@@ -19,9 +19,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Simple track endpoint for testing
-  app.get('/api/tracks', isAuthenticated, async (req: any, res) => {
-    res.json([]);
+  // Student learning routes
+  app.get('/api/tracks', isAuthenticated, async (req, res) => {
+    try {
+      const tracks = await storage.getAllTracks();
+      res.json(tracks);
+    } catch (error) {
+      console.error("Error fetching tracks:", error);
+      res.status(500).json({ message: "Failed to fetch tracks" });
+    }
+  });
+
+  app.get('/api/tracks/:id', isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const track = await storage.getTrack(id);
+      if (!track) {
+        return res.status(404).json({ message: "Track not found" });
+      }
+      res.json(track);
+    } catch (error) {
+      console.error("Error fetching track:", error);
+      res.status(500).json({ message: "Failed to fetch track" });
+    }
+  });
+
+  app.get('/api/chapters/:id', isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const chapter = await storage.getChapter(id);
+      if (!chapter) {
+        return res.status(404).json({ message: "Chapter not found" });
+      }
+      res.json(chapter);
+    } catch (error) {
+      console.error("Error fetching chapter:", error);
+      res.status(500).json({ message: "Failed to fetch chapter" });
+    }
+  });
+
+  app.get('/api/student-progress/:chapterId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { chapterId } = req.params;
+      const progress = await storage.getStudentProgress(userId);
+      const chapterProgress = progress.find(p => p.chapterId === chapterId);
+      res.json(chapterProgress || { proficiencyLevel: 0 });
+    } catch (error) {
+      console.error("Error fetching student progress:", error);
+      res.status(500).json({ message: "Failed to fetch student progress" });
+    }
+  });
+
+  app.get('/api/student-stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const stats = await storage.getStudentStats(userId);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching student stats:", error);
+      res.status(500).json({ message: "Failed to fetch student stats" });
+    }
   });
 
   // Admin routes

@@ -188,13 +188,28 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span>{track.currentChapter}</span>
-                    <span>{track.progress}% complete</span>
+                    <span>{track.chapters?.length || 0} chapters</span>
+                    <span>{getTrackProgress(track.chapters || [])}% complete</span>
                   </div>
-                  <Progress value={track.progress} className="w-full" />
+                  <Progress value={getTrackProgress(track.chapters || [])} className="w-full" />
+                  
+                  {/* Track status indicator */}
+                  {getTrackStatus(track.chapters || []) !== 'not_started' && (
+                    <div className={`rounded-lg border p-2 text-xs ${getTrackStatusColor(getTrackStatus(track.chapters || []))}`}>
+                      {getTrackStatusLabel(getTrackStatus(track.chapters || []))}
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">{track.estimatedTime}</span>
-                    <Button size="sm">Continue Learning</Button>
+                    <span className="text-sm text-gray-500">
+                      {track.chapters?.length || 0} chapters available
+                    </span>
+                    <Button 
+                      size="sm"
+                      onClick={() => setLocation(`/tracks/${track.id}`)}
+                    >
+                      Study Chapters
+                    </Button>
                   </div>
                 </div>
               </CardContent>
