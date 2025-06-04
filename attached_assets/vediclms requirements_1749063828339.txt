@@ -1,0 +1,375 @@
+Vedic Learning Management System (LMS) - Product Requirements (v16)
+1. Product Vision & Core Goals
+Vision: To create an authentic, interactive, and accessible platform for learning Vedic scriptures and practices, mirroring the traditional Guru-Shishya Parampara through modern technology.
+Core Goals:
+Provide students with a structured learning path through various Vedic texts and practices.
+Offer an engaging and interactive learning experience for Vedic verses, including multi-lingual text display and synchronized audio recitations.
+Empower Content Managers with tools to easily create, manage, and enrich Vedic learning content, including precise audio-text segmentation based on character positions within the source text.
+Enable Instructors to effectively guide students and manage their learning progression and proficiency.
+Support multiple languages/scripts (Telugu, Devanagari, English) for both content and interface elements where appropriate.
+Track student progress and proficiency in a clear and motivating manner.
+2. User Roles & Authentication
+The system will support the following primary user roles: Student, Instructor, Content Manager, and Admin. A user account can be assigned one or more roles. Roles define the privileges and access a user has to system functionalities.
+The user interface will dynamically adjust based on the roles assigned to the logged-in user. Access to different functional areas of the application (e.g., "My Learning," "Instructor Panel," "Manage Content," "Administration") will be provided through a tab-based navigation system. The visibility of these tabs will be conditional upon the roles assigned to the user. This approach eliminates the need for an explicit in-session role or context switcher, as all accessible functionalities are presented directly through the available tabs.
+2.1. Definition of Roles
+Student Role:
+Assignment: This is the foundational role. All users who learn on the platform will have this role. It's typically the default role assigned when a new user account is created via admin invitation.
+Permissions & Capabilities:
+Read-only access to all published learning content (tracks and chapters).
+Ability to interact with learning elements (e.g., use the media player for audio, see segment highlighting, use the language switcher).
+Cannot make any changes to the learning content, their own proficiency levels, or track/chapter statuses. These are updated by Instructors.
+View their own progress and proficiency levels as recorded by Instructors.
+Focus: The student's experience is centered on learning, consuming content, and tracking their personal academic journey through the LMS. This is primarily accessed via the "My Learning" tab.
+Instructor Role:
+Prerequisite & Co-assignment: An Instructor is inherently also a Student of the platform. When an Admin assigns the "Instructor" role to a user via the administrative interface, the "Student" role will be automatically co-selected and assigned. Thus, an instructor will always possess all Student role capabilities.
+Core Responsibilities & Permissions (Student-Focused):
+Student Proficiency Management: This is the primary function. Instructors are responsible for assessing students and updating their proficiency levels for each chapter (as detailed in Section 5.A). This includes adhering to prerequisites for updating proficiency in sequential tracks (see Section 4.4.3). For the initial version of the system, an instructor can view and manage proficiency for all students registered in the system.
+View Student Progress: Access to interfaces to view the progress of students across tracks and chapters.
+(Future Consideration - Communication & Class Management): Future enhancements will introduce student batch management, specific student-to-instructor assignments, tools for communication with students, managing student groups/batches, scheduling classes, and recording attendance. These are not part of the initial core implementation.
+Focus: Instructors manage students via the "Instructor Panel" tab and access their own learning materials via the "My Learning" tab.
+Note: Instructors, in this defined role, do not create or modify the core course content, segments, or audio mappings; these responsibilities lie with the Content Manager.
+Content Manager Role:
+Core Responsibilities & Permissions (Content-Focused):
+Curriculum Structure Management: Create, organize, edit, and delete tracks and chapters (Section 5.B.1 & 5.B.2).
+Chapter Content Authoring: Author and update rich textual chapter content in multiple languages using the provided editor, manage chapter status (Draft/Published), and utilize auto-save and preview functionalities (Section 5.B.3).
+Media Management: Upload, manage, and associate audio recitation files with chapters (Section 5.B.3, Tab 2: Media).
+Interactive Content Creation:
+Define interactive text segments within chapter content by marking character positions/offsets (Section 5.B.3, Tab 3: Segmentation & Mapping).
+Map audio timestamps to these defined segments (Section 5.B.3, Tab 3: Segmentation & Mapping).
+Focus: All aspects of curriculum creation, enrichment, and lifecycle management, accessed via the "Manage Content" tab. If a Content Manager also holds the "Student" role, they will also have access to the "My Learning" tab.
+Admin Role:
+Primary Responsibilities & Permissions:
+User Account Management: This is the central function of the Admin role.
+Create new user accounts for Students, Instructors, Content Managers, and other Admins. Account creation is strictly by admin invitation (see Section 2.2.2).
+Update existing user accounts, including modifying user profile information, assigning/changing/removing user roles (with UI logic to co-assign "Student" role when "Instructor" role is selected).
+Disable/Enable User Accounts: Admins can disable user accounts, preventing login. Disabled accounts retain all associated data (progress, content created, etc.) and can be re-enabled by an Admin. Direct deletion of user accounts is not a primary feature; disabling is preferred for data integrity.
+Assist users with account issues, such as managing linked authentication methods (e.g., helping to unlink a social account after proper verification) or triggering secure password resets.
+Resend invitations to users who have not yet activated their accounts. The interface should indicate the age of pending invitations.
+(Future Consideration): Broader system administration tasks like managing site-wide settings, backups, viewing audit logs, managing global announcements, or defining platform-level configurations (e.g., available fonts for the editor). The method for creating the very first Admin account (e.g., via a setup script or manual database entry) will be determined during the development/deployment setup phase and is considered an implementation detail.
+Focus: All administrative functions, accessed via the "Administration" tab. If an Admin also holds the "Student" role, they will also have access to the "My Learning" tab.
+2.2. Authentication & Account Management Flow
+2.2.1. Core Principles:
+Invitation-Only Account Creation: New user accounts are created exclusively through an invitation initiated by an Admin. There will be no open self-signup option.
+Email as Primary Identifier for Invitation & Login: The invitation process is tied to a specific email address provided by the Admin. This email also serves as the username for traditional password-based logins.
+Flexible Authentication Methods: Once invited, users can activate and access their accounts using:
+Social Sign-In (Google, Apple).
+Traditional Email and Password (set up by the user after accepting the invitation).
+Account Linking: A single LMS account (tied to the invited email) can have multiple authentication methods linked.
+2.2.2. Account Creation & Initial Sign-In Workflow:
+Admin Invites User: Admin inputs user's email and assigns initial role(s). System sends an invitation email with a unique link. The Admin interface will show the age of pending invites and allow resending them.
+User Accepts Invitation: User clicks the link, is directed to an activation page.
+Activation Options: User chooses to activate with Google, Apple, or Email/Password.
+Social Sign-In Activation: Standard OAuth flow. LMS validates token and matches verified email from social provider against the invited email. If valid, account is created/activated, linked, roles applied, user logged in. Account status becomes "Active".
+Email/Password Activation: User confirms invited email, creates password. LMS validates token and email. If valid, account created/activated, roles applied, user logged in. Account status becomes "Active".
+2.2.3. Subsequent Logins:
+Login page offers Social Sign-In and Email/Password options.
+Upon successful authentication, the user is presented with a dashboard where available tabs ("My Learning," "Instructor Panel," "Manage Content," "Administration") are displayed based on their assigned roles. Users with a "Disabled" account status cannot log in and should be shown an appropriate message.
+2.2.4. Managing Authentication Methods (User Account Settings):
+Users can add a password if initially signed up via social.
+Users can link additional social accounts (with conflict checks).
+Users can unlink social accounts (with safeguards if it's the sole login method).
+Standard password change functionality.
+2.2.5. Multi-Role Handling:
+The system uses a tab-based navigation model to provide access to functionalities associated with a user's assigned roles.
+"My Learning" Tab: Visible if the user has the Student role.
+"Instructor Panel" Tab: Visible if the user has the Instructor role. (This user will also have the Student role and thus also see the "My Learning" tab).
+"Manage Content" Tab: Visible if the user has the Content Manager role.
+"Administration" Tab: Visible if the user has the Admin role.
+A user can have multiple tabs visible if they hold multiple roles.
+This model ensures that users only see and access the parts of the system relevant to their current permissions without needing an explicit context-switching mechanism.
+2.2.6. Password Management & Recovery:
+Secure password hashing.
+"Forgot Password" functionality with a secure reset link sent to the user's primary email.
+2.2.7. Admin Management of User Authentication:
+View linked authentication methods for user accounts.
+Trigger password resets for users.
+Manage account status (Active, Disabled, Pending Invitation).
+Resend invitations for pending accounts.
+Assist with unlinking social accounts (after appropriate security verification).
+3. Platform-Wide Features & Considerations
+3.1. Multi-Lingual Support
+Core Languages/Scripts:
+Telugu (using Tiro Telugu font or similar appropriate Unicode font)
+Devanagari (for Sanskrit, using Tiro Devanagari Sanskrit font or similar)
+English (IAST for transliterated Vedic texts, using Tiro Devanagari Sanskrit font or similar; Plain English for UI elements and instructional text where appropriate, using Inter font or similar).
+Global Language Switcher: As seen in the chapter view, a prominent language switcher should allow users to change the display script/language of content. This should apply to:
+Vedic verses (both interactive segments and plain text).
+Instructional text provided by instructors/content managers.
+UI Language: The overall application interface language (buttons, labels, menus) might initially be English, with future potential for full UI localization.
+3.2. Font Requirements
+Telugu: 'Tiro Telugu' (or equivalent high-quality Unicode font supporting Vedic accents if applicable).
+Devanagari & English (IAST): 'Tiro Devanagari Sanskrit' (or equivalent high-quality Unicode font supporting Vedic accents).
+General UI (English): 'Inter' or a similar clean sans-serif font.
+Fonts should be web-hosted and loaded efficiently.
+3.3. Accessibility
+The platform should strive to meet common web accessibility standards (e.g., WCAG AA) to ensure usability for people with disabilities. This includes keyboard navigation, screen reader compatibility, and sufficient color contrast.
+4. Student Interface Requirements
+(Based on the interactive prototype vedic_lms_full_prototype_v2 or similar ID of the final merged code, which demonstrates the integrated Student and Instructor views where instructor-specific functionalities are conditionally displayed based on user roles.)
+4.1. Dashboard View ("My Learning" Tab)
+Purpose: Provide an overview of all available learning tracks and the student's overall progress. This content is displayed within the "My Learning" tab of the main application interface.
+Elements:
+Header/Welcome message (e.g., "Sri Lalita Maha Tripura Sundari Veda Pathashala - Student Learning Dashboard").
+Proficiency Levels Legend: Visually explain the color-coding for proficiency levels (0-4) and their labels (e.g., Level 0: Not Started, Level 1: Level 1, etc.).
+Track Cards Grid:
+Display each available learning track as a card.
+Each card shows: Track ID and Title, Icon (e.g., BookOpen), visual indicators for each chapter's proficiency level (student's own, using color codes from the legend and chapter number), and overall track status (see Section 4.4.3).
+Track card styling (background/border colors) reflects overall track status (e.g., "Certified," "Ready for Test," "In Progress," "Not Started").
+Clicking a track card navigates to the Track View for that track. All tracks are accessible for viewing content, regardless of proficiency in prior tracks.
+4.2. Track View
+Purpose: Display the chapters within a selected learning track and their individual statuses based on the student's recorded proficiency.
+Elements:
+Back button to navigate to the Dashboard ("My Learning" tab).
+Track Header: Displaying Track ID and Title.
+Track Status Banner (if applicable): A clear visual banner indicating if the track is "Ready for Track Test" or "Certified" based on chapter proficiency levels.
+Chapter Cards Grid:
+Each card represents a chapter within the track.
+Displays Chapter ID, Title (line-clamped if necessary), and the student's current Proficiency Level pill (color-coded and labeled, e.g., "Level 3").
+Clicking a chapter card navigates to the Chapter View for that chapter. All chapters are accessible for viewing content.
+4.3. Chapter View
+Purpose: Present the learning content for a chapter, including interactive elements if available.
+Layout & Core Elements:
+Back Button: Navigates to the parent Track View.
+Chapter Header Section: Displays Track ID, Chapter ID, full Chapter Title (break words if long), and the student's current Proficiency Level for this chapter.
+Global Language Switcher: Buttons or dropdown for Telugu, Devanagari, and English (IAST). Selection changes the script/language for all main content in this view.
+Media Controls Section:
+Recitation Selector: Dropdown to select between different available audio recitations (e.g., "Teacher A," "Teacher B") for the chapter, if multiple exist.
+Playback Controls: Standard Play/Pause, Stop buttons.
+Time Display: Shows current playback time and total duration of the selected audio (e.g., MM:SS / MM:SS).
+Playback Speed Control: Dropdown to select playback speed (e.g., 0.5x, 1x, 1.5x).
+Seekable Timeline: A visual slider allowing the user to scrub through the audio. Disabled if audio is not loaded, is a placeholder, or has no duration.
+Main Content Display Area:
+This area displays the chapter's textual content.
+If Interactive Segments Exist (as defined by the Content Manager and stored in INTERACTIVE_CHAPTER_DATA, referenced by character offsets from STATIC_CHAPTER_DATA):
+The text is rendered with interactive segments. Each segment is clickable.
+The script/language of the segments changes according to the Global Language Switcher.
+Hovering over a segment visually highlights it.
+Clicking a segment:
+If audio timestamps are mapped for the selected recitation and segment, the audio player seeks to the segment's start time and plays that portion. The segment remains highlighted during playback.
+If audio is placeholder or timings are missing for the selected recitation, a toaster notification informs the user.
+If No Actual Interactive Segments Exist (or only a placeholder "interactive segments not defined" message is present in INTERACTIVE_CHAPTER_DATA):
+The full plain text content for the chapter (from STATIC_CHAPTER_DATA for the selected language) is displayed.
+The script/language of this text changes according to the Global Language Switcher.
+This text is not interactive (no clickable segments).
+A placeholder message (e.g., "Interactive segments not defined for this chapter.") is shown if appropriate.
+If No Content Available: If STATIC_CHAPTER_DATA itself is missing for the selected language, a "Content Not Available" message is displayed.
+Font Application: Appropriate fonts (Tiro Telugu, Tiro Devanagari Sanskrit, Inter) are applied based on the selected script/language.
+Toaster/Notification System: For non-modal feedback (e.g., "Audio timing unavailable," "Placeholder audio").
+4.4. Proficiency System & Learning Progression
+4.4.1. Definition of Proficiency Levels
+The system will use a five-tier proficiency level system for each chapter, numerically represented from 0 to 4.
+Level 0: Not Started (Color: Gray)
+Level 1: Level 1 (Color: Light Green)
+Level 2: Level 2 (Color: Dark Green) - Minimum for all chapters in Track N-1 for instructor to update proficiency in Track N.
+Level 3: Level 3 (Color: Light Purple) - All chapters at Level 3+ in a track means "Ready for Test."
+Level 4: Level 4 (Color: Dark Purple) - All chapters at Level 4 in a track means "Certified."
+4.4.2. Visual Indication of Proficiency
+Proficiency levels will be consistently displayed using their assigned color codes and numerical labels.
+4.4.3. Impact on Track Progression & Status
+Track Content Accessibility: All tracks and their chapter content are accessible for viewing by the student from the beginning.
+Prerequisites for Proficiency Updates by Instructor: For an instructor to assign/update proficiency for any chapter in Track N (N > 1), the student must have achieved Level 2 proficiency in all chapters of Track N-1.
+Track Status (Student-Facing):
+Not Started: No chapter proficiency above 0.
+In Progress: At least one chapter >= Level 1, but not all >= Level 3.
+Ready for Test: All chapters >= Level 3, but not all are Level 4.
+Certified: All chapters are Level 4.
+4.4.4. Updating Proficiency Levels
+Proficiency levels are updated by Instructors. The system does not automatically advance proficiency.
+5. Instructor & Content Manager Interfaces
+5.A. Instructor Interface
+Focus: Managing and guiding students, assessing and updating their proficiency. Accessed via the "Instructor Panel" tab.
+5.A.1. Student Management Hub (within "Instructor Panel" tab):
+A primary view for instructors.
+Student List: Displays a searchable (by name/email, filtering after 3 characters) and filterable list of all students in the system (for the initial version).
+Student Overview (Optional): For each student, a summary of their overall progress.
+Access to Proficiency Management: Clear "Manage Proficiency" button for each student, leading to Section 5.A.2.
+Note: Future versions will introduce batch management and specific student-to-instructor assignments.
+5.A.2. Student Proficiency Management View (Per Student):
+Navigation: "Back to Instructor Panel" button.
+Student Identifier: Displays the name of the student being managed.
+Track & Chapter Display: Lists all learning tracks and their chapters.
+Each track is a collapsible/expandable tile (default collapsed, only one open at a time).
+For each chapter within an expanded track, displays the student's current proficiency level.
+Proficiency Update Controls:
+Chapter-Level: Dropdown or similar control next to each chapter to set its proficiency level (0-4).
+Track-Level: A control (e.g., a dropdown at the track header) to set all chapters within that track to a specific proficiency level.
+Prerequisite Enforcement: Proficiency update controls for chapters in Track N (N > 1) are disabled if the student has not met the Level 2 prerequisite in all chapters of Track N-1. A visual lock indication or message explains this.
+Save Changes: Prominent "Save Changes" button to persist all modifications made on this screen.
+5.A.3. (Future Considerations for Instructor):
+Attendance management, class scheduling, test scheduling, direct communication tools with students.
+5.B. Content Manager Interface
+Focus: Creating, curating, and managing all learning content and its interactive elements. Accessed via the "Manage Content" tab.
+Navigation Flow: The Content Manager interface will follow a hierarchical navigation: a main Content Dashboard listing tracks, a Track Editor view listing chapters within a selected track, and a detailed Chapter Editor view for managing individual chapter content.
+5.B.1. Content Dashboard/Overview (Main View):
+Purpose: Central hub for Content Managers to get an overview of all learning tracks and initiate content creation or management tasks.
+Elements:
+Track List: Displays all learning tracks with columns for Order, Track Title, Number of Chapters, Status (Draft/Published), and Last Modified Date.
+Actions per Track:
+"Manage Chapters / Edit Track": Navigates to the Track Editor View (Section 5.B.2).
+"Delete Track" (with confirmation dialogue). Track deletion implies deletion of all its constituent chapters and their associated content. (See Section 5.B.8 for Deletion Behaviors).
+"Create New Track" Button: Opens a modal or form to input details for a new track (Title, Order). New tracks are created with a "Draft" status.
+5.B.2. Track Editor View:
+Purpose: Manage chapters within a specific track and edit track-level details.
+Elements:
+Navigation: "Back to Content Dashboard" link.
+Track Details Section: Displays and allows editing of the current track's Title and Order. A "Save Track Changes" button persists these details.
+Chapter List (within the selected track):
+Displays chapters with columns for Order, Chapter Title, Status (Draft/Published).
+Visual cues (e.g., icons) indicating chapter completeness for Text Content, Media, Segments, and Mappings.
+Actions per Chapter:
+"Manage Chapter": Navigates to the Detailed Chapter Editor View (Section 5.B.3).
+"Delete Chapter" (with confirmation dialogue). Chapter deletion implies deletion of its associated content and data. (See Section 5.B.8 for Deletion Behaviors).
+"Create New Chapter" Button: Opens a modal or form to input details for a new chapter within the current track (Title, Order). New chapters are created with a "Draft" status.
+5.B.3. Detailed Chapter Editor View:
+Purpose: Provide a comprehensive workspace for managing all aspects of a single chapter's content, interactivity, and status.
+Overall Structure:
+Navigation: "Back to Track Chapters" link.
+Header Area: Displays the current Chapter Title and its Status ("Draft" or "Published").
+Action Buttons (Top Level):
+"Save Draft" Button: Allows the Content Manager to explicitly save all current changes made across all tabs while the chapter is in "Draft" status. Provides user assurance even with auto-saving.
+"Publish" / "Unpublish" Button:
+If status is "Draft," this button reads "Publish." Clicking it changes the status to "Published." A pre-publish check or warning may be advisable if essential elements (e.g., text in primary language) are missing.
+If status is "Published," this button reads "Unpublish." Clicking it changes the status to "Draft."
+Chapter Status and Editability:
+New chapters are created in "Draft" status by default.
+All editing functionalities within the "Text Content," "Media," and "Segmentation & Mapping" tabs are enabled only when the chapter is in "Draft" status.
+When a chapter is "Published," these editing controls become disabled or read-only. The Content Manager must "Unpublish" the chapter to make further edits.
+Students and Instructors (in their student capacity) can only view "Published" chapters.
+Auto-Saving: While in "Draft" status, changes made within the input fields of the "Text Content," "Media," and "Segmentation & Mapping" tabs will be auto-saved conceptually (component state updates immediately, simulating a frequent background save).
+Tabbed Interface: The editor will use the following four tabs:
+Tab 1: Text Content
+Purpose: Manage chapter metadata and its primary textual content in multiple languages.
+Fields (editable if Draft):
+Chapter Title.
+Order in Track.
+Multi-Lingual Rich Text Editor Section (editable if Draft):
+Language sub-tabs or a dropdown (Telugu, Devanagari, English IAST/plain) to switch the editor's active language.
+A robust Rich Text Editor (WYSIWYG preferred, or Markdown with live preview; an LLM may propose suitable libraries) for the selected language.
+Comprehensive Formatting Options as previously detailed, including a "mantra block" style.
+Content is saved to the conceptual STATIC_CHAPTER_DATA.texts for the active language.
+Tab 2: Media
+Purpose: Manage audio recitation files associated with the chapter.
+Functionality (editable if Draft):
+"Upload New Audio File" button: Allows uploading MP3 files. Prompts for an optional "Reciter Name."
+Audio Files List: Displays currently associated audio files (e.g., Reciter Name, Filename).
+Actions per audio file: Preview (if player available), Delete. (See Section 5.B.8 for deletion behavior).
+Tab 3: Segmentation & Mapping
+Purpose: Define interactive text segments from the main chapter text and map them to timestamps in the uploaded audio files.
+Workflow (editable if Draft):
+Language & Audio Selection:
+Select the language version of the chapter text to work with for segmentation (Telugu, Devanagari, English IAST). The full text from STATIC_CHAPTER_DATA for this language is displayed (read-only view for reference).
+Select an audio file (from those uploaded in the Media tab) to map segments against. An integrated audio player for this file is provided with full controls.
+Segment Definition:
+The Content Manager highlights a portion of the displayed chapter text.
+"Create Segment from Selection" button: This action records the character start/end positions (or equivalent robust positional markers) of the selected text within the source text of that specific language.
+A unique Segment ID is generated or assigned, and a conceptual name can be added by the CM for easier identification (e.g., "Verse 1, Stanza 1").
+Cross-Lingual Segment Referencing: After defining offsets for a segment in one language (e.g., Telugu), the UI should clearly indicate this segment (e.g., by its conceptual name or ID). The Content Manager can then switch to another language (e.g., Devanagari). The system will display the full Devanagari text, and the CM will select the corresponding text passage for that same conceptual segment. Upon confirmation, these new Devanagari offsets are linked to the existing segment ID. This process is repeated for all supported languages.
+The system stores the Segment ID and its multi-lingual positional references in the conceptual INTERACTIVE_CHAPTER_DATA.segments.originalTextReferences.
+Timestamp Mapping:
+Select a defined conceptual segment.
+Using the integrated audio player, the Content Manager marks the start and end timestamps for the recitation of that segment in the selected audio file.
+"Save Mapping" button: Timestamps are saved with the Segment ID and Audio Source ID in the conceptual INTERACTIVE_CHAPTER_DATA.segments.timestamps.
+Management Interface:
+Display a list of all defined conceptual segments for the chapter.
+For each segment:
+View/Edit its character offset boundaries for each language.
+View/Edit/Clear its timestamp mappings for each associated audio file.
+Delete Segment (this would remove its definitions and all associated mappings).
+Handling Content Modifications: If the main chapter text (in the "Text Content" tab) is modified after segments have been defined, the system must attempt to detect if these edits might have invalidated the stored segment positions. If conflicts are detected, the Content Manager must be alerted. The re-alignment tool should ideally present the affected segment's previously defined text (or its conceptual name) alongside the modified full text. The Content Manager should be able to easily adjust the start/end character offsets for the segment in each affected language to match the revised content. Options to delete the segment if it's no longer valid should also be present.
+Tab 4: Preview
+Purpose: Allow the Content Manager to view the chapter exactly as a student would experience it, using the current state of the draft (including text, interactive segments if defined and mapped, and selected audio).
+Functionality: This tab will render a view similar to the StudentChapterView, incorporating the multi-lingual text, segment highlighting, and audio playback based on the current draft data. This helps in validating all aspects of the chapter before publishing.
+5.B.8. Deletion Behaviors & Data Integrity for Content Management:
+Track Deletion: When a Track is deleted by a Content Manager:
+All its constituent Chapters must also be deleted.
+All associated STATIC_CHAPTER_DATA and INTERACTIVE_CHAPTER_DATA for these chapters must be deleted.
+Student progress data (StudentProgress) related to these deleted chapters should be handled according to a defined data retention policy (e.g., for now, consider them marked as "obsolete" or "archived" but not immediately deleted from student records to preserve historical learning data. A definitive policy is TBD). The system should prevent deletion if there are active student enrollments or progress that cannot be archived without explicit admin override, or provide clear warnings.
+Chapter Deletion: When a Chapter is deleted by a Content Manager:
+Its STATIC_CHAPTER_DATA and INTERACTIVE_CHAPTER_DATA must be deleted.
+Student progress data related to this chapter should be handled as per the policy defined above for track deletion.
+The parent Track's chapterCount should be decremented.
+Audio File Deletion (from a Chapter): When an audio file is deleted from a chapter's Media tab:
+All timestamp mappings in INTERACTIVE_CHAPTER_DATA that reference that audio file ID for that chapter must be removed.
+The Content Manager should be warned before deletion if such mappings exist (e.g., "This audio file has X segments mapped to it. Deleting the file will remove these mappings. Proceed?").
+6. Data Structures (Conceptual Overview)
+(Implementation Note: These data structures are conceptual starting points. When implementing with a NoSQL database like Firebase Firestore, appropriate data modeling, including decisions on collections, sub-collections, potential denormalization for query efficiency, and necessary indexing, will need to be determined during development. Firestore security rules must be meticulously implemented to enforce the role-based access controls defined in Section 2.)
+Users:
+userId (unique ID)
+primaryEmail (string)
+displayName (string, optional)
+roles (array of strings)
+status (string: 'pending_invitation', 'active', 'disabled')
+inviteSentAt (timestamp, nullable)
+lastLogin (timestamp, nullable)
+linkedSocialIdentities (array of objects)
+passwordHash (string, nullable)
+Tracks (for Content Management & Learning):
+trackId (unique ID)
+title (string)
+order (number)
+status (string: 'draft', 'published')
+chapterCount (number)
+lastModified (timestamp)
+chapterIds (array of chapterIds)
+Chapters (Summary for listings):
+chapterId (unique ID)
+trackId (string)
+title (string)
+orderInTrack (number)
+status (string: 'draft', 'published')
+completeness (object, optional, e.g., { text: true, audio: true, segments: false, mapping: false })
+STATIC_CHAPTER_DATA (Detailed Chapter Text Content):
+Keyed by chapterId.
+texts: { te: "...", hi: "...", en: "..." }.
+INTERACTIVE_CHAPTER_DATA (Interactivity Layer):
+Keyed by chapterId.
+audioSources: Array of objects: { id: 'source1', name: 'Teacher A', src: 'path/to/audio.mp3', reciter: 'Teacher A' }.
+segments: Array of objects:
+id: 'unique_segment_id'.
+conceptualName (string, optional).
+originalTextReferences: { te: {startChar: N, endChar: M}, hi: {...}, en: {...} }.
+timestamps: { 'audioSourceId1': { start: S, end: E }, ... }.
+lineBreakAfter: boolean (optional).
+StudentProgress: (As previously defined)
+6.1. Data Validation Principles (Examples based on best practices):
+General:
+Required fields (e.g., titles, email for new users) must not be empty or consist only of whitespace.
+String lengths should have reasonable maximums (e.g., titles: 255 characters; text content: a larger, appropriate limit for rich text). An LLM can propose suitable limits based on typical database constraints.
+Users:
+primaryEmail: Must be a valid email format (e.g., using a standard regex). Must be unique across all users in the system.
+roles: Each role in the array must be one of the predefined valid roles (Student, Instructor, Content Manager, Admin).
+status: Must be one of the predefined valid statuses ('pending_invitation', 'active', 'disabled').
+Tracks:
+title: Should be unique. Must not be empty.
+order: Must be a positive integer. Should ideally be unique within the list of all tracks (or handled by sorting logic if not strictly unique).
+status: Must be 'draft' or 'published'.
+Chapters:
+title: Should be unique within its parent Track. Must not be empty.
+orderInTrack: Must be a positive integer. Should ideally be unique within its parent Track.
+status: Must be 'draft' or 'published'.
+STATIC_CHAPTER_DATA & INTERACTIVE_CHAPTER_DATA:
+Keys (chapterId) must correspond to existing Chapters.
+originalTextReferences offsets: startChar must be less than endChar. Both must be non-negative integers. The system should validate that these offsets are within the bounds of the actual text length in the corresponding STATIC_CHAPTER_DATA language version during segment creation/update.
+timestamps: start time (in seconds) must be less than end time. Both must be non-negative and should ideally be within the duration of the associated audio file.
+StudentProgress:
+proficiencyLevel: Must be an integer between 0 and 4, inclusive.
+studentId, chapterId: Must refer to existing, valid userIds and chapterIds respectively.
+7. Non-Functional Requirements
+Performance: Pages should load quickly. Audio playback should be smooth and responsive.
+Scalability: The system should be designed to handle a growing number of users, tracks, chapters, and multimedia content.
+Usability: All user interfaces should be intuitive, user-friendly, and require minimal learning curve. The LLM is encouraged to propose and use suitable third-party libraries (e.g., for Rich Text Editors, UI components) to enhance usability and development efficiency.
+Reliability: The platform should be stable with high availability. Data integrity and regular backups are critical.
+Security: Protect user data (PII, progress) and content integrity. Implement standard web security practices (HTTPS, input validation, protection against common vulnerabilities). Securely manage authentication tokens and API access.
+Data Updates: For initial versions, UI updates reflecting changes in data (e.g., proficiency level changes made by an instructor) can occur on page load, navigation, or manual refresh by the user. Real-time automatic updates are not an MVP requirement.
+Error Handling & User Feedback: The system should provide clear, user-friendly error messages and feedback for all user interactions, especially for form submissions, authentication issues, and operations that might fail (e.g., file uploads, data saving).
+8. Future Considerations (Out of Initial Scope but good to keep in mind)
+Advanced student assessment tools (quizzes, tests with automated and/or manual grading).
+Gamification elements (badges, points, leaderboards) to enhance student engagement.
+Discussion forums or Q&A sections per chapter or track for student-instructor and student-student interaction.
+Offline access capabilities for learning content and progress synchronization.
+More granular administrative roles and comprehensive reporting/analytics features.
+Video content support.
+Support for more languages/scripts for both content and the UI.
+Advanced Audio Handling:
+Architecture to support using multiple distinct audio files within a single chapter, where different segments of the chapter content map to different audio files.
+Intelligent audio fallback: If a segment is clicked and the currently selected audio source has no mapping for it, the system could automatically check other available audio sources for that chapter to find and play a mapped version, if one exists.
+This document provides a comprehensive overview. The React prototype identified as vedic_lms_full_prototype_v2 (or the latest agreed-upon ID for the merged code artifact) demonstrates the integrated Student, Instructor, Admin, and Content Manager (mock) interfaces, where role-specific functionalities are conditionally displayed based on user roles via a tabbed dashboard.
