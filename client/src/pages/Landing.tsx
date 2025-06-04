@@ -18,10 +18,10 @@ export default function Landing() {
           
           <Button 
             size="lg"
-            onClick={() => window.location.href = '/api/login'}
+            onClick={() => window.location.reload()}
             className="bg-amber-700 hover:bg-amber-800 text-white px-12 py-4 text-lg"
           >
-            Sign In
+            Enter Vedic LMS
           </Button>
         </div>
       </div>

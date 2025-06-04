@@ -1,14 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
 
-export function useAuth() {
-  const { data: user, isLoading } = useQuery({
-    queryKey: ["/api/auth/user"],
-    retry: false,
-  });
+// Mock user with all roles for development
+const mockUser = {
+  id: "dev-user-123",
+  email: "developer@vediclms.com",
+  firstName: "Development",
+  lastName: "User",
+  profileImageUrl: "https://replit.com/public/images/mark.png",
+  roles: ["student", "instructor", "content_manager", "admin"],
+  status: "active",
+  createdAt: new Date(),
+  updatedAt: new Date()
+};
 
+export function useAuth() {
+  // Always return the mock user as authenticated
   return {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
+    user: mockUser,
+    isLoading: false,
+    isAuthenticated: true,
   };
 }
