@@ -1,7 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage-vedic";
-import { initializeDatabase } from "./init-database";
+import { storage } from "./storage-authentic";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertTrackSchema, insertChapterSchema, insertTextSegmentSchema, insertAudioMappingSchema, insertStudentProgressSchema } from "@shared/schema";
 import multer from "multer";
@@ -52,9 +51,6 @@ function requireRole(role: string) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize database with authentic Vedic curriculum
-  await initializeDatabase();
-  
   await setupAuth(app);
 
   // Auth routes
