@@ -194,7 +194,7 @@ export default function TrackView() {
           ))}
         </div>
 
-        {track.chapters.length === 0 && (
+        {(track.chapters || []).length === 0 && (
           <Card>
             <CardContent className="text-center py-8">
               <p className="text-gray-500">No chapters available in this track yet.</p>

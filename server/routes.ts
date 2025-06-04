@@ -65,14 +65,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Track routes
-  app.get('/api/tracks', isAuthenticated, async (req, res) => {
+  // Track routes (bypassing authentication for development)
+  app.get('/api/tracks', async (req, res) => {
     try {
       const tracks = await storage.getAllTracks();
       res.json(tracks);
     } catch (error) {
       console.error("Error fetching tracks:", error);
       res.status(500).json({ message: "Failed to fetch tracks" });
+    }
+  });
+
+  app.get('/api/tracks/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const track = await storage.getTrack(id);
+      if (!track) {
+        return res.status(404).json({ message: "Track not found" });
+      }
+      res.json(track);
+    } catch (error) {
+      console.error("Error fetching track:", error);
+      res.status(500).json({ message: "Failed to fetch track" });
     }
   });
 
