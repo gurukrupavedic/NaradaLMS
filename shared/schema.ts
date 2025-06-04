@@ -8,13 +8,14 @@ import {
   serial,
   integer,
   boolean,
-  decimal,
+  real,
+  primaryKey
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { createInsertSchema } from "drizzle-zod";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Session storage table - required for Replit Auth
+// Session storage table for Replit Auth
 export const sessions = pgTable(
   "sessions",
   {
@@ -25,7 +26,7 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table - required for Replit Auth
+// User storage table for Replit Auth with roles
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull(),
   email: varchar("email").unique(),
@@ -38,101 +39,104 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Learning tracks table
+// Learning tracks
 export const tracks = pgTable("tracks", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
   order: integer("order").notNull(),
   status: varchar("status").default("draft").notNull(), // 'draft', 'published'
-  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Chapters table
+// Chapters within tracks
 export const chapters = pgTable("chapters", {
   id: serial("id").primaryKey(),
-  trackId: integer("track_id").references(() => tracks.id).notNull(),
+  trackId: integer("track_id").notNull().references(() => tracks.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   order: integer("order").notNull(),
   status: varchar("status").default("draft").notNull(), // 'draft', 'published'
   content: jsonb("content").$type<{
-    te?: string;
-    hi?: string;
-    en?: string;
+    te?: string; // Telugu
+    hi?: string; // Devanagari/Hindi
+    en?: string; // English/IAST
   }>().default({}).notNull(),
-  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Audio files table
+// Audio files for chapters
 export const audioFiles = pgTable("audio_files", {
   id: serial("id").primaryKey(),
-  chapterId: integer("chapter_id").references(() => chapters.id).notNull(),
+  chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
   filename: text("filename").notNull(),
   originalName: text("original_name").notNull(),
   reciter: text("reciter"),
-  duration: decimal("duration", { precision: 10, scale: 3 }), // in seconds
-  fileSize: integer("file_size"), // in bytes
-  mimeType: text("mime_type"),
-  uploadedBy: varchar("uploaded_by").references(() => users.id).notNull(),
+  duration: real("duration"), // in seconds
+  fileSize: integer("file_size"),
+  mimeType: varchar("mime_type"),
+  uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Text segments table
-export const segments = pgTable("segments", {
+// Text segments for audio mapping
+export const textSegments = pgTable("text_segments", {
   id: serial("id").primaryKey(),
-  chapterId: integer("chapter_id").references(() => chapters.id).notNull(),
+  chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
   conceptualName: text("conceptual_name").notNull(),
   textReferences: jsonb("text_references").$type<{
     te?: { start: number; end: number };
     hi?: { start: number; end: number };
     en?: { start: number; end: number };
   }>().default({}).notNull(),
-  order: integer("order").notNull(),
-  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Audio-segment mappings table
-export const audioSegmentMappings = pgTable("audio_segment_mappings", {
+// Audio timestamp mappings
+export const audioMappings = pgTable("audio_mappings", {
   id: serial("id").primaryKey(),
-  audioFileId: integer("audio_file_id").references(() => audioFiles.id).notNull(),
-  segmentId: integer("segment_id").references(() => segments.id).notNull(),
-  startTime: decimal("start_time", { precision: 10, scale: 3 }).notNull(), // in seconds
-  endTime: decimal("end_time", { precision: 10, scale: 3 }).notNull(), // in seconds
-  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  audioFileId: integer("audio_file_id").notNull().references(() => audioFiles.id, { onDelete: "cascade" }),
+  segmentId: integer("segment_id").notNull().references(() => textSegments.id, { onDelete: "cascade" }),
+  startTime: real("start_time").notNull(), // in seconds
+  endTime: real("end_time").notNull(), // in seconds
+  createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  pk: primaryKey({ columns: [table.audioFileId, table.segmentId] })
+}));
 
-// Student progress table
+// Student progress tracking
 export const studentProgress = pgTable("student_progress", {
   id: serial("id").primaryKey(),
-  studentId: varchar("student_id").references(() => users.id).notNull(),
-  chapterId: integer("chapter_id").references(() => chapters.id).notNull(),
-  proficiencyLevel: integer("proficiency_level").default(0).notNull(), // 0-4
-  updatedBy: varchar("updated_by").references(() => users.id).notNull(),
+  studentId: varchar("student_id").notNull().references(() => users.id),
+  chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
+  proficiencyLevel: integer("proficiency_level").default(0).notNull(), // 0-4 (0=not started, 1-4=levels)
+  lastAccessed: timestamp("last_accessed"),
+  updatedBy: varchar("updated_by").notNull().references(() => users.id), // instructor who updated
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  pk: primaryKey({ columns: [table.studentId, table.chapterId] })
+}));
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
-  createdTracks: many(tracks, { relationName: "trackCreator" }),
-  createdChapters: many(chapters, { relationName: "chapterCreator" }),
-  uploadedAudioFiles: many(audioFiles, { relationName: "audioUploader" }),
-  createdSegments: many(segments, { relationName: "segmentCreator" }),
-  createdMappings: many(audioSegmentMappings, { relationName: "mappingCreator" }),
+  createdTracks: many(tracks),
+  createdChapters: many(chapters),
+  uploadedAudioFiles: many(audioFiles),
+  createdSegments: many(textSegments),
+  createdMappings: many(audioMappings),
   studentProgress: many(studentProgress, { relationName: "studentProgress" }),
-  progressUpdates: many(studentProgress, { relationName: "progressUpdater" }),
+  updatedProgress: many(studentProgress, { relationName: "updatedProgress" }),
 }));
 
 export const tracksRelations = relations(tracks, ({ one, many }) => ({
-  creator: one(users, {
+  createdBy: one(users, {
     fields: [tracks.createdBy],
     references: [users.id],
-    relationName: "trackCreator",
   }),
   chapters: many(chapters),
 }));
@@ -142,13 +146,12 @@ export const chaptersRelations = relations(chapters, ({ one, many }) => ({
     fields: [chapters.trackId],
     references: [tracks.id],
   }),
-  creator: one(users, {
+  createdBy: one(users, {
     fields: [chapters.createdBy],
     references: [users.id],
-    relationName: "chapterCreator",
   }),
   audioFiles: many(audioFiles),
-  segments: many(segments),
+  textSegments: many(textSegments),
   studentProgress: many(studentProgress),
 }));
 
@@ -157,40 +160,37 @@ export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({
     fields: [audioFiles.chapterId],
     references: [chapters.id],
   }),
-  uploader: one(users, {
+  uploadedBy: one(users, {
     fields: [audioFiles.uploadedBy],
     references: [users.id],
-    relationName: "audioUploader",
   }),
-  mappings: many(audioSegmentMappings),
+  audioMappings: many(audioMappings),
 }));
 
-export const segmentsRelations = relations(segments, ({ one, many }) => ({
+export const textSegmentsRelations = relations(textSegments, ({ one, many }) => ({
   chapter: one(chapters, {
-    fields: [segments.chapterId],
+    fields: [textSegments.chapterId],
     references: [chapters.id],
   }),
-  creator: one(users, {
-    fields: [segments.createdBy],
+  createdBy: one(users, {
+    fields: [textSegments.createdBy],
     references: [users.id],
-    relationName: "segmentCreator",
   }),
-  mappings: many(audioSegmentMappings),
+  audioMappings: many(audioMappings),
 }));
 
-export const audioSegmentMappingsRelations = relations(audioSegmentMappings, ({ one }) => ({
+export const audioMappingsRelations = relations(audioMappings, ({ one }) => ({
   audioFile: one(audioFiles, {
-    fields: [audioSegmentMappings.audioFileId],
+    fields: [audioMappings.audioFileId],
     references: [audioFiles.id],
   }),
-  segment: one(segments, {
-    fields: [audioSegmentMappings.segmentId],
-    references: [segments.id],
+  segment: one(textSegments, {
+    fields: [audioMappings.segmentId],
+    references: [textSegments.id],
   }),
-  creator: one(users, {
-    fields: [audioSegmentMappings.createdBy],
+  createdBy: one(users, {
+    fields: [audioMappings.createdBy],
     references: [users.id],
-    relationName: "mappingCreator",
   }),
 }));
 
@@ -204,79 +204,53 @@ export const studentProgressRelations = relations(studentProgress, ({ one }) => 
     fields: [studentProgress.chapterId],
     references: [chapters.id],
   }),
-  updater: one(users, {
+  updatedBy: one(users, {
     fields: [studentProgress.updatedBy],
     references: [users.id],
-    relationName: "progressUpdater",
+    relationName: "updatedProgress",
   }),
 }));
 
-// Insert schemas
-export const upsertUserSchema = createInsertSchema(users);
-export const insertTrackSchema = createInsertSchema(tracks).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-export const insertChapterSchema = createInsertSchema(chapters).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-export const insertAudioFileSchema = createInsertSchema(audioFiles).omit({
-  id: true,
-  createdAt: true,
-});
-export const insertSegmentSchema = createInsertSchema(segments).omit({
-  id: true,
-  createdAt: true,
-});
-export const insertAudioSegmentMappingSchema = createInsertSchema(audioSegmentMappings).omit({
-  id: true,
-  createdAt: true,
-});
-export const insertStudentProgressSchema = createInsertSchema(studentProgress).omit({
-  id: true,
-  updatedAt: true,
-});
+// Insert and Select schemas
+export const insertUserSchema = createInsertSchema(users);
+export const selectUserSchema = createSelectSchema(users);
+
+export const insertTrackSchema = createInsertSchema(tracks).omit({ id: true, createdAt: true, updatedAt: true });
+export const selectTrackSchema = createSelectSchema(tracks);
+
+export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true, createdAt: true, updatedAt: true });
+export const selectChapterSchema = createSelectSchema(chapters);
+
+export const insertAudioFileSchema = createInsertSchema(audioFiles).omit({ id: true, createdAt: true });
+export const selectAudioFileSchema = createSelectSchema(audioFiles);
+
+export const insertTextSegmentSchema = createInsertSchema(textSegments).omit({ id: true, createdAt: true });
+export const selectTextSegmentSchema = createSelectSchema(textSegments);
+
+export const insertAudioMappingSchema = createInsertSchema(audioMappings).omit({ id: true, createdAt: true });
+export const selectAudioMappingSchema = createSelectSchema(audioMappings);
+
+export const insertStudentProgressSchema = createInsertSchema(studentProgress).omit({ id: true, updatedAt: true });
+export const selectStudentProgressSchema = createSelectSchema(studentProgress);
 
 // Types
-export type UpsertUser = z.infer<typeof upsertUserSchema>;
-export type User = typeof users.$inferSelect;
+export type UpsertUser = z.infer<typeof insertUserSchema>;
+export type User = z.infer<typeof selectUserSchema>;
+
 export type InsertTrack = z.infer<typeof insertTrackSchema>;
-export type Track = typeof tracks.$inferSelect;
+export type Track = z.infer<typeof selectTrackSchema>;
+
 export type InsertChapter = z.infer<typeof insertChapterSchema>;
-export type Chapter = typeof chapters.$inferSelect;
+export type Chapter = z.infer<typeof selectChapterSchema>;
+
 export type InsertAudioFile = z.infer<typeof insertAudioFileSchema>;
-export type AudioFile = typeof audioFiles.$inferSelect;
-export type InsertSegment = z.infer<typeof insertSegmentSchema>;
-export type Segment = typeof segments.$inferSelect;
-export type InsertAudioSegmentMapping = z.infer<typeof insertAudioSegmentMappingSchema>;
-export type AudioSegmentMapping = typeof audioSegmentMappings.$inferSelect;
+export type AudioFile = z.infer<typeof selectAudioFileSchema>;
+
+export type InsertTextSegment = z.infer<typeof insertTextSegmentSchema>;
+export type TextSegment = z.infer<typeof selectTextSegmentSchema>;
+
+export type InsertAudioMapping = z.infer<typeof insertAudioMappingSchema>;
+export type AudioMapping = z.infer<typeof selectAudioMappingSchema>;
+
 export type InsertStudentProgress = z.infer<typeof insertStudentProgressSchema>;
-export type StudentProgress = typeof studentProgress.$inferSelect;
-
-// Extended types for API responses
-export type TrackWithChapters = Track & {
-  chapters: Chapter[];
-  chapterCount: number;
-};
-
-export type ChapterWithDetails = Chapter & {
-  track: Track;
-  audioFiles: AudioFile[];
-  segments: (Segment & {
-    mappings: (AudioSegmentMapping & {
-      audioFile: AudioFile;
-    })[];
-  })[];
-  studentProgress?: StudentProgress;
-};
-
-export type StudentWithProgress = User & {
-  progress: (StudentProgress & {
-    chapter: Chapter & {
-      track: Track;
-    };
-  })[];
-};
+export type StudentProgress = z.infer<typeof selectStudentProgressSchema>;
