@@ -50,139 +50,115 @@ export function InteractiveText({
   audioFile,
   mappings,
   activeSegment,
-  onSegmentClick,
+  onSegmentClick
 }: InteractiveTextProps) {
-  const processedContent = useMemo(() => {
-    if (!content || !segments.length) {
-      return [{
-        type: 'text' as const,
-        content,
-        isInteractive: false
-      }];
-    }
+  const processedSegments = useMemo(() => {
+    if (!content || !segments) return [];
 
-    // Get valid segments for current script with character positions
-    const validSegments = segments
-      .map(segment => {
-        const ref = segment.textReferences[selectedScript];
-        if (!ref) return null;
-
-        const hasMapping = audioFile && mappings.some(m => 
+    const processedSegs: ProcessedSegment[] = [];
+    
+    segments.forEach(segment => {
+      const reference = segment.textReferences[selectedScript];
+      if (reference) {
+        const hasMapping = mappings.some(m => 
           m.segmentId === segment.id && 
-          m.audioFileId === audioFile.id
+          (!audioFile || m.audioFileId === audioFile.id)
         );
-
-        return {
+        
+        processedSegs.push({
           id: segment.id,
-          start: ref.start,
-          end: ref.end,
-          text: content.slice(ref.start, ref.end),
-          hasAudioMapping: Boolean(hasMapping),
+          start: reference.start,
+          end: reference.end,
+          text: content.slice(reference.start, reference.end),
+          hasAudioMapping: hasMapping,
           isActive: activeSegment === segment.id
-        };
-      })
-      .filter(Boolean) as ProcessedSegment[];
-
-    // Sort segments by start position
-    validSegments.sort((a, b) => a.start - b.start);
-
-    // Build parts array with text and segments
-    const parts: Array<{
-      type: 'text' | 'segment';
-      content: string;
-      segmentData?: ProcessedSegment;
-      isInteractive: boolean;
-    }> = [];
-
-    let lastEnd = 0;
-
-    for (const segment of validSegments) {
-      // Add text before segment
-      if (segment.start > lastEnd) {
-        const textBefore = content.slice(lastEnd, segment.start);
-        if (textBefore) {
-          parts.push({
-            type: 'text',
-            content: textBefore,
-            isInteractive: false
-          });
-        }
-      }
-
-      // Add segment
-      parts.push({
-        type: 'segment',
-        content: segment.text,
-        segmentData: segment,
-        isInteractive: true
-      });
-
-      lastEnd = segment.end;
-    }
-
-    // Add remaining text
-    if (lastEnd < content.length) {
-      const remainingText = content.slice(lastEnd);
-      if (remainingText) {
-        parts.push({
-          type: 'text',
-          content: remainingText,
-          isInteractive: false
         });
       }
+    });
+
+    return processedSegs.sort((a, b) => a.start - b.start);
+  }, [content, segments, selectedScript, mappings, audioFile, activeSegment]);
+
+  const renderTextWithSegments = () => {
+    if (!content || processedSegments.length === 0) {
+      return <span>{content}</span>;
     }
 
-    return parts;
-  }, [content, segments, selectedScript, audioFile, mappings, activeSegment]);
+    const elements: JSX.Element[] = [];
+    let lastEnd = 0;
 
-  const getFontClass = (script: string) => {
-    switch (script) {
-      case 'te':
-        return 'font-["Tiro_Telugu"]';
-      case 'hi':
-        return 'font-["Tiro_Devanagari_Sanskrit"]';
-      case 'en':
-        return 'font-["Tiro_Devanagari_Sanskrit"]'; // IAST uses Devanagari font
-      default:
-        return 'font-sans';
+    processedSegments.forEach((segment, index) => {
+      // Add text before this segment
+      if (segment.start > lastEnd) {
+        elements.push(
+          <span key={`text-${index}`}>
+            {content.slice(lastEnd, segment.start)}
+          </span>
+        );
+      }
+
+      // Add the interactive segment
+      elements.push(
+        <span
+          key={`segment-${segment.id}`}
+          className={getSegmentStyles(segment)}
+          onClick={() => onSegmentClick(segment.id)}
+          style={{ cursor: 'pointer' }}
+        >
+          {segment.text}
+        </span>
+      );
+
+      lastEnd = segment.end;
+    });
+
+    // Add remaining text after the last segment
+    if (lastEnd < content.length) {
+      elements.push(
+        <span key="text-end">
+          {content.slice(lastEnd)}
+        </span>
+      );
     }
+
+    return elements;
   };
 
   const getSegmentStyles = (segment: ProcessedSegment) => {
-    let baseStyles = 'inline cursor-pointer border-b-2 transition-all duration-200 ';
+    let classes = 'transition-all duration-200 ';
     
     if (segment.isActive) {
-      baseStyles += 'bg-vedic-gold/30 border-vedic-brown text-vedic-brown font-semibold ';
+      classes += 'bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100 ';
     } else if (segment.hasAudioMapping) {
-      baseStyles += 'border-vedic-gold/50 hover:bg-vedic-gold/20 hover:border-vedic-brown ';
+      classes += 'bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100 hover:bg-yellow-200 dark:hover:bg-yellow-800 ';
     } else {
-      baseStyles += 'border-gray-300 hover:bg-gray-100 hover:border-gray-400 ';
+      classes += 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 ';
     }
+    
+    classes += 'px-1 py-0.5 rounded border border-transparent hover:border-gray-300 dark:hover:border-gray-600';
+    
+    return classes;
+  };
 
-    return baseStyles;
+  // Font classes for different scripts
+  const getFontClass = () => {
+    switch (selectedScript) {
+      case 'te':
+        return 'font-tiro-telugu text-xl leading-relaxed';
+      case 'hi':
+        return 'font-tiro-devanagari text-xl leading-relaxed';
+      case 'en':
+        return 'font-serif text-lg leading-relaxed';
+      default:
+        return 'text-lg leading-relaxed';
+    }
   };
 
   return (
-    <div className={`leading-relaxed text-lg ${getFontClass(selectedScript)}`}>
-      {processedContent.map((part, index) => (
-        part.type === 'segment' && part.segmentData ? (
-          <span
-            key={`segment-${part.segmentData.id}-${index}`}
-            className={getSegmentStyles(part.segmentData)}
-            onClick={() => onSegmentClick(part.segmentData!.id)}
-            title={part.segmentData.hasAudioMapping ? 
-              'Click to play audio segment' : 
-              'No audio mapping available'
-            }
-          >
-            {part.content}
-          </span>
-        ) : (
-          <span key={`text-${index}`}>
-            {part.content}
-          </span>
-        )
-      ))}
+    <div className={`${getFontClass()} p-6 bg-white dark:bg-gray-900 rounded-lg border`}>
+      <div className="text-justify">
+        {renderTextWithSegments()}
+      </div>
     </div>
   );
 }

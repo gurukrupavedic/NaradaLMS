@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/Landing";
 import RoleTabs from "@/components/role-tabs";
 import NotFound from "@/pages/not-found";
+import TrackView from "@/pages/TrackView";
+import ChapterView from "@/pages/ChapterView";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -28,6 +30,8 @@ function Router() {
         <>
           <Route path="/" component={() => <RoleTabs user={user as any} />} />
           <Route path="/dashboard" component={() => <RoleTabs user={user as any} />} />
+          <Route path="/tracks/:trackId" component={TrackView} />
+          <Route path="/chapters/:chapterId" component={ChapterView} />
         </>
       )}
       <Route component={NotFound} />

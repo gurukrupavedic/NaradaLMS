@@ -162,11 +162,11 @@ export default function TrackView() {
       <div>
         <h2 className="text-xl font-semibold mb-4">Chapters</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {track.chapters.map((chapter) => (
+          {(track.chapters || []).map((chapter) => (
             <Card 
               key={chapter.id}
               className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => setLocation(`/tracks/${trackId}/chapters/${chapter.id}`)}
+              onClick={() => setLocation(`/chapters/${chapter.id}`)}
             >
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
