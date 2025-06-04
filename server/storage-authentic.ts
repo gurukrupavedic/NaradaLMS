@@ -206,14 +206,99 @@ export class MemStorage implements IStorage {
   // Authentic Vedic chapters with content from the prototype
   private chapters: any[] = [
     {
-      id: "2",
+      id: "1",
+      title: "vedādhyayana niyamamulu, veda svaraṁ, pañcāṅgaṁ, saṅkalpaṁ, yajñopavīta dhāraṇaṁ, avapośanaṁ",
+      trackId: "1",
+      order: 1
+    },
+    {
+      id: "2", 
       title: "Śraddhā sūktaṁ",
       trackId: "1",
+      order: 2,
       content: {
         te: "శ్ర॒ద్ధాయా॒ఽగ్నిః సమి॑ధ్యతే । శ్ర॒ద్ధయా॑ విందతే హ॒విః ।\nశ్ర॒ద్ధాం భగ॑స్య మూ॒ర్ధని॑ । వచ॒సాఽఽవే॑దయామసి ।\nప్రి॒యగ్గ్ శ్ర॑ద్ధే॒ దద॑తః । ప్రి॒యగ్గ్ శ్ర॑ద్ధే॒ దిదా॑సతః ।\nప్రి॒యం భో॒జేషు॒ యజ్వ॑సు ॥\nఇ॒దం మ॑ ఉది॒తం కృ॑ధి । యథా॑ దే॒వా అసు॑రేషు ।\nశ్ర॒ద్ధాము॒గ్రేషు॑ చక్రి॒రే । ఏ॒వం భో॒జేషు॒ యజ్వ॑సు ।\nఅ॒స్మాక॑ముది॒తం కృ॑ధి । శ్ర॒ద్ధాం దే॑వా॒ యజ॑మానాః ।\nవా॒యుగో॑పా॒ ఉపా॑సతే । శ్ర॒ద్ధాగ్ం హృ॑ద॒య్య॑యాఽఽకూ᳚త్యా ।\nశ్ర॒ద్ధయా॑ హూయతే హ॒విః । శ్ర॒ద్ధాం ప్రా॒తర్​హ॑వామహే ॥\nశ్ర॒ద్ధాం మ॒ధ్యంది॑నం॒ పరి॑ । శ్ర॒ద్ధాగ్ం సూర్య॑స్య ని॒మృచి॑ ।\nశ్రద్ధే॒ శ్రద్ధా॑పయే॒హ మా᳚ । శ్ర॒ద్ధా దే॒వానధి॑వస్తే ।\nశ్ర॒ద్ధా విశ్వ॑మి॒దం జగ॑త్ । శ్ర॒ద్ధాం కామ॑స్య మా॒తరం᳚ ।\nహ॒విషా॑ వర్ధయామసి । ఓం శాంతిః॒ శాంతిః॒ శాంతిః॑ ॥",
         hi: "श्र॒द्धाया॒-ऽग्नि-स्समि॑ध्यते । श्र॒द्धया॑ විందते హ॒విः ।\nश्र॒द्धा-म्भग॑स्य मू॒र्धनि॑ । वच॒सा-ऽऽवे॑दयामसि ।\nप्रि॒यग्ग् श्र॑द्धे॒ దद॑तः । प्रि॒यగ్ग् श्र॑द्धे॒ दिदा॑সतः ।\nप्रि॒य-म्भो॒जेषु॒ यজ్వ॑सु ॥\nइ॒द-म्म॑ उदि॒त-ङ्कृ॑धि । यथा॑ दे॒वा असु॑रेषु ।\nश्र॒द्धामु॒గ్रेषु॑ चक्रि॒रे । ए॒व-म्भो॒जेषु॒ यজ్વ॑सु ।\nఅ॒స్మాক॑ముది॒తं కృ॑धি । श्र॒द्धा-न्दे॑वा॒ यज॑मानाः ।\nవా॒యుగో॑పా॒ उपा॑सते । श्र॒द्धाग्ं हृ॑द॒य्य॑या-ऽऽकू᳚त्या ।\nश्र॒द्धया॑ हूयते ह॒विः । श्र॒द्धा-म्प्रा॒तर्​హ॑वाমहे ॥\nश्र॒द्धा-म्म॒ध्यन्दि॑न॒-म्परि॑ ।श्र॒द्धाग्ं सूर्य॑स्य नि॒मृचि॑ ।\nश्रद्धे॒ श्रद्धा॑పये॒ह मा᳚ । श्र॒द्धा दे॒वानधि॑वस्ते ।\nश्र॒द्धा विश्व॑मि॒द-ञ्जग॑त् । श्र॒द्धा-ङ्काम॑स्य मा॒तरम्᳚ ।\nह॒विषा॑ वर्धयामसि । ॐ शान्ति॒-श्शान्ति॒-श्शान्तिः॑ ॥",
         en: "śra̠ddhāyā̠-'gni-ssami̍dhyatē । śra̠ddhayā̍ vindatē ha̠viḥ ।\nśra̠ddhā-mbhaga̍sya mū̠rdhani̍ । vacha̠sā-''vē̍dayāmasi ।\n\npri̠yagg śra̍ddhē̠ dada̍taḥ । pri̠yagg śra̍ddhē̠ didā̍sataḥ ।\npri̠ya-mbhō̠jēṣu̠ yajva̍su ॥\ni̠da-mma̍ udi̠ta-ṅkṛ̍dhi । yathā̍ dē̠vā asu̍rēṣu ।\n\nśra̠ddhāmu̠grēṣu̍ chakri̠rē । ē̠va-mbhō̠jēṣu̠ yajva̍su ।\na̠smāka̍mudi̠ta-ṅkṛ̍dhi । śra̠ddhā-ndē̍vā̠ yaja̍mānāḥ ।\n\nvā̠yugō̍pā̠ upā̍satē । śra̠ddhāgṃ hṛ̍da̠yya̍yā-''kū̎tyā ।\nśra̠ddhayā̍ hūyatē ha̠viḥ । śra̠ddhā-mprā̠tar​ha̍vāmahē ॥\n\nśra̠ddhā-mma̠dhyandi̍na̠-mpari̍ । śra̠ddhāgṃ sūrya̍sya ni̠mṛchi̍ ।\nśraddhē̠ śraddhā̍payē̠ha mā̎ । śra̠ddhā dē̠vānadhi̍vastē ।\n\nśra̠ddhā viśva̍mi̠da-ñjaga̍t । śra̠ddhā-ṅkāma̍sya mā̠taram̎ ।\nha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥"
       }
+    },
+    {
+      id: "3",
+      title: "sandhyopāsanopayogi strī puruṣa vyavasthā",
+      trackId: "1", 
+      order: 3
+    },
+    {
+      id: "4", 
+      title: "gāyatrī japa vidhi",
+      trackId: "1",
+      order: 4
+    },
+    {
+      id: "5",
+      title: "prāṇāyāma vidhi",
+      trackId: "1",
+      order: 5
+    },
+    {
+      id: "11",
+      title: "Gaṇapatyatharvaśīrṣopaniṣat",
+      trackId: "2",
+      order: 1
+    },
+    {
+      id: "12", 
+      title: "Śrī sūktaṁ",
+      trackId: "2",
+      order: 2
+    },
+    {
+      id: "13",
+      title: "Bhū sūktaṁ",
+      trackId: "2", 
+      order: 3
+    },
+    {
+      id: "21",
+      title: "Rudra namakam",
+      trackId: "3",
+      order: 1
+    },
+    {
+      id: "22",
+      title: "Rudra chamakam", 
+      trackId: "3",
+      order: 2
+    },
+    {
+      id: "31",
+      title: "Gaṇapati atharvaśīrṣam",
+      trackId: "4",
+      order: 1
+    },
+    {
+      id: "41",
+      title: "Śrī lalitā triśatī nāmāvali",
+      trackId: "5",
+      order: 1
+    },
+    {
+      id: "51",
+      title: "Viṣṇu sahasranāma stotram",
+      trackId: "6",
+      order: 1
+    },
+    {
+      id: "61",
+      title: "Sāma veda - Kauthuma śākhā",
+      trackId: "7",
+      order: 1
+    },
+    {
+      id: "71",
+      title: "Atharva veda saṁhitā",
+      trackId: "8",
+      order: 1
     }
   ];
 
@@ -272,7 +357,33 @@ export class MemStorage implements IStorage {
   }
 
   async getTrack(id: string): Promise<any | undefined> {
-    return this.tracks.find(track => track.id === id);
+    const track = this.tracks.find(track => track.id === id);
+    if (!track) return undefined;
+    
+    // Get chapters for this track and add proficiency levels
+    const chapters = this.chapters.filter(chapter => chapter.trackId === id).map(chapter => ({
+      id: chapter.id,
+      title: chapter.title,
+      order: chapter.order || 1,
+      proficiencyLevel: this.getStudentProficiencyForChapter(chapter.id)
+    }));
+    
+    return {
+      ...track,
+      chapters
+    };
+  }
+
+  private getStudentProficiencyForChapter(chapterId: string): number {
+    // Return proficiency levels for authentic chapters
+    const proficiencyMap: Record<string, number> = {
+      "1": 4, // vedādhyayana niyamamulu - completed
+      "2": 4, // Śraddhā sūktaṁ - completed
+      "3": 3, // sandhyopāsanopayogi strī puruṣa vyavasthā - in progress
+      "4": 2, // gāyatrī japa vidhi - beginner
+      "5": 0, // not started
+    };
+    return proficiencyMap[chapterId] || 0;
   }
 
   async getChapter(id: string): Promise<any | undefined> {
