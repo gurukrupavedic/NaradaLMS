@@ -1,0 +1,995 @@
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Edit, Trash2, PlusCircle, Save, UploadCloud, Link2, Eye, EyeOff, List, Settings, FileText, Music, Film, CheckSquare, XSquare, AlertTriangle, GripVertical, Languages, Columns, Search, Filter, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, ListOrdered, List as ListIcon, BookOpen, PlayCircle, Edit3, Users, Briefcase, Info } from 'lucide-react'; // Added Users, Briefcase, Info based on usage in UnifiedDashboardView
+
+// Mock Data (Specific to Content Manager for this standalone mock)
+const MOCK_TRACKS_INIT = [
+  { id: 'cm_track_1', title: 'Vaidika Nithya Karma (CM)', order: 1, status: 'published', chapterCount: 2, lastModified: '2025-05-28' },
+  { id: 'cm_track_2', title: 'Sookta Paatham (CM)', order: 2, status: 'draft', chapterCount: 1, lastModified: '2025-06-01' },
+  { id: 'cm_track_3', title: 'Rudram Namakam Chamakam (CM)', order: 3, status: 'draft', chapterCount: 0, lastModified: '2025-06-02' },
+];
+
+const MOCK_CHAPTERS_INIT = { // Keyed by trackId
+  'cm_track_1': [
+    { id: 'cm_ch_1_1', trackId: 'cm_track_1', title: 'Vedādhyayana Niyamamulu (CM)', order: 1, status: 'published', completeness: { text: true, audio: true, segments: true, mapping: true } },
+    { id: 'cm_ch_1_2', trackId: 'cm_track_1', title: 'Śraddhā Sūktaṁ (CM)', order: 2, status: 'published', completeness: { text: true, audio: true, segments: true, mapping: true } },
+  ],
+  'cm_track_2': [
+    { id: 'cm_ch_2_1', trackId: 'cm_track_2', title: 'Gaṇapatyatharvaśīrṣopaniṣat (CM)', order: 1, status: 'draft', completeness: { text: true, audio: false, segments: false, mapping: false } },
+  ],
+  'cm_track_3': []
+};
+
+const MOCK_CHAPTER_CONTENT_INIT = { // Keyed by chapterId
+  'cm_ch_1_1': {
+    title: 'Vedādhyayana Niyamamulu (CM)',
+    order: 1,
+    trackId: 'cm_track_1',
+    texts: {
+      te: "ఇది (CM) వేదాధ్యయన నియమములు పై పూర్తి తెలుగు పాఠం...",
+      hi: "यह (CM) वेदाध्ययन नियममुलु पर पूरा देवनागरी पाठ है...",
+      en: "This is the (CM) full English (IAST) text for Vedādhyayana Niyamamulu..."
+    },
+    audioFiles: [
+      { id: 'cm_aud_1_1_1', name: 'Reciter A - Niyamamulu (CM).mp3', reciter: 'Acharya Alpha' },
+    ],
+    segments: [ 
+      { id: 'cm_seg_1_1_intro', conceptualName: "Segment 1 (CM): First Rule", originalTextReferences: { te: {start: 10, end: 50}, hi: {start:12, end:55}, en: {start:11, end:52}} },
+    ],
+    mappings: { 
+      'cm_aud_1_1_1': { 'cm_seg_1_1_intro': { start: 5.2, end: 10.5 } }
+    },
+    status: 'published' 
+  },
+   'cm_ch_1_2': {
+    title: 'Śraddhā Sūktaṁ (CM)',
+    order: 2,
+    trackId: 'cm_track_1',
+    texts: {
+      te: "(CM) శ్ర॒ద్ధాయా॒ఽగ్నిః సమి॑ధ్యతే । శ్ర॒ద్ధయా॑ విందతే హ॒విః ।...",
+      hi: "(CM) श्र॒द्धाया॒ऽग्निस्समि॑ध्यते । श्र॒द्धया॑ विन्दते ह॒విः ।...",
+      en: "(CM) śra̠ddhāyā̠-'gni-ssami̍dhyatē । śra̠ddhayā̍ vindatē ha̠viḥ ।..."
+    },
+    audioFiles: [
+      { id: 'cm_aud_1_2_1', name: 'Shraddha Suktam - Teacher A (CM).mp3', reciter: 'Teacher A' },
+    ],
+    segments: [
+      { id: 'cm_ss_01', conceptualName: "Verse 1, Line 1 (CM)", originalTextReferences: { te: {start:0, end: 20}, hi: {start:0, end:22}, en: {start:0, end:30}}},
+      { id: 'cm_ss_02', conceptualName: "Verse 1, Line 2 (CM)", originalTextReferences: { te: {start:23, end: 45}, hi: {start:25, end:48}, en: {start:33, end:55}}},
+    ],
+    mappings: {
+      'cm_aud_1_2_1': { 'cm_ss_01': { start: 3.0, end: 7.0 }, 'cm_ss_02': { start: 8.0, end: 11.0 } }
+    },
+    status: 'published'
+  },
+  'cm_ch_2_1': { 
+    title: 'Gaṇapatyatharvaśīrṣopaniṣat (CM)',
+    order: 1,
+    trackId: 'cm_track_2',
+    texts: {
+      te: "ప్రారంభ (CM) తెలుగు వచనం...",
+      hi: "",
+      en: "Initial (CM) English text..."
+    },
+    audioFiles: [],
+    segments: [],
+    mappings: {},
+    status: 'draft'
+  }
+};
+
+const CM_SCRIPT_OPTIONS = [ 
+  { id: 'te', name: 'తెలుగు', fullName: 'Telugu', editorFont: 'font-tiro-telugu' }, 
+  { id: 'hi', name: 'देवनागरी', fullName: 'Devanagari', editorFont: 'font-tiro-devanagari-sanskrit' }, 
+  { id: 'en', name: 'English (IAST)', fullName: 'English (IAST)', editorFont: 'font-tiro-devanagari-sanskrit' },
+];
+
+// Placeholder for data that would come from a backend or larger context in a real app
+// These are referenced in the App component but not defined in the provided snippet.
+// Adding them here as empty placeholders to avoid immediate ReferenceErrors.
+const LEARNING_TRACKS_DATA = []; 
+const MOCK_INSTRUCTOR_STUDENTS_INIT = [];
+const MOCK_ADMIN_USERS_INIT = [];
+
+// Placeholder for functions that would be defined elsewhere
+const getLevelColor = (level) => {
+    // Minimal implementation to avoid error
+    const colors = ['bg-gray-200', 'bg-red-200', 'bg-yellow-200', 'bg-blue-200', 'bg-green-200'];
+    return colors[level] || 'bg-gray-200';
+}; 
+const getLevelLabel = (level) => {
+    // Minimal implementation to avoid error
+    const labels = ['Not Started', 'Beginner', 'Intermediate', 'Advanced', 'Mastered'];
+    return labels[level] || 'Unknown';
+};
+
+// Helper Components
+const Modal = ({ children, onClose, title }) => (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg max-h-[90vh] flex flex-col">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <XSquare size={24} />
+        </button>
+      </div>
+      <div className="overflow-y-auto">{children}</div>
+    </div>
+  </div>
+);
+
+const CompletenessIndicator = ({ status, label }) => {
+  const Icon = status ? CheckSquare : XSquare;
+  const color = status ? 'text-green-500' : 'text-red-500';
+  return (
+    <div className="flex items-center text-xs" title={`${label}: ${status ? 'Complete' : 'Incomplete'}`}>
+      <Icon size={14} className={`${color} mr-1`} />
+      <span className="hidden sm:inline">{label}</span>
+    </div>
+  );
+};
+
+
+// Main Content Manager Views
+const CMContentDashboardView = ({ tracks, onCreateTrack, onSelectTrack, onDeleteTrack }) => {
+  const [showCreateTrackModal, setShowCreateTrackModal] = useState(false);
+  const [newTrackTitle, setNewTrackTitle] = useState('');
+  const [newTrackOrder, setNewTrackOrder] = useState(tracks.length + 1);
+
+  const handleCreateTrack = () => {
+    if (!newTrackTitle.trim()) {
+      alert("Track title cannot be empty."); // User's original code uses alert
+      return;
+    }
+    onCreateTrack({ title: newTrackTitle, order: parseInt(newTrackOrder, 10) || (tracks.length + 1) });
+    setShowCreateTrackModal(false);
+    setNewTrackTitle('');
+    setNewTrackOrder(tracks.length + 2); // Should probably be tracks.length + 1 after new track is added
+  };
+
+  return (
+    <div className="p-4 sm:p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Content Dashboard</h1>
+        <button onClick={() => setShowCreateTrackModal(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 shadow-sm text-sm font-medium">
+          <PlusCircle size={18} /> Create New Track
+        </button>
+      </div>
+
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Order</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Track Title</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Chapters</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Last Modified</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {tracks.sort((a,b) => a.order - b.order).map(track => (
+              <tr key={track.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{track.order}</td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <button onClick={() => onSelectTrack(track.id)} className="text-sm font-medium text-indigo-600 hover:text-indigo-800 hover:underline">
+                    {track.title}
+                  </button>
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">{track.chapterCount}</td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${track.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                    {track.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">{track.lastModified}</td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                  <div className="flex items-center space-x-2">
+                    <button onClick={() => onSelectTrack(track.id)} className="text-blue-600 hover:text-blue-800 p-1" title="Manage Chapters / Edit Track"><ListIcon size={16}/></button>
+                    <button onClick={() => { 
+                        // User's original code uses window.confirm
+                        if(typeof window !== 'undefined' && window.confirm(`Are you sure you want to delete track "${track.title}"? This action cannot be undone.`)) {
+                            onDeleteTrack(track.id);
+                        }
+                    }} className="text-red-600 hover:text-red-800 p-1" title="Delete Track"><Trash2 size={16}/></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+             {tracks.length === 0 && (
+               <tr><td colSpan="6" className="text-center py-8 text-gray-500">No tracks created yet.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {showCreateTrackModal && (
+        <Modal onClose={() => setShowCreateTrackModal(false)} title="Create New Track">
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="newTrackTitle" className="block text-sm font-medium text-gray-700 mb-1">Track Title</label>
+              <input type="text" id="newTrackTitle" value={newTrackTitle} onChange={(e) => setNewTrackTitle(e.target.value)}
+                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm" />
+            </div>
+            <div>
+              <label htmlFor="newTrackOrder" className="block text-sm font-medium text-gray-700 mb-1">Order</label>
+              <input type="number" id="newTrackOrder" value={newTrackOrder} onChange={(e) => setNewTrackOrder(e.target.value)}
+                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm" min="1"/>
+            </div>
+            <div className="flex justify-end pt-2">
+              <button onClick={handleCreateTrack} className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium">Create Track</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+};
+
+const CMTrackEditorView = ({ track, chapters, onBack, onSaveTrack, onCreateChapter, onSelectChapter, onDeleteChapter }) => {
+  const [editableTrack, setEditableTrack] = useState({...track});
+  const [showCreateChapterModal, setShowCreateChapterModal] = useState(false);
+  const [newChapterTitle, setNewChapterTitle] = useState('');
+  const [newChapterOrder, setNewChapterOrder] = useState((chapters?.length || 0) + 1);
+
+  useEffect(() => {
+    setEditableTrack({...track});
+    setNewChapterOrder((chapters?.length || 0) + 1); 
+  }, [track, chapters]);
+
+  const handleSave = () => {
+    onSaveTrack(editableTrack);
+  };
+ 
+  const handleCreateChapter = () => {
+     if (!newChapterTitle.trim()) {
+      alert("Chapter title cannot be empty."); // User's original code uses alert
+      return;
+    }
+    onCreateChapter(track.id, { title: newChapterTitle, order: parseInt(newChapterOrder, 10) || ((chapters?.length || 0) + 1) });
+    setShowCreateChapterModal(false);
+    setNewChapterTitle('');
+    // setNewChapterOrder logic might need adjustment if chapters list updates immediately
+  };
+
+
+  return (
+    <div className="p-4 sm:p-6">
+      <button onClick={onBack} className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4 text-sm">
+        <ChevronLeft size={18} /> Back to Tracks Dashboard
+      </button>
+      <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Edit Track Details</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label htmlFor="trackTitle" className="block text-sm font-medium text-gray-700 mb-1">Track Title</label>
+            <input type="text" id="trackTitle" value={editableTrack.title} onChange={(e) => setEditableTrack({...editableTrack, title: e.target.value})}
+                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm" />
+          </div>
+          <div>
+            <label htmlFor="trackOrder" className="block text-sm font-medium text-gray-700 mb-1">Order</label>
+            <input type="number" id="trackOrder" value={editableTrack.order} onChange={(e) => setEditableTrack({...editableTrack, order: parseInt(e.target.value,10)})}
+                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm" min="1"/>
+          </div>
+        </div>
+        <div className="flex justify-end">
+            <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 shadow-sm text-sm font-medium">
+                <Save size={16} /> Save Track Changes
+            </button>
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold text-gray-800">Chapters in "{track.title}"</h2>
+        <button onClick={() => setShowCreateChapterModal(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 shadow-sm text-sm font-medium">
+          <PlusCircle size={18} /> Create New Chapter
+        </button>
+      </div>
+     
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+         <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Order</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Chapter Title</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider hidden sm:table-cell">Completeness</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+           <tbody className="bg-white divide-y divide-gray-200">
+            {(chapters || []).sort((a,b) => a.order - b.order).map(chapter => (
+              <tr key={chapter.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{chapter.order}</td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                   <button onClick={() => onSelectChapter(chapter.id)} className="text-sm font-medium text-indigo-600 hover:text-indigo-800 hover:underline">
+                    {chapter.title}
+                  </button>
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${chapter.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                    {chapter.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                    <div className="flex gap-2">
+                        <CompletenessIndicator status={chapter.completeness?.text} label="Text"/>
+                        <CompletenessIndicator status={chapter.completeness?.audio} label="Audio"/>
+                        <CompletenessIndicator status={chapter.completeness?.segments} label="Segs"/>
+                        <CompletenessIndicator status={chapter.completeness?.mapping} label="Maps"/>
+                    </div>
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                  <div className="flex items-center space-x-2">
+                    <button onClick={() => onSelectChapter(chapter.id)} className="text-blue-600 hover:text-blue-800 p-1" title="Manage Chapter Content"><Edit3 size={16}/></button>
+                    <button onClick={() => { 
+                        // User's original code uses window.confirm
+                        if(typeof window !== 'undefined' && window.confirm(`Are you sure you want to delete chapter "${chapter.title}"?`)) {
+                            onDeleteChapter(track.id, chapter.id);
+                        }
+                    }} className="text-red-600 hover:text-red-800 p-1" title="Delete Chapter"><Trash2 size={16}/></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+             {(chapters || []).length === 0 && (
+               <tr><td colSpan="5" className="text-center py-8 text-gray-500">No chapters in this track yet.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+       {showCreateChapterModal && (
+        <Modal onClose={() => setShowCreateChapterModal(false)} title={`Create New Chapter in "${track.title}"`}>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="newChapterTitle" className="block text-sm font-medium text-gray-700 mb-1">Chapter Title</label>
+              <input type="text" id="newChapterTitle" value={newChapterTitle} onChange={(e) => setNewChapterTitle(e.target.value)}
+                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm" />
+            </div>
+            <div>
+              <label htmlFor="newChapterOrder" className="block text-sm font-medium text-gray-700 mb-1">Order in Track</label>
+              <input type="number" id="newChapterOrder" value={newChapterOrder} onChange={(e) => setNewChapterOrder(e.target.value)}
+                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm" min="1"/>
+            </div>
+            <div className="flex justify-end pt-2">
+              <button onClick={handleCreateChapter} className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium">Create Chapter</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+};
+
+const CMChapterEditorView = ({ chapterId, trackId, tracks, chaptersData, chapterContentData, onBackToTrack, onSaveChapterContent, onPublishChapter }) => {
+  const [activeTab, setActiveTab] = useState('text_content');
+  const [currentChapterData, setCurrentChapterData] = useState(null); 
+  const [activeTextLang, setActiveTextLang] = useState(CM_SCRIPT_OPTIONS[0].id);
+ 
+  const isPublished = useMemo(() => currentChapterData?.status === 'published', [currentChapterData]);
+
+  useEffect(() => {
+    const chapterDetailsList = chaptersData[trackId] || [];
+    const chapterMetadata = chapterDetailsList.find(ch => ch.id === chapterId);
+   
+    if (!chapterMetadata && !chapterContentData[chapterId]) {
+        console.error(`ChapterEditorView: Chapter with ID ${chapterId} not found in track ${trackId} or in content details. Cannot load editor.`);
+        setCurrentChapterData(null); 
+        return;
+    }
+
+    const content = chapterContentData[chapterId] || 
+                      { 
+                        title: chapterMetadata?.title || 'New Chapter', 
+                        order: chapterMetadata?.order || 1, 
+                        texts: { te: '', hi: '', en: '' }, 
+                        audioFiles: [], 
+                        segments: [], 
+                        mappings: {}, 
+                        status: 'draft' 
+                      };
+    setCurrentChapterData({...content, trackId: trackId}); 
+    if (!content.texts) { 
+        setCurrentChapterData(prev => ({...prev, texts: { te: '', hi: '', en: '' }}));
+    }
+  }, [chapterId, trackId, chaptersData, chapterContentData]);
+
+  const handleTextChange = (lang, value) => {
+    setCurrentChapterData(prev => ({
+      ...prev,
+      texts: {
+        ...(prev?.texts || {}), 
+        [lang]: value
+      }
+    }));
+  };
+ 
+  const handleTitleChange = (e) => {
+    setCurrentChapterData(prev => ({...prev, title: e.target.value }));
+  };
+  const handleOrderChange = (e) => {
+     setCurrentChapterData(prev => ({...prev, order: parseInt(e.target.value, 10) || 1 }));
+  };
+
+  const handleSaveDraft = () => {
+    onSaveChapterContent(chapterId, currentChapterData, trackId); 
+    alert(`Chapter "${currentChapterData?.title}" draft saved (mock).`); // User's original code uses alert
+  };
+
+  const handleTogglePublish = () => {
+    const newStatus = isPublished ? 'draft' : 'published';
+    const updatedChapter = { ...currentChapterData, status: newStatus };
+    setCurrentChapterData(updatedChapter); 
+    onPublishChapter(chapterId, updatedChapter, trackId); 
+    alert(`Chapter "${currentChapterData?.title}" status changed to ${newStatus}. Editing is now ${newStatus === 'published' ? 'disabled' : 'enabled'}.`); // User's original code uses alert
+  };
+ 
+  const track = tracks.find(t => t.id === trackId);
+
+  if (!currentChapterData) {
+    return (
+      <div className="p-6 text-center">
+        <AlertTriangle size={48} className="mx-auto text-red-500 mb-4" />
+        <p className="text-xl font-semibold text-red-700">Error: Chapter Data Not Found</p>
+        <p className="text-gray-600">The details for this chapter could not be loaded.</p>
+        <button onClick={() => onBackToTrack(trackId)} className="mt-6 flex items-center justify-center mx-auto gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+            <ChevronLeft size={18} /> Go Back to Chapters in "{track?.title || 'Track'}"
+        </button>
+      </div>
+    );
+  }
+
+  const chapterTabs = [
+    { id: 'text_content', label: 'Text Content', icon: FileText },
+    { id: 'media', label: 'Media', icon: Music },
+    { id: 'segmentation_mapping', label: 'Segmentation & Mapping', icon: Link2 },
+    { id: 'preview', label: 'Preview', icon: Eye },
+  ];
+
+  return (
+    <div className="p-4 sm:p-6">
+      <button onClick={() => onBackToTrack(trackId)} className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4 text-sm">
+        <ChevronLeft size={18} /> Back to Chapters in "{track?.title}"
+      </button>
+     
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 pb-4 border-b border-gray-300">
+        <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-2">
+                <Edit3 size={28} className="text-indigo-600"/>
+                Manage Chapter: {currentChapterData.title || '(Untitled Chapter)'}
+            </h1>
+            <span className={`mt-1 text-xs font-semibold px-2 py-0.5 rounded-full inline-block ${isPublished ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                Status: {currentChapterData.status}
+            </span>
+        </div>
+        <div className="flex space-x-2 self-start sm:self-center">
+            <button onClick={handleSaveDraft} className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 shadow-sm text-sm font-medium" disabled={isPublished}>
+                <Save size={16} /> Save Draft
+            </button>
+            <button onClick={handleTogglePublish} 
+                    className={`flex items-center gap-2 px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white ${isPublished ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'}`}>
+                {isPublished ? <><EyeOff size={16}/> Unpublish</> : <><Eye size={16}/> Publish</>}
+            </button>
+        </div>
+      </div>
+      {isPublished && (
+        <div className="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm rounded">
+            <AlertTriangle size={18} className="inline mr-2" />
+            This chapter is currently **Published**. To make changes, please unpublish it first.
+        </div>
+      )}
+
+
+      <div className="mb-6 flex border-b border-gray-300">
+        {chapterTabs.map(tab => (
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-3 text-sm font-medium -mb-px ${activeTab === tab.id ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700 hover:border-gray-400 border-b-2 border-transparent'}`}>
+            <tab.icon size={16}/> {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md border border-gray-200 min-h-[400px]">
+        {activeTab === 'text_content' && (
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-1">Chapter Title & Order</h3>
+             <p className="text-xs text-gray-500 mb-4">Changes are auto-saved in draft mode. Use "Save Draft" for explicit save or "Publish".</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="md:col-span-2">
+                    <label htmlFor="chapterEditorTitle" className="block text-sm font-medium text-gray-700">Chapter Title</label>
+                    <input type="text" id="chapterEditorTitle" value={currentChapterData.title} 
+                           onChange={handleTitleChange}
+                           disabled={isPublished}
+                           className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500" />
+                </div>
+                <div>
+                    <label htmlFor="chapterEditorOrder" className="block text-sm font-medium text-gray-700">Order in Track</label>
+                    <input type="number" id="chapterEditorOrder" value={currentChapterData.order} 
+                           onChange={handleOrderChange}
+                           disabled={isPublished}
+                           className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500" min="1"/>
+                </div>
+            </div>
+
+
+            <h3 className="text-lg font-semibold text-gray-700 mb-1">Multi-Lingual Text Content</h3>
+            <p className="text-xs text-gray-500 mb-4">Changes are auto-saved in draft mode. Edit content for each language below.</p>
+            <div className="mb-3 flex border-b">
+              {CM_SCRIPT_OPTIONS.map(opt => (
+                <button key={opt.id} onClick={() => setActiveTextLang(opt.id)}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-t-md ${activeTextLang === opt.id ? 'bg-indigo-100 text-indigo-700 border border-gray-300 border-b-white -mb-px' : 'text-gray-500 hover:text-gray-700'}`}>
+                  {opt.name}
+                </button>
+              ))}
+            </div>
+            <textarea value={currentChapterData.texts?.[activeTextLang] || ''} 
+                      onChange={(e) => handleTextChange(activeTextLang, e.target.value)}
+                      disabled={isPublished}
+                      className={`w-full h-64 p-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-lg leading-relaxed ${CM_SCRIPT_OPTIONS.find(s => s.id === activeTextLang)?.editorFont || 'font-mono'} disabled:bg-gray-100 disabled:text-gray-500`}
+                      placeholder={`Enter ${CM_SCRIPT_OPTIONS.find(s => s.id === activeTextLang)?.fullName} content here... (Full Rich Text Editor Mock)`} />
+            <p className="text-xs text-gray-500 mt-1">Mock: This is a simple textarea. A full rich text editor would be used here.</p>
+          </div>
+        )}
+        {activeTab === 'media' && (
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">Audio Management</h3>
+            {isPublished && <p className="text-xs text-red-500 mb-2">Unpublish to manage audio files.</p>}
+            <p className="text-gray-600">Mock: UI for uploading MP3s, listing audio files (Reciter A, Reciter B), and managing them.</p>
+            <button className="mt-2 px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 flex items-center gap-1 disabled:opacity-50" disabled={isPublished}><UploadCloud size={16}/> Upload Audio (Mock)</button>
+            <ul className="mt-4 space-y-2">
+                {currentChapterData.audioFiles?.map(file => (
+                    <li key={file.id} className="p-2 border rounded-md flex justify-between items-center text-sm">
+                        <span>{file.name} ({file.reciter})</span>
+                        <button className="text-red-500 hover:text-red-700 disabled:opacity-50" disabled={isPublished}><Trash2 size={14}/></button>
+                    </li>
+                ))}
+                 {(currentChapterData.audioFiles?.length || 0) === 0 && <li className="text-gray-500 text-sm">No audio files uploaded for this chapter.</li>}
+            </ul>
+          </div>
+        )}
+        {activeTab === 'segmentation_mapping' && (
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">Segmentation & Audio Timestamp Mapping</h3>
+             {isPublished && <p className="text-xs text-red-500 mb-2">Unpublish to manage segments and mappings.</p>}
+            <p className="text-gray-600">Mock: UI for selecting language, displaying full chapter text, highlighting to create segments (character offsets), linking segments across languages, selecting audio & segment, integrated player, inputting timestamps, and saving mappings.</p>
+            <div className="mt-2 p-3 border rounded-md bg-gray-50 min-h-[100px]">
+                <p className="font-mono text-sm whitespace-pre-wrap">{currentChapterData.texts?.[activeTextLang]?.substring(0,300) || "No text content for segmentation."}...</p>
+            </div>
+            <button className="mt-2 px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 disabled:opacity-50" disabled={isPublished}>Define Segment (Mock)</button>
+             <div className="mt-4 p-3 border rounded-md bg-gray-50 min-h-[100px]">
+                <p className="text-sm">Segment: [Segment Text Snippet], Audio: [Audio File Name]</p>
+                <p className="text-sm mt-1">Player Controls (Mock) | Start: [Input] End: [Input]</p>
+            </div>
+            <button className="mt-2 px-3 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 disabled:opacity-50" disabled={isPublished}>Save Mapping (Mock)</button>
+          </div>
+        )}
+        {activeTab === 'preview' && (
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">Chapter Preview (Student View)</h3>
+            <div className="border border-dashed border-gray-400 p-6 rounded-md bg-gray-50 min-h-[300px] flex flex-col items-center justify-center text-center">
+                <BookOpen size={48} className="text-gray-400 mb-4"/>
+                <p className="text-gray-600">This area will render the chapter exactly as a student would see it, using the currently saved draft content.</p>
+                <p className="text-sm text-gray-400 mt-2">(Student chapter view component would be integrated here)</p>
+                {currentChapterData.status === 'published' && <p className="text-sm text-green-600 mt-2 font-semibold">Previewing Published Version</p>}
+                {currentChapterData.status === 'draft' && <p className="text-sm text-yellow-600 mt-2 font-semibold">Previewing Current Draft</p>}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const ContentManagementPortalView = (props) => { // Wrapper for CM views
+  const [currentCMView, setCurrentCMView] = useState('dashboard'); 
+  const [selectedCMTrackId, setSelectedCMTrackId] = useState(null);
+  const [selectedCMChapterId, setSelectedCMChapterId] = useState(null);
+
+  if (currentCMView === 'dashboard') {
+    return <CMContentDashboardView 
+              tracks={props.contentTracksData} 
+              onCreateTrack={props.onCreateTrack} 
+              onSelectTrack={(id) => { setSelectedCMTrackId(id); setCurrentCMView('track_editor');}} 
+              onDeleteTrack={props.onDeleteTrack} 
+            />;
+  }
+  if (currentCMView === 'track_editor' && selectedCMTrackId) {
+    const track = props.contentTracksData.find(t => t.id === selectedCMTrackId);
+    const chapters = props.contentChaptersByTrackData[selectedCMTrackId] || [];
+    if (!track) { 
+        console.warn(`TrackEditorView: Track with ID ${selectedCMTrackId} not found. Returning to dashboard.`);
+        setCurrentCMView('dashboard');
+        setSelectedCMTrackId(null);
+        return <CMContentDashboardView {...props} />; 
+    }
+    return <CMTrackEditorView 
+              track={track} 
+              chapters={chapters} 
+              onBack={() => {setCurrentCMView('dashboard'); setSelectedCMTrackId(null); setSelectedCMChapterId(null);}}
+              onSaveTrack={props.onSaveTrack}
+              onCreateChapter={props.onCreateChapter}
+              onSelectChapter={(id) => {setSelectedCMChapterId(id); setCurrentCMView('chapter_editor');}}
+              onDeleteChapter={props.onDeleteChapter}
+            />;
+  }
+  if (currentCMView === 'chapter_editor' && selectedCMChapterId && selectedCMTrackId) {
+    return <CMChapterEditorView 
+              chapterId={selectedCMChapterId} 
+              trackId={selectedCMTrackId}
+              tracks={props.contentTracksData}
+              chaptersData={props.contentChaptersByTrackData}
+              chapterContentData={props.contentChapterDetailsData}
+              onBackToTrack={(tid) => {setCurrentCMView('track_editor'); setSelectedCMChapterId(null); /* Keep selectedCMTrackId */}}
+              onSaveChapterContent={props.onSaveChapterContent}
+              onPublishChapter={props.onPublishChapter}
+            />;
+  }
+  // Fallback to dashboard if state is inconsistent
+  return <CMContentDashboardView {...props} />;
+};
+
+
+// --- Unified Dashboard & Main App ---
+
+// Placeholder components for missing views to avoid ReferenceError
+const StudentDashboardView = ({ tracks, setCurrentView, setSelectedTrack, studentProficiency, getLevelColor, getLevelLabel, isTrackNotStarted, isTrackComplete, isTrackReadyForTest }) => (
+    <div className="p-4 bg-blue-50 rounded-lg shadow">
+        <h2 className="text-xl font-semibold text-blue-700 mb-2">Student Learning Dashboard (Mock)</h2>
+        <p>This is a placeholder for the Student Learning Dashboard.</p>
+        <p>Tracks available: {tracks?.length || 0}</p>
+        <button onClick={() => setCurrentView('unifiedDashboard')} className="mt-4 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Back to Main Dashboard</button>
+    </div>
+);
+const InstructorStudentsListView = ({ students, setCurrentView, setSelectedStudentForManagement }) => (
+    <div className="p-4 bg-green-50 rounded-lg shadow">
+        <h2 className="text-xl font-semibold text-green-700 mb-2">Instructor Panel (Mock)</h2>
+        <p>This is a placeholder for the Instructor Students List View.</p>
+        <p>Managing {students?.length || 0} students.</p>
+         <button onClick={() => setCurrentView('unifiedDashboard')} className="mt-4 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">Back to Main Dashboard</button>
+    </div>
+);
+const AdminView = ({ adminUsers, onSaveAdminUser, onResendInvite, onToggleUserStatus }) => ( // Renamed from onResendAdminInvite
+    <div className="p-4 bg-purple-50 rounded-lg shadow">
+        <h2 className="text-xl font-semibold text-purple-700 mb-2">Administration Panel (Mock)</h2>
+        <p>This is a placeholder for the Admin View.</p>
+        <p>Total users: {adminUsers?.length || 0}</p>
+    </div>
+);
+const StudentTrackView = ({ selectedTrack, setCurrentView, setSelectedChapter, studentProficiency, getLevelColor, getLevelLabel, isTrackComplete, isTrackReadyForTest }) => (
+    <div className="p-4 bg-indigo-50 rounded-lg shadow">
+        <h2 className="text-xl font-semibold text-indigo-700 mb-2">Student Track View (Mock)</h2>
+        <p>Selected Track: {selectedTrack?.title || "N/A"}</p>
+        <button onClick={() => setCurrentView('unifiedDashboard')} className="mt-4 px-3 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600">Back to Main Dashboard</button>
+    </div>
+);
+const StudentChapterView = ({ selectedChapter, selectedTrack, setCurrentView, audioRef, studentProficiency, getLevelColor, getLevelLabel }) => (
+     <div className="p-4 bg-teal-50 rounded-lg shadow">
+        <h2 className="text-xl font-semibold text-teal-700 mb-2">Student Chapter View (Mock)</h2>
+        <p>Selected Chapter: {selectedChapter?.title || "N/A"} from Track: {selectedTrack?.title || "N/A"}</p>
+        <button onClick={() => setCurrentView('studentTrackView')} className="mt-4 px-3 py-1 bg-teal-500 text-white rounded hover:bg-teal-600">Back to Track View</button>
+    </div>
+);
+const StudentProficiencyManagementView = ({ student, tracks, studentProficiencies, updateStudentProficiency, setCurrentView, setSelectedStudentForManagement, getLevelColor, getLevelLabel }) => (
+    <div className="p-4 bg-pink-50 rounded-lg shadow">
+        <h2 className="text-xl font-semibold text-pink-700 mb-2">Student Proficiency Management (Mock)</h2>
+        <p>Managing proficiency for: {student?.name || "N/A"}</p>
+        <button onClick={() => setCurrentView('unifiedDashboard')} className="mt-4 px-3 py-1 bg-pink-500 text-white rounded hover:bg-pink-600">Back to Main Dashboard</button>
+    </div>
+);
+
+
+const UnifiedDashboardView = ({ 
+  learningTracks, 
+  instructorStudents, 
+  setCurrentView, 
+  setSelectedTrack, 
+  setSelectedStudentForManagement, 
+  studentProficiency, 
+  getLevelColor, 
+  getLevelLabel, 
+  isTrackNotStarted, 
+  isTrackComplete, 
+  isTrackReadyForTest,
+  currentAppUserRoles,
+  // Admin props
+  adminUsers, onSaveAdminUser, onResendInvite, onToggleUserStatus, // onResendAdminInvite was used here
+  // Content Manager props
+  contentTracksData, contentChaptersByTrackData, contentChapterDetailsData,
+  onCreateTrack, onDeleteTrack, onSaveTrack,
+  onCreateChapter, onDeleteChapter, onSaveChapterContent, onPublishChapter
+}) => {
+  const [activeTab, setActiveTab] = useState(''); 
+
+  const availableTabs = useMemo(() => {
+    const tabs = [];
+    if (currentAppUserRoles.includes('student')) tabs.push({ id: 'learning', label: 'My Learning', icon: BookOpen });
+    if (currentAppUserRoles.includes('instructor')) tabs.push({ id: 'instructor', label: 'Instructor Panel', icon: Users }); // Users icon
+    if (currentAppUserRoles.includes('content_manager')) tabs.push({ id: 'content_manager', label: 'Manage Content', icon: Briefcase }); // Briefcase icon
+    if (currentAppUserRoles.includes('admin')) tabs.push({ id: 'admin', label: 'Administration', icon: Settings });
+    return tabs;
+  }, [currentAppUserRoles]);
+
+ useEffect(() => {
+    // Effect to set a valid active tab when availableTabs or currentAppUserRoles change.
+    if (availableTabs.length > 0) {
+      // If current activeTab is no longer available OR if it's not set yet, default to the first available tab.
+      if (!activeTab || !availableTabs.some(tab => tab.id === activeTab)) {
+        setActiveTab(availableTabs[0].id);
+      }
+    } else {
+      setActiveTab(''); // No tabs available (e.g., user has no roles)
+    }
+  }, [availableTabs, activeTab]); // Rerun when availableTabs changes
+
+
+  return (
+    <div className="p-4 sm:p-6 max-w-full mx-auto"> 
+        <div className="mb-8 text-center">
+            <div className="text-5xl sm:text-6xl mb-4 inline-block"> 🕉️ </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Vedic Learning System</h1>
+            <p className="text-md sm:text-lg text-gray-600">Student & Instructor Portal</p>
+        </div>
+       
+        {availableTabs.length > 0 ? (
+            <div className="mb-6 flex flex-wrap border-b border-gray-300">
+                {availableTabs.map(tabInfo => (
+                <button 
+                    key={tabInfo.id}
+                    onClick={() => setActiveTab(tabInfo.id)} 
+                    className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 font-medium text-center flex-grow sm:flex-grow-0 basis-1/2 sm:basis-auto ${activeTab === tabInfo.id ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                    <tabInfo.icon size={18} />{tabInfo.label}
+                </button>
+                ))}
+            </div>
+        ) : (
+            <div className="text-center py-10">
+                <Info size={48} className="mx-auto text-gray-400 mb-4" /> {/* Info icon */}
+                <p className="text-xl text-gray-600">No functionalities available for your current role.</p>
+                 <p className="text-sm text-gray-500 mt-2">Please contact an administrator if you believe this is an error.</p>
+            </div>
+        )}
+
+      {activeTab === 'learning' && currentAppUserRoles.includes('student') && ( <StudentDashboardView tracks={learningTracks} setCurrentView={setCurrentView} setSelectedTrack={setSelectedTrack} studentProficiency={studentProficiency} getLevelColor={getLevelColor} getLevelLabel={getLevelLabel} isTrackNotStarted={isTrackNotStarted} isTrackComplete={isTrackComplete} isTrackReadyForTest={isTrackReadyForTest} /> )}
+      {activeTab === 'instructor' && currentAppUserRoles.includes('instructor') && ( <InstructorStudentsListView students={instructorStudents} setCurrentView={setCurrentView} setSelectedStudentForManagement={setSelectedStudentForManagement}/> )}
+        {activeTab === 'admin' && currentAppUserRoles.includes('admin') && ( <AdminView adminUsers={adminUsers} onSaveAdminUser={onSaveAdminUser} onResendInvite={onResendInvite} onToggleUserStatus={onToggleUserStatus} /> )} 
+        {activeTab === 'content_manager' && currentAppUserRoles.includes('content_manager') && ( 
+            <ContentManagementPortalView 
+                contentTracksData={contentTracksData}
+                contentChaptersByTrackData={contentChaptersByTrackData}
+                contentChapterDetailsData={contentChapterDetailsData}
+                onCreateTrack={onCreateTrack}
+                onDeleteTrack={onDeleteTrack}
+                onSaveTrack={onSaveTrack}
+                onCreateChapter={onCreateChapter}
+                onDeleteChapter={onDeleteChapter}
+                onSaveChapterContent={onSaveChapterContent}
+                onPublishChapter={onPublishChapter}
+            /> 
+        )}
+    </div>
+  );
+};
+
+// Main App Component
+const App = () => {
+  // Top-level view state (e.g., 'unifiedDashboard', 'studentTrackView', etc.)
+  const [currentView, setCurrentView] = useState('unifiedDashboard'); 
+  // State for student learning navigation
+  const [selectedTrack, setSelectedTrack] = useState(null); 
+  const [selectedChapter, setSelectedChapter] = useState(null); 
+  // Simulated roles for the currently logged-in user. In a real app, this would come from an authentication context.
+  // Default to all roles for initial full view to allow testing of all tabs.
+  const [currentAppUserRoles, setCurrentAppUserRoles] = useState(['student', 'instructor', 'admin', 'content_manager']); 
+
+  // --- Student/Instructor Learning State ---
+  // Proficiency of the current user (acting as a student)
+  const [currentUserProficiency, setCurrentUserProficiency] = useState(
+    LEARNING_TRACKS_DATA.reduce((acc, track) => {
+      (track.chapters || []).forEach(ch => { acc[`${track.id}_${ch.id}`] = ch.level; }); // Added check for track.chapters
+      return acc;
+    }, {})
+  );
+  // Data for the instructor panel (list of students they manage - currently all students)
+  const [instructorStudents, setInstructorStudents] = useState(MOCK_INSTRUCTOR_STUDENTS_INIT); 
+  // Detailed proficiency data for all students, managed by instructors
+  const [studentProficiencies, setStudentProficiencies] = useState(
+    MOCK_INSTRUCTOR_STUDENTS_INIT.reduce((acc, student) => {
+      acc[student.id] = { ...(student.chapterProficiency || {}) };
+      LEARNING_TRACKS_DATA.forEach(track => {
+        (track.chapters || []).forEach(chapter => { // Added check for track.chapters
+          const chapterKey = `${track.id}_${chapter.id}`;
+          if (acc[student.id][chapterKey] === undefined) acc[student.id][chapterKey] = 0;
+        });
+      });
+      return acc;
+    }, {})
+  );
+  const [selectedStudentForManagement, setSelectedStudentForManagement] = useState(null); // Student being managed by an instructor
+  const audioRef = useRef(null); // Shared audio element for student chapter view
+
+  // --- Admin State ---
+  // List of all users in the system, managed by Admins
+  const [adminUsers, setAdminUsers] = useState(MOCK_ADMIN_USERS_INIT);
+
+  // --- Content Manager State ---
+  // Using the globally defined mock data, not the CM_ prefixed versions from the original prompt's App component
+  const [contentTracksData, setContentTracksData] = useState(MOCK_TRACKS_INIT);
+  const [contentChaptersByTrackData, setContentChaptersByTrackData] = useState(MOCK_CHAPTERS_INIT);
+  const [contentChapterDetailsData, setContentChapterDetailsData] = useState(MOCK_CHAPTER_CONTENT_INIT);
+
+
+  // --- Memoized Callbacks & Utility Functions ---
+  const memoizedGetLevelColor = useCallback(getLevelColor, []);
+  const memoizedGetLevelLabel = useCallback(getLevelLabel, []);
+  const memoizedIsStudentTrackComplete = useCallback((trackWithLevels) => { if (!trackWithLevels || !trackWithLevels.chapters) return false; return trackWithLevels.chapters.every(chapter => chapter.level === 4); }, []);
+  const memoizedIsStudentTrackReadyForTest = useCallback((trackWithLevels) => { if (!trackWithLevels || !trackWithLevels.chapters) return false; return trackWithLevels.chapters.every(chapter => chapter.level >= 3) && !memoizedIsStudentTrackComplete(trackWithLevels); }, [memoizedIsStudentTrackComplete]); 
+  const memoizedIsStudentTrackNotStarted = useCallback((trackWithLevels) => { if (!trackWithLevels || !trackWithLevels.chapters) return false; return trackWithLevels.chapters.every(chapter => chapter.level === 0); }, []);
+  // Handler for instructors to update a student's proficiency
+  const updateStudentProficiency = (studentId, newProficiencies) => { setStudentProficiencies(prev => ({ ...prev, [studentId]: newProficiencies })); };
+
+  // --- Admin Handlers ---
+  const handleSaveAdminUser = (userData) => {
+    // Handles both inviting a new user and updating an existing one
+    if (userData.id) { 
+      setAdminUsers(adminUsers.map(u => u.id === userData.id ? { ...u, ...userData } : u));
+      alert(`User ${userData.email} updated.`); // User's original code uses alert
+    } else { 
+      const newUser = { 
+        ...userData, 
+        id: `user${Date.now()}`, // Simple unique ID for mock
+        status: 'pending_invitation', 
+        inviteSentAt: new Date(),
+        lastLogin: null
+      };
+      setAdminUsers(prevUsers => [newUser, ...prevUsers]); // Add to the beginning of the list for visibility
+      alert(`Invitation sent to ${newUser.email}.`); // User's original code uses alert
+    }
+  };
+  const handleResendAdminInvite = (userId) => { // This name matches the prop passed to AdminView
+    setAdminUsers(adminUsers.map(u => u.id === userId ? { ...u, inviteSentAt: new Date() } : u));
+    alert(`Invitation resent for user ${adminUsers.find(u=>u.id===userId)?.email}.`); // User's original code uses alert
+  };
+  const handleToggleAdminUserStatus = (userId) => {
+    setAdminUsers(adminUsers.map(u => {
+      if (u.id === userId) {
+        const newStatus = u.status === 'active' ? 'disabled' : (u.status === 'disabled' ? 'active' : u.status); // Toggle between active/disabled
+         if (u.status === 'pending_invitation') { // Prevent disabling a pending invitation
+            alert("This account has a pending invitation. Please manage the invitation or wait for activation before changing status."); // User's original code uses alert
+            return u;
+         }
+        alert(`User ${u.email} status changed to ${newStatus}.`); // User's original code uses alert
+        return { ...u, status: newStatus };
+      }
+      return u;
+    }));
+  };
+
+  // --- Content Manager Handlers ---
+  const handleCMCreateTrack = (newTrackData) => {
+    const newTrack = { ...newTrackData, id: `cm_track_${Date.now()}`, status: 'draft', chapterCount: 0, lastModified: new Date().toISOString().split('T')[0] };
+    setContentTracksData(prev => [...prev, newTrack]);
+    setContentChaptersByTrackData(prev => ({...prev, [newTrack.id]: []})); // Initialize an empty array for chapters of the new track
+    alert(`Content Track "${newTrack.title}" created.`); // User's original code uses alert
+  };
+  const handleCMDeleteTrack = (trackIdToDelete) => {
+    // Confirmation is handled in the component, here we just perform deletion.
+    setContentTracksData(prev => prev.filter(t => t.id !== trackIdToDelete));
+    const chapterIdsToDelete = (contentChaptersByTrackData[trackIdToDelete] || []).map(ch => ch.id);
+    setContentChaptersByTrackData(prev => { 
+        const newChapters = {...prev};
+        delete newChapters[trackIdToDelete];
+        return newChapters;
+    });
+    setContentChapterDetailsData(prevContent => {
+        const newContent = {...prevContent};
+        chapterIdsToDelete.forEach(chId => delete newContent[chId]);
+        return newContent;
+    });
+    alert(`Content Track (ID: ${trackIdToDelete}) and its chapters deleted.`); // User's original code uses alert
+  };
+  const handleCMSaveTrack = (updatedTrackData) => {
+     setContentTracksData(prev => prev.map(t => t.id === updatedTrackData.id ? {...t, ...updatedTrackData, lastModified: new Date().toISOString().split('T')[0]} : t));
+     alert(`Content Track "${updatedTrackData.title}" saved.`); // User's original code uses alert
+  };
+  const handleCMCreateChapter = (trackIdForChapter, newChapterData) => {
+    const newChapter = { ...newChapterData, id: `cm_ch_${trackIdForChapter}_${Date.now()}`, trackId: trackIdForChapter, status: 'draft', completeness: {text: false, audio: false, segments: false, mapping: false } };
+    setContentChaptersByTrackData(prev => ({
+        ...prev,
+        [trackIdForChapter]: [...(prev[trackIdForChapter] || []), newChapter]
+    }));
+    setContentChapterDetailsData(prevContent => ({ // Initialize details for the new chapter
+        ...prevContent,
+        [newChapter.id]: {
+            title: newChapter.title, order: newChapter.order, texts: { te: '', hi: '', en: '' },
+            audioFiles: [], segments: [], mappings: {}, status: 'draft', trackId: trackIdForChapter
+        }
+    }));
+    setContentTracksData(prevTracks => prevTracks.map(t => t.id === trackIdForChapter ? {...t, chapterCount: (t.chapterCount || 0) + 1} : t));
+    alert(`Chapter "${newChapter.title}" created in track "${contentTracksData.find(t=>t.id === trackIdForChapter)?.title}".`); // User's original code uses alert
+  };
+  const handleCMDeleteChapter = (trackIdOfChapter, chapterIdToDelete) => {
+    setContentChaptersByTrackData(prev => ({
+        ...prev,
+        [trackIdOfChapter]: (prev[trackIdOfChapter] || []).filter(ch => ch.id !== chapterIdToDelete)
+    }));
+    setContentChapterDetailsData(prevContent => {
+        const newContent = {...prevContent};
+        delete newContent[chapterIdToDelete];
+        return newContent;
+    });
+    setContentTracksData(prevTracks => prevTracks.map(t => t.id === trackIdOfChapter ? {...t, chapterCount: Math.max(0, (t.chapterCount || 0) - 1)} : t));
+    alert(`Chapter (ID: ${chapterIdToDelete}) deleted from track "${contentTracksData.find(t=>t.id === trackIdOfChapter)?.title}".`); // User's original code uses alert
+  };
+  // This handler updates the detailed content AND the summary in contentChaptersByTrackData
+  const handleCMSaveChapterContent = (chapterIdToSave, updatedData, trackIdOfChapter) => {
+    // Update detailed content
+    setContentChapterDetailsData(prev => ({...prev, [chapterIdToSave]: {...prev[chapterIdToSave], ...updatedData }}));
+   
+    // Update the summary data in contentChaptersByTrackData (title, order, status, completeness)
+    setContentChaptersByTrackData(prevChs => {
+        const newChaptersForTrack = (prevChs[trackIdOfChapter] || []).map(ch => 
+            ch.id === chapterIdToSave ? { // Update the specific chapter
+                ...ch, 
+                title: updatedData.title, 
+                order: updatedData.order, 
+                status: updatedData.status, // Ensure status is also updated in the summary list
+                completeness: { // Recalculate completeness based on the detailed data
+                    text: Object.values(updatedData.texts || {}).some(t => t && t.trim().length > 5), // More robust check
+                    audio: (updatedData.audioFiles?.length || 0) > 0,
+                    segments: (updatedData.segments?.length || 0) > 0,
+                    mapping: Object.values(updatedData.mappings || {}).some(m => Object.keys(m).length > 0)
+                }
+            } : ch
+        );
+        return {...prevChs, [trackIdOfChapter]: newChaptersForTrack };
+    });
+  };
+  const handleCMPublishChapter = (chapterIdToPublish, updatedData, trackIdOfChapter) => {
+    // Publishing also implies saving, so call the save content handler
+    handleCMSaveChapterContent(chapterIdToPublish, updatedData, trackIdOfChapter);
+    // In a real app, this might trigger additional backend processes for publishing.
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 font-sans text-slate-800">
+      {currentView === 'unifiedDashboard' && (
+        <UnifiedDashboardView 
+            learningTracks={LEARNING_TRACKS_DATA} 
+            instructorStudents={instructorStudents} 
+            setCurrentView={setCurrentView} 
+            setSelectedTrack={setSelectedTrack} 
+            setSelectedStudentForManagement={setSelectedStudentForManagement} 
+            studentProficiency={currentUserProficiency} 
+            getLevelColor={memoizedGetLevelColor} 
+            getLevelLabel={memoizedGetLevelLabel} 
+            isTrackNotStarted={memoizedIsStudentTrackNotStarted} 
+            isTrackComplete={memoizedIsStudentTrackComplete} 
+            isTrackReadyForTest={memoizedIsStudentTrackReadyForTest}
+            currentAppUserRoles={currentAppUserRoles}
+            // Admin Props
+            adminUsers={adminUsers}
+            onSaveAdminUser={handleSaveAdminUser}
+            onResendInvite={handleResendAdminInvite} // Prop name matches UnifiedDashboardView
+            onToggleUserStatus={handleToggleAdminUserStatus}
+            // Content Manager Props
+            contentTracksData={contentTracksData}
+            contentChaptersByTrackData={contentChaptersByTrackData}
+            contentChapterDetailsData={contentChapterDetailsData}
+            onCreateTrack={handleCMCreateTrack}
+            onDeleteTrack={handleCMDeleteTrack}
+            onSaveTrack={handleCMSaveTrack}
+            onCreateChapter={handleCMCreateChapter}
+            onDeleteChapter={handleCMDeleteChapter}
+            onSaveChapterContent={handleCMSaveChapterContent}
+            onPublishChapter={handleCMPublishChapter}
+        /> 
+      )}
+      {currentView === 'studentTrackView' && selectedTrack && ( <StudentTrackView selectedTrack={selectedTrack} setCurrentView={setCurrentView} setSelectedChapter={setSelectedChapter} studentProficiency={currentUserProficiency} getLevelColor={memoizedGetLevelColor} getLevelLabel={memoizedGetLevelLabel} isTrackComplete={memoizedIsStudentTrackComplete} isTrackReadyForTest={memoizedIsStudentTrackReadyForTest} /> )}
+      {currentView === 'studentChapterView' && selectedChapter && selectedTrack && ( <StudentChapterView selectedChapter={selectedChapter} selectedTrack={selectedTrack} setCurrentView={setCurrentView} audioRef={audioRef} studentProficiency={currentUserProficiency} getLevelColor={memoizedGetLevelColor} getLevelLabel={memoizedGetLevelLabel}/> )}
+      {currentView === 'instructorStudentProficiencyManagementView' && selectedStudentForManagement && ( <StudentProficiencyManagementView student={selectedStudentForManagement} tracks={LEARNING_TRACKS_DATA} studentProficiencies={studentProficiencies} updateStudentProficiency={updateStudentProficiency} setCurrentView={setCurrentView} setSelectedStudentForManagement={setSelectedStudentForManagement} getLevelColor={memoizedGetLevelColor} getLevelLabel={memoizedGetLevelLabel}/> )}
+      <audio ref={audioRef} className="hidden" />
+    </div>
+  );
+};
+export default App;
