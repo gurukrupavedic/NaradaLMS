@@ -26,15 +26,18 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table for Replit Auth with roles
+// User storage table with multi-role support and invitation system
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull(),
-  email: varchar("email").unique(),
+  email: varchar("email").unique().notNull(), // Email as username per Q9
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  roles: jsonb("roles").$type<string[]>().default([]).notNull(), // ['student', 'instructor', 'content_manager', 'admin']
-  status: varchar("status").default("active").notNull(), // 'active', 'disabled', 'pending'
+  roles: jsonb("roles").$type<string[]>().default(['student']).notNull(), // Multi-role support per Q8
+  status: varchar("status").default("pending").notNull(), // 'active', 'disabled', 'pending'
+  invitedBy: varchar("invited_by").references(() => users.id), // Admin invitation system per Q8
+  invitedAt: timestamp("invited_at"),
+  lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -52,18 +55,20 @@ export const tracks = pgTable("tracks", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Chapters within tracks
+// Chapters - Wiki-style content with draft/published workflow
 export const chapters = pgTable("chapters", {
   id: serial("id").primaryKey(),
   trackId: integer("track_id").notNull().references(() => tracks.id, { onDelete: "cascade" }),
-  title: text("title").notNull(),
+  title: text("title").notNull(), // Single source of truth per Q9
   order: integer("order").notNull(),
-  status: varchar("status").default("draft").notNull(), // 'draft', 'published'
+  status: varchar("status").default("draft").notNull(), // 'draft', 'published' with protection per Q13
   content: jsonb("content").$type<{
     te?: string; // Telugu
-    hi?: string; // Devanagari/Hindi
+    hi?: string; // Devanagari/Hindi  
     en?: string; // English/IAST
   }>().default({}).notNull(),
+  publishedAt: timestamp("published_at"), // Track when content was published
+  lastEditedBy: varchar("last_edited_by").references(() => users.id),
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -83,16 +88,16 @@ export const audioFiles = pgTable("audio_files", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Text segments for audio mapping
+// Text segments - Reference-based approach for interactive highlighting
 export const textSegments = pgTable("text_segments", {
   id: serial("id").primaryKey(),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
-  conceptualName: text("conceptual_name").notNull(),
+  conceptualName: text("conceptual_name").notNull(), // Human-readable segment identifier per Q3
   textReferences: jsonb("text_references").$type<{
-    te?: { start: number; end: number };
-    hi?: { start: number; end: number };
-    en?: { start: number; end: number };
-  }>().default({}).notNull(),
+    te?: { start: number; end: number }; // Character offsets for Telugu
+    hi?: { start: number; end: number }; // Character offsets for Devanagari  
+    en?: { start: number; end: number }; // Character offsets for English/IAST
+  }>().default({}).notNull(), // Reference points like PDF highlighting per Q3
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
