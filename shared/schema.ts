@@ -39,13 +39,14 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Learning tracks
+// Learning tracks - Vedic curriculum structure
 export const tracks = pgTable("tracks", {
   id: serial("id").primaryKey(),
-  title: text("title").notNull(),
+  title: text("title").notNull().unique(), // Unique track titles as per requirements
   description: text("description"),
-  order: integer("order").notNull(),
-  status: varchar("status").default("draft").notNull(), // 'draft', 'published'
+  order: integer("order").notNull(), // Positive integer for track ordering
+  status: varchar("status").default("draft").notNull(), // 'draft', 'published', 'certified'
+  estimatedHours: integer("estimated_hours").default(0),
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
