@@ -2,40 +2,105 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen, Clock, Trophy, Flame } from "lucide-react";
+import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
+
+interface Chapter {
+  id: string;
+  title: string;
+  order: number;
+  proficiencyLevel: number;
+}
+
+interface Track {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  chapters: Chapter[];
+}
 
 interface StudentDashboardProps {
   user: User;
 }
 
 export default function StudentDashboard({ user }: StudentDashboardProps) {
-  // Mock data for demonstration
-  const tracks = [
-    {
-      id: "1",
-      title: "Vedic Sanskrit Fundamentals",
-      description: "Learn the basics of Vedic Sanskrit pronunciation and grammar",
-      progress: 65,
-      currentChapter: "Chapter 3: Sandhi Rules",
-      totalChapters: 12,
-      estimatedTime: "2 hours remaining"
-    },
-    {
-      id: "2", 
-      title: "Rigveda Samhita",
-      description: "Study selected hymns from the Rigveda with audio pronunciation",
-      progress: 30,
-      currentChapter: "Chapter 1: Agni Sukta",
-      totalChapters: 8,
-      estimatedTime: "5 hours remaining"
-    }
-  ];
+  const [, setLocation] = useLocation();
 
-  const stats = {
+  const { data: tracks = [], isLoading } = useQuery<Track[]>({
+    queryKey: ['/api/tracks'],
+  });
+
+  const { data: studentStats = {
     totalStudyTime: 24,
     chaptersCompleted: 8,
     currentStreak: 5,
     level: 3
+  } } = useQuery({
+    queryKey: ['/api/student-stats'],
+  });
+
+  const getProficiencyColor = (level: number) => {
+    const colors = {
+      0: 'bg-gray-100 text-gray-800',
+      1: 'bg-red-100 text-red-800',
+      2: 'bg-yellow-100 text-yellow-800',
+      3: 'bg-blue-100 text-blue-800',
+      4: 'bg-green-100 text-green-800'
+    };
+    return colors[level as keyof typeof colors] || colors[0];
+  };
+
+  const getProficiencyLabel = (level: number) => {
+    const labels = {
+      0: 'Not Started',
+      1: 'Level 1',
+      2: 'Level 2',
+      3: 'Level 3',
+      4: 'Level 4'
+    };
+    return labels[level as keyof typeof labels] || 'Unknown';
+  };
+
+  const getTrackProgress = (chapters: Chapter[]) => {
+    if (chapters.length === 0) return 0;
+    const totalProficiency = chapters.reduce((sum, ch) => sum + ch.proficiencyLevel, 0);
+    return Math.round((totalProficiency / (chapters.length * 4)) * 100);
+  };
+
+  const getTrackStatus = (chapters: Chapter[]) => {
+    if (chapters.length === 0) return 'not_started';
+    const avgProficiency = chapters.reduce((sum, ch) => sum + ch.proficiencyLevel, 0) / chapters.length;
+    if (avgProficiency >= 3.5) return 'ready_for_test';
+    if (avgProficiency > 0) return 'in_progress';
+    return 'not_started';
+  };
+
+  const getTrackStatusColor = (status: string) => {
+    switch (status) {
+      case 'certified':
+        return 'bg-green-100 border-green-300 text-green-800';
+      case 'ready_for_test':
+        return 'bg-blue-100 border-blue-300 text-blue-800';
+      case 'in_progress':
+        return 'bg-yellow-100 border-yellow-300 text-yellow-800';
+      default:
+        return 'bg-gray-100 border-gray-300 text-gray-800';
+    }
+  };
+
+  const getTrackStatusLabel = (status: string) => {
+    switch (status) {
+      case 'certified':
+        return 'Certified';
+      case 'ready_for_test':
+        return 'Ready for Track Test';
+      case 'in_progress':
+        return 'In Progress';
+      default:
+        return 'Not Started';
+    }
   };
 
   const recentActivity = [
