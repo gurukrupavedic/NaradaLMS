@@ -52,6 +52,9 @@ function requireRole(role: string) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize database with authentic Vedic curriculum
+  await initializeDatabase();
+  
   await setupAuth(app);
 
   // Auth routes
