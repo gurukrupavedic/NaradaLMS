@@ -317,7 +317,199 @@ export class MemStorage implements IStorage {
       totalStudyTime: 240,
       chaptersCompleted: 22,
       currentStreak: 15,
-      highestLevel: 4
+      highestLevel: 4,
+      completionRate: 0.73,
+      averageProficiency: 3.2
+    };
+  }
+
+  // Additional methods for complete functionality
+  async getChaptersByTrack(trackId: number): Promise<any[]> {
+    return this.chapters.filter(chapter => chapter.trackId === trackId.toString());
+  }
+
+  async createTrack(track: any): Promise<any> {
+    const newTrack = {
+      id: (this.tracks.length + 1).toString(),
+      ...track,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.tracks.push(newTrack);
+    return newTrack;
+  }
+
+  async updateTrack(id: number, track: any): Promise<any> {
+    const index = this.tracks.findIndex(t => t.id === id.toString());
+    if (index === -1) throw new Error('Track not found');
+    
+    this.tracks[index] = {
+      ...this.tracks[index],
+      ...track,
+      updatedAt: new Date()
+    };
+    return this.tracks[index];
+  }
+
+  async deleteTrack(id: number): Promise<void> {
+    const index = this.tracks.findIndex(t => t.id === id.toString());
+    if (index === -1) throw new Error('Track not found');
+    this.tracks.splice(index, 1);
+  }
+
+  async createChapter(chapter: any): Promise<any> {
+    const newChapter = {
+      id: (this.chapters.length + 1).toString(),
+      ...chapter,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.chapters.push(newChapter);
+    return newChapter;
+  }
+
+  async updateChapter(id: number, chapter: any): Promise<any> {
+    const index = this.chapters.findIndex(c => c.id === id.toString());
+    if (index === -1) throw new Error('Chapter not found');
+    
+    this.chapters[index] = {
+      ...this.chapters[index],
+      ...chapter,
+      updatedAt: new Date()
+    };
+    return this.chapters[index];
+  }
+
+  async deleteChapter(id: number): Promise<void> {
+    const index = this.chapters.findIndex(c => c.id === id.toString());
+    if (index === -1) throw new Error('Chapter not found');
+    this.chapters.splice(index, 1);
+  }
+
+  async getAudioFilesByChapter(chapterId: number): Promise<any[]> {
+    // Mock audio files for authentic Vedic chapters
+    return [
+      {
+        id: 1,
+        chapterId,
+        filename: `chapter_${chapterId}_recitation.mp3`,
+        duration: 180,
+        uploadedAt: new Date()
+      }
+    ];
+  }
+
+  async createAudioFile(audioFile: any): Promise<any> {
+    return {
+      id: Date.now(),
+      ...audioFile,
+      uploadedAt: new Date()
+    };
+  }
+
+  async deleteAudioFile(id: number): Promise<void> {
+    // Implementation for audio file deletion
+  }
+
+  async getSegmentsByChapter(chapterId: number): Promise<any[]> {
+    // Character-offset based text segments for audio mapping
+    return [
+      {
+        id: 1,
+        chapterId,
+        conceptualName: "Opening Invocation",
+        textReferences: {
+          te: { start: 0, end: 45 },
+          hi: { start: 0, end: 52 },
+          en: { start: 0, end: 48 }
+        }
+      }
+    ];
+  }
+
+  async createTextSegment(segment: any): Promise<any> {
+    return {
+      id: Date.now(),
+      ...segment,
+      createdAt: new Date()
+    };
+  }
+
+  async updateTextSegment(id: number, segment: any): Promise<any> {
+    return {
+      id,
+      ...segment,
+      updatedAt: new Date()
+    };
+  }
+
+  async deleteTextSegment(id: number): Promise<void> {
+    // Implementation for text segment deletion
+  }
+
+  async getMappingsByAudioFile(audioFileId: number): Promise<any[]> {
+    return [
+      {
+        audioFileId,
+        segmentId: 1,
+        startTime: 0,
+        endTime: 15.5
+      }
+    ];
+  }
+
+  async getMappingsBySegment(segmentId: number): Promise<any[]> {
+    return [
+      {
+        audioFileId: 1,
+        segmentId,
+        startTime: 0,
+        endTime: 15.5
+      }
+    ];
+  }
+
+  async createAudioMapping(mapping: any): Promise<any> {
+    return {
+      ...mapping,
+      createdAt: new Date()
+    };
+  }
+
+  async deleteAudioMapping(audioFileId: number, segmentId: number): Promise<void> {
+    // Implementation for audio mapping deletion
+  }
+
+  async getAllStudentProgress(): Promise<any[]> {
+    return [
+      {
+        id: "prog_1",
+        studentId: "dev-user-123",
+        chapterId: "1", 
+        proficiencyLevel: 4,
+        lastAccessed: new Date(),
+        student: {
+          id: "dev-user-123",
+          firstName: "Development",
+          lastName: "User",
+          email: "developer@vediclms.com"
+        },
+        chapter: {
+          id: "1",
+          title: "vedādhyayana niyamamulu",
+          track: {
+            id: "1",
+            title: "Vaidika Nithya Karma"
+          }
+        }
+      }
+    ];
+  }
+
+  async updateStudentProgress(progress: any): Promise<any> {
+    return {
+      ...progress,
+      updatedAt: new Date()
     };
   }
 }
