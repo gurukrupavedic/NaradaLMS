@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./routes-simple";
+import { storage } from "./storage-authentic";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertTrackSchema, insertChapterSchema, insertTextSegmentSchema, insertAudioMappingSchema, insertStudentProgressSchema } from "@shared/schema";
 import multer from "multer";
