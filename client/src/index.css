@@ -144,7 +144,7 @@
   }
 
   .audio-waveform {
-    @apply h-15 rounded-lg relative overflow-hidden;
+    @apply h-16 rounded-lg relative overflow-hidden;
     background: linear-gradient(90deg, hsl(var(--vedic-gold)) 0%, hsl(var(--vedic-orange)) 50%, hsl(var(--vedic-gold)) 100%);
   }
 
