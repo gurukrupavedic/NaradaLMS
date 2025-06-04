@@ -211,7 +211,15 @@ export class MemStorage implements IStorage {
   }
 
   async getTrack(id: string): Promise<any | undefined> {
-    return this.tracks.find(track => track.id === id);
+    const track = this.tracks.find(track => track.id === id);
+    if (!track) return undefined;
+    
+    // Include chapters for this track
+    const trackChapters = this.chapters.filter(chapter => chapter.trackId === track.id);
+    return {
+      ...track,
+      chapters: trackChapters
+    };
   }
 
   async getChapter(id: string): Promise<any | undefined> {
