@@ -21,6 +21,13 @@ interface Track {
   chapters: Chapter[];
 }
 
+interface StudentStats {
+  totalStudyTime: number;
+  chaptersCompleted: number;
+  currentStreak: number;
+  level: number;
+}
+
 interface StudentDashboardProps {
   user: User;
 }
@@ -32,14 +39,16 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
     queryKey: ['/api/tracks'],
   });
 
-  const { data: studentStats = {
+  const { data: studentStatsData } = useQuery<StudentStats>({
+    queryKey: ['/api/student-stats'],
+  });
+
+  const studentStats: StudentStats = studentStatsData || {
     totalStudyTime: 24,
     chaptersCompleted: 8,
     currentStreak: 5,
     level: 3
-  } } = useQuery({
-    queryKey: ['/api/student-stats'],
-  });
+  };
 
   const getProficiencyColor = (level: number) => {
     const colors = {
@@ -136,7 +145,7 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalStudyTime}h</div>
+            <div className="text-2xl font-bold">{studentStats.totalStudyTime}h</div>
             <p className="text-xs text-muted-foreground">Total hours</p>
           </CardContent>
         </Card>
@@ -147,7 +156,7 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.chaptersCompleted}</div>
+            <div className="text-2xl font-bold">{studentStats.chaptersCompleted}</div>
             <p className="text-xs text-muted-foreground">Chapters done</p>
           </CardContent>
         </Card>
@@ -158,7 +167,7 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
             <Flame className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.currentStreak}</div>
+            <div className="text-2xl font-bold">{studentStats.currentStreak}</div>
             <p className="text-xs text-muted-foreground">Days in a row</p>
           </CardContent>
         </Card>
@@ -169,7 +178,7 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
             <Trophy className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.level}</div>
+            <div className="text-2xl font-bold">{studentStats.level}</div>
             <p className="text-xs text-muted-foreground">Current level</p>
           </CardContent>
         </Card>
