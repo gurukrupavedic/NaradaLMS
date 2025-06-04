@@ -105,9 +105,7 @@ export const audioMappings = pgTable("audio_mappings", {
   endTime: real("end_time").notNull(), // in seconds
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
-}, (table) => ({
-  pk: primaryKey({ columns: [table.audioFileId, table.segmentId] })
-}));
+});
 
 // Student progress tracking
 export const studentProgress = pgTable("student_progress", {
@@ -118,9 +116,7 @@ export const studentProgress = pgTable("student_progress", {
   lastAccessed: timestamp("last_accessed"),
   updatedBy: varchar("updated_by").notNull().references(() => users.id), // instructor who updated
   updatedAt: timestamp("updated_at").defaultNow(),
-}, (table) => ({
-  pk: primaryKey({ columns: [table.studentId, table.chapterId] })
-}));
+});
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
