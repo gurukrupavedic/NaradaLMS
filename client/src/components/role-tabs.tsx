@@ -7,9 +7,9 @@ import {
   UserCog 
 } from "lucide-react";
 import StudentDashboard from "./student-dashboard";
-import InstructorPanel from "./instructor-panel";
-import ContentManager from "./content-manager";
-import AdminPanel from "./admin-panel";
+import InstructorPanel from "./simple-instructor-panel";
+import ContentManager from "./simple-content-manager";
+import AdminPanel from "./simple-admin-panel";
 import type { User } from "@shared/schema";
 
 interface RoleTabsProps {
