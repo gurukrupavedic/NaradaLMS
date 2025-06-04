@@ -26,8 +26,8 @@ function Router() {
         <Route path="/" component={Landing} />
       ) : (
         <>
-          <Route path="/" component={() => <RoleTabs user={user} />} />
-          <Route path="/dashboard" component={() => <RoleTabs user={user} />} />
+          <Route path="/" component={() => <RoleTabs user={user as any} />} />
+          <Route path="/dashboard" component={() => <RoleTabs user={user as any} />} />
         </>
       )}
       <Route component={NotFound} />
