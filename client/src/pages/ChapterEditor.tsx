@@ -274,20 +274,22 @@ export default function ChapterEditor() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
+      {/* Back Button */}
+      <div className="mb-6">
+        <Button variant="ghost" onClick={() => setLocation("/content-management")}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Chapters
+        </Button>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => setLocation("/content-management")}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Chapters
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{chapter?.title}</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge variant={chapter?.status === "published" ? "default" : "secondary"}>
-                {chapter?.status === "published" ? "Published" : "Draft"}
-              </Badge>
-            </div>
+        <div>
+          <h1 className="text-2xl font-bold">{chapter?.title}</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <Badge variant={chapter?.status === "published" ? "default" : "secondary"}>
+              {chapter?.status === "published" ? "Published" : "Draft"}
+            </Badge>
           </div>
         </div>
         <div className="flex items-center gap-2">
