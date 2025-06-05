@@ -80,6 +80,7 @@ export default function ChapterEditor() {
   const [segmentTextStart, setSegmentTextStart] = useState("");
   const [segmentTextEnd, setSegmentTextEnd] = useState("");
   const [segmentLanguage, setSegmentLanguage] = useState("te");
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Fetch chapter details
   const { data: chapter = {}, isLoading: chapterLoading } = useQuery({
@@ -217,6 +218,16 @@ export default function ChapterEditor() {
   const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      if (!validateFileType(file)) {
+        toast({ 
+          title: "Invalid file type", 
+          description: "Please upload audio or video files only", 
+          variant: "destructive" 
+        });
+        // Reset the input
+        event.target.value = '';
+        return;
+      }
       uploadAudioMutation.mutate(file);
     }
   };
@@ -225,6 +236,58 @@ export default function ChapterEditor() {
     if (confirm("Are you sure you want to delete this media file?")) {
       deleteAudioMutation.mutate(audioFileId);
     }
+  };
+
+  const validateFileType = (file: File) => {
+    const allowedTypes = [
+      // Audio types
+      'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/aac', 'audio/ogg', 'audio/flac',
+      // Video types
+      'video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo', 'video/webm'
+    ];
+    
+    const fileExtension = file.name.toLowerCase().split('.').pop();
+    const allowedExtensions = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac', 'mp4', 'mpeg', 'mov', 'avi', 'webm'];
+    
+    return allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension || '');
+  };
+
+  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    const validFiles = files.filter(validateFileType);
+    
+    if (validFiles.length === 0) {
+      toast({ 
+        title: "Invalid file type", 
+        description: "Please upload audio or video files only", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
+    if (validFiles.length > 1) {
+      toast({ 
+        title: "Multiple files not supported", 
+        description: "Please upload one file at a time", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
+    uploadAudioMutation.mutate(validFiles[0]);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
   };
 
   const handlePlayPause = () => {
@@ -389,21 +452,51 @@ export default function ChapterEditor() {
         <TabsContent value="media" className="space-y-6">
           <Card>
             <CardContent className="space-y-4 pt-6">
-              <div className="flex items-center gap-4">
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadAudioMutation.isPending}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload Media
-                </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="audio/*"
-                  onChange={handleAudioUpload}
-                  className="hidden"
-                />
+              <div 
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                  isDragOver 
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' 
+                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                }`}
+                onDrop={handleFileDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+              >
+                <div className="space-y-4">
+                  <div className="flex justify-center">
+                    <Upload className="h-12 w-12 text-gray-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-medium">Drop your media files here</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Or click to browse and select files
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Supported formats: MP3, WAV, M4A, AAC, OGG, FLAC, MP4, MOV, AVI, WebM
+                    </p>
+                  </div>
+                  <div>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadAudioMutation.isPending}
+                    >
+                      Select Files
+                    </Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="audio/*,video/*"
+                      onChange={handleAudioUpload}
+                      className="hidden"
+                    />
+                  </div>
+                  {uploadAudioMutation.isPending && (
+                    <p className="text-sm text-blue-600 dark:text-blue-400">
+                      Uploading and processing file...
+                    </p>
+                  )}
+                </div>
               </div>
 
               {audioFiles.length > 0 && (
