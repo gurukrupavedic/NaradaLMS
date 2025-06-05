@@ -18,7 +18,7 @@ export interface IStorage {
   getTrack(id: string): Promise<any | undefined>;
   
   // Chapter operations  
-  getChapter(id: string): Promise<any | undefined>;
+  getChapter(id: number): Promise<any | undefined>;
   
   // Student progress
   getStudentProgress(studentId: string): Promise<any[]>;
@@ -27,6 +27,9 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private users: Map<string, User> = new Map();
+  private segments: any[] = [];
+  private audioFiles: any[] = [];
+  private audioMappings: any[] = [];
   
   // Authentic 8-track Vedic curriculum from prototype files
   private tracks: any[] = [
@@ -433,41 +436,20 @@ export class MemStorage implements IStorage {
 
   async getChapter(id: number): Promise<any | undefined> {
     // Search for chapter across all tracks
-    let foundChapter = null;
-    let trackId = null;
-    
     for (const track of this.tracks) {
       const chapter = track.chapters.find((ch: any) => ch.id === id.toString());
       if (chapter) {
-        foundChapter = chapter;
-        trackId = track.id;
-        break;
+        return {
+          ...chapter,
+          trackId: track.id,
+          segments: [],
+          audioFiles: [],
+          mappings: [],
+          content: this.getChapterContent(chapter.id)
+        };
       }
     }
-    
-    if (!foundChapter) return undefined;
-    
-    // Get segments for this chapter
-    const segments = this.segments.filter(segment => segment.chapterId === id);
-    
-    // Get audio files for this chapter
-    const audioFiles = this.audioFiles.filter(file => file.chapterId === id);
-    
-    // Get audio mappings for this chapter's segments
-    const mappings = this.audioMappings.filter(mapping => 
-      segments.some(segment => segment.id === mapping.segmentId)
-    );
-    
-    return {
-      ...foundChapter,
-      trackId,
-      segments,
-      audioFiles,
-      mappings,
-      proficiencyLevel: this.getStudentProficiencyForChapter(foundChapter.id),
-      // Add authentic Vedic content for the chapter
-      content: this.getChapterContent(foundChapter.id)
-    };
+    return undefined;
   }
 
   async getStudentProgress(studentId: string): Promise<any[]> {
