@@ -75,7 +75,22 @@ export default function ChapterView() {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const updateTime = () => setCurrentTime(audio.currentTime);
+    const updateTime = () => {
+      const currentTime = audio.currentTime;
+      setCurrentTime(currentTime);
+      
+      // Check if we need to stop at segment end
+      if (chapter && isPlaying && currentSegmentId !== null) {
+        const currentMapping = chapter.mappings.find(m => m.segmentId === currentSegmentId);
+        if (currentMapping && currentTime >= currentMapping.endTime) {
+          console.log(`Auto-stopping segment ${currentSegmentId} at ${currentTime}s (end: ${currentMapping.endTime}s)`);
+          audio.pause();
+          setIsPlaying(false);
+          setCurrentSegmentId(null);
+        }
+      }
+    };
+    
     const handleEnded = () => {
       setIsPlaying(false);
       setCurrentSegmentId(null);
@@ -88,22 +103,9 @@ export default function ChapterView() {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, []);
+  }, [chapter, isPlaying, currentSegmentId]);
 
-  // Auto-pause when segment ends
-  useEffect(() => {
-    if (!chapter || !isPlaying || currentSegmentId === null) return;
 
-    const currentMapping = chapter.mappings.find(m => m.segmentId === currentSegmentId);
-    if (currentMapping && currentTime >= currentMapping.endTime - 0.1) { // Small buffer for timing precision
-      const audio = audioRef.current;
-      if (audio) {
-        audio.pause();
-        setIsPlaying(false);
-        setCurrentSegmentId(null);
-      }
-    }
-  }, [currentTime, currentSegmentId, chapter, isPlaying]);
 
   const handleSegmentClick = (segmentId: number) => {
     if (!chapter) return;
