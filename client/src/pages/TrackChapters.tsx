@@ -88,7 +88,7 @@ export default function TrackChapters() {
   };
 
   const handleEditChapter = (chapterId: number) => {
-    setLocation(`/content-management/track/${trackId}/chapter/${chapterId}`);
+    setLocation(`/chapter/${chapterId}`);
   };
 
   const handleDeleteChapter = (chapterId: number) => {
