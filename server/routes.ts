@@ -648,12 +648,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create a new segment
-  app.post('/api/admin/segments', async (req, res) => {
+  app.post('/api/admin/segments', isAuthenticated, async (req: any, res) => {
     try {
       const segmentData = insertTextSegmentSchema.parse(req.body);
       const segment = await storage.createTextSegment({
         ...segmentData,
-        createdBy: "system"
+        createdBy: req.user.claims.sub
       });
       res.json(segment);
     } catch (error) {
