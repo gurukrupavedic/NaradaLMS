@@ -7,6 +7,7 @@ import { insertTrackSchema, insertChapterSchema, insertTextSegmentSchema, insert
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { parseFile } from "music-metadata";
 
 // Configure multer for audio file uploads
 const uploadsDir = path.join(process.cwd(), "uploads");
@@ -587,12 +588,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Chapter ID is required" });
       }
 
+      // Extract audio duration using music-metadata
+      let duration = 0;
+      try {
+        const filePath = req.file.path;
+        const metadata = await parseFile(filePath);
+        duration = metadata.format.duration || 0;
+        console.log(`Extracted duration: ${duration}s for file: ${req.file.originalname}`);
+      } catch (metadataError) {
+        console.warn("Could not extract audio duration:", metadataError);
+      }
+
       const audioFile = await storage.createAudioFile({
         chapterId,
         filename: req.file.originalname,
         originalName: req.file.originalname,
         fileSize: req.file.size,
         mimeType: req.file.mimetype,
+        duration: duration,
         uploadedBy: "system",
       });
 
