@@ -40,6 +40,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Database will be seeded through content management interface
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

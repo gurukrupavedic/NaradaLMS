@@ -1,5 +1,6 @@
 import { db } from "./db";
 import { users, tracks, chapters, audioFiles, textSegments, audioMappings, studentProgress } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 export async function seedDatabase() {
   console.log("Seeding database with authentic Vedic content...");
