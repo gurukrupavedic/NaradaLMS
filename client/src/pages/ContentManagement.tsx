@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+
 import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
@@ -255,21 +255,23 @@ export default function ContentManagement() {
         </div>
 
         <div className="mb-6">
-          <Dialog open={createTrackDialogOpen} onOpenChange={setCreateTrackDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add New Track
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Track</DialogTitle>
-                <DialogDescription>
+          <Button onClick={() => setCreateTrackDialogOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Track
+          </Button>
+        </div>
+
+        {/* Create Track Modal */}
+        {createTrackDialogOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <Card className="w-full max-w-md mx-4">
+              <CardHeader>
+                <CardTitle>Create New Track</CardTitle>
+                <CardDescription>
                   Add a new learning track to the curriculum
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 mt-4">
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div>
                   <Label htmlFor="track-title">Track Title</Label>
                   <Input
@@ -305,10 +307,10 @@ export default function ContentManagement() {
                     Cancel
                   </Button>
                 </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <Card>
           <CardHeader>
