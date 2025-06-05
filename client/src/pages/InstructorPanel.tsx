@@ -69,16 +69,25 @@ export default function InstructorPanel() {
 
   const { data: chapters = [] } = useQuery<Chapter[]>({
     queryKey: ["/api/admin/chapters", selectedTrack],
+    queryFn: async () => {
+      console.log('Fetching chapters for track:', selectedTrack);
+      const response = await fetch(`/api/admin/chapters/${selectedTrack}`);
+      const data = await response.json();
+      console.log('Chapters data received:', data);
+      return data;
+    },
     enabled: !!selectedTrack,
   });
 
   const { data: segments = [] } = useQuery<TextSegment[]>({
     queryKey: ["/api/admin/segments", selectedChapter],
+    queryFn: () => fetch(`/api/admin/segments/${selectedChapter}`).then(res => res.json()),
     enabled: !!selectedChapter,
   });
 
   const { data: audioFiles = [] } = useQuery<AudioFile[]>({
     queryKey: ["/api/admin/audio-files", selectedChapter],
+    queryFn: () => fetch(`/api/admin/audio-files/${selectedChapter}`).then(res => res.json()),
     enabled: !!selectedChapter,
   });
 
