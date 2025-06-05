@@ -657,6 +657,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update audio file
+  app.patch('/api/admin/audio-files/:audioFileId', async (req, res) => {
+    try {
+      const audioFileId = parseInt(req.params.audioFileId);
+      const { filename } = req.body;
+      
+      if (!filename || filename.trim().length === 0) {
+        return res.status(400).json({ message: "Filename is required" });
+      }
+      
+      console.log(`Updating audio file ${audioFileId} filename to: ${filename}`);
+      
+      const updatedFile = await storage.updateAudioFile(audioFileId, { filename: filename.trim() });
+      console.log(`Audio file ${audioFileId} updated successfully`);
+      
+      res.json(updatedFile);
+    } catch (error) {
+      console.error("Error updating audio file:", error);
+      res.status(500).json({ message: "Failed to update audio file" });
+    }
+  });
+
   // Delete audio file
   app.delete('/api/admin/audio-files/:audioFileId', async (req, res) => {
     try {

@@ -81,6 +81,8 @@ export default function ChapterEditor() {
   const [segmentTextEnd, setSegmentTextEnd] = useState("");
   const [segmentLanguage, setSegmentLanguage] = useState("te");
   const [isDragOver, setIsDragOver] = useState(false);
+  const [editingFileId, setEditingFileId] = useState<number | null>(null);
+  const [editingFileName, setEditingFileName] = useState("");
 
   // Fetch chapter details
   const { data: chapter = {}, isLoading: chapterLoading } = useQuery({
@@ -158,6 +160,22 @@ export default function ChapterEditor() {
     },
     onError: (error: any) => {
       toast({ title: "Failed to upload media file", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Update audio file mutation
+  const updateAudioMutation = useMutation({
+    mutationFn: async ({ id, filename }: { id: number; filename: string }) => {
+      return await apiRequest("PATCH", `/api/admin/audio-files/${id}`, { filename });
+    },
+    onSuccess: () => {
+      toast({ title: "File name updated successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+      setEditingFileId(null);
+      setEditingFileName("");
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update file name", description: error.message, variant: "destructive" });
     },
   });
 
@@ -288,6 +306,30 @@ export default function ChapterEditor() {
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragOver(false);
+  };
+
+  const startEditing = (fileId: number, currentName: string) => {
+    setEditingFileId(fileId);
+    setEditingFileName(currentName);
+  };
+
+  const cancelEditing = () => {
+    setEditingFileId(null);
+    setEditingFileName("");
+  };
+
+  const saveFileName = () => {
+    if (editingFileId && editingFileName.trim()) {
+      updateAudioMutation.mutate({ id: editingFileId, filename: editingFileName.trim() });
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      saveFileName();
+    } else if (e.key === 'Escape') {
+      cancelEditing();
+    }
   };
 
   const handlePlayPause = () => {
