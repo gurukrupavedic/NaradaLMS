@@ -196,11 +196,29 @@ export default function ChapterEditor() {
       return response.json();
     },
     onSuccess: () => {
-      toast({ title: "Audio file uploaded successfully" });
+      toast({ title: "Media file uploaded successfully" });
       queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
     },
     onError: (error: any) => {
-      toast({ title: "Failed to upload audio file", description: error.message, variant: "destructive" });
+      toast({ title: "Failed to upload media file", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Delete audio file mutation
+  const deleteAudioMutation = useMutation({
+    mutationFn: async (audioFileId: number) => {
+      await apiRequest("DELETE", `/api/admin/audio-files/${audioFileId}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Media file deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+      // Clear selected audio file if it was deleted
+      setSelectedAudioFile(null);
+      setAudioPlayer(null);
+      setIsPlaying(false);
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to delete media file", description: error.message, variant: "destructive" });
     },
   });
 
@@ -242,6 +260,12 @@ export default function ChapterEditor() {
     const file = event.target.files?.[0];
     if (file) {
       uploadAudioMutation.mutate(file);
+    }
+  };
+
+  const handleDeleteAudioFile = (audioFileId: number) => {
+    if (confirm("Are you sure you want to delete this media file?")) {
+      deleteAudioMutation.mutate(audioFileId);
     }
   };
 
@@ -441,20 +465,14 @@ export default function ChapterEditor() {
         {/* Media Content Phase */}
         <TabsContent value="media" className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Music className="w-5 h-5" />
-                Audio Files
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               <div className="flex items-center gap-4">
                 <Button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadAudioMutation.isPending}
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Upload Audio File
+                  Upload Media
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -476,13 +494,23 @@ export default function ChapterEditor() {
                             Duration: {Math.round(file.duration || 0)}s
                           </p>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedAudioFile(file.id)}
-                        >
-                          Select for Mapping
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedAudioFile(file.id)}
+                          >
+                            Select for Mapping
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteAudioFile(file.id)}
+                            disabled={deleteAudioMutation.isPending}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </Card>
                   ))}
@@ -491,7 +519,7 @@ export default function ChapterEditor() {
 
               {audioFiles.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
-                  No audio files uploaded yet. Upload audio files to proceed with segmentation.
+                  No media files uploaded yet. Upload media files to proceed with segmentation.
                 </div>
               )}
             </CardContent>

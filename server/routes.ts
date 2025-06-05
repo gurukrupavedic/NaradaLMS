@@ -644,6 +644,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete audio file
+  app.delete('/api/admin/audio-files/:audioFileId', async (req, res) => {
+    try {
+      const audioFileId = parseInt(req.params.audioFileId);
+      console.log(`Deleting audio file ${audioFileId}`);
+      await storage.deleteAudioFile(audioFileId);
+      console.log(`Audio file ${audioFileId} deleted successfully`);
+      res.json({ message: "Audio file deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting audio file:", error);
+      res.status(500).json({ message: "Failed to delete audio file" });
+    }
+  });
+
   app.get('/api/admin/audio-files/:chapterId', async (req, res) => {
     try {
       const chapterId = parseInt(req.params.chapterId);
