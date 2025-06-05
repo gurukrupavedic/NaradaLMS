@@ -13,7 +13,6 @@ interface Track {
   chapterCount: number;
   completedChapters: number;
   currentLevel: number;
-  estimatedHours: number;
 }
 
 interface TrackCardProps {
@@ -76,10 +75,7 @@ export default function TrackCard({ track, onContinue }: TrackCardProps) {
                 <BookOpen className="h-4 w-4 mr-1" />
                 {track.chapterCount} Chapter{track.chapterCount !== 1 ? 's' : ''}
               </span>
-              <span className="text-sm text-muted-foreground flex items-center">
-                <Clock className="h-4 w-4 mr-1" />
-                ~{track.estimatedHours} hour{track.estimatedHours !== 1 ? 's' : ''}
-              </span>
+
               <Badge className={getLevelColor(track.currentLevel)}>
                 {getLevelLabel(track.currentLevel)}
               </Badge>

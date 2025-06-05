@@ -53,8 +53,7 @@ const TABS: Tab[] = [
 ];
 
 export default function RoleTabs({ user }: RoleTabsProps) {
-  // Determine which tabs the user has access to
-  // Temporarily allow all tabs for testing content management
+  // Remove role restrictions entirely - show all tabs for development
   const availableTabs = TABS;
 
   // Default to the first available tab
