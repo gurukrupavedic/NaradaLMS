@@ -16,6 +16,8 @@ export default function ContentManagement() {
   const { toast } = useToast();
   
   const [createTrackModalOpen, setCreateTrackModalOpen] = useState(false);
+  const [editTrackModalOpen, setEditTrackModalOpen] = useState(false);
+  const [editingTrack, setEditingTrack] = useState<any>(null);
   const [newTrack, setNewTrack] = useState({ title: "", description: "" });
 
   // Fetch tracks
@@ -40,6 +42,40 @@ export default function ContentManagement() {
     },
   });
 
+  // Edit track mutation
+  const editTrackMutation = useMutation({
+    mutationFn: async (trackData: { id: number; title: string; description: string }) => {
+      const response = await apiRequest("PUT", `/api/admin/tracks/${trackData.id}`, {
+        title: trackData.title,
+        description: trackData.description
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Track updated successfully" });
+      setEditTrackModalOpen(false);
+      setEditingTrack(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update track", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Delete track mutation
+  const deleteTrackMutation = useMutation({
+    mutationFn: async (trackId: number) => {
+      await apiRequest("DELETE", `/api/admin/tracks/${trackId}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Track deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to delete track", description: error.message, variant: "destructive" });
+    },
+  });
+
   const handleCreateTrack = () => {
     if (!newTrack.title.trim()) {
       toast({ title: "Please enter a track title", variant: "destructive" });
@@ -54,6 +90,29 @@ export default function ContentManagement() {
 
   const handleTrackClick = (trackId: number) => {
     setLocation(`/content-management/track/${trackId}`);
+  };
+
+  const handleEditTrack = (track: any) => {
+    setEditingTrack(track);
+    setEditTrackModalOpen(true);
+  };
+
+  const handleUpdateTrack = () => {
+    if (!editingTrack?.title?.trim()) {
+      toast({ title: "Please enter a track title", variant: "destructive" });
+      return;
+    }
+    if (!editingTrack?.description?.trim()) {
+      toast({ title: "Please enter a track description", variant: "destructive" });
+      return;
+    }
+    editTrackMutation.mutate(editingTrack);
+  };
+
+  const handleDeleteTrack = (trackId: number) => {
+    if (confirm("Are you sure you want to delete this track? This will also delete all its chapters.")) {
+      deleteTrackMutation.mutate(trackId);
+    }
   };
 
   if (isLoading) {
@@ -77,17 +136,20 @@ export default function ContentManagement() {
 
         {/* Track List */}
         <div className="grid gap-4">
-          {tracks.map((track: any) => (
-            <Card key={track.id} className="hover:shadow-md transition-shadow cursor-pointer">
+          {tracks.map((track: any, index: number) => (
+            <Card key={track.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-semibold">{track.title}</h3>
+                      <span className="text-sm text-muted-foreground font-medium">
+                        Track {track.order || index + 1}
+                      </span>
                       <Badge variant={track.status === "published" ? "default" : "secondary"}>
                         {track.status}
                       </Badge>
                     </div>
+                    <h3 className="text-xl font-semibold mb-2">{track.title}</h3>
                     <p className="text-muted-foreground mb-3">{track.description}</p>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
@@ -100,14 +162,32 @@ export default function ContentManagement() {
                       </span>
                     </div>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handleTrackClick(track.id)}
-                  >
-                    Manage Chapters
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditTrack(track)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDeleteTrack(track.id)}
+                      disabled={deleteTrackMutation.isPending}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleTrackClick(track.id)}
+                    >
+                      Manage Chapters
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -166,6 +246,54 @@ export default function ContentManagement() {
                     onClick={() => {
                       setCreateTrackModalOpen(false);
                       setNewTrack({ title: "", description: "" });
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Edit Track Modal */}
+        {editTrackModalOpen && editingTrack && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <Card className="w-full max-w-md mx-4">
+              <CardHeader>
+                <CardTitle>Edit Track</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="edit-track-title">Track Title</Label>
+                  <Input
+                    id="edit-track-title"
+                    value={editingTrack.title}
+                    onChange={(e) => setEditingTrack({ ...editingTrack, title: e.target.value })}
+                    placeholder="Enter track title"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-track-description">Description</Label>
+                  <Textarea
+                    id="edit-track-description"
+                    value={editingTrack.description}
+                    onChange={(e) => setEditingTrack({ ...editingTrack, description: e.target.value })}
+                    placeholder="Enter track description"
+                  />
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button 
+                    onClick={handleUpdateTrack} 
+                    disabled={editTrackMutation.isPending || !editingTrack.title?.trim() || !editingTrack.description?.trim()}
+                  >
+                    Update Track
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setEditTrackModalOpen(false);
+                      setEditingTrack(null);
                     }}
                   >
                     Cancel
