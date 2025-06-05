@@ -39,7 +39,7 @@ export default function TrackChapters() {
 
   // Fetch chapters for this track
   const { data: chapters = [], isLoading } = useQuery({
-    queryKey: ["/api/admin/tracks", trackId, "chapters"],
+    queryKey: [`/api/admin/chapters/${trackId}`],
     enabled: !!trackId,
   });
 
@@ -53,7 +53,7 @@ export default function TrackChapters() {
       toast({ title: "Chapter created successfully" });
       setCreateChapterModalOpen(false);
       setNewChapter({ title: "", description: "" });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks", trackId, "chapters"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${trackId}`] });
     },
     onError: (error: any) => {
       toast({ title: "Failed to create chapter", description: error.message, variant: "destructive" });
