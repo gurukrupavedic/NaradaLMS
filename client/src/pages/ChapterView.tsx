@@ -144,12 +144,17 @@ export default function ChapterView() {
       );
       
       if (currentMapping && time >= currentMapping.endTime && audioRef.current) {
-        console.log(`Auto-pausing at segment ${segmentPlayback} end time: ${currentMapping.endTime}s`);
+        console.log(`Auto-pausing at segment ${segmentPlayback} end time: ${currentMapping.endTime}s (current: ${time.toFixed(2)}s)`);
         audioRef.current.pause();
         setIsPlaying(false);
         setSegmentPlayback(null);
         setActiveSegment(null);
         return;
+      }
+      
+      // Debug: Log current timing for active segment
+      if (currentMapping) {
+        console.log(`Segment ${segmentPlayback} playing: ${time.toFixed(2)}s / ${currentMapping.endTime}s`);
       }
     }
 
