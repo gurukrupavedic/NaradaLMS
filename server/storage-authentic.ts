@@ -136,7 +136,7 @@ export class MemStorage implements IStorage {
       id: 1,
       chapterId: 2,
       filename: "shraddha-suktam-1.m4a",
-      reciter: "Authentic Vedic Recitation",
+      reciter: "1.2 Ravikiran guruvugaru - sukta patham",
       duration: 99, // Duration from your audio file
       uploadedAt: new Date("2025-01-01"),
       fileSize: 2450000
