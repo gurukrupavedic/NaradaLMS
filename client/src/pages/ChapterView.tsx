@@ -11,26 +11,29 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { InteractiveText } from "@/components/InteractiveText";
 
 interface AudioFile {
-  id: string;
-  name: string;
+  id: number;
+  chapterId: number;
+  filename: string;
   reciter: string;
-  url: string;
-  duration?: number;
+  duration: number;
+  uploadedAt: string;
+  fileSize: number;
 }
 
 interface TextSegment {
   id: number;
-  conceptualName: string;
-  textReferences: {
-    te?: { start: number; end: number };
-    hi?: { start: number; end: number };
-    en?: { start: number; end: number };
+  chapterId: number;
+  text: {
+    te: string;
+    hi: string;
+    en: string;
   };
+  order: number;
 }
 
 interface AudioMapping {
+  audioFileId: number;
   segmentId: number;
-  audioFileId: string;
   startTime: number;
   endTime: number;
 }
@@ -40,14 +43,14 @@ interface Chapter {
   title: string;
   trackId: string;
   order: number;
+  proficiencyLevel: number;
   content: {
     te?: string;
     hi?: string;
     en?: string;
   };
-  status: string;
-  audioFiles: AudioFile[];
   segments: TextSegment[];
+  audioFiles: AudioFile[];
   mappings: AudioMapping[];
 }
 
@@ -123,7 +126,9 @@ export default function ChapterView() {
   // Update audio source when selection changes
   useEffect(() => {
     if (selectedAudioFile && audioRef.current) {
-      audioRef.current.src = selectedAudioFile.url;
+      // For demo purposes, we'll use a placeholder audio path
+      // In production, this would reference the actual uploaded file
+      audioRef.current.src = `/audio/${selectedAudioFile.filename}`;
       audioRef.current.playbackRate = playbackSpeed;
     }
   }, [selectedAudioFile, playbackSpeed]);
@@ -298,9 +303,9 @@ export default function ChapterView() {
               <div>
                 <label className="block text-sm font-medium mb-2">Recitation</label>
                 <Select 
-                  value={selectedAudioFile?.id || ''} 
+                  value={selectedAudioFile?.id.toString() || ''} 
                   onValueChange={(value) => {
-                    const audioFile = chapter.audioFiles.find(f => f.id === value);
+                    const audioFile = chapter.audioFiles.find(f => f.id.toString() === value);
                     setSelectedAudioFile(audioFile || null);
                   }}
                 >
@@ -309,7 +314,7 @@ export default function ChapterView() {
                   </SelectTrigger>
                   <SelectContent>
                     {chapter.audioFiles.map((file) => (
-                      <SelectItem key={file.id} value={file.id}>
+                      <SelectItem key={file.id} value={file.id.toString()}>
                         {file.reciter}
                       </SelectItem>
                     ))}
@@ -386,16 +391,38 @@ export default function ChapterView() {
           <CardTitle>Chapter Content</CardTitle>
         </CardHeader>
         <CardContent>
-          {chapter.content && (
-            <InteractiveText
-              content={chapter.content[selectedLanguage] || ''}
-              segments={chapter.segments}
-              selectedScript={selectedLanguage}
-              audioFile={selectedAudioFile}
-              mappings={chapter.mappings}
-              activeSegment={activeSegment}
-              onSegmentClick={handleSegmentClick}
-            />
+          {chapter.segments.length > 0 ? (
+            <div className="space-y-4">
+              <div className="text-right text-sm text-gray-500 mb-4">
+                Click any text segment to jump to its audio position
+              </div>
+              <div className="space-y-3">
+                {chapter.segments.map((segment) => (
+                  <div
+                    key={segment.id}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      activeSegment === segment.id
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-200 hover:border-gray-300 dark:border-gray-700'
+                    }`}
+                    onClick={() => handleSegmentClick(segment.id)}
+                  >
+                    <div className="text-lg leading-relaxed font-['Tiro_Telugu','Tiro_Devanagari_Sanskrit',serif]">
+                      {segment.text[selectedLanguage]}
+                    </div>
+                    {selectedLanguage !== 'en' && (
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-mono">
+                        {segment.text.en}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-lg leading-relaxed font-['Tiro_Telugu','Tiro_Devanagari_Sanskrit',serif]">
+              {chapter.content?.[selectedLanguage] || 'No content available'}
+            </div>
           )}
         </CardContent>
       </Card>

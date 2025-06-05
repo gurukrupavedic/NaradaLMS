@@ -475,7 +475,6 @@ export class MemStorage implements IStorage {
       const chapter = track.chapters.find((ch: any) => ch.id === id.toString());
       if (chapter) {
         // Get segments for this chapter (match by numeric ID)
-        console.log(`Looking for segments with chapterId ${id}. Available segments:`, this.segments.map(s => ({ id: s.id, chapterId: s.chapterId })));
         const segments = this.segments.filter(segment => segment.chapterId === id);
         
         // Get audio files for this chapter (match by numeric ID)
