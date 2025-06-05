@@ -10,6 +10,7 @@ import NotFound from "@/pages/not-found";
 import TrackView from "@/pages/TrackView";
 import ChapterView from "@/pages/ChapterView";
 import ContentManagement from "@/pages/ContentManagement";
+import TrackChapters from "@/pages/TrackChapters";
 import ChapterEditor from "@/pages/ChapterEditor";
 
 function Router() {
@@ -33,6 +34,8 @@ function Router() {
           <Route path="/" component={() => <RoleTabs user={user as any} />} />
           <Route path="/dashboard" component={() => <RoleTabs user={user as any} />} />
           <Route path="/content-management" component={() => <ContentManagement />} />
+          <Route path="/content-management/track/:trackId" component={() => <TrackChapters />} />
+          <Route path="/content-management/track/:trackId/chapter/:chapterId" component={() => <ChapterEditor />} />
           <Route path="/tracks/:trackId" component={TrackView} />
           <Route path="/chapter/:id" component={ChapterView} />
         </>
