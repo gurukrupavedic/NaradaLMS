@@ -270,8 +270,8 @@ export default function InstructorPanel() {
 
     try {
       // Swap the order values
-      await apiRequest(`/api/admin/tracks/${currentTrack.id}`, 'PUT', { order: targetOrder });
-      await apiRequest(`/api/admin/tracks/${targetTrack.id}`, 'PUT', { order: currentOrder });
+      await apiRequest('PUT', `/api/admin/tracks/${currentTrack.id}`, { order: targetOrder });
+      await apiRequest('PUT', `/api/admin/tracks/${targetTrack.id}`, { order: currentOrder });
 
       // Refresh the tracks list
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
