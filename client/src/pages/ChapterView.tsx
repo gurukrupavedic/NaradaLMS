@@ -187,14 +187,7 @@ export default function ChapterView() {
   };
 
   const handleSegmentClick = (segmentId: number) => {
-    console.log('Segment clicked:', segmentId, 'Language:', selectedLanguage);
-    
     if (!chapter?.mappings || !selectedAudioFile || !audioRef.current) {
-      console.log('Missing required data for segment click:', {
-        mappings: !!chapter?.mappings,
-        audioFile: !!selectedAudioFile,
-        audioRef: !!audioRef.current
-      });
       return;
     }
 
@@ -203,12 +196,8 @@ export default function ChapterView() {
       m.audioFileId === selectedAudioFile.id
     );
 
-    console.log('Found mapping:', mapping);
-    console.log('All mappings:', chapter.mappings);
-
     if (mapping) {
       try {
-        console.log(`Playing segment ${segmentId}: ${mapping.startTime}s - ${mapping.endTime}s`);
         audioRef.current.currentTime = mapping.startTime;
         setCurrentTime(mapping.startTime);
         setSegmentPlayback(segmentId); // Enable auto-pause for this segment
@@ -220,8 +209,6 @@ export default function ChapterView() {
       } catch (error) {
         console.error('Error in handleSegmentClick:', error);
       }
-    } else {
-      console.log('No mapping found for segment:', segmentId, 'with audio file:', selectedAudioFile.id);
     }
   };
 

@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage-authentic";
+import { storage } from "./storage-vedic";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertTrackSchema, insertChapterSchema, insertTextSegmentSchema, insertAudioMappingSchema, insertStudentProgressSchema } from "@shared/schema";
 import multer from "multer";
@@ -41,7 +41,7 @@ function requireRole(role: string) {
     }
 
     const user = await storage.getUser(userId);
-    if (!user || !user.roles.includes(role)) {
+    if (!user || !user.roles || !user.roles.includes(role)) {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 
