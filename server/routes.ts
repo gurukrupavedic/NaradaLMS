@@ -464,7 +464,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/admin/chapters/:trackId', async (req, res) => {
     try {
       const trackId = parseInt(req.params.trackId);
+      console.log(`Fetching chapters for track ${trackId}`);
       const chapters = await storage.getChaptersByTrack(trackId);
+      console.log(`Found ${chapters.length} chapters for track ${trackId}`);
       res.json(chapters);
     } catch (error) {
       console.error("Error fetching chapters:", error);

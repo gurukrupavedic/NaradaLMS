@@ -67,7 +67,7 @@ export default function TrackChapters() {
     },
     onSuccess: () => {
       toast({ title: "Chapter deleted successfully" });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks", trackId, "chapters"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${trackId}`] });
     },
     onError: (error: any) => {
       toast({ title: "Failed to delete chapter", description: error.message, variant: "destructive" });
