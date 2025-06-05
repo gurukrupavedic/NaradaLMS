@@ -66,7 +66,8 @@ export default function ChapterView() {
   const { toast } = useToast();
 
   const { data: chapter, isLoading } = useQuery<Chapter>({
-    queryKey: ["/api/chapters", params?.id],
+    queryKey: [`/api/chapters/${params?.id}`],
+    enabled: !!params?.id,
   });
 
   // Update current time as audio plays
