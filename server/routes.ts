@@ -103,6 +103,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!track) {
         return res.status(404).json({ message: "Track not found" });
       }
+      
+      // Debug logging
+      console.log(`Track ${id} found:`, {
+        title: track.title,
+        chaptersCount: track.chapters?.length || 0,
+        chapters: track.chapters?.map((ch: any) => ({ id: ch.id, title: ch.title })) || []
+      });
+      
       res.json(track);
     } catch (error) {
       console.error("Error fetching track:", error);
