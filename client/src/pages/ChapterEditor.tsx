@@ -279,7 +279,7 @@ export default function ChapterEditor() {
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => setLocation("/content-management")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Content Management
+            Back to Chapters
           </Button>
           <div>
             <h1 className="text-2xl font-bold">{chapter?.title}</h1>
