@@ -36,10 +36,55 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private tracks: any[] = [
     {
-      id: 6,
+      id: 1,
       title: "Vaidika Nithya Karma",
-      description: "Daily Vedic practices and rituals",
+      description: "Daily Vedic practices and rituals for spiritual growth",
       order: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: "system"
+    },
+    {
+      id: 2,
+      title: "Rig Veda Samhita",
+      description: "Sacred hymns and mantras from the Rig Veda",
+      order: 2,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: "system"
+    },
+    {
+      id: 3,
+      title: "Sama Veda Gayatri",
+      description: "Melodic chants and musical verses from Sama Veda",
+      order: 3,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: "system"
+    },
+    {
+      id: 4,
+      title: "Yajur Veda Mantras",
+      description: "Ritual formulas and sacrificial prayers",
+      order: 4,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: "system"
+    },
+    {
+      id: 5,
+      title: "Atharva Veda Wisdom",
+      description: "Healing mantras and spiritual knowledge",
+      order: 5,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: "system"
+    },
+    {
+      id: 6,
+      title: "Upanishad Teachings",
+      description: "Philosophical wisdom and spiritual insights",
+      order: 6,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: "system"
@@ -47,15 +92,93 @@ export class MemStorage implements IStorage {
   ];
 
   private chapters: any[] = [
+    // Vaidika Nithya Karma chapters
     {
-      id: 10,
-      trackId: 6,
+      id: 1,
+      trackId: 1,
       title: "Shraddha Suktam",
       order: 1,
       content: {
         te: "శ్రద్ధా సూక్తం తెలుగు వచనం",
         hi: "श्रद्धा सूक्त हिंदी पाठ",
         en: "Shraddha Suktam English translation"
+      },
+      status: "published",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: "system"
+    },
+    {
+      id: 2,
+      trackId: 1,
+      title: "Sandhya Vandana",
+      order: 2,
+      content: {
+        te: "సంధ్యా వందనా మంత్రాలు",
+        hi: "संध्या वंदना मंत्र",
+        en: "Evening prayers and worship"
+      },
+      status: "published",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: "system"
+    },
+    // Rig Veda chapters
+    {
+      id: 3,
+      trackId: 2,
+      title: "Agni Sukta",
+      order: 1,
+      content: {
+        te: "అగ్ని సూక్తం",
+        hi: "अग्नि सूक्त",
+        en: "Hymns to Agni, the fire deity"
+      },
+      status: "published",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: "system"
+    },
+    {
+      id: 4,
+      trackId: 2,
+      title: "Indra Sukta",
+      order: 2,
+      content: {
+        te: "ఇంద్ర సూక్తం",
+        hi: "इंद्र सूक्त",
+        en: "Hymns to Indra, king of gods"
+      },
+      status: "published",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: "system"
+    },
+    // Sama Veda chapters
+    {
+      id: 5,
+      trackId: 3,
+      title: "Gayatri Mantra",
+      order: 1,
+      content: {
+        te: "గాయత్రీ మంత్రం",
+        hi: "गायत्री मंत्र",
+        en: "The most sacred Vedic mantra"
+      },
+      status: "published",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: "system"
+    },
+    {
+      id: 6,
+      trackId: 3,
+      title: "Soma Gana",
+      order: 2,
+      content: {
+        te: "సోమ గానం",
+        hi: "सोम गान",
+        en: "Sacred songs for Soma rituals"
       },
       status: "published",
       createdAt: new Date(),
