@@ -88,7 +88,7 @@ export default function TrackChapters() {
   };
 
   const handleEditChapter = (chapterId: number) => {
-    setLocation(`/chapter/${chapterId}`);
+    setLocation(`/chapter-editor/${chapterId}`);
   };
 
   const handleDeleteChapter = (chapterId: number) => {
