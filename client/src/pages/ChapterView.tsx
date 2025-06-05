@@ -63,6 +63,7 @@ export default function ChapterView() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [currentSegmentId, setCurrentSegmentId] = useState<number | null>(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
 
@@ -136,6 +137,7 @@ export default function ChapterView() {
     // Set audio source if needed
     if (audio.src !== `/audio/${audioFile.filename}`) {
       audio.src = `/audio/${audioFile.filename}`;
+      audio.playbackRate = playbackSpeed;
     }
 
     // Set playback position and play
@@ -322,13 +324,15 @@ export default function ChapterView() {
               <div className="flex items-center gap-2">
                 <select 
                   className="text-sm border rounded px-2 py-1 bg-white dark:bg-gray-800"
+                  value={playbackSpeed}
                   onChange={(e) => {
+                    const newSpeed = parseFloat(e.target.value);
+                    setPlaybackSpeed(newSpeed);
                     const audio = audioRef.current;
                     if (audio) {
-                      audio.playbackRate = parseFloat(e.target.value);
+                      audio.playbackRate = newSpeed;
                     }
                   }}
-                  defaultValue="1"
                 >
                   <option value="0.5">0.5x</option>
                   <option value="0.75">0.75x</option>
@@ -367,6 +371,7 @@ export default function ChapterView() {
                     } else {
                       if (!audio.src) {
                         audio.src = `/audio/${chapter.audioFiles[0].filename}`;
+                        audio.playbackRate = playbackSpeed;
                       }
                       audio.play().then(() => setIsPlaying(true));
                     }
