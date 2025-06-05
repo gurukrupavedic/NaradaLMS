@@ -28,17 +28,107 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private users: Map<string, User> = new Map();
   private segments: any[] = [
-    // Śraddhā Sūktam segments for chapter 2
-    { id: 1, chapterId: 2, text: { te: "శ్ర॒ద్ధాయా॒ఽగ్నిః సమి॑ధ్యతే", hi: "श्र॒द्धाया॒-ऽग्नि-स्समि॑ध्यते", en: "oṁ śra̱ddhayā̱'gnissami̍dhyate" }, order: 1 },
-    { id: 2, chapterId: 2, text: { te: "శ్ర॒ద్ధయా॑ విందతే హ॒విః", hi: "श्र॒द्धया॑ विन्दते ह॒विः", en: "śra̱ddhayā̍ vindateha̱viḥ" }, order: 2 },
-    { id: 3, chapterId: 2, text: { te: "శ్ర॒ద్ధాం భగ॑స్య మూ॒ర్ధని॑", hi: "श्र॒द्धा-म्भग॑स्य मू॒र्धनि॑", en: "śra̱ddhāṁ bhaga̍sya mū̱rdhani̍" }, order: 3 },
-    { id: 4, chapterId: 2, text: { te: "వచ॒సాఽఽవే॑దయామసి", hi: "वच॒सा-ऽऽवे॑दयामसि", en: "vaca̱sā ve̍dayāmasi" }, order: 4 },
-    { id: 5, chapterId: 2, text: { te: "ప్రి॒యగ్గ్ శ్ర॑ద్ధే॒ దద॑తః", hi: "प्रि॒यग्ग् श्र॑द्धे॒ दद॑तः", en: "pri̱yagg śra̍ddhe̱ dada̍taḥ" }, order: 5 },
-    { id: 6, chapterId: 2, text: { te: "ప్రి॒యగ్గ్ శ్ర॑ద్ధే॒ దిదా॑సతః", hi: "प्रि॒यग्ग् श्र॑द्धे॒ दिदा॑सतः", en: "pri̱yagg śra̍ddhe̱ didā̍sataḥ" }, order: 6 },
-    { id: 7, chapterId: 2, text: { te: "ప్రి॒యం భో॒జేషు॒ యజ్వ॑సు", hi: "प्रि॒य-म्भो॒जेषु॒ यज्व॑सु", en: "pri̱yaṁ bho̱jeṣu̱ yajva̍su" }, order: 7 },
-    { id: 8, chapterId: 2, text: { te: "ఇ॒దం మ॑ ఉది॒తం కృ॑ధి", hi: "इ॒द-म्म॑ उदि॒त-ङ्कृ॑धि", en: "i̱damma̍ udi̱taṁ kṛ̍dhi" }, order: 8 },
-    { id: 9, chapterId: 2, text: { te: "యథా॑ దే॒వా అసు॑రేషు", hi: "यथा॑ दे॒वा असु॑रेषु", en: "yathā̍ de̱vā asu̍ reṣu" }, order: 9 },
-    { id: 10, chapterId: 2, text: { te: "శ్ర॒ద్ధాము॒గ్రేషు॑ చక్రి॒రే", hi: "श्र॒द्धामु॒ग्रेषु॑ चक्रि॒रे", en: "śra̱ddhāmu̱greṣu̍ cakri̱re" }, order: 10 }
+    // Character-position based segments for Śraddhā Sūktam (chapter 2)
+    { 
+      id: 1, 
+      chapterId: 2, 
+      conceptualName: "Opening Invocation - Agni and Faith",
+      textReferences: {
+        te: { start: 0, end: 25 }, // "శ్ర॒ద్ధాయా॒ఽగ్నిః సమి॑ధ్యతే"
+        hi: { start: 0, end: 28 }, // "श्र॒द्धाया॒-ऽग्नि-स्समि॑ध्यते"
+        en: { start: 0, end: 30 }  // "śra̠ddhāyā̠-'gni-ssami̍dhyatē"
+      }
+    },
+    { 
+      id: 2, 
+      chapterId: 2, 
+      conceptualName: "Faith and Oblation",
+      textReferences: {
+        te: { start: 28, end: 52 }, // "శ్ర॒ద్ధయా॑ విందతే హ॒విః"
+        hi: { start: 31, end: 54 }, // "श्र॒द्धया॑ विन्दते ह॒विः"
+        en: { start: 33, end: 59 }  // "śra̠ddhayā̍ vindatē ha̠viḥ"
+      }
+    },
+    { 
+      id: 3, 
+      chapterId: 2, 
+      conceptualName: "Crown of Bhaga",
+      textReferences: {
+        te: { start: 55, end: 82 }, // "శ్ర॒ద్ధాం భగ॑స్య మూ॒ర్ధని॑"
+        hi: { start: 57, end: 85 }, // "श्र॒द्धा-म्भग॑स्य मू॒र्धनि॑"
+        en: { start: 62, end: 97 }  // "śra̠ddhā-mbhaga̍sya mū̠rdhani̍"
+      }
+    },
+    { 
+      id: 4, 
+      chapterId: 2, 
+      conceptualName: "Declaration by Speech",
+      textReferences: {
+        te: { start: 85, end: 109 }, // "వచ॒సాఽఽవే॑దయామసి"
+        hi: { start: 88, end: 112 }, // "वच॒सा-ऽऽवे॑दयामसि"
+        en: { start: 100, end: 123 } // "vacha̠sā-''vē̍dayāmasi"
+      }
+    },
+    { 
+      id: 5, 
+      chapterId: 2, 
+      conceptualName: "Beloved of the Faithful - Giver",
+      textReferences: {
+        te: { start: 112, end: 140 }, // "ప్రి॒యగ్గ్ శ్ర॑ద్ధే॒ దద॑తః"
+        hi: { start: 115, end: 144 }, // "प्रि॒यग्ग् श्र॑द्धे॒ दद॑तः"
+        en: { start: 126, end: 155 } // "pri̠yagg śra̍ddhē̠ dada̍taḥ"
+      }
+    },
+    { 
+      id: 6, 
+      chapterId: 2, 
+      conceptualName: "Beloved of the Faithful - Desiring",
+      textReferences: {
+        te: { start: 143, end: 173 }, // "ప్రి॒యగ్గ్ శ్ర॑ద్ధే॒ దిదా॑సతః"
+        hi: { start: 147, end: 178 }, // "प्रि॒यग्ग् श्र॑द्धे॒ दिदा॑सतः"
+        en: { start: 158, end: 189 } // "pri̠yagg śra̍ddhē̠ didā̍sataḥ"
+      }
+    },
+    { 
+      id: 7, 
+      chapterId: 2, 
+      conceptualName: "Among Bhojas and Sacrifice",
+      textReferences: {
+        te: { start: 176, end: 203 }, // "ప్రి॒యం భో॒జేషు॒ యజ్వ॑సు"
+        hi: { start: 181, end: 209 }, // "प्रि॒य-म्भो॒जेषु॒ यज्व॑सु"
+        en: { start: 192, end: 221 } // "pri̠ya-mbhō̠jēṣu̠ yajva̍su"
+      }
+    },
+    { 
+      id: 8, 
+      chapterId: 2, 
+      conceptualName: "Make This Rise",
+      textReferences: {
+        te: { start: 208, end: 230 }, // "ఇ॒దం మ॑ ఉది॒తం కృ॑ధి"
+        hi: { start: 214, end: 237 }, // "इ॒द-म्म॑ उदि॒त-ङ्कृ॑धि"
+        en: { start: 226, end: 252 } // "i̠da-mma̍ udi̠ta-ṅkṛ̍dhi"
+      }
+    },
+    { 
+      id: 9, 
+      chapterId: 2, 
+      conceptualName: "Gods Against Asuras",
+      textReferences: {
+        te: { start: 233, end: 257 }, // "యథా॑ దే॒వా అసు॑రేషు"
+        hi: { start: 240, end: 265 }, // "यथा॑ दे॒वा असु॑रेषु"
+        en: { start: 255, end: 277 } // "yathā̍ dē̠vā asu̍rēṣu"
+      }
+    },
+    { 
+      id: 10, 
+      chapterId: 2, 
+      conceptualName: "Faith in Fierce Ones",
+      textReferences: {
+        te: { start: 260, end: 288 }, // "శ్ర॒ద్ధాము॒గ్రేషు॑ చక్రి॒రే"
+        hi: { start: 268, end: 297 }, // "श्र॒द्धामु॒ग्रेषु॑ चक्रि॒रे"
+        en: { start: 280, end: 311 } // "śra̠ddhāmu̠grēṣu̍ chakri̠rē"
+      }
+    }
   ];
   
   private audioFiles: any[] = [

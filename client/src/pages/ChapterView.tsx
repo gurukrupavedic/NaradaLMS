@@ -1,33 +1,23 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useLocation, useParams } from "wouter";
+import React, { useState, useRef, useEffect } from "react";
+import { useRoute } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronLeft, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { ChevronLeft, Play, Pause, Square, Volume2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useToast } from "@/hooks/use-toast";
 
-interface AudioFile {
-  id: number;
-  chapterId: number;
-  filename: string;
-  reciter: string;
-  duration: number;
-  uploadedAt: string;
-  fileSize: number;
+interface TextReferences {
+  te?: { start: number; end: number };
+  hi?: { start: number; end: number };
+  en?: { start: number; end: number };
 }
 
-interface TextSegment {
+interface Segment {
   id: number;
   chapterId: number;
-  text: {
-    te: string;
-    hi: string;
-    en: string;
-  };
-  order: number;
+  conceptualName: string;
+  textReferences: TextReferences;
 }
 
 interface AudioMapping {
@@ -37,216 +27,210 @@ interface AudioMapping {
   endTime: number;
 }
 
+interface AudioFile {
+  id: number;
+  chapterId: number;
+  filename: string;
+  reciter: string;
+  duration: number;
+}
+
+interface ChapterContent {
+  te: string;
+  hi: string;
+  en: string;
+}
+
 interface Chapter {
   id: string;
   title: string;
-  trackId: string;
   order: number;
   proficiencyLevel: number;
-  content: {
-    te?: string;
-    hi?: string;
-    en?: string;
-  };
-  segments: TextSegment[];
+  trackId: string;
+  segments: Segment[];
   audioFiles: AudioFile[];
   mappings: AudioMapping[];
+  content: ChapterContent;
 }
 
-interface StudentProgress {
-  proficiencyLevel: number;
-}
+type Language = 'te' | 'hi' | 'en';
 
 export default function ChapterView() {
-  const [, setLocation] = useLocation();
-  const { trackId, chapterId } = useParams();
-  
-  // Audio player state
-  const [selectedLanguage, setSelectedLanguage] = useState<'te' | 'hi' | 'en'>('te');
-  const [selectedAudioFile, setSelectedAudioFile] = useState<AudioFile | null>(null);
+  const [, params] = useRoute("/chapter/:id");
+  const [currentLanguage, setCurrentLanguage] = useState<Language>('te');
+  const [hoveredSegmentId, setHoveredSegmentId] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [activeSegment, setActiveSegment] = useState<number | null>(null);
-  const [segmentPlayback, setSegmentPlayback] = useState<number | null>(null);
-  
+  const [currentSegmentId, setCurrentSegmentId] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const { toast } = useToast();
 
-  // Fetch chapter data
-  const { data: chapter, isLoading, error } = useQuery<Chapter>({
-    queryKey: [`/api/chapters/${chapterId}`],
-    enabled: !!chapterId
+  const { data: chapter, isLoading } = useQuery<Chapter>({
+    queryKey: ["/api/chapters", params?.id],
   });
 
-  // Student progress is included in chapter data
-
-  // Initialize audio file selection
-  useEffect(() => {
-    if (chapter?.audioFiles?.length && !selectedAudioFile) {
-      setSelectedAudioFile(chapter.audioFiles[0]);
-    }
-  }, [chapter, selectedAudioFile]);
-
-  // Audio event handlers
+  // Update current time as audio plays
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => {
-      const currentTime = audio.currentTime;
-      setCurrentTime(currentTime);
-      checkActiveSegment(currentTime);
-    };
-
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
-    };
-
+    const updateTime = () => setCurrentTime(audio.currentTime);
     const handleEnded = () => {
       setIsPlaying(false);
-      setCurrentTime(0);
-      setActiveSegment(null);
-      setSegmentPlayback(null);
+      setCurrentSegmentId(null);
     };
 
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('ended', handleEnded);
-
+    
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [chapter, selectedAudioFile, segmentPlayback, isPlaying]);
+  }, []);
 
-  // Update audio source when selection changes
+  // Auto-pause when segment ends
   useEffect(() => {
-    if (selectedAudioFile && audioRef.current) {
-      // Using your authentic Śraddhā Sūktam audio file
-      audioRef.current.src = `/audio/${selectedAudioFile.filename}`;
-      audioRef.current.playbackRate = playbackSpeed;
+    if (!chapter || !isPlaying || currentSegmentId === null) return;
+
+    const currentMapping = chapter.mappings.find(m => m.segmentId === currentSegmentId);
+    if (currentMapping && currentTime >= currentMapping.endTime) {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+      setCurrentSegmentId(null);
     }
-  }, [selectedAudioFile, playbackSpeed]);
-
-  const checkActiveSegment = useCallback((time: number) => {
-    if (!chapter?.mappings || !selectedAudioFile) return;
-
-    const mapping = chapter.mappings.find(m => 
-      m.audioFileId === selectedAudioFile.id &&
-      time >= m.startTime && 
-      time <= m.endTime
-    );
-
-    // Auto-pause at segment end if currently playing a specific segment
-    if (segmentPlayback && isPlaying) {
-      const currentMapping = chapter.mappings.find(m => 
-        m.segmentId === segmentPlayback && m.audioFileId === selectedAudioFile.id
-      );
-      
-      if (currentMapping && time >= currentMapping.endTime && audioRef.current) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-        setSegmentPlayback(null);
-        setActiveSegment(null);
-        return;
-      }
-    }
-
-    setActiveSegment(mapping ? mapping.segmentId : null);
-  }, [chapter?.mappings, selectedAudioFile, segmentPlayback, isPlaying]);
-
-  const handlePlayPause = () => {
-    if (!audioRef.current) return;
-
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleStop = () => {
-    if (!audioRef.current) return;
-    
-    audioRef.current.pause();
-    audioRef.current.currentTime = 0;
-    setIsPlaying(false);
-    setCurrentTime(0);
-    setActiveSegment(null);
-  };
-
-  const handleSeek = (value: number[]) => {
-    if (!audioRef.current) return;
-    
-    const newTime = value[0];
-    audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
-  };
+  }, [currentTime, currentSegmentId, chapter, isPlaying]);
 
   const handleSegmentClick = (segmentId: number) => {
-    if (!chapter?.mappings || !selectedAudioFile || !audioRef.current) {
+    if (!chapter) return;
+
+    const mapping = chapter.mappings.find(m => m.segmentId === segmentId);
+    if (!mapping) {
+      toast({
+        title: "No Audio Mapping",
+        description: "This text segment doesn't have audio mapped yet.",
+        variant: "destructive",
+      });
       return;
     }
 
-    const mapping = chapter.mappings.find(m => 
-      m.segmentId === segmentId && 
-      m.audioFileId === selectedAudioFile.id
-    );
-
-    if (mapping) {
-      try {
-        audioRef.current.currentTime = mapping.startTime;
-        setCurrentTime(mapping.startTime);
-        setSegmentPlayback(segmentId); // Enable auto-pause for this segment
-        
-        audioRef.current.play().catch(err => {
-          console.error('Audio play failed:', err);
-        });
-        setIsPlaying(true);
-      } catch (error) {
-        console.error('Error in handleSegmentClick:', error);
-      }
+    const audioFile = chapter.audioFiles.find(af => af.id === mapping.audioFileId);
+    if (!audioFile) {
+      toast({
+        title: "Audio File Not Found",
+        description: "The audio file for this segment is missing.",
+        variant: "destructive",
+      });
+      return;
     }
+
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Set audio source if needed
+    if (audio.src !== `/audio/${audioFile.filename}`) {
+      audio.src = `/audio/${audioFile.filename}`;
+    }
+
+    // Set playback position and play
+    audio.currentTime = mapping.startTime;
+    setCurrentSegmentId(segmentId);
+    audio.play()
+      .then(() => setIsPlaying(true))
+      .catch(() => {
+        toast({
+          title: "Playback Error",
+          description: "Unable to play audio. Please try again.",
+          variant: "destructive",
+        });
+      });
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+  const renderInteractiveContent = (content: string, language: Language) => {
+    if (!chapter) return content;
 
-  const getProficiencyColor = (level: number) => {
-    const colors = {
-      0: 'bg-gray-100 text-gray-800',
-      1: 'bg-red-100 text-red-800',
-      2: 'bg-yellow-100 text-yellow-800', 
-      3: 'bg-blue-100 text-blue-800',
-      4: 'bg-green-100 text-green-800'
-    };
-    return colors[level as keyof typeof colors] || colors[0];
-  };
+    const segments = chapter.segments.filter(s => s.textReferences[language]);
+    if (segments.length === 0) return content;
 
-  const getProficiencyLabel = (level: number) => {
-    const labels = {
-      0: 'Not Started',
-      1: 'Level 1',
-      2: 'Level 2', 
-      3: 'Level 3',
-      4: 'Level 4'
-    };
-    return labels[level as keyof typeof labels] || 'Unknown';
+    // Sort segments by start position
+    const sortedSegments = [...segments].sort((a, b) => {
+      const aStart = a.textReferences[language]?.start || 0;
+      const bStart = b.textReferences[language]?.start || 0;
+      return aStart - bStart;
+    });
+
+    let result = [];
+    let lastEnd = 0;
+
+    for (const segment of sortedSegments) {
+      const ref = segment.textReferences[language];
+      if (!ref) continue;
+
+      // Add text before this segment
+      if (ref.start > lastEnd) {
+        result.push(
+          <span key={`text-${lastEnd}-${ref.start}`}>
+            {content.slice(lastEnd, ref.start)}
+          </span>
+        );
+      }
+
+      // Add the interactive segment
+      const segmentText = content.slice(ref.start, ref.end);
+      const isHovered = hoveredSegmentId === segment.id;
+      const isCurrentlyPlaying = currentSegmentId === segment.id && isPlaying;
+      const hasMapping = chapter.mappings.some(m => m.segmentId === segment.id);
+
+      result.push(
+        <span
+          key={`segment-${segment.id}`}
+          className={`
+            inline cursor-pointer transition-all duration-200 rounded-sm px-1
+            ${hasMapping 
+              ? 'hover:bg-blue-100 dark:hover:bg-blue-900 hover:shadow-sm' 
+              : 'hover:bg-red-100 dark:hover:bg-red-900 hover:shadow-sm'
+            }
+            ${isHovered 
+              ? hasMapping 
+                ? 'bg-blue-200 dark:bg-blue-800' 
+                : 'bg-red-200 dark:bg-red-800'
+              : ''
+            }
+            ${isCurrentlyPlaying 
+              ? 'bg-green-200 dark:bg-green-800 animate-pulse' 
+              : ''
+            }
+          `}
+          onClick={() => handleSegmentClick(segment.id)}
+          onMouseEnter={() => setHoveredSegmentId(segment.id)}
+          onMouseLeave={() => setHoveredSegmentId(null)}
+          title={hasMapping ? segment.conceptualName : `${segment.conceptualName} (No audio mapped)`}
+        >
+          {segmentText}
+        </span>
+      );
+
+      lastEnd = ref.end;
+    }
+
+    // Add remaining text
+    if (lastEnd < content.length) {
+      result.push(
+        <span key={`text-${lastEnd}-end`}>
+          {content.slice(lastEnd)}
+        </span>
+      );
+    }
+
+    return result;
   };
 
   if (isLoading) {
     return (
       <div className="container mx-auto p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+          <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
       </div>
     );
@@ -255,200 +239,178 @@ export default function ChapterView() {
   if (!chapter) {
     return (
       <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="text-center py-8">
-            <p className="text-gray-500">Chapter not found</p>
-            <Button 
-              variant="outline" 
-              className="mt-4"
-              onClick={() => setLocation(`/tracks/${trackId}`)}
-            >
-              Back to Track
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            Chapter Not Found
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            The requested chapter could not be found.
+          </p>
+        </div>
       </div>
     );
   }
 
+  const currentContent = chapter.content[currentLanguage];
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 max-w-4xl">
+      <audio ref={audioRef} preload="metadata" />
+      
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => setLocation(`/tracks/${trackId}`)}
-        >
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Back to Track
+      <div className="flex items-center gap-4 mb-6">
+        <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
+          <ChevronLeft className="h-4 w-4 mr-2" />
+          Back
         </Button>
         
         <div className="flex-1">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span>Track {trackId}</span>
-            <span>•</span>
-            <span>Chapter {chapter.order}</span>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            {chapter.title}
+          </h1>
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="secondary">Chapter {chapter.order}</Badge>
+            <Badge variant="outline">Level {chapter.proficiencyLevel}</Badge>
           </div>
-          <h1 className="text-2xl font-bold break-words">{chapter.title}</h1>
         </div>
-
-        {chapter && (
-          <Badge className={getProficiencyColor(chapter.proficiencyLevel)}>
-            {getProficiencyLabel(chapter.proficiencyLevel)}
-          </Badge>
-        )}
       </div>
 
-      {/* Language Switcher */}
-      <div className="flex justify-center">
-        <LanguageSwitcher 
-          selectedLanguage={selectedLanguage}
-          onLanguageChange={(lang) => setSelectedLanguage(lang as 'te' | 'hi' | 'en')}
-        />
-      </div>
-
-      {/* Media Controls */}
-      {chapter.audioFiles.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Volume2 className="h-5 w-5" />
-              Audio Controls
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Recitation Selector */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Recitation</label>
-                <Select 
-                  value={selectedAudioFile?.id.toString() || ''} 
-                  onValueChange={(value) => {
-                    const audioFile = chapter.audioFiles.find(f => f.id.toString() === value);
-                    setSelectedAudioFile(audioFile || null);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select recitation" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {chapter.audioFiles.map((file) => (
-                      <SelectItem key={file.id} value={file.id.toString()}>
-                        {file.reciter}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Speed</label>
-                <Select 
-                  value={playbackSpeed.toString()} 
-                  onValueChange={(value) => setPlaybackSpeed(parseFloat(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0.5">0.5x</SelectItem>
-                    <SelectItem value="0.75">0.75x</SelectItem>
-                    <SelectItem value="1">1x</SelectItem>
-                    <SelectItem value="1.25">1.25x</SelectItem>
-                    <SelectItem value="1.5">1.5x</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Playback Controls */}
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="outline" 
+      {/* Language Selector */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Content Language</span>
+            <div className="flex gap-2">
+              <Button
+                variant={currentLanguage === 'te' ? 'default' : 'outline'}
                 size="sm"
-                onClick={handlePlayPause}
-                disabled={!selectedAudioFile}
+                onClick={() => setCurrentLanguage('te')}
               >
-                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                Telugu
+              </Button>
+              <Button
+                variant={currentLanguage === 'hi' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setCurrentLanguage('hi')}
+              >
+                Hindi
+              </Button>
+              <Button
+                variant={currentLanguage === 'en' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setCurrentLanguage('en')}
+              >
+                English
+              </Button>
+            </div>
+          </CardTitle>
+        </CardHeader>
+      </Card>
+
+      {/* Audio Controls */}
+      {chapter.audioFiles.length > 0 && (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const audio = audioRef.current;
+                  if (!audio) return;
+                  
+                  if (isPlaying) {
+                    audio.pause();
+                    setIsPlaying(false);
+                  } else {
+                    audio.play().then(() => setIsPlaying(true));
+                  }
+                }}
+                disabled={!chapter.audioFiles[0]}
+              >
+                {isPlaying ? (
+                  <Pause className="h-4 w-4 mr-2" />
+                ) : (
+                  <Play className="h-4 w-4 mr-2" />
+                )}
+                {isPlaying ? 'Pause' : 'Play'} Audio
               </Button>
               
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleStop}
-                disabled={!selectedAudioFile}
-              >
-                <Square className="h-4 w-4" />
-              </Button>
-
-              <div className="flex items-center gap-2 text-sm">
-                <span>{formatTime(currentTime)}</span>
-                <span>/</span>
-                <span>{formatTime(duration)}</span>
+              <div className="flex-1 text-sm text-gray-600 dark:text-gray-400">
+                {chapter.audioFiles[0] && (
+                  <span>Reciter: {chapter.audioFiles[0].reciter}</span>
+                )}
               </div>
+              
+              {isPlaying && (
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {Math.floor(currentTime)}s / {Math.floor(chapter.audioFiles[0]?.duration || 0)}s
+                </div>
+              )}
             </div>
-
-            {/* Timeline */}
-            {duration > 0 && (
-              <div className="space-y-2">
-                <Slider
-                  value={[currentTime]}
-                  max={duration}
-                  step={0.1}
-                  onValueChange={handleSeek}
-                  className="w-full"
-                />
-              </div>
-            )}
           </CardContent>
         </Card>
       )}
 
-      {/* Main Content */}
+      {/* Interactive Content */}
       <Card>
         <CardHeader>
-          <CardTitle>Chapter Content</CardTitle>
+          <CardTitle>
+            {currentLanguage === 'te' && 'Telugu Text'}
+            {currentLanguage === 'hi' && 'Devanagari Text'}
+            {currentLanguage === 'en' && 'English/IAST Text'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {chapter.segments.length > 0 ? (
-            <div className="space-y-4">
-              <div className="text-right text-sm text-gray-500 mb-4">
-                Click any text segment to jump to its audio position
-              </div>
-              <div className="space-y-3">
-                {chapter.segments.filter(segment => segment && segment.text).map((segment) => (
-                  <div
-                    key={segment.id}
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      activeSegment === segment.id
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 hover:border-gray-300 dark:border-gray-700'
-                    }`}
-                    onClick={() => handleSegmentClick(segment.id)}
-                  >
-                    <div className="text-lg leading-relaxed font-['Tiro_Telugu','Tiro_Devanagari_Sanskrit',serif]">
-                      {segment.text?.[selectedLanguage] || 'Content not available'}
-                    </div>
-                    {selectedLanguage !== 'en' && segment.text?.en && (
-                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-mono">
-                        {segment.text.en}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="text-lg leading-relaxed font-['Tiro_Telugu','Tiro_Devanagari_Sanskrit',serif]">
-              {chapter.content?.[selectedLanguage] || 'No content available'}
-            </div>
-          )}
+          <div 
+            className={`
+              prose prose-lg max-w-none leading-relaxed
+              ${currentLanguage === 'te' ? 'font-telugu text-2xl' : ''}
+              ${currentLanguage === 'hi' ? 'font-devanagari text-2xl' : ''}
+              ${currentLanguage === 'en' ? 'font-vedic text-xl' : ''}
+            `}
+            style={{
+              lineHeight: '2.5',
+              letterSpacing: '0.02em',
+            }}
+          >
+            {renderInteractiveContent(currentContent, currentLanguage)}
+          </div>
+          
+          {/* Usage Instructions */}
+          <div className="mt-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <h4 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">
+              Interactive Features:
+            </h4>
+            <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+              <li>• Hover over text to highlight segments</li>
+              <li>• Click highlighted text to play corresponding audio</li>
+              <li>• Blue highlights indicate segments with audio mapping</li>
+              <li>• Red highlights indicate segments without audio mapping</li>
+              <li>• Green highlights show currently playing segment</li>
+            </ul>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Hidden Audio Element */}
-      <audio ref={audioRef} preload="metadata" />
+      {/* Segment Overview */}
+      {hoveredSegmentId && (
+        <Card className="mt-6">
+          <CardContent className="pt-6">
+            <div className="text-sm">
+              <strong>Segment:</strong> {
+                chapter.segments.find(s => s.id === hoveredSegmentId)?.conceptualName
+              }
+              <br />
+              <strong>Audio Mapping:</strong> {
+                chapter.mappings.find(m => m.segmentId === hoveredSegmentId)
+                  ? 'Available'
+                  : 'Not mapped'
+              }
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
