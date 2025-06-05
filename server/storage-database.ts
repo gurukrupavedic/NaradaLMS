@@ -160,21 +160,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTrack(id: number): Promise<void> {
-    // Get the order of the track being deleted
-    const [trackToDelete] = await db.select().from(tracks).where(eq(tracks.id, id));
-    if (!trackToDelete) return;
-    
     // Delete the track
     await db.delete(tracks).where(eq(tracks.id, id));
     
-    // Reorder all tracks with higher order numbers
-    await db
-      .update(tracks)
-      .set({ 
-        order: sql`${tracks.order} - 1`,
-        updatedAt: new Date()
-      })
-      .where(gt(tracks.order, trackToDelete.order));
+    // Get all remaining tracks ordered by their current order
+    const allTracks = await db.select().from(tracks).orderBy(tracks.order);
+    
+    // Update each track with sequential order numbers (1, 2, 3, ...)
+    for (let i = 0; i < allTracks.length; i++) {
+      await db
+        .update(tracks)
+        .set({ 
+          order: i + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(tracks.id, allTracks[i].id));
+    }
   }
 
   async publishTrack(id: number, publishedBy: string): Promise<Track> {
