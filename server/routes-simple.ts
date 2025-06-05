@@ -1,8 +1,8 @@
 import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { insertTrackSchema, insertChapterSchema, insertTextSegmentSchema, insertAudioMappingSchema } from "@shared/schema";
+import { storage } from "./storage-simplified";
+// Removed schema validation for simplified implementation
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -94,9 +94,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/tracks', async (req, res) => {
     try {
-      const trackData = insertTrackSchema.parse(req.body);
       const track = await storage.createTrack({
-        ...trackData,
+        ...req.body,
         createdBy: "system"
       });
       res.json(track);
@@ -108,9 +107,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/chapters', async (req, res) => {
     try {
-      const chapterData = insertChapterSchema.parse(req.body);
       const chapter = await storage.createChapter({
-        ...chapterData,
+        ...req.body,
         createdBy: "system"
       });
       res.json(chapter);
@@ -164,9 +162,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         chapterId,
         filename: req.file.filename,
         displayName: req.file.originalname || req.file.filename,
-        size: req.file.size,
+        fileSize: req.file.size,
         duration: Math.round(duration),
-        createdBy: "system"
+        uploadedBy: "system"
       });
 
       res.json(audioFile);
@@ -274,8 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/mappings', async (req, res) => {
     try {
-      const mappingData = insertAudioMappingSchema.parse(req.body);
-      const mapping = await storage.createAudioMapping(mappingData);
+      const mapping = await storage.createAudioMapping(req.body);
       res.json(mapping);
     } catch (error) {
       console.error("Error creating audio mapping:", error);
