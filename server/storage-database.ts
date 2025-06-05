@@ -22,7 +22,7 @@ import {
   type InsertStudentProgress,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, gt } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -160,7 +160,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTrack(id: number): Promise<void> {
+    // Get the order of the track being deleted
+    const [trackToDelete] = await db.select().from(tracks).where(eq(tracks.id, id));
+    if (!trackToDelete) return;
+    
+    // Delete the track
     await db.delete(tracks).where(eq(tracks.id, id));
+    
+    // Reorder all tracks with higher order numbers
+    await db
+      .update(tracks)
+      .set({ 
+        order: sql`${tracks.order} - 1`,
+        updatedAt: new Date()
+      })
+      .where(gt(tracks.order, trackToDelete.order));
   }
 
   async publishTrack(id: number, publishedBy: string): Promise<Track> {
