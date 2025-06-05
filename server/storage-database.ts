@@ -254,10 +254,7 @@ export class DatabaseStorage implements IStorage {
   async updateAudioFile(id: number, audioFile: Partial<InsertAudioFile>): Promise<AudioFile> {
     const [updatedFile] = await db
       .update(audioFiles)
-      .set({
-        ...audioFile,
-        updatedAt: new Date(),
-      })
+      .set(audioFile)
       .where(eq(audioFiles.id, id))
       .returning();
     return updatedFile;
