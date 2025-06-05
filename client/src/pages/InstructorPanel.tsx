@@ -307,7 +307,7 @@ export default function InstructorPanel() {
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-medium">{track.title}</h3>
+                        <h3 className="font-medium">Track {track.order}: {track.title}</h3>
                         <p className="text-sm text-muted-foreground">{track.description}</p>
                       </div>
                       <Badge variant={track.status === "published" ? "default" : "secondary"}>

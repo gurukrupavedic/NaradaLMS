@@ -129,9 +129,9 @@ export default function TrackView() {
         
         <div className="flex-1">
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span>Track {trackId}</span>
+            <span>Track {track.order}</span>
           </div>
-          <h1 className="text-2xl font-bold">{track.title}</h1>
+          <h1 className="text-2xl font-bold">Track {track.order}: {track.title}</h1>
           {track.description && (
             <p className="text-gray-600 mt-1">{track.description}</p>
           )}

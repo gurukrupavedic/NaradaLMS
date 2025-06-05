@@ -64,7 +64,7 @@ export default function TrackCard({ track, onContinue }: TrackCardProps) {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h3 className="font-semibold text-lg text-primary mb-2">
-              {track.title}
+              Track {track.order}: {track.title}
             </h3>
             <p className="text-muted-foreground text-sm mb-3 leading-relaxed">
               {track.description}
