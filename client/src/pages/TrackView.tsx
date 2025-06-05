@@ -29,10 +29,7 @@ export default function TrackView() {
     enabled: !!trackId
   });
 
-  // Debug logging
-  console.log('TrackView - trackId:', trackId);
-  console.log('TrackView - track data:', track);
-  console.log('TrackView - chapters:', track?.chapters);
+
 
   const getProficiencyColor = (level: number) => {
     const colors = {

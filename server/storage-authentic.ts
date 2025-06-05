@@ -399,8 +399,75 @@ export class MemStorage implements IStorage {
     return proficiencyMap[chapterId] || 0;
   }
 
-  async getChapter(id: string): Promise<any | undefined> {
-    return this.chapters.find(chapter => chapter.id === id);
+  private getChapterContent(chapterId: string): any {
+    // Authentic Vedic content for chapters with multilingual support
+    const contentMap: Record<string, any> = {
+      "1": {
+        te: "వేదాధ్యయన నియమములు, వేద స్వరం, పంచాంగం, సంకల్పం, యజ్ఞోపవీత ధారణం, అవపోశనం",
+        hi: "वेदाध्ययन नियममुलु, वेद स्वरं, पञ्चाङ्गं, सङ्कल्पं, यज्ञोपवीत धारणं, अवपोशनं",
+        en: "Rules of Vedic study, Vedic intonation, calendar system, ritual intention, sacred thread wearing, ritual purification"
+      },
+      "2": {
+        te: "శ్రద్ధా సూక్తం",
+        hi: "श्रद्धा सूक्तम्",
+        en: "Hymn of Faith (Śraddhā Sūktam)"
+      },
+      "3": {
+        te: "సంధ్యోపాసనోపయోగి స్త్రీ పురుష వ్యవస్థ",
+        hi: "सन्ध्योपासनोपयोगि स्त्री पुरुष व्यवस्था",
+        en: "Gender-specific procedures for twilight worship"
+      },
+      "4": {
+        te: "గాయత్రీ జప విధి",
+        hi: "गायत्री जप विधि",
+        en: "Procedure for Gayatri mantra recitation"
+      },
+      "5": {
+        te: "ప్రాణాయామ విధి",
+        hi: "प्राणायाम विधि",
+        en: "Procedure for breath control practices"
+      }
+    };
+    return contentMap[chapterId] || { te: "", hi: "", en: "" };
+  }
+
+  async getChapter(id: number): Promise<any | undefined> {
+    // Search for chapter across all tracks
+    let foundChapter = null;
+    let trackId = null;
+    
+    for (const track of this.tracks) {
+      const chapter = track.chapters.find((ch: any) => ch.id === id.toString());
+      if (chapter) {
+        foundChapter = chapter;
+        trackId = track.id;
+        break;
+      }
+    }
+    
+    if (!foundChapter) return undefined;
+    
+    // Get segments for this chapter
+    const segments = this.segments.filter(segment => segment.chapterId === id);
+    
+    // Get audio files for this chapter
+    const audioFiles = this.audioFiles.filter(file => file.chapterId === id);
+    
+    // Get audio mappings for this chapter's segments
+    const mappings = this.audioMappings.filter(mapping => 
+      segments.some(segment => segment.id === mapping.segmentId)
+    );
+    
+    return {
+      ...foundChapter,
+      trackId,
+      segments,
+      audioFiles,
+      mappings,
+      proficiencyLevel: this.getStudentProficiencyForChapter(foundChapter.id),
+      // Add authentic Vedic content for the chapter
+      content: this.getChapterContent(foundChapter.id)
+    };
   }
 
   async getStudentProgress(studentId: string): Promise<any[]> {
