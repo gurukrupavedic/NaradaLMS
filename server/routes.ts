@@ -688,9 +688,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Filename is required" });
       }
       
-      console.log(`Updating audio file ${audioFileId} filename to: ${filename}`);
+      console.log(`Updating audio file ${audioFileId} display name to: ${filename}`);
       
-      const updatedFile = await storage.updateAudioFile(audioFileId, { filename: filename.trim() });
+      // Update originalName for display purposes, not the actual filename (hash)
+      const updatedFile = await storage.updateAudioFile(audioFileId, { originalName: filename.trim() });
       console.log(`Audio file ${audioFileId} updated successfully:`, updatedFile);
       
       res.json(updatedFile);
