@@ -314,7 +314,7 @@ export default function InstructorPanel() {
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Instructor Content Management</h1>
+        <h1 className="text-3xl font-bold">Content Management</h1>
         <p className="text-muted-foreground">Create and manage Vedic learning content</p>
       </div>
 
