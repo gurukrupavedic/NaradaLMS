@@ -184,7 +184,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(audioFiles)
       .where(eq(audioFiles.chapterId, chapterId))
-      .orderBy(asc(audioFiles.originalName));
+      .orderBy(asc(audioFiles.displayName));
   }
 
   async createAudioFile(audioFile: InsertAudioFile): Promise<AudioFile> {
