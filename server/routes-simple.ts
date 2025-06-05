@@ -10,9 +10,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mock auth routes for development
   app.get('/api/auth/user', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      // Return mock user with all roles for development
+      const mockUser = {
+        id: "mock-user-123",
+        email: "student@vediclms.com",
+        firstName: "Test",
+        lastName: "Student",
+        profileImageUrl: null,
+        roles: ["student", "instructor", "content_manager", "admin"],
+        status: "active",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      res.json(mockUser);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
