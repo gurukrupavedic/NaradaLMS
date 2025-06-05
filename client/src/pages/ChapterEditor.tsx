@@ -546,20 +546,63 @@ export default function ChapterEditor() {
                   {audioFiles.map((file: any) => (
                     <Card key={file.id} className="p-4">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">{file.filename}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Duration: {Math.round(file.duration || 0)}s
-                          </p>
+                        <div className="flex-1">
+                          {editingFileId === file.id ? (
+                            <div className="space-y-2">
+                              <Input
+                                value={editingFileName}
+                                onChange={(e) => setEditingFileName(e.target.value)}
+                                onKeyDown={handleKeyPress}
+                                className="font-medium"
+                                autoFocus
+                              />
+                              <div className="flex gap-2">
+                                <Button 
+                                  size="sm" 
+                                  onClick={saveFileName}
+                                  disabled={updateAudioMutation.isPending || !editingFileName.trim()}
+                                >
+                                  Save
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  onClick={cancelEditing}
+                                  disabled={updateAudioMutation.isPending}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-medium">{file.filename}</h4>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => startEditing(file.id, file.filename)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Edit className="w-3 h-3" />
+                                </Button>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                Duration: {Math.round(file.duration || 0)}s
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteAudioFile(file.id)}
-                          disabled={deleteAudioMutation.isPending}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {editingFileId !== file.id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteAudioFile(file.id)}
+                            disabled={deleteAudioMutation.isPending}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </Card>
                   ))}
