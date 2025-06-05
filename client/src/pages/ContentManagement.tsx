@@ -145,9 +145,6 @@ export default function ContentManagement() {
                       <span className="text-sm text-muted-foreground font-medium">
                         Track {track.order || index + 1} • {track.chapterCount || 0} chapters
                       </span>
-                      <Badge variant={track.status === "published" ? "default" : "secondary"}>
-                        {track.status}
-                      </Badge>
                     </div>
                     <h3 className="text-xl font-semibold mb-2">{track.title}</h3>
                     <p className="text-muted-foreground mb-3">{track.description}</p>
