@@ -623,17 +623,18 @@ export default function ChapterEditor() {
         <TabsContent value="mapping" className="space-y-6">
           {audioFiles.length > 0 ? (
             <>
-              {/* Audio File Selection */}
+              {/* Audio Controls & Segment Creation */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Select Audio File</CardTitle>
+                  <CardTitle>Audio Player & Segment Creation</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
+                  {/* Audio File Selection */}
                   <div className="space-y-2">
-                    <Label>Choose audio file for segmentation</Label>
+                    <Label>Select Audio File</Label>
                     <Select value={selectedAudioFile?.toString() || ""} onValueChange={(value) => setSelectedAudioFile(parseInt(value))}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select an audio file" />
+                        <SelectValue placeholder="Choose audio file for segmentation" />
                       </SelectTrigger>
                       <SelectContent>
                         {audioFiles.map((file: any) => (
@@ -644,107 +645,120 @@ export default function ChapterEditor() {
                       </SelectContent>
                     </Select>
                   </div>
-                </CardContent>
-              </Card>
 
-              {selectedAudioFile && audioFiles.find((f: any) => f.id === selectedAudioFile) && (
-                <>
-                  {/* Audio Player Controls */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Audio Player & Segmentation</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <audio
-                        ref={(audio) => setAudioPlayer(audio)}
-                        src={`/uploads/${audioFiles.find((f: any) => f.id === selectedAudioFile)?.filename}`}
-                        onTimeUpdate={(e) => setCurrentTime((e.target as HTMLAudioElement).currentTime)}
-                        onLoadedMetadata={(e) => setDuration((e.target as HTMLAudioElement).duration)}
-                        className="hidden"
-                      />
-                      <div className="flex items-center gap-4">
-                        <Button onClick={handlePlayPause} variant="outline">
-                          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                        </Button>
-                        <span className="text-sm font-mono">
-                          {currentTime.toFixed(2)}s
-                        </span>
+                  {selectedAudioFile && audioFiles.find((f: any) => f.id === selectedAudioFile) && (
+                    <>
+                      {/* Audio Player */}
+                      <div className="space-y-4">
+                        <audio
+                          ref={(audio) => setAudioPlayer(audio)}
+                          src={`/uploads/${audioFiles.find((f: any) => f.id === selectedAudioFile)?.filename}`}
+                          onTimeUpdate={(e) => setCurrentTime((e.target as HTMLAudioElement).currentTime)}
+                          onLoadedMetadata={(e) => setDuration((e.target as HTMLAudioElement).duration)}
+                          className="hidden"
+                        />
+                        <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <Button onClick={handlePlayPause} variant="outline" size="lg">
+                            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                          </Button>
+                          <div className="flex flex-col">
+                            <span className="text-lg font-mono font-bold">
+                              {currentTime.toFixed(2)}s
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              / {duration.toFixed(2)}s
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Segment Start Time</Label>
-                          <div className="flex gap-2">
+                      {/* Segment Creation Form */}
+                      <div className="space-y-4 border-t pt-4">
+                        <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                          Create New Segment
+                        </h4>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Audio Start Time</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                value={segmentStart}
+                                onChange={(e) => setSegmentStart(e.target.value)}
+                                placeholder="0.00"
+                                type="number"
+                                step="0.01"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleUseCurrentTime}
+                                title="Use current playback time"
+                              >
+                                <Clock className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Audio End Time</Label>
                             <Input
-                              value={segmentStart}
-                              onChange={(e) => setSegmentStart(e.target.value)}
+                              value={segmentEnd}
+                              onChange={(e) => setSegmentEnd(e.target.value)}
                               placeholder="0.00"
                               type="number"
                               step="0.01"
                             />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleUseCurrentTime}
-                            >
-                              <Clock className="w-4 h-4" />
-                            </Button>
                           </div>
                         </div>
-                        <div className="space-y-2">
-                          <Label>Segment End Time</Label>
-                          <Input
-                            value={segmentEnd}
-                            onChange={(e) => setSegmentEnd(e.target.value)}
-                            placeholder="0.00"
-                            type="number"
-                            step="0.01"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Text Start Position</Label>
-                          <Input
-                            value={segmentTextStart}
-                            onChange={(e) => setSegmentTextStart(e.target.value)}
-                            placeholder="Character position"
-                            type="number"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Text End Position</Label>
-                          <Input
-                            value={segmentTextEnd}
-                            onChange={(e) => setSegmentTextEnd(e.target.value)}
-                            placeholder="Character position"
-                            type="number"
-                          />
-                        </div>
-                      </div>
 
-                      <div className="space-y-2">
-                        <Label>Language</Label>
-                        <Select value={segmentLanguage} onValueChange={setSegmentLanguage}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="te">Telugu</SelectItem>
-                            <SelectItem value="hi">Hindi</SelectItem>
-                            <SelectItem value="en">English/IAST</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Text Start Position</Label>
+                            <Input
+                              value={segmentTextStart}
+                              onChange={(e) => setSegmentTextStart(e.target.value)}
+                              placeholder="Character position"
+                              type="number"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Text End Position</Label>
+                            <Input
+                              value={segmentTextEnd}
+                              onChange={(e) => setSegmentTextEnd(e.target.value)}
+                              placeholder="Character position"
+                              type="number"
+                            />
+                          </div>
+                        </div>
 
-                      <Button
-                        onClick={handleCreateSegment}
-                        disabled={createSegmentMutation.isPending}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Segment
-                      </Button>
-                    </CardContent>
-                  </Card>
+                        <div className="space-y-2">
+                          <Label>Language</Label>
+                          <Select value={segmentLanguage} onValueChange={setSegmentLanguage}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="te">Telugu</SelectItem>
+                              <SelectItem value="hi">Hindi</SelectItem>
+                              <SelectItem value="en">English/IAST</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <Button
+                          onClick={handleCreateSegment}
+                          disabled={createSegmentMutation.isPending}
+                          className="w-full"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Create Audio Segment
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
 
                   {/* Existing Segments */}
                   {segments.length > 0 && (
