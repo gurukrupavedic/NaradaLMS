@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, 
@@ -21,20 +21,21 @@ import {
   FileText, 
   Music, 
   Link, 
-  CheckCircle 
+  CheckCircle,
+  Globe,
+  Plus,
+  Trash2,
+  Clock
 } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
 
-type Language = "telugu" | "hindi" | "english";
-
-interface ChapterContent {
+interface ChapterData {
   id: number;
   title: string;
   status: "draft" | "published";
   content: {
-    telugu: string;
-    hindi: string;
-    english: string;
+    te?: string;
+    hi?: string;
+    en?: string;
   };
   audioFiles?: Array<{
     id: number;
@@ -49,464 +50,651 @@ interface ChapterContent {
     endTime: number;
     textStart: number;
     textEnd: number;
-    language: Language;
+    language: string;
   }>;
 }
 
 export default function ChapterEditor() {
-  const [location, setLocation] = useLocation();
-  const [match, params] = useRoute("/content-management/track/:trackId/chapter/:chapterId");
+  const [, params] = useRoute("/chapter/:chapterId");
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   
-  const [activePhase, setActivePhase] = useState<"text" | "media" | "mapping" | "preview">("text");
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>("telugu");
+  const chapterId = parseInt(params?.chapterId || "0");
+  
+  // State for current editing phase
+  const [currentPhase, setCurrentPhase] = useState("text");
+  
+  // State for text content
+  const [textContent, setTextContent] = useState({
+    te: "",
+    hi: "",
+    en: ""
+  });
+  
+  // State for audio files and segments
   const [selectedAudioFile, setSelectedAudioFile] = useState<number | null>(null);
+  const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [segmentStart, setSegmentStart] = useState("");
   const [segmentEnd, setSegmentEnd] = useState("");
-  const [selectedText, setSelectedText] = useState({ start: 0, end: 0 });
+  const [selectedText, setSelectedText] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState("te");
   
-  const trackId = params?.trackId;
-  const chapterId = params?.chapterId;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch chapter data
   const { data: chapter, isLoading } = useQuery({
-    queryKey: ["/api/admin/chapters", chapterId],
+    queryKey: [`/api/admin/chapters/${chapterId}/details`],
     enabled: !!chapterId,
   });
 
-  // Fetch track info
-  const { data: track } = useQuery({
-    queryKey: ["/api/admin/tracks", trackId],
-    enabled: !!trackId,
+  // Fetch audio files for this chapter
+  const { data: audioFiles = [] } = useQuery({
+    queryKey: [`/api/admin/audio-files/${chapterId}`],
+    enabled: !!chapterId,
   });
 
-  const chapterData = chapter as ChapterContent;
+  // Fetch segments for this chapter
+  const { data: segments = [] } = useQuery({
+    queryKey: [`/api/admin/segments/${chapterId}`],
+    enabled: !!chapterId,
+  });
 
-  // Save chapter content
-  const saveChapterMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest("PUT", `/api/admin/chapters/${chapterId}`, data);
+  // Initialize text content when chapter data loads
+  useEffect(() => {
+    if (chapter?.content) {
+      setTextContent({
+        te: chapter.content.te || "",
+        hi: chapter.content.hi || "",
+        en: chapter.content.en || ""
+      });
+    }
+  }, [chapter]);
+
+  // Audio player setup
+  useEffect(() => {
+    if (selectedAudioFile && audioFiles.length > 0) {
+      const audioFile = audioFiles.find(f => f.id === selectedAudioFile);
+      if (audioFile) {
+        const audio = new Audio(audioFile.url);
+        audio.addEventListener('timeupdate', () => {
+          setCurrentTime(audio.currentTime);
+        });
+        audio.addEventListener('ended', () => {
+          setIsPlaying(false);
+        });
+        setAudioPlayer(audio);
+        
+        return () => {
+          audio.pause();
+          audio.removeEventListener('timeupdate', () => {});
+          audio.removeEventListener('ended', () => {});
+        };
+      }
+    }
+  }, [selectedAudioFile, audioFiles]);
+
+  // Save text content mutation
+  const saveTextMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}`, {
+        content: textContent
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Text content saved successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${chapterId}/details`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to save text content", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Upload audio file mutation
+  const uploadAudioMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('audio', file);
+      formData.append('chapterId', chapterId.toString());
+      
+      const response = await fetch('/api/admin/audio-files', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload audio file');
+      }
+      
       return response.json();
     },
     onSuccess: () => {
-      toast({ title: "Chapter saved successfully" });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/chapters", chapterId] });
+      toast({ title: "Audio file uploaded successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
     },
     onError: (error: any) => {
-      toast({ title: "Failed to save chapter", description: error.message, variant: "destructive" });
+      toast({ title: "Failed to upload audio file", description: error.message, variant: "destructive" });
     },
   });
 
-  // Publish/Unpublish chapter
+  // Create segment mutation
+  const createSegmentMutation = useMutation({
+    mutationFn: async (segmentData: any) => {
+      await apiRequest("POST", "/api/admin/segments", segmentData);
+    },
+    onSuccess: () => {
+      toast({ title: "Segment created successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+      // Reset form
+      setSegmentStart("");
+      setSegmentEnd("");
+      setSelectedText("");
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to create segment", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Publish/Unpublish chapter mutation
   const publishMutation = useMutation({
     mutationFn: async (action: "publish" | "unpublish") => {
-      const response = await apiRequest("POST", `/api/admin/chapters/${chapterId}/${action}`);
-      return response.json();
+      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}/${action}`);
     },
-    onSuccess: (data) => {
+    onSuccess: (_, action) => {
       toast({ 
-        title: data.status === "published" ? "Chapter published" : "Chapter moved to draft",
-        description: data.status === "published" ? "Chapter is now available to students" : "Chapter is now in draft mode"
+        title: action === "publish" ? "Chapter published successfully" : "Chapter unpublished successfully" 
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/chapters", chapterId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${chapterId}/details`] });
     },
     onError: (error: any) => {
-      toast({ title: "Action failed", description: error.message, variant: "destructive" });
+      toast({ title: "Failed to update chapter status", description: error.message, variant: "destructive" });
     },
   });
 
-  const handleSaveContent = () => {
-    if (!chapterData) return;
-    
-    saveChapterMutation.mutate({
-      title: chapterData.title,
-      content: chapterData.content,
-    });
+  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      uploadAudioMutation.mutate(file);
+    }
+  };
+
+  const handlePlayPause = () => {
+    if (audioPlayer) {
+      if (isPlaying) {
+        audioPlayer.pause();
+        setIsPlaying(false);
+      } else {
+        audioPlayer.play();
+        setIsPlaying(true);
+      }
+    }
+  };
+
+  const setCurrentTimeAsStart = () => {
+    setSegmentStart(currentTime.toFixed(2));
+  };
+
+  const setCurrentTimeAsEnd = () => {
+    setSegmentEnd(currentTime.toFixed(2));
   };
 
   const handleTextSelection = () => {
     const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      setSelectedText({
-        start: range.startOffset,
-        end: range.endOffset
-      });
+    if (selection && selection.toString().trim()) {
+      setSelectedText(selection.toString().trim());
     }
   };
 
-  const handleCreateSegment = () => {
-    if (!selectedAudioFile || !segmentStart || !segmentEnd) {
-      toast({ title: "Please select audio file and set timestamps", variant: "destructive" });
+  const createSegment = () => {
+    if (!selectedAudioFile || !segmentStart || !segmentEnd || !selectedText) {
+      toast({ title: "Please fill all segment details", variant: "destructive" });
       return;
     }
-    
-    // Create segment logic here
-    toast({ title: "Audio segment created successfully" });
-    setSegmentStart("");
-    setSegmentEnd("");
+
+    const textArea = document.getElementById(`text-${selectedLanguage}`) as HTMLTextAreaElement;
+    if (!textArea) return;
+
+    const fullText = textContent[selectedLanguage as keyof typeof textContent];
+    const textStart = fullText.indexOf(selectedText);
+    const textEnd = textStart + selectedText.length;
+
+    if (textStart === -1) {
+      toast({ title: "Selected text not found in content", variant: "destructive" });
+      return;
+    }
+
+    createSegmentMutation.mutate({
+      chapterId,
+      audioFileId: selectedAudioFile,
+      startTime: parseFloat(segmentStart),
+      endTime: parseFloat(segmentEnd),
+      textStart,
+      textEnd,
+      language: selectedLanguage,
+    });
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading chapter...</div>;
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center">Loading chapter...</div>
+      </div>
+    );
   }
 
-  if (!chapter || !match) {
-    return <div className="flex items-center justify-center h-screen">Chapter not found</div>;
+  if (!chapter) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center">Chapter not found</div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="container mx-auto p-6">
       {/* Header */}
-      <div className="border-b bg-white">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                onClick={() => setLocation(`/content-management`)}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Tracks
-              </Button>
-              <Separator orientation="vertical" className="h-6" />
-              <div>
-                <h1 className="text-2xl font-bold">{chapter.title}</h1>
-                <p className="text-sm text-muted-foreground">
-                  {track?.title} • Chapter Editor
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate("/content-management")}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Tracks
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">{chapter.title}</h1>
+            <div className="flex items-center gap-2 mt-1">
               <Badge variant={chapter.status === "published" ? "default" : "secondary"}>
                 {chapter.status}
               </Badge>
-              {chapter.status === "published" ? (
-                <Button 
-                  variant="outline" 
-                  onClick={() => publishMutation.mutate("unpublish")}
-                  disabled={publishMutation.isPending}
-                >
-                  Move to Draft
-                </Button>
-              ) : (
-                <Button 
-                  onClick={() => publishMutation.mutate("publish")}
-                  disabled={publishMutation.isPending}
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Publish Chapter
-                </Button>
-              )}
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Phase Navigation */}
-      <div className="border-b bg-gray-50">
-        <div className="container mx-auto px-6">
-          <Tabs value={activePhase} onValueChange={(value: any) => setActivePhase(value)}>
-            <TabsList className="grid w-full max-w-2xl grid-cols-4 bg-transparent h-auto p-0">
-              <TabsTrigger 
-                value="text" 
-                className="flex items-center gap-2 py-4 px-6 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-primary"
-              >
-                <FileText className="w-4 h-4" />
-                Text Content
-              </TabsTrigger>
-              <TabsTrigger 
-                value="media" 
-                className="flex items-center gap-2 py-4 px-6 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-primary"
-              >
-                <Music className="w-4 h-4" />
-                Media Content
-              </TabsTrigger>
-              <TabsTrigger 
-                value="mapping" 
-                className="flex items-center gap-2 py-4 px-6 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-primary"
-              >
-                <Link className="w-4 h-4" />
-                Segmentation & Mapping
-              </TabsTrigger>
-              <TabsTrigger 
-                value="preview" 
-                className="flex items-center gap-2 py-4 px-6 data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-primary"
-              >
-                <Eye className="w-4 h-4" />
-                Preview
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+        
+        <div className="flex items-center gap-2">
+          {chapter.status === "draft" ? (
+            <Button 
+              onClick={() => publishMutation.mutate("publish")}
+              disabled={publishMutation.isPending}
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Publish Chapter
+            </Button>
+          ) : (
+            <Button 
+              variant="outline"
+              onClick={() => publishMutation.mutate("unpublish")}
+              disabled={publishMutation.isPending}
+            >
+              Unpublish Chapter
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="container mx-auto px-6 py-8">
-        <Tabs value={activePhase}>
-          {/* Phase 1: Text Content */}
-          <TabsContent value="text" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  Text Content Management
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex gap-4">
-                  <Button 
-                    variant={selectedLanguage === "telugu" ? "default" : "outline"}
-                    onClick={() => setSelectedLanguage("telugu")}
-                  >
-                    Telugu
-                  </Button>
-                  <Button 
-                    variant={selectedLanguage === "hindi" ? "default" : "outline"}
-                    onClick={() => setSelectedLanguage("hindi")}
-                  >
-                    Hindi
-                  </Button>
-                  <Button 
-                    variant={selectedLanguage === "english" ? "default" : "outline"}
-                    onClick={() => setSelectedLanguage("english")}
-                  >
-                    English/IAST
-                  </Button>
-                </div>
-                
-                <div className="space-y-4">
-                  <Label htmlFor="chapter-title">Chapter Title ({selectedLanguage})</Label>
-                  <Input
-                    id="chapter-title"
-                    value={chapter.title}
-                    placeholder={`Enter title in ${selectedLanguage}`}
-                  />
-                </div>
+      {/* Main Content */}
+      <Tabs value={currentPhase} onValueChange={setCurrentPhase}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="text" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Text Content
+          </TabsTrigger>
+          <TabsTrigger value="media" className="flex items-center gap-2">
+            <Music className="w-4 h-4" />
+            Media Content
+          </TabsTrigger>
+          <TabsTrigger value="mapping" className="flex items-center gap-2">
+            <Link className="w-4 h-4" />
+            Segmentation & Mapping
+          </TabsTrigger>
+          <TabsTrigger value="preview" className="flex items-center gap-2">
+            <Eye className="w-4 h-4" />
+            Preview
+          </TabsTrigger>
+        </TabsList>
 
-                <div className="space-y-4">
-                  <Label htmlFor="chapter-content">Content ({selectedLanguage})</Label>
-                  <Textarea
-                    id="chapter-content"
-                    value={chapter.content?.[selectedLanguage] || ""}
-                    placeholder={`Enter content in ${selectedLanguage}`}
-                    className="min-h-[400px] font-mono"
-                    onMouseUp={handleTextSelection}
-                  />
-                </div>
+        {/* Text Content Phase */}
+        <TabsContent value="text" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="w-5 h-5" />
+                Multilingual Text Content
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Telugu Content */}
+              <div className="space-y-2">
+                <Label htmlFor="text-te">Telugu Content</Label>
+                <Textarea
+                  id="text-te"
+                  value={textContent.te}
+                  onChange={(e) => setTextContent(prev => ({ ...prev, te: e.target.value }))}
+                  placeholder="Enter Telugu text content..."
+                  className="min-h-[200px]"
+                />
+              </div>
 
-                <div className="flex justify-end">
-                  <Button onClick={handleSaveContent} disabled={saveChapterMutation.isPending}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Content
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              {/* Hindi Content */}
+              <div className="space-y-2">
+                <Label htmlFor="text-hi">Hindi Content</Label>
+                <Textarea
+                  id="text-hi"
+                  value={textContent.hi}
+                  onChange={(e) => setTextContent(prev => ({ ...prev, hi: e.target.value }))}
+                  placeholder="Enter Hindi text content..."
+                  className="min-h-[200px]"
+                />
+              </div>
 
-          {/* Phase 2: Media Content */}
-          <TabsContent value="media" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Music className="w-5 h-5" />
-                  Audio & Media Files
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                  <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                  <p className="text-lg font-medium mb-2">Upload Audio Files</p>
-                  <p className="text-gray-500 mb-4">Drag and drop audio files or click to browse</p>
-                  <Button>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Choose Files
-                  </Button>
-                </div>
+              {/* English Content */}
+              <div className="space-y-2">
+                <Label htmlFor="text-en">English/IAST Content</Label>
+                <Textarea
+                  id="text-en"
+                  value={textContent.en}
+                  onChange={(e) => setTextContent(prev => ({ ...prev, en: e.target.value }))}
+                  placeholder="Enter English/IAST text content..."
+                  className="min-h-[200px]"
+                />
+              </div>
 
-                {chapter.audioFiles && chapter.audioFiles.length > 0 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Uploaded Files</h3>
-                    {chapter.audioFiles.map((file) => (
-                      <Card key={file.id} className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{file.filename}</p>
-                            <p className="text-sm text-gray-500">Duration: {file.duration}s</p>
-                          </div>
-                          <Button size="sm" variant="outline">
-                            <Play className="w-4 h-4 mr-2" />
-                            Play
-                          </Button>
+              <Button 
+                onClick={() => saveTextMutation.mutate()}
+                disabled={saveTextMutation.isPending}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Save Text Content
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Media Content Phase */}
+        <TabsContent value="media" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Music className="w-5 h-5" />
+                Audio Files
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadAudioMutation.isPending}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Audio File
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleAudioUpload}
+                  className="hidden"
+                />
+              </div>
+
+              {audioFiles.length > 0 && (
+                <div className="grid gap-4">
+                  {audioFiles.map((file: any) => (
+                    <Card key={file.id} className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">{file.filename}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Duration: {Math.round(file.duration || 0)}s
+                          </p>
                         </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedAudioFile(file.id)}
+                        >
+                          Select for Mapping
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
 
-          {/* Phase 3: Segmentation & Mapping */}
-          <TabsContent value="mapping" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {audioFiles.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No audio files uploaded yet. Upload audio files to proceed with segmentation.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Segmentation & Mapping Phase */}
+        <TabsContent value="mapping" className="space-y-6">
+          {selectedAudioFile && audioFiles.find(f => f.id === selectedAudioFile) ? (
+            <>
+              {/* Audio Player Controls */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Audio Segmentation</CardTitle>
+                  <CardTitle>Audio Player & Segmentation</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <Label>Select Audio File</Label>
-                    <select 
-                      className="w-full mt-1 p-2 border rounded"
-                      value={selectedAudioFile || ""}
-                      onChange={(e) => setSelectedAudioFile(Number(e.target.value) || null)}
-                    >
-                      <option value="">Choose audio file...</option>
-                      {chapter.audioFiles?.map((file) => (
-                        <option key={file.id} value={file.id}>
-                          {file.filename}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="flex items-center gap-4">
+                    <Button onClick={handlePlayPause} variant="outline">
+                      {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    </Button>
+                    <span className="text-sm font-mono">
+                      {currentTime.toFixed(2)}s
+                    </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="start-time">Start Time (seconds)</Label>
-                      <Input
-                        id="start-time"
-                        type="number"
-                        step="0.1"
-                        value={segmentStart}
-                        onChange={(e) => setSegmentStart(e.target.value)}
-                        placeholder="0.0"
-                      />
+                    <div className="space-y-2">
+                      <Label>Segment Start Time</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={segmentStart}
+                          onChange={(e) => setSegmentStart(e.target.value)}
+                          placeholder="0.00"
+                        />
+                        <Button onClick={setCurrentTimeAsStart} variant="outline" size="sm">
+                          Use Current
+                        </Button>
+                      </div>
                     </div>
-                    <div>
-                      <Label htmlFor="end-time">End Time (seconds)</Label>
-                      <Input
-                        id="end-time"
-                        type="number"
-                        step="0.1"
-                        value={segmentEnd}
-                        onChange={(e) => setSegmentEnd(e.target.value)}
-                        placeholder="10.0"
-                      />
+                    <div className="space-y-2">
+                      <Label>Segment End Time</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={segmentEnd}
+                          onChange={(e) => setSegmentEnd(e.target.value)}
+                          placeholder="5.00"
+                        />
+                        <Button onClick={setCurrentTimeAsEnd} variant="outline" size="sm">
+                          Use Current
+                        </Button>
+                      </div>
                     </div>
                   </div>
-
-                  <Button onClick={handleCreateSegment} className="w-full">
-                    Create Audio Segment
-                  </Button>
                 </CardContent>
               </Card>
 
+              {/* Text Selection */}
               <Card>
                 <CardHeader>
                   <CardTitle>Text Selection & Mapping</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm"
-                      variant={selectedLanguage === "telugu" ? "default" : "outline"}
-                      onClick={() => setSelectedLanguage("telugu")}
-                    >
-                      Telugu
-                    </Button>
-                    <Button 
-                      size="sm"
-                      variant={selectedLanguage === "hindi" ? "default" : "outline"}
-                      onClick={() => setSelectedLanguage("hindi")}
-                    >
-                      Hindi
-                    </Button>
-                    <Button 
-                      size="sm"
-                      variant={selectedLanguage === "english" ? "default" : "outline"}
-                      onClick={() => setSelectedLanguage("english")}
-                    >
-                      English
-                    </Button>
+                  <div className="space-y-2">
+                    <Label>Select Language</Label>
+                    <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="te">Telugu</SelectItem>
+                        <SelectItem value="hi">Hindi</SelectItem>
+                        <SelectItem value="en">English/IAST</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  <div className="border p-4 rounded max-h-[300px] overflow-y-auto">
-                    <p className="text-sm leading-relaxed" onMouseUp={handleTextSelection}>
-                      {chapter.content?.[selectedLanguage] || "No content available for this language"}
-                    </p>
+                  <div className="space-y-2">
+                    <Label>Select text to map to audio segment</Label>
+                    <Textarea
+                      value={textContent[selectedLanguage as keyof typeof textContent]}
+                      readOnly
+                      onMouseUp={handleTextSelection}
+                      className="min-h-[200px] cursor-pointer"
+                      placeholder="No text content available for this language"
+                    />
                   </div>
 
-                  <div className="text-sm text-gray-500">
-                    Selected: Characters {selectedText.start} - {selectedText.end}
-                  </div>
+                  {selectedText && (
+                    <div className="p-3 bg-muted rounded">
+                      <Label className="text-sm font-medium">Selected Text:</Label>
+                      <p className="text-sm mt-1">{selectedText}</p>
+                    </div>
+                  )}
 
-                  <Button className="w-full" disabled={!selectedText.start && !selectedText.end}>
-                    Map Selected Text to Audio Segment
+                  <Button
+                    onClick={createSegment}
+                    disabled={!segmentStart || !segmentEnd || !selectedText || createSegmentMutation.isPending}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Segment
                   </Button>
                 </CardContent>
               </Card>
-            </div>
-          </TabsContent>
 
-          {/* Phase 4: Preview */}
-          <TabsContent value="preview" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Eye className="w-5 h-5" />
-                  Chapter Preview
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm"
-                      variant={selectedLanguage === "telugu" ? "default" : "outline"}
-                      onClick={() => setSelectedLanguage("telugu")}
-                    >
-                      Telugu
-                    </Button>
-                    <Button 
-                      size="sm"
-                      variant={selectedLanguage === "hindi" ? "default" : "outline"}
-                      onClick={() => setSelectedLanguage("hindi")}
-                    >
-                      Hindi
-                    </Button>
-                    <Button 
-                      size="sm"
-                      variant={selectedLanguage === "english" ? "default" : "outline"}
-                      onClick={() => setSelectedLanguage("english")}
-                    >
-                      English
-                    </Button>
-                  </div>
-
-                  <div className="border p-6 rounded-lg bg-gray-50 min-h-[400px]">
-                    <h2 className="text-2xl font-bold mb-4">{chapter.title}</h2>
-                    <div className="prose max-w-none">
-                      <p className="text-base leading-relaxed whitespace-pre-wrap">
-                        {chapter.content?.[selectedLanguage] || "No content available for this language"}
-                      </p>
+              {/* Existing Segments */}
+              {segments.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Created Segments</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {segments.map((segment: any) => (
+                        <div key={segment.id} className="flex items-center justify-between p-3 border rounded">
+                          <div className="flex items-center gap-3">
+                            <Clock className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm font-medium">
+                                {segment.startTime}s - {segment.endTime}s
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {segment.language} • {segment.textEnd - segment.textStart} chars
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-
-                  <div className="flex justify-center">
-                    <Badge variant="outline" className="text-sm">
-                      Preview Mode - Interactive segments will appear here once mapping is complete
-                    </Badge>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          ) : (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Music className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-medium mb-2">No Audio File Selected</h3>
+                <p className="text-muted-foreground">
+                  Go to Media Content tab to upload and select an audio file for segmentation.
+                </p>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+          )}
+        </TabsContent>
+
+        {/* Preview Phase */}
+        <TabsContent value="preview" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Eye className="w-5 h-5" />
+                Chapter Preview
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {Object.entries(textContent).map(([lang, content]) => {
+                  if (!content) return null;
+                  
+                  const langName = lang === "te" ? "Telugu" : lang === "hi" ? "Hindi" : "English/IAST";
+                  const langSegments = segments.filter((s: any) => s.language === lang);
+                  
+                  return (
+                    <div key={lang} className="space-y-2">
+                      <h3 className="text-lg font-semibold">{langName}</h3>
+                      <div className="prose max-w-none">
+                        {langSegments.length > 0 ? (
+                          // Render text with interactive segments
+                          <div className="whitespace-pre-wrap">
+                            {(() => {
+                              let lastIndex = 0;
+                              const elements = [];
+                              
+                              langSegments
+                                .sort((a: any, b: any) => a.textStart - b.textStart)
+                                .forEach((segment: any, index: number) => {
+                                  // Add text before segment
+                                  if (segment.textStart > lastIndex) {
+                                    elements.push(
+                                      <span key={`text-${index}`}>
+                                        {content.slice(lastIndex, segment.textStart)}
+                                      </span>
+                                    );
+                                  }
+                                  
+                                  // Add interactive segment
+                                  elements.push(
+                                    <span
+                                      key={`segment-${index}`}
+                                      className="bg-blue-100 hover:bg-blue-200 cursor-pointer px-1 rounded"
+                                      title={`Audio: ${segment.startTime}s - ${segment.endTime}s`}
+                                    >
+                                      {content.slice(segment.textStart, segment.textEnd)}
+                                    </span>
+                                  );
+                                  
+                                  lastIndex = segment.textEnd;
+                                });
+                              
+                              // Add remaining text
+                              if (lastIndex < content.length) {
+                                elements.push(
+                                  <span key="text-end">
+                                    {content.slice(lastIndex)}
+                                  </span>
+                                );
+                              }
+                              
+                              return elements;
+                            })()}
+                          </div>
+                        ) : (
+                          <p className="whitespace-pre-wrap">{content}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {Object.values(textContent).every(content => !content) && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No text content available for preview.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

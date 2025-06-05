@@ -500,6 +500,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get chapter details with content
+  app.get('/api/admin/chapters/:chapterId/details', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const chapter = await storage.getChapter(chapterId);
+      if (!chapter) {
+        return res.status(404).json({ message: "Chapter not found" });
+      }
+      res.json(chapter);
+    } catch (error) {
+      console.error("Error fetching chapter details:", error);
+      res.status(500).json({ message: "Failed to fetch chapter details" });
+    }
+  });
+
+  // Update chapter content
+  app.patch('/api/admin/chapters/:chapterId', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const updateData = req.body;
+      const chapter = await storage.updateChapter(chapterId, updateData);
+      res.json(chapter);
+    } catch (error) {
+      console.error("Error updating chapter:", error);
+      res.status(500).json({ message: "Failed to update chapter" });
+    }
+  });
+
+  // Publish/unpublish chapter
+  app.patch('/api/admin/chapters/:chapterId/:action', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const action = req.params.action;
+      
+      if (action === 'publish') {
+        const chapter = await storage.updateChapter(chapterId, { 
+          status: "published", 
+          content: { publishedAt: new Date() }
+        });
+        res.json(chapter);
+      } else if (action === 'unpublish') {
+        const chapter = await storage.updateChapter(chapterId, { status: "draft" });
+        res.json(chapter);
+      } else {
+        res.status(400).json({ message: "Invalid action" });
+      }
+    } catch (error) {
+      console.error("Error updating chapter status:", error);
+      res.status(500).json({ message: "Failed to update chapter status" });
+    }
+  });
+
+  // Get audio files for a chapter
+  app.get('/api/admin/audio-files/:chapterId', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const audioFiles = await storage.getAudioFilesByChapter(chapterId);
+      res.json(audioFiles);
+    } catch (error) {
+      console.error("Error fetching audio files:", error);
+      res.status(500).json({ message: "Failed to fetch audio files" });
+    }
+  });
+
+  // Upload audio file
+  app.post('/api/admin/audio-files', upload.single('audio'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No audio file provided" });
+      }
+
+      const chapterId = parseInt(req.body.chapterId);
+      if (!chapterId) {
+        return res.status(400).json({ message: "Chapter ID is required" });
+      }
+
+      const audioFile = await storage.createAudioFile({
+        chapterId,
+        filename: req.file.originalname,
+        originalName: req.file.originalname,
+        fileSize: req.file.size,
+        mimeType: req.file.mimetype,
+        uploadedBy: "system",
+      });
+
+      res.json(audioFile);
+    } catch (error) {
+      console.error("Error uploading audio file:", error);
+      res.status(500).json({ message: "Failed to upload audio file" });
+    }
+  });
+
+  // Get segments for a chapter
   app.get('/api/admin/segments/:chapterId', async (req, res) => {
     try {
       const chapterId = parseInt(req.params.chapterId);
@@ -511,6 +604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create a new segment
   app.post('/api/admin/segments', async (req, res) => {
     try {
       const segmentData = insertTextSegmentSchema.parse(req.body);
