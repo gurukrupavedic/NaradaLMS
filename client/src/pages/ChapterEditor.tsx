@@ -391,11 +391,12 @@ export default function ChapterEditor() {
       return;
     }
 
+    const segmentName = `Segment ${Math.floor(parseFloat(segmentStart))}s-${Math.floor(parseFloat(segmentEnd))}s`;
+    
     createSegmentMutation.mutate({
       chapterId,
-      audioFileId: selectedAudioFile,
-      startTime: parseFloat(segmentStart),
-      endTime: parseFloat(segmentEnd),
+      conceptualName: segmentName,
+      textReferences: {}
     });
   };
 
