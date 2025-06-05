@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Upload, Play, Pause, Save } from "lucide-react";
+import { Plus, Edit, Trash2, Upload, Play, Pause, Save, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface Track {
@@ -254,6 +254,40 @@ export default function InstructorPanel() {
   const handleDeleteTrack = (id: number) => {
     if (window.confirm("Are you sure you want to delete this track? This action cannot be undone.")) {
       deleteTrackMutation.mutate(id);
+    }
+  };
+
+  const handleMoveTrack = async (trackId: number, direction: 'up' | 'down') => {
+    const currentTrack = tracks.find(t => t.id === trackId);
+    if (!currentTrack) return;
+
+    const currentOrder = currentTrack.order;
+    const targetOrder = direction === 'up' ? currentOrder - 1 : currentOrder + 1;
+    
+    // Find the track at the target position
+    const targetTrack = tracks.find(t => t.order === targetOrder);
+    if (!targetTrack) return;
+
+    try {
+      // Swap the order values
+      await apiRequest(`/api/admin/tracks/${currentTrack.id}`, {
+        method: 'PUT',
+        body: { order: targetOrder }
+      });
+      
+      await apiRequest(`/api/admin/tracks/${targetTrack.id}`, {
+        method: 'PUT', 
+        body: { order: currentOrder }
+      });
+
+      // Refresh the tracks list
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      toast({ title: "Track order updated successfully" });
+    } catch (error) {
+      toast({ 
+        title: "Failed to update track order", 
+        variant: "destructive" 
+      });
     }
   };
 
