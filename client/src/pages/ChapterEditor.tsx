@@ -673,11 +673,11 @@ export default function ChapterEditor() {
                           ) : (
                             <div>
                               <div className="flex items-center gap-2">
-                                <h4 className="font-medium">{file.filename}</h4>
+                                <h4 className="font-medium">{file.displayName}</h4>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => startEditing(file.id, file.filename)}
+                                  onClick={() => startEditing(file.id, file.displayName)}
                                   className="h-6 w-6 p-0"
                                 >
                                   <Edit className="w-3 h-3" />
