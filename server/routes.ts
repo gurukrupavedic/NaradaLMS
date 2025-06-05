@@ -650,10 +650,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new segment
   app.post('/api/admin/segments', isAuthenticated, async (req: any, res) => {
     try {
+      console.log("User session:", req.user);
+      const userId = req.user?.claims?.sub || "system";
+      console.log("Using userId:", userId);
+      
       const segmentData = insertTextSegmentSchema.parse(req.body);
       const segment = await storage.createTextSegment({
         ...segmentData,
-        createdBy: req.user.claims.sub
+        createdBy: userId
       });
       res.json(segment);
     } catch (error) {
