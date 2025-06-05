@@ -27,9 +27,44 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private users: Map<string, User> = new Map();
-  private segments: any[] = [];
-  private audioFiles: any[] = [];
-  private audioMappings: any[] = [];
+  private segments: any[] = [
+    // Śraddhā Sūktam segments for chapter 2
+    { id: 1, chapterId: 2, text: { te: "శ్ర॒ద్ధాయా॒ఽగ్నిః సమి॑ధ్యతే", hi: "श्र॒द्धाया॒-ऽग्नि-स्समि॑ध्यते", en: "oṁ śra̱ddhayā̱'gnissami̍dhyate" }, order: 1 },
+    { id: 2, chapterId: 2, text: { te: "శ్ర॒ద్ధయా॑ విందతే హ॒విః", hi: "श्र॒द्धया॑ विन्दते ह॒विः", en: "śra̱ddhayā̍ vindateha̱viḥ" }, order: 2 },
+    { id: 3, chapterId: 2, text: { te: "శ్ర॒ద్ధాం భగ॑స్య మూ॒ర్ధని॑", hi: "श्र॒द्धा-म्भग॑स्य मू॒र्धनि॑", en: "śra̱ddhāṁ bhaga̍sya mū̱rdhani̍" }, order: 3 },
+    { id: 4, chapterId: 2, text: { te: "వచ॒సాఽఽవే॑దయామసి", hi: "वच॒सा-ऽऽवे॑दयामसि", en: "vaca̱sā ve̍dayāmasi" }, order: 4 },
+    { id: 5, chapterId: 2, text: { te: "ప్రి॒యగ్గ్ శ్ర॑ద్ధే॒ దద॑తః", hi: "प्रि॒यग्ग् श्र॑द्धे॒ दद॑तः", en: "pri̱yagg śra̍ddhe̱ dada̍taḥ" }, order: 5 },
+    { id: 6, chapterId: 2, text: { te: "ప్రి॒యగ్గ్ శ్ర॑ద్ధే॒ దిదా॑సతః", hi: "प्रि॒यग्ग् श्र॑द्धे॒ दिदा॑सतः", en: "pri̱yagg śra̍ddhe̱ didā̍sataḥ" }, order: 6 },
+    { id: 7, chapterId: 2, text: { te: "ప్రి॒యం భో॒జేషు॒ యజ్వ॑సు", hi: "प्रि॒य-म्भो॒जेषु॒ यज्व॑सु", en: "pri̱yaṁ bho̱jeṣu̱ yajva̍su" }, order: 7 },
+    { id: 8, chapterId: 2, text: { te: "ఇ॒దం మ॑ ఉది॒తం కృ॑ధి", hi: "इ॒द-म्म॑ उदि॒त-ङ्कृ॑धि", en: "i̱damma̍ udi̱taṁ kṛ̍dhi" }, order: 8 },
+    { id: 9, chapterId: 2, text: { te: "యథా॑ దే॒వా అసు॑రేషు", hi: "यथा॑ दे॒वा असु॑रेषु", en: "yathā̍ de̱vā asu̍ reṣu" }, order: 9 },
+    { id: 10, chapterId: 2, text: { te: "శ్ర॒ద్ధాము॒గ్రేషు॑ చక్రి॒రే", hi: "श्र॒द्धामु॒ग्रेषु॑ चक्रि॒रे", en: "śra̱ddhāmu̱greṣu̍ cakri̱re" }, order: 10 }
+  ];
+  
+  private audioFiles: any[] = [
+    {
+      id: 1,
+      chapterId: 2,
+      filename: "shraddha-suktam-1.mp3",
+      reciter: "Pandit Krishnamurthy",
+      duration: 99, // 1:39 in seconds
+      uploadedAt: new Date("2025-01-01"),
+      fileSize: 2450000 // ~2.45MB
+    }
+  ];
+  
+  private audioMappings: any[] = [
+    { audioFileId: 1, segmentId: 1, startTime: 3, endTime: 7 },
+    { audioFileId: 1, segmentId: 2, startTime: 8, endTime: 11 },
+    { audioFileId: 1, segmentId: 3, startTime: 12, endTime: 15 },
+    { audioFileId: 1, segmentId: 4, startTime: 16, endTime: 19 },
+    { audioFileId: 1, segmentId: 5, startTime: 20, endTime: 22 },
+    { audioFileId: 1, segmentId: 6, startTime: 23, endTime: 27 },
+    { audioFileId: 1, segmentId: 7, startTime: 28, endTime: 30 },
+    { audioFileId: 1, segmentId: 8, startTime: 30, endTime: 32 },
+    { audioFileId: 1, segmentId: 9, startTime: 33, endTime: 36 },
+    { audioFileId: 1, segmentId: 10, startTime: 37, endTime: 40 }
+  ];
   
   // Authentic 8-track Vedic curriculum from prototype files
   private tracks: any[] = [
@@ -407,13 +442,13 @@ export class MemStorage implements IStorage {
     const contentMap: Record<string, any> = {
       "1": {
         te: "వేదాధ్యయన నియమములు, వేద స్వరం, పంచాంగం, సంకల్పం, యజ్ఞోపవీత ధారణం, అవపోశనం",
-        hi: "वेदाध्ययन नियममुलु, वेद स्वरं, पञ्चाङ्गं, सङ्कल्पं, यज्ञोपवीत धारणं, अवपोशनं",
+        hi: "वेदाध्ययन नियममुलु, वेद स्वरं, पञ्चाङ्गं, सङ्कल्पं, यज्ञोपवीत धారणं, अवपोशनं",
         en: "Rules of Vedic study, Vedic intonation, calendar system, ritual intention, sacred thread wearing, ritual purification"
       },
       "2": {
-        te: "శ్రద్ధా సూక్తం",
-        hi: "श्रद्धा सूक्तम्",
-        en: "Hymn of Faith (Śraddhā Sūktam)"
+        te: "శ్ర॒ద్ధాయా॒ఽగ్నిః సమి॑ధ్యతే । శ్ర॒ద్ధయా॑ విందతే హ॒విః ।శ్ర॒ద్ధాం భగ॑స్య మూ॒ర్ధని॑ । వచ॒సాఽఽవే॑దయామసి ।ప్రి॒యగ్గ్ శ్ర॑ద్ధే॒ దద॑తః । ప్రి॒యగ్గ్ శ్ర॑ద్ధే॒ దిదా॑సతః ।ప్రి॒యం భో॒జేషు॒ యజ్వ॑సు ॥ ఇ॒దం మ॑ ఉది॒తం కృ॑ధి । యథా॑ దే॒వా అసు॑రేషు ।శ్ర॒ద్ధాము॒గ్రేషు॑ చక్రి॒రే । ఏ॒వం భో॒జేషు॒ యజ్వ॑సు ।అ॒స్మాక॑ముది॒తం కృ॑ధి । శ్ర॒ద్ధాం దే॑వా॒ యజ॑మానాః ।వా॒యుగో॑పా॒ ఉపా॑సతే । శ్ర॒ద్ధాగ్ం హృ॑ద॒య్యయా॒ఽఽకూ॒త్యా । శ్ర॒ద్ధయా॑ హూయతే హ॒విః । శ్ర॒ద్ధాం ప్రా॒తర్హ॑వామహే ॥ శ్ర॒ద్ధాం మ॒ధ్యంది॑నం॒ పరి॑ । శ్ర॒ద్ధాగ్ం సూర్య॑స్య ని॒మృచి॑ ।శ్రద్ధే॒ శ్రద్ధా॑పయే॒హ మా᳚ । శ్ర॒ద్ధా దే॒వానధి॑వస్తే ।శ్ర॒ద్ధా విశ్వ॑మి॒దం జగ॑త్ । శ్ర॒ద్ధాం కామ॑స్య మా॒తరం᳚ ।హ॒విషా॑ వర్ధయామసి । ఓం శాన్తిః शान्तिः शान्तिः ॥",
+        hi: "श्र॒द्धाया॒-ऽग्नि-स्समि॑ध्यते । श्र॒द्धया॑ विन्दते ह॒विः ।श्र॒द्धा-म्भग॑स्य मू॒र्धनि॑ । वच॒सा-ऽऽवे॑दयामसि ।प्रि॒यग्ग् श्र॑द्धे॒ दद॑तः । प्रि॒यग्ग् श्र॑द्धे॒ दिदा॑सतः ।प्रि॒य-म्भो॒जेषु॒ यज्व॑सु ॥ इ॒द-म्म॑ उदि॒त-ङ्कृ॑धि । यथा॑ दे॒वा असु॑रेषु ।श्र॒द्धामु॒ग्रेषु॑ चक्रि॒रे । ए॒व-म्भो॒जेषु॒ यज्व॑सु ।अ॒स्माक॑मुदि॒त-ङ्कृ॑धि । श्र॒द्धा-न्दे॑वा॒ यज॑मानाः ।वा॒युगो॑पा॒ उपा॑सते । श्र॒द्धाग्ं हृ॑द॒य्यया॒-ऽऽकू॒त्या । श्र॒द्धया॑ हूयते ह॒विः । श्र॒द्धा-म्प्रा॒तर्ह॑वामहे ॥ श्र॒द्धा-म्म॒ध्यन्दि॑न॒-म्परि॑ ।श्र॒द्धाग्ं सूर्य॑स्य नि॒मृचि॑ ।श्रद्धे॒ श्रद्धा॑पये॒ह मा᳚ । श्र॒द्धा दे॒वानधि॑वस्ते ।श्र॒द्धा विश्व॑मि॒द-ञ्जग॑त् । श्र॒द्धा-ङ्काम॑स्य मा॒तरम्᳚ ।ह॒विषा॑ वर्धयामसि । ओं शान्तिः शान्तिः शान्तिः ॥",
+        en: "śra̠ddhāyā̠-'gni-ssami̍dhyatē । śra̠ddhayā̍ vindatē ha̠viḥ ।śra̠ddhā-mbhaga̍sya mū̠rdhani̍ । vacha̠sā-''vē̍dayāmasi ।pri̠yagg śra̍ddhē̠ dada̍taḥ । pri̠yagg śra̍ddhē̠ didā̍sataḥ ।pri̠ya-mbhō̠jēṣu̠ yajva̍su ॥ i̠da-mma̍ udi̠ta-ṅkṛ̍dhi । yathā̍ dē̠vā asu̍rēṣu ।śra̠ddhāmu̠grēṣu̍ chakri̠rē । ē̠va-mbhō̠jēṣu̠ yajva̍su ।a̠smāka̍mudi̠ta-ṅkṛ̍dhi । śra̠ddhā-ndē̍vā̠ yaja̍mānāḥ ।vā̠yugō̍pā̠ upā̍satē । śra̠ddhāgṃ hṛ̍da̠yya̍yā-''kū̎tyā ।śra̠ddhayā̍ hūyatē ha̠viḥ । śra̠ddhā-mprā̠tar​ha̍vāmahē ॥ śra̠ddhā-mma̠dhyandi̍na̠-mpari̍ । śra̠ddhāgṃ sūrya̍sya ni̠mṛchi̍ ।śraddhē̠ śraddhā̍payē̠ha mā̎ । śra̠ddhā dē̠vānadhi̍vastē ।śra̠ddhā viśva̍mi̠da-ñjaga̍t । śra̠ddhā-ṅkāma̍sya mā̠taram̎ ।ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥"
       },
       "3": {
         te: "సంధ్యోపాసనోపయోగి స్త్రీ పురుష వ్యవస్థ",
@@ -439,12 +474,24 @@ export class MemStorage implements IStorage {
     for (const track of this.tracks) {
       const chapter = track.chapters.find((ch: any) => ch.id === id.toString());
       if (chapter) {
+        // Get segments for this chapter (match by numeric ID)
+        console.log(`Looking for segments with chapterId ${id}. Available segments:`, this.segments.map(s => ({ id: s.id, chapterId: s.chapterId })));
+        const segments = this.segments.filter(segment => segment.chapterId === id);
+        
+        // Get audio files for this chapter (match by numeric ID)
+        const audioFiles = this.audioFiles.filter(file => file.chapterId === id);
+        
+        // Get audio mappings for this chapter's segments
+        const mappings = this.audioMappings.filter(mapping => 
+          segments.some(segment => segment.id === mapping.segmentId)
+        );
+        
         return {
           ...chapter,
           trackId: track.id,
-          segments: [],
-          audioFiles: [],
-          mappings: [],
+          segments,
+          audioFiles,
+          mappings,
           content: this.getChapterContent(chapter.id)
         };
       }
