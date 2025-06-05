@@ -1,58 +1,41 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage-authentic";
-// Authentication disabled for development
+import { storage } from "./storage";
+import { insertTrackSchema, insertChapterSchema, insertTextSegmentSchema, insertAudioMappingSchema } from "@shared/schema";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { parseFile } from "music-metadata";
+
+// Configure multer for audio file uploads
+const uploadsDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const upload = multer({
+  dest: uploadsDir,
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('audio/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only audio files are allowed'));
+    }
+  },
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Skip auth setup for development
-  // await setupAuth(app);
+  // Static file serving for uploaded audio files
+  app.use('/uploads', express.static(uploadsDir));
 
-  // Mock auth routes for development
-  app.get('/api/auth/user', async (req: any, res) => {
-    try {
-      // Return mock user with all roles for development
-      const mockUser = {
-        id: "mock-user-123",
-        email: "student@vediclms.com",
-        firstName: "Test",
-        lastName: "Student",
-        profileImageUrl: null,
-        roles: ["student", "instructor", "content_manager", "admin"],
-        status: "active",
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      res.json(mockUser);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
-
-  // Student learning routes
+  // Track routes
   app.get('/api/tracks', async (req, res) => {
     try {
-      const rawTracks = await storage.getAllTracks();
-      
-      // Transform tracks to match Dashboard component expectations
-      const tracks = rawTracks.map(track => {
-        const chapters = track.chapters || [];
-        const completedChapters = chapters.filter((ch: any) => ch.proficiencyLevel >= 4).length;
-        
-        return {
-          id: track.id,
-          title: track.title,
-          description: track.description,
-          order: track.order || 1,
-          status: completedChapters === chapters.length && chapters.length > 0 ? 'completed' : 
-                  completedChapters > 0 ? 'in_progress' : 'not_started',
-          chapterCount: chapters.length,
-          completedChapters,
-          currentLevel: Math.max(0, ...chapters.map((ch: any) => ch.proficiencyLevel || 0)),
-          estimatedHours: track.estimatedHours || chapters.length * 2
-        };
-      });
-      
+      const tracks = await storage.getAllTracks();
       res.json(tracks);
     } catch (error) {
       console.error("Error fetching tracks:", error);
@@ -60,21 +43,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/tracks/:id', async (req, res) => {
+  app.get('/api/admin/tracks', async (req, res) => {
     try {
-      const { id } = req.params;
-      const track = await storage.getTrack(id);
+      const tracks = await storage.getAllTracks();
+      res.json(tracks);
+    } catch (error) {
+      console.error("Error fetching tracks:", error);
+      res.status(500).json({ message: "Failed to fetch tracks" });
+    }
+  });
+
+  app.get('/api/admin/tracks/:id', async (req, res) => {
+    try {
+      const track = await storage.getTrack(parseInt(req.params.id));
       if (!track) {
         return res.status(404).json({ message: "Track not found" });
       }
-      
-      // Debug logging
-      console.log(`Track ${id} found:`, {
-        title: track.title,
-        chaptersCount: track.chapters?.length || 0,
-        chapters: track.chapters?.map((ch: any) => ({ id: ch.id, title: ch.title })) || []
-      });
-      
       res.json(track);
     } catch (error) {
       console.error("Error fetching track:", error);
@@ -82,10 +66,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/chapters/:id', async (req, res) => {
+  // Chapter routes
+  app.get('/api/admin/chapters/:trackId', async (req, res) => {
     try {
-      const { id } = req.params;
-      const chapter = await storage.getChapter(parseInt(id));
+      const trackId = parseInt(req.params.trackId);
+      const chapters = await storage.getChaptersByTrack(trackId);
+      res.json(chapters);
+    } catch (error) {
+      console.error("Error fetching chapters:", error);
+      res.status(500).json({ message: "Failed to fetch chapters" });
+    }
+  });
+
+  app.get('/api/admin/chapters/:chapterId/details', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const chapter = await storage.getChapter(chapterId);
       if (!chapter) {
         return res.status(404).json({ message: "Chapter not found" });
       }
@@ -96,62 +92,206 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/student-progress/:chapterId', async (req: any, res) => {
+  app.post('/api/admin/tracks', async (req, res) => {
     try {
-      const userId = "mock-user-123"; // Mock user for development
-      const { chapterId } = req.params;
-      const progress = await storage.getStudentProgress(userId);
-      const chapterProgress = progress.find(p => p.chapterId === parseInt(chapterId));
-      res.json(chapterProgress || { proficiencyLevel: 0 });
+      const trackData = insertTrackSchema.parse(req.body);
+      const track = await storage.createTrack({
+        ...trackData,
+        createdBy: "system"
+      });
+      res.json(track);
     } catch (error) {
-      console.error("Error fetching student progress:", error);
-      res.status(500).json({ message: "Failed to fetch student progress" });
+      console.error("Error creating track:", error);
+      res.status(500).json({ message: "Failed to create track" });
     }
   });
 
-  app.get('/api/student-stats', async (req: any, res) => {
+  app.post('/api/admin/chapters', async (req, res) => {
     try {
-      const userId = "mock-user-123"; // Mock user for development
-      const stats = await storage.getStudentStats(userId);
-      res.json(stats);
+      const chapterData = insertChapterSchema.parse(req.body);
+      const chapter = await storage.createChapter({
+        ...chapterData,
+        createdBy: "system"
+      });
+      res.json(chapter);
     } catch (error) {
-      console.error("Error fetching student stats:", error);
-      res.status(500).json({ message: "Failed to fetch student stats" });
+      console.error("Error creating chapter:", error);
+      res.status(500).json({ message: "Failed to create chapter" });
     }
   });
 
-  // Admin routes
-  app.get('/api/admin/users', async (req: any, res) => {
+  app.patch('/api/admin/chapters/:chapterId', async (req, res) => {
     try {
-      const users = await storage.getAllUsers();
-      res.json(users);
+      const chapterId = parseInt(req.params.chapterId);
+      const chapter = await storage.updateChapter(chapterId, req.body);
+      res.json(chapter);
     } catch (error) {
-      console.error("Error fetching users:", error);
-      res.status(500).json({ message: "Failed to fetch users" });
+      console.error("Error updating chapter:", error);
+      res.status(500).json({ message: "Failed to update chapter" });
     }
   });
 
-  app.put('/api/admin/users/:userId/roles', async (req: any, res) => {
+  // Audio file routes
+  app.get('/api/admin/audio-files/:chapterId', async (req, res) => {
     try {
-      const { userId } = req.params;
-      const { roles } = req.body;
-      const user = await storage.updateUserRoles(userId, roles);
-      res.json(user);
+      const chapterId = parseInt(req.params.chapterId);
+      const audioFiles = await storage.getAudioFilesByChapter(chapterId);
+      res.json(audioFiles);
     } catch (error) {
-      console.error("Error updating user roles:", error);
-      res.status(500).json({ message: "Failed to update user roles" });
+      console.error("Error fetching audio files:", error);
+      res.status(500).json({ message: "Failed to fetch audio files" });
     }
   });
 
-  app.put('/api/admin/users/:userId/status', async (req: any, res) => {
+  app.post('/api/admin/audio-files/:chapterId/upload', upload.single('audio'), async (req, res) => {
     try {
-      const { userId } = req.params;
-      const { status } = req.body;
-      const user = await storage.updateUserStatus(userId, status);
-      res.json(user);
+      if (!req.file) {
+        return res.status(400).json({ message: "No audio file provided" });
+      }
+
+      const chapterId = parseInt(req.params.chapterId);
+      
+      // Parse audio metadata
+      let duration = 0;
+      try {
+        const metadata = await parseFile(req.file.path);
+        duration = metadata.format.duration || 0;
+      } catch (error) {
+        console.warn("Could not parse audio metadata:", error);
+      }
+
+      const audioFile = await storage.createAudioFile({
+        chapterId,
+        filename: req.file.filename,
+        displayName: req.file.originalname || req.file.filename,
+        size: req.file.size,
+        duration: Math.round(duration),
+        createdBy: "system"
+      });
+
+      res.json(audioFile);
     } catch (error) {
-      console.error("Error updating user status:", error);
-      res.status(500).json({ message: "Failed to update user status" });
+      console.error("Error uploading audio file:", error);
+      res.status(500).json({ message: "Failed to upload audio file" });
+    }
+  });
+
+  app.patch('/api/admin/audio-files/:audioFileId', async (req, res) => {
+    try {
+      const audioFileId = parseInt(req.params.audioFileId);
+      const audioFile = await storage.updateAudioFile(audioFileId, req.body);
+      res.json(audioFile);
+    } catch (error) {
+      console.error("Error updating audio file:", error);
+      res.status(500).json({ message: "Failed to update audio file" });
+    }
+  });
+
+  app.delete('/api/admin/audio-files/:audioFileId', async (req, res) => {
+    try {
+      const audioFileId = parseInt(req.params.audioFileId);
+      await storage.deleteAudioFile(audioFileId);
+      res.json({ message: "Audio file deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting audio file:", error);
+      res.status(500).json({ message: "Failed to delete audio file" });
+    }
+  });
+
+  // Text segment routes
+  app.get('/api/admin/segments/:chapterId', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const segments = await storage.getSegmentsByChapter(chapterId);
+      res.json(segments);
+    } catch (error) {
+      console.error("Error fetching segments:", error);
+      res.status(500).json({ message: "Failed to fetch segments" });
+    }
+  });
+
+  app.post('/api/admin/segments', async (req, res) => {
+    try {
+      const { chapterId, conceptualName, textReferences } = req.body;
+      const segment = await storage.createTextSegment({
+        chapterId,
+        conceptualName,
+        textReferences: textReferences || {},
+        createdBy: "system"
+      });
+      
+      res.json(segment);
+    } catch (error) {
+      console.error("Error creating segment:", error);
+      res.status(500).json({ message: "Failed to create segment" });
+    }
+  });
+
+  app.patch('/api/admin/segments/:segmentId', async (req, res) => {
+    try {
+      const segmentId = parseInt(req.params.segmentId);
+      const segment = await storage.updateTextSegment(segmentId, req.body);
+      res.json(segment);
+    } catch (error) {
+      console.error("Error updating segment:", error);
+      res.status(500).json({ message: "Failed to update segment" });
+    }
+  });
+
+  app.delete('/api/admin/segments/:segmentId', async (req, res) => {
+    try {
+      const segmentId = parseInt(req.params.segmentId);
+      await storage.deleteTextSegment(segmentId);
+      res.json({ message: "Segment deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting segment:", error);
+      res.status(500).json({ message: "Failed to delete segment" });
+    }
+  });
+
+  // Audio mapping routes
+  app.get('/api/admin/mappings/audio/:audioFileId', async (req, res) => {
+    try {
+      const audioFileId = parseInt(req.params.audioFileId);
+      const mappings = await storage.getMappingsByAudioFile(audioFileId);
+      res.json(mappings);
+    } catch (error) {
+      console.error("Error fetching audio mappings:", error);
+      res.status(500).json({ message: "Failed to fetch audio mappings" });
+    }
+  });
+
+  app.get('/api/admin/mappings/segment/:segmentId', async (req, res) => {
+    try {
+      const segmentId = parseInt(req.params.segmentId);
+      const mappings = await storage.getMappingsBySegment(segmentId);
+      res.json(mappings);
+    } catch (error) {
+      console.error("Error fetching segment mappings:", error);
+      res.status(500).json({ message: "Failed to fetch segment mappings" });
+    }
+  });
+
+  app.post('/api/admin/mappings', async (req, res) => {
+    try {
+      const mappingData = insertAudioMappingSchema.parse(req.body);
+      const mapping = await storage.createAudioMapping(mappingData);
+      res.json(mapping);
+    } catch (error) {
+      console.error("Error creating audio mapping:", error);
+      res.status(500).json({ message: "Failed to create audio mapping" });
+    }
+  });
+
+  app.delete('/api/admin/mappings/:audioFileId/:segmentId', async (req, res) => {
+    try {
+      const audioFileId = parseInt(req.params.audioFileId);
+      const segmentId = parseInt(req.params.segmentId);
+      await storage.deleteAudioMapping(audioFileId, segmentId);
+      res.json({ message: "Audio mapping deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting audio mapping:", error);
+      res.status(500).json({ message: "Failed to delete audio mapping" });
     }
   });
 

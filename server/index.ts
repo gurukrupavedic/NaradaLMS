@@ -1,5 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { registerRoutes } from "./routes-simple";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
@@ -40,20 +40,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize database with authentic Vedic content if empty
-  try {
-    const { storage } = await import("./storage-database");
-    const tracks = await storage.getAllTracks();
-    
-    if (tracks.length === 0) {
-      console.log("Database is empty, initializing with authentic Vedic content...");
-      const { initializeDatabase } = await import("./init-database");
-      await initializeDatabase();
-      console.log("Database initialization completed");
-    }
-  } catch (error) {
-    console.error("Database initialization failed:", error);
-  }
+  // Using simplified in-memory storage for development
   
   const server = await registerRoutes(app);
 

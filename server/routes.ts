@@ -2,7 +2,6 @@ import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertTrackSchema, insertChapterSchema, insertTextSegmentSchema, insertAudioMappingSchema, insertStudentProgressSchema } from "@shared/schema";
 import multer from "multer";
 import path from "path";
@@ -29,43 +28,9 @@ const upload = multer({
   },
 });
 
-// Helper function to check user roles
-function hasRole(user: any, role: string): boolean {
-  return user?.claims?.sub && user.roles?.includes(role);
-}
 
-// Middleware to check specific roles
-function requireRole(role: string) {
-  return async (req: any, res: any, next: any) => {
-    const userId = req.user?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const user = await storage.getUser(userId);
-    if (!user || !user.roles || !user.roles.includes(role)) {
-      return res.status(403).json({ message: "Insufficient permissions" });
-    }
-
-    req.currentUser = user;
-    next();
-  };
-}
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  await setupAuth(app);
-
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
 
   // Track routes (bypassing authentication for development)
   app.get('/api/tracks', async (req, res) => {
