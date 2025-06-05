@@ -401,6 +401,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin/Instructor content management routes
+  app.get('/api/admin/tracks', async (req, res) => {
+    try {
+      const tracks = await storage.getAllTracks();
+      res.json(tracks);
+    } catch (error) {
+      console.error("Error fetching admin tracks:", error);
+      res.status(500).json({ message: "Failed to fetch tracks" });
+    }
+  });
+
+  app.post('/api/admin/tracks', async (req, res) => {
+    try {
+      const trackData = insertTrackSchema.parse(req.body);
+      // For now, use system user as creator
+      const track = await storage.createTrack({
+        ...trackData,
+        createdBy: "system"
+      });
+      res.json(track);
+    } catch (error) {
+      console.error("Error creating track:", error);
+      res.status(500).json({ message: "Failed to create track" });
+    }
+  });
+
+  app.get('/api/admin/chapters/:trackId', async (req, res) => {
+    try {
+      const trackId = parseInt(req.params.trackId);
+      const chapters = await storage.getChaptersByTrack(trackId);
+      res.json(chapters);
+    } catch (error) {
+      console.error("Error fetching chapters:", error);
+      res.status(500).json({ message: "Failed to fetch chapters" });
+    }
+  });
+
+  app.post('/api/admin/chapters', async (req, res) => {
+    try {
+      const chapterData = insertChapterSchema.parse(req.body);
+      const chapter = await storage.createChapter({
+        ...chapterData,
+        createdBy: "system"
+      });
+      res.json(chapter);
+    } catch (error) {
+      console.error("Error creating chapter:", error);
+      res.status(500).json({ message: "Failed to create chapter" });
+    }
+  });
+
+  app.get('/api/admin/segments/:chapterId', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const segments = await storage.getSegmentsByChapter(chapterId);
+      res.json(segments);
+    } catch (error) {
+      console.error("Error fetching segments:", error);
+      res.status(500).json({ message: "Failed to fetch segments" });
+    }
+  });
+
+  app.post('/api/admin/segments', async (req, res) => {
+    try {
+      const segmentData = insertTextSegmentSchema.parse(req.body);
+      const segment = await storage.createTextSegment({
+        ...segmentData,
+        createdBy: "system"
+      });
+      res.json(segment);
+    } catch (error) {
+      console.error("Error creating segment:", error);
+      res.status(500).json({ message: "Failed to create segment" });
+    }
+  });
+
+  app.get('/api/admin/audio-files/:chapterId', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const audioFiles = await storage.getAudioFilesByChapter(chapterId);
+      res.json(audioFiles);
+    } catch (error) {
+      console.error("Error fetching audio files:", error);
+      res.status(500).json({ message: "Failed to fetch audio files" });
+    }
+  });
+
   // Serve uploaded audio files
   app.get('/api/audio-files/:filename', (req, res) => {
     const filename = req.params.filename;

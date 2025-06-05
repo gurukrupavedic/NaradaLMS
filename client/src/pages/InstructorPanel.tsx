@@ -87,10 +87,15 @@ export default function InstructorPanel() {
   // Create track mutation
   const createTrackMutation = useMutation({
     mutationFn: async (trackData: Partial<Track>) => {
-      return apiRequest("/api/admin/tracks", {
+      const response = await fetch("/api/admin/tracks", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(trackData),
       });
+      if (!response.ok) throw new Error("Failed to create track");
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
@@ -108,10 +113,15 @@ export default function InstructorPanel() {
   // Create chapter mutation
   const createChapterMutation = useMutation({
     mutationFn: async (chapterData: Partial<Chapter>) => {
-      return apiRequest("/api/admin/chapters", {
+      const response = await fetch("/api/admin/chapters", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(chapterData),
       });
+      if (!response.ok) throw new Error("Failed to create chapter");
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/chapters"] });
@@ -129,10 +139,15 @@ export default function InstructorPanel() {
   // Create segment mutation
   const createSegmentMutation = useMutation({
     mutationFn: async (segmentData: Partial<TextSegment>) => {
-      return apiRequest("/api/admin/segments", {
+      const response = await fetch("/api/admin/segments", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(segmentData),
       });
+      if (!response.ok) throw new Error("Failed to create segment");
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/segments"] });
