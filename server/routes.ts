@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage-authentic";
+import { storage } from "./storage-database";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertTrackSchema, insertChapterSchema, insertTextSegmentSchema, insertAudioMappingSchema, insertStudentProgressSchema } from "@shared/schema";
 import multer from "multer";
@@ -71,23 +71,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const rawTracks = await storage.getAllTracks();
       
       // Transform tracks to match Dashboard component expectations
-      const tracks = rawTracks.map(track => {
-        const chapters = track.chapters || [];
-        const completedChapters = chapters.filter((ch: any) => ch.proficiencyLevel >= 4).length;
+      const tracks = await Promise.all(rawTracks.map(async track => {
+        const chapters = await storage.getChaptersByTrack(track.id);
+        const completedChapters = 0; // Will implement with student progress later
         
         return {
           id: track.id,
           title: track.title,
           description: track.description,
           order: track.order || 1,
-          status: completedChapters === chapters.length && chapters.length > 0 ? 'completed' : 
-                  completedChapters > 0 ? 'in_progress' : 'not_started',
+          status: 'not_started', // Will implement with student progress later
           chapterCount: chapters.length,
           completedChapters,
-          currentLevel: Math.max(0, ...chapters.map((ch: any) => ch.proficiencyLevel || 0)),
+          currentLevel: 0, // Will implement with student progress later
           estimatedHours: track.estimatedHours || chapters.length * 2
         };
-      });
+      }));
       
       res.json(tracks);
     } catch (error) {
@@ -98,7 +97,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/tracks/:id', async (req, res) => {
     try {
-      const id = req.params.id;
+      const id = parseInt(req.params.id);
       const track = await storage.getTrack(id);
       if (!track) {
         return res.status(404).json({ message: "Track not found" });
