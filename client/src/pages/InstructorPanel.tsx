@@ -415,6 +415,11 @@ export default function InstructorPanel() {
 
           {/* Chapter Management Section */}
           {selectedTrack && (
+            <div>
+              <p>Debug: selectedTrack = {selectedTrack}, chapters.length = {chapters.length}</p>
+            </div>
+          )}
+          {selectedTrack && (
             <>
               <Card>
                 <CardHeader>
