@@ -841,13 +841,23 @@ export default function ChapterEditor() {
                           </div>
                           <div className="space-y-2">
                             <Label>End Time</Label>
-                            <Input
-                              value={segmentEnd}
-                              onChange={(e) => setSegmentEnd(e.target.value)}
-                              placeholder="0.00"
-                              type="number"
-                              step="0.01"
-                            />
+                            <div className="flex gap-2">
+                              <Input
+                                value={segmentEnd}
+                                onChange={(e) => setSegmentEnd(e.target.value)}
+                                placeholder="0.00"
+                                type="number"
+                                step="0.01"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSegmentEnd(currentTime.toFixed(2))}
+                                title="Use current playback time"
+                              >
+                                <Clock className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
 
