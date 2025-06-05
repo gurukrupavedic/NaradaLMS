@@ -283,16 +283,7 @@ export default function InstructorPanel() {
                   placeholder="Enter track description"
                 />
               </div>
-              <div>
-                <Label htmlFor="estimated-hours">Estimated Hours</Label>
-                <Input
-                  id="estimated-hours"
-                  type="number"
-                  value={newTrack.estimatedHours}
-                  onChange={(e) => setNewTrack({ ...newTrack, estimatedHours: parseInt(e.target.value) || 0 })}
-                  placeholder="0"
-                />
-              </div>
+
               <Button onClick={handleCreateTrack} disabled={createTrackMutation.isPending}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create Track
