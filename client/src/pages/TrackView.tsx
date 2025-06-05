@@ -24,10 +24,15 @@ export default function TrackView() {
   const [, setLocation] = useLocation();
   const { trackId } = useParams();
 
-  const { data: track, isLoading } = useQuery<Track>({
-    queryKey: ['/api/tracks', trackId],
+  const { data: track, isLoading, error } = useQuery<Track>({
+    queryKey: [`/api/tracks/${trackId}`],
     enabled: !!trackId
   });
+
+  // Debug logging
+  console.log('TrackView - trackId:', trackId);
+  console.log('TrackView - track data:', track);
+  console.log('TrackView - chapters:', track?.chapters);
 
   const getProficiencyColor = (level: number) => {
     const colors = {
