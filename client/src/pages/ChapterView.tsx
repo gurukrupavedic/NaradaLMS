@@ -8,7 +8,6 @@ import { Slider } from "@/components/ui/slider";
 import { ChevronLeft, Play, Pause, Square, Volume2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { InteractiveText } from "@/components/InteractiveText";
 
 interface AudioFile {
   id: number;
@@ -79,11 +78,7 @@ export default function ChapterView() {
     enabled: !!chapterId
   });
 
-  // Fetch student progress
-  const { data: progress } = useQuery<StudentProgress>({
-    queryKey: ['/api/student-progress', chapterId],
-    enabled: !!chapterId
-  });
+  // Student progress is included in chapter data
 
   // Initialize audio file selection
   useEffect(() => {
@@ -273,9 +268,9 @@ export default function ChapterView() {
           <h1 className="text-2xl font-bold break-words">{chapter.title}</h1>
         </div>
 
-        {progress && (
-          <Badge className={getProficiencyColor(progress.proficiencyLevel)}>
-            {getProficiencyLabel(progress.proficiencyLevel)}
+        {chapter && (
+          <Badge className={getProficiencyColor(chapter.proficiencyLevel)}>
+            {getProficiencyLabel(chapter.proficiencyLevel)}
           </Badge>
         )}
       </div>
