@@ -619,6 +619,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete chapter
+  app.delete('/api/admin/chapters/:chapterId', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      console.log(`Deleting chapter ${chapterId}`);
+      await storage.deleteChapter(chapterId);
+      console.log(`Chapter ${chapterId} deleted successfully`);
+      res.json({ message: "Chapter deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting chapter:", error);
+      res.status(500).json({ message: "Failed to delete chapter" });
+    }
+  });
+
   app.get('/api/admin/audio-files/:chapterId', async (req, res) => {
     try {
       const chapterId = parseInt(req.params.chapterId);

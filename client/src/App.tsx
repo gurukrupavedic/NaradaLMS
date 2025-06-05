@@ -35,7 +35,7 @@ function Router() {
           <Route path="/dashboard" component={() => <RoleTabs user={user as any} />} />
           <Route path="/content-management" component={() => <ContentManagement />} />
           <Route path="/content-management/track/:trackId" component={() => <TrackChapters />} />
-          <Route path="/content-management/track/:trackId/chapter/:chapterId" component={() => <ChapterEditor />} />
+          <Route path="/chapter/:chapterId" component={() => <ChapterEditor />} />
           <Route path="/tracks/:trackId" component={TrackView} />
           <Route path="/chapter/:id" component={ChapterView} />
         </>
