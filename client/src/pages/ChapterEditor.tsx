@@ -734,7 +734,7 @@ export default function ChapterEditor() {
                       <SelectContent>
                         {audioFiles.map((file: any) => (
                           <SelectItem key={file.id} value={file.id.toString()}>
-                            {file.originalName || file.filename}
+                            {file.displayName || file.filename}
                           </SelectItem>
                         ))}
                       </SelectContent>
