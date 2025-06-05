@@ -25,7 +25,8 @@ import {
   Globe,
   Plus,
   Trash2,
-  Clock
+  Clock,
+  Edit
 } from "lucide-react";
 
 interface ChapterData {
