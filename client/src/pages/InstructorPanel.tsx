@@ -209,10 +209,49 @@ export default function InstructorPanel() {
     },
   });
 
+  // Chapter mutations
+  const updateChapterMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const response = await apiRequest('PUT', `/api/admin/chapters/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/chapters", selectedTrack] });
+      toast({ title: "Chapter updated successfully" });
+      setEditingChapter(null);
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Failed to update chapter", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const deleteChapterMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/admin/chapters/${id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/chapters", selectedTrack] });
+      toast({ title: "Chapter deleted successfully" });
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Failed to delete chapter", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
   // Content editing functions
   const [newTrack, setNewTrack] = useState({ title: "", description: "" });
   const [editingTrack, setEditingTrack] = useState<Track | null>(null);
   const [newChapter, setNewChapter] = useState({ title: "", content: { te: "", hi: "", en: "" } });
+  const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
   const [selectedText, setSelectedText] = useState("");
   const [segmentName, setSegmentName] = useState("");
 
@@ -305,6 +344,65 @@ export default function InstructorPanel() {
       status: "draft",
     });
     setNewChapter({ title: "", content: { te: "", hi: "", en: "" } });
+  };
+
+  const handleEditChapter = (chapter: Chapter) => {
+    setEditingChapter(chapter);
+  };
+
+  const handleUpdateChapter = () => {
+    if (!editingChapter || !editingChapter.title.trim()) {
+      toast({ title: "Chapter title is required", variant: "destructive" });
+      return;
+    }
+    
+    updateChapterMutation.mutate({
+      id: editingChapter.id,
+      data: {
+        title: editingChapter.title,
+        content: editingChapter.content,
+        order: editingChapter.order,
+      },
+    });
+  };
+
+  const handleDeleteChapter = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this chapter? This action cannot be undone.")) {
+      deleteChapterMutation.mutate(id);
+    }
+  };
+
+  const handleMoveChapter = async (chapterId: number, direction: 'up' | 'down') => {
+    const currentChapter = chapters.find(c => c.id === chapterId);
+    if (!currentChapter) return;
+
+    const currentOrder = currentChapter.order;
+    const targetOrder = direction === 'up' ? currentOrder - 1 : currentOrder + 1;
+    
+    const targetChapter = chapters.find(c => c.order === targetOrder);
+    if (!targetChapter) return;
+
+    try {
+      await apiRequest('PUT', `/api/admin/chapters/${currentChapter.id}`, { 
+        title: currentChapter.title,
+        content: currentChapter.content,
+        order: targetOrder 
+      });
+      
+      await apiRequest('PUT', `/api/admin/chapters/${targetChapter.id}`, { 
+        title: targetChapter.title,
+        content: targetChapter.content,
+        order: currentOrder 
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/chapters", selectedTrack] });
+      toast({ title: "Chapter order updated successfully" });
+    } catch (error) {
+      toast({ 
+        title: "Failed to update chapter order", 
+        variant: "destructive" 
+      });
+    }
   };
 
   const handleTextSelection = () => {
@@ -601,16 +699,67 @@ export default function InstructorPanel() {
                     {chapters.map((chapter) => (
                       <div
                         key={chapter.id}
-                        className={`p-3 border rounded cursor-pointer ${
+                        className={`p-3 border rounded ${
                           selectedChapter === chapter.id ? "border-primary bg-primary/5" : ""
                         }`}
-                        onClick={() => setSelectedChapter(chapter.id)}
                       >
-                        <div className="flex justify-between items-center">
-                          <h3 className="font-medium">{chapter.title}</h3>
-                          <Badge variant={chapter.status === "published" ? "default" : "secondary"}>
-                            {chapter.status}
-                          </Badge>
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-col gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-5 w-5 p-0"
+                                disabled={chapter.order === 1}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveChapter(chapter.id, 'up');
+                                }}
+                              >
+                                <ChevronUp className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-5 w-5 p-0"
+                                disabled={chapter.order === chapters.length}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveChapter(chapter.id, 'down');
+                                }}
+                              >
+                                <ChevronDown className="w-3 h-3" />
+                              </Button>
+                            </div>
+                            <div className="flex-1 cursor-pointer" onClick={() => setSelectedChapter(chapter.id)}>
+                              <h3 className="font-medium">Chapter {chapter.order}: {chapter.title}</h3>
+                              <Badge variant={chapter.status === "published" ? "default" : "secondary"}>
+                                {chapter.status}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 ml-4">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditChapter(chapter);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteChapter(chapter.id);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}
