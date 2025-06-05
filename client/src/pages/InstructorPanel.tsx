@@ -270,15 +270,8 @@ export default function InstructorPanel() {
 
     try {
       // Swap the order values
-      await apiRequest(`/api/admin/tracks/${currentTrack.id}`, {
-        method: 'PUT',
-        body: { order: targetOrder }
-      });
-      
-      await apiRequest(`/api/admin/tracks/${targetTrack.id}`, {
-        method: 'PUT', 
-        body: { order: currentOrder }
-      });
+      await apiRequest(`/api/admin/tracks/${currentTrack.id}`, 'PUT', { order: targetOrder });
+      await apiRequest(`/api/admin/tracks/${targetTrack.id}`, 'PUT', { order: currentOrder });
 
       // Refresh the tracks list
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
@@ -407,9 +400,37 @@ export default function InstructorPanel() {
                     }`}
                   >
                     <div className="flex justify-between items-start">
-                      <div className="flex-1 cursor-pointer" onClick={() => setSelectedTrack(track.id)}>
-                        <h3 className="font-medium">Track {track.order}: {track.title}</h3>
-                        <p className="text-sm text-muted-foreground">{track.description}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-5 w-5 p-0"
+                            disabled={track.order === 1}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMoveTrack(track.id, 'up');
+                            }}
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-5 w-5 p-0"
+                            disabled={track.order === tracks.length}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMoveTrack(track.id, 'down');
+                            }}
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </Button>
+                        </div>
+                        <div className="flex-1 cursor-pointer" onClick={() => setSelectedTrack(track.id)}>
+                          <h3 className="font-medium">Track {track.order}: {track.title}</h3>
+                          <p className="text-sm text-muted-foreground">{track.description}</p>
+                        </div>
                       </div>
                       <div className="flex gap-2 ml-4">
                         <Button
