@@ -631,19 +631,8 @@ export class MemStorage implements IStorage {
   }
 
   async getSegmentsByChapter(chapterId: number): Promise<any[]> {
-    // Character-offset based text segments for audio mapping
-    return [
-      {
-        id: 1,
-        chapterId,
-        conceptualName: "Opening Invocation",
-        textReferences: {
-          te: { start: 0, end: 45 },
-          hi: { start: 0, end: 52 },
-          en: { start: 0, end: 48 }
-        }
-      }
-    ];
+    // Return the actual segments with text content
+    return this.segments.filter(segment => segment.chapterId === chapterId);
   }
 
   async createTextSegment(segment: any): Promise<any> {
