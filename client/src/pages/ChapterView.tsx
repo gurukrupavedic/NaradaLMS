@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,8 +94,9 @@ export default function ChapterView() {
     if (!audio) return;
 
     const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-      checkActiveSegment(audio.currentTime);
+      const currentTime = audio.currentTime;
+      setCurrentTime(currentTime);
+      checkActiveSegment(currentTime);
     };
 
     const handleLoadedMetadata = () => {
@@ -106,6 +107,7 @@ export default function ChapterView() {
       setIsPlaying(false);
       setCurrentTime(0);
       setActiveSegment(null);
+      setSegmentPlayback(null);
     };
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -117,7 +119,7 @@ export default function ChapterView() {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, []);
+  }, [chapter, selectedAudioFile, segmentPlayback, isPlaying]);
 
   // Update audio source when selection changes
   useEffect(() => {
@@ -128,7 +130,7 @@ export default function ChapterView() {
     }
   }, [selectedAudioFile, playbackSpeed]);
 
-  const checkActiveSegment = (time: number) => {
+  const checkActiveSegment = useCallback((time: number) => {
     if (!chapter?.mappings || !selectedAudioFile) return;
 
     const mapping = chapter.mappings.find(m => 
@@ -159,7 +161,7 @@ export default function ChapterView() {
     }
 
     setActiveSegment(mapping ? mapping.segmentId : null);
-  };
+  }, [chapter?.mappings, selectedAudioFile, segmentPlayback, isPlaying]);
 
   const handlePlayPause = () => {
     if (!audioRef.current) return;
