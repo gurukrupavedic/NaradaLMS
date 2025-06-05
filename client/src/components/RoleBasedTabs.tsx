@@ -25,7 +25,7 @@ const tabs: Tab[] = [
   },
   {
     id: 'content-management',
-    label: 'Manage Content',
+    label: 'Content Management',
     icon: <FileEdit className="w-4 h-4" />,
     requiredRole: 'content_manager',
   },
