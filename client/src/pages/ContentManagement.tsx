@@ -163,26 +163,31 @@ export default function ContentManagement() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditTrack(track)}
+                      >
+                        <Edit className="w-4 h-4 mr-1" />
+                        Edit
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDeleteTrack(track.id)}
+                        disabled={deleteTrackMutation.isPending}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
                     <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleEditTrack(track)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleDeleteTrack(track.id)}
-                      disabled={deleteTrackMutation.isPending}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
+                      variant="default" 
                       size="sm"
                       onClick={() => handleTrackClick(track.id)}
+                      className="w-full"
                     >
                       Manage Chapters
                       <ChevronRight className="w-4 h-4 ml-2" />
