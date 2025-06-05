@@ -121,8 +121,7 @@ export default function ChapterView() {
   // Update audio source when selection changes
   useEffect(() => {
     if (selectedAudioFile && audioRef.current) {
-      // For demo purposes, we'll use a placeholder audio path
-      // In production, this would reference the actual uploaded file
+      // Using your authentic Śraddhā Sūktam audio file
       audioRef.current.src = `/audio/${selectedAudioFile.filename}`;
       audioRef.current.playbackRate = playbackSpeed;
     }

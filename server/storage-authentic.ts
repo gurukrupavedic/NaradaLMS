@@ -45,11 +45,11 @@ export class MemStorage implements IStorage {
     {
       id: 1,
       chapterId: 2,
-      filename: "shraddha-suktam-1.mp3",
-      reciter: "Pandit Krishnamurthy",
-      duration: 99, // 1:39 in seconds
+      filename: "shraddha-suktam-1.m4a",
+      reciter: "Authentic Vedic Recitation",
+      duration: 99, // Duration from your audio file
       uploadedAt: new Date("2025-01-01"),
-      fileSize: 2450000 // ~2.45MB
+      fileSize: 2450000
     }
   ];
   
