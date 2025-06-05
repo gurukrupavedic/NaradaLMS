@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage-database";
+import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertTrackSchema, insertChapterSchema, insertTextSegmentSchema, insertAudioMappingSchema, insertStudentProgressSchema } from "@shared/schema";
 import multer from "multer";
@@ -418,9 +418,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const trackData = insertTrackSchema.parse(req.body);
       console.log("Parsed track data:", trackData);
       
-      // For now, use system user as creator
+      // Get the next sequential order number
+      const existingTracks = await storage.getAllTracks();
+      const nextOrder = existingTracks.length + 1;
+      
       const track = await storage.createTrack({
         ...trackData,
+        order: nextOrder,
         createdBy: "system"
       });
       console.log("Created track:", track);

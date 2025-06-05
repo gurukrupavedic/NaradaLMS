@@ -20,7 +20,6 @@ interface Track {
   chapterCount: number;
   completedChapters: number;
   currentLevel: number;
-  estimatedHours: number;
 }
 
 interface RecentActivity {
