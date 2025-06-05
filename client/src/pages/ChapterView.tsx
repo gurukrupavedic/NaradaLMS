@@ -73,8 +73,8 @@ export default function ChapterView() {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   // Fetch chapter data
-  const { data: chapter, isLoading } = useQuery<Chapter>({
-    queryKey: ['/api/chapters', chapterId],
+  const { data: chapter, isLoading, error } = useQuery<Chapter>({
+    queryKey: [`/api/chapters/${chapterId}`],
     enabled: !!chapterId
   });
 
