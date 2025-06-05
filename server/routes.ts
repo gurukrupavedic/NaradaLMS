@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -557,12 +558,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const chapterId = parseInt(req.params.chapterId);
       const audioFiles = await storage.getAudioFilesByChapter(chapterId);
-      res.json(audioFiles);
+      
+      // Add URL to each audio file
+      const audioFilesWithUrls = audioFiles.map(file => ({
+        ...file,
+        url: `/uploads/${file.filename}`
+      }));
+      
+      res.json(audioFilesWithUrls);
     } catch (error) {
       console.error("Error fetching audio files:", error);
       res.status(500).json({ message: "Failed to fetch audio files" });
     }
   });
+
+  // Serve uploaded files
+  app.use('/uploads', express.static(uploadsDir));
 
   // Upload audio file
   app.post('/api/admin/audio-files', upload.single('audio'), async (req, res) => {

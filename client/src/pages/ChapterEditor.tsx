@@ -115,25 +115,51 @@ export default function ChapterEditor() {
   // Audio player setup
   useEffect(() => {
     if (selectedAudioFile && audioFiles.length > 0) {
-      const audioFile = audioFiles.find(f => f.id === selectedAudioFile);
-      if (audioFile) {
-        const audio = new Audio(audioFile.url);
-        audio.addEventListener('timeupdate', () => {
-          setCurrentTime(audio.currentTime);
-        });
-        audio.addEventListener('ended', () => {
-          setIsPlaying(false);
-        });
-        setAudioPlayer(audio);
-        
-        return () => {
-          audio.pause();
-          audio.removeEventListener('timeupdate', () => {});
-          audio.removeEventListener('ended', () => {});
-        };
+      const audioFile = audioFiles.find((f: any) => f.id === selectedAudioFile);
+      if (audioFile && audioFile.url) {
+        try {
+          const audio = new Audio(audioFile.url);
+          
+          const handleTimeUpdate = () => {
+            setCurrentTime(audio.currentTime);
+          };
+          
+          const handleEnded = () => {
+            setIsPlaying(false);
+          };
+          
+          const handleError = (e: any) => {
+            console.error('Audio loading error:', e);
+            toast({ 
+              title: "Audio Error", 
+              description: "Failed to load audio file",
+              variant: "destructive" 
+            });
+          };
+          
+          audio.addEventListener('timeupdate', handleTimeUpdate);
+          audio.addEventListener('ended', handleEnded);
+          audio.addEventListener('error', handleError);
+          
+          setAudioPlayer(audio);
+          
+          return () => {
+            audio.pause();
+            audio.removeEventListener('timeupdate', handleTimeUpdate);
+            audio.removeEventListener('ended', handleEnded);
+            audio.removeEventListener('error', handleError);
+          };
+        } catch (error) {
+          console.error('Audio setup error:', error);
+          toast({ 
+            title: "Audio Error", 
+            description: "Failed to initialize audio player",
+            variant: "destructive" 
+          });
+        }
       }
     }
-  }, [selectedAudioFile, audioFiles]);
+  }, [selectedAudioFile, audioFiles, toast]);
 
   // Save text content mutation
   const saveTextMutation = useMutation({
