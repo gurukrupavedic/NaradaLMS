@@ -83,7 +83,6 @@ export default function ChapterView() {
       if (chapter && isPlaying && currentSegmentId !== null) {
         const currentMapping = chapter.mappings.find(m => m.segmentId === currentSegmentId);
         if (currentMapping && currentTime >= currentMapping.endTime) {
-          console.log(`Auto-stopping segment ${currentSegmentId} at ${currentTime}s (end: ${currentMapping.endTime}s)`);
           audio.pause();
           setIsPlaying(false);
           setCurrentSegmentId(null);
