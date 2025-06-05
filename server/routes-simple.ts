@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage-authentic";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+// Authentication disabled for development
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Skip auth setup for development
@@ -82,10 +82,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/chapters/:id', isAuthenticated, async (req, res) => {
+  app.get('/api/chapters/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const chapter = await storage.getChapter(id);
+      const chapter = await storage.getChapter(parseInt(id));
       if (!chapter) {
         return res.status(404).json({ message: "Chapter not found" });
       }
@@ -96,12 +96,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/student-progress/:chapterId', isAuthenticated, async (req: any, res) => {
+  app.get('/api/student-progress/:chapterId', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "mock-user-123"; // Mock user for development
       const { chapterId } = req.params;
       const progress = await storage.getStudentProgress(userId);
-      const chapterProgress = progress.find(p => p.chapterId === chapterId);
+      const chapterProgress = progress.find(p => p.chapterId === parseInt(chapterId));
       res.json(chapterProgress || { proficiencyLevel: 0 });
     } catch (error) {
       console.error("Error fetching student progress:", error);
@@ -109,9 +109,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/student-stats', isAuthenticated, async (req: any, res) => {
+  app.get('/api/student-stats', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "mock-user-123"; // Mock user for development
       const stats = await storage.getStudentStats(userId);
       res.json(stats);
     } catch (error) {
@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes
-  app.get('/api/admin/users', isAuthenticated, async (req: any, res) => {
+  app.get('/api/admin/users', async (req: any, res) => {
     try {
       const users = await storage.getAllUsers();
       res.json(users);
@@ -131,7 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/users/:userId/roles', isAuthenticated, async (req: any, res) => {
+  app.put('/api/admin/users/:userId/roles', async (req: any, res) => {
     try {
       const { userId } = req.params;
       const { roles } = req.body;
@@ -143,7 +143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/users/:userId/status', isAuthenticated, async (req: any, res) => {
+  app.put('/api/admin/users/:userId/status', async (req: any, res) => {
     try {
       const { userId } = req.params;
       const { status } = req.body;
