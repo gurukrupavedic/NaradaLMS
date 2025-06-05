@@ -167,7 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/chapters/:id', isAuthenticated, async (req, res) => {
+  app.get('/api/chapters/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const chapter = await storage.getChapter(id);
@@ -175,26 +175,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Chapter not found" });
       }
 
-      // Get related data
-      const [audioFiles, segments] = await Promise.all([
-        storage.getAudioFilesByChapter(id),
-        storage.getSegmentsByChapter(id),
-      ]);
-
-      // Get mappings for each audio file
-      const audioMappings = await Promise.all(
-        audioFiles.map(async (audio) => ({
-          audioFileId: audio.id,
-          mappings: await storage.getMappingsByAudioFile(audio.id),
-        }))
-      );
-
-      res.json({
-        ...chapter,
-        audioFiles,
-        segments,
-        audioMappings,
-      });
+      // Chapter already includes segments, audioFiles, and mappings from storage
+      res.json(chapter);
     } catch (error) {
       console.error("Error fetching chapter:", error);
       res.status(500).json({ message: "Failed to fetch chapter" });
