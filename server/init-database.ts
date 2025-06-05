@@ -23,7 +23,7 @@ export async function initializeDatabase(): Promise<void> {
 }
 
 // Run initialization if this file is executed directly
-if (require.main === module) {
+if (process.argv[1] === new URL(import.meta.url).pathname) {
   initializeDatabase()
     .then(() => {
       console.log("Database seeding completed");

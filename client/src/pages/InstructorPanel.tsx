@@ -1,308 +1,570 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useToast } from '@/hooks/use-toast';
-import { Search, Save, Download, Eye } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
-import type { StudentWithProgress, TrackWithChapters } from '@shared/schema';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { Plus, Edit, Trash2, Upload, Play, Pause, Save } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+
+interface Track {
+  id: number;
+  title: string;
+  description: string;
+  order: number;
+  status: string;
+  estimatedHours: number;
+  createdBy: string;
+}
+
+interface Chapter {
+  id: number;
+  trackId: number;
+  title: string;
+  order: number;
+  status: string;
+  content: {
+    te?: string;
+    hi?: string;
+    en?: string;
+  };
+}
+
+interface TextSegment {
+  id: number;
+  chapterId: number;
+  conceptualName: string;
+  textReferences: {
+    te?: { start: number; end: number };
+    hi?: { start: number; end: number };
+    en?: { start: number; end: number };
+  };
+}
+
+interface AudioFile {
+  id: number;
+  chapterId: number;
+  filename: string;
+  originalName: string;
+  reciter: string;
+  duration: number;
+}
 
 export default function InstructorPanel() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTrack, setSelectedTrack] = useState<string>('all');
-  const [progressUpdates, setProgressUpdates] = useState<Record<string, number>>({});
-  
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  const [activeTab, setActiveTab] = useState("tracks");
+  const [selectedTrack, setSelectedTrack] = useState<number | null>(null);
+  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<"te" | "hi" | "en">("en");
 
-  const { data: students, isLoading: studentsLoading } = useQuery<StudentWithProgress[]>({
-    queryKey: ['/api/progress/students'],
+  // Fetch data
+  const { data: tracks = [] } = useQuery<Track[]>({
+    queryKey: ["/api/admin/tracks"],
   });
 
-  const { data: tracks } = useQuery<TrackWithChapters[]>({
-    queryKey: ['/api/tracks'],
+  const { data: chapters = [] } = useQuery<Chapter[]>({
+    queryKey: ["/api/admin/chapters", selectedTrack],
+    enabled: !!selectedTrack,
   });
 
-  const bulkUpdateMutation = useMutation({
-    mutationFn: async (updates: Array<{ studentId: string; chapterId: number; proficiencyLevel: number }>) => {
-      await apiRequest('POST', '/api/progress/bulk', { progressUpdates: updates });
+  const { data: segments = [] } = useQuery<TextSegment[]>({
+    queryKey: ["/api/admin/segments", selectedChapter],
+    enabled: !!selectedChapter,
+  });
+
+  const { data: audioFiles = [] } = useQuery<AudioFile[]>({
+    queryKey: ["/api/admin/audio-files", selectedChapter],
+    enabled: !!selectedChapter,
+  });
+
+  // Create track mutation
+  const createTrackMutation = useMutation({
+    mutationFn: async (trackData: Partial<Track>) => {
+      return apiRequest("/api/admin/tracks", {
+        method: "POST",
+        body: JSON.stringify(trackData),
+      });
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Student progress updated successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/progress/students'] });
-      setProgressUpdates({});
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      toast({ title: "Track created successfully" });
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update progress",
-        variant: "destructive",
+      toast({ 
+        title: "Failed to create track", 
+        description: error.message,
+        variant: "destructive" 
       });
     },
   });
 
-  const handleProgressChange = (studentId: string, chapterId: number, level: number) => {
-    const key = `${studentId}-${chapterId}`;
-    setProgressUpdates(prev => ({
-      ...prev,
-      [key]: level,
-    }));
+  // Create chapter mutation
+  const createChapterMutation = useMutation({
+    mutationFn: async (chapterData: Partial<Chapter>) => {
+      return apiRequest("/api/admin/chapters", {
+        method: "POST",
+        body: JSON.stringify(chapterData),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/chapters"] });
+      toast({ title: "Chapter created successfully" });
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Failed to create chapter", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
+  // Create segment mutation
+  const createSegmentMutation = useMutation({
+    mutationFn: async (segmentData: Partial<TextSegment>) => {
+      return apiRequest("/api/admin/segments", {
+        method: "POST",
+        body: JSON.stringify(segmentData),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/segments"] });
+      toast({ title: "Text segment created successfully" });
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Failed to create segment", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
+  // Content editing functions
+  const [newTrack, setNewTrack] = useState({ title: "", description: "", estimatedHours: 0 });
+  const [newChapter, setNewChapter] = useState({ title: "", content: { te: "", hi: "", en: "" } });
+  const [selectedText, setSelectedText] = useState("");
+  const [segmentName, setSegmentName] = useState("");
+
+  const handleCreateTrack = () => {
+    if (!newTrack.title.trim()) {
+      toast({ title: "Track title is required", variant: "destructive" });
+      return;
+    }
+    
+    createTrackMutation.mutate({
+      ...newTrack,
+      order: tracks.length + 1,
+      status: "draft",
+    });
+    setNewTrack({ title: "", description: "", estimatedHours: 0 });
   };
 
-  const handleSaveAll = () => {
-    const updates = Object.entries(progressUpdates).map(([key, level]) => {
-      const [studentId, chapterId] = key.split('-');
-      return {
-        studentId,
-        chapterId: parseInt(chapterId),
-        proficiencyLevel: level,
-      };
+  const handleCreateChapter = () => {
+    if (!selectedTrack || !newChapter.title.trim()) {
+      toast({ title: "Track selection and chapter title are required", variant: "destructive" });
+      return;
+    }
+    
+    createChapterMutation.mutate({
+      ...newChapter,
+      trackId: selectedTrack,
+      order: chapters.length + 1,
+      status: "draft",
     });
+    setNewChapter({ title: "", content: { te: "", hi: "", en: "" } });
+  };
 
-    if (updates.length > 0) {
-      bulkUpdateMutation.mutate(updates);
+  const handleTextSelection = () => {
+    const selection = window.getSelection();
+    if (selection && selection.toString().trim()) {
+      const selectedText = selection.toString().trim();
+      const range = selection.getRangeAt(0);
+      
+      // Get character positions relative to the content
+      const container = range.commonAncestorContainer.parentElement;
+      if (container?.getAttribute('data-language') === selectedLanguage) {
+        const start = range.startOffset;
+        const end = range.endOffset;
+        
+        setSelectedText(selectedText);
+        console.log(`Selected text: "${selectedText}" at positions ${start}-${end} in ${selectedLanguage}`);
+      }
     }
   };
 
-  const getProgressKey = (studentId: string, chapterId: number) => `${studentId}-${chapterId}`;
+  const handleCreateSegment = () => {
+    if (!selectedChapter || !segmentName.trim() || !selectedText.trim()) {
+      toast({ title: "Chapter, segment name, and text selection are required", variant: "destructive" });
+      return;
+    }
 
-  const getLevelColor = (level: number) => {
-    const colors = {
-      0: 'bg-gray-100 text-gray-800',
-      1: 'bg-red-100 text-red-800',
-      2: 'bg-yellow-100 text-yellow-800',
-      3: 'bg-blue-100 text-blue-800',
-      4: 'bg-green-100 text-green-800',
+    // This is a simplified version - in a real implementation, you'd calculate exact character positions
+    const textReferences = {
+      [selectedLanguage]: { start: 0, end: selectedText.length }
     };
-    return colors[level as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-  };
 
-  const getLevelLabel = (level: number) => {
-    if (level === 0) return 'Not Started';
-    return `Level ${level}`;
-  };
-
-  // Filter students and their progress
-  const filteredData = React.useMemo(() => {
-    if (!students) return [];
-
-    return students.flatMap(student => {
-      // Filter by search term
-      const matchesSearch = !searchTerm || 
-        student.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.email?.toLowerCase().includes(searchTerm.toLowerCase());
-
-      if (!matchesSearch) return [];
-
-      // Get progress entries, filtering by track if selected
-      let progressEntries = student.progress || [];
-      
-      if (selectedTrack !== 'all') {
-        progressEntries = progressEntries.filter(
-          progress => progress.chapter.track.id.toString() === selectedTrack
-        );
-      }
-
-      // If no progress entries but user passes search filter, show with empty progress
-      if (progressEntries.length === 0 && matchesSearch) {
-        return [{
-          student,
-          progress: null,
-          chapter: null,
-          track: null,
-        }];
-      }
-
-      return progressEntries.map(progress => ({
-        student,
-        progress,
-        chapter: progress.chapter,
-        track: progress.chapter.track,
-      }));
+    createSegmentMutation.mutate({
+      chapterId: selectedChapter,
+      conceptualName: segmentName,
+      textReferences,
     });
-  }, [students, searchTerm, selectedTrack]);
-
-  if (studentsLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
-          <div className="h-64 bg-gray-200 rounded-lg"></div>
-        </div>
-      </div>
-    );
-  }
+    
+    setSegmentName("");
+    setSelectedText("");
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Student Progress Management</h1>
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search students..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64"
-            />
-          </div>
-          <Select value={selectedTrack} onValueChange={setSelectedTrack}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Tracks</SelectItem>
-              {tracks?.map((track) => (
-                <SelectItem key={track.id} value={track.id.toString()}>
-                  {track.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="container mx-auto p-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Instructor Content Management</h1>
+        <p className="text-muted-foreground">Create and manage Vedic learning content</p>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Student
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Track
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Chapter
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Current Level
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Update Level
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredData.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                      No students found matching your criteria
-                    </td>
-                  </tr>
-                ) : (
-                  filteredData.map((item, index) => {
-                    const progressKey = item.chapter ? getProgressKey(item.student.id, item.chapter.id) : '';
-                    const currentLevel = item.progress?.proficiencyLevel ?? 0;
-                    const updatedLevel = progressUpdates[progressKey] ?? currentLevel;
-                    const hasChanges = progressUpdates[progressKey] !== undefined;
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="tracks">Tracks</TabsTrigger>
+          <TabsTrigger value="chapters">Chapters</TabsTrigger>
+          <TabsTrigger value="segments">Text Segments</TabsTrigger>
+          <TabsTrigger value="audio">Audio Management</TabsTrigger>
+        </TabsList>
 
-                    return (
-                      <tr key={`${item.student.id}-${item.chapter?.id || 'no-chapter'}-${index}`} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <Avatar className="h-10 w-10">
-                              <AvatarImage src={item.student.profileImageUrl || undefined} />
-                              <AvatarFallback>
-                                {(item.student.firstName?.[0] || '') + (item.student.lastName?.[0] || '')}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
-                                {item.student.firstName} {item.student.lastName}
-                              </div>
-                              <div className="text-sm text-gray-500">{item.student.email}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {item.track?.title || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {item.chapter?.title || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge className={getLevelColor(currentLevel)}>
-                            {getLevelLabel(currentLevel)}
+        <TabsContent value="tracks" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Create New Track</CardTitle>
+              <CardDescription>Add a new learning track to the curriculum</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="track-title">Track Title</Label>
+                <Input
+                  id="track-title"
+                  value={newTrack.title}
+                  onChange={(e) => setNewTrack({ ...newTrack, title: e.target.value })}
+                  placeholder="Enter track title"
+                />
+              </div>
+              <div>
+                <Label htmlFor="track-description">Description</Label>
+                <Textarea
+                  id="track-description"
+                  value={newTrack.description}
+                  onChange={(e) => setNewTrack({ ...newTrack, description: e.target.value })}
+                  placeholder="Enter track description"
+                />
+              </div>
+              <div>
+                <Label htmlFor="estimated-hours">Estimated Hours</Label>
+                <Input
+                  id="estimated-hours"
+                  type="number"
+                  value={newTrack.estimatedHours}
+                  onChange={(e) => setNewTrack({ ...newTrack, estimatedHours: parseInt(e.target.value) || 0 })}
+                  placeholder="0"
+                />
+              </div>
+              <Button onClick={handleCreateTrack} disabled={createTrackMutation.isPending}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Track
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Existing Tracks ({tracks.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {tracks.map((track) => (
+                  <div
+                    key={track.id}
+                    className={`p-3 border rounded cursor-pointer ${
+                      selectedTrack === track.id ? "border-primary bg-primary/5" : ""
+                    }`}
+                    onClick={() => setSelectedTrack(track.id)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium">{track.title}</h3>
+                        <p className="text-sm text-muted-foreground">{track.description}</p>
+                      </div>
+                      <Badge variant={track.status === "published" ? "default" : "secondary"}>
+                        {track.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="chapters" className="space-y-4">
+          {!selectedTrack ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">Please select a track first</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Create New Chapter</CardTitle>
+                  <CardDescription>Add content to the selected track</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="chapter-title">Chapter Title</Label>
+                    <Input
+                      id="chapter-title"
+                      value={newChapter.title}
+                      onChange={(e) => setNewChapter({ ...newChapter, title: e.target.value })}
+                      placeholder="Enter chapter title"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Content Languages</Label>
+                    <Tabs value={selectedLanguage} onValueChange={(value) => setSelectedLanguage(value as "te" | "hi" | "en")}>
+                      <TabsList>
+                        <TabsTrigger value="te">Telugu</TabsTrigger>
+                        <TabsTrigger value="hi">Devanagari</TabsTrigger>
+                        <TabsTrigger value="en">English/IAST</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="te">
+                        <Textarea
+                          value={newChapter.content.te}
+                          onChange={(e) => setNewChapter({ 
+                            ...newChapter, 
+                            content: { ...newChapter.content, te: e.target.value }
+                          })}
+                          placeholder="Enter Telugu content"
+                          className="min-h-32"
+                        />
+                      </TabsContent>
+                      
+                      <TabsContent value="hi">
+                        <Textarea
+                          value={newChapter.content.hi}
+                          onChange={(e) => setNewChapter({ 
+                            ...newChapter, 
+                            content: { ...newChapter.content, hi: e.target.value }
+                          })}
+                          placeholder="Enter Devanagari content"
+                          className="min-h-32"
+                        />
+                      </TabsContent>
+                      
+                      <TabsContent value="en">
+                        <Textarea
+                          value={newChapter.content.en}
+                          onChange={(e) => setNewChapter({ 
+                            ...newChapter, 
+                            content: { ...newChapter.content, en: e.target.value }
+                          })}
+                          placeholder="Enter English/IAST content"
+                          className="min-h-32"
+                        />
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+
+                  <Button onClick={handleCreateChapter} disabled={createChapterMutation.isPending}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Chapter
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Chapters in Track ({chapters.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {chapters.map((chapter) => (
+                      <div
+                        key={chapter.id}
+                        className={`p-3 border rounded cursor-pointer ${
+                          selectedChapter === chapter.id ? "border-primary bg-primary/5" : ""
+                        }`}
+                        onClick={() => setSelectedChapter(chapter.id)}
+                      >
+                        <div className="flex justify-between items-center">
+                          <h3 className="font-medium">{chapter.title}</h3>
+                          <Badge variant={chapter.status === "published" ? "default" : "secondary"}>
+                            {chapter.status}
                           </Badge>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {item.chapter ? (
-                            <Select
-                              value={updatedLevel.toString()}
-                              onValueChange={(value) => 
-                                handleProgressChange(item.student.id, item.chapter.id, parseInt(value))
-                              }
-                            >
-                              <SelectTrigger className={`w-32 ${hasChanges ? 'border-amber-500' : ''}`}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="0">Not Started</SelectItem>
-                                <SelectItem value="1">Level 1</SelectItem>
-                                <SelectItem value="2">Level 2</SelectItem>
-                                <SelectItem value="3">Level 3</SelectItem>
-                                <SelectItem value="4">Level 4</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <span className="text-gray-400">N/A</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center space-x-2">
-                            {hasChanges && (
-                              <Save className="h-4 w-4 text-amber-600" />
-                            )}
-                            <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
 
-          <div className="px-6 py-4 bg-gray-50 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                onClick={handleSaveAll}
-                disabled={Object.keys(progressUpdates).length === 0 || bulkUpdateMutation.isPending}
-                className="bg-amber-700 hover:bg-amber-800 text-white"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Save All Changes ({Object.keys(progressUpdates).length})
-              </Button>
-              <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50">
-                <Download className="h-4 w-4 mr-2" />
-                Export Progress
-              </Button>
-            </div>
-            
-            <div className="text-sm text-gray-500">
-              Showing {filteredData.length} entries
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        <TabsContent value="segments" className="space-y-4">
+          {!selectedChapter ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">Please select a chapter first</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Create Text Segment</CardTitle>
+                  <CardDescription>Select text portions and create interactive segments</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label>Language</Label>
+                    <Select value={selectedLanguage} onValueChange={(value) => setSelectedLanguage(value as "te" | "hi" | "en")}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="te">Telugu</SelectItem>
+                        <SelectItem value="hi">Devanagari</SelectItem>
+                        <SelectItem value="en">English/IAST</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="segment-name">Segment Name</Label>
+                    <Input
+                      id="segment-name"
+                      value={segmentName}
+                      onChange={(e) => setSegmentName(e.target.value)}
+                      placeholder="Enter conceptual name for segment"
+                    />
+                  </div>
+
+                  {selectedText && (
+                    <div className="p-3 bg-muted rounded">
+                      <Label className="text-sm font-medium">Selected Text:</Label>
+                      <p className="mt-1">{selectedText}</p>
+                    </div>
+                  )}
+
+                  <div className="flex space-x-2">
+                    <Button onClick={handleTextSelection} variant="outline">
+                      <Edit className="w-4 h-4 mr-2" />
+                      Capture Selection
+                    </Button>
+                    <Button 
+                      onClick={handleCreateSegment} 
+                      disabled={createSegmentMutation.isPending || !selectedText}
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Create Segment
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Chapter Segments ({segments.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {segments.map((segment) => (
+                      <div key={segment.id} className="p-3 border rounded">
+                        <h3 className="font-medium">{segment.conceptualName}</h3>
+                        <div className="text-sm text-muted-foreground">
+                          {Object.entries(segment.textReferences).map(([lang, ref]) => (
+                            <span key={lang} className="mr-4">
+                              {lang.toUpperCase()}: {ref.start}-{ref.end}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="audio" className="space-y-4">
+          {!selectedChapter ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">Please select a chapter first</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Upload Audio File</CardTitle>
+                  <CardDescription>Add audio recordings for the selected chapter</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="audio-upload">Audio File</Label>
+                    <Input id="audio-upload" type="file" accept="audio/*" />
+                  </div>
+                  <div>
+                    <Label htmlFor="reciter-name">Reciter Name</Label>
+                    <Input 
+                      id="reciter-name" 
+                      placeholder="Enter reciter name and style"
+                    />
+                  </div>
+                  <Button disabled>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Audio
+                  </Button>
+                  <p className="text-sm text-muted-foreground">
+                    Audio upload functionality will be implemented in the next phase
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Audio Files ({audioFiles.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {audioFiles.map((audio) => (
+                      <div key={audio.id} className="p-3 border rounded">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h3 className="font-medium">{audio.originalName}</h3>
+                            <p className="text-sm text-muted-foreground">{audio.reciter}</p>
+                          </div>
+                          <Badge variant="outline">
+                            {Math.round(audio.duration)}s
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
