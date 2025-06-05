@@ -533,7 +533,10 @@ export default function InstructorPanel() {
                             <ChevronDown className="w-3 h-3" />
                           </Button>
                         </div>
-                        <div className="flex-1 cursor-pointer" onClick={() => setSelectedTrack(track.id)}>
+                        <div className="flex-1 cursor-pointer" onClick={() => {
+                          console.log('Track clicked:', track.id, track.title);
+                          setSelectedTrack(track.id);
+                        }}>
                           <h3 className="font-medium">Track {track.order}: {track.title}</h3>
                           <p className="text-sm text-muted-foreground">{track.description}</p>
                         </div>
