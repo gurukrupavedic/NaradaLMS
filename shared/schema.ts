@@ -77,7 +77,7 @@ export const audioFiles = pgTable("audio_files", {
   id: serial("id").primaryKey(),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
   filename: text("filename").notNull(),
-  originalName: text("original_name").notNull(),
+  displayName: text("display_name").notNull(),
   reciter: text("reciter"),
   duration: real("duration"), // in seconds
   fileSize: integer("file_size"),

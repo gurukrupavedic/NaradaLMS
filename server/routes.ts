@@ -221,7 +221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const audioFile = await storage.createAudioFile({
         chapterId,
         filename: req.file.filename,
-        originalName: req.file.originalname,
+        displayName: req.file.originalname,
         reciter: req.body.reciter || null,
         fileSize: req.file.size,
         mimeType: req.file.mimetype,
@@ -690,8 +690,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Updating audio file ${audioFileId} display name to: ${filename}`);
       
-      // Update originalName for display purposes, not the actual filename (hash)
-      const updatedFile = await storage.updateAudioFile(audioFileId, { originalName: filename.trim() });
+      // Update displayName for display purposes, not the actual filename (hash)
+      const updatedFile = await storage.updateAudioFile(audioFileId, { displayName: filename.trim() });
       console.log(`Audio file ${audioFileId} updated successfully:`, updatedFile);
       
       res.json(updatedFile);
