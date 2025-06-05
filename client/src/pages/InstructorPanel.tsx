@@ -169,10 +169,18 @@ export default function InstructorPanel() {
   const [segmentName, setSegmentName] = useState("");
 
   const handleCreateTrack = () => {
+    console.log("handleCreateTrack called with:", newTrack);
+    
     if (!newTrack.title.trim()) {
       toast({ title: "Track title is required", variant: "destructive" });
       return;
     }
+    
+    console.log("About to call mutation with:", {
+      ...newTrack,
+      order: tracks.length + 1,
+      status: "draft",
+    });
     
     createTrackMutation.mutate({
       ...newTrack,
