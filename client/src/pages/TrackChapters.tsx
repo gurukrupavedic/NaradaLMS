@@ -199,13 +199,9 @@ export default function TrackChapters() {
             <CardContent className="p-12 text-center">
               <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-lg font-medium mb-2">No chapters yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Create your first chapter to start building this track
+              <p className="text-muted-foreground">
+                Create your first chapter using the "Create Chapter" button above
               </p>
-              <Button onClick={() => setCreateChapterModalOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Chapter
-              </Button>
             </CardContent>
           </Card>
         )}

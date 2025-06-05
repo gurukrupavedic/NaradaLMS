@@ -218,7 +218,7 @@ export const selectUserSchema = createSelectSchema(users);
 export const insertTrackSchema = createInsertSchema(tracks).omit({ id: true, createdAt: true, updatedAt: true, createdBy: true, order: true });
 export const selectTrackSchema = createSelectSchema(tracks);
 
-export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true, createdAt: true, updatedAt: true, order: true, createdBy: true, lastEditedBy: true, publishedAt: true });
 export const selectChapterSchema = createSelectSchema(chapters);
 
 export const insertAudioFileSchema = createInsertSchema(audioFiles).omit({ id: true, createdAt: true });

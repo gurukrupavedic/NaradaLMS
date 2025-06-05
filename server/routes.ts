@@ -476,11 +476,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/chapters', async (req, res) => {
     try {
+      console.log("Chapter creation request body:", req.body);
       const chapterData = insertChapterSchema.parse(req.body);
+      console.log("Parsed chapter data:", chapterData);
+      
+      // Get the next sequential order number for this track
+      const existingChapters = await storage.getChaptersByTrack(chapterData.trackId);
+      const nextOrder = existingChapters.length + 1;
+      
       const chapter = await storage.createChapter({
-        ...chapterData,
+        title: chapterData.title,
+        trackId: chapterData.trackId,
+        status: chapterData.status || "draft",
+        content: chapterData.content || {},
+        order: nextOrder,
         createdBy: "system"
       });
+      console.log("Created chapter:", chapter);
       res.json(chapter);
     } catch (error) {
       console.error("Error creating chapter:", error);
