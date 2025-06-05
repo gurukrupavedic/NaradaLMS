@@ -170,11 +170,12 @@ export default function TrackChapters() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-2">
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleEditChapter(chapter.id)}
+                      className="w-full"
                     >
                       <Edit className="w-4 h-4 mr-2" />
                       Edit Content
@@ -184,6 +185,7 @@ export default function TrackChapters() {
                       size="sm"
                       onClick={() => handleDeleteChapter(chapter.id)}
                       disabled={deleteChapterMutation.isPending}
+                      className="w-full"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Delete Chapter
