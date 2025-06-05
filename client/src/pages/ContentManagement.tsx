@@ -19,7 +19,10 @@ import {
   ArrowLeft, 
   Save,
   Play,
-  Pause
+  Pause,
+  ChevronUp,
+  ChevronDown,
+  Trash2
 } from "lucide-react";
 
 interface Track {
@@ -88,8 +91,53 @@ export default function ContentManagement() {
   // State for editing
   const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<'te' | 'hi' | 'en'>('en');
+  const [editingTrack, setEditingTrack] = useState<Track | null>(null);
+  const [newTrack, setNewTrack] = useState({ title: "", description: "" });
 
-  // Mutations
+  // Track mutations
+  const createTrackMutation = useMutation({
+    mutationFn: async (trackData: any) => {
+      return await apiRequest("/api/admin/tracks", "POST", trackData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      setNewTrack({ title: "", description: "" });
+      toast({ title: "Track created successfully" });
+    },
+  });
+
+  const updateTrackMutation = useMutation({
+    mutationFn: async (trackData: Track) => {
+      return await apiRequest(`/api/admin/tracks/${trackData.id}`, "PUT", trackData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      setEditingTrack(null);
+      toast({ title: "Track updated successfully" });
+    },
+  });
+
+  const deleteTrackMutation = useMutation({
+    mutationFn: async (trackId: number) => {
+      return await apiRequest(`/api/admin/tracks/${trackId}`, "DELETE");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      toast({ title: "Track deleted successfully" });
+    },
+  });
+
+  const moveTrackMutation = useMutation({
+    mutationFn: async ({ trackId, direction }: { trackId: number; direction: 'up' | 'down' }) => {
+      return await apiRequest(`/api/admin/tracks/${trackId}/move`, "POST", { direction });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      toast({ title: "Track order updated" });
+    },
+  });
+
+  // Chapter mutations
   const createChapterMutation = useMutation({
     mutationFn: async (chapterData: any) => {
       return await apiRequest("/api/admin/chapters", "POST", chapterData);
@@ -130,7 +178,32 @@ export default function ContentManagement() {
     },
   });
 
-  // Event handlers
+  // Track event handlers
+  const handleCreateTrack = () => {
+    if (!newTrack.title.trim()) return;
+    createTrackMutation.mutate(newTrack);
+  };
+
+  const handleEditTrack = (track: Track) => {
+    setEditingTrack(track);
+  };
+
+  const handleUpdateTrack = () => {
+    if (!editingTrack) return;
+    updateTrackMutation.mutate(editingTrack);
+  };
+
+  const handleDeleteTrack = (trackId: number) => {
+    if (confirm("Are you sure you want to delete this track?")) {
+      deleteTrackMutation.mutate(trackId);
+    }
+  };
+
+  const handleMoveTrack = (trackId: number, direction: 'up' | 'down') => {
+    moveTrackMutation.mutate({ trackId, direction });
+  };
+
+  // Chapter event handlers
   const handleCreateChapter = () => {
     if (!selectedTrack) return;
     
@@ -175,23 +248,152 @@ export default function ContentManagement() {
       <div className="container mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">Content Management</h1>
-          <p className="text-muted-foreground">Select a track to manage its chapters</p>
+          <p className="text-muted-foreground">Create and manage learning tracks and chapters</p>
         </div>
 
-        <div className="grid gap-4">
-          {tracks.map((track) => (
-            <Card 
-              key={track.id} 
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => setSelectedTrack(track.id)}
-            >
-              <CardHeader>
-                <CardTitle>Track {track.order}: {track.title}</CardTitle>
-                <CardDescription>{track.description}</CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Create New Track</CardTitle>
+            <CardDescription>Add a new learning track to the curriculum</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="track-title">Track Title</Label>
+              <Input
+                id="track-title"
+                value={newTrack.title}
+                onChange={(e) => setNewTrack({ ...newTrack, title: e.target.value })}
+                placeholder="Enter track title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="track-description">Description</Label>
+              <Textarea
+                id="track-description"
+                value={newTrack.description}
+                onChange={(e) => setNewTrack({ ...newTrack, description: e.target.value })}
+                placeholder="Enter track description"
+              />
+            </div>
+            <Button onClick={handleCreateTrack} disabled={createTrackMutation.isPending}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Track
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Tracks ({tracks.length})</CardTitle>
+            <CardDescription>Click on a track to manage its chapters</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {tracks.map((track) => (
+                <div key={track.id} className="flex items-center gap-3 p-4 border rounded-lg">
+                  <div className="flex flex-col gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0"
+                      disabled={track.order === 1}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMoveTrack(track.id, 'up');
+                      }}
+                    >
+                      <ChevronUp className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0"
+                      disabled={track.order === tracks.length}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMoveTrack(track.id, 'down');
+                      }}
+                    >
+                      <ChevronDown className="w-3 h-3" />
+                    </Button>
+                  </div>
+                  
+                  <div 
+                    className="flex-1 cursor-pointer"
+                    onClick={() => setSelectedTrack(track.id)}
+                  >
+                    <h3 className="font-medium">Track {track.order}: {track.title}</h3>
+                    <p className="text-sm text-muted-foreground">{track.description}</p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditTrack(track);
+                      }}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteTrack(track.id);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Edit Track Dialog */}
+        {editingTrack && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Edit Track</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="edit-title">Title</Label>
+                <Input
+                  id="edit-title"
+                  value={editingTrack.title}
+                  onChange={(e) => setEditingTrack({ ...editingTrack, title: e.target.value })}
+                  placeholder="Enter track title"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editingTrack.description}
+                  onChange={(e) => setEditingTrack({ ...editingTrack, description: e.target.value })}
+                  placeholder="Enter track description"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleUpdateTrack} disabled={updateTrackMutation.isPending}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Update Track
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setEditingTrack(null)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }
