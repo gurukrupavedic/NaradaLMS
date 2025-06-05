@@ -475,10 +475,10 @@ export class MemStorage implements IStorage {
       const chapter = track.chapters.find((ch: any) => ch.id === id.toString());
       if (chapter) {
         // Get segments for this chapter (match by numeric ID)
-        const segments = this.segments.filter(segment => segment.chapterId === id);
+        const segments = this.segments.filter(segment => segment.chapterId === parseInt(chapter.id));
         
         // Get audio files for this chapter (match by numeric ID)
-        const audioFiles = this.audioFiles.filter(file => file.chapterId === id);
+        const audioFiles = this.audioFiles.filter(file => file.chapterId === parseInt(chapter.id));
         
         // Get audio mappings for this chapter's segments
         const mappings = this.audioMappings.filter(mapping => 
