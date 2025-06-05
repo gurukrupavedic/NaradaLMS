@@ -414,16 +414,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/tracks', async (req, res) => {
     try {
+      console.log("Track creation request body:", req.body);
       const trackData = insertTrackSchema.parse(req.body);
+      console.log("Parsed track data:", trackData);
+      
       // For now, use system user as creator
       const track = await storage.createTrack({
         ...trackData,
         createdBy: "system"
       });
+      console.log("Created track:", track);
       res.json(track);
     } catch (error) {
       console.error("Error creating track:", error);
-      res.status(500).json({ message: "Failed to create track" });
+      res.status(500).json({ message: "Failed to create track", error: error.message });
     }
   });
 

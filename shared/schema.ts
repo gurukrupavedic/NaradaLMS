@@ -50,7 +50,7 @@ export const tracks = pgTable("tracks", {
   order: integer("order").notNull(), // Positive integer for track ordering
   status: varchar("status").default("draft").notNull(), // 'draft', 'published', 'certified'
   estimatedHours: integer("estimated_hours").default(0),
-  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdBy: varchar("created_by").notNull().references(() => users.id).default("system"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -217,7 +217,7 @@ export const studentProgressRelations = relations(studentProgress, ({ one }) => 
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 
-export const insertTrackSchema = createInsertSchema(tracks).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertTrackSchema = createInsertSchema(tracks).omit({ id: true, createdAt: true, updatedAt: true, createdBy: true });
 export const selectTrackSchema = createSelectSchema(tracks);
 
 export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true, createdAt: true, updatedAt: true });
