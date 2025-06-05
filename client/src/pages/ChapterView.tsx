@@ -69,6 +69,7 @@ export default function ChapterView() {
   const [duration, setDuration] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [activeSegment, setActiveSegment] = useState<number | null>(null);
+  const [segmentPlayback, setSegmentPlayback] = useState<number | null>(null);
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -136,6 +137,22 @@ export default function ChapterView() {
       time <= m.endTime
     );
 
+    // Auto-pause at segment end if currently playing a specific segment
+    if (segmentPlayback && isPlaying) {
+      const currentMapping = chapter.mappings.find(m => 
+        m.segmentId === segmentPlayback && m.audioFileId === selectedAudioFile.id
+      );
+      
+      if (currentMapping && time >= currentMapping.endTime && audioRef.current) {
+        console.log(`Auto-pausing at segment ${segmentPlayback} end time: ${currentMapping.endTime}s`);
+        audioRef.current.pause();
+        setIsPlaying(false);
+        setSegmentPlayback(null);
+        setActiveSegment(null);
+        return;
+      }
+    }
+
     setActiveSegment(mapping ? mapping.segmentId : null);
   };
 
@@ -185,8 +202,11 @@ export default function ChapterView() {
 
     if (mapping) {
       try {
+        console.log(`Playing segment ${segmentId}: ${mapping.startTime}s - ${mapping.endTime}s`);
         audioRef.current.currentTime = mapping.startTime;
         setCurrentTime(mapping.startTime);
+        setSegmentPlayback(segmentId); // Enable auto-pause for this segment
+        
         if (!isPlaying) {
           audioRef.current.play().catch(err => {
             console.error('Audio play failed:', err);
