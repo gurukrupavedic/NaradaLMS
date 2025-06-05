@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Plus, 
@@ -93,6 +94,7 @@ export default function ContentManagement() {
   const [selectedLanguage, setSelectedLanguage] = useState<'te' | 'hi' | 'en'>('en');
   const [editingTrack, setEditingTrack] = useState<Track | null>(null);
   const [newTrack, setNewTrack] = useState({ title: "", description: "" });
+  const [createTrackDialogOpen, setCreateTrackDialogOpen] = useState(false);
 
   // Track mutations
   const createTrackMutation = useMutation({
@@ -102,6 +104,7 @@ export default function ContentManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
       setNewTrack({ title: "", description: "" });
+      setCreateTrackDialogOpen(false);
       toast({ title: "Track created successfully" });
     },
   });
@@ -251,36 +254,61 @@ export default function ContentManagement() {
           <p className="text-muted-foreground">Create and manage learning tracks and chapters</p>
         </div>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Create New Track</CardTitle>
-            <CardDescription>Add a new learning track to the curriculum</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="track-title">Track Title</Label>
-              <Input
-                id="track-title"
-                value={newTrack.title}
-                onChange={(e) => setNewTrack({ ...newTrack, title: e.target.value })}
-                placeholder="Enter track title"
-              />
-            </div>
-            <div>
-              <Label htmlFor="track-description">Description</Label>
-              <Textarea
-                id="track-description"
-                value={newTrack.description}
-                onChange={(e) => setNewTrack({ ...newTrack, description: e.target.value })}
-                placeholder="Enter track description"
-              />
-            </div>
-            <Button onClick={handleCreateTrack} disabled={createTrackMutation.isPending}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Track
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="mb-6">
+          <Dialog open={createTrackDialogOpen} onOpenChange={setCreateTrackDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add New Track
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Track</DialogTitle>
+                <DialogDescription>
+                  Add a new learning track to the curriculum
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label htmlFor="track-title">Track Title</Label>
+                  <Input
+                    id="track-title"
+                    value={newTrack.title}
+                    onChange={(e) => setNewTrack({ ...newTrack, title: e.target.value })}
+                    placeholder="Enter track title"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="track-description">Description</Label>
+                  <Textarea
+                    id="track-description"
+                    value={newTrack.description}
+                    onChange={(e) => setNewTrack({ ...newTrack, description: e.target.value })}
+                    placeholder="Enter track description"
+                  />
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button 
+                    onClick={handleCreateTrack} 
+                    disabled={createTrackMutation.isPending || !newTrack.title.trim()}
+                  >
+                    Create Track
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setCreateTrackDialogOpen(false);
+                      setNewTrack({ title: "", description: "" });
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
 
         <Card>
           <CardHeader>
