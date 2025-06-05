@@ -481,8 +481,6 @@ export class MemStorage implements IStorage {
   }
 
   async getAllTracks(): Promise<any[]> {
-    console.log("getAllTracks called, tracks count:", this.tracks.length);
-    console.log("First track:", this.tracks[0]);
     // Return tracks with their chapters populated
     return this.tracks.map(track => {
       const chapters = this.chapters.filter(chapter => chapter.trackId === track.id).map(chapter => ({
