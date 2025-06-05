@@ -143,7 +143,7 @@ export default function ContentManagement() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <span className="text-sm text-muted-foreground font-medium">
-                        Track {track.order || index + 1}
+                        Track {track.order || index + 1} • {track.chapterCount || 0} chapters
                       </span>
                       <Badge variant={track.status === "published" ? "default" : "secondary"}>
                         {track.status}
@@ -151,16 +151,6 @@ export default function ContentManagement() {
                     </div>
                     <h3 className="text-xl font-semibold mb-2">{track.title}</h3>
                     <p className="text-muted-foreground mb-3">{track.description}</p>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <FileText className="w-4 h-4" />
-                        {track.chapterCount || 0} chapters
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Music className="w-4 h-4" />
-                        {track.audioFileCount || 0} audio files
-                      </span>
-                    </div>
                   </div>
                   
                   <div className="flex flex-col gap-2">
