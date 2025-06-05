@@ -733,7 +733,7 @@ export default function ChapterEditor() {
                       <SelectContent>
                         {audioFiles.map((file: any) => (
                           <SelectItem key={file.id} value={file.id.toString()}>
-                            {file.filename}
+                            {file.originalName || file.filename}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -760,20 +760,54 @@ export default function ChapterEditor() {
                           preload="metadata"
                           className="hidden"
                         />
-                        <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                          <Button onClick={handlePlayPause} variant="outline" size="lg">
-                            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                          </Button>
-                          <div className="flex flex-col">
-                            <span className="text-lg font-mono font-bold">
-                              {currentTime.toFixed(2)}s
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              / {duration.toFixed(2)}s
-                            </span>
+                        <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <div className="flex items-center gap-4">
+                            <Button onClick={handlePlayPause} variant="outline" size="lg">
+                              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                            </Button>
+                            <div className="flex flex-col">
+                              <span className="text-lg font-mono font-bold">
+                                {currentTime.toFixed(2)}s
+                              </span>
+                              <span className="text-sm text-muted-foreground">
+                                / {duration.toFixed(2)}s
+                              </span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {audioFiles.find((f: any) => f.id === selectedAudioFile)?.originalName || audioFiles.find((f: any) => f.id === selectedAudioFile)?.filename}
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            {audioFiles.find((f: any) => f.id === selectedAudioFile)?.filename}
+                          
+                          {/* Audio Progress Slider */}
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                              <span>0:00</span>
+                              <span>{Math.floor(duration / 60)}:{String(Math.floor(duration % 60)).padStart(2, '0')}</span>
+                            </div>
+                            <div className="relative">
+                              <input
+                                type="range"
+                                min="0"
+                                max={duration || 0}
+                                value={currentTime}
+                                onChange={(e) => {
+                                  const newTime = parseFloat(e.target.value);
+                                  if (audioPlayer) {
+                                    audioPlayer.currentTime = newTime;
+                                    setCurrentTime(newTime);
+                                  }
+                                }}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 
+                                         [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 
+                                         [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:cursor-pointer
+                                         [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full 
+                                         [&::-moz-range-thumb]:bg-blue-500 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-none"
+                              />
+                              <div 
+                                className="absolute top-0 left-0 h-2 bg-blue-500 rounded-lg pointer-events-none"
+                                style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
