@@ -1,16 +1,16 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Upload, Play, Pause, Save, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { Plus, Edit, Trash2, ChevronUp, ChevronDown, Save, Upload } from "lucide-react";
 
 interface Track {
   id: number;
@@ -91,192 +91,100 @@ export default function InstructorPanel() {
     enabled: !!selectedChapter,
   });
 
+  // State for new items
+  const [newTrack, setNewTrack] = useState({ title: "", description: "" });
+  const [newChapter, setNewChapter] = useState({ 
+    title: "", 
+    content: { te: "", hi: "", en: "" }
+  });
+  const [segmentName, setSegmentName] = useState("");
+  const [selectedText, setSelectedText] = useState("");
+  const [editingTrack, setEditingTrack] = useState<Track | null>(null);
+
   // Create track mutation
   const createTrackMutation = useMutation({
     mutationFn: async (trackData: Partial<Track>) => {
-      const response = await fetch("/api/admin/tracks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(trackData),
-      });
-      if (!response.ok) throw new Error("Failed to create track");
-      return response.json();
+      return await apiRequest("/api/admin/tracks", "POST", trackData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      setNewTrack({ title: "", description: "" });
       toast({ title: "Track created successfully" });
-    },
-    onError: (error) => {
-      toast({ 
-        title: "Failed to create track", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    },
-  });
-
-  // Create chapter mutation
-  const createChapterMutation = useMutation({
-    mutationFn: async (chapterData: Partial<Chapter>) => {
-      const response = await fetch("/api/admin/chapters", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(chapterData),
-      });
-      if (!response.ok) throw new Error("Failed to create chapter");
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/chapters"] });
-      toast({ title: "Chapter created successfully" });
-    },
-    onError: (error) => {
-      toast({ 
-        title: "Failed to create chapter", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    },
-  });
-
-  // Create segment mutation
-  const createSegmentMutation = useMutation({
-    mutationFn: async (segmentData: Partial<TextSegment>) => {
-      const response = await fetch("/api/admin/segments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(segmentData),
-      });
-      if (!response.ok) throw new Error("Failed to create segment");
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/segments"] });
-      toast({ title: "Text segment created successfully" });
-    },
-    onError: (error) => {
-      toast({ 
-        title: "Failed to create segment", 
-        description: error.message,
-        variant: "destructive" 
-      });
     },
   });
 
   // Update track mutation
   const updateTrackMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<Track> }) => {
-      const response = await fetch(`/api/admin/tracks/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error("Failed to update track");
-      return response.json();
+    mutationFn: async (trackData: Track) => {
+      return await apiRequest(`/api/admin/tracks/${trackData.id}`, "PUT", trackData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
-      toast({ title: "Track updated successfully" });
       setEditingTrack(null);
-    },
-    onError: (error) => {
-      toast({ 
-        title: "Failed to update track", 
-        description: error.message,
-        variant: "destructive" 
-      });
+      toast({ title: "Track updated successfully" });
     },
   });
 
   // Delete track mutation
   const deleteTrackMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await fetch(`/api/admin/tracks/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Failed to delete track");
-      return response.json();
+    mutationFn: async (trackId: number) => {
+      return await apiRequest(`/api/admin/tracks/${trackId}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
       toast({ title: "Track deleted successfully" });
     },
-    onError: (error) => {
-      toast({ 
-        title: "Failed to delete track", 
-        description: error.message,
-        variant: "destructive" 
-      });
+  });
+
+  // Move track mutation
+  const moveTrackMutation = useMutation({
+    mutationFn: async ({ trackId, direction }: { trackId: number; direction: 'up' | 'down' }) => {
+      return await apiRequest(`/api/admin/tracks/${trackId}/move`, "POST", { direction });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      toast({ title: "Track order updated" });
     },
   });
 
-  // Chapter mutations
-  const updateChapterMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: any }) => {
-      const response = await apiRequest('PUT', `/api/admin/chapters/${id}`, data);
-      return response.json();
+  // Create chapter mutation
+  const createChapterMutation = useMutation({
+    mutationFn: async (chapterData: any) => {
+      return await apiRequest("/api/admin/chapters", "POST", chapterData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/chapters", selectedTrack] });
-      toast({ title: "Chapter updated successfully" });
-      setEditingChapter(null);
-    },
-    onError: (error) => {
-      toast({ 
-        title: "Failed to update chapter", 
-        description: error.message,
-        variant: "destructive" 
-      });
+      setNewChapter({ title: "", content: { te: "", hi: "", en: "" } });
+      toast({ title: "Chapter created successfully" });
     },
   });
 
+  // Delete chapter mutation
   const deleteChapterMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/admin/chapters/${id}`);
-      return response.json();
+    mutationFn: async (chapterId: number) => {
+      return await apiRequest(`/api/admin/chapters/${chapterId}`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/chapters", selectedTrack] });
       toast({ title: "Chapter deleted successfully" });
     },
-    onError: (error) => {
-      toast({ 
-        title: "Failed to delete chapter", 
-        description: error.message,
-        variant: "destructive" 
-      });
+  });
+
+  // Create segment mutation
+  const createSegmentMutation = useMutation({
+    mutationFn: async (segmentData: any) => {
+      return await apiRequest("/api/admin/segments", "POST", segmentData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/segments", selectedChapter] });
+      toast({ title: "Text segment created successfully" });
     },
   });
 
-  // Content editing functions
-  const [newTrack, setNewTrack] = useState({ title: "", description: "" });
-  const [editingTrack, setEditingTrack] = useState<Track | null>(null);
-  const [newChapter, setNewChapter] = useState({ title: "", content: { te: "", hi: "", en: "" } });
-  const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
-  const [selectedText, setSelectedText] = useState("");
-  const [segmentName, setSegmentName] = useState("");
-
+  // Event handlers
   const handleCreateTrack = () => {
-    console.log("handleCreateTrack called with:", newTrack);
-    
-    if (!newTrack.title.trim() || !newTrack.description.trim()) {
-      toast({ title: "Track title and description are required", variant: "destructive" });
-      return;
-    }
-    
-    createTrackMutation.mutate({
-      ...newTrack,
-      order: tracks.length + 1,
-    });
-    setNewTrack({ title: "", description: "" });
+    if (!newTrack.title.trim()) return;
+    createTrackMutation.mutate(newTrack);
   };
 
   const handleEditTrack = (track: Track) => {
@@ -284,164 +192,48 @@ export default function InstructorPanel() {
   };
 
   const handleUpdateTrack = () => {
-    if (!editingTrack || !editingTrack.title.trim() || !editingTrack.description.trim()) {
-      toast({ title: "Track title and description are required", variant: "destructive" });
-      return;
-    }
-    
-    updateTrackMutation.mutate({
-      id: editingTrack.id,
-      data: {
-        title: editingTrack.title,
-        description: editingTrack.description,
-        order: editingTrack.order,
-      },
-    });
+    if (!editingTrack) return;
+    updateTrackMutation.mutate(editingTrack);
   };
 
-  const handleDeleteTrack = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this track? This action cannot be undone.")) {
-      deleteTrackMutation.mutate(id);
+  const handleDeleteTrack = (trackId: number) => {
+    if (confirm("Are you sure you want to delete this track?")) {
+      deleteTrackMutation.mutate(trackId);
     }
   };
 
-  const handleMoveTrack = async (trackId: number, direction: 'up' | 'down') => {
-    const currentTrack = tracks.find(t => t.id === trackId);
-    if (!currentTrack) return;
-
-    const currentOrder = currentTrack.order;
-    const targetOrder = direction === 'up' ? currentOrder - 1 : currentOrder + 1;
-    
-    // Find the track at the target position
-    const targetTrack = tracks.find(t => t.order === targetOrder);
-    if (!targetTrack) return;
-
-    try {
-      // Swap the order values - include all required fields
-      await apiRequest('PUT', `/api/admin/tracks/${currentTrack.id}`, { 
-        title: currentTrack.title,
-        description: currentTrack.description,
-        order: targetOrder 
-      });
-      await apiRequest('PUT', `/api/admin/tracks/${targetTrack.id}`, { 
-        title: targetTrack.title,
-        description: targetTrack.description,
-        order: currentOrder 
-      });
-
-      // Refresh the tracks list
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
-      toast({ title: "Track order updated successfully" });
-    } catch (error) {
-      toast({ 
-        title: "Failed to update track order", 
-        variant: "destructive" 
-      });
-    }
+  const handleMoveTrack = (trackId: number, direction: 'up' | 'down') => {
+    moveTrackMutation.mutate({ trackId, direction });
   };
 
   const handleCreateChapter = () => {
-    if (!selectedTrack || !newChapter.title.trim()) {
-      toast({ title: "Track selection and chapter title are required", variant: "destructive" });
-      return;
-    }
-    
+    if (!newChapter.title.trim() || !selectedTrack) return;
     createChapterMutation.mutate({
       ...newChapter,
       trackId: selectedTrack,
-      order: chapters.length + 1,
-      status: "draft",
     });
-    setNewChapter({ title: "", content: { te: "", hi: "", en: "" } });
   };
 
   const handleEditChapter = (chapter: Chapter) => {
-    setEditingChapter(chapter);
+    // Implementation for editing chapters
+    console.log("Edit chapter:", chapter);
   };
 
-  const handleUpdateChapter = () => {
-    if (!editingChapter || !editingChapter.title.trim()) {
-      toast({ title: "Chapter title is required", variant: "destructive" });
-      return;
-    }
-    
-    updateChapterMutation.mutate({
-      id: editingChapter.id,
-      data: {
-        title: editingChapter.title,
-        content: editingChapter.content,
-        order: editingChapter.order,
-      },
-    });
-  };
-
-  const handleDeleteChapter = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this chapter? This action cannot be undone.")) {
-      deleteChapterMutation.mutate(id);
-    }
-  };
-
-  const handleMoveChapter = async (chapterId: number, direction: 'up' | 'down') => {
-    const currentChapter = chapters.find(c => c.id === chapterId);
-    if (!currentChapter) return;
-
-    const currentOrder = currentChapter.order;
-    const targetOrder = direction === 'up' ? currentOrder - 1 : currentOrder + 1;
-    
-    const targetChapter = chapters.find(c => c.order === targetOrder);
-    if (!targetChapter) return;
-
-    try {
-      await apiRequest('PUT', `/api/admin/chapters/${currentChapter.id}`, { 
-        title: currentChapter.title,
-        content: currentChapter.content,
-        order: targetOrder 
-      });
-      
-      await apiRequest('PUT', `/api/admin/chapters/${targetChapter.id}`, { 
-        title: targetChapter.title,
-        content: targetChapter.content,
-        order: currentOrder 
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/chapters", selectedTrack] });
-      toast({ title: "Chapter order updated successfully" });
-    } catch (error) {
-      toast({ 
-        title: "Failed to update chapter order", 
-        variant: "destructive" 
-      });
-    }
-  };
-
-  const handleTextSelection = () => {
-    const selection = window.getSelection();
-    if (selection && selection.toString().trim()) {
-      const selectedText = selection.toString().trim();
-      const range = selection.getRangeAt(0);
-      
-      // Get character positions relative to the content
-      const container = range.commonAncestorContainer.parentElement;
-      if (container?.getAttribute('data-language') === selectedLanguage) {
-        const start = range.startOffset;
-        const end = range.endOffset;
-        
-        setSelectedText(selectedText);
-        console.log(`Selected text: "${selectedText}" at positions ${start}-${end} in ${selectedLanguage}`);
-      }
+  const handleDeleteChapter = (chapterId: number) => {
+    if (confirm("Are you sure you want to delete this chapter?")) {
+      deleteChapterMutation.mutate(chapterId);
     }
   };
 
   const handleCreateSegment = () => {
-    if (!selectedChapter || !segmentName.trim() || !selectedText.trim()) {
-      toast({ title: "Chapter, segment name, and text selection are required", variant: "destructive" });
-      return;
-    }
+    if (!segmentName.trim() || !selectedText || !selectedChapter) return;
 
-    // This is a simplified version - in a real implementation, you'd calculate exact character positions
-    const textReferences = {
-      [selectedLanguage]: { start: 0, end: selectedText.length }
-    };
+    const [text, startStr, endStr] = selectedText.split('|');
+    const start = parseInt(startStr);
+    const end = parseInt(endStr);
+
+    const textReferences: any = {};
+    textReferences[selectedLanguage] = { start, end };
 
     createSegmentMutation.mutate({
       chapterId: selectedChapter,
@@ -502,7 +294,7 @@ export default function InstructorPanel() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Existing Tracks ({tracks.length})</CardTitle>
+              <CardTitle>Tracks ({tracks.length})</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -793,125 +585,6 @@ export default function InstructorPanel() {
               <Card>
                 <CardHeader>
                   <CardTitle>Text Segments ({segments.length})</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {segments.map((segment) => (
-                      <div key={segment.id} className="p-3 border rounded">
-                        <h3 className="font-medium">{segment.conceptualName}</h3>
-                        <div className="text-sm text-muted-foreground">
-                          {Object.entries(segment.textReferences).map(([lang, ref]) => (
-                            <span key={lang} className="mr-4">
-                              {lang.toUpperCase()}: {ref.start}-{ref.end}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
-        </TabsContent>
-                          </div>
-                          <div className="flex gap-2 ml-4">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditChapter(chapter);
-                              }}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteChapter(chapter.id);
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="segments" className="space-y-4">
-          {!selectedChapter ? (
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground">Please select a chapter first</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Create Text Segment</CardTitle>
-                  <CardDescription>Select text portions and create interactive segments</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label>Language</Label>
-                    <Select value={selectedLanguage} onValueChange={(value) => setSelectedLanguage(value as "te" | "hi" | "en")}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="te">Telugu</SelectItem>
-                        <SelectItem value="hi">Devanagari</SelectItem>
-                        <SelectItem value="en">English/IAST</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="segment-name">Segment Name</Label>
-                    <Input
-                      id="segment-name"
-                      value={segmentName}
-                      onChange={(e) => setSegmentName(e.target.value)}
-                      placeholder="Enter conceptual name for segment"
-                    />
-                  </div>
-
-                  {selectedText && (
-                    <div className="p-3 bg-muted rounded">
-                      <Label className="text-sm font-medium">Selected Text:</Label>
-                      <p className="mt-1">{selectedText}</p>
-                    </div>
-                  )}
-
-                  <div className="flex space-x-2">
-                    <Button onClick={handleTextSelection} variant="outline">
-                      <Edit className="w-4 h-4 mr-2" />
-                      Capture Selection
-                    </Button>
-                    <Button 
-                      onClick={handleCreateSegment} 
-                      disabled={createSegmentMutation.isPending || !selectedText}
-                    >
-                      <Save className="w-4 h-4 mr-2" />
-                      Create Segment
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Chapter Segments ({segments.length})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
