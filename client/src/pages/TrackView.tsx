@@ -168,7 +168,7 @@ export default function TrackView() {
             <Card 
               key={chapter.id}
               className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => setLocation(`/chapters/${chapter.id}`)}
+              onClick={() => setLocation(`/chapter/${chapter.id}`)}
             >
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
