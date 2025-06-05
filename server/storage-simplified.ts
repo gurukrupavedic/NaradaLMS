@@ -38,53 +38,87 @@ export class MemStorage implements IStorage {
     {
       id: 1,
       title: "Vaidika Nithya Karma",
-      description: "Daily Vedic practices and rituals for spiritual growth",
+      description: "Essential daily Vedic practices and rituals for spiritual development",
       order: 1,
+      status: "published",
+      estimatedHours: 120,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: "system"
     },
     {
       id: 2,
-      title: "Rig Veda Samhita",
-      description: "Sacred hymns and mantras from the Rig Veda",
+      title: "Sookta Paatham",
+      description: "Sacred hymns and verses for devotional practice and spiritual elevation",
       order: 2,
+      status: "published",
+      estimatedHours: 100,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: "system"
     },
     {
       id: 3,
-      title: "Sama Veda Gayatri",
-      description: "Melodic chants and musical verses from Sama Veda",
+      title: "Rudram, Shaakunadi, Ganapati Pooja, Punyaahavaachanam",
+      description: "Advanced worship practices including Rudra prayers and ceremonial procedures",
       order: 3,
+      status: "published",
+      estimatedHours: 80,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: "system"
     },
     {
       id: 4,
-      title: "Yajur Veda Mantras",
-      description: "Ritual formulas and sacrificial prayers",
+      title: "Mahaanyaasadhikam & Sakala Devataa Pooja Vidhaanam",
+      description: "Comprehensive deity worship procedures and advanced ceremonial practices",
       order: 4,
+      status: "published",
+      estimatedHours: 90,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: "system"
     },
     {
       id: 5,
-      title: "Atharva Veda Wisdom",
-      description: "Healing mantras and spiritual knowledge",
+      title: "Swasthi Mantraah, Agni Mukham, Nakshatreshti",
+      description: "Auspicious mantras, fire ceremonies, and stellar worship practices",
       order: 5,
+      status: "published",
+      estimatedHours: 70,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: "system"
     },
     {
       id: 6,
-      title: "Upanishad Teachings",
-      description: "Philosophical wisdom and spiritual insights",
+      title: "Upanishad Mantraah",
+      description: "Sacred Upanishadic teachings and philosophical foundations",
       order: 6,
+      status: "published",
+      estimatedHours: 110,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: "system"
+    },
+    {
+      id: 7,
+      title: "Pancha Kaatakam Part I",
+      description: "First section of the five Kathaka collections with specialized ceremonies",
+      order: 7,
+      status: "published",
+      estimatedHours: 60,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: "system"
+    },
+    {
+      id: 8,
+      title: "Pancha Kaatakam Part II",
+      description: "Second section of the Kathaka collections with Aranyaka teachings",
+      order: 8,
+      status: "published",
+      estimatedHours: 50,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: "system"
@@ -92,105 +126,51 @@ export class MemStorage implements IStorage {
   ];
 
   private chapters: any[] = [
-    // Vaidika Nithya Karma chapters
-    {
-      id: 1,
-      trackId: 1,
-      title: "Shraddha Suktam",
-      order: 1,
-      content: {
-        te: "శ్రద్ధా సూక్తం తెలుగు వచనం",
-        hi: "श्रद्धा सूक्त हिंदी पाठ",
-        en: "Shraddha Suktam English translation"
-      },
-      status: "published",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      createdBy: "system"
-    },
-    {
-      id: 2,
-      trackId: 1,
-      title: "Sandhya Vandana",
-      order: 2,
-      content: {
-        te: "సంధ్యా వందనా మంత్రాలు",
-        hi: "संध्या वंदना मंत्र",
-        en: "Evening prayers and worship"
-      },
-      status: "published",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      createdBy: "system"
-    },
-    // Rig Veda chapters
-    {
-      id: 3,
-      trackId: 2,
-      title: "Agni Sukta",
-      order: 1,
-      content: {
-        te: "అగ్ని సూక్తం",
-        hi: "अग्नि सूक्त",
-        en: "Hymns to Agni, the fire deity"
-      },
-      status: "published",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      createdBy: "system"
-    },
-    {
-      id: 4,
-      trackId: 2,
-      title: "Indra Sukta",
-      order: 2,
-      content: {
-        te: "ఇంద్ర సూక్తం",
-        hi: "इंद्र सूक्त",
-        en: "Hymns to Indra, king of gods"
-      },
-      status: "published",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      createdBy: "system"
-    },
-    // Sama Veda chapters
-    {
-      id: 5,
-      trackId: 3,
-      title: "Gayatri Mantra",
-      order: 1,
-      content: {
-        te: "గాయత్రీ మంత్రం",
-        hi: "गायत्री मंत्र",
-        en: "The most sacred Vedic mantra"
-      },
-      status: "published",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      createdBy: "system"
-    },
-    {
-      id: 6,
-      trackId: 3,
-      title: "Soma Gana",
-      order: 2,
-      content: {
-        te: "సోమ గానం",
-        hi: "सोम गान",
-        en: "Sacred songs for Soma rituals"
-      },
-      status: "published",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      createdBy: "system"
-    }
+    // Track 1: Vaidika Nithya Karma chapters
+    { id: 1, trackId: 1, title: "vedādhyayana niyamamulu, veda svaraṁ, pañcāṅgaṁ, saṅkalpaṁ, yajñopavīta dhāraṇaṁ, avapośanaṁ", order: 1, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 2, trackId: 1, title: "Śraddhā sūktaṁ", order: 2, status: "published", content: { te: "శ్రద్ధా సూక్తం", hi: "श्रद्धा सूक्त", en: "Shraddha Suktam" }, createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 3, trackId: 1, title: "Medhā sūktaṁ", order: 3, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 4, trackId: 1, title: "Durgā sūktaṁ", order: 4, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 5, trackId: 1, title: "Śrī sūktaṁ", order: 5, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 6, trackId: 1, title: "Puruṣa sūktaṁ", order: 6, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 7, trackId: 1, title: "krṣṇa yajurveda sandhyāvaṁdanaṁ", order: 7, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 8, trackId: 1, title: "brahmayajña vidhiḥ, tarpaṇa vidhiḥ", order: 8, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 9, trackId: 1, title: "agnikāryaṁ (brahmacāriṇakaraṇīyaṁ)", order: 9, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 10, trackId: 1, title: "vaidika nitya karma vidhānaṁ", order: 10, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+
+    // Track 2: Sookta Paatham chapters  
+    { id: 11, trackId: 2, title: "Gaṇapatyatharvaśīrṣopaniṣat", order: 1, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 12, trackId: 2, title: "nārāyaṇa sūktaṁ", order: 2, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 13, trackId: 2, title: "viṣṇu sūktaṁ", order: 3, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 14, trackId: 2, title: "bhūsūktaṁ", order: 4, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 15, trackId: 2, title: "nīḷā sūktaṁ", order: 5, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 16, trackId: 2, title: "bhāgya sūktaṁ", order: 6, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 17, trackId: 2, title: "brahma sūktaṁ", order: 7, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 18, trackId: 2, title: "sarpa sūktaṁ", order: 8, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 19, trackId: 2, title: "pavamāna sūktaṁ", order: 9, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 20, trackId: 2, title: "mahā mantrapuṣpaṁ", order: 10, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 21, trackId: 2, title: "sarasvatī sūktaṁ", order: 11, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 22, trackId: 2, title: "go sūktaṁ", order: 12, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 23, trackId: 2, title: "āyuṣya sūktaṁ", order: 13, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 24, trackId: 2, title: "manyu sūktaṁ", order: 14, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 25, trackId: 2, title: "navagraha, upadevatā mantrāḥ", order: 15, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+
+    // Track 3: Rudram, Shaakunadi, Ganapati Pooja, Punyaahavaachanam chapters
+    { id: 26, trackId: 3, title: "śrīrudrapraśnaḥ (namakaṁ)", order: 1, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 27, trackId: 3, title: "camakapraśnaḥ", order: 2, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 28, trackId: 3, title: "dīpa prajvālana & nīrājana mantrāh", order: 3, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 29, trackId: 3, title: "śākunādi mantrāḥ", order: 4, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 30, trackId: 3, title: "trisuparṇa mantrāḥ", order: 5, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 31, trackId: 3, title: "vighneśvara pūja", order: 6, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 32, trackId: 3, title: "puṇyāhavācanaṁ", order: 7, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 33, trackId: 3, title: "vighneśvara pūjā vidhānaṁ", order: 8, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" },
+    { id: 34, trackId: 3, title: "puṇyāhavācana pūjā vidhānaṁ", order: 9, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" }
   ];
 
   private audioFiles: any[] = [
     {
       id: 12,
-      chapterId: 10,
+      chapterId: 2,
       filename: "shraddha-suktam.m4a",
       displayName: "Shraddha Suktam - 1",
       duration: 180,
