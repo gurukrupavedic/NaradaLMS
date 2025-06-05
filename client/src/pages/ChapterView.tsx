@@ -425,30 +425,7 @@ export default function ChapterView() {
                     {Math.floor((chapter.audioFiles[0]?.duration || 0) / 60)}:{(Math.floor(chapter.audioFiles[0]?.duration || 0) % 60).toString().padStart(2, '0')}
                   </span>
                 </div>
-                
-                {/* Segment markers */}
-                <div className="relative h-2">
-                  {chapter.mappings.map((mapping) => {
-                    const startPercent = (mapping.startTime / (chapter.audioFiles[0]?.duration || 1)) * 100;
-                    const widthPercent = ((mapping.endTime - mapping.startTime) / (chapter.audioFiles[0]?.duration || 1)) * 100;
-                    return (
-                      <div
-                        key={mapping.segmentId}
-                        className={`absolute h-full rounded ${
-                          currentSegmentId === mapping.segmentId
-                            ? 'bg-green-500'
-                            : 'bg-blue-400 hover:bg-blue-500'
-                        } cursor-pointer opacity-70 hover:opacity-100`}
-                        style={{
-                          left: `${startPercent}%`,
-                          width: `${widthPercent}%`,
-                        }}
-                        onClick={() => handleSegmentClick(mapping.segmentId)}
-                        title={`${chapter.segments.find(s => s.id === mapping.segmentId)?.conceptualName} (${mapping.startTime}s-${mapping.endTime}s)`}
-                      />
-                    );
-                  })}
-                </div>
+
               </div>
             </div>
           </CardContent>
