@@ -177,7 +177,7 @@ export default function TrackChapters() {
                       onClick={() => handleEditChapter(chapter.id)}
                     >
                       <Edit className="w-4 h-4 mr-2" />
-                      Edit Chapter
+                      Edit Content
                     </Button>
                     <Button 
                       variant="outline" 
@@ -185,7 +185,8 @@ export default function TrackChapters() {
                       onClick={() => handleDeleteChapter(chapter.id)}
                       disabled={deleteChapterMutation.isPending}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Chapter
                     </Button>
                   </div>
                 </div>
