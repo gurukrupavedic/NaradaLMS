@@ -10,6 +10,7 @@ import NotFound from "@/pages/not-found";
 import TrackView from "@/pages/TrackView";
 import ChapterView from "@/pages/ChapterView";
 import ContentManagement from "@/pages/ContentManagement";
+import ChapterEditor from "@/pages/ChapterEditor";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
