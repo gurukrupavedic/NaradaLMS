@@ -336,14 +336,47 @@ export default function ChapterEditor() {
     }
   };
 
-  const handlePlayPause = () => {
+  const handlePlayPause = async () => {
     if (audioPlayer) {
-      if (isPlaying) {
-        audioPlayer.pause();
+      try {
+        if (isPlaying) {
+          audioPlayer.pause();
+          setIsPlaying(false);
+        } else {
+          // Check if audio is ready to play
+          if (audioPlayer.readyState >= 2) { // HAVE_CURRENT_DATA
+            await audioPlayer.play();
+            setIsPlaying(true);
+          } else {
+            toast({
+              title: "Audio Loading",
+              description: "Please wait for the audio to load completely.",
+              variant: "default",
+            });
+            // Wait for the audio to load
+            audioPlayer.addEventListener('canplay', async () => {
+              try {
+                await audioPlayer.play();
+                setIsPlaying(true);
+              } catch (error) {
+                console.error("Audio play error:", error);
+                toast({
+                  title: "Playback Error",
+                  description: "Failed to play audio. Please check the file format.",
+                  variant: "destructive",
+                });
+              }
+            }, { once: true });
+          }
+        }
+      } catch (error) {
+        console.error("Audio play error:", error);
         setIsPlaying(false);
-      } else {
-        audioPlayer.play();
-        setIsPlaying(true);
+        toast({
+          title: "Playback Error",
+          description: "Failed to play audio. The file may be corrupted or in an unsupported format.",
+          variant: "destructive",
+        });
       }
     }
   };
@@ -716,6 +749,15 @@ export default function ChapterEditor() {
                           src={`/uploads/${audioFiles.find((f: any) => f.id === selectedAudioFile)?.filename}`}
                           onTimeUpdate={(e) => setCurrentTime((e.target as HTMLAudioElement).currentTime)}
                           onLoadedMetadata={(e) => setDuration((e.target as HTMLAudioElement).duration)}
+                          onError={(e) => {
+                            console.error("Audio loading error:", e);
+                            toast({
+                              title: "Audio Error",
+                              description: "Failed to load audio file. Please check the file format.",
+                              variant: "destructive",
+                            });
+                          }}
+                          preload="metadata"
                           className="hidden"
                         />
                         <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -729,6 +771,9 @@ export default function ChapterEditor() {
                             <span className="text-sm text-muted-foreground">
                               / {duration.toFixed(2)}s
                             </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {audioFiles.find((f: any) => f.id === selectedAudioFile)?.filename}
                           </div>
                         </div>
                       </div>

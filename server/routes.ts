@@ -620,7 +620,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const audioFile = await storage.createAudioFile({
         chapterId,
-        filename: req.file.originalname,
+        filename: req.file.filename, // Use the actual saved filename (hash)
         originalName: req.file.originalname,
         fileSize: req.file.size,
         mimeType: req.file.mimetype,
