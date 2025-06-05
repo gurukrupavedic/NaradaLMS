@@ -45,6 +45,10 @@ export default function ContentManagement() {
       toast({ title: "Please enter a track title", variant: "destructive" });
       return;
     }
+    if (!newTrack.description.trim()) {
+      toast({ title: "Please enter a track description", variant: "destructive" });
+      return;
+    }
     createTrackMutation.mutate(newTrack);
   };
 
@@ -153,7 +157,7 @@ export default function ContentManagement() {
                 <div className="flex gap-2 pt-4">
                   <Button 
                     onClick={handleCreateTrack} 
-                    disabled={createTrackMutation.isPending || !newTrack.title.trim()}
+                    disabled={createTrackMutation.isPending || !newTrack.title.trim() || !newTrack.description.trim()}
                   >
                     Create Track
                   </Button>
