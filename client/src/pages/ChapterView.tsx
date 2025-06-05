@@ -398,7 +398,13 @@ export default function ChapterView() {
                 
                 {currentSegmentId && (
                   <Badge variant="secondary" className="ml-2">
-                    Playing segment: {chapter.segments.find(s => s.id === currentSegmentId)?.conceptualName}
+                    Playing: {(() => {
+                      const segment = chapter.segments.find(s => s.id === currentSegmentId);
+                      if (!segment) return '';
+                      const refs = segment.textReferences[currentLanguage];
+                      if (!refs) return '';
+                      return currentContent.substring(refs.start, refs.end);
+                    })()}
                   </Badge>
                 )}
               </div>
