@@ -46,9 +46,8 @@ export const users = pgTable("users", {
 export const tracks = pgTable("tracks", {
   id: serial("id").primaryKey(),
   title: text("title").notNull().unique(), // Unique track titles as per requirements
-  description: text("description"),
+  description: text("description").notNull(), // Made mandatory
   order: integer("order").notNull(), // Sequential number starting from 1, 2, 3...
-  status: varchar("status").default("draft").notNull(), // 'draft', 'published', 'certified'
   createdBy: varchar("created_by").notNull().references(() => users.id).default("system"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

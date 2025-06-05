@@ -17,7 +17,6 @@ interface Track {
   title: string;
   description: string;
   order: number;
-  status: string;
   createdBy: string;
 }
 
@@ -170,21 +169,14 @@ export default function InstructorPanel() {
   const handleCreateTrack = () => {
     console.log("handleCreateTrack called with:", newTrack);
     
-    if (!newTrack.title.trim()) {
-      toast({ title: "Track title is required", variant: "destructive" });
+    if (!newTrack.title.trim() || !newTrack.description.trim()) {
+      toast({ title: "Track title and description are required", variant: "destructive" });
       return;
     }
-    
-    console.log("About to call mutation with:", {
-      ...newTrack,
-      order: tracks.length + 1,
-      status: "draft",
-    });
     
     createTrackMutation.mutate({
       ...newTrack,
       order: tracks.length + 1,
-      status: "draft",
     });
     setNewTrack({ title: "", description: "" });
   };

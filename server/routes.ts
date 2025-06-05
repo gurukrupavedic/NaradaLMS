@@ -435,6 +435,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update track
+  app.put('/api/admin/tracks/:id', async (req, res) => {
+    try {
+      const trackId = parseInt(req.params.id);
+      const trackData = insertTrackSchema.parse(req.body);
+      
+      const track = await storage.updateTrack(trackId, trackData);
+      res.json(track);
+    } catch (error) {
+      console.error("Error updating track:", error);
+      res.status(500).json({ message: "Failed to update track" });
+    }
+  });
+
+  // Delete track
+  app.delete('/api/admin/tracks/:id', async (req, res) => {
+    try {
+      const trackId = parseInt(req.params.id);
+      await storage.deleteTrack(trackId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting track:", error);
+      res.status(500).json({ message: "Failed to delete track" });
+    }
+  });
+
   app.get('/api/admin/chapters/:trackId', async (req, res) => {
     try {
       const trackId = parseInt(req.params.trackId);
