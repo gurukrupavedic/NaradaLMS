@@ -308,45 +308,37 @@ export default function ChapterView() {
         </CardHeader>
       </Card>
 
-      {/* Audio Controls */}
+      {/* Audio Info */}
       {chapter.audioFiles.length > 0 && (
         <Card className="mb-6">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const audio = audioRef.current;
-                  if (!audio) return;
-                  
-                  if (isPlaying) {
-                    audio.pause();
-                    setIsPlaying(false);
-                  } else {
-                    audio.play().then(() => setIsPlaying(true));
-                  }
-                }}
-                disabled={!chapter.audioFiles[0]}
-              >
-                {isPlaying ? (
-                  <Pause className="h-4 w-4 mr-2" />
-                ) : (
-                  <Play className="h-4 w-4 mr-2" />
-                )}
-                {isPlaying ? 'Pause' : 'Play'} Audio
-              </Button>
-              
-              <div className="flex-1 text-sm text-gray-600 dark:text-gray-400">
-                {chapter.audioFiles[0] && (
-                  <span>Reciter: {chapter.audioFiles[0].reciter}</span>
-                )}
+              <div className="flex items-center gap-2">
+                <Volume2 className="h-4 w-4 text-gray-600" />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Audio available: {chapter.audioFiles[0].reciter}
+                </span>
               </div>
               
               {isPlaying && (
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  {Math.floor(currentTime)}s / {Math.floor(chapter.audioFiles[0]?.duration || 0)}s
+                  Playing: {Math.floor(currentTime)}s / {Math.floor(chapter.audioFiles[0]?.duration || 0)}s
                 </div>
+              )}
+              
+              {currentSegmentId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    audioRef.current?.pause();
+                    setIsPlaying(false);
+                    setCurrentSegmentId(null);
+                  }}
+                >
+                  <Pause className="h-4 w-4 mr-2" />
+                  Stop Segment
+                </Button>
               )}
             </div>
           </CardContent>
