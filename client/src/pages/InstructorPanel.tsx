@@ -269,9 +269,17 @@ export default function InstructorPanel() {
     if (!targetTrack) return;
 
     try {
-      // Swap the order values
-      await apiRequest('PUT', `/api/admin/tracks/${currentTrack.id}`, { order: targetOrder });
-      await apiRequest('PUT', `/api/admin/tracks/${targetTrack.id}`, { order: currentOrder });
+      // Swap the order values - include all required fields
+      await apiRequest('PUT', `/api/admin/tracks/${currentTrack.id}`, { 
+        title: currentTrack.title,
+        description: currentTrack.description,
+        order: targetOrder 
+      });
+      await apiRequest('PUT', `/api/admin/tracks/${targetTrack.id}`, { 
+        title: targetTrack.title,
+        description: targetTrack.description,
+        order: currentOrder 
+      });
 
       // Refresh the tracks list
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
