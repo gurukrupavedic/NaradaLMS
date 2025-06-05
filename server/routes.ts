@@ -286,6 +286,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Map segment to text
+  app.post("/api/admin/segments/:segmentId/map", isAuthenticated, async (req, res) => {
+    try {
+      const segmentId = parseInt(req.params.segmentId);
+      const { textStart, textEnd, language } = req.body;
+      
+      const updatedSegment = await storage.updateTextSegment(segmentId, {
+        textStart,
+        textEnd,
+        language
+      });
+      
+      res.json(updatedSegment);
+    } catch (error: any) {
+      console.error("Error mapping segment:", error);
+      res.status(500).json({ message: "Failed to map segment" });
+    }
+  });
+
   // Audio mapping routes
   app.post('/api/audio-mappings', isAuthenticated, requireRole('content_manager'), async (req: any, res) => {
     try {

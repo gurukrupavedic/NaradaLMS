@@ -404,10 +404,7 @@ export default function ChapterEditor() {
 
   const mapSegmentMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest(`/api/admin/segments/${selectedSegment.id}/map`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", `/api/admin/segments/${selectedSegment.id}/map`, data);
     },
     onSuccess: () => {
       toast({ title: "Segment mapped to text successfully" });
@@ -890,32 +887,6 @@ export default function ChapterEditor() {
                   </div>
                 </CardContent>
               </Card>
-
-                  {/* Existing Segments */}
-                  {segments.length > 0 && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Existing Segments</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          {segments.map((segment: any) => (
-                            <div key={segment.id} className="flex items-center justify-between p-3 border rounded">
-                              <div className="flex items-center gap-4">
-                                <Badge variant="outline">{segment.language}</Badge>
-                                <span className="text-sm font-mono">
-                                  {segment.startTime.toFixed(2)}s - {segment.endTime.toFixed(2)}s
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                  Chars {segment.textStart}-{segment.textEnd}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
             </>
           ) : (
             <Card>
