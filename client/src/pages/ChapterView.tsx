@@ -95,10 +95,13 @@ export default function ChapterView() {
     if (!chapter || !isPlaying || currentSegmentId === null) return;
 
     const currentMapping = chapter.mappings.find(m => m.segmentId === currentSegmentId);
-    if (currentMapping && currentTime >= currentMapping.endTime) {
-      audioRef.current?.pause();
-      setIsPlaying(false);
-      setCurrentSegmentId(null);
+    if (currentMapping && currentTime >= currentMapping.endTime - 0.1) { // Small buffer for timing precision
+      const audio = audioRef.current;
+      if (audio) {
+        audio.pause();
+        setIsPlaying(false);
+        setCurrentSegmentId(null);
+      }
     }
   }, [currentTime, currentSegmentId, chapter, isPlaying]);
 
