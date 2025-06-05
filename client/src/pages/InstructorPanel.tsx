@@ -57,7 +57,7 @@ export default function InstructorPanel() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const [activeTab, setActiveTab] = useState("tracks");
+  const [activeTab, setActiveTab] = useState("content");
   const [selectedTrack, setSelectedTrack] = useState<number | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<"te" | "hi" | "en">("en");
@@ -461,14 +461,13 @@ export default function InstructorPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="tracks">Tracks</TabsTrigger>
-          <TabsTrigger value="chapters">Chapters</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="content">Manage Content</TabsTrigger>
           <TabsTrigger value="segments">Text Segments</TabsTrigger>
           <TabsTrigger value="audio">Audio Management</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="tracks" className="space-y-4">
+        <TabsContent value="content" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Create New Track</CardTitle>
@@ -621,21 +620,14 @@ export default function InstructorPanel() {
               </CardContent>
             </Card>
           )}
-        </TabsContent>
 
-        <TabsContent value="chapters" className="space-y-4">
-          {!selectedTrack ? (
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground">Please select a track first</p>
-              </CardContent>
-            </Card>
-          ) : (
+          {/* Chapter Management Section */}
+          {selectedTrack && (
             <>
               <Card>
                 <CardHeader>
                   <CardTitle>Create New Chapter</CardTitle>
-                  <CardDescription>Add content to the selected track</CardDescription>
+                  <CardDescription>Add content to Track {tracks.find(t => t.id === selectedTrack)?.order}: {tracks.find(t => t.id === selectedTrack)?.title}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
@@ -704,51 +696,124 @@ export default function InstructorPanel() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Chapters in Track ({chapters.length})</CardTitle>
+                  <CardTitle>Chapters ({chapters.length})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {chapters.map((chapter) => (
                       <div
                         key={chapter.id}
-                        className={`p-3 border rounded ${
+                        className={`p-3 border rounded cursor-pointer ${
                           selectedChapter === chapter.id ? "border-primary bg-primary/5" : ""
                         }`}
+                        onClick={() => setSelectedChapter(chapter.id)}
                       >
                         <div className="flex justify-between items-start">
-                          <div className="flex items-center gap-3">
-                            <div className="flex flex-col gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-5 w-5 p-0"
-                                disabled={chapter.order === 1}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleMoveChapter(chapter.id, 'up');
-                                }}
-                              >
-                                <ChevronUp className="w-3 h-3" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-5 w-5 p-0"
-                                disabled={chapter.order === chapters.length}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleMoveChapter(chapter.id, 'down');
-                                }}
-                              >
-                                <ChevronDown className="w-3 h-3" />
-                              </Button>
+                          <div className="flex-1">
+                            <h3 className="font-medium">Chapter {chapter.order}: {chapter.title}</h3>
+                            <div className="text-sm text-muted-foreground mt-1">
+                              <Badge variant="outline" className="mr-2">{chapter.status}</Badge>
+                              Content in: {Object.keys(chapter.content).join(', ')}
                             </div>
-                            <div className="flex-1 cursor-pointer" onClick={() => setSelectedChapter(chapter.id)}>
-                              <h3 className="font-medium">Chapter {chapter.order}: {chapter.title}</h3>
-                              <Badge variant={chapter.status === "published" ? "default" : "secondary"}>
-                                {chapter.status}
-                              </Badge>
-                            </div>
+                          </div>
+                          <div className="flex gap-2 ml-4">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditChapter(chapter);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteChapter(chapter.id);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="segments" className="space-y-4">
+          {!selectedChapter ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">Please select a chapter first</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Create Text Segment</CardTitle>
+                  <CardDescription>Create character-position based segments for chapter content</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="segment-name">Conceptual Name</Label>
+                    <Input
+                      id="segment-name"
+                      value={segmentName}
+                      onChange={(e) => setSegmentName(e.target.value)}
+                      placeholder="Enter segment name (e.g., verse 1, mantra 2)"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label>Selected Text: {selectedText}</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedText ? `Characters ${selectedText.split('|')[1]} to ${selectedText.split('|')[2]}` : 'No text selected'}
+                    </p>
+                  </div>
+
+                  <Button 
+                    onClick={handleCreateSegment} 
+                    disabled={createSegmentMutation.isPending || !segmentName || !selectedText}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Segment
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Text Segments ({segments.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {segments.map((segment) => (
+                      <div key={segment.id} className="p-3 border rounded">
+                        <h3 className="font-medium">{segment.conceptualName}</h3>
+                        <div className="text-sm text-muted-foreground">
+                          {Object.entries(segment.textReferences).map(([lang, ref]) => (
+                            <span key={lang} className="mr-4">
+                              {lang.toUpperCase()}: {ref.start}-{ref.end}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
                           </div>
                           <div className="flex gap-2 ml-4">
                             <Button
