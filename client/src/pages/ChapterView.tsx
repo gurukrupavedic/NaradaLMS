@@ -417,7 +417,7 @@ export default function ChapterView() {
                 Click any text segment to jump to its audio position
               </div>
               <div className="space-y-3">
-                {chapter.segments.map((segment) => (
+                {chapter.segments.filter(segment => segment && segment.text).map((segment) => (
                   <div
                     key={segment.id}
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
@@ -428,9 +428,9 @@ export default function ChapterView() {
                     onClick={() => handleSegmentClick(segment.id)}
                   >
                     <div className="text-lg leading-relaxed font-['Tiro_Telugu','Tiro_Devanagari_Sanskrit',serif]">
-                      {segment.text[selectedLanguage]}
+                      {segment.text?.[selectedLanguage] || 'Content not available'}
                     </div>
-                    {selectedLanguage !== 'en' && (
+                    {selectedLanguage !== 'en' && segment.text?.en && (
                       <div className="text-sm text-gray-600 dark:text-gray-400 mt-2 font-mono">
                         {segment.text.en}
                       </div>
