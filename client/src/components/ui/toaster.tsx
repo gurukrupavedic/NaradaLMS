@@ -31,7 +31,9 @@ export function Toaster() {
     <ToastProvider>
       {toasts.map(function ({ id, title, description, action, variant, ...props }) {
         const isError = variant === 'destructive'
-        const copyText = `${title || ''}${title && description ? '\n' : ''}${description || ''}`
+        const titleText = typeof title === 'string' ? title : ''
+        const descText = typeof description === 'string' ? description : ''
+        const copyText = `${titleText}${titleText && descText ? '\n' : ''}${descText}`
         
         return (
           <Toast key={id} variant={variant} {...props}>
@@ -42,8 +44,9 @@ export function Toaster() {
               )}
             </div>
             <div className="flex items-center gap-2">
-              {isError && copyText.trim() && (
+              {isError && copyText && copyText.trim() && (
                 <ToastAction
+                  altText="Copy error message"
                   onClick={() => copyToClipboard(copyText)}
                   className="h-8 w-8 p-0"
                   title="Copy error message"
