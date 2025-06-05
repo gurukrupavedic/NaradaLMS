@@ -785,8 +785,6 @@ export default function ChapterEditor() {
                       </CardContent>
                     </Card>
                   )}
-                </>
-              )}
             </>
           ) : (
             <Card>
