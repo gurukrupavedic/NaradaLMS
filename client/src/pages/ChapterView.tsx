@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,7 @@ type Language = 'te' | 'hi' | 'en';
 
 export default function ChapterView() {
   const [, params] = useRoute("/chapter/:id");
+  const [, setLocation] = useLocation();
   const [currentLanguage, setCurrentLanguage] = useState<Language>('te');
   const [hoveredSegmentId, setHoveredSegmentId] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -264,7 +265,7 @@ export default function ChapterView() {
       
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
+        <Button variant="ghost" size="sm" onClick={() => setLocation(`/tracks/${chapter?.trackId}`)}>
           <ChevronLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
