@@ -682,6 +682,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const audioFileId = parseInt(req.params.audioFileId);
       const { filename } = req.body;
       
+      console.log('Audio file update request:', { audioFileId, filename, body: req.body });
+      
       if (!filename || filename.trim().length === 0) {
         return res.status(400).json({ message: "Filename is required" });
       }
@@ -689,12 +691,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Updating audio file ${audioFileId} filename to: ${filename}`);
       
       const updatedFile = await storage.updateAudioFile(audioFileId, { filename: filename.trim() });
-      console.log(`Audio file ${audioFileId} updated successfully`);
+      console.log(`Audio file ${audioFileId} updated successfully:`, updatedFile);
       
       res.json(updatedFile);
-    } catch (error) {
-      console.error("Error updating audio file:", error);
-      res.status(500).json({ message: "Failed to update audio file" });
+    } catch (error: any) {
+      console.error("Error updating audio file:", {
+        message: error.message,
+        stack: error.stack,
+        audioFileId: req.params.audioFileId,
+        body: req.body
+      });
+      res.status(500).json({ 
+        message: "Failed to update audio file",
+        error: error.message 
+      });
     }
   });
 
