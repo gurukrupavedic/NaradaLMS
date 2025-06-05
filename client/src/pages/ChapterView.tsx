@@ -308,38 +308,144 @@ export default function ChapterView() {
         </CardHeader>
       </Card>
 
-      {/* Audio Info */}
+      {/* Audio Controls */}
       {chapter.audioFiles.length > 0 && (
         <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Audio Playback</span>
               <div className="flex items-center gap-2">
-                <Volume2 className="h-4 w-4 text-gray-600" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Audio available: {chapter.audioFiles[0].reciter}
-                </span>
+                <select 
+                  className="text-sm border rounded px-2 py-1 bg-white dark:bg-gray-800"
+                  onChange={(e) => {
+                    const audio = audioRef.current;
+                    if (audio) {
+                      audio.playbackRate = parseFloat(e.target.value);
+                    }
+                  }}
+                  defaultValue="1"
+                >
+                  <option value="0.5">0.5x</option>
+                  <option value="0.75">0.75x</option>
+                  <option value="1">1x</option>
+                  <option value="1.25">1.25x</option>
+                  <option value="1.5">1.5x</option>
+                  <option value="2">2x</option>
+                </select>
+                <select 
+                  className="text-sm border rounded px-2 py-1 bg-white dark:bg-gray-800"
+                  defaultValue={chapter.audioFiles[0]?.id}
+                >
+                  {chapter.audioFiles.map((audioFile) => (
+                    <option key={audioFile.id} value={audioFile.id}>
+                      {audioFile.reciter}
+                    </option>
+                  ))}
+                </select>
               </div>
-              
-              {isPlaying && (
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Playing: {Math.floor(currentTime)}s / {Math.floor(chapter.audioFiles[0]?.duration || 0)}s
-                </div>
-              )}
-              
-              {currentSegmentId && (
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Main Controls */}
+              <div className="flex items-center gap-4">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    audioRef.current?.pause();
-                    setIsPlaying(false);
-                    setCurrentSegmentId(null);
+                    const audio = audioRef.current;
+                    if (!audio) return;
+                    
+                    if (isPlaying) {
+                      audio.pause();
+                      setIsPlaying(false);
+                    } else {
+                      if (!audio.src) {
+                        audio.src = `/audio/${chapter.audioFiles[0].filename}`;
+                      }
+                      audio.play().then(() => setIsPlaying(true));
+                    }
                   }}
                 >
-                  <Pause className="h-4 w-4 mr-2" />
-                  Stop Segment
+                  {isPlaying ? (
+                    <Pause className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Play className="h-4 w-4 mr-2" />
+                  )}
+                  {isPlaying ? 'Pause' : 'Play'}
                 </Button>
-              )}
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const audio = audioRef.current;
+                    if (audio) {
+                      audio.pause();
+                      audio.currentTime = 0;
+                      setIsPlaying(false);
+                      setCurrentSegmentId(null);
+                    }
+                  }}
+                >
+                  Stop
+                </Button>
+                
+                {currentSegmentId && (
+                  <Badge variant="secondary" className="ml-2">
+                    Playing segment: {chapter.segments.find(s => s.id === currentSegmentId)?.conceptualName}
+                  </Badge>
+                )}
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400 min-w-[40px]">
+                    {Math.floor(currentTime / 60)}:{(Math.floor(currentTime) % 60).toString().padStart(2, '0')}
+                  </span>
+                  <input
+                    type="range"
+                    min="0"
+                    max={chapter.audioFiles[0]?.duration || 0}
+                    value={currentTime}
+                    onChange={(e) => {
+                      const audio = audioRef.current;
+                      if (audio) {
+                        audio.currentTime = parseFloat(e.target.value);
+                      }
+                    }}
+                    className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-600 dark:text-gray-400 min-w-[40px]">
+                    {Math.floor((chapter.audioFiles[0]?.duration || 0) / 60)}:{(Math.floor(chapter.audioFiles[0]?.duration || 0) % 60).toString().padStart(2, '0')}
+                  </span>
+                </div>
+                
+                {/* Segment markers */}
+                <div className="relative h-2">
+                  {chapter.mappings.map((mapping) => {
+                    const startPercent = (mapping.startTime / (chapter.audioFiles[0]?.duration || 1)) * 100;
+                    const widthPercent = ((mapping.endTime - mapping.startTime) / (chapter.audioFiles[0]?.duration || 1)) * 100;
+                    return (
+                      <div
+                        key={mapping.segmentId}
+                        className={`absolute h-full rounded ${
+                          currentSegmentId === mapping.segmentId
+                            ? 'bg-green-500'
+                            : 'bg-blue-400 hover:bg-blue-500'
+                        } cursor-pointer opacity-70 hover:opacity-100`}
+                        style={{
+                          left: `${startPercent}%`,
+                          width: `${widthPercent}%`,
+                        }}
+                        onClick={() => handleSegmentClick(mapping.segmentId)}
+                        title={`${chapter.segments.find(s => s.id === mapping.segmentId)?.conceptualName} (${mapping.startTime}s-${mapping.endTime}s)`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
