@@ -9,6 +9,7 @@ import RoleTabs from "@/components/role-tabs";
 import NotFound from "@/pages/not-found";
 import TrackView from "@/pages/TrackView";
 import ChapterView from "@/pages/ChapterView";
+import InstructorPanel from "@/pages/InstructorPanel";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -30,6 +31,7 @@ function Router() {
         <>
           <Route path="/" component={() => <RoleTabs user={user as any} />} />
           <Route path="/dashboard" component={() => <RoleTabs user={user as any} />} />
+          <Route path="/content-management" component={() => <InstructorPanel user={user as any} />} />
           <Route path="/tracks/:trackId" component={TrackView} />
           <Route path="/chapter/:id" component={ChapterView} />
         </>
