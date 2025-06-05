@@ -49,6 +49,7 @@ export interface IStorage {
   // Audio file operations
   getAudioFilesByChapter(chapterId: number): Promise<AudioFile[]>;
   createAudioFile(audioFile: InsertAudioFile): Promise<AudioFile>;
+  updateAudioFile(id: number, audioFile: Partial<InsertAudioFile>): Promise<AudioFile>;
   deleteAudioFile(id: number): Promise<void>;
 
   // Text segment operations
@@ -189,6 +190,15 @@ export class DatabaseStorage implements IStorage {
   async createAudioFile(audioFile: InsertAudioFile): Promise<AudioFile> {
     const [newAudioFile] = await db.insert(audioFiles).values(audioFile).returning();
     return newAudioFile;
+  }
+
+  async updateAudioFile(id: number, audioFile: Partial<InsertAudioFile>): Promise<AudioFile> {
+    const [updatedFile] = await db
+      .update(audioFiles)
+      .set(audioFile)
+      .where(eq(audioFiles.id, id))
+      .returning();
+    return updatedFile;
   }
 
   async deleteAudioFile(id: number): Promise<void> {
