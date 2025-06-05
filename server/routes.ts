@@ -68,7 +68,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Track routes (bypassing authentication for development)
   app.get('/api/tracks', async (req, res) => {
     try {
-      const tracks = await storage.getAllTracks();
+      const rawTracks = await storage.getAllTracks();
+      
+      // Transform tracks to match Dashboard component expectations
+      const tracks = rawTracks.map(track => {
+        const chapters = track.chapters || [];
+        const completedChapters = chapters.filter((ch: any) => ch.proficiencyLevel >= 4).length;
+        
+        return {
+          id: track.id,
+          title: track.title,
+          description: track.description,
+          order: track.order || 1,
+          status: completedChapters === chapters.length && chapters.length > 0 ? 'completed' : 
+                  completedChapters > 0 ? 'in_progress' : 'not_started',
+          chapterCount: chapters.length,
+          completedChapters,
+          currentLevel: Math.max(0, ...chapters.map((ch: any) => ch.proficiencyLevel || 0)),
+          estimatedHours: track.estimatedHours || chapters.length * 2
+        };
+      });
+      
       res.json(tracks);
     } catch (error) {
       console.error("Error fetching tracks:", error);

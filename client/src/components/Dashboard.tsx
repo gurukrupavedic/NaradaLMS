@@ -45,15 +45,15 @@ export default function Dashboard() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   const { data: tracks, isLoading: tracksLoading, error: tracksError } = useQuery<Track[]>({
-    queryKey: ['/api/student/tracks'],
+    queryKey: ['/api/tracks'],
   });
 
   const { data: recentActivity, isLoading: activityLoading, error: activityError } = useQuery<RecentActivity[]>({
-    queryKey: ['/api/student/recent-activity'],
+    queryKey: ['/api/student-progress'],
   });
 
   const { data: studyStats, isLoading: statsLoading, error: statsError } = useQuery<StudyStats>({
-    queryKey: ['/api/student/stats'],
+    queryKey: ['/api/student-stats'],
   });
 
   useEffect(() => {

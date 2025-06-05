@@ -353,7 +353,20 @@ export class MemStorage implements IStorage {
   }
 
   async getAllTracks(): Promise<any[]> {
-    return this.tracks;
+    // Return tracks with their chapters populated
+    return this.tracks.map(track => {
+      const chapters = this.chapters.filter(chapter => chapter.trackId === track.id).map(chapter => ({
+        id: chapter.id,
+        title: chapter.title,
+        order: chapter.order || 1,
+        proficiencyLevel: this.getStudentProficiencyForChapter(chapter.id)
+      }));
+      
+      return {
+        ...track,
+        chapters
+      };
+    });
   }
 
   async getTrack(id: string): Promise<any | undefined> {
