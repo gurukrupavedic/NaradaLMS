@@ -47,9 +47,8 @@ export const tracks = pgTable("tracks", {
   id: serial("id").primaryKey(),
   title: text("title").notNull().unique(), // Unique track titles as per requirements
   description: text("description"),
-  order: integer("order").notNull(), // Positive integer for track ordering
+  order: integer("order").notNull(), // Sequential number starting from 1, 2, 3...
   status: varchar("status").default("draft").notNull(), // 'draft', 'published', 'certified'
-  estimatedHours: integer("estimated_hours").default(0),
   createdBy: varchar("created_by").notNull().references(() => users.id).default("system"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

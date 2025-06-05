@@ -18,7 +18,6 @@ interface Track {
   description: string;
   order: number;
   status: string;
-  estimatedHours: number;
   createdBy: string;
 }
 
@@ -163,7 +162,7 @@ export default function InstructorPanel() {
   });
 
   // Content editing functions
-  const [newTrack, setNewTrack] = useState({ title: "", description: "", estimatedHours: 0 });
+  const [newTrack, setNewTrack] = useState({ title: "", description: "" });
   const [newChapter, setNewChapter] = useState({ title: "", content: { te: "", hi: "", en: "" } });
   const [selectedText, setSelectedText] = useState("");
   const [segmentName, setSegmentName] = useState("");
@@ -187,7 +186,7 @@ export default function InstructorPanel() {
       order: tracks.length + 1,
       status: "draft",
     });
-    setNewTrack({ title: "", description: "", estimatedHours: 0 });
+    setNewTrack({ title: "", description: "" });
   };
 
   const handleCreateChapter = () => {

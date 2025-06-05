@@ -134,7 +134,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTrack(track: InsertTrack): Promise<Track> {
-    const [newTrack] = await db.insert(tracks).values(track).returning();
+    // Get the next sequential order number
+    const lastTrack = await db
+      .select({ order: tracks.order })
+      .from(tracks)
+      .orderBy(desc(tracks.order))
+      .limit(1);
+    
+    const nextOrder = lastTrack.length > 0 ? lastTrack[0].order + 1 : 1;
+    
+    const [newTrack] = await db.insert(tracks).values({
+      ...track,
+      order: nextOrder
+    }).returning();
     return newTrack;
   }
 
