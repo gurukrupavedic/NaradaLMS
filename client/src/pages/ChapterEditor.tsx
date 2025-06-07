@@ -690,6 +690,7 @@ export default function ChapterEditor() {
                                   size="sm"
                                   onClick={() => startEditing(file.id, file.displayName)}
                                   className="h-6 w-6 p-0"
+                                  disabled={isPublished}
                                 >
                                   <Edit className="w-3 h-3" />
                                 </Button>
@@ -705,7 +706,7 @@ export default function ChapterEditor() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeleteAudioFile(file.id)}
-                            disabled={deleteAudioMutation.isPending}
+                            disabled={deleteAudioMutation.isPending || isPublished}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -738,7 +739,7 @@ export default function ChapterEditor() {
                   {/* Audio File Selection */}
                   <div className="space-y-2">
                     <Label>Select Audio File</Label>
-                    <Select value={selectedAudioFile?.toString() || ""} onValueChange={(value) => setSelectedAudioFile(parseInt(value))}>
+                    <Select value={selectedAudioFile?.toString() || ""} onValueChange={(value) => setSelectedAudioFile(parseInt(value))} disabled={isPublished}>
                       <SelectTrigger>
                         <SelectValue placeholder="Choose audio file for segmentation" />
                       </SelectTrigger>
@@ -774,7 +775,7 @@ export default function ChapterEditor() {
                         />
                         <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                           <div className="flex items-center gap-4">
-                            <Button onClick={handlePlayPause} variant="outline" size="lg">
+                            <Button onClick={handlePlayPause} variant="outline" size="lg" disabled={isPublished}>
                               {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                             </Button>
                             <div className="flex flex-col">
@@ -809,6 +810,7 @@ export default function ChapterEditor() {
                                     setCurrentTime(newTime);
                                   }
                                 }}
+                                disabled={isPublished}
                                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 
                                          [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 
                                          [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:cursor-pointer
@@ -840,12 +842,14 @@ export default function ChapterEditor() {
                                 placeholder="0.00"
                                 type="number"
                                 step="0.01"
+                                disabled={isPublished}
                               />
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={handleUseCurrentTime}
                                 title="Use current playback time"
+                                disabled={isPublished}
                               >
                                 <Clock className="w-4 h-4" />
                               </Button>
@@ -860,6 +864,7 @@ export default function ChapterEditor() {
                                 placeholder="0.00"
                                 type="number"
                                 step="0.01"
+                                disabled={isPublished}
                               />
                               <Button
                                 variant="outline"
