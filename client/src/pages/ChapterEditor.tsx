@@ -26,7 +26,8 @@ import {
   Plus,
   Trash2,
   Clock,
-  Edit
+  Edit,
+  Lock
 } from "lucide-react";
 
 interface ChapterData {
@@ -494,6 +495,12 @@ export default function ChapterEditor() {
             <Badge variant={chapter?.status === "published" ? "default" : "secondary"}>
               {chapter?.status === "published" ? "Published" : "Draft"}
             </Badge>
+            {isPublished && (
+              <div className="text-sm text-muted-foreground flex items-center gap-1">
+                <Lock className="w-3 h-3" />
+                Read-only mode
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -871,6 +878,7 @@ export default function ChapterEditor() {
                                 size="sm"
                                 onClick={() => setSegmentEnd(currentTime.toFixed(2))}
                                 title="Use current playback time"
+                                disabled={isPublished}
                               >
                                 <Clock className="w-4 h-4" />
                               </Button>
@@ -880,7 +888,7 @@ export default function ChapterEditor() {
 
                         <Button
                           onClick={handleCreateAudioSegment}
-                          disabled={createSegmentMutation.isPending}
+                          disabled={createSegmentMutation.isPending || isPublished}
                           className="w-full"
                         >
                           <Plus className="w-4 h-4 mr-2" />
