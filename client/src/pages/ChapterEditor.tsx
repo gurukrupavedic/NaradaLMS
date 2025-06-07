@@ -124,6 +124,9 @@ export default function ChapterEditor() {
     }
   }, [audioFiles, selectedAudioFile]);
 
+  // Check if chapter is published (read-only mode)
+  const isPublished = chapter?.status === "published";
+
   // Save text content mutation
   const saveContentMutation = useMutation({
     mutationFn: async (content: any) => {
@@ -534,7 +537,10 @@ export default function ChapterEditor() {
                   <FileText className="w-5 h-5" />
                   Multilingual Text Content
                 </CardTitle>
-                <Button onClick={handleSaveTextContent} disabled={saveContentMutation.isPending}>
+                <Button 
+                  onClick={handleSaveTextContent} 
+                  disabled={saveContentMutation.isPending || isPublished}
+                >
                   <Save className="w-4 h-4 mr-2" />
                   Save Content
                 </Button>
@@ -552,6 +558,7 @@ export default function ChapterEditor() {
                   value={textContent.te}
                   onChange={(e) => setTextContent(prev => ({ ...prev, te: e.target.value }))}
                   className="min-h-32 font-mono"
+                  disabled={isPublished}
                 />
               </div>
 
@@ -566,6 +573,7 @@ export default function ChapterEditor() {
                   value={textContent.hi}
                   onChange={(e) => setTextContent(prev => ({ ...prev, hi: e.target.value }))}
                   className="min-h-32 font-mono"
+                  disabled={isPublished}
                 />
               </div>
 
@@ -580,6 +588,7 @@ export default function ChapterEditor() {
                   value={textContent.en}
                   onChange={(e) => setTextContent(prev => ({ ...prev, en: e.target.value }))}
                   className="min-h-32 font-mono"
+                  disabled={isPublished}
                 />
               </div>
             </CardContent>
@@ -592,13 +601,15 @@ export default function ChapterEditor() {
             <CardContent className="space-y-4 pt-6">
               <div 
                 className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                  isDragOver 
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' 
-                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                  isPublished 
+                    ? 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800 opacity-50' 
+                    : isDragOver 
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' 
+                      : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                 }`}
-                onDrop={handleFileDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
+                onDrop={isPublished ? undefined : handleFileDrop}
+                onDragOver={isPublished ? undefined : handleDragOver}
+                onDragLeave={isPublished ? undefined : handleDragLeave}
               >
                 <div className="space-y-4">
                   <div className="flex justify-center">
@@ -617,7 +628,7 @@ export default function ChapterEditor() {
                     <Button 
                       variant="outline" 
                       onClick={() => fileInputRef.current?.click()}
-                      disabled={uploadAudioMutation.isPending}
+                      disabled={uploadAudioMutation.isPending || isPublished}
                     >
                       Select Files
                     </Button>
