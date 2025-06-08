@@ -283,6 +283,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Media segment routes
+  app.get('/api/admin/media-segments/:audioFileId', async (req, res) => {
+    try {
+      const audioFileId = parseInt(req.params.audioFileId);
+      const mediaSegments = await storage.getMediaSegmentsByAudioFile(audioFileId);
+      res.json(mediaSegments);
+    } catch (error) {
+      console.error("Error fetching media segments:", error);
+      res.status(500).json({ message: "Failed to fetch media segments" });
+    }
+  });
+
+  app.post('/api/admin/media-segments', async (req, res) => {
+    try {
+      const mediaSegment = await storage.createMediaSegment({
+        ...req.body,
+        createdBy: "system"
+      });
+      res.json(mediaSegment);
+    } catch (error) {
+      console.error("Error creating media segment:", error);
+      res.status(500).json({ message: "Failed to create media segment" });
+    }
+  });
+
+  app.patch('/api/admin/media-segments/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const mediaSegment = await storage.updateMediaSegment(id, req.body);
+      res.json(mediaSegment);
+    } catch (error) {
+      console.error("Error updating media segment:", error);
+      res.status(500).json({ message: "Failed to update media segment" });
+    }
+  });
+
+  app.delete('/api/admin/media-segments/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteMediaSegment(id);
+      res.json({ message: "Media segment deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting media segment:", error);
+      res.status(500).json({ message: "Failed to delete media segment" });
+    }
+  });
+
+  // Segment mapping routes
+  app.get('/api/admin/segment-mappings/:chapterId', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const mappings = await storage.getSegmentMappingsByChapter(chapterId);
+      res.json(mappings);
+    } catch (error) {
+      console.error("Error fetching segment mappings:", error);
+      res.status(500).json({ message: "Failed to fetch segment mappings" });
+    }
+  });
+
+  app.post('/api/admin/segment-mappings', async (req, res) => {
+    try {
+      const mapping = await storage.createSegmentMapping({
+        ...req.body,
+        createdBy: "system"
+      });
+      res.json(mapping);
+    } catch (error) {
+      console.error("Error creating segment mapping:", error);
+      res.status(500).json({ message: "Failed to create segment mapping" });
+    }
+  });
+
+  app.delete('/api/admin/segment-mappings/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteSegmentMapping(id);
+      res.json({ message: "Segment mapping deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting segment mapping:", error);
+      res.status(500).json({ message: "Failed to delete segment mapping" });
+    }
+  });
+
   // Audio mapping routes
   app.get('/api/admin/mappings/audio/:audioFileId', async (req, res) => {
     try {

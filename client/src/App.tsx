@@ -12,6 +12,7 @@ import ChapterView from "@/pages/ChapterView";
 import ContentManagement from "@/pages/ContentManagement";
 import TrackChapters from "@/pages/TrackChapters";
 import ChapterEditor from "@/pages/ChapterEditor";
+import SegmentationEditor from "@/pages/SegmentationEditor";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();

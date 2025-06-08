@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { 
-  tracks, chapters, audioFiles, textSegments, audioMappings, users
+  tracks, chapters, audioFiles, textSegments, mediaSegments, segmentMappings, audioMappings, users
 } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { MemStorage } from "./storage-simplified";
@@ -40,7 +40,18 @@ export interface IStorage {
   updateTextSegment(id: number, segment: any): Promise<any>;
   deleteTextSegment(id: number): Promise<void>;
 
-  // Audio mapping operations
+  // Media segment operations
+  getMediaSegmentsByAudioFile(audioFileId: number): Promise<any[]>;
+  createMediaSegment(segment: any): Promise<any>;
+  updateMediaSegment(id: number, segment: any): Promise<any>;
+  deleteMediaSegment(id: number): Promise<void>;
+
+  // Segment mapping operations
+  getSegmentMappingsByChapter(chapterId: number): Promise<any[]>;
+  createSegmentMapping(mapping: any): Promise<any>;
+  deleteSegmentMapping(id: number): Promise<void>;
+
+  // Audio mapping operations (legacy)
   getMappingsByAudioFile(audioFileId: number): Promise<any[]>;
   getMappingsBySegment(segmentId: number): Promise<any[]>;
   createAudioMapping(mapping: any): Promise<any>;
@@ -513,6 +524,132 @@ export class DatabaseStorage implements IStorage {
         ));
     } catch (error) {
       return memStorage.deleteAudioMapping(audioFileId, segmentId);
+    }
+  }
+
+  // Media segment operations
+  async getMediaSegmentsByAudioFile(audioFileId: number): Promise<any[]> {
+    await this.ensureInitialized();
+    if (!this.initialized) return [];
+    
+    try {
+      const segments = await db.select()
+        .from(mediaSegments)
+        .where(eq(mediaSegments.audioFileId, audioFileId))
+        .orderBy(mediaSegments.startTimestamp);
+      return segments;
+    } catch (error) {
+      console.error("Error fetching media segments:", error);
+      return [];
+    }
+  }
+
+  async createMediaSegment(segment: any): Promise<any> {
+    await this.ensureInitialized();
+    if (!this.initialized) return null;
+    
+    try {
+      const [newSegment] = await db.insert(mediaSegments).values({
+        ...segment,
+        createdAt: new Date()
+      }).returning();
+      return newSegment;
+    } catch (error) {
+      console.error("Error creating media segment:", error);
+      return null;
+    }
+  }
+
+  async updateMediaSegment(id: number, segmentUpdate: any): Promise<any> {
+    await this.ensureInitialized();
+    if (!this.initialized) return null;
+    
+    try {
+      const [updatedSegment] = await db.update(mediaSegments)
+        .set(segmentUpdate)
+        .where(eq(mediaSegments.id, id))
+        .returning();
+      return updatedSegment;
+    } catch (error) {
+      console.error("Error updating media segment:", error);
+      return null;
+    }
+  }
+
+  async deleteMediaSegment(id: number): Promise<void> {
+    await this.ensureInitialized();
+    if (!this.initialized) return;
+    
+    try {
+      await db.delete(mediaSegments)
+        .where(eq(mediaSegments.id, id));
+    } catch (error) {
+      console.error("Error deleting media segment:", error);
+    }
+  }
+
+  // Segment mapping operations
+  async getSegmentMappingsByChapter(chapterId: number): Promise<any[]> {
+    await this.ensureInitialized();
+    if (!this.initialized) return [];
+    
+    try {
+      const mappings = await db.select({
+        id: segmentMappings.id,
+        mediaSegmentId: segmentMappings.mediaSegmentId,
+        textSegmentId: segmentMappings.textSegmentId,
+        createdBy: segmentMappings.createdBy,
+        createdAt: segmentMappings.createdAt,
+        mediaSegment: {
+          id: mediaSegments.id,
+          audioFileId: mediaSegments.audioFileId,
+          startTimestamp: mediaSegments.startTimestamp,
+          endTimestamp: mediaSegments.endTimestamp,
+          segmentName: mediaSegments.segmentName
+        },
+        textSegment: {
+          id: textSegments.id,
+          conceptualName: textSegments.conceptualName,
+          textReferences: textSegments.textReferences
+        }
+      })
+      .from(segmentMappings)
+      .leftJoin(mediaSegments, eq(segmentMappings.mediaSegmentId, mediaSegments.id))
+      .leftJoin(textSegments, eq(segmentMappings.textSegmentId, textSegments.id))
+      .where(eq(textSegments.chapterId, chapterId));
+      
+      return mappings;
+    } catch (error) {
+      console.error("Error fetching segment mappings:", error);
+      return [];
+    }
+  }
+
+  async createSegmentMapping(mapping: any): Promise<any> {
+    await this.ensureInitialized();
+    if (!this.initialized) return null;
+    
+    try {
+      const [newMapping] = await db.insert(segmentMappings).values({
+        ...mapping,
+        createdAt: new Date()
+      }).returning();
+      return newMapping;
+    } catch (error) {
+      console.error("Error creating segment mapping:", error);
+      return null;
+    }
+  }
+
+  async deleteSegmentMapping(id: number): Promise<void> {
+    await this.ensureInitialized();
+    if (!this.initialized) return;
+    
+    try {
+      await db.delete(segmentMappings)
+        .where(eq(segmentMappings.id, id));
+    } catch (error) {
+      console.error("Error deleting segment mapping:", error);
     }
   }
 
