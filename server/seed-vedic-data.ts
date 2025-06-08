@@ -36,7 +36,7 @@ export async function seedVedicData(createdBy: string) {
   const audioFile = await storage.createAudioFile({
     chapterId: chapter.id,
     filename: "shraddha-suktam-1.m4a",
-    originalName: "Shraddha Suktam - 1.m4a",
+    displayName: "Shraddha Suktam - 1.m4a",
     reciter: "1.2 Ravikiran guruvugaru - sukta patham",
     duration: 99,
     fileSize: 2450000,
