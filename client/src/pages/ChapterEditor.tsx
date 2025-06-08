@@ -1029,7 +1029,7 @@ export default function ChapterEditor() {
                                     className={`w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] cursor-pointer ${
                                       selectedMark === mark 
                                         ? 'border-l-transparent border-r-transparent border-b-red-500 hover:border-b-red-600' 
-                                        : 'border-l-transparent border-r-transparent border-b-blue-500 hover:border-b-blue-600'
+                                        : 'border-l-transparent border-r-transparent border-b-green-500 hover:border-b-green-600'
                                     } transition-colors ${isDragging && selectedMark === mark ? 'cursor-grabbing' : 'cursor-grab'}`}
                                     onMouseDown={(e) => {
                                       e.preventDefault();
@@ -1070,7 +1070,7 @@ export default function ChapterEditor() {
                                   ) : (
                                     <div 
                                       className={`text-xs mt-1 font-mono cursor-pointer hover:underline ${
-                                        selectedMark === mark ? 'text-red-600 font-semibold' : 'text-blue-600'
+                                        selectedMark === mark ? 'text-red-600 font-semibold' : 'text-green-600'
                                       }`}
                                       onClick={(e) => {
                                         e.stopPropagation();
