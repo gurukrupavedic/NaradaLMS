@@ -295,6 +295,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Media segments bulk creation endpoint
+  app.post('/api/admin/media-segments/bulk', async (req, res) => {
+    try {
+      const { segments } = req.body;
+      
+      if (!segments || !Array.isArray(segments)) {
+        return res.status(400).json({ message: "Segments array is required" });
+      }
+
+      const createdSegments = [];
+      for (const segment of segments) {
+        const mediaSegment = await storage.createMediaSegment({
+          audioFileId: segment.audioFileId,
+          startTime: segment.startTime,
+          endTime: segment.endTime,
+          name: segment.name,
+          createdBy: "system"
+        });
+        createdSegments.push(mediaSegment);
+      }
+
+      res.json(createdSegments);
+    } catch (error) {
+      console.error("Error creating media segments:", error);
+      res.status(500).json({ message: "Failed to create media segments" });
+    }
+  });
+
   app.post('/api/admin/media-segments', async (req, res) => {
     try {
       const mediaSegment = await storage.createMediaSegment({

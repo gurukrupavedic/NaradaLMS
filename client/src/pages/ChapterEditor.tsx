@@ -147,7 +147,9 @@ export default function ChapterEditor() {
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
   const [editingFileName, setEditingFileName] = useState("");
-  
+
+
+
   // Media segmentation state
   const [selectedMediaSegment, setSelectedMediaSegment] = useState<any>(null);
   const [selectedTextSegment, setSelectedTextSegment] = useState<any>(null);
@@ -249,21 +251,46 @@ export default function ChapterEditor() {
 
   // Create audio segments from marks mutation
   const createAudioSegmentsMutation = useMutation({
-    mutationFn: async (segments: any[]) => {
-      const promises = segments.map(segment => 
-        apiRequest("POST", "/api/admin/segments", segment)
-      );
-      await Promise.all(promises);
+    mutationFn: async () => {
+      if (!selectedAudioFile || timeMarks.length === 0) {
+        throw new Error("No audio file selected or no time marks");
+      }
+
+      const segments = [];
+      const sortedMarks = [...timeMarks].sort((a, b) => a - b);
+      
+      // Create segments from start to each mark, and between marks
+      for (let i = 0; i <= sortedMarks.length; i++) {
+        const startTime = i === 0 ? 0 : sortedMarks[i - 1];
+        const endTime = i === sortedMarks.length ? duration : sortedMarks[i];
+        
+        segments.push({
+          audioFileId: selectedAudioFile,
+          startTime,
+          endTime,
+          name: `Segment ${i + 1}`
+        });
+      }
+
+      const response = await apiRequest("POST", "/api/admin/media-segments/bulk", { segments });
+      return response;
     },
     onSuccess: () => {
-      toast({ title: "Audio segments created successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/media-segments'] });
       setTimeMarks([]);
       setSelectedMark(null);
+      toast({
+        title: "Audio Segments Created",
+        description: `Successfully created ${timeMarks.length + 1} audio segments`
+      });
     },
     onError: (error: any) => {
-      toast({ title: "Failed to create audio segments", description: error.message, variant: "destructive" });
-    },
+      toast({
+        title: "Error Creating Segments",
+        description: error.message || "Failed to create audio segments",
+        variant: "destructive"
+      });
+    }
   });
 
   // Delete audio file mutation
@@ -363,28 +390,15 @@ export default function ChapterEditor() {
   };
 
   const handleCreateAudioSegments = () => {
-    if (!selectedAudioFile || timeMarks.length === 0) {
-      toast({ title: "Please mark time points on the audio track", variant: "destructive" });
+    if (timeMarks.length === 0) {
+      toast({
+        title: "No Time Marks",
+        description: "Please add time marks to create segments",
+        variant: "destructive"
+      });
       return;
     }
-
-    // Create segments based on marks
-    const segments = [];
-    const marks = [0, ...timeMarks, duration].sort((a, b) => a - b);
-    
-    for (let i = 0; i < marks.length - 1; i++) {
-      const startTime = marks[i];
-      const endTime = marks[i + 1];
-      const segmentName = `Segment ${i + 1} (${formatTime(startTime)} - ${formatTime(endTime)})`;
-      
-      segments.push({
-        chapterId: parseInt(chapterId!),
-        conceptualName: segmentName,
-        textReferences: {}
-      });
-    }
-
-    createAudioSegmentsMutation.mutate(segments);
+    createAudioSegmentsMutation.mutate();
   };
 
   // Audio file selection and setup
@@ -1168,6 +1182,20 @@ export default function ChapterEditor() {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
+
+                        {/* Create Segments Button */}
+                        {timeMarks.length > 0 && (
+                          <div className="mt-4 flex justify-center">
+                            <Button 
+                              onClick={handleCreateAudioSegments}
+                              disabled={createAudioSegmentsMutation.isPending || isPublished}
+                              className="flex items-center gap-2"
+                            >
+                              <Clock className="h-4 w-4" />
+                              {createAudioSegmentsMutation.isPending ? 'Creating...' : 'Create Audio Segments'}
+                            </Button>
+                          </div>
+                        )}
                       </div>
 
 
