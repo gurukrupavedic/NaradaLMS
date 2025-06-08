@@ -64,6 +64,7 @@ export default function ChapterEditor() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [editingFileId, setEditingFileId] = useState<number | null>(null);
   const [editingFileName, setEditingFileName] = useState("");
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Fetch chapter details
   const { data: chapter, isLoading: chapterLoading } = useQuery({
@@ -72,8 +73,8 @@ export default function ChapterEditor() {
   });
 
   // Fetch audio files
-  const { data: audioFiles } = useQuery({
-    queryKey: [`/api/admin/audio-files/${chapterId}`],
+  const { data: audioFiles, refetch: refetchAudioFiles } = useQuery({
+    queryKey: [`/api/admin/audio-files/${chapterId}`, refreshTrigger],
     enabled: !!chapterId,
   });
 
@@ -107,9 +108,11 @@ export default function ChapterEditor() {
     },
     onSuccess: () => {
       toast({ title: "Audio file uploaded successfully" });
-      // Force refetch of audio files
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
-      queryClient.refetchQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+      // Force complete cache invalidation and refetch
+      queryClient.removeQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+      setTimeout(() => {
+        refetchAudioFiles();
+      }, 100);
     },
     onError: (error: any) => {
       toast({ title: "Failed to upload audio file", description: error.message, variant: "destructive" });
