@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   FileText, Upload, Music, Eye, ChevronLeft, Play, Pause, Square, 
-  MapPin, X, Trash2, Plus, ArrowRight, Save
+  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2
 } from "lucide-react";
 
 interface ChapterData {
@@ -61,6 +61,9 @@ export default function ChapterEditor() {
   const [duration, setDuration] = useState(0);
   const [timeMarks, setTimeMarks] = useState<number[]>([]);
   const [selectedMark, setSelectedMark] = useState<number | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [editingFileId, setEditingFileId] = useState<number | null>(null);
+  const [editingFileName, setEditingFileName] = useState("");
 
   // Fetch chapter details
   const { data: chapter, isLoading: chapterLoading } = useQuery({
@@ -140,6 +143,42 @@ export default function ChapterEditor() {
     },
     onError: (error: any) => {
       toast({ title: "Failed to create audio segments", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Delete audio file mutation
+  const deleteAudioMutation = useMutation({
+    mutationFn: async (fileId: number) => {
+      await apiRequest("DELETE", `/api/admin/audio-files/${fileId}`);
+      return fileId;
+    },
+    onSuccess: (deletedFileId) => {
+      toast({ title: "Audio file deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+      if (selectedAudioFile === deletedFileId) {
+        setSelectedAudioFile(null);
+        setAudioPlayer(null);
+        setIsPlaying(false);
+      }
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to delete audio file", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Update filename mutation
+  const updateFileNameMutation = useMutation({
+    mutationFn: async ({ fileId, newName }: { fileId: number; newName: string }) => {
+      await apiRequest("PATCH", `/api/admin/audio-files/${fileId}`, { originalName: newName });
+    },
+    onSuccess: () => {
+      toast({ title: "Filename updated successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+      setEditingFileId(null);
+      setEditingFileName("");
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update filename", description: error.message, variant: "destructive" });
     },
   });
 
@@ -264,19 +303,39 @@ export default function ChapterEditor() {
     };
   }, []);
 
+  const validateFileType = (file: File) => {
+    const allowedTypes = ['audio/', 'video/'];
+    if (!allowedTypes.some(type => file.type.startsWith(type))) {
+      toast({ 
+        title: "Invalid file type", 
+        description: "Please upload audio or video files only", 
+        variant: "destructive" 
+      });
+      return false;
+    }
+    return true;
+  };
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const allowedTypes = ['audio/', 'video/'];
-      if (!allowedTypes.some(type => file.type.startsWith(type))) {
-        toast({ 
-          title: "Invalid file type", 
-          description: "Please upload audio or video files only", 
-          variant: "destructive" 
-        });
-        return;
-      }
+    if (file && validateFileType(file)) {
       audioUploadMutation.mutate(file);
+    }
+  };
+
+  const startEditing = (fileId: number, currentName: string) => {
+    setEditingFileId(fileId);
+    setEditingFileName(currentName);
+  };
+
+  const cancelEditing = () => {
+    setEditingFileId(null);
+    setEditingFileName("");
+  };
+
+  const handleSaveFileName = (fileId: number) => {
+    if (editingFileName.trim()) {
+      updateFileNameMutation.mutate({ fileId, newName: editingFileName.trim() });
     }
   };
 
@@ -378,33 +437,143 @@ export default function ChapterEditor() {
               <CardContent>
                 <div className="space-y-4">
                   {!isPublished && (
-                    <div>
-                      <Label htmlFor="audio-upload">Upload Audio File</Label>
+                    <div 
+                      className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                        isDragOver ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600'
+                      }`}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsDragOver(true);
+                      }}
+                      onDragLeave={() => setIsDragOver(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDragOver(false);
+                        const files = Array.from(e.dataTransfer.files);
+                        if (files.length > 0) {
+                          const file = files[0];
+                          if (validateFileType(file)) {
+                            audioUploadMutation.mutate(file);
+                          }
+                        }
+                      }}
+                    >
+                      <Upload className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Upload Audio Files</p>
+                        <p className="text-xs text-muted-foreground">
+                          Drag and drop files here, or click to browse
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Supports: MP3, WAV, M4A, MP4, and other audio/video formats
+                        </p>
+                      </div>
                       <input
-                        id="audio-upload"
                         type="file"
                         accept="audio/*,video/*"
                         onChange={handleFileUpload}
-                        className="mt-2 block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        disabled={audioUploadMutation.isPending}
                       />
                     </div>
                   )}
 
                   {audioFiles && (audioFiles as any).length > 0 ? (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                        Uploaded Files ({(audioFiles as any).length})
+                      </h4>
+                      
                       {(audioFiles as any).map((file: any) => (
-                        <div key={file.id} className="flex items-center justify-between p-3 border rounded">
-                          <div>
-                            <p className="font-medium">{file.originalName || file.filename}</p>
-                            <p className="text-sm text-muted-foreground">
-                              Duration: {file.duration ? `${file.duration.toFixed(2)}s` : 'Unknown'}
-                            </p>
+                        <div key={file.id} className="group border rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              {editingFileId === file.id ? (
+                                <div className="space-y-2">
+                                  <input
+                                    type="text"
+                                    value={editingFileName}
+                                    onChange={(e) => setEditingFileName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleSaveFileName(file.id);
+                                      } else if (e.key === 'Escape') {
+                                        cancelEditing();
+                                      }
+                                    }}
+                                    className="w-full px-2 py-1 text-sm border rounded"
+                                    autoFocus
+                                  />
+                                  <div className="flex gap-2">
+                                    <Button 
+                                      size="sm" 
+                                      onClick={() => handleSaveFileName(file.id)}
+                                      disabled={updateFileNameMutation.isPending}
+                                    >
+                                      <Save className="w-3 h-3 mr-1" />
+                                      Save
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      onClick={cancelEditing}
+                                    >
+                                      <X className="w-3 h-3 mr-1" />
+                                      Cancel
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="flex items-center gap-2">
+                                    <Music className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                                    <p className="font-medium text-sm truncate">
+                                      {file.originalName || file.filename}
+                                    </p>
+                                  </div>
+                                  <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
+                                    <span>Duration: {file.duration ? `${file.duration.toFixed(2)}s` : 'Unknown'}</span>
+                                    <span>Size: {file.size ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : 'Unknown'}</span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                            
+                            {!isPublished && editingFileId !== file.id && (
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => startEditing(file.id, file.originalName || file.filename)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Edit2 className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteAudioMutation.mutate(file.id)}
+                                  disabled={deleteAudioMutation.isPending}
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground">No audio files uploaded yet.</p>
+                    <Card>
+                      <CardContent className="p-12 text-center">
+                        <Music className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                        <h3 className="text-lg font-medium mb-2">No Audio Files</h3>
+                        <p className="text-muted-foreground">
+                          Upload audio files to start creating segments for this chapter.
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
               </CardContent>
