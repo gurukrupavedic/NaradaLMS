@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   FileText, Upload, Music, Eye, ChevronLeft, Play, Pause, Square, 
-  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2
+  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2, Clock
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -69,7 +70,7 @@ export default function ChapterEditor() {
   });
   
   // Audio and segmentation state
-  const [selectedAudioFile, setSelectedAudioFile] = useState<number | null>(null);
+  const [selectedAudioFile, setSelectedAudioFile] = useState<any | null>(null);
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -79,6 +80,14 @@ export default function ChapterEditor() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [editingFileId, setEditingFileId] = useState<number | null>(null);
   const [editingFileName, setEditingFileName] = useState("");
+  
+  // Media segmentation state
+  const [mediaSegments, setMediaSegments] = useState<any[]>([]);
+  const [selectedMediaSegment, setSelectedMediaSegment] = useState<any>(null);
+  const [selectedTextSegment, setSelectedTextSegment] = useState<any>(null);
+  const [mediaSegmentName, setMediaSegmentName] = useState("");
+  const [startTime, setStartTime] = useState(0);
+  const [endTime, setEndTime] = useState(0);
   
   // Text segmentation state
   const [selectedLanguage, setSelectedLanguage] = useState<'te' | 'hi' | 'en'>('te');
@@ -494,6 +503,37 @@ export default function ChapterEditor() {
     },
   });
 
+  // Create media segment mutation
+  const createMediaSegmentMutation = useMutation({
+    mutationFn: async (segment: any) => {
+      const response = await fetch("/api/admin/media-segments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(segment),
+      });
+      if (!response.ok) throw new Error("Failed to create media segment");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/media-segments"] });
+      toast({ title: "Media segment created successfully" });
+      setMediaSegmentName("");
+      setStartTime(0);
+      setEndTime(0);
+    },
+  });
+
+  // Fetch media segments for selected audio file
+  const { data: mediaSegmentsData = [] } = useQuery({
+    queryKey: ["/api/admin/media-segments", selectedAudioFile?.id],
+    enabled: !!selectedAudioFile?.id,
+  });
+
+  // Update media segments when data changes
+  React.useEffect(() => {
+    setMediaSegments(mediaSegmentsData);
+  }, [mediaSegmentsData]);
+
   // Enhanced segment rendering with text highlighting
   const renderTextWithSegments = (text: string, language: 'te' | 'hi' | 'en') => {
     if (!segments || segments.length === 0) {
@@ -594,14 +634,6 @@ export default function ChapterEditor() {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => window.open(`/admin/chapters/${chapterId}/segmentation`, '_blank')}
-                  className="flex items-center gap-2"
-                >
-                  <Link2 className="w-4 h-4" />
-                  Advanced Segmentation
-                </Button>
                 <Button
                   variant={chapter?.status === 'published' ? 'destructive' : 'default'}
                   onClick={() => {
@@ -831,12 +863,182 @@ export default function ChapterEditor() {
 
           {/* Segmentation & Mapping Tab */}
           <TabsContent value="segmentation" className="space-y-6">
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Audio Player & Media Segmentation Panel */}
+              <Card className="lg:col-span-1">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Music className="h-5 w-5" />
+                    Audio Player & Media Segments
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Audio File Selection */}
+                  <div>
+                    <Label>Select Audio File</Label>
+                    <div className="grid grid-cols-1 gap-2 mt-2">
+                      {audioFiles && Array.isArray(audioFiles) && audioFiles.map((file: any) => (
+                        <Button
+                          key={file.id}
+                          variant={selectedAudioFile?.id === file.id ? "default" : "outline"}
+                          onClick={() => setSelectedAudioFile(file)}
+                          className="justify-start text-left"
+                          size="sm"
+                        >
+                          <Music className="h-4 w-4 mr-2" />
+                          {file.displayName || file.filename}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {selectedAudioFile && (
+                    <>
+                      {/* Audio Player */}
+                      <div className="space-y-4">
+                        <audio
+                          ref={audioRef}
+                          src={selectedAudioFile.filePath}
+                          onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
+                          onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+                          onEnded={() => setIsPlaying(false)}
+                        />
+                        
+                        {/* Player Controls */}
+                        <div className="flex items-center gap-4">
+                          <Button onClick={() => audioRef.current && audioRef.current.currentTime > 10 && (audioRef.current.currentTime -= 10)} size="sm">
+                            <ArrowRight className="h-4 w-4 rotate-180" />
+                          </Button>
+                          <Button onClick={() => {
+                            if (audioRef.current) {
+                              if (isPlaying) {
+                                audioRef.current.pause();
+                              } else {
+                                audioRef.current.play();
+                              }
+                              setIsPlaying(!isPlaying);
+                            }
+                          }} size="sm">
+                            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                          </Button>
+                          <Button onClick={() => audioRef.current && audioRef.current.currentTime < duration - 10 && (audioRef.current.currentTime += 10)} size="sm">
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                          <span className="text-sm font-mono">
+                            {Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, '0')} / 
+                            {Math.floor(duration / 60)}:{Math.floor(duration % 60).toString().padStart(2, '0')}
+                          </span>
+                        </div>
+
+                        {/* Timeline */}
+                        <div className="space-y-2">
+                          <input
+                            type="range"
+                            min="0"
+                            max={duration || 0}
+                            value={currentTime}
+                            onChange={(e) => {
+                              if (audioRef.current) {
+                                audioRef.current.currentTime = parseFloat(e.target.value);
+                                setCurrentTime(parseFloat(e.target.value));
+                              }
+                            }}
+                            className="w-full"
+                          />
+                          <div className="relative h-8 bg-muted rounded">
+                            {mediaSegments.map((segment) => {
+                              const left = (segment.startTimestamp / duration) * 100;
+                              const width = ((segment.endTimestamp - segment.startTimestamp) / duration) * 100;
+                              return (
+                                <div
+                                  key={segment.id}
+                                  className="absolute bg-primary/60 h-full rounded cursor-pointer hover:bg-primary/80"
+                                  style={{ left: `${left}%`, width: `${width}%` }}
+                                  onClick={() => {
+                                    if (audioRef.current) {
+                                      audioRef.current.currentTime = segment.startTimestamp;
+                                      audioRef.current.play();
+                                      setIsPlaying(true);
+                                    }
+                                  }}
+                                  title={segment.segmentName}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Media Segment Creation */}
+                      <div className="space-y-4 border-t pt-4">
+                        <h3 className="text-lg font-semibold">Create Media Segment</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Start Time</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                type="number"
+                                value={startTime.toFixed(2)}
+                                onChange={(e) => setStartTime(parseFloat(e.target.value))}
+                                step="0.1"
+                                size="sm"
+                              />
+                              <Button onClick={() => setStartTime(currentTime)} size="sm">
+                                <Clock className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div>
+                            <Label>End Time</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                type="number"
+                                value={endTime.toFixed(2)}
+                                onChange={(e) => setEndTime(parseFloat(e.target.value))}
+                                step="0.1"
+                                size="sm"
+                              />
+                              <Button onClick={() => setEndTime(currentTime)} size="sm">
+                                <Clock className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <Label>Segment Name</Label>
+                          <Input
+                            value={mediaSegmentName}
+                            onChange={(e) => setMediaSegmentName(e.target.value)}
+                            placeholder="Enter segment name..."
+                            size="sm"
+                          />
+                        </div>
+                        <Button 
+                          onClick={() => {
+                            // Create media segment logic here
+                            toast({ title: "Media segment creation functionality will be implemented" });
+                          }} 
+                          disabled={!mediaSegmentName || startTime >= endTime}
+                          size="sm"
+                          className="w-full"
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          Create Media Segment
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
               {/* Text Segmentation Panel */}
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle>Text Segmentation</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Text Segmentation & Mapping
+                    </CardTitle>
                     <Button
                       variant="outline"
                       size="sm"
