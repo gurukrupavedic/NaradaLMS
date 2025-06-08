@@ -870,22 +870,31 @@ export default function ChapterEditor() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Audio File Selection */}
-                  <div>
+                  <div className="space-y-2">
                     <Label>Select Audio File</Label>
-                    <div className="grid grid-cols-1 gap-2 mt-2">
-                      {audioFiles && Array.isArray(audioFiles) && audioFiles.map((file: any) => (
-                        <Button
-                          key={file.id}
-                          variant={selectedAudioFile?.id === file.id ? "default" : "outline"}
-                          onClick={() => setSelectedAudioFile(file)}
-                          className="justify-start text-left"
-                          size="sm"
-                        >
-                          <Music className="h-4 w-4 mr-2" />
-                          {file.displayName || file.filename}
-                        </Button>
-                      ))}
-                    </div>
+                    <Select
+                      value={selectedAudioFile?.id?.toString() || ""}
+                      onValueChange={(value) => {
+                        const file = audioFiles && Array.isArray(audioFiles) 
+                          ? audioFiles.find((f: any) => f.id.toString() === value)
+                          : null;
+                        setSelectedAudioFile(file);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose an audio file" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {audioFiles && Array.isArray(audioFiles) && audioFiles.map((file: any) => (
+                          <SelectItem key={file.id} value={file.id.toString()}>
+                            <div className="flex items-center gap-2">
+                              <Music className="h-4 w-4" />
+                              {file.displayName || file.filename}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {selectedAudioFile && (
