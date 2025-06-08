@@ -201,7 +201,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const chapterId = parseInt(req.params.chapterId);
       const segments = await storage.getSegmentsByChapter(chapterId);
-      res.json(segments);
+      
+      // Enrich segments with audio mapping data
+      const enrichedSegments = await Promise.all(
+        segments.map(async (segment) => {
+          const mappings = await storage.getMappingsBySegment(segment.id);
+          if (mappings.length > 0) {
+            const mapping = mappings[0]; // Use first mapping
+            return {
+              ...segment,
+              startTime: mapping.startTime,
+              endTime: mapping.endTime,
+              audioFileId: mapping.audioFileId
+            };
+          }
+          return segment;
+        })
+      );
+      
+      res.json(enrichedSegments);
     } catch (error) {
       console.error("Error fetching segments:", error);
       res.status(500).json({ message: "Failed to fetch segments" });

@@ -928,7 +928,7 @@ export default function ChapterEditor() {
                             >
                               <div className="flex items-center justify-between">
                                 <span className="text-sm font-mono">
-                                  {segment.startTime.toFixed(2)}s - {segment.endTime.toFixed(2)}s
+                                  {segment.startTime ? `${segment.startTime.toFixed(2)}s - ${segment.endTime.toFixed(2)}s` : segment.conceptualName}
                                 </span>
                                 <Button
                                   variant="ghost"

@@ -169,8 +169,74 @@ export class MemStorage implements IStorage {
 
   private audioFiles: any[] = [];
 
-  private segments: any[] = [];
-  private mappings: any[] = [];
+  private segments: any[] = [
+    {
+      id: 8,
+      chapterId: 1,
+      conceptualName: "Opening Invocation - Agni and Faith",
+      textReferences: {
+        te: { start: 0, end: 95 },
+        hi: { start: 0, end: 95 },
+        en: { start: 0, end: 95 }
+      },
+      createdBy: "system",
+      createdAt: new Date()
+    },
+    {
+      id: 9,
+      chapterId: 1,
+      conceptualName: "Faith and Oblation",
+      textReferences: {
+        te: { start: 96, end: 190 },
+        hi: { start: 96, end: 190 },
+        en: { start: 96, end: 190 }
+      },
+      createdBy: "system",
+      createdAt: new Date()
+    },
+    {
+      id: 10,
+      chapterId: 1,
+      conceptualName: "Faith as Ultimate",
+      textReferences: {
+        te: { start: 191, end: 285 },
+        hi: { start: 191, end: 285 },
+        en: { start: 191, end: 285 }
+      },
+      createdBy: "system",
+      createdAt: new Date()
+    }
+  ];
+  
+  private mappings: any[] = [
+    {
+      id: 1,
+      audioFileId: 1,
+      segmentId: 8,
+      startTime: 0.0,
+      endTime: 12.5,
+      createdBy: "system",
+      createdAt: new Date()
+    },
+    {
+      id: 2,
+      audioFileId: 1,
+      segmentId: 9,
+      startTime: 12.5,
+      endTime: 25.0,
+      createdBy: "system",
+      createdAt: new Date()
+    },
+    {
+      id: 3,
+      audioFileId: 1,
+      segmentId: 10,
+      startTime: 25.0,
+      endTime: 37.5,
+      createdBy: "system",
+      createdAt: new Date()
+    }
+  ];
   private nextId = 100;
 
   // Track operations
