@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   FileText, Upload, Music, Eye, ChevronLeft, Play, Pause, Square, 
-  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2, Clock, Edit
+  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2, Clock, Edit, Timer, Ruler
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -1512,9 +1512,13 @@ export default function ChapterEditor() {
                                   <div className="flex-1">
                                     <div className="font-medium text-sm">{segment.segmentName || segment.name}</div>
                                     <div className="text-xs text-muted-foreground mt-1 flex items-center gap-4">
-                                      <span>Duration: {formatTime(segment.startTimestamp || segment.startTime || 0)} - {formatTime(segment.endTimestamp || segment.endTime || 0)}</span>
-                                      <span className="text-blue-600">
-                                        Length: {(() => {
+                                      <span className="flex items-center gap-1">
+                                        <Timer className="w-3 h-3" />
+                                        {formatTime(segment.startTimestamp || segment.startTime || 0)} - {formatTime(segment.endTimestamp || segment.endTime || 0)}
+                                      </span>
+                                      <span className="text-blue-600 flex items-center gap-1">
+                                        <Ruler className="w-3 h-3" />
+                                        {(() => {
                                           const start = segment.startTimestamp || segment.startTime || 0;
                                           const end = segment.endTimestamp || segment.endTime || 0;
                                           const length = Math.max(0, end - start);
