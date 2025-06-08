@@ -914,10 +914,7 @@ export default function ChapterEditor() {
                         />
                         
                         {/* Player Controls */}
-                        <div className="flex items-center gap-4">
-                          <Button onClick={() => audioRef.current && audioRef.current.currentTime > 10 && (audioRef.current.currentTime -= 10)} size="sm">
-                            <ArrowRight className="h-4 w-4 rotate-180" />
-                          </Button>
+                        <div className="flex items-center gap-2">
                           <Button onClick={() => {
                             if (audioRef.current) {
                               if (isPlaying) {
@@ -930,10 +927,19 @@ export default function ChapterEditor() {
                           }} size="sm">
                             {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                           </Button>
-                          <Button onClick={() => audioRef.current && audioRef.current.currentTime < duration - 10 && (audioRef.current.currentTime += 10)} size="sm">
-                            <ArrowRight className="h-4 w-4" />
+                          <Button size="sm" variant="outline">
+                            <Square className="h-4 w-4" />
                           </Button>
-                          <span className="text-sm font-mono">
+                          <Button size="sm" variant="outline">
+                            <MapPin className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <X className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          <span className="text-sm font-mono ml-2">
                             {Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, '0')} / 
                             {Math.floor(duration / 60)}:{Math.floor(duration % 60).toString().padStart(2, '0')}
                           </span>
