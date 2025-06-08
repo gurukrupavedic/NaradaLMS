@@ -82,7 +82,6 @@ export default function ChapterEditor() {
   const [editingFileName, setEditingFileName] = useState("");
   
   // Media segmentation state
-  const [mediaSegments, setMediaSegments] = useState<any[]>([]);
   const [selectedMediaSegment, setSelectedMediaSegment] = useState<any>(null);
   const [selectedTextSegment, setSelectedTextSegment] = useState<any>(null);
   const [mediaSegmentName, setMediaSegmentName] = useState("");
@@ -529,12 +528,7 @@ export default function ChapterEditor() {
     enabled: !!selectedAudioFile?.id,
   });
 
-  // Initialize media segments only once when data is first loaded
-  React.useEffect(() => {
-    if (Array.isArray(mediaSegmentsData) && mediaSegmentsData !== mediaSegments) {
-      setMediaSegments(mediaSegmentsData);
-    }
-  }, [mediaSegmentsData]); // Removed mediaSegments from dependency to prevent infinite loop
+
 
   // Enhanced segment rendering with text highlighting
   const renderTextWithSegments = (text: string, language: 'te' | 'hi' | 'en') => {
@@ -900,18 +894,23 @@ export default function ChapterEditor() {
                       <div className="space-y-4">
                         <audio
                           ref={audioRef}
-                          src={selectedAudioFile.url || `/uploads/${selectedAudioFile.filename}`}
+                          src={`/uploads/${selectedAudioFile.hashedFilename || selectedAudioFile.filename}`}
                           onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
                           onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
                           onEnded={() => setIsPlaying(false)}
                           onError={(e) => {
-                            console.error("Audio play error:", e);
+                            console.error("Audio play error:", e, "Trying path:", `/uploads/${selectedAudioFile.hashedFilename || selectedAudioFile.filename}`);
                             toast({ 
-                              title: "Playbook Error", 
-                              description: "Failed to play audio. Please check the file format.", 
+                              title: "Audio Playback Error", 
+                              description: "Failed to play audio. Please check the file format and path.", 
                               variant: "destructive" 
                             });
                           }}
+                          onCanPlayThrough={() => {
+                            console.log("Audio loaded successfully");
+                          }}
+                          crossOrigin="anonymous"
+                          preload="metadata"
                         />
                         
                         {/* Player Controls */}
@@ -956,7 +955,7 @@ export default function ChapterEditor() {
                             className="w-full"
                           />
                           <div className="relative h-8 bg-muted rounded">
-                            {mediaSegments.map((segment) => {
+                            {Array.isArray(mediaSegmentsData) && mediaSegmentsData.map((segment: any) => {
                               const left = (segment.startTimestamp / duration) * 100;
                               const width = ((segment.endTimestamp - segment.startTimestamp) / duration) * 100;
                               return (
