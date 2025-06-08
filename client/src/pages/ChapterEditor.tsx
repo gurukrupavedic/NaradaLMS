@@ -40,6 +40,20 @@ interface ChapterData {
   }>;
 }
 
+interface TextSegment {
+  id: number;
+  chapterId: number;
+  conceptualName: string;
+  textReferences: {
+    te?: { start: number; end: number };
+    hi?: { start: number; end: number };
+    en?: { start: number; end: number };
+  };
+  startTime?: number;
+  endTime?: number;
+  audioFileId?: number;
+}
+
 export default function ChapterEditor() {
   const { chapterId } = useParams<{ chapterId: string }>();
   const { toast } = useToast();
@@ -65,9 +79,15 @@ export default function ChapterEditor() {
   const [editingFileId, setEditingFileId] = useState<number | null>(null);
   const [editingFileName, setEditingFileName] = useState("");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // Text segmentation state
+  const [selectedLanguage, setSelectedLanguage] = useState<'te' | 'hi' | 'en'>('te');
+  const [textSelection, setTextSelection] = useState<{start: number; end: number; text: string} | null>(null);
+  const [segmentName, setSegmentName] = useState("");
+  const [showTextSegmentation, setShowTextSegmentation] = useState(false);
 
   // Fetch chapter details
-  const { data: chapter, isLoading: chapterLoading } = useQuery({
+  const { data: chapter, isLoading: chapterLoading } = useQuery<ChapterData>({
     queryKey: [`/api/admin/chapters/${chapterId}/details`],
     enabled: !!chapterId,
   });
@@ -79,7 +99,7 @@ export default function ChapterEditor() {
   });
 
   // Fetch segments
-  const { data: segments } = useQuery({
+  const { data: segments } = useQuery<TextSegment[]>({
     queryKey: [`/api/admin/segments/${chapterId}`],
     enabled: !!chapterId,
   });
@@ -358,6 +378,177 @@ export default function ChapterEditor() {
     });
   };
 
+  // Text segmentation functions
+  const handleTextSelection = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    const container = range.commonAncestorContainer;
+    const textContainer = container.nodeType === Node.TEXT_NODE ? container.parentElement : container;
+    
+    if (!textContainer?.closest('[data-segmentable]')) return;
+
+    const selectedText = selection.toString().trim();
+    if (!selectedText) return;
+
+    // Calculate character positions within the full text
+    const fullText = textContent[selectedLanguage] || "";
+    const beforeText = range.startContainer.textContent?.substring(0, range.startOffset) || "";
+    const startPos = fullText.indexOf(beforeText + selectedText.charAt(0));
+    const endPos = startPos + selectedText.length;
+
+    setTextSelection({
+      start: startPos,
+      end: endPos,
+      text: selectedText
+    });
+
+    setSegmentName(`${selectedText.substring(0, 30)}${selectedText.length > 30 ? '...' : ''}`);
+  };
+
+  const createTextSegmentMutation = useMutation({
+    mutationFn: async (segmentData: {
+      chapterId: number;
+      conceptualName: string;
+      textReferences: Record<string, { start: number; end: number }>;
+    }) => {
+      return await apiRequest("POST", "/api/admin/segments", segmentData);
+    },
+    onSuccess: () => {
+      toast({ title: "Text segment created successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+      setTextSelection(null);
+      setSegmentName("");
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to create text segment", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleCreateTextSegment = () => {
+    if (!textSelection || !segmentName.trim()) {
+      toast({ title: "Please select text and provide a segment name", variant: "destructive" });
+      return;
+    }
+
+    createTextSegmentMutation.mutate({
+      chapterId: parseInt(chapterId!),
+      conceptualName: segmentName.trim(),
+      textReferences: {
+        [selectedLanguage]: {
+          start: textSelection.start,
+          end: textSelection.end
+        }
+      }
+    });
+  };
+
+  const deleteSegmentMutation = useMutation({
+    mutationFn: async (segmentId: number) => {
+      return await apiRequest("DELETE", `/api/admin/segments/${segmentId}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Segment deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to delete segment", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const createAudioMappingMutation = useMutation({
+    mutationFn: async (mappingData: {
+      audioFileId: number;
+      segmentId: number;
+      startTime: number;
+      endTime: number;
+    }) => {
+      return await apiRequest("POST", "/api/admin/mappings", mappingData);
+    },
+    onSuccess: () => {
+      toast({ title: "Audio mapping created successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to create audio mapping", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Enhanced segment rendering with text highlighting
+  const renderTextWithSegments = (text: string, language: 'te' | 'hi' | 'en') => {
+    if (!segments || segments.length === 0) {
+      return <div data-segmentable className="whitespace-pre-wrap cursor-text" onMouseUp={handleTextSelection}>{text}</div>;
+    }
+
+    const segmentsForLang = segments.filter(seg => seg.textReferences[language]);
+    if (segmentsForLang.length === 0) {
+      return <div data-segmentable className="whitespace-pre-wrap cursor-text" onMouseUp={handleTextSelection}>{text}</div>;
+    }
+
+    // Sort segments by start position
+    const sortedSegments = segmentsForLang.sort((a, b) => 
+      (a.textReferences[language]?.start || 0) - (b.textReferences[language]?.start || 0)
+    );
+
+    const parts = [];
+    let lastEnd = 0;
+
+    sortedSegments.forEach((segment, index) => {
+      const ref = segment.textReferences[language];
+      if (!ref) return;
+
+      // Add text before this segment
+      if (ref.start > lastEnd) {
+        parts.push(
+          <span key={`before-${index}`} className="cursor-text">
+            {text.substring(lastEnd, ref.start)}
+          </span>
+        );
+      }
+
+      // Add the segmented text with highlighting
+      const hasAudioMapping = segment.audioFileId && segment.startTime !== undefined;
+      parts.push(
+        <span
+          key={`segment-${segment.id}`}
+          className={`px-1 py-0.5 rounded cursor-pointer transition-colors ${
+            hasAudioMapping 
+              ? 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700' 
+              : 'bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700'
+          } hover:opacity-80`}
+          title={`${segment.conceptualName}${hasAudioMapping ? ' (Audio Mapped)' : ' (No Audio)'}`}
+          onClick={() => {
+            if (hasAudioMapping && audioPlayer && segment.startTime !== undefined) {
+              audioPlayer.currentTime = segment.startTime;
+              audioPlayer.play();
+              setIsPlaying(true);
+            }
+          }}
+        >
+          {text.substring(ref.start, ref.end)}
+        </span>
+      );
+
+      lastEnd = ref.end;
+    });
+
+    // Add remaining text
+    if (lastEnd < text.length) {
+      parts.push(
+        <span key="after" className="cursor-text">
+          {text.substring(lastEnd)}
+        </span>
+      );
+    }
+
+    return (
+      <div data-segmentable className="whitespace-pre-wrap" onMouseUp={handleTextSelection}>
+        {parts}
+      </div>
+    );
+  };
+
   if (chapterLoading) {
     return <div className="p-6">Loading chapter...</div>;
   }
@@ -601,7 +792,146 @@ export default function ChapterEditor() {
 
           {/* Segmentation & Mapping Tab */}
           <TabsContent value="segmentation" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              {/* Text Segmentation Panel */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Text Segmentation</CardTitle>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowTextSegmentation(!showTextSegmentation)}
+                    >
+                      {showTextSegmentation ? 'Hide' : 'Show'} Text
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Language Selection */}
+                  <div className="space-y-2">
+                    <Label>Language</Label>
+                    <Select 
+                      value={selectedLanguage} 
+                      onValueChange={(value: 'te' | 'hi' | 'en') => setSelectedLanguage(value)}
+                      disabled={isPublished}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="te">Telugu</SelectItem>
+                        <SelectItem value="hi">Hindi</SelectItem>
+                        <SelectItem value="en">English/IAST</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Text Content with Segmentation */}
+                  {showTextSegmentation && (
+                    <div className="space-y-3">
+                      <Label>Text Content (Click and drag to select)</Label>
+                      <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900 max-h-96 overflow-y-auto">
+                        <div className={`text-sm leading-relaxed ${
+                          selectedLanguage === 'te' ? 'font-telugu' : 
+                          selectedLanguage === 'hi' ? 'font-devanagari' : 
+                          'font-mono'
+                        }`}>
+                          {textContent[selectedLanguage] ? 
+                            renderTextWithSegments(textContent[selectedLanguage], selectedLanguage) :
+                            <div className="text-muted-foreground italic">No content available for this language</div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Text Selection Info */}
+                  {textSelection && (
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <Label className="text-sm font-medium">Selected Text</Label>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Characters {textSelection.start}-{textSelection.end}
+                      </div>
+                      <div className="text-sm mt-2 p-2 bg-white dark:bg-gray-800 rounded border">
+                        "{textSelection.text}"
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Segment Creation */}
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label>Segment Name</Label>
+                      <input
+                        type="text"
+                        value={segmentName}
+                        onChange={(e) => setSegmentName(e.target.value)}
+                        placeholder="Enter segment name..."
+                        disabled={isPublished}
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                      />
+                    </div>
+                    
+                    <Button
+                      onClick={handleCreateTextSegment}
+                      disabled={!textSelection || !segmentName.trim() || createTextSegmentMutation.isPending || isPublished}
+                      size="sm"
+                      className="w-full"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Text Segment
+                    </Button>
+                  </div>
+
+                  {/* Segment List */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Text Segments ({segments?.length || 0})</Label>
+                    <div className="max-h-64 overflow-y-auto space-y-2">
+                      {segments && segments.length > 0 ? (
+                        segments.map((segment) => (
+                          <div key={segment.id} className="p-3 border rounded-lg bg-white dark:bg-gray-800">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="font-medium text-sm">{segment.conceptualName}</div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {segment.textReferences[selectedLanguage] ? 
+                                    `${selectedLanguage.toUpperCase()}: ${segment.textReferences[selectedLanguage]?.start}-${segment.textReferences[selectedLanguage]?.end}` :
+                                    'No reference for selected language'
+                                  }
+                                </div>
+                                {segment.audioFileId && segment.startTime !== undefined && (
+                                  <div className="text-xs text-green-600 mt-1">
+                                    Audio: {formatTime(segment.startTime)} - {formatTime(segment.endTime || 0)}
+                                  </div>
+                                )}
+                              </div>
+                              {!isPublished && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteSegmentMutation.mutate(segment.id)}
+                                  disabled={deleteSegmentMutation.isPending}
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">No text segments created yet</p>
+                          <p className="text-xs">Select text above to create segments</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Audio Player and Controls */}
               <Card>
                 <CardHeader>
