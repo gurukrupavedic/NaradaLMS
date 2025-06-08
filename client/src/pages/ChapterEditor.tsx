@@ -101,9 +101,8 @@ export default function ChapterEditor() {
   const audioUploadMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("chapterId", chapterId!);
-      const response = await apiRequest("POST", "/api/admin/audio-files", formData);
+      formData.append("audio", file);
+      const response = await apiRequest("POST", `/api/admin/audio-files/${chapterId}/upload`, formData);
       return response;
     },
     onSuccess: () => {
