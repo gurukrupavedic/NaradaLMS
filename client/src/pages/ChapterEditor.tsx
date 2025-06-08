@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   FileText, Upload, Music, Eye, ChevronLeft, Play, Pause, Square, 
-  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2, Clock
+  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2, Clock, Edit
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -131,6 +131,13 @@ export default function ChapterEditor() {
   const [isDragOver, setIsDragOver] = useState(false);
   const timelineRef = useRef<HTMLInputElement>(null);
   const [editingFileId, setEditingFileId] = useState<number | null>(null);
+  
+  // Audio segment editing state
+  const [editingSegmentId, setEditingSegmentId] = useState<number | null>(null);
+  const [editingSegmentData, setEditingSegmentData] = useState<{
+    startTime: string;
+    endTime: string;
+  } | null>(null);
 
   // Helper functions for drag operations
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -225,6 +232,82 @@ export default function ChapterEditor() {
   const [segmentName, setSegmentName] = useState("");
   const [showTextSegmentation, setShowTextSegmentation] = useState(false);
 
+  // Helper functions for segment editing
+  const startEditingSegment = (segment: any) => {
+    const startTime = segment.startTimestamp || segment.startTime || 0;
+    const endTime = segment.endTimestamp || segment.endTime || 0;
+    
+    setEditingSegmentId(segment.id);
+    setEditingSegmentData({
+      startTime: formatTime(startTime),
+      endTime: formatTime(endTime)
+    });
+  };
+
+  const cancelEditingSegment = () => {
+    setEditingSegmentId(null);
+    setEditingSegmentData(null);
+  };
+
+  const saveSegmentEdit = () => {
+    if (!editingSegmentData || editingSegmentId === null) return;
+
+    // Parse start time
+    const [startMin, startSec] = editingSegmentData.startTime.split(':').map(Number);
+    if (isNaN(startMin) || isNaN(startSec)) {
+      toast({
+        title: "Invalid Start Time",
+        description: "Please enter a valid start time in MM:SS format",
+        variant: "destructive"
+      });
+      return;
+    }
+    const startTime = startMin * 60 + startSec;
+
+    // Parse end time
+    const [endMin, endSec] = editingSegmentData.endTime.split(':').map(Number);
+    if (isNaN(endMin) || isNaN(endSec)) {
+      toast({
+        title: "Invalid End Time",
+        description: "Please enter a valid end time in MM:SS format",
+        variant: "destructive"
+      });
+      return;
+    }
+    const endTime = endMin * 60 + endSec;
+
+    // Validate times
+    if (startTime >= endTime) {
+      toast({
+        title: "Invalid Time Range",
+        description: "Start time must be before end time",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (endTime > duration) {
+      toast({
+        title: "Time Exceeds Duration",
+        description: "End time cannot exceed audio duration",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    updateMediaSegmentMutation.mutate({
+      id: editingSegmentId,
+      startTime,
+      endTime
+    });
+  };
+
+  const deleteSegment = (segmentId: number) => {
+    if (window.confirm("Are you sure you want to delete this segment? This action cannot be undone.")) {
+      deleteMediaSegmentMutation.mutate(segmentId);
+    }
+  };
+
   // Chapter status toggle mutation
   const toggleStatusMutation = useMutation({
     mutationFn: async (newStatus: 'draft' | 'published') => {
@@ -301,6 +384,51 @@ export default function ChapterEditor() {
     },
     onError: (error: any) => {
       toast({ title: "Failed to upload audio file", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Update media segment mutation
+  const updateMediaSegmentMutation = useMutation({
+    mutationFn: async ({ id, startTime, endTime }: { id: number; startTime: number; endTime: number }) => {
+      await apiRequest("PATCH", `/api/admin/media-segments/${id}`, {
+        startTimestamp: startTime,
+        endTimestamp: endTime
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Segment updated successfully" });
+      setEditingSegmentId(null);
+      setEditingSegmentData(null);
+      if (selectedAudioFile?.id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/admin/media-segments/${selectedAudioFile.id}`] });
+      }
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to update segment", 
+        description: error.message || "Unknown error occurred", 
+        variant: "destructive" 
+      });
+    },
+  });
+
+  // Delete media segment mutation
+  const deleteMediaSegmentMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/admin/media-segments/${id}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Segment deleted successfully" });
+      if (selectedAudioFile?.id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/admin/media-segments/${selectedAudioFile.id}`] });
+      }
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to delete segment", 
+        description: error.message || "Unknown error occurred", 
+        variant: "destructive" 
+      });
     },
   });
 
@@ -1333,35 +1461,105 @@ export default function ChapterEditor() {
                         {Array.isArray(mediaSegments) && mediaSegments.length > 0 ? (
                           (mediaSegments as any[]).map((segment, index) => (
                             <div key={segment.id} className="p-3 border rounded-lg bg-white dark:bg-gray-800">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
+                              {editingSegmentId === segment.id ? (
+                                // Edit mode
+                                <div className="space-y-3">
                                   <div className="font-medium text-sm">{segment.segmentName || segment.name}</div>
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    Duration: {formatTime(segment.startTimestamp || segment.startTime || 0)} - {formatTime(segment.endTimestamp || segment.endTime || 0)}
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                      <Label className="text-xs">Start Time (MM:SS)</Label>
+                                      <Input
+                                        type="text"
+                                        value={editingSegmentData?.startTime || ""}
+                                        onChange={(e) => setEditingSegmentData(prev => prev ? {...prev, startTime: e.target.value} : null)}
+                                        placeholder="0:00"
+                                        className="text-sm h-8"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-xs">End Time (MM:SS)</Label>
+                                      <Input
+                                        type="text"
+                                        value={editingSegmentData?.endTime || ""}
+                                        onChange={(e) => setEditingSegmentData(prev => prev ? {...prev, endTime: e.target.value} : null)}
+                                        placeholder="0:00"
+                                        className="text-sm h-8"
+                                      />
+                                    </div>
                                   </div>
-                                  <div className="text-xs text-blue-600 mt-1">
-                                    Length: {(() => {
-                                      const start = segment.startTimestamp || segment.startTime || 0;
-                                      const end = segment.endTimestamp || segment.endTime || 0;
-                                      const length = Math.max(0, end - start);
-                                      return formatTime(length);
-                                    })()}
+                                  <div className="flex gap-2 justify-end">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={cancelEditingSegment}
+                                      className="h-7 px-2 text-xs"
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={saveSegmentEdit}
+                                      disabled={updateMediaSegmentMutation.isPending}
+                                      className="h-7 px-2 text-xs"
+                                    >
+                                      {updateMediaSegmentMutation.isPending ? "Saving..." : "Save"}
+                                    </Button>
                                   </div>
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    if (audioPlayer) {
-                                      const startTime = segment.startTimestamp || segment.startTime;
-                                      playAudioSegment(segment);
-                                    }
-                                  }}
-                                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
-                                >
-                                  <Play className="w-3 h-3" />
-                                </Button>
-                              </div>
+                              ) : (
+                                // View mode
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm">{segment.segmentName || segment.name}</div>
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      Duration: {formatTime(segment.startTimestamp || segment.startTime || 0)} - {formatTime(segment.endTimestamp || segment.endTime || 0)}
+                                    </div>
+                                    <div className="text-xs text-blue-600 mt-1">
+                                      Length: {(() => {
+                                        const start = segment.startTimestamp || segment.startTime || 0;
+                                        const end = segment.endTimestamp || segment.endTime || 0;
+                                        const length = Math.max(0, end - start);
+                                        return formatTime(length);
+                                      })()}
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        if (audioPlayer) {
+                                          playAudioSegment(segment);
+                                        }
+                                      }}
+                                      className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700"
+                                      title="Play segment"
+                                    >
+                                      <Play className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => startEditingSegment(segment)}
+                                      disabled={isPublished}
+                                      className="h-7 w-7 p-0 text-gray-600 hover:text-gray-700"
+                                      title="Edit segment"
+                                    >
+                                      <Edit2 className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => deleteSegment(segment.id)}
+                                      disabled={isPublished || deleteMediaSegmentMutation.isPending}
+                                      className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                                      title="Delete segment"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           ))
                         ) : (
