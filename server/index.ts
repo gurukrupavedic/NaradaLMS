@@ -1,5 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { registerRoutes } from "./routes-simple";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
@@ -40,9 +40,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize database and seed with authentic data
-  const { initializeDatabase } = await import("./init-database");
-  await initializeDatabase();
+  // Using simplified in-memory storage for development
   
   const server = await registerRoutes(app);
 
