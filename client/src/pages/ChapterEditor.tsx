@@ -529,12 +529,12 @@ export default function ChapterEditor() {
     enabled: !!selectedAudioFile?.id,
   });
 
-  // Update media segments when data changes
+  // Initialize media segments only once when data is first loaded
   React.useEffect(() => {
-    if (Array.isArray(mediaSegmentsData)) {
+    if (Array.isArray(mediaSegmentsData) && mediaSegmentsData !== mediaSegments) {
       setMediaSegments(mediaSegmentsData);
     }
-  }, [mediaSegmentsData]);
+  }, [mediaSegmentsData]); // Removed mediaSegments from dependency to prevent infinite loop
 
   // Enhanced segment rendering with text highlighting
   const renderTextWithSegments = (text: string, language: 'te' | 'hi' | 'en') => {
@@ -900,10 +900,18 @@ export default function ChapterEditor() {
                       <div className="space-y-4">
                         <audio
                           ref={audioRef}
-                          src={selectedAudioFile.filePath}
+                          src={selectedAudioFile.url || `/uploads/${selectedAudioFile.filename}`}
                           onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
                           onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
                           onEnded={() => setIsPlaying(false)}
+                          onError={(e) => {
+                            console.error("Audio play error:", e);
+                            toast({ 
+                              title: "Playbook Error", 
+                              description: "Failed to play audio. Please check the file format.", 
+                              variant: "destructive" 
+                            });
+                          }}
                         />
                         
                         {/* Player Controls */}
@@ -981,9 +989,9 @@ export default function ChapterEditor() {
                               <Input
                                 type="number"
                                 value={startTime.toFixed(2)}
-                                onChange={(e) => setStartTime(parseFloat(e.target.value))}
+                                onChange={(e) => setStartTime(parseFloat(e.target.value) || 0)}
                                 step="0.1"
-                                size="sm"
+                                className="text-sm"
                               />
                               <Button onClick={() => setStartTime(currentTime)} size="sm">
                                 <Clock className="h-4 w-4" />
@@ -996,9 +1004,9 @@ export default function ChapterEditor() {
                               <Input
                                 type="number"
                                 value={endTime.toFixed(2)}
-                                onChange={(e) => setEndTime(parseFloat(e.target.value))}
+                                onChange={(e) => setEndTime(parseFloat(e.target.value) || 0)}
                                 step="0.1"
-                                size="sm"
+                                className="text-sm"
                               />
                               <Button onClick={() => setEndTime(currentTime)} size="sm">
                                 <Clock className="h-4 w-4" />
@@ -1012,7 +1020,7 @@ export default function ChapterEditor() {
                             value={mediaSegmentName}
                             onChange={(e) => setMediaSegmentName(e.target.value)}
                             placeholder="Enter segment name..."
-                            size="sm"
+                            className="text-sm"
                           />
                         </div>
                         <Button 
