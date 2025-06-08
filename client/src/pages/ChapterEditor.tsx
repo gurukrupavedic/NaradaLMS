@@ -78,7 +78,6 @@ export default function ChapterEditor() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [editingFileId, setEditingFileId] = useState<number | null>(null);
   const [editingFileName, setEditingFileName] = useState("");
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   // Text segmentation state
   const [selectedLanguage, setSelectedLanguage] = useState<'te' | 'hi' | 'en'>('te');
@@ -199,7 +198,7 @@ export default function ChapterEditor() {
     },
     onSuccess: (deletedFileId) => {
       toast({ title: "Audio file deleted successfully" });
-      setRefreshTrigger(prev => prev + 1);
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
       if (selectedAudioFile === deletedFileId) {
         setSelectedAudioFile(null);
         setAudioPlayer(null);
@@ -218,7 +217,7 @@ export default function ChapterEditor() {
     },
     onSuccess: () => {
       toast({ title: "Filename updated successfully" });
-      setRefreshTrigger(prev => prev + 1);
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
       setEditingFileId(null);
       setEditingFileName("");
     },
