@@ -101,7 +101,7 @@ export default function ChapterEditor() {
 
   // Fetch chapter data
   const { data: chapter, isLoading: chapterLoading } = useQuery({
-    queryKey: [`/api/admin/chapters/${chapterId}/details`],
+    queryKey: ['/api/chapters', chapterId],
     enabled: !!chapterId
   });
 
@@ -441,7 +441,7 @@ export default function ChapterEditor() {
             Back
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">{(chapter as any)?.title || 'Untitled Chapter'}</h1>
+            <h1 className="text-2xl font-bold">{chapter?.title || 'Untitled Chapter'}</h1>
             <div className="flex items-center gap-2 mt-1">
               <Badge variant={status === 'published' ? 'default' : 'secondary'}>
                 {status}
