@@ -77,11 +77,8 @@ export default function ChapterEditor() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [segmentStart, setSegmentStart] = useState("");
-  const [segmentEnd, setSegmentEnd] = useState("");
-  const [segmentTextStart, setSegmentTextStart] = useState("");
-  const [segmentTextEnd, setSegmentTextEnd] = useState("");
-  const [segmentLanguage, setSegmentLanguage] = useState("te");
+  const [timeMarks, setTimeMarks] = useState<number[]>([]);
+  const [selectedMark, setSelectedMark] = useState<number | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [editingFileId, setEditingFileId] = useState<number | null>(null);
   const [editingFileName, setEditingFileName] = useState("");
@@ -205,22 +202,23 @@ export default function ChapterEditor() {
     },
   });
 
-  // Create segment mutation
-  const createSegmentMutation = useMutation({
-    mutationFn: async (segmentData: any) => {
-      await apiRequest("POST", "/api/admin/segments", segmentData);
+  // Create audio segments from marks mutation
+  const createAudioSegmentsMutation = useMutation({
+    mutationFn: async (segments: any[]) => {
+      // Create multiple segments from time marks
+      const promises = segments.map(segment => 
+        apiRequest("POST", "/api/admin/segments", segment)
+      );
+      await Promise.all(promises);
     },
     onSuccess: () => {
-      toast({ title: "Segment created successfully" });
+      toast({ title: "Audio segments created successfully" });
       queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
-      // Clear form
-      setSegmentStart("");
-      setSegmentEnd("");
-      setSegmentTextStart("");
-      setSegmentTextEnd("");
+      setTimeMarks([]);
+      setSelectedMark(null);
     },
     onError: (error: any) => {
-      toast({ title: "Failed to create segment", description: error.message, variant: "destructive" });
+      toast({ title: "Failed to create audio segments", description: error.message, variant: "destructive" });
     },
   });
 
@@ -399,23 +397,66 @@ export default function ChapterEditor() {
     }
   };
 
-  const handleUseCurrentTime = () => {
-    setSegmentStart(currentTime.toString());
+  const handleStop = () => {
+    if (!audioPlayer) return;
+    
+    audioPlayer.pause();
+    audioPlayer.currentTime = 0;
+    setIsPlaying(false);
+    setCurrentTime(0);
   };
 
-  const handleCreateAudioSegment = () => {
-    if (!selectedAudioFile || !segmentStart || !segmentEnd) {
-      toast({ title: "Please fill in start and end times", variant: "destructive" });
+  const handleMarkTime = () => {
+    if (!audioPlayer) return;
+    
+    const markTime = audioPlayer.currentTime;
+    setTimeMarks(prev => [...prev, markTime].sort((a, b) => a - b));
+  };
+
+  const handleClearMark = () => {
+    if (selectedMark === null) return;
+    
+    setTimeMarks(prev => prev.filter(mark => mark !== selectedMark));
+    setSelectedMark(null);
+  };
+
+  const handleClearAllMarks = () => {
+    setTimeMarks([]);
+    setSelectedMark(null);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = (seconds % 60).toFixed(2);
+    return `${mins}:${secs.padStart(5, '0')}`;
+  };
+
+  const handleCreateAudioSegments = () => {
+    if (!selectedAudioFile || timeMarks.length === 0) {
+      toast({ title: "Please mark time points on the audio track", variant: "destructive" });
       return;
     }
 
-    const segmentName = `Segment ${Math.floor(parseFloat(segmentStart))}s-${Math.floor(parseFloat(segmentEnd))}s`;
+    // Create segments based on marks
+    const segments = [];
+    const marks = [0, ...timeMarks, duration].sort((a, b) => a - b);
     
-    createSegmentMutation.mutate({
-      chapterId,
-      conceptualName: segmentName,
-      textReferences: {}
-    });
+    for (let i = 0; i < marks.length - 1; i++) {
+      const startTime = marks[i];
+      const endTime = marks[i + 1];
+      const segmentName = `Segment ${i + 1} (${formatTime(startTime)} - ${formatTime(endTime)})`;
+      
+      segments.push({
+        chapterId,
+        conceptualName: segmentName,
+        textReferences: {},
+        audioFileId: selectedAudioFile,
+        startTime,
+        endTime
+      });
+    }
+
+    createAudioSegmentsMutation.mutate(segments);
   };
 
   const handleTextSelection = () => {
