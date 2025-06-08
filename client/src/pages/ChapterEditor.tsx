@@ -1,33 +1,17 @@
-import { useState, useEffect, useRef } from "react";
-import { useLocation, useRoute } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useParams } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
 import { 
-  ArrowLeft, 
-  Save, 
-  Upload, 
-  Play, 
-  Pause, 
-  Eye, 
-  FileText, 
-  Music, 
-  Link, 
-  CheckCircle,
-  Globe,
-  Plus,
-  Trash2,
-  Clock,
-  Edit,
-  Lock
+  FileText, Upload, Music, Eye, ChevronLeft, Play, Pause, Square, 
+  MapPin, X, Trash2, Plus, ArrowRight, Save
 } from "lucide-react";
 
 interface ChapterData {
@@ -57,21 +41,19 @@ interface ChapterData {
 }
 
 export default function ChapterEditor() {
-  const [, params] = useRoute("/chapter-editor/:chapterId");
-  const [, setLocation] = useLocation();
+  const { chapterId } = useParams<{ chapterId: string }>();
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const chapterId = parseInt(params?.chapterId || "0");
-  
-  // State for text content
+  const queryClient = useQueryClient();
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // State management
   const [textContent, setTextContent] = useState({
     te: "",
     hi: "",
     en: ""
   });
   
-  // State for audio and segmentation
+  // Audio and segmentation state
   const [selectedAudioFile, setSelectedAudioFile] = useState<number | null>(null);
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -79,32 +61,28 @@ export default function ChapterEditor() {
   const [duration, setDuration] = useState(0);
   const [timeMarks, setTimeMarks] = useState<number[]>([]);
   const [selectedMark, setSelectedMark] = useState<number | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const [editingFileId, setEditingFileId] = useState<number | null>(null);
-  const [editingFileName, setEditingFileName] = useState("");
-  const [previewLanguage, setPreviewLanguage] = useState("te");
-  const [selectedSegment, setSelectedSegment] = useState<any>(null);
-  const [selectedText, setSelectedText] = useState<{ text: string; start: number; end: number } | null>(null);
 
   // Fetch chapter details
-  const { data: chapter = {}, isLoading: chapterLoading } = useQuery({
+  const { data: chapter, isLoading: chapterLoading } = useQuery({
     queryKey: [`/api/admin/chapters/${chapterId}/details`],
     enabled: !!chapterId,
   });
 
   // Fetch audio files
-  const { data: audioFiles = [] } = useQuery({
+  const { data: audioFiles } = useQuery({
     queryKey: [`/api/admin/audio-files/${chapterId}`],
     enabled: !!chapterId,
   });
 
   // Fetch segments
-  const { data: segments = [] } = useQuery({
+  const { data: segments } = useQuery({
     queryKey: [`/api/admin/segments/${chapterId}`],
     enabled: !!chapterId,
   });
 
-  // Update text content when chapter data loads
+  const isPublished = chapter?.status === "published";
+
+  // Initialize text content when chapter loads
   useEffect(() => {
     if (chapter?.content) {
       setTextContent({
@@ -115,97 +93,40 @@ export default function ChapterEditor() {
     }
   }, [chapter]);
 
-  // Auto-select first audio file if available
-  useEffect(() => {
-    if (audioFiles.length > 0 && !selectedAudioFile) {
-      setSelectedAudioFile(audioFiles[0].id);
-    }
-  }, [audioFiles, selectedAudioFile]);
-
-  // Check if chapter is published (read-only mode)
-  const isPublished = chapter?.status === "published";
-
-  // Save text content mutation
-  const saveContentMutation = useMutation({
-    mutationFn: async (content: any) => {
-      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}`, {
-        content
-      });
+  // Audio file upload mutation
+  const audioUploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("chapterId", chapterId!);
+      await apiRequest("POST", "/api/admin/audio-files", formData);
     },
     onSuccess: () => {
-      toast({ title: "Text content saved successfully" });
+      toast({ title: "Audio file uploaded successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to upload audio file", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Content update mutation
+  const updateContentMutation = useMutation({
+    mutationFn: async (content: any) => {
+      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}`, { content });
+    },
+    onSuccess: () => {
+      toast({ title: "Content updated successfully" });
       queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${chapterId}/details`] });
     },
     onError: (error: any) => {
-      toast({ title: "Failed to save text content", description: error.message, variant: "destructive" });
-    },
-  });
-
-  // Upload audio file mutation
-  const uploadAudioMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append('audio', file);
-      formData.append('chapterId', chapterId.toString());
-      
-      const response = await fetch(`/api/admin/audio-files/${chapterId}/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to upload audio file');
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Media file uploaded successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
-    },
-    onError: (error: any) => {
-      toast({ title: "Failed to upload media file", description: error.message, variant: "destructive" });
-    },
-  });
-
-  // Update audio file mutation
-  const updateAudioMutation = useMutation({
-    mutationFn: async ({ id, filename }: { id: number; filename: string }) => {
-      return await apiRequest("PATCH", `/api/admin/audio-files/${id}`, { filename });
-    },
-    onSuccess: () => {
-      toast({ title: "File name updated successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
-      setEditingFileId(null);
-      setEditingFileName("");
-    },
-    onError: (error: any) => {
-      toast({ title: "Failed to update file name", description: error.message, variant: "destructive" });
-    },
-  });
-
-  // Delete audio file mutation
-  const deleteAudioMutation = useMutation({
-    mutationFn: async (audioFileId: number) => {
-      await apiRequest("DELETE", `/api/admin/audio-files/${audioFileId}`);
-    },
-    onSuccess: () => {
-      toast({ title: "Media file deleted successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
-      // Clear selected audio file if it was deleted
-      setSelectedAudioFile(null);
-      setAudioPlayer(null);
-      setIsPlaying(false);
-    },
-    onError: (error: any) => {
-      toast({ title: "Failed to delete media file", description: error.message, variant: "destructive" });
+      toast({ title: "Failed to update content", description: error.message, variant: "destructive" });
     },
   });
 
   // Create audio segments from marks mutation
   const createAudioSegmentsMutation = useMutation({
     mutationFn: async (segments: any[]) => {
-      // Create multiple segments from time marks
       const promises = segments.map(segment => 
         apiRequest("POST", "/api/admin/segments", segment)
       );
@@ -222,178 +143,26 @@ export default function ChapterEditor() {
     },
   });
 
-  // Create audio mapping mutation
-  const createMappingMutation = useMutation({
-    mutationFn: async (mappingData: any) => {
-      await apiRequest("POST", "/api/admin/mappings", mappingData);
-    },
-    onSuccess: () => {
-      toast({ title: "Audio mapping created successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
-    },
-    onError: (error: any) => {
-      toast({ title: "Failed to create audio mapping", description: error.message, variant: "destructive" });
-    },
-  });
-
-  // Publish/unpublish mutation
-  const toggleStatusMutation = useMutation({
-    mutationFn: async () => {
-      const newStatus = chapter?.status === "published" ? "draft" : "published";
-      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}`, {
-        status: newStatus
-      });
-    },
-    onSuccess: () => {
-      toast({ title: "Chapter status updated successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${chapterId}/details`] });
-    },
-    onError: (error: any) => {
-      toast({ title: "Failed to update chapter status", description: error.message, variant: "destructive" });
-    },
-  });
-
-  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (!validateFileType(file)) {
-        toast({ 
-          title: "Invalid file type", 
-          description: "Please upload audio or video files only", 
-          variant: "destructive" 
-        });
-        // Reset the input
-        event.target.value = '';
-        return;
-      }
-      uploadAudioMutation.mutate(file);
-    }
-  };
-
-  const handleDeleteAudioFile = (audioFileId: number) => {
-    if (confirm("Are you sure you want to delete this media file?")) {
-      deleteAudioMutation.mutate(audioFileId);
-    }
-  };
-
-  const validateFileType = (file: File) => {
-    const allowedTypes = [
-      // Audio types
-      'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/aac', 'audio/ogg', 'audio/flac',
-      // Video types
-      'video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo', 'video/webm'
-    ];
-    
-    const fileExtension = file.name.toLowerCase().split('.').pop();
-    const allowedExtensions = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac', 'mp4', 'mpeg', 'mov', 'avi', 'webm'];
-    
-    return allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension || '');
-  };
-
-  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const files = Array.from(e.dataTransfer.files);
-    const validFiles = files.filter(validateFileType);
-    
-    if (validFiles.length === 0) {
-      toast({ 
-        title: "Invalid file type", 
-        description: "Please upload audio or video files only", 
-        variant: "destructive" 
-      });
-      return;
-    }
-    
-    if (validFiles.length > 1) {
-      toast({ 
-        title: "Multiple files not supported", 
-        description: "Please upload one file at a time", 
-        variant: "destructive" 
-      });
-      return;
-    }
-    
-    uploadAudioMutation.mutate(validFiles[0]);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragOver(false);
-  };
-
-  const startEditing = (fileId: number, currentName: string) => {
-    setEditingFileId(fileId);
-    setEditingFileName(currentName);
-  };
-
-  const cancelEditing = () => {
-    setEditingFileId(null);
-    setEditingFileName("");
-  };
-
-  const saveFileName = () => {
-    if (editingFileId && editingFileName.trim()) {
-      updateAudioMutation.mutate({ id: editingFileId, filename: editingFileName.trim() });
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      saveFileName();
-    } else if (e.key === 'Escape') {
-      cancelEditing();
-    }
-  };
-
+  // Audio control functions
   const handlePlayPause = async () => {
-    if (audioPlayer) {
-      try {
-        if (isPlaying) {
-          audioPlayer.pause();
-          setIsPlaying(false);
-        } else {
-          // Check if audio is ready to play
-          if (audioPlayer.readyState >= 2) { // HAVE_CURRENT_DATA
-            await audioPlayer.play();
-            setIsPlaying(true);
-          } else {
-            toast({
-              title: "Audio Loading",
-              description: "Please wait for the audio to load completely.",
-              variant: "default",
-            });
-            // Wait for the audio to load
-            audioPlayer.addEventListener('canplay', async () => {
-              try {
-                await audioPlayer.play();
-                setIsPlaying(true);
-              } catch (error) {
-                console.error("Audio play error:", error);
-                toast({
-                  title: "Playback Error",
-                  description: "Failed to play audio. Please check the file format.",
-                  variant: "destructive",
-                });
-              }
-            }, { once: true });
-          }
-        }
-      } catch (error) {
-        console.error("Audio play error:", error);
+    if (!audioPlayer) return;
+    
+    try {
+      if (isPlaying) {
+        audioPlayer.pause();
         setIsPlaying(false);
-        toast({
-          title: "Playback Error",
-          description: "Failed to play audio. The file may be corrupted or in an unsupported format.",
-          variant: "destructive",
-        });
+      } else {
+        await audioPlayer.play();
+        setIsPlaying(true);
       }
+    } catch (error) {
+      console.error("Audio play error:", error);
+      setIsPlaying(false);
+      toast({
+        title: "Playback Error",
+        description: "Failed to play audio. Please check the file format.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -411,6 +180,7 @@ export default function ChapterEditor() {
     
     const markTime = audioPlayer.currentTime;
     setTimeMarks(prev => [...prev, markTime].sort((a, b) => a - b));
+    toast({ title: `Time mark added at ${formatTime(markTime)}` });
   };
 
   const handleClearMark = () => {
@@ -418,11 +188,13 @@ export default function ChapterEditor() {
     
     setTimeMarks(prev => prev.filter(mark => mark !== selectedMark));
     setSelectedMark(null);
+    toast({ title: "Time mark cleared" });
   };
 
   const handleClearAllMarks = () => {
     setTimeMarks([]);
     setSelectedMark(null);
+    toast({ title: "All time marks cleared" });
   };
 
   const formatTime = (seconds: number) => {
@@ -447,513 +219,374 @@ export default function ChapterEditor() {
       const segmentName = `Segment ${i + 1} (${formatTime(startTime)} - ${formatTime(endTime)})`;
       
       segments.push({
-        chapterId,
+        chapterId: parseInt(chapterId!),
         conceptualName: segmentName,
-        textReferences: {},
-        audioFileId: selectedAudioFile,
-        startTime,
-        endTime
+        textReferences: {}
       });
     }
 
     createAudioSegmentsMutation.mutate(segments);
   };
 
-  const handleTextSelection = () => {
-    const selection = window.getSelection();
-    if (selection && selection.toString().trim()) {
-      const text = selection.toString();
-      const range = selection.getRangeAt(0);
-      
-      // Calculate character positions within the text content
-      const textContent = chapter?.content?.[previewLanguage as keyof typeof chapter.content] || '';
-      const start = textContent.indexOf(text);
-      const end = start + text.length;
-      
-      if (start !== -1) {
-        setSelectedText({ text, start, end });
-      }
-    }
-  };
-
-  const handlePlaySegment = (segment: any) => {
-    if (audioPlayer && segment.startTime !== undefined && segment.endTime !== undefined) {
-      audioPlayer.currentTime = segment.startTime;
-      audioPlayer.play();
-      setIsPlaying(true);
-      
-      // Stop at end time
-      const checkTime = () => {
-        if (audioPlayer.currentTime >= segment.endTime) {
-          audioPlayer.pause();
-          setIsPlaying(false);
-        } else {
-          requestAnimationFrame(checkTime);
-        }
-      };
-      requestAnimationFrame(checkTime);
-    } else {
-      toast({ 
-        title: "Cannot play segment", 
-        description: "This segment doesn't have audio timing information yet", 
-        variant: "destructive" 
-      });
-    }
-  };
-
-  const mapSegmentMutation = useMutation({
-    mutationFn: async (data: any) => {
-      return apiRequest("POST", `/api/admin/segments/${selectedSegment.id}/map`, data);
-    },
-    onSuccess: () => {
-      toast({ title: "Segment mapped to text successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
-      setSelectedText(null);
-      setSelectedSegment(null);
-    },
-    onError: () => {
-      toast({ title: "Failed to map segment", variant: "destructive" });
-    },
-  });
-
-  const handleMapSegment = () => {
-    if (!selectedSegment || !selectedText) return;
+  // Audio file selection and setup
+  const handleAudioFileSelect = (fileId: number) => {
+    setSelectedAudioFile(fileId);
+    setTimeMarks([]);
+    setSelectedMark(null);
+    setCurrentTime(0);
+    setIsPlaying(false);
     
-    mapSegmentMutation.mutate({
-      textStart: selectedText.start,
-      textEnd: selectedText.end,
-      language: previewLanguage,
-    });
+    const file = (audioFiles as any)?.find((f: any) => f.id === fileId);
+    if (file && audioRef.current) {
+      audioRef.current.src = file.url;
+      audioRef.current.load();
+      setAudioPlayer(audioRef.current);
+    }
   };
 
-  const handleSaveTextContent = () => {
-    saveContentMutation.mutate(textContent);
+  // Audio event handlers
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const handleLoadedMetadata = () => setDuration(audio.duration);
+    const handleEnded = () => setIsPlaying(false);
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, []);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const allowedTypes = ['audio/', 'video/'];
+      if (!allowedTypes.some(type => file.type.startsWith(type))) {
+        toast({ 
+          title: "Invalid file type", 
+          description: "Please upload audio or video files only", 
+          variant: "destructive" 
+        });
+        return;
+      }
+      audioUploadMutation.mutate(file);
+    }
+  };
+
+  const handleContentSave = (language: string) => {
+    updateContentMutation.mutate({
+      ...chapter?.content,
+      [language]: textContent[language as keyof typeof textContent]
+    });
   };
 
   if (chapterLoading) {
     return <div className="p-6">Loading chapter...</div>;
   }
 
-  if (!chapter?.id) {
-    return <div className="p-6">Chapter not found</div>;
-  }
-
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      {/* Back Button */}
-      <div className="mb-6">
-        <Button variant="ghost" onClick={() => setLocation("/content-management")}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Chapters
-        </Button>
-      </div>
-
+    <div className="min-h-screen bg-background">
+      <audio ref={audioRef} preload="metadata" />
+      
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">{chapter?.title}</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant={chapter?.status === "published" ? "default" : "secondary"}>
-              {chapter?.status === "published" ? "Published" : "Draft"}
-            </Badge>
-            {isPublished && (
-              <div className="text-sm text-muted-foreground flex items-center gap-1">
-                <Lock className="w-3 h-3" />
-                Read-only mode
+      <div className="border-b bg-card">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                Back to Chapters
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold">{chapter?.title}</h1>
+                <p className="text-sm text-muted-foreground">
+                  Status: <span className={`capitalize ${chapter?.status === 'published' ? 'text-green-600' : 'text-orange-600'}`}>
+                    {chapter?.status}
+                  </span>
+                </p>
               </div>
-            )}
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={() => toggleStatusMutation.mutate()}
-            variant={chapter?.status === "published" ? "outline" : "default"}
-            disabled={toggleStatusMutation.isPending}
-          >
-            {chapter?.status === "published" ? "Unpublish" : "Publish"}
-          </Button>
-        </div>
       </div>
 
-      {/* 4-Phase Workflow Tabs */}
-      <Tabs defaultValue="content" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="content" className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            Text Content
-          </TabsTrigger>
-          <TabsTrigger value="media" className="flex items-center gap-2">
-            <Music className="w-4 h-4" />
-            Media Content
-          </TabsTrigger>
-          <TabsTrigger value="mapping" className="flex items-center gap-2">
-            <Link className="w-4 h-4" />
-            Segmentation & Mapping
-          </TabsTrigger>
-          <TabsTrigger value="preview" className="flex items-center gap-2">
-            <Eye className="w-4 h-4" />
-            Preview
-          </TabsTrigger>
-        </TabsList>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-6">
+        <Tabs defaultValue="content" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="content" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Text Content
+            </TabsTrigger>
+            <TabsTrigger value="media" className="flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              Media Content
+            </TabsTrigger>
+            <TabsTrigger value="segmentation" className="flex items-center gap-2">
+              <Music className="w-4 h-4" />
+              Segmentation & Mapping
+            </TabsTrigger>
+            <TabsTrigger value="preview" className="flex items-center gap-2">
+              <Eye className="w-4 h-4" />
+              Preview
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Text Content Phase */}
-        <TabsContent value="content" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  Multilingual Text Content
-                </CardTitle>
-                <Button 
-                  onClick={handleSaveTextContent} 
-                  disabled={saveContentMutation.isPending || isPublished}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Content
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Telugu Content */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Globe className="w-4 h-4" />
-                  Telugu Content
-                </Label>
-                <Textarea
-                  placeholder="Enter Telugu content..."
-                  value={textContent.te}
-                  onChange={(e) => setTextContent(prev => ({ ...prev, te: e.target.value }))}
-                  className="min-h-32 font-mono"
-                  disabled={isPublished}
-                />
-              </div>
-
-              {/* Hindi Content */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Globe className="w-4 h-4" />
-                  Hindi Content
-                </Label>
-                <Textarea
-                  placeholder="Enter Hindi content..."
-                  value={textContent.hi}
-                  onChange={(e) => setTextContent(prev => ({ ...prev, hi: e.target.value }))}
-                  className="min-h-32 font-mono"
-                  disabled={isPublished}
-                />
-              </div>
-
-              {/* English/IAST Content */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Globe className="w-4 h-4" />
-                  English/IAST Content
-                </Label>
-                <Textarea
-                  placeholder="Enter English/IAST content..."
-                  value={textContent.en}
-                  onChange={(e) => setTextContent(prev => ({ ...prev, en: e.target.value }))}
-                  className="min-h-32 font-mono"
-                  disabled={isPublished}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Media Content Phase */}
-        <TabsContent value="media" className="space-y-6">
-          <Card>
-            <CardContent className="space-y-4 pt-6">
-              <div 
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                  isPublished 
-                    ? 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800 opacity-50' 
-                    : isDragOver 
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' 
-                      : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                }`}
-                onDrop={isPublished ? undefined : handleFileDrop}
-                onDragOver={isPublished ? undefined : handleDragOver}
-                onDragLeave={isPublished ? undefined : handleDragLeave}
-              >
-                <div className="space-y-4">
-                  <div className="flex justify-center">
-                    <Upload className="h-12 w-12 text-gray-400" />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-medium">Drop your media files here</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Or click to browse and select files
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Supported formats: MP3, WAV, M4A, AAC, OGG, FLAC, MP4, MOV, AVI, WebM
-                    </p>
-                  </div>
-                  <div>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploadAudioMutation.isPending || isPublished}
+          {/* Text Content Tab */}
+          <TabsContent value="content" className="space-y-6">
+            {['te', 'hi', 'en'].map((lang) => (
+              <Card key={lang}>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    {lang === 'te' ? 'Telugu' : lang === 'hi' ? 'Hindi' : 'English/IAST'}
+                    <Button
+                      onClick={() => handleContentSave(lang)}
+                      disabled={updateContentMutation.isPending || isPublished}
+                      size="sm"
                     >
-                      Select Files
+                      <Save className="w-4 h-4 mr-2" />
+                      Save
                     </Button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="audio/*,video/*"
-                      onChange={handleAudioUpload}
-                      className="hidden"
-                    />
-                  </div>
-                  {uploadAudioMutation.isPending && (
-                    <p className="text-sm text-blue-600 dark:text-blue-400">
-                      Uploading and processing file...
-                    </p>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Textarea
+                    value={textContent[lang as keyof typeof textContent]}
+                    onChange={(e) => setTextContent(prev => ({ ...prev, [lang]: e.target.value }))}
+                    disabled={isPublished}
+                    placeholder={`Enter ${lang === 'te' ? 'Telugu' : lang === 'hi' ? 'Hindi' : 'English/IAST'} content...`}
+                    className="min-h-[200px]"
+                  />
+                </CardContent>
+              </Card>
+            ))}
+          </TabsContent>
+
+          {/* Media Content Tab */}
+          <TabsContent value="media" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Audio Files</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {!isPublished && (
+                    <div>
+                      <Label htmlFor="audio-upload">Upload Audio File</Label>
+                      <input
+                        id="audio-upload"
+                        type="file"
+                        accept="audio/*,video/*"
+                        onChange={handleFileUpload}
+                        className="mt-2 block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                    </div>
+                  )}
+
+                  {audioFiles && (audioFiles as any).length > 0 ? (
+                    <div className="space-y-2">
+                      {(audioFiles as any).map((file: any) => (
+                        <div key={file.id} className="flex items-center justify-between p-3 border rounded">
+                          <div>
+                            <p className="font-medium">{file.originalName || file.filename}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Duration: {file.duration ? `${file.duration.toFixed(2)}s` : 'Unknown'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">No audio files uploaded yet.</p>
                   )}
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-              {audioFiles.length > 0 && (
-                <div className="grid gap-4">
-                  {audioFiles.map((file: any) => (
-                    <Card key={file.id} className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          {editingFileId === file.id ? (
-                            <div className="space-y-2">
-                              <Input
-                                value={editingFileName}
-                                onChange={(e) => setEditingFileName(e.target.value)}
-                                onKeyDown={handleKeyPress}
-                                className="font-medium"
-                                autoFocus
-                              />
-                              <div className="flex gap-2">
-                                <Button 
-                                  size="sm" 
-                                  onClick={saveFileName}
-                                  disabled={updateAudioMutation.isPending || !editingFileName.trim()}
-                                >
-                                  Save
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  onClick={cancelEditing}
-                                  disabled={updateAudioMutation.isPending}
-                                >
-                                  Cancel
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-medium">{file.displayName}</h4>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => startEditing(file.id, file.displayName)}
-                                  className="h-6 w-6 p-0"
-                                  disabled={isPublished}
-                                >
-                                  <Edit className="w-3 h-3" />
-                                </Button>
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                Duration: {Math.round(file.duration || 0)}s
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                        {editingFileId !== file.id && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteAudioFile(file.id)}
-                            disabled={deleteAudioMutation.isPending || isPublished}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              {audioFiles.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No media files uploaded yet. Upload media files to proceed with segmentation.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Segmentation & Mapping Phase */}
-        <TabsContent value="mapping" className="space-y-6">
-          {audioFiles.length > 0 ? (
-            <>
-              {/* Audio Segment Creation */}
+          {/* Segmentation & Mapping Tab */}
+          <TabsContent value="segmentation" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Audio Player and Controls */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Audio Segment Creation</CardTitle>
+                  <CardTitle>Audio Segmentation</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-4">
                   {/* Audio File Selection */}
                   <div className="space-y-2">
                     <Label>Select Audio File</Label>
-                    <Select value={selectedAudioFile?.toString() || ""} onValueChange={(value) => setSelectedAudioFile(parseInt(value))} disabled={isPublished}>
+                    <Select 
+                      value={selectedAudioFile?.toString() || ""} 
+                      onValueChange={(value) => handleAudioFileSelect(parseInt(value))}
+                      disabled={isPublished}
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Choose audio file for segmentation" />
+                        <SelectValue placeholder="Choose an audio file..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {audioFiles.map((file: any) => (
+                        {audioFiles && (audioFiles as any).map((file: any) => (
                           <SelectItem key={file.id} value={file.id.toString()}>
-                            {file.displayName || file.filename}
+                            {file.originalName || file.filename}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {selectedAudioFile && audioFiles.find((f: any) => f.id === selectedAudioFile) && (
+                  {selectedAudioFile && (
                     <>
-                      {/* Audio Player */}
-                      <div className="space-y-4">
-                        <audio
-                          ref={(audio) => setAudioPlayer(audio)}
-                          src={`/uploads/${audioFiles.find((f: any) => f.id === selectedAudioFile)?.filename}`}
-                          onTimeUpdate={(e) => setCurrentTime((e.target as HTMLAudioElement).currentTime)}
-                          onLoadedMetadata={(e) => setDuration((e.target as HTMLAudioElement).duration)}
-                          onError={(e) => {
-                            console.error("Audio loading error:", e);
-                            toast({
-                              title: "Audio Error",
-                              description: "Failed to load audio file. Please check the file format.",
-                              variant: "destructive",
-                            });
-                          }}
-                          preload="metadata"
-                          className="hidden"
-                        />
-                        <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      {/* Audio Player Display */}
+                      <div className="space-y-4 p-4 border rounded-lg bg-gray-50 dark:bg-gray-900">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <Button onClick={handlePlayPause} variant="outline" size="lg" disabled={isPublished}>
-                              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                            </Button>
-                            <div className="flex flex-col">
-                              <span className="text-lg font-mono font-bold">
-                                {currentTime.toFixed(2)}s
-                              </span>
-                              <span className="text-sm text-muted-foreground">
-                                / {duration.toFixed(2)}s
-                              </span>
+                            <div className="text-lg font-mono font-bold">
+                              {formatTime(currentTime)}
                             </div>
-                            <div className="text-xs text-muted-foreground">
-                              {audioFiles.find((f: any) => f.id === selectedAudioFile)?.originalName || audioFiles.find((f: any) => f.id === selectedAudioFile)?.filename}
+                            <div className="text-sm text-muted-foreground">
+                              / {formatTime(duration)}
                             </div>
                           </div>
-                          
-                          {/* Audio Progress Slider */}
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-xs text-muted-foreground">
-                              <span>0:00</span>
-                              <span>{Math.floor(duration / 60)}:{String(Math.floor(duration % 60)).padStart(2, '0')}</span>
-                            </div>
-                            <div className="relative">
-                              <input
-                                type="range"
-                                min="0"
-                                max={duration || 0}
-                                value={currentTime}
-                                onChange={(e) => {
-                                  const newTime = parseFloat(e.target.value);
-                                  if (audioPlayer) {
-                                    audioPlayer.currentTime = newTime;
-                                    setCurrentTime(newTime);
-                                  }
-                                }}
-                                disabled={isPublished}
-                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 
-                                         [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 
-                                         [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:cursor-pointer
-                                         [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full 
-                                         [&::-moz-range-thumb]:bg-blue-500 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-none"
+                        </div>
+                        
+                        {/* Audio Progress Bar */}
+                        <div className="space-y-2">
+                          <div className="relative">
+                            <input
+                              type="range"
+                              min="0"
+                              max={duration || 0}
+                              value={currentTime}
+                              onChange={(e) => {
+                                const newTime = parseFloat(e.target.value);
+                                if (audioPlayer) {
+                                  audioPlayer.currentTime = newTime;
+                                  setCurrentTime(newTime);
+                                }
+                              }}
+                              disabled={isPublished}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            />
+                            {/* Time marks on progress bar */}
+                            {timeMarks.map((mark, index) => (
+                              <div
+                                key={index}
+                                className="absolute top-0 w-1 h-2 bg-red-500 rounded cursor-pointer"
+                                style={{ left: `${duration > 0 ? (mark / duration) * 100 : 0}%` }}
+                                onClick={() => setSelectedMark(mark)}
+                                title={`Mark ${index + 1}: ${formatTime(mark)}`}
                               />
-                              <div 
-                                className="absolute top-0 left-0 h-2 bg-blue-500 rounded-lg pointer-events-none"
-                                style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
-                              />
-                            </div>
+                            ))}
                           </div>
                         </div>
                       </div>
 
-                      {/* Audio Segment Timing */}
+                      {/* Audio Controls */}
                       <div className="space-y-4 border-t pt-4">
                         <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-                          Audio Segment Timing
+                          Audio Controls
                         </h4>
                         
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Start Time</Label>
-                            <div className="flex gap-2">
-                              <Input
-                                value={segmentStart}
-                                onChange={(e) => setSegmentStart(e.target.value)}
-                                placeholder="0.00"
-                                type="number"
-                                step="0.01"
-                                disabled={isPublished}
-                              />
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleUseCurrentTime}
-                                title="Use current playback time"
-                                disabled={isPublished}
-                              >
-                                <Clock className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label>End Time</Label>
-                            <div className="flex gap-2">
-                              <Input
-                                value={segmentEnd}
-                                onChange={(e) => setSegmentEnd(e.target.value)}
-                                placeholder="0.00"
-                                type="number"
-                                step="0.01"
-                                disabled={isPublished}
-                              />
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setSegmentEnd(currentTime.toFixed(2))}
-                                title="Use current playback time"
-                                disabled={isPublished}
-                              >
-                                <Clock className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            onClick={handlePlayPause}
+                            disabled={isPublished}
+                            variant="outline"
+                            size="sm"
+                          >
+                            {isPlaying ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+                            {isPlaying ? "Pause" : "Play"}
+                          </Button>
+                          
+                          <Button
+                            onClick={handleStop}
+                            disabled={isPublished}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Square className="w-4 h-4 mr-2" />
+                            Stop
+                          </Button>
+                          
+                          <Button
+                            onClick={handleMarkTime}
+                            disabled={isPublished}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <MapPin className="w-4 h-4 mr-2" />
+                            Mark Time
+                          </Button>
+                          
+                          <Button
+                            onClick={handleClearMark}
+                            disabled={isPublished || selectedMark === null}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <X className="w-4 h-4 mr-2" />
+                            Clear Mark
+                          </Button>
                         </div>
-
+                        
                         <Button
-                          onClick={handleCreateAudioSegment}
-                          disabled={createSegmentMutation.isPending || isPublished}
+                          onClick={handleClearAllMarks}
+                          disabled={isPublished || timeMarks.length === 0}
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Clear All Marks
+                        </Button>
+                        
+                        {/* Time Marks Display */}
+                        {timeMarks.length > 0 && (
+                          <div className="space-y-2">
+                            <Label className="text-xs">Time Marks ({timeMarks.length})</Label>
+                            <div className="max-h-24 overflow-y-auto space-y-1">
+                              {timeMarks.map((mark, index) => (
+                                <div 
+                                  key={index}
+                                  className={`text-xs p-2 rounded cursor-pointer flex justify-between items-center ${
+                                    selectedMark === mark ? 'bg-blue-100 dark:bg-blue-900' : 'bg-gray-100 dark:bg-gray-800'
+                                  }`}
+                                  onClick={() => setSelectedMark(mark)}
+                                >
+                                  <span>Mark {index + 1}: {formatTime(mark)}</span>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-4 w-4 p-0"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (audioPlayer) {
+                                        audioPlayer.currentTime = mark;
+                                      }
+                                    }}
+                                  >
+                                    <ArrowRight className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        <Button 
+                          onClick={handleCreateAudioSegments}
+                          disabled={createAudioSegmentsMutation.isPending || isPublished || timeMarks.length === 0}
                           className="w-full"
                         >
                           <Plus className="w-4 h-4 mr-2" />
-                          Create Audio Segment
+                          Create Audio Segments ({timeMarks.length > 0 ? timeMarks.length + 1 : 0})
                         </Button>
                       </div>
                     </>
@@ -961,256 +594,80 @@ export default function ChapterEditor() {
                 </CardContent>
               </Card>
 
-              {/* Audio Segments & Text Mapping */}
+              {/* Audio Segments */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Segment to Text Mapping</CardTitle>
+                  <CardTitle>Audio Segments</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-6">
-                    {/* Left Panel - Audio Segments */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium">Audio Segments</h4>
-                        <Badge variant="secondary">{segments.length} segments</Badge>
-                      </div>
-                      
-                      {segments.length > 0 ? (
-                        <div className="space-y-2 max-h-96 overflow-y-auto">
-                          {segments.map((segment: any) => (
-                            <div 
-                              key={segment.id} 
-                              className={`p-3 border rounded cursor-pointer transition-colors ${
-                                selectedSegment?.id === segment.id 
-                                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                                  : 'hover:bg-gray-50 dark:hover:bg-gray-800'
-                              }`}
-                              onClick={() => setSelectedSegment(segment)}
-                            >
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium">{segment.conceptualName}</span>
-                                  {segment.startTime !== undefined && segment.endTime !== undefined && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handlePlaySegment(segment);
-                                      }}
-                                    >
-                                      <Play className="w-3 h-3" />
-                                    </Button>
-                                  )}
-                                </div>
-                                {segment.startTime !== undefined && segment.endTime !== undefined ? (
-                                  <div className="text-xs text-muted-foreground font-mono">
-                                    {segment.startTime.toFixed(2)}s - {segment.endTime.toFixed(2)}s
-                                  </div>
-                                ) : (
-                                  <div className="flex gap-2 text-xs">
-                                    <input
-                                      type="number"
-                                      step="0.1"
-                                      placeholder="Start (s)"
-                                      className="w-20 px-2 py-1 border rounded text-xs"
-                                      onChange={(e) => {
-                                        segment._tempStart = parseFloat(e.target.value) || 0;
-                                      }}
-                                      disabled={isPublished}
-                                    />
-                                    <input
-                                      type="number"
-                                      step="0.1"
-                                      placeholder="End (s)"
-                                      className="w-20 px-2 py-1 border rounded text-xs"
-                                      onChange={(e) => {
-                                        segment._tempEnd = parseFloat(e.target.value) || 0;
-                                      }}
-                                      disabled={isPublished}
-                                    />
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="px-2 py-1 h-6 text-xs"
-                                      onClick={() => {
-                                        if (segment._tempStart && segment._tempEnd && selectedAudioFile) {
-                                          createMappingMutation.mutate({
-                                            audioFileId: selectedAudioFile,
-                                            segmentId: segment.id,
-                                            startTime: segment._tempStart,
-                                            endTime: segment._tempEnd,
-                                            createdBy: "system"
-                                          });
-                                        }
-                                      }}
-                                      disabled={isPublished || createMappingMutation.isPending}
-                                    >
-                                      Save
-                                    </Button>
-                                  </div>
-                                )}
-                              </div>
+                  {segments && (segments as any).length > 0 ? (
+                    <div className="space-y-2">
+                      {(segments as any).map((segment: any) => (
+                        <div key={segment.id} className="p-3 border rounded">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium">{segment.conceptualName}</span>
+                              {segment.startTime !== undefined && segment.endTime !== undefined && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (audioPlayer) {
+                                      audioPlayer.currentTime = segment.startTime;
+                                      audioPlayer.play();
+                                      setIsPlaying(true);
+                                    }
+                                  }}
+                                >
+                                  <Play className="w-3 h-3" />
+                                </Button>
+                              )}
                             </div>
-                          ))}
+                            {segment.startTime !== undefined && segment.endTime !== undefined && (
+                              <div className="text-xs text-muted-foreground font-mono">
+                                {formatTime(segment.startTime)} - {formatTime(segment.endTime)}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground text-center py-8">
-                          No audio segments created yet. Create segments above to begin mapping.
-                        </p>
-                      )}
+                      ))}
                     </div>
-
-                    {/* Right Panel - Text Content */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium">Text Content</h4>
-                        <Select value={previewLanguage} onValueChange={setPreviewLanguage}>
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="te">Telugu</SelectItem>
-                            <SelectItem value="hi">Hindi</SelectItem>
-                            <SelectItem value="en">English/IAST</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900 max-h-96 overflow-y-auto">
-                        <div 
-                          className="text-sm leading-relaxed select-text cursor-text"
-                          onMouseUp={handleTextSelection}
-                          style={{ userSelect: 'text' }}
-                        >
-                          {chapter?.content?.[previewLanguage as keyof typeof chapter.content] || 
-                           'No content available for this language'}
-                        </div>
-                      </div>
-                      
-                      {selectedText && selectedSegment && (
-                        <div className="space-y-2 p-3 border border-blue-200 bg-blue-50 dark:bg-blue-900/20 rounded">
-                          <p className="text-sm text-blue-800 dark:text-blue-200">
-                            <strong>Selected text:</strong> "{selectedText.text}"
-                          </p>
-                          <p className="text-xs text-blue-600 dark:text-blue-300">
-                            Characters {selectedText.start} - {selectedText.end}
-                          </p>
-                          <Button
-                            onClick={handleMapSegment}
-                            disabled={mapSegmentMutation.isPending}
-                            className="w-full"
-                            size="sm"
-                          >
-                            <Link className="w-4 h-4 mr-2" />
-                            Map Segment to Text
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  ) : (
+                    <p className="text-muted-foreground">No audio segments created yet.</p>
+                  )}
                 </CardContent>
               </Card>
-            </>
-          ) : (
+            </div>
+          </TabsContent>
+
+          {/* Preview Tab */}
+          <TabsContent value="preview" className="space-y-6">
             <Card>
-              <CardContent className="p-12 text-center">
-                <Music className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">No Media Files Available</h3>
-                <p className="text-muted-foreground">
-                  Go to Media Content tab to upload media files for segmentation.
-                </p>
+              <CardHeader>
+                <CardTitle>Chapter Preview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {Object.entries(textContent).map(([lang, content]) => {
+                    if (!content) return null;
+                    
+                    const langName = lang === "te" ? "Telugu" : lang === "hi" ? "Hindi" : "English/IAST";
+                    
+                    return (
+                      <div key={lang} className="space-y-2">
+                        <h3 className="text-lg font-semibold">{langName}</h3>
+                        <div className="prose max-w-none">
+                          <div className="whitespace-pre-wrap">{content}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </CardContent>
             </Card>
-          )}
-        </TabsContent>
-
-        {/* Preview Phase */}
-        <TabsContent value="preview" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Eye className="w-5 h-5" />
-                Chapter Preview
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {Object.entries(textContent).map(([lang, content]) => {
-                  if (!content) return null;
-                  
-                  const langName = lang === "te" ? "Telugu" : lang === "hi" ? "Hindi" : "English/IAST";
-                  const langSegments = segments.filter((s: any) => s.language === lang);
-                  
-                  return (
-                    <div key={lang} className="space-y-2">
-                      <h3 className="text-lg font-semibold">{langName}</h3>
-                      <div className="prose max-w-none">
-                        {langSegments.length > 0 ? (
-                          <div className="whitespace-pre-wrap">
-                            {(() => {
-                              let lastIndex = 0;
-                              const elements: React.ReactNode[] = [];
-                              
-                              langSegments
-                                .sort((a: any, b: any) => a.textStart - b.textStart)
-                                .forEach((segment: any, index: number) => {
-                                  if (segment.textStart > lastIndex) {
-                                    elements.push(
-                                      <span key={`text-${index}`}>
-                                        {content.slice(lastIndex, segment.textStart)}
-                                      </span>
-                                    );
-                                  }
-                                  
-                                  elements.push(
-                                    <span
-                                      key={`segment-${segment.id}`}
-                                      className="bg-blue-100 hover:bg-blue-200 cursor-pointer px-1 rounded"
-                                      onClick={() => {
-                                        if (audioPlayer && selectedAudioFile) {
-                                          audioPlayer.currentTime = segment.startTime;
-                                          audioPlayer.play();
-                                          setIsPlaying(true);
-                                        }
-                                      }}
-                                    >
-                                      {content.slice(segment.textStart, segment.textEnd)}
-                                    </span>
-                                  );
-                                  
-                                  lastIndex = segment.textEnd;
-                                });
-                              
-                              if (lastIndex < content.length) {
-                                elements.push(
-                                  <span key="remaining">
-                                    {content.slice(lastIndex)}
-                                  </span>
-                                );
-                              }
-                              
-                              return elements;
-                            })()}
-                          </div>
-                        ) : (
-                          <div className="whitespace-pre-wrap">{content}</div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-                
-                {Object.values(textContent).every(content => !content) && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No content available. Add text content in the Text Content tab.
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
