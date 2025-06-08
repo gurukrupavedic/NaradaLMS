@@ -308,9 +308,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const segment of segments) {
         const mediaSegment = await storage.createMediaSegment({
           audioFileId: segment.audioFileId,
-          startTime: segment.startTime,
-          endTime: segment.endTime,
-          name: segment.name,
+          startTimestamp: segment.startTime,
+          endTimestamp: segment.endTime,
+          segmentName: segment.name,
           createdBy: "system"
         });
         createdSegments.push(mediaSegment);

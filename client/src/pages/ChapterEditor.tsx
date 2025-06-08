@@ -1376,12 +1376,12 @@ export default function ChapterEditor() {
                             <div key={segment.id} className="p-3 border rounded-lg bg-white dark:bg-gray-800">
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                  <div className="font-medium text-sm">{segment.name}</div>
+                                  <div className="font-medium text-sm">{segment.segmentName || segment.name}</div>
                                   <div className="text-xs text-muted-foreground mt-1">
-                                    Duration: {formatTime(segment.startTime)} - {formatTime(segment.endTime)}
+                                    Duration: {formatTime(segment.startTimestamp || segment.startTime)} - {formatTime(segment.endTimestamp || segment.endTime)}
                                   </div>
                                   <div className="text-xs text-blue-600 mt-1">
-                                    Length: {formatTime(segment.endTime - segment.startTime)}
+                                    Length: {formatTime((segment.endTimestamp || segment.endTime) - (segment.startTimestamp || segment.startTime))}
                                   </div>
                                 </div>
                                 <Button
@@ -1389,8 +1389,9 @@ export default function ChapterEditor() {
                                   size="sm"
                                   onClick={() => {
                                     if (audioPlayer) {
-                                      audioPlayer.currentTime = segment.startTime;
-                                      setCurrentTime(segment.startTime);
+                                      const startTime = segment.startTimestamp || segment.startTime;
+                                      audioPlayer.currentTime = startTime;
+                                      setCurrentTime(startTime);
                                     }
                                   }}
                                   className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
