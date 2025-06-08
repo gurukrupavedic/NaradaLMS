@@ -167,18 +167,7 @@ export class MemStorage implements IStorage {
     { id: 34, trackId: 3, title: "puṇyāhavācana pūjā vidhānaṁ", order: 9, status: "published", createdAt: new Date(), updatedAt: new Date(), createdBy: "system" }
   ];
 
-  private audioFiles: any[] = [
-    {
-      id: 12,
-      chapterId: 2,
-      filename: "c19b4027eef345c6a540169955e1b80a",
-      displayName: "Shraddha Suktam - 1",
-      duration: 99,
-      fileSize: 1999139,
-      uploadedBy: "system",
-      createdAt: new Date()
-    }
-  ];
+  private audioFiles: any[] = [];
 
   private segments: any[] = [];
   private mappings: any[] = [];
