@@ -195,6 +195,12 @@ export default function ChapterEditor() {
     enabled: !!chapterId,
   });
 
+  // Fetch media segments for selected audio file
+  const { data: mediaSegments } = useQuery({
+    queryKey: [`/api/admin/media-segments/${selectedAudioFile}`],
+    enabled: !!selectedAudioFile,
+  });
+
   const isPublished = chapter?.status === "published";
 
   // Initialize text content when chapter loads
@@ -1345,6 +1351,66 @@ export default function ChapterEditor() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Audio Segments Panel */}
+              {selectedAudioFile && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Clock className="h-5 w-5" />
+                      Audio Segments
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="text-sm text-muted-foreground">
+                      Audio File: {audioFiles && (audioFiles as any[]).find((f: any) => f.id === selectedAudioFile)?.displayName}
+                    </div>
+                    
+                    {/* Segments List */}
+                    <div className="space-y-2">
+                      <Label className="text-sm">Media Segments ({mediaSegments?.length || 0})</Label>
+                      <div className="max-h-64 overflow-y-auto space-y-2">
+                        {mediaSegments && mediaSegments.length > 0 ? (
+                          (mediaSegments as any[]).map((segment, index) => (
+                            <div key={segment.id} className="p-3 border rounded-lg bg-white dark:bg-gray-800">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm">{segment.name}</div>
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    Duration: {formatTime(segment.startTime)} - {formatTime(segment.endTime)}
+                                  </div>
+                                  <div className="text-xs text-blue-600 mt-1">
+                                    Length: {formatTime(segment.endTime - segment.startTime)}
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (audioPlayer) {
+                                      audioPlayer.currentTime = segment.startTime;
+                                      setCurrentTime(segment.startTime);
+                                    }
+                                  }}
+                                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+                                >
+                                  <Play className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">No audio segments created yet</p>
+                            <p className="text-xs">Add time marks and create segments</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
