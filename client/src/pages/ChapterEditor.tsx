@@ -782,50 +782,102 @@ export default function ChapterEditor() {
                 </CardContent>
               </Card>
 
-              {/* Audio Segments */}
+              {/* Text Content Panel */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Audio Segments</CardTitle>
+                  <CardTitle>Chapter Text</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Reference text for creating audio segments
+                  </p>
                 </CardHeader>
                 <CardContent>
-                  {segments && (segments as any).length > 0 ? (
-                    <div className="space-y-2">
-                      {(segments as any).map((segment: any) => (
-                        <div key={segment.id} className="p-3 border rounded">
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">{segment.conceptualName}</span>
-                              {segment.startTime !== undefined && segment.endTime !== undefined && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    if (audioPlayer) {
-                                      audioPlayer.currentTime = segment.startTime;
-                                      audioPlayer.play();
-                                      setIsPlaying(true);
-                                    }
-                                  }}
-                                >
-                                  <Play className="w-3 h-3" />
-                                </Button>
-                              )}
-                            </div>
-                            {segment.startTime !== undefined && segment.endTime !== undefined && (
-                              <div className="text-xs text-muted-foreground font-mono">
-                                {formatTime(segment.startTime)} - {formatTime(segment.endTime)}
-                              </div>
-                            )}
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {Object.entries(textContent).map(([lang, content]) => {
+                      if (!content) return null;
+                      
+                      const langName = lang === "te" ? "Telugu" : lang === "hi" ? "Hindi" : "English/IAST";
+                      
+                      return (
+                        <div key={lang} className="space-y-2">
+                          <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                            {langName}
+                          </h4>
+                          <div className="text-sm leading-relaxed whitespace-pre-wrap p-3 bg-gray-50 dark:bg-gray-900 rounded border">
+                            {content}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground">No audio segments created yet.</p>
-                  )}
+                      );
+                    })}
+                    
+                    {Object.values(textContent).every(content => !content) && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>No text content available</p>
+                        <p className="text-xs">Add content in the Text Content tab first</p>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Audio Segments Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Audio Segments</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Segments created from time marks will appear here
+                </p>
+              </CardHeader>
+              <CardContent>
+                {segments && (segments as any).length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {(segments as any).map((segment: any) => (
+                      <div key={segment.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">{segment.conceptualName}</span>
+                            {segment.startTime !== undefined && segment.endTime !== undefined && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (audioPlayer) {
+                                    audioPlayer.currentTime = segment.startTime;
+                                    audioPlayer.play();
+                                    setIsPlaying(true);
+                                  }
+                                }}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Play className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
+                          {segment.startTime !== undefined && segment.endTime !== undefined && (
+                            <div className="text-xs text-muted-foreground font-mono">
+                              {formatTime(segment.startTime)} - {formatTime(segment.endTime)}
+                              <span className="ml-2 text-xs">
+                                ({Math.round(segment.endTime - segment.startTime)}s)
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                      <MapPin className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-lg font-medium mb-2">No Audio Segments</h3>
+                    <p className="text-sm">
+                      Select an audio file, mark time points, and create segments to get started.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Preview Tab */}
