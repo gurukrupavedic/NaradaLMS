@@ -385,9 +385,15 @@ export default function ChapterEditor() {
 
     const range = selection.getRangeAt(0);
     const container = range.commonAncestorContainer;
-    const textContainer = container.nodeType === Node.TEXT_NODE ? container.parentElement : container;
+    let element: Element | null = null;
     
-    if (!textContainer?.closest('[data-segmentable]')) return;
+    if (container.nodeType === Node.TEXT_NODE) {
+      element = container.parentElement;
+    } else if (container.nodeType === Node.ELEMENT_NODE) {
+      element = container as Element;
+    }
+    
+    if (!element?.closest('[data-segmentable]')) return;
 
     const selectedText = selection.toString().trim();
     if (!selectedText) return;
@@ -1112,38 +1118,112 @@ export default function ChapterEditor() {
                 </CardContent>
               </Card>
 
-              {/* Audio Segments */}
+              {/* Audio-Text Mapping Panel */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Audio Segments</CardTitle>
+                  <CardTitle>Audio-Text Mapping</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  {segments && (segments as any).length > 0 ? (
-                    <div className="space-y-2">
-                      {(segments as any).map((segment: any) => (
-                        <div key={segment.id} className="p-3 border rounded">
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">{segment.conceptualName}</span>
-                              {segment.startTime !== undefined && segment.endTime !== undefined && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    if (audioPlayer) {
-                                      audioPlayer.currentTime = segment.startTime;
-                                      audioPlayer.play();
-                                      setIsPlaying(true);
-                                    }
-                                  }}
-                                >
-                                  <Play className="w-3 h-3" />
-                                </Button>
-                              )}
+                <CardContent className="space-y-4">
+                  {segments && segments.length > 0 ? (
+                    <div className="space-y-3">
+                      <Label className="text-sm">Map Text Segments to Audio</Label>
+                      
+                      {segments.map((segment) => (
+                        <div key={segment.id} className="border rounded-lg p-3">
+                          <div className="space-y-3">
+                            {/* Segment Info */}
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="font-medium text-sm">{segment.conceptualName}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {Object.entries(segment.textReferences).map(([lang, ref]) => (
+                                    <div key={lang}>
+                                      {lang.toUpperCase()}: {ref?.start}-{ref?.end}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              {/* Audio mapping status */}
+                              <div className={`text-xs px-2 py-1 rounded-full ${
+                                segment.audioFileId && segment.startTime !== undefined 
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                  : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                              }`}>
+                                {segment.audioFileId && segment.startTime !== undefined ? 'Mapped' : 'Unmapped'}
+                              </div>
                             </div>
-                            {segment.startTime !== undefined && segment.endTime !== undefined && (
-                              <div className="text-xs text-muted-foreground font-mono">
-                                {formatTime(segment.startTime)} - {formatTime(segment.endTime)}
+
+                            {/* Current mapping display */}
+                            {segment.audioFileId && segment.startTime !== undefined && (
+                              <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded border text-sm">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-green-700 dark:text-green-400 font-mono">
+                                    {formatTime(segment.startTime)} - {formatTime(segment.endTime || 0)}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        if (audioPlayer && segment.startTime !== undefined) {
+                                          audioPlayer.currentTime = segment.startTime;
+                                          audioPlayer.play();
+                                          setIsPlaying(true);
+                                        }
+                                      }}
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      <Play className="w-3 h-3" />
+                                    </Button>
+                                    {!isPublished && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          // Delete audio mapping
+                                          // This would need an API endpoint to delete mappings
+                                          toast({ title: "Mapping removal not yet implemented", variant: "destructive" });
+                                        }}
+                                        className="h-6 w-6 p-0 text-red-600"
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Mapping controls for unmapped segments */}
+                            {(!segment.audioFileId || segment.startTime === undefined) && selectedAudioFile && !isPublished && (
+                              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border">
+                                <div className="text-xs text-blue-700 dark:text-blue-400 mb-2">
+                                  Map to current audio position: {formatTime(currentTime)}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      // Set start time for this segment
+                                      const startTime = currentTime;
+                                      createAudioMappingMutation.mutate({
+                                        audioFileId: selectedAudioFile,
+                                        segmentId: segment.id,
+                                        startTime: startTime,
+                                        endTime: startTime + 10 // Default 10 second duration
+                                      });
+                                    }}
+                                    disabled={createAudioMappingMutation.isPending}
+                                  >
+                                    <MapPin className="w-3 h-3 mr-1" />
+                                    Map Here
+                                  </Button>
+                                  <span className="text-xs text-muted-foreground">
+                                    (Creates 10s segment)
+                                  </span>
+                                </div>
                               </div>
                             )}
                           </div>
@@ -1151,7 +1231,11 @@ export default function ChapterEditor() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground">No audio segments created yet.</p>
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Music className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No text segments available</p>
+                      <p className="text-xs">Create text segments first to map audio</p>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -1160,29 +1244,141 @@ export default function ChapterEditor() {
 
           {/* Preview Tab */}
           <TabsContent value="preview" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Chapter Preview</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {Object.entries(textContent).map(([lang, content]) => {
-                    if (!content) return null;
-                    
-                    const langName = lang === "te" ? "Telugu" : lang === "hi" ? "Hindi" : "English/IAST";
-                    
-                    return (
-                      <div key={lang} className="space-y-2">
-                        <h3 className="text-lg font-semibold">{langName}</h3>
-                        <div className="prose max-w-none">
-                          <div className="whitespace-pre-wrap">{content}</div>
-                        </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Audio Player Control */}
+              {selectedAudioFile && (
+                <Card className="lg:col-span-3">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <Music className="w-5 h-5" />
+                        Audio Playback
+                      </CardTitle>
+                      <div className="text-sm text-muted-foreground">
+                        {audioFiles && audioFiles.find((f: any) => f.id === selectedAudioFile)?.displayName}
                       </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-4">
+                      <Button
+                        onClick={handlePlayPause}
+                        variant="outline"
+                        size="sm"
+                      >
+                        {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                      </Button>
+                      <div className="flex-1">
+                        <div className="text-sm font-mono mb-1">
+                          {formatTime(currentTime)} / {formatTime(duration)}
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max={duration || 0}
+                          value={currentTime}
+                          onChange={(e) => {
+                            const newTime = parseFloat(e.target.value);
+                            if (audioPlayer) {
+                              audioPlayer.currentTime = newTime;
+                              setCurrentTime(newTime);
+                            }
+                          }}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Interactive Content Display */}
+              {Object.entries(textContent).map(([lang, content]) => {
+                if (!content) return null;
+                
+                const langName = lang === "te" ? "Telugu" : lang === "hi" ? "Hindi" : "English/IAST";
+                
+                return (
+                  <Card key={lang}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <span>{langName}</span>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <span className="w-3 h-3 bg-blue-100 border border-blue-300 rounded"></span>
+                            Text Segments
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className="w-3 h-3 bg-green-100 border border-green-300 rounded"></span>
+                            Audio Mapped
+                          </span>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`prose max-w-none text-sm leading-relaxed ${
+                        lang === 'te' ? 'font-telugu' : 
+                        lang === 'hi' ? 'font-devanagari' : 
+                        'font-mono'
+                      }`}>
+                        {renderTextWithSegments(content, lang as 'te' | 'hi' | 'en')}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+
+              {/* Segment Overview */}
+              {segments && segments.length > 0 && (
+                <Card className="lg:col-span-3">
+                  <CardHeader>
+                    <CardTitle>Segment Overview</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {segments.map((segment) => (
+                        <div key={segment.id} className="border rounded-lg p-3">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-sm truncate">{segment.conceptualName}</span>
+                              {segment.audioFileId && segment.startTime !== undefined && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (audioPlayer && segment.startTime !== undefined) {
+                                      audioPlayer.currentTime = segment.startTime;
+                                      audioPlayer.play();
+                                      setIsPlaying(true);
+                                    }
+                                  }}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Play className="w-3 h-3" />
+                                </Button>
+                              )}
+                            </div>
+                            
+                            <div className="text-xs text-muted-foreground space-y-1">
+                              {Object.entries(segment.textReferences).map(([lang, ref]) => (
+                                <div key={lang}>
+                                  {lang.toUpperCase()}: {ref?.start}-{ref?.end}
+                                </div>
+                              ))}
+                              {segment.audioFileId && segment.startTime !== undefined && (
+                                <div className="text-green-600">
+                                  Audio: {formatTime(segment.startTime)} - {formatTime(segment.endTime || 0)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
