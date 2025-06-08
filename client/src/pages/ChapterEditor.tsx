@@ -422,7 +422,7 @@ export default function ChapterEditor() {
   };
 
   const handlePlaySegment = (segment: any) => {
-    if (audioPlayer) {
+    if (audioPlayer && segment.startTime !== undefined && segment.endTime !== undefined) {
       audioPlayer.currentTime = segment.startTime;
       audioPlayer.play();
       setIsPlaying(true);
@@ -437,6 +437,12 @@ export default function ChapterEditor() {
         }
       };
       requestAnimationFrame(checkTime);
+    } else {
+      toast({ 
+        title: "Cannot play segment", 
+        description: "This segment doesn't have audio timing information yet", 
+        variant: "destructive" 
+      });
     }
   };
 
@@ -930,16 +936,18 @@ export default function ChapterEditor() {
                                 <span className="text-sm font-mono">
                                   {segment.startTime ? `${segment.startTime.toFixed(2)}s - ${segment.endTime.toFixed(2)}s` : segment.conceptualName}
                                 </span>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handlePlaySegment(segment);
-                                  }}
-                                >
-                                  <Play className="w-3 h-3" />
-                                </Button>
+                                {segment.startTime !== undefined && segment.endTime !== undefined && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handlePlaySegment(segment);
+                                    }}
+                                  >
+                                    <Play className="w-3 h-3" />
+                                  </Button>
+                                )}
                               </div>
                             </div>
                           ))}
