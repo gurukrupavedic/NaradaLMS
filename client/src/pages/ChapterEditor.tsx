@@ -151,7 +151,7 @@ export default function ChapterEditor() {
       formData.append('audio', file);
       formData.append('chapterId', chapterId.toString());
       
-      const response = await fetch('/api/admin/audio-files', {
+      const response = await fetch(`/api/admin/audio-files/${chapterId}/upload`, {
         method: 'POST',
         body: formData,
       });
