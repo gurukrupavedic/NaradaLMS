@@ -224,6 +224,20 @@ export default function ChapterEditor() {
     },
   });
 
+  // Create audio mapping mutation
+  const createMappingMutation = useMutation({
+    mutationFn: async (mappingData: any) => {
+      await apiRequest("POST", "/api/admin/mappings", mappingData);
+    },
+    onSuccess: () => {
+      toast({ title: "Audio mapping created successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to create audio mapping", description: error.message, variant: "destructive" });
+    },
+  });
+
   // Publish/unpublish mutation
   const toggleStatusMutation = useMutation({
     mutationFn: async () => {
@@ -932,21 +946,68 @@ export default function ChapterEditor() {
                               }`}
                               onClick={() => setSelectedSegment(segment)}
                             >
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-mono">
-                                  {segment.startTime ? `${segment.startTime.toFixed(2)}s - ${segment.endTime.toFixed(2)}s` : segment.conceptualName}
-                                </span>
-                                {segment.startTime !== undefined && segment.endTime !== undefined && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handlePlaySegment(segment);
-                                    }}
-                                  >
-                                    <Play className="w-3 h-3" />
-                                  </Button>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">{segment.conceptualName}</span>
+                                  {segment.startTime !== undefined && segment.endTime !== undefined && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handlePlaySegment(segment);
+                                      }}
+                                    >
+                                      <Play className="w-3 h-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                                {segment.startTime !== undefined && segment.endTime !== undefined ? (
+                                  <div className="text-xs text-muted-foreground font-mono">
+                                    {segment.startTime.toFixed(2)}s - {segment.endTime.toFixed(2)}s
+                                  </div>
+                                ) : (
+                                  <div className="flex gap-2 text-xs">
+                                    <input
+                                      type="number"
+                                      step="0.1"
+                                      placeholder="Start (s)"
+                                      className="w-20 px-2 py-1 border rounded text-xs"
+                                      onChange={(e) => {
+                                        segment._tempStart = parseFloat(e.target.value) || 0;
+                                      }}
+                                      disabled={isPublished}
+                                    />
+                                    <input
+                                      type="number"
+                                      step="0.1"
+                                      placeholder="End (s)"
+                                      className="w-20 px-2 py-1 border rounded text-xs"
+                                      onChange={(e) => {
+                                        segment._tempEnd = parseFloat(e.target.value) || 0;
+                                      }}
+                                      disabled={isPublished}
+                                    />
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="px-2 py-1 h-6 text-xs"
+                                      onClick={() => {
+                                        if (segment._tempStart && segment._tempEnd && selectedAudioFile) {
+                                          createMappingMutation.mutate({
+                                            audioFileId: selectedAudioFile,
+                                            segmentId: segment.id,
+                                            startTime: segment._tempStart,
+                                            endTime: segment._tempEnd,
+                                            createdBy: "system"
+                                          });
+                                        }
+                                      }}
+                                      disabled={isPublished || createMappingMutation.isPending}
+                                    >
+                                      Save
+                                    </Button>
+                                  </div>
                                 )}
                               </div>
                             </div>
