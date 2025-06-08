@@ -77,8 +77,75 @@ export default function ChapterEditor() {
   const [duration, setDuration] = useState(0);
   const [timeMarks, setTimeMarks] = useState<number[]>([]);
   const [selectedMark, setSelectedMark] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [editingTimestamp, setEditingTimestamp] = useState<number | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const timelineRef = useRef<HTMLInputElement>(null);
   const [editingFileId, setEditingFileId] = useState<number | null>(null);
+
+  // Helper functions for drag operations
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging || !selectedMark || !timelineRef.current) return;
+    
+    const rect = timelineRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, x / rect.width));
+    const newTime = percentage * duration;
+    
+    setTimeMarks(prev => 
+      prev.map(mark => mark === selectedMark ? newTime : mark).sort((a, b) => a - b)
+    );
+    setSelectedMark(newTime);
+  }, [isDragging, selectedMark, duration]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const updateMarkTimestamp = (oldMark: number, newTimestamp: string) => {
+    const [minutes, seconds] = newTimestamp.split(':').map(Number);
+    if (isNaN(minutes) || isNaN(seconds) || minutes < 0 || seconds < 0 || seconds >= 60) {
+      toast({
+        title: "Invalid Timestamp",
+        description: "Please enter a valid timestamp in MM:SS format",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const newTime = minutes * 60 + seconds;
+    if (newTime > duration) {
+      toast({
+        title: "Timestamp Too Large",
+        description: "Timestamp cannot exceed audio duration",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setTimeMarks(prev => 
+      prev.map(mark => mark === oldMark ? newTime : mark).sort((a, b) => a - b)
+    );
+    setSelectedMark(newTime);
+    setEditingTimestamp(null);
+    
+    toast({
+      title: "Timestamp Updated",
+      description: `Mark updated to ${Math.floor(newTime / 60)}:${Math.floor(newTime % 60).toString().padStart(2, '0')}`
+    });
+  };
+
+  // Add global mouse event listeners for dragging
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp]);
   const [editingFileName, setEditingFileName] = useState("");
   
   // Media segmentation state
@@ -934,6 +1001,7 @@ export default function ChapterEditor() {
                         <div className="space-y-2">
                           <div className="relative mb-8">
                             <input
+                              ref={timelineRef}
                               type="range"
                               min="0"
                               max={duration || 0}
@@ -953,31 +1021,66 @@ export default function ChapterEditor() {
                               return (
                                 <div
                                   key={index}
-                                  className="absolute top-full flex flex-col items-center cursor-pointer"
+                                  className="absolute top-full flex flex-col items-center"
                                   style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
-                                  onClick={() => {
-                                    setSelectedMark(selectedMark === mark ? null : mark);
-                                    if (audioRef.current) {
-                                      audioRef.current.currentTime = mark;
-                                      setCurrentTime(mark);
-                                    }
-                                  }}
-                                  title={`Mark at ${timestamp}`}
                                 >
                                   {/* Triangle pointing up */}
                                   <div 
-                                    className={`w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] ${
+                                    className={`w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] cursor-pointer ${
                                       selectedMark === mark 
                                         ? 'border-l-transparent border-r-transparent border-b-red-500 hover:border-b-red-600' 
                                         : 'border-l-transparent border-r-transparent border-b-blue-500 hover:border-b-blue-600'
-                                    } transition-colors`}
+                                    } transition-colors ${isDragging && selectedMark === mark ? 'cursor-grabbing' : 'cursor-grab'}`}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      setSelectedMark(mark);
+                                      setIsDragging(true);
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (!isDragging) {
+                                        setSelectedMark(selectedMark === mark ? null : mark);
+                                        if (audioRef.current) {
+                                          audioRef.current.currentTime = mark;
+                                          setCurrentTime(mark);
+                                        }
+                                      }
+                                    }}
+                                    title={`Mark at ${timestamp} - Click to select, drag to move`}
                                   />
-                                  {/* Timestamp label */}
-                                  <div className={`text-xs mt-1 font-mono ${
-                                    selectedMark === mark ? 'text-red-600 font-semibold' : 'text-blue-600'
-                                  }`}>
-                                    {timestamp}
-                                  </div>
+                                  {/* Editable Timestamp label */}
+                                  {editingTimestamp === mark ? (
+                                    <input
+                                      type="text"
+                                      defaultValue={timestamp}
+                                      className="text-xs mt-1 font-mono w-12 text-center border rounded px-1"
+                                      autoFocus
+                                      onBlur={(e) => {
+                                        updateMarkTimestamp(mark, e.target.value);
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          updateMarkTimestamp(mark, e.currentTarget.value);
+                                        } else if (e.key === 'Escape') {
+                                          setEditingTimestamp(null);
+                                        }
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  ) : (
+                                    <div 
+                                      className={`text-xs mt-1 font-mono cursor-pointer hover:underline ${
+                                        selectedMark === mark ? 'text-red-600 font-semibold' : 'text-blue-600'
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingTimestamp(mark);
+                                      }}
+                                      title="Click to edit timestamp"
+                                    >
+                                      {timestamp}
+                                    </div>
+                                  )}
                                 </div>
                               );
                             })}
