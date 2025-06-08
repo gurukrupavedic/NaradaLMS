@@ -601,9 +601,9 @@ export default function ChapterEditor() {
 
           {/* Segmentation & Mapping Tab */}
           <TabsContent value="segmentation" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Audio Player and Controls */}
-              <Card>
+              <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle>Audio Segmentation</CardTitle>
                 </CardHeader>
