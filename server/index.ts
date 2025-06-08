@@ -40,7 +40,23 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Using simplified in-memory storage for development
+  // Initialize database and seed with authentic data if empty
+  const { storage } = await import("./storage-database");
+  
+  // Check if database needs seeding
+  const tracks = await storage.getAllTracks();
+  if (tracks.length === 0) {
+    const { seedAuthenticData } = await import("./seed-authentic-data");
+    
+    // Create system user for seeding
+    await storage.upsertUser({
+      id: "system",
+      email: "system@vediclms.local",
+    });
+    
+    await seedAuthenticData("system");
+    console.log("Database seeded with authentic Vedic content");
+  }
   
   const server = await registerRoutes(app);
 
