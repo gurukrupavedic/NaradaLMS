@@ -86,6 +86,20 @@ export default function ChapterEditor() {
   const [segmentName, setSegmentName] = useState("");
   const [showTextSegmentation, setShowTextSegmentation] = useState(false);
 
+  // Chapter status toggle mutation
+  const toggleStatusMutation = useMutation({
+    mutationFn: async (newStatus: 'draft' | 'published') => {
+      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}/status`, { status: newStatus });
+    },
+    onSuccess: () => {
+      toast({ title: "Chapter status updated successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${chapterId}/details`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update chapter status", description: error.message, variant: "destructive" });
+    },
+  });
+
   // Fetch chapter details
   const { data: chapter, isLoading: chapterLoading } = useQuery<ChapterData>({
     queryKey: [`/api/admin/chapters/${chapterId}/details`],
@@ -93,7 +107,7 @@ export default function ChapterEditor() {
   });
 
   // Fetch audio files
-  const { data: audioFiles, refetch: refetchAudioFiles } = useQuery({
+  const { data: audioFiles, refetch: refetchAudioFiles } = useQuery<any[]>({
     queryKey: [`/api/admin/audio-files/${chapterId}`, refreshTrigger],
     enabled: !!chapterId,
   });
@@ -579,6 +593,18 @@ export default function ChapterEditor() {
                     {chapter?.status}
                   </span>
                 </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant={chapter?.status === 'published' ? 'destructive' : 'default'}
+                  onClick={() => {
+                    const newStatus = chapter?.status === 'published' ? 'draft' : 'published';
+                    toggleStatusMutation.mutate(newStatus);
+                  }}
+                  disabled={toggleStatusMutation.isPending}
+                >
+                  {chapter?.status === 'published' ? 'Unpublish' : 'Publish'}
+                </Button>
               </div>
             </div>
           </div>
@@ -1255,7 +1281,7 @@ export default function ChapterEditor() {
                         Audio Playback
                       </CardTitle>
                       <div className="text-sm text-muted-foreground">
-                        {audioFiles && audioFiles.find((f: any) => f.id === selectedAudioFile)?.displayName}
+                        {audioFiles && (audioFiles as any[]).find((f: any) => f.id === selectedAudioFile)?.displayName}
                       </div>
                     </div>
                   </CardHeader>

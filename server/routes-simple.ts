@@ -129,6 +129,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chapter status toggle (publish/unpublish)
+  app.patch('/api/admin/chapters/:chapterId/status', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const { status } = req.body;
+      
+      if (!['draft', 'published'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be 'draft' or 'published'" });
+      }
+      
+      const chapter = await storage.updateChapter(chapterId, { status });
+      res.json(chapter);
+    } catch (error) {
+      console.error("Error updating chapter status:", error);
+      res.status(500).json({ message: "Failed to update chapter status" });
+    }
+  });
+
   // Audio file routes
   app.get('/api/admin/audio-files/:chapterId', async (req, res) => {
     try {
