@@ -37,6 +37,7 @@ function Router() {
           <Route path="/content-management" component={() => <ContentManagement />} />
           <Route path="/content-management/track/:trackId" component={() => <TrackChapters />} />
           <Route path="/chapter-editor/:chapterId" component={() => <ChapterEditor />} />
+          <Route path="/admin/chapters/:chapterId/segmentation" component={() => <SegmentationEditor />} />
           <Route path="/tracks/:trackId" component={TrackView} />
           <Route path="/chapters/:id" component={ChapterView} />
         </>

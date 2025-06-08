@@ -11,8 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   FileText, Upload, Music, Eye, ChevronLeft, Play, Pause, Square, 
-  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2
+  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2
 } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface ChapterData {
   id: number;
@@ -593,6 +594,14 @@ export default function ChapterEditor() {
                 </p>
               </div>
               <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(`/admin/chapters/${chapterId}/segmentation`, '_blank')}
+                  className="flex items-center gap-2"
+                >
+                  <Link2 className="w-4 h-4" />
+                  Advanced Segmentation
+                </Button>
                 <Button
                   variant={chapter?.status === 'published' ? 'destructive' : 'default'}
                   onClick={() => {
