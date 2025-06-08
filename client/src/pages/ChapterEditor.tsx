@@ -196,9 +196,10 @@ export default function ChapterEditor() {
   });
 
   // Fetch media segments for selected audio file
+  const selectedAudioFileId = typeof selectedAudioFile === 'object' ? selectedAudioFile?.id : selectedAudioFile;
   const { data: mediaSegments } = useQuery({
-    queryKey: [`/api/admin/media-segments/${selectedAudioFile}`],
-    enabled: !!selectedAudioFile,
+    queryKey: [`/api/admin/media-segments/${selectedAudioFileId}`],
+    enabled: !!selectedAudioFileId,
   });
 
   const isPublished = chapter?.status === "published";
@@ -271,7 +272,7 @@ export default function ChapterEditor() {
         const endTime = i === sortedMarks.length ? duration : sortedMarks[i];
         
         segments.push({
-          audioFileId: selectedAudioFile,
+          audioFileId: typeof selectedAudioFile === 'object' ? selectedAudioFile.id : selectedAudioFile,
           startTime,
           endTime,
           name: `Segment ${i + 1}`
@@ -282,7 +283,7 @@ export default function ChapterEditor() {
       return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/media-segments'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/media-segments/${selectedAudioFileId}`] });
       setTimeMarks([]);
       setSelectedMark(null);
       toast({
@@ -1368,9 +1369,9 @@ export default function ChapterEditor() {
                     
                     {/* Segments List */}
                     <div className="space-y-2">
-                      <Label className="text-sm">Media Segments ({mediaSegments?.length || 0})</Label>
+                      <Label className="text-sm">Media Segments ({Array.isArray(mediaSegments) ? mediaSegments.length : 0})</Label>
                       <div className="max-h-64 overflow-y-auto space-y-2">
-                        {mediaSegments && mediaSegments.length > 0 ? (
+                        {Array.isArray(mediaSegments) && mediaSegments.length > 0 ? (
                           (mediaSegments as any[]).map((segment, index) => (
                             <div key={segment.id} className="p-3 border rounded-lg bg-white dark:bg-gray-800">
                               <div className="flex items-start justify-between">
