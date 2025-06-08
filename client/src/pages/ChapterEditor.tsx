@@ -169,7 +169,7 @@ export default function ChapterEditor() {
   // Update filename mutation
   const updateFileNameMutation = useMutation({
     mutationFn: async ({ fileId, newName }: { fileId: number; newName: string }) => {
-      await apiRequest("PATCH", `/api/admin/audio-files/${fileId}`, { originalName: newName });
+      await apiRequest("PATCH", `/api/admin/audio-files/${fileId}`, { displayName: newName });
     },
     onSuccess: () => {
       toast({ title: "Filename updated successfully" });
@@ -538,7 +538,7 @@ export default function ChapterEditor() {
                                   <div className="flex items-center gap-2">
                                     <Music className="w-4 h-4 text-blue-500 flex-shrink-0" />
                                     <p className="font-medium text-sm truncate">
-                                      {file.originalName || file.filename}
+                                      {file.displayName || file.filename}
                                     </p>
                                   </div>
                                   <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
@@ -554,7 +554,7 @@ export default function ChapterEditor() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => startEditing(file.id, file.originalName || file.filename)}
+                                  onClick={() => startEditing(file.id, file.displayName || file.filename)}
                                   className="h-8 w-8 p-0"
                                 >
                                   <Edit2 className="w-3 h-3" />
