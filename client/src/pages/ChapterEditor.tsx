@@ -146,6 +146,19 @@ export default function ChapterEditor() {
       };
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  // Cleanup audio player on unmount
+  useEffect(() => {
+    return () => {
+      if (audioPlayer) {
+        audioPlayer.pause();
+        audioPlayer.removeEventListener('loadedmetadata', () => {});
+        audioPlayer.removeEventListener('timeupdate', () => {});
+        audioPlayer.removeEventListener('error', () => {});
+        setAudioPlayer(null);
+      }
+    };
+  }, [audioPlayer]);
   const [editingFileName, setEditingFileName] = useState("");
 
 
@@ -1368,27 +1381,53 @@ export default function ChapterEditor() {
                       <Select
                         value={selectedAudioFile?.toString() || ""}
                         onValueChange={(value) => {
-                          const fileId = parseInt(value);
-                          setSelectedAudioFile(fileId);
-                          
-                          // Find and load the audio file
-                          const file = audioFiles && Array.isArray(audioFiles) 
-                            ? (audioFiles as any[]).find((f: any) => f.id === fileId)
-                            : null;
-                          
-                          if (file) {
-                            const audio = new Audio(`/uploads/${file.filename}`);
-                            audio.addEventListener('loadedmetadata', () => {
-                              setDuration(audio.duration);
-                              setCurrentTime(0);
-                              setIsPlaying(false);
-                              console.log('Audio loaded successfully');
+                          try {
+                            const fileId = parseInt(value);
+                            if (isNaN(fileId)) return;
+                            
+                            setSelectedAudioFile(fileId);
+                            
+                            // Find and load the audio file
+                            const file = audioFiles && Array.isArray(audioFiles) 
+                              ? (audioFiles as any[]).find((f: any) => f.id === fileId)
+                              : null;
+                            
+                            if (file && file.filename) {
+                              // Clean up existing audio player
+                              if (audioPlayer) {
+                                audioPlayer.pause();
+                                audioPlayer.removeEventListener('loadedmetadata', () => {});
+                                audioPlayer.removeEventListener('timeupdate', () => {});
+                              }
+                              
+                              const audio = new Audio(`/uploads/${file.filename}`);
+                              audio.addEventListener('loadedmetadata', () => {
+                                setDuration(audio.duration);
+                                setCurrentTime(0);
+                                setIsPlaying(false);
+                                console.log('Audio loaded successfully');
+                              });
+                              audio.addEventListener('error', (e) => {
+                                console.error('Audio loading error:', e);
+                                toast({
+                                  title: "Audio Load Error",
+                                  description: "Failed to load audio file",
+                                  variant: "destructive"
+                                });
+                              });
+                              setAudioPlayer(audio);
+                            }
+                            
+                            // Refresh media segments for the selected audio file
+                            queryClient.invalidateQueries({ queryKey: [`/api/admin/media-segments/${fileId}`] });
+                          } catch (error) {
+                            console.error('Error selecting audio file:', error);
+                            toast({
+                              title: "Selection Error",
+                              description: "Failed to select audio file",
+                              variant: "destructive"
                             });
-                            setAudioPlayer(audio);
                           }
-                          
-                          // Refresh media segments for the selected audio file
-                          queryClient.invalidateQueries({ queryKey: [`/api/admin/media-segments/${fileId}`] });
                         }}
                       >
                         <SelectTrigger className="w-full">
