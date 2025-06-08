@@ -102,8 +102,18 @@ export default function ChapterEditor() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("audio", file);
-      const response = await apiRequest("POST", `/api/admin/audio-files/${chapterId}/upload`, formData);
-      return response;
+      
+      const response = await fetch(`/api/admin/audio-files/${chapterId}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Upload failed");
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({ title: "Audio file uploaded successfully" });
