@@ -932,7 +932,7 @@ export default function ChapterEditor() {
 
                         {/* Timeline */}
                         <div className="space-y-2">
-                          <div className="relative">
+                          <div className="relative mb-8">
                             <input
                               type="range"
                               min="0"
@@ -946,18 +946,15 @@ export default function ChapterEditor() {
                               }}
                               className="w-full"
                             />
-                            {/* Time Marks */}
+                            {/* Time Mark Triangles */}
                             {timeMarks.map((mark, index) => {
                               const position = (mark / duration) * 100;
+                              const timestamp = `${Math.floor(mark / 60)}:${Math.floor(mark % 60).toString().padStart(2, '0')}`;
                               return (
                                 <div
                                   key={index}
-                                  className={`absolute top-0 w-2 h-6 cursor-pointer transform -translate-x-1 ${
-                                    selectedMark === mark 
-                                      ? 'bg-red-500 border-2 border-red-700' 
-                                      : 'bg-blue-500 border border-blue-700 hover:bg-blue-600'
-                                  } rounded-sm shadow-sm`}
-                                  style={{ left: `${position}%` }}
+                                  className="absolute top-full flex flex-col items-center cursor-pointer"
+                                  style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
                                   onClick={() => {
                                     setSelectedMark(selectedMark === mark ? null : mark);
                                     if (audioRef.current) {
@@ -965,8 +962,23 @@ export default function ChapterEditor() {
                                       setCurrentTime(mark);
                                     }
                                   }}
-                                  title={`Mark at ${Math.floor(mark / 60)}:${Math.floor(mark % 60).toString().padStart(2, '0')}`}
-                                />
+                                  title={`Mark at ${timestamp}`}
+                                >
+                                  {/* Triangle pointing up */}
+                                  <div 
+                                    className={`w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] ${
+                                      selectedMark === mark 
+                                        ? 'border-l-transparent border-r-transparent border-b-red-500 hover:border-b-red-600' 
+                                        : 'border-l-transparent border-r-transparent border-b-blue-500 hover:border-b-blue-600'
+                                    } transition-colors`}
+                                  />
+                                  {/* Timestamp label */}
+                                  <div className={`text-xs mt-1 font-mono ${
+                                    selectedMark === mark ? 'text-red-600 font-semibold' : 'text-blue-600'
+                                  }`}>
+                                    {timestamp}
+                                  </div>
+                                </div>
                               );
                             })}
                           </div>
