@@ -62,6 +62,55 @@ export default function ChapterEditor() {
   const queryClient = useQueryClient();
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // Safe time formatting function
+  const formatTime = (seconds: number): string => {
+    if (!seconds || seconds < 0 || !isFinite(seconds)) return "0:00";
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // Safe audio playback function for segments
+  const playAudioSegment = (segment: any) => {
+    if (!audioPlayer) {
+      toast({
+        title: "Audio Not Ready",
+        description: "Please wait for audio to load",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const startTime = segment.startTimestamp || segment.startTime || 0;
+    
+    // Validate timestamp
+    if (typeof startTime !== 'number' || !isFinite(startTime) || startTime < 0) {
+      console.warn('Invalid start time for segment:', segment);
+      toast({
+        title: "Invalid Timestamp", 
+        description: "This segment has an invalid start time",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      audioPlayer.currentTime = startTime;
+      setCurrentTime(startTime);
+      if (!isPlaying) {
+        audioPlayer.play();
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error('Error playing segment:', error);
+      toast({
+        title: "Playback Error",
+        description: "Failed to play audio segment", 
+        variant: "destructive"
+      });
+    }
+  };
+
   // State management
   const [textContent, setTextContent] = useState({
     te: "",
@@ -403,11 +452,7 @@ export default function ChapterEditor() {
     toast({ title: "All time marks cleared" });
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = (seconds % 60).toFixed(2);
-    return `${mins}:${secs.padStart(5, '0')}`;
-  };
+
 
   const handleCreateAudioSegments = () => {
     if (timeMarks.length === 0) {
