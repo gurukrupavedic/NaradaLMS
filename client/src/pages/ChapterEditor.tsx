@@ -1364,7 +1364,12 @@ export default function ChapterEditor() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="text-sm text-muted-foreground">
-                      Audio File: {audioFiles && (audioFiles as any[]).find((f: any) => f.id === selectedAudioFile)?.displayName}
+                      Audio File: {(() => {
+                        if (!selectedAudioFile) return 'None selected';
+                        if (!audioFiles || !Array.isArray(audioFiles)) return 'Loading...';
+                        const file = (audioFiles as any[]).find((f: any) => f.id === selectedAudioFile);
+                        return file?.displayName || `Audio File ${selectedAudioFile}`;
+                      })()}
                     </div>
                     
                     {/* Segments List */}
@@ -1381,7 +1386,12 @@ export default function ChapterEditor() {
                                     Duration: {formatTime(segment.startTimestamp || segment.startTime)} - {formatTime(segment.endTimestamp || segment.endTime)}
                                   </div>
                                   <div className="text-xs text-blue-600 mt-1">
-                                    Length: {formatTime((segment.endTimestamp || segment.endTime) - (segment.startTimestamp || segment.startTime))}
+                                    Length: {(() => {
+                                      const start = segment.startTimestamp || segment.startTime || 0;
+                                      const end = segment.endTimestamp || segment.endTime || 0;
+                                      const length = Math.max(0, end - start);
+                                      return formatTime(length);
+                                    })()}
                                   </div>
                                 </div>
                                 <Button
