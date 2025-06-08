@@ -32,13 +32,13 @@ export default function TrackChapters() {
   const trackId = params?.trackId;
 
   // Fetch track info
-  const { data: track } = useQuery({
+  const { data: track } = useQuery<any>({
     queryKey: ["/api/admin/tracks", trackId],
     enabled: !!trackId,
   });
 
   // Fetch chapters for this track
-  const { data: chapters = [], isLoading } = useQuery({
+  const { data: chapters = [], isLoading } = useQuery<any[]>({
     queryKey: [`/api/admin/chapters/${trackId}`],
     enabled: !!trackId,
   });
@@ -71,6 +71,20 @@ export default function TrackChapters() {
     },
     onError: (error: any) => {
       toast({ title: "Failed to delete chapter", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Toggle chapter status mutation
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ chapterId, status }: { chapterId: number; status: 'draft' | 'published' }) => {
+      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}/status`, { status });
+    },
+    onSuccess: () => {
+      toast({ title: "Chapter status updated successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${trackId}`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update chapter status", description: error.message, variant: "destructive" });
     },
   });
 
@@ -119,8 +133,8 @@ export default function TrackChapters() {
               Back to Tracks
             </Button>
           </div>
-          <h1 className="text-3xl font-bold">{track.title}</h1>
-          <p className="text-muted-foreground">{track.description}</p>
+          <h1 className="text-3xl font-bold">{track?.title}</h1>
+          <p className="text-muted-foreground">{track?.description}</p>
         </div>
 
         <div className="mb-6">
@@ -132,7 +146,7 @@ export default function TrackChapters() {
 
         {/* Chapter List */}
         <div className="grid gap-4">
-          {chapters.map((chapter: any, index: number) => (
+          {(chapters as any[]).map((chapter: any, index: number) => (
             <Card key={chapter.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -181,6 +195,18 @@ export default function TrackChapters() {
                       Edit Content
                     </Button>
                     <Button 
+                      variant={chapter.status === "published" ? "destructive" : "default"}
+                      size="sm"
+                      onClick={() => {
+                        const newStatus = chapter.status === "published" ? "draft" : "published";
+                        toggleStatusMutation.mutate({ chapterId: chapter.id, status: newStatus });
+                      }}
+                      disabled={toggleStatusMutation.isPending}
+                      className="w-full"
+                    >
+                      {chapter.status === "published" ? "Unpublish" : "Publish"}
+                    </Button>
+                    <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleDeleteChapter(chapter.id)}
@@ -197,7 +223,7 @@ export default function TrackChapters() {
           ))}
         </div>
 
-        {chapters.length === 0 && (
+        {(chapters as any[]).length === 0 && (
           <Card>
             <CardContent className="p-12 text-center">
               <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
