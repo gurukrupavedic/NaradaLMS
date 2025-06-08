@@ -468,11 +468,21 @@ export default function ChapterEditor() {
                           Supports: MP3, WAV, M4A, MP4, and other audio/video formats
                         </p>
                       </div>
+                      <Button
+                        variant="outline"
+                        className="mt-2"
+                        onClick={() => document.getElementById('audio-upload-input')?.click()}
+                        disabled={audioUploadMutation.isPending}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Browse Files
+                      </Button>
                       <input
+                        id="audio-upload-input"
                         type="file"
                         accept="audio/*,video/*"
                         onChange={handleFileUpload}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        className="hidden"
                         disabled={audioUploadMutation.isPending}
                       />
                     </div>
