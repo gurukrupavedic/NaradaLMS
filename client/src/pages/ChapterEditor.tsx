@@ -108,7 +108,7 @@ export default function ChapterEditor() {
 
   // Fetch audio files
   const { data: audioFiles, refetch: refetchAudioFiles } = useQuery<any[]>({
-    queryKey: [`/api/admin/audio-files/${chapterId}`, refreshTrigger],
+    queryKey: [`/api/admin/audio-files/${chapterId}`],
     enabled: !!chapterId,
   });
 
@@ -151,8 +151,7 @@ export default function ChapterEditor() {
     },
     onSuccess: () => {
       toast({ title: "Audio file uploaded successfully" });
-      // Trigger refresh by updating the refresh trigger
-      setRefreshTrigger(prev => prev + 1);
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
     },
     onError: (error: any) => {
       toast({ title: "Failed to upload audio file", description: error.message, variant: "destructive" });
@@ -720,10 +719,10 @@ export default function ChapterEditor() {
                     </div>
                   )}
 
-                  {audioFiles && (audioFiles as any).length > 0 ? (
+                  {audioFiles && Array.isArray(audioFiles) && audioFiles.length > 0 ? (
                     <div className="space-y-3">
                       <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-                        Uploaded Files ({(audioFiles as any).length})
+                        Uploaded Files ({audioFiles.length})
                       </h4>
                       
                       {(audioFiles as any).map((file: any) => (
