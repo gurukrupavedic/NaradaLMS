@@ -531,7 +531,9 @@ export default function ChapterEditor() {
 
   // Update media segments when data changes
   React.useEffect(() => {
-    setMediaSegments(mediaSegmentsData);
+    if (Array.isArray(mediaSegmentsData)) {
+      setMediaSegments(mediaSegmentsData);
+    }
   }, [mediaSegmentsData]);
 
   // Enhanced segment rendering with text highlighting
@@ -1015,15 +1017,22 @@ export default function ChapterEditor() {
                         </div>
                         <Button 
                           onClick={() => {
-                            // Create media segment logic here
-                            toast({ title: "Media segment creation functionality will be implemented" });
+                            if (selectedAudioFile && mediaSegmentName && startTime < endTime) {
+                              createMediaSegmentMutation.mutate({
+                                audioFileId: selectedAudioFile.id,
+                                segmentName: mediaSegmentName,
+                                startTimestamp: startTime,
+                                endTimestamp: endTime,
+                                createdBy: "admin"
+                              });
+                            }
                           }} 
-                          disabled={!mediaSegmentName || startTime >= endTime}
+                          disabled={!mediaSegmentName || startTime >= endTime || createMediaSegmentMutation.isPending}
                           size="sm"
                           className="w-full"
                         >
                           <Save className="h-4 w-4 mr-2" />
-                          Create Media Segment
+                          {createMediaSegmentMutation.isPending ? "Creating..." : "Create Media Segment"}
                         </Button>
                       </div>
                     </>
