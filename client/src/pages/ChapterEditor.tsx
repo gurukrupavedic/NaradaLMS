@@ -932,19 +932,44 @@ export default function ChapterEditor() {
 
                         {/* Timeline */}
                         <div className="space-y-2">
-                          <input
-                            type="range"
-                            min="0"
-                            max={duration || 0}
-                            value={currentTime}
-                            onChange={(e) => {
-                              if (audioRef.current) {
-                                audioRef.current.currentTime = parseFloat(e.target.value);
-                                setCurrentTime(parseFloat(e.target.value));
-                              }
-                            }}
-                            className="w-full"
-                          />
+                          <div className="relative">
+                            <input
+                              type="range"
+                              min="0"
+                              max={duration || 0}
+                              value={currentTime}
+                              onChange={(e) => {
+                                if (audioRef.current) {
+                                  audioRef.current.currentTime = parseFloat(e.target.value);
+                                  setCurrentTime(parseFloat(e.target.value));
+                                }
+                              }}
+                              className="w-full"
+                            />
+                            {/* Time Marks */}
+                            {timeMarks.map((mark, index) => {
+                              const position = (mark / duration) * 100;
+                              return (
+                                <div
+                                  key={index}
+                                  className={`absolute top-0 w-2 h-6 cursor-pointer transform -translate-x-1 ${
+                                    selectedMark === mark 
+                                      ? 'bg-red-500 border-2 border-red-700' 
+                                      : 'bg-blue-500 border border-blue-700 hover:bg-blue-600'
+                                  } rounded-sm shadow-sm`}
+                                  style={{ left: `${position}%` }}
+                                  onClick={() => {
+                                    setSelectedMark(selectedMark === mark ? null : mark);
+                                    if (audioRef.current) {
+                                      audioRef.current.currentTime = mark;
+                                      setCurrentTime(mark);
+                                    }
+                                  }}
+                                  title={`Mark at ${Math.floor(mark / 60)}:${Math.floor(mark % 60).toString().padStart(2, '0')}`}
+                                />
+                              );
+                            })}
+                          </div>
                         </div>
 
                         {/* Player Controls */}
@@ -961,16 +986,70 @@ export default function ChapterEditor() {
                           }} size="sm">
                             {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            onClick={() => {
+                              if (audioRef.current) {
+                                audioRef.current.pause();
+                                audioRef.current.currentTime = 0;
+                                setIsPlaying(false);
+                                setCurrentTime(0);
+                              }
+                            }}
+                            size="sm" 
+                            variant="outline"
+                          >
                             <Square className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            onClick={() => {
+                              if (audioRef.current) {
+                                const newMark = audioRef.current.currentTime;
+                                setTimeMarks(prev => [...prev, newMark].sort((a, b) => a - b));
+                                toast({
+                                  title: "Time Mark Added",
+                                  description: `Mark added at ${Math.floor(newMark / 60)}:${Math.floor(newMark % 60).toString().padStart(2, '0')}`
+                                });
+                              }
+                            }}
+                            size="sm" 
+                            variant="outline"
+                          >
                             <MapPin className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            onClick={() => {
+                              if (selectedMark !== null) {
+                                setTimeMarks(prev => prev.filter(mark => mark !== selectedMark));
+                                setSelectedMark(null);
+                                toast({
+                                  title: "Time Mark Cleared",
+                                  description: "Selected mark has been removed"
+                                });
+                              } else {
+                                toast({
+                                  title: "No Mark Selected",
+                                  description: "Please select a mark on the timeline first",
+                                  variant: "destructive"
+                                });
+                              }
+                            }}
+                            size="sm" 
+                            variant="outline"
+                          >
                             <X className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            onClick={() => {
+                              setTimeMarks([]);
+                              setSelectedMark(null);
+                              toast({
+                                title: "All Marks Cleared",
+                                description: "All time marks have been removed"
+                              });
+                            }}
+                            size="sm" 
+                            variant="outline"
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
