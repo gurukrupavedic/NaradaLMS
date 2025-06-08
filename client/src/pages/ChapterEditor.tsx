@@ -1224,6 +1224,150 @@ export default function ChapterEditor() {
                 </CardContent>
               </Card>
 
+              {/* Audio Segments Panel */}
+              {selectedAudioFile && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Clock className="h-5 w-5" />
+                      Audio Segments
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Select Audio File</Label>
+                      <Select
+                        value={selectedAudioFile?.toString() || ""}
+                        onValueChange={(value) => {
+                          try {
+                            const fileId = parseInt(value);
+                            if (isNaN(fileId)) return;
+                            
+                            setSelectedAudioFile(fileId);
+                            
+                            // Find and load the audio file
+                            const file = audioFiles && Array.isArray(audioFiles) 
+                              ? (audioFiles as any[]).find((f: any) => f.id === fileId)
+                              : null;
+                            
+                            if (file && file.filename) {
+                              // Clean up existing audio player
+                              if (audioPlayer) {
+                                audioPlayer.pause();
+                                audioPlayer.removeEventListener('loadedmetadata', () => {});
+                                audioPlayer.removeEventListener('timeupdate', () => {});
+                              }
+                              
+                              const audio = new Audio(`/uploads/${file.filename}`);
+                              audio.addEventListener('loadedmetadata', () => {
+                                setDuration(audio.duration);
+                                setCurrentTime(0);
+                                setIsPlaying(false);
+                                console.log('Audio loaded successfully');
+                              });
+                              audio.addEventListener('error', (e) => {
+                                console.error('Audio loading error:', e);
+                                toast({
+                                  title: "Audio Load Error",
+                                  description: "Failed to load audio file",
+                                  variant: "destructive"
+                                });
+                              });
+                              setAudioPlayer(audio);
+                            }
+                            
+                            // Refresh media segments for the selected audio file
+                            queryClient.invalidateQueries({ queryKey: [`/api/admin/media-segments/${fileId}`] });
+                          } catch (error) {
+                            console.error('Error selecting audio file:', error);
+                            toast({
+                              title: "Selection Error",
+                              description: "Failed to select audio file",
+                              variant: "destructive"
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Choose an audio file to view segments" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {audioFiles && Array.isArray(audioFiles) && (audioFiles as any[]).length > 0 ? (
+                            (audioFiles as any[]).map((file: any) => {
+                              // Check if this file has segments by querying the mediaSegments data
+                              const hasSegments = file.id === selectedAudioFile && mediaSegments && Array.isArray(mediaSegments) && mediaSegments.length > 0;
+                              const segmentCount = hasSegments ? (mediaSegments as any[]).length : 0;
+                              
+                              return (
+                                <SelectItem key={file.id} value={file.id.toString()}>
+                                  {file.displayName}
+                                  {file.id === selectedAudioFile && segmentCount > 0 && (
+                                    <span className="text-xs text-muted-foreground ml-2">
+                                      ({segmentCount} segments)
+                                    </span>
+                                  )}
+                                </SelectItem>
+                              );
+                            })
+                          ) : (
+                            <SelectItem value="" disabled>No audio files available</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {/* Segments List */}
+                    <div className="space-y-2">
+                      <Label className="text-sm">Media Segments ({Array.isArray(mediaSegments) ? mediaSegments.length : 0})</Label>
+                      <div className="max-h-64 overflow-y-auto space-y-2">
+                        {Array.isArray(mediaSegments) && mediaSegments.length > 0 ? (
+                          (mediaSegments as any[]).map((segment, index) => (
+                            <div key={segment.id} className="p-3 border rounded-lg bg-white dark:bg-gray-800">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm">{segment.segmentName || segment.name}</div>
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    Duration: {formatTime(segment.startTimestamp || segment.startTime)} - {formatTime(segment.endTimestamp || segment.endTime)}
+                                  </div>
+                                  <div className="text-xs text-blue-600 mt-1">
+                                    Length: {(() => {
+                                      const start = segment.startTimestamp || segment.startTime || 0;
+                                      const end = segment.endTimestamp || segment.endTime || 0;
+                                      const length = Math.max(0, end - start);
+                                      return formatTime(length);
+                                    })()}
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (audioPlayer) {
+                                      const startTime = segment.startTimestamp || segment.startTime;
+                                      audioPlayer.currentTime = startTime;
+                                      setCurrentTime(startTime);
+                                    }
+                                  }}
+                                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+                                >
+                                  <Play className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">No audio segments created yet</p>
+                            <p className="text-xs">Add time marks and create segments</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Text Segmentation Panel */}
               <Card>
                 <CardHeader>
@@ -1365,15 +1509,25 @@ export default function ChapterEditor() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          </TabsContent>
 
-              {/* Audio Segments Panel */}
+          {/* Preview Tab */}
+          <TabsContent value="preview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Audio Player Control */}
               {selectedAudioFile && (
-                <Card>
+                <Card className="lg:col-span-3">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Clock className="h-5 w-5" />
-                      Audio Segments
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <Music className="w-5 h-5" />
+                        Audio Playback
+                      </CardTitle>
+                      <div className="text-sm text-muted-foreground">
+                        {audioFiles && (audioFiles as any[]).find((f: any) => f.id === selectedAudioFile)?.displayName}
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
