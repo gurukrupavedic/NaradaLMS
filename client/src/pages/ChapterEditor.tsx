@@ -1363,13 +1363,60 @@ export default function ChapterEditor() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="text-sm text-muted-foreground">
-                      Audio File: {(() => {
-                        if (!selectedAudioFile) return 'None selected';
-                        if (!audioFiles || !Array.isArray(audioFiles)) return 'Loading...';
-                        const file = (audioFiles as any[]).find((f: any) => f.id === selectedAudioFile);
-                        return file?.displayName || `Audio File ${selectedAudioFile}`;
-                      })()}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Select Audio File</Label>
+                      <Select
+                        value={selectedAudioFile?.toString() || ""}
+                        onValueChange={(value) => {
+                          const fileId = parseInt(value);
+                          setSelectedAudioFile(fileId);
+                          
+                          // Find and load the audio file
+                          const file = audioFiles && Array.isArray(audioFiles) 
+                            ? (audioFiles as any[]).find((f: any) => f.id === fileId)
+                            : null;
+                          
+                          if (file) {
+                            const audio = new Audio(`/uploads/${file.filename}`);
+                            audio.addEventListener('loadedmetadata', () => {
+                              setDuration(audio.duration);
+                              setCurrentTime(0);
+                              setIsPlaying(false);
+                              console.log('Audio loaded successfully');
+                            });
+                            setAudioPlayer(audio);
+                          }
+                          
+                          // Refresh media segments for the selected audio file
+                          queryClient.invalidateQueries({ queryKey: [`/api/admin/media-segments/${fileId}`] });
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Choose an audio file to view segments" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {audioFiles && Array.isArray(audioFiles) && (audioFiles as any[]).length > 0 ? (
+                            (audioFiles as any[]).map((file: any) => {
+                              // Check if this file has segments by querying the mediaSegments data
+                              const hasSegments = file.id === selectedAudioFile && mediaSegments && Array.isArray(mediaSegments) && mediaSegments.length > 0;
+                              const segmentCount = hasSegments ? (mediaSegments as any[]).length : 0;
+                              
+                              return (
+                                <SelectItem key={file.id} value={file.id.toString()}>
+                                  {file.displayName}
+                                  {file.id === selectedAudioFile && segmentCount > 0 && (
+                                    <span className="text-xs text-muted-foreground ml-2">
+                                      ({segmentCount} segments)
+                                    </span>
+                                  )}
+                                </SelectItem>
+                              );
+                            })
+                          ) : (
+                            <SelectItem value="" disabled>No audio files available</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
                     </div>
                     
                     {/* Segments List */}
