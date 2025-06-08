@@ -922,6 +922,14 @@ export default function ChapterEditor() {
                           preload="metadata"
                         />
                         
+                        {/* Time Display */}
+                        <div className="text-center">
+                          <span className="text-sm font-mono">
+                            {Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, '0')} / 
+                            {Math.floor(duration / 60)}:{Math.floor(duration % 60).toString().padStart(2, '0')}
+                          </span>
+                        </div>
+
                         {/* Timeline */}
                         <div className="space-y-2">
                           <input
@@ -937,7 +945,6 @@ export default function ChapterEditor() {
                             }}
                             className="w-full"
                           />
-
                         </div>
 
                         {/* Player Controls */}
@@ -966,10 +973,6 @@ export default function ChapterEditor() {
                           <Button size="sm" variant="outline">
                             <Trash2 className="h-4 w-4" />
                           </Button>
-                          <span className="text-sm font-mono ml-2">
-                            {Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, '0')} / 
-                            {Math.floor(duration / 60)}:{Math.floor(duration % 60).toString().padStart(2, '0')}
-                          </span>
                         </div>
                       </div>
 
