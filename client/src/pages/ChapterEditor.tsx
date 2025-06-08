@@ -108,11 +108,8 @@ export default function ChapterEditor() {
     },
     onSuccess: () => {
       toast({ title: "Audio file uploaded successfully" });
-      // Force complete cache invalidation and refetch
-      queryClient.removeQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
-      setTimeout(() => {
-        refetchAudioFiles();
-      }, 100);
+      // Trigger refresh by updating the refresh trigger
+      setRefreshTrigger(prev => prev + 1);
     },
     onError: (error: any) => {
       toast({ title: "Failed to upload audio file", description: error.message, variant: "destructive" });
@@ -160,7 +157,7 @@ export default function ChapterEditor() {
     },
     onSuccess: (deletedFileId) => {
       toast({ title: "Audio file deleted successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+      setRefreshTrigger(prev => prev + 1);
       if (selectedAudioFile === deletedFileId) {
         setSelectedAudioFile(null);
         setAudioPlayer(null);
@@ -179,7 +176,7 @@ export default function ChapterEditor() {
     },
     onSuccess: () => {
       toast({ title: "Filename updated successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+      setRefreshTrigger(prev => prev + 1);
       setEditingFileId(null);
       setEditingFileName("");
     },
