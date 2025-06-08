@@ -3,7 +3,8 @@ import {
   tracks, chapters, audioFiles, textSegments, audioMappings, users
 } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
-import { storage as memStorage } from "./storage-simplified";
+import { MemStorage } from "./storage-simplified";
+const memStorage = new MemStorage();
 
 export interface IStorage {
   // User operations (required for Replit Auth)
