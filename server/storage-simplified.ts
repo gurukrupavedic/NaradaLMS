@@ -171,10 +171,10 @@ export class MemStorage implements IStorage {
     {
       id: 12,
       chapterId: 2,
-      filename: "shraddha-suktam.m4a",
+      filename: "c19b4027eef345c6a540169955e1b80a",
       displayName: "Shraddha Suktam - 1",
-      duration: 180,
-      fileSize: 2048000,
+      duration: 99,
+      fileSize: 1999139,
       uploadedBy: "system",
       createdAt: new Date()
     }
