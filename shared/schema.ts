@@ -100,7 +100,27 @@ export const textSegments = pgTable("text_segments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Audio timestamp mappings
+// Media segments - Audio file timestamp segments
+export const mediaSegments = pgTable("media_segments", {
+  id: serial("id").primaryKey(),
+  audioFileId: integer("audio_file_id").notNull().references(() => audioFiles.id, { onDelete: "cascade" }),
+  startTimestamp: real("start_timestamp").notNull(), // in seconds
+  endTimestamp: real("end_timestamp").notNull(), // in seconds
+  segmentName: text("segment_name"), // Optional human-readable name
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Segment mapping - Maps media segments to text segments
+export const segmentMappings = pgTable("segment_mappings", {
+  id: serial("id").primaryKey(),
+  mediaSegmentId: integer("media_segment_id").notNull().references(() => mediaSegments.id, { onDelete: "cascade" }),
+  textSegmentId: integer("text_segment_id").notNull().references(() => textSegments.id, { onDelete: "cascade" }),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Legacy audio mappings - keeping for backward compatibility
 export const audioMappings = pgTable("audio_mappings", {
   id: serial("id").primaryKey(),
   audioFileId: integer("audio_file_id").notNull().references(() => audioFiles.id, { onDelete: "cascade" }),
@@ -165,6 +185,7 @@ export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({
     references: [users.id],
   }),
   audioMappings: many(audioMappings),
+  mediaSegments: many(mediaSegments),
 }));
 
 export const textSegmentsRelations = relations(textSegments, ({ one, many }) => ({
@@ -177,6 +198,34 @@ export const textSegmentsRelations = relations(textSegments, ({ one, many }) => 
     references: [users.id],
   }),
   audioMappings: many(audioMappings),
+  segmentMappings: many(segmentMappings),
+}));
+
+export const mediaSegmentsRelations = relations(mediaSegments, ({ one, many }) => ({
+  audioFile: one(audioFiles, {
+    fields: [mediaSegments.audioFileId],
+    references: [audioFiles.id],
+  }),
+  createdBy: one(users, {
+    fields: [mediaSegments.createdBy],
+    references: [users.id],
+  }),
+  segmentMappings: many(segmentMappings),
+}));
+
+export const segmentMappingsRelations = relations(segmentMappings, ({ one }) => ({
+  mediaSegment: one(mediaSegments, {
+    fields: [segmentMappings.mediaSegmentId],
+    references: [mediaSegments.id],
+  }),
+  textSegment: one(textSegments, {
+    fields: [segmentMappings.textSegmentId],
+    references: [textSegments.id],
+  }),
+  createdBy: one(users, {
+    fields: [segmentMappings.createdBy],
+    references: [users.id],
+  }),
 }));
 
 export const audioMappingsRelations = relations(audioMappings, ({ one }) => ({
@@ -227,6 +276,12 @@ export const selectAudioFileSchema = createSelectSchema(audioFiles);
 export const insertTextSegmentSchema = createInsertSchema(textSegments).omit({ id: true, createdAt: true });
 export const selectTextSegmentSchema = createSelectSchema(textSegments);
 
+export const insertMediaSegmentSchema = createInsertSchema(mediaSegments).omit({ id: true, createdAt: true });
+export const selectMediaSegmentSchema = createSelectSchema(mediaSegments);
+
+export const insertSegmentMappingSchema = createInsertSchema(segmentMappings).omit({ id: true, createdAt: true });
+export const selectSegmentMappingSchema = createSelectSchema(segmentMappings);
+
 export const insertAudioMappingSchema = createInsertSchema(audioMappings).omit({ id: true, createdAt: true });
 export const selectAudioMappingSchema = createSelectSchema(audioMappings);
 
@@ -248,6 +303,12 @@ export type AudioFile = z.infer<typeof selectAudioFileSchema>;
 
 export type InsertTextSegment = z.infer<typeof insertTextSegmentSchema>;
 export type TextSegment = z.infer<typeof selectTextSegmentSchema>;
+
+export type InsertMediaSegment = z.infer<typeof insertMediaSegmentSchema>;
+export type MediaSegment = z.infer<typeof selectMediaSegmentSchema>;
+
+export type InsertSegmentMapping = z.infer<typeof insertSegmentMappingSchema>;
+export type SegmentMapping = z.infer<typeof selectSegmentMappingSchema>;
 
 export type InsertAudioMapping = z.infer<typeof insertAudioMappingSchema>;
 export type AudioMapping = z.infer<typeof selectAudioMappingSchema>;
