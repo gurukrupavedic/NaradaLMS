@@ -175,10 +175,15 @@ export default function ChapterEditor() {
   // Save chapter mutation
   const saveChapterMutation = useMutation({
     mutationFn: async (chapterData: any) => {
-      return apiRequest(`/api/chapters/${chapterId}`, {
+      const response = await fetch(`/api/chapters/${chapterId}`, {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(chapterData)
       });
+      if (!response.ok) throw new Error('Failed to save chapter');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chapters', chapterId] });
@@ -199,10 +204,15 @@ export default function ChapterEditor() {
   // Create text segment mutation
   const createTextSegmentMutation = useMutation({
     mutationFn: async (segmentData: any) => {
-      return apiRequest('/api/text-segments', {
+      const response = await fetch('/api/text-segments', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(segmentData)
       });
+      if (!response.ok) throw new Error('Failed to create segment');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/text-segments', chapterId] });
@@ -218,9 +228,11 @@ export default function ChapterEditor() {
   // Delete segment mutation
   const deleteSegmentMutation = useMutation({
     mutationFn: async (segmentId: number) => {
-      return apiRequest(`/api/text-segments/${segmentId}`, {
+      const response = await fetch(`/api/text-segments/${segmentId}`, {
         method: 'DELETE'
       });
+      if (!response.ok) throw new Error('Failed to delete segment');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/text-segments', chapterId] });
@@ -238,11 +250,12 @@ export default function ChapterEditor() {
       formData.append('audio', file);
       formData.append('chapterId', chapterId!);
       
-      return apiRequest('/api/audio-upload', {
+      const response = await fetch('/api/audio-upload', {
         method: 'POST',
-        body: formData,
-        headers: {}
+        body: formData
       });
+      if (!response.ok) throw new Error('Failed to upload audio');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/audio-files', chapterId] });
@@ -348,9 +361,9 @@ export default function ChapterEditor() {
   };
 
   const renderTextWithSegments = (text: string, language: string) => {
-    if (!segments || segments.length === 0) return text;
+    if (!segments || (segments as any[]).length === 0) return text;
     
-    const relevantSegments = segments.filter((segment: any) => 
+    const relevantSegments = (segments as any[]).filter((segment: any) => 
       segment.textReferences?.[language]
     ).sort((a: any, b: any) => 
       a.textReferences[language].start - b.textReferences[language].start
