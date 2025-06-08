@@ -978,70 +978,7 @@ export default function ChapterEditor() {
                         </div>
                       </div>
 
-                      {/* Media Segment Creation */}
-                      <div className="space-y-4 border-t pt-4">
-                        <h3 className="text-lg font-semibold">Create Media Segment</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label>Start Time</Label>
-                            <div className="flex gap-2">
-                              <Input
-                                type="number"
-                                value={startTime.toFixed(2)}
-                                onChange={(e) => setStartTime(parseFloat(e.target.value) || 0)}
-                                step="0.1"
-                                className="text-sm"
-                              />
-                              <Button onClick={() => setStartTime(currentTime)} size="sm">
-                                <Clock className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div>
-                            <Label>End Time</Label>
-                            <div className="flex gap-2">
-                              <Input
-                                type="number"
-                                value={endTime.toFixed(2)}
-                                onChange={(e) => setEndTime(parseFloat(e.target.value) || 0)}
-                                step="0.1"
-                                className="text-sm"
-                              />
-                              <Button onClick={() => setEndTime(currentTime)} size="sm">
-                                <Clock className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                        <div>
-                          <Label>Segment Name</Label>
-                          <Input
-                            value={mediaSegmentName}
-                            onChange={(e) => setMediaSegmentName(e.target.value)}
-                            placeholder="Enter segment name..."
-                            className="text-sm"
-                          />
-                        </div>
-                        <Button 
-                          onClick={() => {
-                            if (selectedAudioFile && mediaSegmentName && startTime < endTime) {
-                              createMediaSegmentMutation.mutate({
-                                audioFileId: selectedAudioFile.id,
-                                segmentName: mediaSegmentName,
-                                startTimestamp: startTime,
-                                endTimestamp: endTime,
-                                createdBy: "admin"
-                              });
-                            }
-                          }} 
-                          disabled={!mediaSegmentName || startTime >= endTime || createMediaSegmentMutation.isPending}
-                          size="sm"
-                          className="w-full"
-                        >
-                          <Save className="h-4 w-4 mr-2" />
-                          {createMediaSegmentMutation.isPending ? "Creating..." : "Create Media Segment"}
-                        </Button>
-                      </div>
+
                     </>
                   )}
                 </CardContent>
