@@ -143,12 +143,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/audio-files/:chapterId/upload', upload.single('audio'), async (req, res) => {
     try {
-      console.log('Upload request received:', {
-        file: req.file,
-        body: req.body,
-        headers: req.headers['content-type']
-      });
-      
       if (!req.file) {
         return res.status(400).json({ message: "No audio file provided" });
       }

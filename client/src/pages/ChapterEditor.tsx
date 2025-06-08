@@ -555,7 +555,7 @@ export default function ChapterEditor() {
                                   </div>
                                   <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
                                     <span>Duration: {file.duration ? `${file.duration.toFixed(2)}s` : 'Unknown'}</span>
-                                    <span>Size: {file.size ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : 'Unknown'}</span>
+                                    <span>Size: {file.fileSize ? `${(file.fileSize / (1024 * 1024)).toFixed(1)} MB` : 'Unknown'}</span>
                                   </div>
                                 </>
                               )}
@@ -625,7 +625,7 @@ export default function ChapterEditor() {
                       <SelectContent>
                         {audioFiles && (audioFiles as any).map((file: any) => (
                           <SelectItem key={file.id} value={file.id.toString()}>
-                            {file.originalName || file.filename}
+                            {file.displayName || file.filename}
                           </SelectItem>
                         ))}
                       </SelectContent>
