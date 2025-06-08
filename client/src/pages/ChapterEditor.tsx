@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { ChevronLeft, Plus, Upload, Music, FileText, Save, Eye, Trash2, Play, Pause, Waveform, Volume2, VolumeX } from 'lucide-react';
+import { ChevronLeft, Plus, Upload, Music, FileText, Save, Eye, Trash2, Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -73,7 +73,7 @@ export default function ChapterEditor() {
   const queryClient = useQueryClient();
   
   // Extract chapter ID from URL
-  const chapterId = location.split('/').pop();
+  const chapterId = location.split('/').pop()?.replace(/[^0-9]/g, '') || '';
   
   // Audio player state
   const [selectedAudioFile, setSelectedAudioFile] = useState<AudioFile | null>(null);
@@ -106,13 +106,13 @@ export default function ChapterEditor() {
   });
 
   // Fetch audio files for this chapter
-  const { data: audioFiles } = useQuery({
+  const { data: audioFiles = [] } = useQuery({
     queryKey: ['/api/audio-files', chapterId],
     enabled: !!chapterId
   });
 
   // Fetch text segments for this chapter
-  const { data: segments } = useQuery({
+  const { data: segments = [] } = useQuery({
     queryKey: ['/api/text-segments', chapterId],
     enabled: !!chapterId
   });
@@ -123,14 +123,15 @@ export default function ChapterEditor() {
     enabled: !!selectedAudioFile?.id
   });
 
-  const isPublished = chapter?.status === 'published';
+  const isPublished = (chapter as any)?.status === 'published';
 
   // Initialize form data when chapter loads
   useEffect(() => {
     if (chapter) {
-      setTitle(chapter.title || '');
-      setContent(chapter.content || { te: '', hi: '', en: '' });
-      setStatus(chapter.status || 'draft');
+      const chapterData = chapter as any;
+      setTitle(chapterData.title || '');
+      setContent(chapterData.content || { te: '', hi: '', en: '' });
+      setStatus(chapterData.status || 'draft');
     }
   }, [chapter]);
 
