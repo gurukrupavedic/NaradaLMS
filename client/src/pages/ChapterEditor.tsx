@@ -937,27 +937,7 @@ export default function ChapterEditor() {
                             }}
                             className="w-full"
                           />
-                          <div className="relative h-8 bg-muted rounded">
-                            {Array.isArray(mediaSegmentsData) && mediaSegmentsData.map((segment: any) => {
-                              const left = (segment.startTimestamp / duration) * 100;
-                              const width = ((segment.endTimestamp - segment.startTimestamp) / duration) * 100;
-                              return (
-                                <div
-                                  key={segment.id}
-                                  className="absolute bg-primary/60 h-full rounded cursor-pointer hover:bg-primary/80"
-                                  style={{ left: `${left}%`, width: `${width}%` }}
-                                  onClick={() => {
-                                    if (audioRef.current) {
-                                      audioRef.current.currentTime = segment.startTimestamp;
-                                      audioRef.current.play();
-                                      setIsPlaying(true);
-                                    }
-                                  }}
-                                  title={segment.segmentName}
-                                />
-                              );
-                            })}
-                          </div>
+
                         </div>
 
                         {/* Player Controls */}
