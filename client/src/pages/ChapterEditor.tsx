@@ -102,11 +102,14 @@ export default function ChapterEditor() {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("chapterId", chapterId!);
-      await apiRequest("POST", "/api/admin/audio-files", formData);
+      const response = await apiRequest("POST", "/api/admin/audio-files", formData);
+      return response;
     },
     onSuccess: () => {
       toast({ title: "Audio file uploaded successfully" });
+      // Force refetch of audio files
       queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+      queryClient.refetchQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
     },
     onError: (error: any) => {
       toast({ title: "Failed to upload audio file", description: error.message, variant: "destructive" });
