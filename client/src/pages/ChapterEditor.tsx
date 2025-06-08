@@ -443,9 +443,6 @@ export default function ChapterEditor() {
           {/* Media Content Tab */}
           <TabsContent value="media" className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Audio Files</CardTitle>
-              </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {!isPublished && (
