@@ -1511,16 +1511,16 @@ export default function ChapterEditor() {
                                 <div className="flex items-start justify-between">
                                   <div className="flex-1">
                                     <div className="font-medium text-sm">{segment.segmentName || segment.name}</div>
-                                    <div className="text-xs text-muted-foreground mt-1">
-                                      Duration: {formatTime(segment.startTimestamp || segment.startTime || 0)} - {formatTime(segment.endTimestamp || segment.endTime || 0)}
-                                    </div>
-                                    <div className="text-xs text-blue-600 mt-1">
-                                      Length: {(() => {
-                                        const start = segment.startTimestamp || segment.startTime || 0;
-                                        const end = segment.endTimestamp || segment.endTime || 0;
-                                        const length = Math.max(0, end - start);
-                                        return formatTime(length);
-                                      })()}
+                                    <div className="text-xs text-muted-foreground mt-1 flex items-center gap-4">
+                                      <span>Duration: {formatTime(segment.startTimestamp || segment.startTime || 0)} - {formatTime(segment.endTimestamp || segment.endTime || 0)}</span>
+                                      <span className="text-blue-600">
+                                        Length: {(() => {
+                                          const start = segment.startTimestamp || segment.startTime || 0;
+                                          const end = segment.endTimestamp || segment.endTime || 0;
+                                          const length = Math.max(0, end - start);
+                                          return formatTime(length);
+                                        })()}
+                                      </span>
                                     </div>
                                   </div>
                                   <div className="flex gap-1">
