@@ -69,7 +69,10 @@ export function RichTextEditor({
       Heading.configure({
         levels: [1, 2, 3, 4, 5, 6],
       }),
-      HardBreak,
+      HardBreak.configure({
+        // Make Enter key create hard breaks (line breaks)
+        keepMarks: false,
+      }),
       HorizontalRule,
       OrderedList.configure({
         HTMLAttributes: {
@@ -97,6 +100,23 @@ export function RichTextEditor({
         types: ['heading', 'paragraph'],
       }),
     ],
+    editorProps: {
+      handleKeyDown: (view, event) => {
+        // Handle Enter key behavior
+        if (event.key === 'Enter') {
+          if (event.shiftKey) {
+            // Shift+Enter: Create new paragraph
+            return false; // Let default behavior handle paragraph creation
+          } else {
+            // Enter: Create hard break (line break)
+            event.preventDefault();
+            view.dispatch(view.state.tr.replaceSelectionWith(view.state.schema.nodes.hardBreak.create()));
+            return true;
+          }
+        }
+        return false;
+      },
+    },
     content: value,
     editable: !disabled,
     onUpdate: ({ editor }) => {
