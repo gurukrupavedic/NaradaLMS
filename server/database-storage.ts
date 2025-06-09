@@ -397,9 +397,17 @@ export class DatabaseStorage implements IStorage {
     if (!this.initialized) return memStorage.createChapter(chapter);
     
     try {
+      // Calculate the next order number within the specific track
+      const maxOrderResult = await db
+        .select({ maxOrder: sql<number>`COALESCE(MAX(${chapters.order}), 0)` })
+        .from(chapters)
+        .where(eq(chapters.trackId, chapter.trackId));
+      
+      const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
+      
       const [newChapter] = await db.insert(chapters).values({
         ...chapter,
-        order: 1,
+        order: nextOrder,
         createdBy: "system",
         createdAt: new Date(),
         updatedAt: new Date()
