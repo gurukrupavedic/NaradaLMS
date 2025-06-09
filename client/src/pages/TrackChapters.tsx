@@ -177,7 +177,11 @@ export default function TrackChapters() {
         {/* Chapter List */}
         <div className="flex flex-col gap-3 sm:gap-4">
           {(chapters as any[]).sort((a, b) => a.order - b.order).map((chapter: any, index: number) => (
-            <Card key={chapter.id} className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto hover:shadow-md transition-shadow">
+            <Card 
+              key={chapter.id} 
+              className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto hover:shadow-md transition-shadow cursor-pointer group"
+              onClick={() => handleEditChapter(chapter.id)}
+            >
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -188,7 +192,10 @@ export default function TrackChapters() {
                         variant="ghost"
                         className="h-4 w-4 sm:h-5 sm:w-5 p-0"
                         disabled={chapter.order === 1 || moveChapterMutation.isPending}
-                        onClick={() => handleMoveChapter(chapter.id, 'up')}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMoveChapter(chapter.id, 'up');
+                        }}
                         title="Move chapter up"
                       >
                         <ChevronUp className="w-3 h-3" />
@@ -198,7 +205,10 @@ export default function TrackChapters() {
                         variant="ghost"
                         className="h-4 w-4 sm:h-5 sm:w-5 p-0"
                         disabled={chapter.order === (chapters as any[]).length || moveChapterMutation.isPending}
-                        onClick={() => handleMoveChapter(chapter.id, 'down')}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMoveChapter(chapter.id, 'down');
+                        }}
                         title="Move chapter down"
                       >
                         <ChevronDown className="w-3 h-3" />
@@ -222,7 +232,7 @@ export default function TrackChapters() {
                       </div>
                       <ResponsiveTitle
                         title={chapter.title}
-                        className="text-lg font-semibold mb-1"
+                        className="text-lg font-semibold mb-1 group-hover:text-primary transition-colors"
                       />
                       {chapter.description && (
                         <p className="text-muted-foreground mb-2 line-clamp-2 text-sm">{chapter.description}</p>
@@ -234,16 +244,10 @@ export default function TrackChapters() {
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => handleEditChapter(chapter.id)}
-                      className="h-8 w-8 p-0"
-                      title="Edit Chapter"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleDeleteChapter(chapter.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteChapter(chapter.id);
+                      }}
                       disabled={deleteChapterMutation.isPending}
                       className="h-8 w-8 p-0"
                       title="Delete Chapter"
@@ -253,7 +257,8 @@ export default function TrackChapters() {
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         const newStatus = chapter.status === "published" ? "draft" : "published";
                         toggleStatusMutation.mutate({ chapterId: chapter.id, status: newStatus });
                       }}
