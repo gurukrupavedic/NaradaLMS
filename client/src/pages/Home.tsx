@@ -12,7 +12,7 @@ import {
 import { BookOpen, Presentation, Edit, UsersIcon, ChevronDown, Languages } from "lucide-react";
 import Dashboard from "@/components/Dashboard";
 import InstructorPanel from "@/components/InstructorPanel";
-import ContentManager from "@/components/ContentManager";
+
 import Administration from "@/components/Administration";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
@@ -146,7 +146,9 @@ export default function Home() {
           
           {hasRole('content_manager') && (
             <TabsContent value="manage-content" className="space-y-6">
-              <ContentManager />
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Content management functionality has been moved.</p>
+              </div>
             </TabsContent>
           )}
           
