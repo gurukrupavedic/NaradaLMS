@@ -365,6 +365,8 @@ export default function ChapterEditor() {
     }
   }, [chapter]);
 
+
+
   // Audio file upload mutation
   const audioUploadMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -443,13 +445,31 @@ export default function ChapterEditor() {
       await apiRequest("PATCH", `/api/admin/chapters/${chapterId}`, { content });
     },
     onSuccess: () => {
-      toast({ title: "Content updated successfully" });
+      toast({ title: "Content saved" });
       queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${chapterId}/details`] });
     },
     onError: (error: any) => {
-      toast({ title: "Failed to update content", description: error.message, variant: "destructive" });
+      toast({ title: "Failed to save content", description: error.message, variant: "destructive" });
     },
   });
+
+  // Auto-save functionality with debounce
+  useEffect(() => {
+    if (!chapter?.content || isPublished) return;
+
+    const hasChanges = 
+      textContent.te !== (chapter.content.te || "") ||
+      textContent.hi !== (chapter.content.hi || "") ||
+      textContent.en !== (chapter.content.en || "");
+
+    if (!hasChanges) return;
+
+    const timeoutId = setTimeout(() => {
+      updateContentMutation.mutate(textContent);
+    }, 2000); // Auto-save after 2 seconds of no typing
+
+    return () => clearTimeout(timeoutId);
+  }, [textContent, chapter?.content, isPublished, updateContentMutation]);
 
   // Create audio segments from marks mutation
   const createAudioSegmentsMutation = useMutation({
@@ -960,26 +980,29 @@ export default function ChapterEditor() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Select value={contentLanguage} onValueChange={(value: 'te' | 'hi' | 'en') => setContentLanguage(value)}>
-                      <SelectTrigger className="w-48">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="te">తెలుగు (Telugu)</SelectItem>
-                        <SelectItem value="hi">देवनागरी (Hindi)</SelectItem>
-                        <SelectItem value="en">English/IAST</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <Select value={contentLanguage} onValueChange={(value: 'te' | 'hi' | 'en') => setContentLanguage(value)}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="te">తెలుగు (Telugu)</SelectItem>
+                      <SelectItem value="hi">देवनागरी (Hindi)</SelectItem>
+                      <SelectItem value="en">English/IAST</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {updateContentMutation.isPending ? (
+                      <>
+                        <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        Auto-saved
+                      </>
+                    )}
                   </div>
-                  <Button
-                    onClick={() => handleContentSave(contentLanguage)}
-                    disabled={updateContentMutation.isPending || isPublished}
-                    size="sm"
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    Save {contentLanguage === 'te' ? 'Telugu' : contentLanguage === 'hi' ? 'Hindi' : 'English/IAST'}
-                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
