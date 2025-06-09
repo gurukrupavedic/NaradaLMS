@@ -204,9 +204,15 @@ export default function TrackChapters() {
                         <span className="text-sm text-muted-foreground font-medium">
                           Chapter {chapter.order}
                         </span>
-                        <Badge variant={chapter.status === "published" ? "default" : "secondary"} className="text-xs">
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            chapter.status === "published"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                          }`}
+                        >
                           {chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1)}
-                        </Badge>
+                        </span>
                       </div>
                       <h3 className="text-xl font-semibold mb-2">{chapter.title}</h3>
                       {chapter.description && (
