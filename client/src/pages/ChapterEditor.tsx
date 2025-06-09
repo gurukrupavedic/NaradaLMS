@@ -1556,7 +1556,7 @@ export default function ChapterEditor() {
                                           const start = segment.startTimestamp || segment.startTime || 0;
                                           const end = segment.endTimestamp || segment.endTime || 0;
                                           const length = Math.max(0, end - start);
-                                          return formatTime(length);
+                                          return Math.round(length) + 's';
                                         })()}
                                       </span>
                                     </div>
