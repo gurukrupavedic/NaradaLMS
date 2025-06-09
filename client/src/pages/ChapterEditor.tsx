@@ -1190,17 +1190,18 @@ export default function ChapterEditor() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* LEFT PANEL: Audio Operations */}
               <div className="space-y-6">
-                {/* Audio File Selection */}
+                {/* Consolidated Audio Panel */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Music className="h-5 w-5" />
-                      Audio File Selection
+                      Audio File Selection, Segmentation & Segments
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-6">
+                    {/* Audio File Selection Section */}
                     <div className="space-y-2">
-                      <Label>Select Audio File for Segmentation</Label>
+                      <Label className="text-sm font-medium">Select Audio File for Segmentation</Label>
                       <Select
                         value={selectedAudioFile?.id?.toString() || ""}
                         onValueChange={(value) => {
@@ -1262,22 +1263,14 @@ export default function ChapterEditor() {
                         </div>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
 
-                {/* Audio Segmentation */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Timer className="h-5 w-5" />
-                      Audio Segmentation
-                    </CardTitle>
-                  </CardHeader>
-                <CardContent className="space-y-4">
-                  {selectedAudioFile && (
-                    <>
-                      {/* Audio Player */}
-                      <div className="space-y-4">
+                    {/* Audio Segmentation Section */}
+                    {selectedAudioFile && (
+                      <div className="space-y-4 border-t pt-4">
+                        <div className="flex items-center gap-2">
+                          <Timer className="h-4 w-4" />
+                          <Label className="text-sm font-medium">Audio Segmentation</Label>
+                        </div>
                         <audio
                           ref={audioRef}
                           src={`/uploads/${selectedAudioFile.hashedFilename || selectedAudioFile.filename}`}
@@ -1494,26 +1487,16 @@ export default function ChapterEditor() {
                         )}
                       </div>
 
-
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Audio Segments Panel */}
-              {selectedAudioFile && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Clock className="h-5 w-5" />
-                      Audio Segments
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Segments List */}
-                    <div className="space-y-2">
-                      <Label className="text-sm">Media Segments ({Array.isArray(mediaSegments) ? mediaSegments.length : 0})</Label>
-                      <div className="max-h-64 overflow-y-auto space-y-2">
+                      {/* Audio Segments Section */}
+                      <div className="space-y-4 border-t pt-4">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <Label className="text-sm font-medium">Audio Segments</Label>
+                        </div>
+                        {/* Segments List */}
+                        <div className="space-y-2">
+                          <Label className="text-sm">Media Segments ({Array.isArray(mediaSegments) ? mediaSegments.length : 0})</Label>
+                          <div className="max-h-64 overflow-y-auto space-y-2">
                         {Array.isArray(mediaSegments) && mediaSegments.length > 0 ? (
                           (mediaSegments as any[]).map((segment, index) => (
                             <div key={segment.id} className="p-3 border rounded-lg bg-white dark:bg-gray-800">
@@ -1629,11 +1612,13 @@ export default function ChapterEditor() {
                             <p className="text-xs">Add time marks and create segments</p>
                           </div>
                         )}
-                      </div>
-                    </div>
+                          </div>
+                        </div>
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
-              )}
               </div>
 
               {/* RIGHT PANEL: Text Segmentation & Mapping */}
