@@ -68,7 +68,7 @@ export default function ChapterEditor() {
   }, [chapterData]);
 
   // Audio files query
-  const { data: audioFiles } = useQuery({
+  const { data: audioFiles = [] } = useQuery<any[]>({
     queryKey: [`/api/admin/audio-files/${id}`],
     enabled: !!id,
   });
@@ -98,10 +98,7 @@ export default function ChapterEditor() {
   const togglePublishMutation = useMutation({
     mutationFn: async () => {
       const newStatus = chapterData?.status === 'published' ? 'draft' : 'published';
-      return apiRequest(`/api/admin/chapters/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ status: newStatus }),
-      });
+      return apiRequest('PUT', `/api/admin/chapters/${id}`, { status: newStatus });
     },
     onSuccess: () => {
       const newStatus = chapterData?.status === 'published' ? 'draft' : 'published';
@@ -171,13 +168,13 @@ export default function ChapterEditor() {
             <div className="flex items-center space-x-4">
               <Button 
                 variant="ghost" 
-                onClick={() => navigate(`/admin/tracks/${chapterData.trackId}/chapters`)}
+                onClick={() => navigate(`/admin/tracks/${chapterData?.trackId}/chapters`)}
               >
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 Back to Chapters
               </Button>
               <div>
-                <h1 className="text-3xl font-bold">{chapterData.title}</h1>
+                <h1 className="text-3xl font-bold">{chapterData?.title || 'Loading...'}</h1>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant={isPublished ? "default" : "secondary"}>
                     {isPublished ? "Published" : "Draft"}
@@ -338,13 +335,13 @@ export default function ChapterEditor() {
                       <div>
                         <label className="text-sm font-medium">Content Languages</label>
                         <div className="flex gap-2 mt-1">
-                          {Object.entries(chapterData?.content || {}).map(([lang, content]) => (
-                            content && (
+                          {Object.entries(chapterData?.content || {})
+                            .filter(([_, content]) => content)
+                            .map(([lang]) => (
                               <Badge key={lang} variant="secondary">
                                 {lang.toUpperCase()}
                               </Badge>
-                            )
-                          ))}
+                            ))}
                         </div>
                       </div>
                     </CardContent>
