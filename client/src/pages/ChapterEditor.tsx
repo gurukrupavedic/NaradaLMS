@@ -63,6 +63,7 @@ export default function ChapterEditor() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const audioRef = useRef<HTMLAudioElement>(null);
+  const segmentBoundaryListenerRef = useRef<(() => void) | null>(null);
 
   // Safe time formatting function
   const formatTime = (seconds: number): string => {
@@ -72,7 +73,7 @@ export default function ChapterEditor() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  // Safe audio playback function for segments
+  // Safe audio playback function for segments with boundary enforcement
   const playAudioSegment = (segment: any) => {
     if (!audioPlayer) {
       toast({
@@ -84,8 +85,9 @@ export default function ChapterEditor() {
     }
 
     const startTime = segment.startTimestamp || segment.startTime || 0;
+    const endTime = segment.endTimestamp || segment.endTime || 0;
     
-    // Validate timestamp
+    // Validate timestamps
     if (typeof startTime !== 'number' || !isFinite(startTime) || startTime < 0) {
       console.warn('Invalid start time for segment:', segment);
       toast({
@@ -96,13 +98,49 @@ export default function ChapterEditor() {
       return;
     }
 
+    if (typeof endTime !== 'number' || !isFinite(endTime) || endTime <= startTime) {
+      console.warn('Invalid end time for segment:', segment);
+      toast({
+        title: "Invalid Timestamp", 
+        description: "This segment has an invalid end time",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
+      // Remove any existing segment boundary listener
+      if (segmentBoundaryListenerRef.current) {
+        audioPlayer.removeEventListener('timeupdate', segmentBoundaryListenerRef.current);
+        segmentBoundaryListenerRef.current = null;
+      }
+
+      // Create new boundary enforcement listener
+      const boundaryListener = () => {
+        if (audioPlayer.currentTime >= endTime) {
+          audioPlayer.pause();
+          setIsPlaying(false);
+          // Clean up listener
+          audioPlayer.removeEventListener('timeupdate', boundaryListener);
+          segmentBoundaryListenerRef.current = null;
+        }
+      };
+
+      // Store listener reference and add it
+      segmentBoundaryListenerRef.current = boundaryListener;
+      audioPlayer.addEventListener('timeupdate', boundaryListener);
+
+      // Set playback position and start playing
       audioPlayer.currentTime = startTime;
       setCurrentTime(startTime);
-      if (!isPlaying) {
-        audioPlayer.play();
-        setIsPlaying(true);
-      }
+      audioPlayer.play();
+      setIsPlaying(true);
+      
+      toast({
+        title: "Playing Segment",
+        description: `${formatTime(startTime)} - ${formatTime(endTime)} (${Math.round(endTime - startTime)}s)`
+      });
+      
     } catch (error) {
       console.error('Error playing segment:', error);
       toast({
@@ -1390,10 +1428,11 @@ export default function ChapterEditor() {
                             if (audioRef.current) {
                               if (isPlaying) {
                                 audioRef.current.pause();
+                                setIsPlaying(false);
                               } else {
                                 audioRef.current.play();
+                                setIsPlaying(true);
                               }
-                              setIsPlaying(!isPlaying);
                             }
                           }} size="sm">
                             {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
