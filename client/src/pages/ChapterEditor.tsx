@@ -936,10 +936,7 @@ export default function ChapterEditor() {
               <Music className="w-4 h-4" />
               Segmentation & Mapping
             </TabsTrigger>
-            <TabsTrigger value="preview" className="flex items-center gap-2">
-              <Eye className="w-4 h-4" />
-              Preview
-            </TabsTrigger>
+
           </TabsList>
 
           {/* Text Content Tab */}
