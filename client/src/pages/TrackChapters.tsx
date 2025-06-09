@@ -178,9 +178,9 @@ export default function TrackChapters() {
                         <div className="flex items-center gap-1.5 text-muted-foreground">
                           <FileText className={`w-3.5 h-3.5 ${chapter.hasContent ? 'text-green-600' : 'text-orange-500'}`} />
                           <span className="text-xs">
-                            <span className={`font-semibold ${chapter.hasContent ? 'text-green-600' : 'text-orange-500'}`}>
-                              {chapter.hasContent ? "Ready" : "Missing"}
-                            </span> content
+                            <span className={`font-semibold text-foreground`}>
+                              {chapter.hasContent ? "Content ready" : "No content"}
+                            </span>
                           </span>
                         </div>
                         
