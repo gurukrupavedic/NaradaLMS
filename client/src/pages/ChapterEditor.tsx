@@ -1208,6 +1208,7 @@ export default function ChapterEditor() {
               </CardContent>
             </Card>
 
+            {/* Two-column layout for audio and text segmentation */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Left Column: Audio Segmentation Panel */}
               <div className="space-y-6">
@@ -1216,14 +1217,14 @@ export default function ChapterEditor() {
                     <CardTitle className="flex items-center gap-2">
                       <Music className="h-5 w-5" />
                       Audio Segmentation
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {selectedAudioFile && (
-                    <>
-                      {/* Audio Player */}
-                      <div className="space-y-4">
-                        <audio
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {selectedAudioFile && (
+                      <>
+                        {/* Audio Player */}
+                        <div className="space-y-4">
+                          <audio
                           ref={audioRef}
                           src={`/uploads/${selectedAudioFile.hashedFilename || selectedAudioFile.filename}`}
                           onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
