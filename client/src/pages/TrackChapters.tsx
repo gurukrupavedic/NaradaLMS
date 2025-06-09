@@ -215,16 +215,8 @@ export default function TrackChapters() {
                           {chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1)}
                         </span>
                       </div>
-                      <h3 className="text-xl font-semibold mb-1 truncate" title={chapter.title}>
-                        <span className="block sm:hidden">
-                          {chapter.title.length > 20 ? `${chapter.title.substring(0, 20)}...` : chapter.title}
-                        </span>
-                        <span className="hidden sm:block md:hidden">
-                          {chapter.title.length > 35 ? `${chapter.title.substring(0, 35)}...` : chapter.title}
-                        </span>
-                        <span className="hidden md:block">
-                          {chapter.title}
-                        </span>
+                      <h3 className="text-xl font-semibold mb-1 truncate flex-1 min-w-0" title={chapter.title}>
+                        {chapter.title}
                       </h3>
                       {chapter.description && (
                         <p className="text-muted-foreground mb-2 line-clamp-2">{chapter.description}</p>
