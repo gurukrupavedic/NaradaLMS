@@ -1200,7 +1200,7 @@ export default function ChapterEditor() {
                   <CardContent className="space-y-6">
                     {/* Audio File Selection Section */}
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium">Select Audio File for Segmentation</Label>
+                      <Label className="text-sm font-medium">Select Media</Label>
                       <Select
                         value={selectedAudioFile?.id?.toString() || ""}
                         onValueChange={(value) => {
