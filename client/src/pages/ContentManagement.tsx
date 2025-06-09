@@ -154,9 +154,9 @@ export default function ContentManagement() {
         </div>
 
         {/* Track List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+        <div className="flex flex-col gap-3 sm:gap-4">
           {(tracks as any[]).sort((a, b) => a.order - b.order).map((track: any, index: number) => (
-            <Card key={track.id} className="hover:shadow-md transition-shadow">
+            <Card key={track.id} className="w-full md:max-w-4xl lg:max-w-3xl xl:max-w-2xl mx-auto hover:shadow-md transition-shadow">
               <CardContent className="p-3 sm:p-4">
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-2">
