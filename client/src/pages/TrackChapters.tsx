@@ -267,6 +267,17 @@ export default function TrackChapters() {
             </Card>
           </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={deleteConfirm.show}
+          onClose={() => setDeleteConfirm({ show: false, chapter: null })}
+          onConfirm={confirmDeleteChapter}
+          title="Delete Chapter"
+          message={`Are you sure you want to delete "${deleteConfirm.chapter?.title}"? This action cannot be undone.`}
+          confirmLabel="Delete Chapter"
+          isLoading={deleteChapterMutation.isPending}
+        />
       </div>
     </div>
   );
