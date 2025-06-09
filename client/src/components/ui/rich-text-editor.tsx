@@ -13,6 +13,8 @@ import ListItem from '@tiptap/extension-list-item'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import FontFamily from '@tiptap/extension-font-family'
+import { Node, mergeAttributes } from '@tiptap/core'
+import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { 
@@ -27,10 +29,92 @@ import {
   ListOrdered,
   Minus,
   Link as LinkIcon,
-  ImageIcon
+  ImageIcon,
+  MapPin,
+  Triangle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCallback, useEffect } from 'react'
+
+// Text Marker Node View Component
+const TextMarkerComponent = ({ node, updateAttributes, deleteNode }: any) => {
+  const { id, timestamp, type, label } = node.attrs;
+  
+  return (
+    <NodeViewWrapper className="inline-block">
+      <span 
+        className={cn(
+          "inline-flex items-center px-1 py-0.5 rounded-sm text-xs font-medium cursor-pointer",
+          "hover:bg-opacity-80 transition-colors",
+          type === 'audio' && "bg-blue-100 text-blue-800 border border-blue-300",
+          type === 'verse' && "bg-green-100 text-green-800 border border-green-300",
+          type === 'section' && "bg-purple-100 text-purple-800 border border-purple-300"
+        )}
+        title={`${label || 'Marker'} ${timestamp ? `(${timestamp}s)` : ''}`}
+        onClick={() => {
+          // Could trigger audio playback or other actions
+          console.log('Marker clicked:', { id, timestamp, type, label });
+        }}
+      >
+        <Triangle className="w-3 h-3 mr-1" fill="currentColor" />
+        {label || `${type || 'marker'}`}
+        {timestamp && <span className="ml-1 opacity-70">{timestamp}s</span>}
+      </span>
+    </NodeViewWrapper>
+  );
+};
+
+// Text Marker Node Extension
+const TextMarker = Node.create({
+  name: 'textMarker',
+  group: 'inline',
+  inline: true,
+  atom: true,
+
+  addAttributes() {
+    return {
+      id: {
+        default: null,
+      },
+      timestamp: {
+        default: null,
+      },
+      type: {
+        default: 'audio',
+      },
+      label: {
+        default: '',
+      },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        tag: 'span[data-text-marker]',
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ['span', mergeAttributes(HTMLAttributes, { 'data-text-marker': '' })];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(TextMarkerComponent);
+  },
+
+  addCommands() {
+    return {
+      setTextMarker: (options: any) => ({ commands }: any) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: options,
+        });
+      },
+    };
+  },
+});
 
 interface RichTextEditorProps {
   value: string;
@@ -97,6 +181,7 @@ export function RichTextEditor({
       FontFamily.configure({
         types: ['textStyle'],
       }),
+      TextMarker,
     ],
     editorProps: {
       handleKeyDown: (view, event) => {
@@ -155,6 +240,23 @@ export function RichTextEditor({
 
   const setAlignment = useCallback((alignment: string) => {
     editor?.chain().focus().setTextAlign(alignment).run();
+  }, [editor]);
+
+  const insertTextMarker = useCallback((type: 'audio' | 'verse' | 'section' = 'audio') => {
+    const timestamp = prompt('Enter timestamp (seconds):');
+    const label = prompt('Enter marker label (optional):');
+    
+    if (timestamp !== null) {
+      editor?.chain().focus().insertContent({
+        type: 'textMarker',
+        attrs: {
+          id: `marker-${Date.now()}`,
+          timestamp: timestamp ? parseFloat(timestamp) : null,
+          type,
+          label: label || '',
+        },
+      }).run();
+    }
   }, [editor]);
 
   const getFontClass = () => {
@@ -410,6 +512,40 @@ export function RichTextEditor({
               title="Horizontal Rule"
             >
               <Minus className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+          {/* Text Markers */}
+          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => insertTextMarker('audio')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Audio Marker"
+            >
+              <Triangle className="h-3.5 w-3.5 text-blue-600" fill="currentColor" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => insertTextMarker('verse')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Verse Marker"
+            >
+              <Triangle className="h-3.5 w-3.5 text-green-600" fill="currentColor" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => insertTextMarker('section')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Section Marker"
+            >
+              <Triangle className="h-3.5 w-3.5 text-purple-600" fill="currentColor" />
             </Button>
           </div>
         </div>
