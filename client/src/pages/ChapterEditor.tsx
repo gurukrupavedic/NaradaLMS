@@ -1256,11 +1256,6 @@ export default function ChapterEditor() {
                           ))}
                         </SelectContent>
                       </Select>
-                      {selectedAudioFile && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Selected: {selectedAudioFile.displayName || selectedAudioFile.filename}
-                        </div>
-                      )}
                     </div>
 
                     {/* Audio Segmentation Section */}
