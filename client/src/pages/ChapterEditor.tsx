@@ -1190,6 +1190,9 @@ export default function ChapterEditor() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* LEFT PANEL: Audio Operations */}
               <div className="space-y-6">
+                <div className="text-xs text-green-600 font-bold bg-green-50 p-2 rounded border">
+                  ✓ NEW LAYOUT ACTIVE - Left Panel
+                </div>
                 {/* Audio File Selection */}
                 <Card>
                   <CardHeader>
@@ -1638,6 +1641,9 @@ export default function ChapterEditor() {
 
               {/* RIGHT PANEL: Text Segmentation & Mapping */}
               <div className="space-y-6">
+                <div className="text-xs text-blue-600 font-bold bg-blue-50 p-2 rounded border">
+                  ✓ NEW LAYOUT ACTIVE - Right Panel
+                </div>
                 <Card>
                   <CardHeader>
                     <div className="flex items-center justify-between">
