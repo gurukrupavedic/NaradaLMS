@@ -145,27 +145,27 @@ export default function TrackChapters() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-6 py-6">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Button 
-              variant="ghost" 
-              onClick={() => setLocation("/content-management")}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Tracks
+        <div className="space-y-4 mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => setLocation("/content-management")}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Tracks
+          </Button>
+          
+          <div className="flex items-end justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">{track?.title}</h1>
+              <p className="text-muted-foreground">{track?.description}</p>
+            </div>
+            <Button onClick={() => setCreateChapterModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Chapter
             </Button>
           </div>
-          <h1 className="text-3xl font-bold">{track?.title}</h1>
-          <p className="text-muted-foreground">{track?.description}</p>
-        </div>
-
-        <div className="mb-6">
-          <Button onClick={() => setCreateChapterModalOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Chapter
-          </Button>
         </div>
 
         {/* Chapter List */}
