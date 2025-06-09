@@ -80,7 +80,7 @@ export function ChapterCard({
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-sm sm:text-base text-foreground truncate group-hover:text-primary transition-colors">
-                  Chapter {chapter.order}: {chapter.title}
+                  Chapter {index + 1}: {chapter.title}
                 </h3>
                 <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">
                   {chapter.description}

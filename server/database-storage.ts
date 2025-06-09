@@ -394,10 +394,7 @@ export class DatabaseStorage implements IStorage {
 
   async createChapter(chapter: any): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) {
-      console.log("Database not initialized, using memory storage for createChapter");
-      return memStorage.createChapter(chapter);
-    }
+    if (!this.initialized) return memStorage.createChapter(chapter);
     
     try {
       // Calculate the next order number within the specific track
@@ -407,7 +404,6 @@ export class DatabaseStorage implements IStorage {
         .where(eq(chapters.trackId, chapter.trackId));
       
       const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
-      console.log(`Creating chapter for trackId ${chapter.trackId}, calculated order: ${nextOrder}`);
       
       const [newChapter] = await db.insert(chapters).values({
         ...chapter,
@@ -417,10 +413,8 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       }).returning();
       
-      console.log(`Created chapter with order: ${newChapter.order}`);
       return newChapter;
     } catch (error) {
-      console.error("Error creating chapter in database, falling back to memory:", error);
       return memStorage.createChapter(chapter);
     }
   }

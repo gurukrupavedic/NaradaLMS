@@ -78,7 +78,7 @@ export function TrackCard({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-1 text-xs text-muted-foreground">
-                  <span className="font-medium">Track {track.order || index + 1}</span>
+                  <span className="font-medium">Track {index + 1}</span>
                   <span>•</span>
                   <span>{track.chapterCount} chapters</span>
                 </div>
