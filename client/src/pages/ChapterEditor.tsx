@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { extractPlainText, isHtmlContent, plainTextToHtml } from "@/lib/html-utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -964,8 +966,11 @@ export default function ChapterEditor() {
     const selectedText = selection.toString().trim();
     if (!selectedText) return;
 
-    // Calculate character positions within the full text
-    const fullText = textContent[selectedLanguage] || "";
+    // Calculate character positions within the full text (extract plain text from HTML)
+    const fullTextContent = textContent[selectedLanguage] || "";
+    const fullText = isHtmlContent(fullTextContent) 
+      ? extractPlainText(fullTextContent) 
+      : fullTextContent;
     const beforeText =
       range.startContainer.textContent?.substring(0, range.startOffset) || "";
     const startPos = fullText.indexOf(beforeText + selectedText.charAt(0));
@@ -1408,17 +1413,17 @@ export default function ChapterEditor() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Textarea
-                  value={textContent[contentLanguage]}
-                  onChange={(e) =>
+                <RichTextEditor
+                  value={textContent[contentLanguage] || ''}
+                  onChange={(html) =>
                     setTextContent((prev) => ({
                       ...prev,
-                      [contentLanguage]: e.target.value,
+                      [contentLanguage]: html,
                     }))
                   }
                   disabled={isPublished}
                   placeholder={`Enter ${contentLanguage === "te" ? "Telugu" : contentLanguage === "hi" ? "Hindi" : "English/IAST"} content...`}
-                  className="min-h-[400px] text-base leading-relaxed"
+                  language={contentLanguage}
                 />
               </CardContent>
             </Card>
@@ -2328,7 +2333,9 @@ export default function ChapterEditor() {
                         >
                           {textContent[selectedLanguage] ? (
                             renderTextWithSegments(
-                              textContent[selectedLanguage],
+                              isHtmlContent(textContent[selectedLanguage]) 
+                                ? extractPlainText(textContent[selectedLanguage])
+                                : textContent[selectedLanguage],
                               selectedLanguage,
                             )
                           ) : (
