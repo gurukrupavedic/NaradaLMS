@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   FileText, Upload, Music, Eye, ChevronLeft, Play, Pause, Square, 
@@ -956,11 +957,11 @@ export default function ChapterEditor() {
       <audio ref={audioRef} preload="metadata" />
       
       {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+      <div className="border-b bg-background">
+        <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => {
+              <Button variant="ghost" onClick={() => {
                 // Get the track ID from the chapter data
                 if (chapter?.trackId) {
                   // Invalidate chapters query to refresh data
@@ -976,32 +977,36 @@ export default function ChapterEditor() {
                 Back to Chapters
               </Button>
               <div>
-                <h1 className="text-2xl font-bold">{chapter?.title}</h1>
-                <p className="text-sm text-muted-foreground">
-                  Status: <span className={`capitalize ${chapter?.status === 'published' ? 'text-green-600' : 'text-orange-600'}`}>
-                    {chapter?.status}
+                <h1 className="text-3xl font-bold">{chapter?.title}</h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    chapter?.status === 'published' 
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                      : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                  }`}>
+{chapter?.status ? chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1) : 'Draft'}
                   </span>
-                </p>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant={chapter?.status === 'published' ? 'destructive' : 'default'}
-                  onClick={() => {
-                    const newStatus = chapter?.status === 'published' ? 'draft' : 'published';
-                    toggleStatusMutation.mutate(newStatus);
-                  }}
-                  disabled={toggleStatusMutation.isPending}
-                >
-                  {chapter?.status === 'published' ? 'Unpublish' : 'Publish'}
-                </Button>
-              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant={chapter?.status === 'published' ? 'destructive' : 'default'}
+                onClick={() => {
+                  const newStatus = chapter?.status === 'published' ? 'draft' : 'published';
+                  toggleStatusMutation.mutate(newStatus);
+                }}
+                disabled={toggleStatusMutation.isPending}
+              >
+                {chapter?.status === 'published' ? 'Unpublish' : 'Publish'}
+              </Button>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-6 py-8">
         <Tabs defaultValue="content" className="space-y-6">
           <TabsList>
             <TabsTrigger value="content" className="flex items-center gap-2">
@@ -1601,15 +1606,55 @@ export default function ChapterEditor() {
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => {
-                                        console.log('Segment play button clicked:', segment);
-                                        console.log('Audio player state:', audioPlayer);
-                                        console.log('Audio ref current:', audioRef.current);
-                                        
+                                        // Ensure audio player is set up
                                         if (!audioPlayer && audioRef.current) {
                                           setAudioPlayer(audioRef.current);
-                                          playAudioSegment(segment);
-                                        } else if (audioPlayer) {
-                                          playAudioSegment(segment);
+                                        }
+                                        
+                                        // Use audioRef.current directly if audioPlayer state is not ready
+                                        const audio = audioPlayer || audioRef.current;
+                                        if (audio) {
+                                          // Update playAudioSegment to use the audio element directly
+                                          const startTime = segment.startTimestamp || segment.startTime || 0;
+                                          const endTime = segment.endTimestamp || segment.endTime || 0;
+                                          
+                                          if (endTime <= startTime) {
+                                            toast({
+                                              title: "Invalid Segment",
+                                              description: "This segment has invalid timestamps",
+                                              variant: "destructive"
+                                            });
+                                            return;
+                                          }
+
+                                          // Remove any existing boundary listener
+                                          if (segmentBoundaryListenerRef.current) {
+                                            audio.removeEventListener('timeupdate', segmentBoundaryListenerRef.current);
+                                          }
+
+                                          // Create boundary listener
+                                          const boundaryListener = () => {
+                                            if (audio.currentTime >= endTime) {
+                                              audio.pause();
+                                              setIsPlaying(false);
+                                              audio.removeEventListener('timeupdate', boundaryListener);
+                                              segmentBoundaryListenerRef.current = null;
+                                            }
+                                          };
+
+                                          segmentBoundaryListenerRef.current = boundaryListener;
+                                          audio.addEventListener('timeupdate', boundaryListener);
+
+                                          // Set position and play
+                                          audio.currentTime = startTime;
+                                          setCurrentTime(startTime);
+                                          audio.play();
+                                          setIsPlaying(true);
+                                          
+                                          toast({
+                                            title: "Playing Segment",
+                                            description: `${formatTime(startTime)} - ${formatTime(endTime)} (${Math.round(endTime - startTime)}s)`
+                                          });
                                         } else {
                                           toast({
                                             title: "Audio Not Ready",
