@@ -148,51 +148,66 @@ export default function TrackChapters() {
         </div>
 
         {/* Chapter List */}
-        <div className="grid gap-4">
+        <div className="grid gap-6">
           {(chapters as any[]).map((chapter: any, index: number) => (
-            <Card key={chapter.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-sm text-muted-foreground font-medium">
-                        Chapter {index + 1}
-                      </span>
-                      <Badge variant={chapter.status === "published" ? "default" : "secondary"}>
-                        {chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1)}
-                      </Badge>
+            <Card key={chapter.id} className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-transparent hover:border-l-blue-500">
+              <CardContent className="p-8">
+                <div className="flex items-start justify-between gap-8">
+                  <div className="flex-1 min-w-0">
+                    {/* Header */}
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                          <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                            {index + 1}
+                          </span>
+                        </div>
+                        <Badge variant={chapter.status === "published" ? "default" : "secondary"} className="font-medium">
+                          {chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1)}
+                        </Badge>
+                      </div>
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">{chapter.title}</h3>
-                    <p className="text-muted-foreground mb-3">{chapter.description}</p>
                     
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <FileText className="w-4 h-4" />
-                        {chapter.hasContent ? "Content added" : "No content"}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Music className="w-4 h-4" />
-                        {chapter.audioFileCount || 0} audio files
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {chapter.segmentCount || 0} segments
-                      </span>
-                      {chapter.status === "published" && (
-                        <span className="flex items-center gap-1 text-green-600">
-                          <CheckCircle className="w-4 h-4" />
-                          Published
-                        </span>
+                    {/* Content */}
+                    <div className="space-y-3">
+                      <h3 className="text-xl font-semibold leading-tight pr-4">{chapter.title}</h3>
+                      {chapter.description && (
+                        <p className="text-muted-foreground leading-relaxed">{chapter.description}</p>
                       )}
+                      
+                      {/* Progress Indicators */}
+                      <div className="flex items-center gap-8 pt-2">
+                        <div className={`flex items-center gap-2 ${chapter.hasContent ? 'text-green-600' : 'text-orange-500'}`}>
+                          <FileText className="w-4 h-4" />
+                          <span className="text-sm font-medium">
+                            {chapter.hasContent ? "Content ready" : "No content"}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Music className="w-4 h-4" />
+                          <span className="text-sm">
+                            <span className="font-semibold text-foreground">{chapter.audioFileCount || 0}</span> audio files
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Clock className="w-4 h-4" />
+                          <span className="text-sm">
+                            <span className="font-semibold text-foreground">{chapter.segmentCount || 0}</span> segments
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="flex flex-col gap-2">
+                  {/* Actions */}
+                  <div className="flex flex-col gap-3 min-w-[140px]">
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleEditChapter(chapter.id)}
-                      className="w-full"
+                      className="w-full justify-start"
                     >
                       <Edit className="w-4 h-4 mr-2" />
                       Edit Content
@@ -205,19 +220,19 @@ export default function TrackChapters() {
                         toggleStatusMutation.mutate({ chapterId: chapter.id, status: newStatus });
                       }}
                       disabled={toggleStatusMutation.isPending}
-                      className="w-full"
+                      className="w-full justify-start"
                     >
                       {chapter.status === "published" ? "Unpublish" : "Publish"}
                     </Button>
                     <Button 
-                      variant="outline" 
+                      variant="ghost" 
                       size="sm"
                       onClick={() => handleDeleteChapter(chapter.id)}
                       disabled={deleteChapterMutation.isPending}
-                      className="w-full"
+                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
-                      Delete Chapter
+                      Delete
                     </Button>
                   </div>
                 </div>
