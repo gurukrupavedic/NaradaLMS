@@ -67,7 +67,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Chapter routes
-  app.get('/api/admin/chapters/:trackId', async (req, res) => {
+  // Get chapters by track ID
+  app.get('/api/admin/tracks/:trackId/chapters', async (req, res) => {
     try {
       const trackId = parseInt(req.params.trackId);
       const chapters = await storage.getChaptersByTrack(trackId);
@@ -75,6 +76,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching chapters:", error);
       res.status(500).json({ message: "Failed to fetch chapters" });
+    }
+  });
+
+  // Get single chapter by ID
+  app.get('/api/admin/chapters/:chapterId', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const chapter = await storage.getChapter(chapterId);
+      if (!chapter) {
+        return res.status(404).json({ message: "Chapter not found" });
+      }
+      res.json(chapter);
+    } catch (error) {
+      console.error("Error fetching chapter:", error);
+      res.status(500).json({ message: "Failed to fetch chapter" });
     }
   });
 
