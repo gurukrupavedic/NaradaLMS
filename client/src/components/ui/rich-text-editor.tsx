@@ -212,17 +212,20 @@ export function RichTextEditor({
             onValueChange={setFontFamily}
             disabled={disabled}
           >
-            <SelectTrigger className="w-[110px] h-8 text-xs">
+            <SelectTrigger className="w-[160px] h-8 text-xs">
               <SelectValue placeholder="Font" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="default">Default</SelectItem>
-              <SelectItem value="'Noto Sans Telugu', sans-serif">Telugu</SelectItem>
-              <SelectItem value="'Noto Sans Devanagari', sans-serif">Devanagari</SelectItem>
-              <SelectItem value="'Sanskrit 2003', serif">Sanskrit</SelectItem>
+              <SelectItem value="'Noto Sans Telugu', sans-serif">Noto Sans Telugu</SelectItem>
+              <SelectItem value="'Noto Sans Devanagari', sans-serif">Noto Sans Devanagari</SelectItem>
+              <SelectItem value="'Sanskrit 2003', serif">Sanskrit 2003</SelectItem>
               <SelectItem value="Arial, sans-serif">Arial</SelectItem>
-              <SelectItem value="Times New Roman, serif">Times</SelectItem>
+              <SelectItem value="Times New Roman, serif">Times New Roman</SelectItem>
               <SelectItem value="Georgia, serif">Georgia</SelectItem>
+              <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
+              <SelectItem value="'Noto Sans', sans-serif">Noto Sans</SelectItem>
+              <SelectItem value="Courier New, monospace">Courier New</SelectItem>
             </SelectContent>
           </Select>
 
