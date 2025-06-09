@@ -8,7 +8,6 @@ interface Track {
   description: string;
   order: number;
   chapterCount: number;
-  status: 'draft' | 'published';
   lastModified: string;
 }
 
@@ -85,14 +84,9 @@ export function TrackCard({
                   {track.description}
                 </p>
                 <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                  <span className="font-medium">Track {track.order || index + 1}</span>
+                  <span>•</span>
                   <span>{track.chapterCount} chapters</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                    track.status === 'published' 
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' 
-                      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
-                  }`}>
-                    {track.status}
-                  </span>
                 </div>
               </div>
             </div>

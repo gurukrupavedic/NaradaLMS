@@ -18,7 +18,6 @@ interface Track {
   description: string;
   order: number;
   chapterCount: number;
-  status: 'draft' | 'published';
   lastModified: string;
 }
 
