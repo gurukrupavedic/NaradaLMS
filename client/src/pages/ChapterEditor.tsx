@@ -966,25 +966,45 @@ export default function ChapterEditor() {
     const selectedText = selection.toString().trim();
     if (!selectedText) return;
 
-    // Calculate character positions within the full text (extract plain text from HTML)
+    // Calculate character positions within the full text (extract plain text from HTML for position calculation)
     const fullTextContent = textContent[selectedLanguage] || "";
     const fullText = isHtmlContent(fullTextContent) 
       ? extractPlainText(fullTextContent) 
       : fullTextContent;
-    const beforeText =
-      range.startContainer.textContent?.substring(0, range.startOffset) || "";
-    const startPos = fullText.indexOf(beforeText + selectedText.charAt(0));
-    const endPos = startPos + selectedText.length;
-
-    setTextSelection({
-      start: startPos,
-      end: endPos,
-      text: selectedText,
-    });
-
-    setSegmentName(
-      `${selectedText.substring(0, 30)}${selectedText.length > 30 ? "..." : ""}`,
-    );
+    
+    // For HTML content, we need to map the selection to plain text positions
+    if (isHtmlContent(fullTextContent)) {
+      // Get the plain text equivalent of the selection
+      const plainTextSelection = extractPlainText(selectedText);
+      const startPos = fullText.indexOf(plainTextSelection);
+      const endPos = startPos + plainTextSelection.length;
+      
+      setTextSelection({
+        start: startPos >= 0 ? startPos : 0,
+        end: startPos >= 0 ? endPos : plainTextSelection.length,
+        text: plainTextSelection,
+      });
+      
+      setSegmentName(
+        `${plainTextSelection.substring(0, 30)}${plainTextSelection.length > 30 ? "..." : ""}`,
+      );
+    } else {
+      // Plain text logic (existing)
+      const beforeText =
+        range.startContainer.textContent?.substring(0, range.startOffset) || "";
+      const startPos = fullText.indexOf(beforeText + selectedText.charAt(0));
+      const endPos = startPos + selectedText.length;
+      
+      setTextSelection({
+        start: startPos,
+        end: endPos,
+        text: selectedText,
+      });
+      
+      setSegmentName(
+        `${selectedText.substring(0, 30)}${selectedText.length > 30 ? "..." : ""}`,
+      );
+    }
   };
 
   const createTextSegmentMutation = useMutation({
@@ -2332,11 +2352,18 @@ export default function ChapterEditor() {
                           }`}
                         >
                           {textContent[selectedLanguage] ? (
-                            renderTextWithSegments(
-                              isHtmlContent(textContent[selectedLanguage]) 
-                                ? extractPlainText(textContent[selectedLanguage])
-                                : textContent[selectedLanguage],
-                              selectedLanguage,
+                            isHtmlContent(textContent[selectedLanguage]) ? (
+                              <div
+                                data-segmentable
+                                className="whitespace-pre-wrap cursor-text prose prose-sm max-w-none"
+                                onMouseUp={handleTextSelection}
+                                dangerouslySetInnerHTML={{ __html: textContent[selectedLanguage] }}
+                              />
+                            ) : (
+                              renderTextWithSegments(
+                                textContent[selectedLanguage],
+                                selectedLanguage,
+                              )
                             )
                           ) : (
                             <div className="text-muted-foreground italic">
