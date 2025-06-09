@@ -198,6 +198,17 @@ export default function ContentManagement() {
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
                       <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => handleTrackClick(track.id)}
+                        className="w-full"
+                      >
+                        Manage Chapters
+                        <ChevronRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => handleEditTrack(track)}
@@ -215,15 +226,6 @@ export default function ContentManagement() {
                         Delete
                       </Button>
                     </div>
-                    <Button 
-                      variant="default" 
-                      size="sm"
-                      onClick={() => handleTrackClick(track.id)}
-                      className="w-full"
-                    >
-                      Manage Chapters
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
                   </div>
                 </div>
               </CardContent>
