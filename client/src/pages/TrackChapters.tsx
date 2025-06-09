@@ -201,7 +201,7 @@ export default function TrackChapters() {
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-3 mb-1">
+                      <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm text-muted-foreground font-medium">
                           Chapter {chapter.order}
                         </span>
@@ -216,7 +216,7 @@ export default function TrackChapters() {
                         </span>
                       </div>
                       <h3 className="text-xl font-semibold mb-1 truncate" title={chapter.title}>
-                        {chapter.title.length > 25 ? `${chapter.title.substring(0, 25)}...` : chapter.title}
+                        {chapter.title.length > 30 ? `${chapter.title.substring(0, 30)}...` : chapter.title}
                       </h3>
                       {chapter.description && (
                         <p className="text-muted-foreground mb-2 line-clamp-2">{chapter.description}</p>
