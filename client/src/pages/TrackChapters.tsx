@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,15 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
+interface Chapter {
+  id: number;
+  trackId: number;
+  title: string;
+  description: string;
+  order: number;
+  status: 'draft' | 'published';
+}
+
 export default function TrackChapters() {
   const [location, setLocation] = useLocation();
   const [match, params] = useRoute("/content-management/track/:trackId");
@@ -39,10 +48,15 @@ export default function TrackChapters() {
   const track = tracks?.find(t => t.id.toString() === trackId);
 
   // Fetch chapters for this track
-  const { data: chapters = [], isLoading } = useQuery<any[]>({
+  const { data: chapters = [], isLoading } = useQuery<Chapter[]>({
     queryKey: [`/api/admin/chapters/${trackId}`],
     enabled: !!trackId,
   });
+
+  // Memoized sorted chapters for performance
+  const sortedChapters = useMemo(() => 
+    chapters.sort((a, b) => a.order - b.order), [chapters]
+  );
 
   // Create chapter mutation
   const createChapterMutation = useMutation({
@@ -171,7 +185,7 @@ export default function TrackChapters() {
 
         {/* Chapter List */}
         <div className="flex flex-col gap-3 sm:gap-4">
-          {(chapters as any[]).sort((a, b) => a.order - b.order).map((chapter: any, index: number) => (
+          {sortedChapters.map((chapter: Chapter, index: number) => (
             <Card 
               key={chapter.id} 
               className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto hover:shadow-md transition-shadow cursor-pointer group"

@@ -32,9 +32,14 @@ export default function ContentManagement() {
   const [newTrack, setNewTrack] = useState({ title: "", description: "" });
 
   // Fetch tracks
-  const { data: tracks = [], isLoading } = useQuery({
+  const { data: tracks = [], isLoading } = useQuery<Track[]>({
     queryKey: ["/api/admin/tracks"],
   });
+
+  // Memoized sorted tracks for performance
+  const sortedTracks = useMemo(() => 
+    tracks.sort((a, b) => a.order - b.order), [tracks]
+  );
 
   // Create track mutation
   const createTrackMutation = useMutation({
@@ -167,7 +172,7 @@ export default function ContentManagement() {
 
         {/* Track List */}
         <div className="flex flex-col gap-3 sm:gap-4">
-          {(tracks as any[]).sort((a, b) => a.order - b.order).map((track: any, index: number) => (
+          {sortedTracks.map((track: Track, index: number) => (
             <Card 
               key={track.id} 
               className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto hover:shadow-md transition-shadow cursor-pointer group"
