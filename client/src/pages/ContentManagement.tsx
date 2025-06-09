@@ -154,12 +154,12 @@ export default function ContentManagement() {
         </div>
 
         {/* Track List */}
-        <div className="grid gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           {(tracks as any[]).sort((a, b) => a.order - b.order).map((track: any, index: number) => (
             <Card key={track.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-3 sm:p-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
                     {/* Track Ordering Controls */}
                     <div className="flex flex-col gap-0.5 flex-shrink-0">
                       <Button
@@ -192,44 +192,41 @@ export default function ContentManagement() {
                       </div>
                       <ResponsiveTitle
                         title={track.title}
-                        className="text-lg sm:text-xl font-semibold mb-1"
+                        className="text-lg font-semibold mb-1"
                       />
-                      <p className="text-muted-foreground mb-2 line-clamp-1 sm:line-clamp-2">{track.description}</p>
+                      <p className="text-muted-foreground mb-2 line-clamp-2 text-sm">{track.description}</p>
                     </div>
                   </div>
                   
-                  <div className="flex sm:flex-col gap-1 flex-shrink-0 sm:ml-6">
-                    <div className="flex items-center gap-2 w-full">
-                      <Button 
-                        variant="default" 
-                        size="sm"
-                        onClick={() => handleTrackClick(track.id)}
-                        className="w-full justify-center sm:justify-start"
-                      >
-                        <span className="sm:hidden">Manage</span>
-                        <span className="hidden sm:inline">Manage Chapters</span>
-                        <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center gap-1 w-full">
+                  <div className="flex flex-col gap-2">
+                    <Button 
+                      variant="default" 
+                      size="sm"
+                      onClick={() => handleTrackClick(track.id)}
+                      className="w-full justify-center"
+                    >
+                      Manage Chapters
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                    <div className="flex items-center gap-2">
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => handleEditTrack(track)}
-                        className="flex-1 sm:flex-none justify-center"
+                        className="flex-1 justify-center"
                       >
-                        <Edit className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
-                        <span className="hidden sm:inline">Edit</span>
+                        <Edit className="w-4 h-4 mr-1" />
+                        Edit
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => handleDeleteTrack(track.id)}
                         disabled={deleteTrackMutation.isPending}
-                        className="flex-1 sm:flex-none justify-center"
+                        className="flex-1 justify-center"
                       >
-                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
-                        <span className="hidden sm:inline">Delete</span>
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete
                       </Button>
                     </div>
                   </div>

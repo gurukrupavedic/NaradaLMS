@@ -171,7 +171,7 @@ export default function TrackChapters() {
         </div>
 
         {/* Chapter List */}
-        <div className="grid gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           {(chapters as any[]).sort((a, b) => a.order - b.order).map((chapter: any, index: number) => (
             <Card key={chapter.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-3 sm:p-4">
