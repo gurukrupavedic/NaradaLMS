@@ -1486,8 +1486,10 @@ export default function ChapterEditor() {
                           </div>
                         )}
                       </div>
+                    )}
 
-                      {/* Audio Segments Section */}
+                    {/* Audio Segments Section */}
+                    {selectedAudioFile && (
                       <div className="space-y-4 border-t pt-4">
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4" />
@@ -1613,6 +1615,7 @@ export default function ChapterEditor() {
                           </div>
                         )}
                         </div>
+                      </div>
                       </div>
                     )}
                   </CardContent>
