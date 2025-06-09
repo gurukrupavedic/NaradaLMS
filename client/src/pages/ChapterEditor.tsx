@@ -363,7 +363,7 @@ export default function ChapterEditor() {
 
   // Fetch media segments for selected audio file
   const selectedAudioFileId = typeof selectedAudioFile === 'object' ? selectedAudioFile?.id : selectedAudioFile;
-  const { data: mediaSegments } = useQuery({
+  const { data: mediaSegments = [] } = useQuery({
     queryKey: [`/api/admin/media-segments/${selectedAudioFileId}`],
     enabled: !!selectedAudioFileId,
   });
@@ -867,11 +867,7 @@ export default function ChapterEditor() {
     },
   });
 
-  // Fetch media segments for selected audio file
-  const { data: mediaSegmentsData = [] } = useQuery({
-    queryKey: ["/api/admin/media-segments", selectedAudioFile?.id],
-    enabled: !!selectedAudioFile?.id,
-  });
+
 
 
 
@@ -1605,8 +1601,21 @@ export default function ChapterEditor() {
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => {
-                                        if (audioPlayer) {
+                                        console.log('Segment play button clicked:', segment);
+                                        console.log('Audio player state:', audioPlayer);
+                                        console.log('Audio ref current:', audioRef.current);
+                                        
+                                        if (!audioPlayer && audioRef.current) {
+                                          setAudioPlayer(audioRef.current);
                                           playAudioSegment(segment);
+                                        } else if (audioPlayer) {
+                                          playAudioSegment(segment);
+                                        } else {
+                                          toast({
+                                            title: "Audio Not Ready",
+                                            description: "Please select an audio file first",
+                                            variant: "destructive"
+                                          });
                                         }
                                       }}
                                       className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700"
