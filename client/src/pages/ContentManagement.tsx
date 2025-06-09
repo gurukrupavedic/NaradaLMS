@@ -189,7 +189,9 @@ export default function ContentManagement() {
                           Track {track.order || index + 1} • {track.chapterCount || 0} chapters
                         </span>
                       </div>
-                      <h3 className="text-xl font-semibold mb-1 truncate max-w-[40%]">{track.title}</h3>
+                      <h3 className="text-xl font-semibold mb-1 truncate" title={track.title}>
+                        {track.title.length > 25 ? `${track.title.substring(0, 25)}...` : track.title}
+                      </h3>
                       <p className="text-muted-foreground mb-2 line-clamp-2">{track.description}</p>
                     </div>
                   </div>

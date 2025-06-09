@@ -205,7 +205,9 @@ export default function TrackChapters() {
                         <span className="text-sm text-muted-foreground font-medium flex-shrink-0">
                           Chapter {chapter.order}
                         </span>
-                        <h3 className="text-xl font-semibold truncate max-w-[40%]">{chapter.title}</h3>
+                        <h3 className="text-xl font-semibold truncate" title={chapter.title}>
+                          {chapter.title.length > 25 ? `${chapter.title.substring(0, 25)}...` : chapter.title}
+                        </h3>
                         <span
                           className={`px-2 py-1 text-xs rounded-full flex-shrink-0 ${
                             chapter.status === "published"
