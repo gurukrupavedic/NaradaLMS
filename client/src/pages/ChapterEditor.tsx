@@ -140,6 +140,23 @@ export default function ChapterEditor() {
     startTime: string;
     endTime: string;
   } | null>(null);
+  const [editingFileName, setEditingFileName] = useState("");
+
+  // Media segmentation state
+  const [selectedMediaSegment, setSelectedMediaSegment] = useState<any>(null);
+  const [selectedTextSegment, setSelectedTextSegment] = useState<any>(null);
+  const [mediaSegmentName, setMediaSegmentName] = useState("");
+  const [startTime, setStartTime] = useState(0);
+  const [endTime, setEndTime] = useState(0);
+  
+  // Text segmentation state
+  const [selectedLanguage, setSelectedLanguage] = useState<'te' | 'hi' | 'en'>('te');
+  const [textSelection, setTextSelection] = useState<{start: number; end: number; text: string} | null>(null);
+  const [segmentName, setSegmentName] = useState("");
+  const [showTextSegmentation, setShowTextSegmentation] = useState(false);
+
+  // Content editor language state
+  const [contentLanguage, setContentLanguage] = useState<'te' | 'hi' | 'en'>('te');
 
   // Helper functions for drag operations
   const handleMouseMove = useCallback((e: MouseEvent) => {
