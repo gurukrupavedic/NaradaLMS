@@ -1069,7 +1069,7 @@ export default function ChapterEditor() {
           {/* Media Content Tab */}
           <TabsContent value="media" className="space-y-6">
             <Card>
-              <CardContent>
+              <CardContent className="pt-6">
                 <div className="space-y-4">
                   {audioFiles && Array.isArray(audioFiles) && audioFiles.length > 0 ? (
                     <div className="space-y-3">
