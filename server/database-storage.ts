@@ -277,9 +277,16 @@ export class DatabaseStorage implements IStorage {
     if (!this.initialized) return memStorage.createTrack(track);
     
     try {
+      // Calculate the next order number by finding the maximum existing order
+      const maxOrderResult = await db
+        .select({ maxOrder: sql<number>`COALESCE(MAX(${tracks.order}), 0)` })
+        .from(tracks);
+      
+      const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
+      
       const [newTrack] = await db.insert(tracks).values({
         ...track,
-        order: 1,
+        order: nextOrder,
         createdBy: "system",
         createdAt: new Date(),
         updatedAt: new Date()
