@@ -156,7 +156,7 @@ export default function TrackChapters() {
                         Chapter {index + 1}
                       </span>
                       <Badge variant={chapter.status === "published" ? "default" : "secondary"}>
-                        {chapter.status}
+                        {chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1)}
                       </Badge>
                     </div>
                     <h3 className="text-xl font-semibold mb-2">{chapter.title}</h3>
