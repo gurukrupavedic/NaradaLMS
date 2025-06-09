@@ -1194,7 +1194,7 @@ export default function ChapterEditor() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Music className="h-5 w-5" />
-                      Audio File Selection, Segmentation & Segments
+                      Media Segmentation
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
