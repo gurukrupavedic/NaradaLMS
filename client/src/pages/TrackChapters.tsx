@@ -12,17 +12,12 @@ import { ResponsiveTitle } from "@/components/ResponsiveTitle";
 import { 
   ArrowLeft, 
   Plus, 
-  Edit, 
   Trash2, 
-  ChevronRight,
   ChevronUp,
   ChevronDown, 
-  FileText, 
-  Music,
-  Clock,
+  FileText,
   Eye,
-  EyeOff,
-  CheckCircle 
+  EyeOff 
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 

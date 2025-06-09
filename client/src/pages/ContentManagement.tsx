@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -6,11 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, ChevronRight, ChevronUp, ChevronDown, FileText, Music, Eye, EyeOff } from "lucide-react";
+import { Plus, Edit, Trash2, ChevronUp, ChevronDown, FileText } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ResponsiveTitle } from "@/components/ResponsiveTitle";
+
+interface Track {
+  id: number;
+  title: string;
+  description: string;
+  order: number;
+  chapterCount: number;
+  status: 'draft' | 'published';
+  lastModified: string;
+}
 
 export default function ContentManagement() {
   const [location, setLocation] = useLocation();
