@@ -158,7 +158,11 @@ export default function TrackChapters() {
           
           <div className="flex items-end justify-between">
             <div>
-              <h1 className="text-3xl font-bold">{track?.title}</h1>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm text-muted-foreground">Track:</span>
+                <span className="text-sm font-medium">{track?.title}</span>
+              </div>
+              <h1 className="text-3xl font-bold">Chapters</h1>
               <p className="text-muted-foreground">{track?.description}</p>
             </div>
             <Button onClick={() => setCreateChapterModalOpen(true)}>
