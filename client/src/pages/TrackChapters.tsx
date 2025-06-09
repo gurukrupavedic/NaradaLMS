@@ -148,52 +148,50 @@ export default function TrackChapters() {
         </div>
 
         {/* Chapter List */}
-        <div className="grid gap-6">
+        <div className="grid gap-4">
           {(chapters as any[]).map((chapter: any, index: number) => (
             <Card key={chapter.id} className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-transparent hover:border-l-blue-500">
-              <CardContent className="p-8">
-                <div className="flex items-start justify-between gap-8">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between gap-6">
                   <div className="flex-1 min-w-0">
                     {/* Header */}
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                          <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                            {index + 1}
-                          </span>
-                        </div>
-                        <Badge variant={chapter.status === "published" ? "default" : "secondary"} className="font-medium">
-                          {chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1)}
-                        </Badge>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                        <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                          {index + 1}
+                        </span>
                       </div>
+                      <Badge variant={chapter.status === "published" ? "default" : "secondary"} className="text-xs">
+                        {chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1)}
+                      </Badge>
                     </div>
                     
                     {/* Content */}
-                    <div className="space-y-3">
-                      <h3 className="text-xl font-semibold leading-tight pr-4">{chapter.title}</h3>
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold leading-tight pr-4">{chapter.title}</h3>
                       {chapter.description && (
-                        <p className="text-muted-foreground leading-relaxed">{chapter.description}</p>
+                        <p className="text-sm text-muted-foreground leading-normal">{chapter.description}</p>
                       )}
                       
                       {/* Progress Indicators */}
-                      <div className="flex items-center gap-8 pt-2">
-                        <div className={`flex items-center gap-2 ${chapter.hasContent ? 'text-green-600' : 'text-orange-500'}`}>
-                          <FileText className="w-4 h-4" />
-                          <span className="text-sm font-medium">
+                      <div className="flex items-center gap-6 pt-1">
+                        <div className={`flex items-center gap-1.5 ${chapter.hasContent ? 'text-green-600' : 'text-orange-500'}`}>
+                          <FileText className="w-3.5 h-3.5" />
+                          <span className="text-xs font-medium">
                             {chapter.hasContent ? "Content ready" : "No content"}
                           </span>
                         </div>
                         
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Music className="w-4 h-4" />
-                          <span className="text-sm">
-                            <span className="font-semibold text-foreground">{chapter.audioFileCount || 0}</span> audio files
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Music className="w-3.5 h-3.5" />
+                          <span className="text-xs">
+                            <span className="font-semibold text-foreground">{chapter.audioFileCount || 0}</span> audio
                           </span>
                         </div>
                         
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Clock className="w-4 h-4" />
-                          <span className="text-sm">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span className="text-xs">
                             <span className="font-semibold text-foreground">{chapter.segmentCount || 0}</span> segments
                           </span>
                         </div>
@@ -202,14 +200,14 @@ export default function TrackChapters() {
                   </div>
                   
                   {/* Actions */}
-                  <div className="flex flex-col gap-3 min-w-[140px]">
+                  <div className="flex flex-col gap-2 min-w-[130px]">
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleEditChapter(chapter.id)}
-                      className="w-full justify-start"
+                      className="w-full justify-start text-xs h-8"
                     >
-                      <Edit className="w-4 h-4 mr-2" />
+                      <Edit className="w-3 h-3 mr-2" />
                       Edit Content
                     </Button>
                     <Button 
@@ -220,7 +218,7 @@ export default function TrackChapters() {
                         toggleStatusMutation.mutate({ chapterId: chapter.id, status: newStatus });
                       }}
                       disabled={toggleStatusMutation.isPending}
-                      className="w-full justify-start"
+                      className="w-full justify-start text-xs h-8"
                     >
                       {chapter.status === "published" ? "Unpublish" : "Publish"}
                     </Button>
@@ -229,9 +227,9 @@ export default function TrackChapters() {
                       size="sm"
                       onClick={() => handleDeleteChapter(chapter.id)}
                       disabled={deleteChapterMutation.isPending}
-                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      className="w-full justify-start text-xs h-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                     >
-                      <Trash2 className="w-4 h-4 mr-2" />
+                      <Trash2 className="w-3 h-3 mr-2" />
                       Delete
                     </Button>
                   </div>
