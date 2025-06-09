@@ -1612,10 +1612,8 @@ export default function ChapterEditor() {
                             <p className="text-xs">Add time marks and create segments</p>
                           </div>
                         )}
-                          </div>
                         </div>
-                        </div>
-                      </>
+                      </div>
                     )}
                   </CardContent>
                 </Card>
