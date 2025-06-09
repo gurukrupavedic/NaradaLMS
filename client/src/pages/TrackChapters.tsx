@@ -13,7 +13,9 @@ import {
   Plus, 
   Edit, 
   Trash2, 
-  ChevronRight, 
+  ChevronRight,
+  ChevronUp,
+  ChevronDown, 
   FileText, 
   Music,
   Clock,
@@ -88,6 +90,21 @@ export default function TrackChapters() {
     },
   });
 
+  // Move chapter mutation
+  const moveChapterMutation = useMutation({
+    mutationFn: async ({ chapterId, direction }: { chapterId: number; direction: 'up' | 'down' }) => {
+      const response = await apiRequest("POST", `/api/admin/chapters/${chapterId}/move`, { direction });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Chapter order updated successfully" });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${trackId}`] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update chapter order", description: error.message, variant: "destructive" });
+    },
+  });
+
   const handleCreateChapter = () => {
     if (!newChapter.title.trim()) {
       toast({ title: "Please enter a chapter title", variant: "destructive" });
@@ -112,6 +129,10 @@ export default function TrackChapters() {
     if (confirm("Are you sure you want to delete this chapter?")) {
       deleteChapterMutation.mutate(chapterId);
     }
+  };
+
+  const handleMoveChapter = (chapterId: number, direction: 'up' | 'down') => {
+    moveChapterMutation.mutate({ chapterId, direction });
   };
 
   if (isLoading) {
@@ -149,23 +170,49 @@ export default function TrackChapters() {
 
         {/* Chapter List */}
         <div className="grid gap-4">
-          {(chapters as any[]).map((chapter: any, index: number) => (
+          {(chapters as any[]).sort((a, b) => a.order - b.order).map((chapter: any, index: number) => (
             <Card key={chapter.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-sm text-muted-foreground font-medium">
-                        Chapter {index + 1}
-                      </span>
-                      <Badge variant={chapter.status === "published" ? "default" : "secondary"} className="text-xs">
-                        {chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1)}
-                      </Badge>
+                  <div className="flex items-center gap-3">
+                    {/* Chapter Ordering Controls */}
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                        disabled={chapter.order === 1 || moveChapterMutation.isPending}
+                        onClick={() => handleMoveChapter(chapter.id, 'up')}
+                        title="Move chapter up"
+                      >
+                        <ChevronUp className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                        disabled={chapter.order === (chapters as any[]).length || moveChapterMutation.isPending}
+                        onClick={() => handleMoveChapter(chapter.id, 'down')}
+                        title="Move chapter down"
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </Button>
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">{chapter.title}</h3>
-                    {chapter.description && (
-                      <p className="text-muted-foreground mb-3">{chapter.description}</p>
-                    )}
+                    
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-sm text-muted-foreground font-medium">
+                          Chapter {chapter.order}
+                        </span>
+                        <Badge variant={chapter.status === "published" ? "default" : "secondary"} className="text-xs">
+                          {chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1)}
+                        </Badge>
+                      </div>
+                      <h3 className="text-xl font-semibold mb-2">{chapter.title}</h3>
+                      {chapter.description && (
+                        <p className="text-muted-foreground mb-3">{chapter.description}</p>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="flex flex-col gap-2">

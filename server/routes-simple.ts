@@ -211,6 +211,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chapter ordering
+  app.post('/api/admin/chapters/:id/move', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.id);
+      const { direction } = req.body;
+      
+      if (!['up', 'down'].includes(direction)) {
+        return res.status(400).json({ message: "Invalid direction. Must be 'up' or 'down'" });
+      }
+      
+      // Get the current chapter to find its track
+      const currentChapter = await storage.getChapter(chapterId);
+      if (!currentChapter) {
+        return res.status(404).json({ message: "Chapter not found" });
+      }
+      
+      // Get all chapters in the same track
+      const chapters = await storage.getChaptersByTrack(currentChapter.trackId);
+      const sortedChapters = chapters.sort((a, b) => a.order - b.order);
+      const currentIndex = sortedChapters.findIndex(c => c.id === chapterId);
+      
+      if (direction === 'up' && currentIndex > 0) {
+        // Swap with previous chapter
+        const previousChapter = sortedChapters[currentIndex - 1];
+        await storage.updateChapter(chapterId, { order: previousChapter.order });
+        await storage.updateChapter(previousChapter.id, { order: currentChapter.order });
+      } else if (direction === 'down' && currentIndex < sortedChapters.length - 1) {
+        // Swap with next chapter
+        const nextChapter = sortedChapters[currentIndex + 1];
+        await storage.updateChapter(chapterId, { order: nextChapter.order });
+        await storage.updateChapter(nextChapter.id, { order: currentChapter.order });
+      } else {
+        return res.status(400).json({ message: "Cannot move chapter in that direction" });
+      }
+      
+      res.json({ message: "Chapter order updated successfully" });
+    } catch (error) {
+      console.error("Error moving chapter:", error);
+      res.status(500).json({ message: "Failed to move chapter" });
+    }
+  });
+
+  app.delete('/api/admin/chapters/:id', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.id);
+      await storage.deleteChapter(chapterId);
+      res.json({ message: "Chapter deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting chapter:", error);
+      res.status(500).json({ message: "Failed to delete chapter" });
+    }
+  });
+
   // Audio file routes
   app.get('/api/admin/audio-files/:chapterId', async (req, res) => {
     try {
