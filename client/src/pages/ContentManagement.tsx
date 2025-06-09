@@ -141,7 +141,7 @@ export default function ContentManagement() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-6 py-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-end justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold">Content Management</h1>
             <p className="text-muted-foreground">Manage learning tracks and chapters</p>
