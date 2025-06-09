@@ -19,21 +19,15 @@ import {
   Bold, 
   Italic, 
   Underline as UnderlineIcon, 
-  Palette, 
   AlignLeft,
   AlignCenter,
   AlignRight,
   AlignJustify,
-  Heading1,
-  Heading2,
-  Heading3,
   List,
   ListOrdered,
   Minus,
   Link as LinkIcon,
-  ImageIcon,
-  Type,
-  ChevronDown
+  ImageIcon
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCallback, useEffect } from 'react'
@@ -58,7 +52,6 @@ export function RichTextEditor({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // Disable default extensions we're configuring separately
         heading: false,
         hardBreak: false,
         horizontalRule: false,
@@ -73,7 +66,6 @@ export function RichTextEditor({
         levels: [1, 2, 3, 4, 5, 6],
       }),
       HardBreak.configure({
-        // Make Enter key create hard breaks (line breaks)
         keepMarks: false,
       }),
       HorizontalRule,
@@ -108,13 +100,11 @@ export function RichTextEditor({
     ],
     editorProps: {
       handleKeyDown: (view, event) => {
-        // Handle Enter key behavior
         if (event.key === 'Enter') {
           if (event.shiftKey) {
-            // Shift+Enter: Create new paragraph
-            return false; // Let default behavior handle paragraph creation
+            return false; // Shift+Enter: Create paragraph
           } else {
-            // Enter: Create hard break (line break)
+            // Enter: Create hard break
             event.preventDefault();
             view.dispatch(view.state.tr.replaceSelectionWith(view.state.schema.nodes.hardBreak.create()));
             return true;
@@ -131,19 +121,11 @@ export function RichTextEditor({
     },
   });
 
-  // Update editor content when value changes externally (language switching)
   useEffect(() => {
-    if (editor && editor.getHTML() !== value) {
-      editor.commands.setContent(value, false);
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value);
     }
-  }, [editor, value]);
-
-  // Update editor editable state when disabled prop changes
-  useEffect(() => {
-    if (editor) {
-      editor.setEditable(!disabled);
-    }
-  }, [editor, disabled]);
+  }, [value, editor]);
 
   const setColor = useCallback((color: string) => {
     editor?.chain().focus().setColor(color).run();
@@ -175,18 +157,10 @@ export function RichTextEditor({
     editor?.chain().focus().setTextAlign(alignment).run();
   }, [editor]);
 
-  if (!editor) {
-    return (
-      <div className={cn("min-h-[400px] border rounded-md p-4 bg-muted", className)}>
-        <div className="animate-pulse">Loading editor...</div>
-      </div>
-    );
-  }
-
   const getFontClass = () => {
     switch (language) {
-      case "te": return "font-telugu";
-      case "hi": return "font-devanagari";
+      case "te": return "font-['Noto Sans Telugu']";
+      case "hi": return "font-['Noto Sans Devanagari']";
       case "en": return "font-mono";
       default: return "";
     }
@@ -194,291 +168,251 @@ export function RichTextEditor({
 
   return (
     <div className={cn("border rounded-md", className)}>
-      {/* Toolbar */}
-      <div className="border-b p-2 flex flex-wrap items-center gap-1">
-        {/* Basic formatting */}
-        <Button
-          variant={editor.isActive('bold') ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          disabled={disabled}
-          className="h-8 w-8 p-0"
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        
-        <Button
-          variant={editor.isActive('italic') ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          disabled={disabled}
-          className="h-8 w-8 p-0"
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
+      {/* Reorganized Toolbar */}
+      <div className="border-b p-2 bg-muted/50">
+        {/* Row 1: Primary Tools */}
+        <div className="flex flex-wrap items-center gap-2 mb-2">
+          {/* Essential Formatting */}
+          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
+            <Button
+              variant={editor?.isActive('bold') ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => editor?.chain().focus().toggleBold().run()}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Bold (Ctrl+B)"
+            >
+              <Bold className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant={editor?.isActive('italic') ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => editor?.chain().focus().toggleItalic().run()}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Italic (Ctrl+I)"
+            >
+              <Italic className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant={editor?.isActive('underline') ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => editor?.chain().focus().toggleUnderline().run()}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Underline (Ctrl+U)"
+            >
+              <UnderlineIcon className="h-3.5 w-3.5" />
+            </Button>
+          </div>
 
-        <div className="w-px h-6 bg-border mx-1" />
+          {/* Font Selector */}
+          <Select
+            value={editor?.getAttributes('textStyle')?.fontFamily || 'default'}
+            onValueChange={setFontFamily}
+            disabled={disabled}
+          >
+            <SelectTrigger className="w-[110px] h-8 text-xs">
+              <SelectValue placeholder="Font" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default</SelectItem>
+              <SelectItem value="'Noto Sans Telugu', sans-serif">Telugu</SelectItem>
+              <SelectItem value="'Noto Sans Devanagari', sans-serif">Devanagari</SelectItem>
+              <SelectItem value="'Sanskrit 2003', serif">Sanskrit</SelectItem>
+              <SelectItem value="Arial, sans-serif">Arial</SelectItem>
+              <SelectItem value="Times New Roman, serif">Times</SelectItem>
+              <SelectItem value="Georgia, serif">Georgia</SelectItem>
+            </SelectContent>
+          </Select>
 
-        {/* Text colors */}
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setColor('#ef4444')}
-            disabled={disabled}
-            className="h-8 w-8 p-0"
-            title="Red text"
-          >
-            <div className="w-4 h-4 bg-red-500 rounded"></div>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setColor('#3b82f6')}
-            disabled={disabled}
-            className="h-8 w-8 p-0"
-            title="Blue text"
-          >
-            <div className="w-4 h-4 bg-blue-500 rounded"></div>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setColor('#22c55e')}
-            disabled={disabled}
-            className="h-8 w-8 p-0"
-            title="Green text"
-          >
-            <div className="w-4 h-4 bg-green-500 rounded"></div>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setColor('#000000')}
-            disabled={disabled}
-            className="h-8 w-8 p-0"
-            title="Black text"
-          >
-            <div className="w-4 h-4 bg-black dark:bg-white rounded"></div>
-          </Button>
+          {/* Text Colors */}
+          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setColor('#000000')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Black"
+            >
+              <div className="w-3 h-3 bg-black dark:bg-white rounded-sm"></div>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setColor('#ef4444')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Red"
+            >
+              <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setColor('#3b82f6')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Blue"
+            >
+              <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setColor('#22c55e')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Green"
+            >
+              <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
+            </Button>
+          </div>
         </div>
 
-        <div className="w-px h-6 bg-border mx-1" />
-
-        {/* Font Family */}
-        <Select
-          value={editor?.getAttributes('textStyle')?.fontFamily || 'default'}
-          onValueChange={setFontFamily}
-          disabled={disabled}
-        >
-          <SelectTrigger className="w-[140px] h-8 text-sm">
-            <SelectValue placeholder="Font" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="default">Default</SelectItem>
-            <SelectItem value="Arial, sans-serif">Arial</SelectItem>
-            <SelectItem value="Times New Roman, serif">Times New Roman</SelectItem>
-            <SelectItem value="Courier New, monospace">Courier New</SelectItem>
-            <SelectItem value="'Noto Sans Telugu', sans-serif">Noto Sans Telugu</SelectItem>
-            <SelectItem value="'Noto Sans Devanagari', sans-serif">Noto Sans Devanagari</SelectItem>
-            <SelectItem value="'Noto Sans', sans-serif">Noto Sans</SelectItem>
-            <SelectItem value="'Sanskrit 2003', serif">Sanskrit 2003</SelectItem>
-            <SelectItem value="Georgia, serif">Georgia</SelectItem>
-            <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
-        {/* Underline */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor?.chain().focus().toggleUnderline().run()}
-          disabled={disabled}
-          className={cn(
-            "h-8 w-8 p-0",
-            editor?.isActive('underline') && "bg-muted"
-          )}
-          title="Underline"
-        >
-          <UnderlineIcon className="h-4 w-4" />
-        </Button>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
-        {/* Headings */}
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
+        {/* Row 2: Structure Tools */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Heading Selector */}
+          <Select
+            value={
+              editor?.isActive('heading', { level: 1 }) ? 'h1' :
+              editor?.isActive('heading', { level: 2 }) ? 'h2' :
+              editor?.isActive('heading', { level: 3 }) ? 'h3' :
+              editor?.isActive('heading', { level: 4 }) ? 'h4' :
+              editor?.isActive('heading', { level: 5 }) ? 'h5' :
+              editor?.isActive('heading', { level: 6 }) ? 'h6' :
+              'paragraph'
+            }
+            onValueChange={(value) => {
+              if (value === 'paragraph') {
+                editor?.chain().focus().setParagraph().run();
+              } else {
+                const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5 | 6;
+                editor?.chain().focus().toggleHeading({ level }).run();
+              }
+            }}
             disabled={disabled}
-            className={cn(
-              "h-8 w-8 p-0",
-              editor?.isActive('heading', { level: 1 }) && "bg-muted"
-            )}
-            title="Heading 1"
           >
-            <Heading1 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-            disabled={disabled}
-            className={cn(
-              "h-8 w-8 p-0",
-              editor?.isActive('heading', { level: 2 }) && "bg-muted"
-            )}
-            title="Heading 2"
-          >
-            <Heading2 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-            disabled={disabled}
-            className={cn(
-              "h-8 w-8 p-0",
-              editor?.isActive('heading', { level: 3 }) && "bg-muted"
-            )}
-            title="Heading 3"
-          >
-            <Heading3 className="h-4 w-4" />
-          </Button>
+            <SelectTrigger className="w-[90px] h-8 text-xs">
+              <SelectValue placeholder="Style" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="paragraph">Paragraph</SelectItem>
+              <SelectItem value="h1">Heading 1</SelectItem>
+              <SelectItem value="h2">Heading 2</SelectItem>
+              <SelectItem value="h3">Heading 3</SelectItem>
+              <SelectItem value="h4">Heading 4</SelectItem>
+              <SelectItem value="h5">Heading 5</SelectItem>
+              <SelectItem value="h6">Heading 6</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Lists */}
+          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
+            <Button
+              variant={editor?.isActive('orderedList') ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Numbered List"
+            >
+              <ListOrdered className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant={editor?.isActive('bulletList') ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => editor?.chain().focus().toggleBulletList().run()}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Bullet List"
+            >
+              <List className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+          {/* Alignment */}
+          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
+            <Button
+              variant={editor?.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setAlignment('left')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Left Align"
+            >
+              <AlignLeft className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant={editor?.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setAlignment('center')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Center Align"
+            >
+              <AlignCenter className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant={editor?.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setAlignment('right')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Right Align"
+            >
+              <AlignRight className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant={editor?.isActive({ textAlign: 'justify' }) ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setAlignment('justify')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Justify"
+            >
+              <AlignJustify className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+          {/* Content Insertion */}
+          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
+            <Button
+              variant={editor?.isActive('link') ? 'default' : 'ghost'}
+              size="sm"
+              onClick={addLink}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Add Link"
+            >
+              <LinkIcon className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={addImage}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Add Image"
+            >
+              <ImageIcon className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor?.chain().focus().setHorizontalRule().run()}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Horizontal Rule"
+            >
+              <Minus className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
-        {/* Hard Break & Horizontal Rule */}
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor?.chain().focus().setHardBreak().run()}
-            disabled={disabled}
-            className="h-8 w-8 p-0"
-            title="Line break"
-          >
-            <Type className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor?.chain().focus().setHorizontalRule().run()}
-            disabled={disabled}
-            className="h-8 w-8 p-0"
-            title="Horizontal rule"
-          >
-            <Minus className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
-        {/* Lists */}
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-            disabled={disabled}
-            className={cn(
-              "h-8 w-8 p-0",
-              editor?.isActive('orderedList') && "bg-muted"
-            )}
-            title="Numbered list"
-          >
-            <ListOrdered className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor?.chain().focus().toggleBulletList().run()}
-            disabled={disabled}
-            className={cn(
-              "h-8 w-8 p-0",
-              editor?.isActive('bulletList') && "bg-muted"
-            )}
-            title="Bullet list"
-          >
-            <List className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
-        {/* Links & Images */}
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={addLink}
-            disabled={disabled}
-            className={cn(
-              "h-8 w-8 p-0",
-              editor?.isActive('link') && "bg-muted"
-            )}
-            title="Add link"
-          >
-            <LinkIcon className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={addImage}
-            disabled={disabled}
-            className="h-8 w-8 p-0"
-            title="Add image"
-          >
-            <ImageIcon className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
-        {/* Text alignment */}
-        <Button
-          variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => setAlignment('left')}
-          disabled={disabled}
-          className="h-8 w-8 p-0"
-        >
-          <AlignLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => setAlignment('center')}
-          disabled={disabled}
-          className="h-8 w-8 p-0"
-        >
-          <AlignCenter className="h-4 w-4" />
-        </Button>
-        <Button
-          variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => setAlignment('right')}
-          disabled={disabled}
-          className="h-8 w-8 p-0"
-        >
-          <AlignRight className="h-4 w-4" />
-        </Button>
-        <Button
-          variant={editor.isActive({ textAlign: 'justify' }) ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => setAlignment('justify')}
-          disabled={disabled}
-          className="h-8 w-8 p-0"
-        >
-          <AlignJustify className="h-4 w-4" />
-        </Button>
       </div>
 
-      {/* Editor content */}
+      {/* Editor Content */}
       <EditorContent 
         editor={editor} 
         className={cn(
