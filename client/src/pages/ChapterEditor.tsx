@@ -153,7 +153,6 @@ export default function ChapterEditor() {
   const [selectedLanguage, setSelectedLanguage] = useState<'te' | 'hi' | 'en'>('te');
   const [textSelection, setTextSelection] = useState<{start: number; end: number; text: string} | null>(null);
   const [segmentName, setSegmentName] = useState("");
-  const [showTextSegmentation, setShowTextSegmentation] = useState(false);
 
   // Content editor language state
   const [contentLanguage, setContentLanguage] = useState<'te' | 'hi' | 'en'>('te');
@@ -1626,19 +1625,10 @@ export default function ChapterEditor() {
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <FileText className="h-5 w-5" />
-                        Text Segmentation & Mapping
-                      </CardTitle>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowTextSegmentation(!showTextSegmentation)}
-                      >
-                        {showTextSegmentation ? 'Hide' : 'Show'} Text
-                      </Button>
-                    </div>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Text Segmentation & Mapping
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {/* Language Selection */}
@@ -1661,23 +1651,21 @@ export default function ChapterEditor() {
                     </div>
 
                     {/* Text Content with Segmentation */}
-                    {showTextSegmentation && (
-                      <div className="space-y-3">
-                        <Label>Text Content (Click and drag to select)</Label>
-                        <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900 max-h-96 overflow-y-auto">
-                          <div className={`text-sm leading-relaxed ${
-                            selectedLanguage === 'te' ? 'font-telugu' : 
-                            selectedLanguage === 'hi' ? 'font-devanagari' : 
-                            'font-mono'
-                          }`}>
-                            {textContent[selectedLanguage] ? 
-                              renderTextWithSegments(textContent[selectedLanguage], selectedLanguage) :
-                              <div className="text-muted-foreground italic">No content available for this language</div>
-                            }
-                          </div>
+                    <div className="space-y-3">
+                      <Label>Text Content (Click and drag to select)</Label>
+                      <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900 max-h-96 overflow-y-auto">
+                        <div className={`text-sm leading-relaxed ${
+                          selectedLanguage === 'te' ? 'font-telugu' : 
+                          selectedLanguage === 'hi' ? 'font-devanagari' : 
+                          'font-mono'
+                        }`}>
+                          {textContent[selectedLanguage] ? 
+                            renderTextWithSegments(textContent[selectedLanguage], selectedLanguage) :
+                            <div className="text-muted-foreground italic">No content available for this language</div>
+                          }
                         </div>
                       </div>
-                    )}
+                    </div>
 
                     {/* Text Selection Info */}
                     {textSelection && (
