@@ -47,6 +47,7 @@ interface ChapterData {
   id: number;
   trackId: number;
   title: string;
+  description?: string;
   status: "draft" | "published";
   content: {
     te?: string;
@@ -194,6 +195,11 @@ export default function ChapterEditor() {
     hi: "",
     en: "",
   });
+
+  // Chapter metadata editing state
+  const [isEditingMetadata, setIsEditingMetadata] = useState(false);
+  const [editingTitle, setEditingTitle] = useState("");
+  const [editingDescription, setEditingDescription] = useState("");
 
   // Audio and segmentation state
   const [selectedAudioFile, setSelectedAudioFile] = useState<any | null>(null);
@@ -409,6 +415,36 @@ export default function ChapterEditor() {
     onError: (error: any) => {
       toast({
         title: "Failed to update chapter status",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update chapter metadata mutation
+  const updateChapterMetadataMutation = useMutation({
+    mutationFn: async ({ title, description }: { title: string; description: string }) => {
+      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}`, {
+        title,
+        description,
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Chapter updated successfully" });
+      setIsEditingMetadata(false);
+      queryClient.invalidateQueries({
+        queryKey: [`/api/admin/chapters/${chapterId}/details`],
+      });
+      // Also invalidate the chapters list to update the display
+      if (chapter?.trackId) {
+        queryClient.invalidateQueries({
+          queryKey: [`/api/admin/chapters/${chapter.trackId}`],
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update chapter",
         description: error.message,
         variant: "destructive",
       });
