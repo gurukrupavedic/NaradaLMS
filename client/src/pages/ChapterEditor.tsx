@@ -10,10 +10,36 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  FileText, Upload, Music, Eye, ChevronLeft, Play, Pause, Square, 
-  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2, Clock, Edit, Timer, Ruler, Type, Settings
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  FileText,
+  Upload,
+  Music,
+  Eye,
+  ChevronLeft,
+  Play,
+  Pause,
+  Square,
+  MapPin,
+  X,
+  Trash2,
+  Plus,
+  ArrowRight,
+  Save,
+  Edit2,
+  Link2,
+  Clock,
+  Edit,
+  Timer,
+  Ruler,
+  Type,
+  Settings,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -71,7 +97,7 @@ export default function ChapterEditor() {
     if (!seconds || seconds < 0 || !isFinite(seconds)) return "0:00";
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   // Safe audio playback function for segments with boundary enforcement
@@ -80,31 +106,39 @@ export default function ChapterEditor() {
       toast({
         title: "Audio Not Ready",
         description: "Please wait for audio to load",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
     const startTime = segment.startTimestamp || segment.startTime || 0;
     const endTime = segment.endTimestamp || segment.endTime || 0;
-    
+
     // Validate timestamps
-    if (typeof startTime !== 'number' || !isFinite(startTime) || startTime < 0) {
-      console.warn('Invalid start time for segment:', segment);
+    if (
+      typeof startTime !== "number" ||
+      !isFinite(startTime) ||
+      startTime < 0
+    ) {
+      console.warn("Invalid start time for segment:", segment);
       toast({
-        title: "Invalid Timestamp", 
+        title: "Invalid Timestamp",
         description: "This segment has an invalid start time",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
-    if (typeof endTime !== 'number' || !isFinite(endTime) || endTime <= startTime) {
-      console.warn('Invalid end time for segment:', segment);
+    if (
+      typeof endTime !== "number" ||
+      !isFinite(endTime) ||
+      endTime <= startTime
+    ) {
+      console.warn("Invalid end time for segment:", segment);
       toast({
-        title: "Invalid Timestamp", 
+        title: "Invalid Timestamp",
         description: "This segment has an invalid end time",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -112,7 +146,10 @@ export default function ChapterEditor() {
     try {
       // Remove any existing segment boundary listener
       if (segmentBoundaryListenerRef.current) {
-        audioPlayer.removeEventListener('timeupdate', segmentBoundaryListenerRef.current);
+        audioPlayer.removeEventListener(
+          "timeupdate",
+          segmentBoundaryListenerRef.current,
+        );
         segmentBoundaryListenerRef.current = null;
       }
 
@@ -122,32 +159,31 @@ export default function ChapterEditor() {
           audioPlayer.pause();
           setIsPlaying(false);
           // Clean up listener
-          audioPlayer.removeEventListener('timeupdate', boundaryListener);
+          audioPlayer.removeEventListener("timeupdate", boundaryListener);
           segmentBoundaryListenerRef.current = null;
         }
       };
 
       // Store listener reference and add it
       segmentBoundaryListenerRef.current = boundaryListener;
-      audioPlayer.addEventListener('timeupdate', boundaryListener);
+      audioPlayer.addEventListener("timeupdate", boundaryListener);
 
       // Set playback position and start playing
       audioPlayer.currentTime = startTime;
       setCurrentTime(startTime);
       audioPlayer.play();
       setIsPlaying(true);
-      
+
       toast({
         title: "Playing Segment",
-        description: `${formatTime(startTime)} - ${formatTime(endTime)} (${Math.round(endTime - startTime)}s)`
+        description: `${formatTime(startTime)} - ${formatTime(endTime)} (${Math.round(endTime - startTime)}s)`,
       });
-      
     } catch (error) {
-      console.error('Error playing segment:', error);
+      console.error("Error playing segment:", error);
       toast({
         title: "Playback Error",
-        description: "Failed to play audio segment", 
-        variant: "destructive"
+        description: "Failed to play audio segment",
+        variant: "destructive",
       });
     }
   };
@@ -156,9 +192,9 @@ export default function ChapterEditor() {
   const [textContent, setTextContent] = useState({
     te: "",
     hi: "",
-    en: ""
+    en: "",
   });
-  
+
   // Audio and segmentation state
   const [selectedAudioFile, setSelectedAudioFile] = useState<any | null>(null);
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
@@ -172,7 +208,7 @@ export default function ChapterEditor() {
   const [isDragOver, setIsDragOver] = useState(false);
   const timelineRef = useRef<HTMLInputElement>(null);
   const [editingFileId, setEditingFileId] = useState<number | null>(null);
-  
+
   // Audio segment editing state
   const [editingSegmentId, setEditingSegmentId] = useState<number | null>(null);
   const [editingSegmentData, setEditingSegmentData] = useState<{
@@ -187,80 +223,103 @@ export default function ChapterEditor() {
   const [mediaSegmentName, setMediaSegmentName] = useState("");
   const [startTime, setStartTime] = useState(0);
   const [endTime, setEndTime] = useState(0);
-  
+
   // Text segmentation state
-  const [selectedLanguage, setSelectedLanguage] = useState<'te' | 'hi' | 'en'>('te');
-  const [textSelection, setTextSelection] = useState<{start: number; end: number; text: string} | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<"te" | "hi" | "en">(
+    "te",
+  );
+  const [textSelection, setTextSelection] = useState<{
+    start: number;
+    end: number;
+    text: string;
+  } | null>(null);
   const [segmentName, setSegmentName] = useState("");
 
   // Content editor language state
-  const [contentLanguage, setContentLanguage] = useState<'te' | 'hi' | 'en'>('te');
+  const [contentLanguage, setContentLanguage] = useState<"te" | "hi" | "en">(
+    "te",
+  );
 
   // === HELPER FUNCTIONS SECTION ===
-  
+
   // Helper functions for drag operations
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging || !selectedMark || !timelineRef.current) return;
-    
-    const rect = timelineRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percentage = Math.max(0, Math.min(1, x / rect.width));
-    const newTime = percentage * duration;
-    
-    setTimeMarks(prev => 
-      prev.map(mark => mark === selectedMark ? newTime : mark).sort((a, b) => a - b)
-    );
-    setSelectedMark(newTime);
-  }, [isDragging, selectedMark, duration]);
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isDragging || !selectedMark || !timelineRef.current) return;
+
+      const rect = timelineRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const percentage = Math.max(0, Math.min(1, x / rect.width));
+      const newTime = percentage * duration;
+
+      setTimeMarks((prev) =>
+        prev
+          .map((mark) => (mark === selectedMark ? newTime : mark))
+          .sort((a, b) => a - b),
+      );
+      setSelectedMark(newTime);
+    },
+    [isDragging, selectedMark, duration],
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
   }, []);
 
   const updateMarkTimestamp = (oldMark: number, newTimestamp: string) => {
-    const [minutes, seconds] = newTimestamp.split(':').map(Number);
-    if (isNaN(minutes) || isNaN(seconds) || minutes < 0 || seconds < 0 || seconds >= 60) {
+    const [minutes, seconds] = newTimestamp.split(":").map(Number);
+    if (
+      isNaN(minutes) ||
+      isNaN(seconds) ||
+      minutes < 0 ||
+      seconds < 0 ||
+      seconds >= 60
+    ) {
       toast({
         title: "Invalid Timestamp",
         description: "Please enter a valid timestamp in MM:SS format",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
+
     const newTime = minutes * 60 + seconds;
     if (newTime > duration) {
       toast({
         title: "Timestamp Too Large",
         description: "Timestamp cannot exceed audio duration",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
-    setTimeMarks(prev => 
-      prev.map(mark => mark === oldMark ? newTime : mark).sort((a, b) => a - b)
+
+    setTimeMarks((prev) =>
+      prev
+        .map((mark) => (mark === oldMark ? newTime : mark))
+        .sort((a, b) => a - b),
     );
     setSelectedMark(newTime);
     setEditingTimestamp(null);
-    
+
     toast({
       title: "Timestamp Updated",
-      description: `Mark updated to ${Math.floor(newTime / 60)}:${Math.floor(newTime % 60).toString().padStart(2, '0')}`
+      description: `Mark updated to ${Math.floor(newTime / 60)}:${Math.floor(
+        newTime % 60,
+      )
+        .toString()
+        .padStart(2, "0")}`,
     });
   };
-
-
 
   // Helper functions for segment editing
   const startEditingSegment = (segment: any) => {
     const startTime = segment.startTimestamp || segment.startTime || 0;
     const endTime = segment.endTimestamp || segment.endTime || 0;
-    
+
     setEditingSegmentId(segment.id);
     setEditingSegmentData({
       startTime: formatTime(startTime),
-      endTime: formatTime(endTime)
+      endTime: formatTime(endTime),
     });
   };
 
@@ -273,24 +332,26 @@ export default function ChapterEditor() {
     if (!editingSegmentData || editingSegmentId === null) return;
 
     // Parse start time
-    const [startMin, startSec] = editingSegmentData.startTime.split(':').map(Number);
+    const [startMin, startSec] = editingSegmentData.startTime
+      .split(":")
+      .map(Number);
     if (isNaN(startMin) || isNaN(startSec)) {
       toast({
         title: "Invalid Start Time",
         description: "Please enter a valid start time in MM:SS format",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
     const startTime = startMin * 60 + startSec;
 
     // Parse end time
-    const [endMin, endSec] = editingSegmentData.endTime.split(':').map(Number);
+    const [endMin, endSec] = editingSegmentData.endTime.split(":").map(Number);
     if (isNaN(endMin) || isNaN(endSec)) {
       toast({
         title: "Invalid End Time",
         description: "Please enter a valid end time in MM:SS format",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -301,7 +362,7 @@ export default function ChapterEditor() {
       toast({
         title: "Invalid Time Range",
         description: "Start time must be before end time",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -310,7 +371,7 @@ export default function ChapterEditor() {
       toast({
         title: "Time Exceeds Duration",
         description: "End time cannot exceed audio duration",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -318,32 +379,44 @@ export default function ChapterEditor() {
     updateMediaSegmentMutation.mutate({
       id: editingSegmentId,
       startTime,
-      endTime
+      endTime,
     });
   };
 
   const deleteSegment = (segmentId: number) => {
-    if (window.confirm("Are you sure you want to delete this segment? This action cannot be undone.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this segment? This action cannot be undone.",
+      )
+    ) {
       deleteMediaSegmentMutation.mutate(segmentId);
     }
   };
 
   // Chapter status toggle mutation
   const toggleStatusMutation = useMutation({
-    mutationFn: async (newStatus: 'draft' | 'published') => {
-      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}/status`, { status: newStatus });
+    mutationFn: async (newStatus: "draft" | "published") => {
+      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}/status`, {
+        status: newStatus,
+      });
     },
     onSuccess: () => {
       toast({ title: "Chapter status updated successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${chapterId}/details`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/admin/chapters/${chapterId}/details`],
+      });
     },
     onError: (error: any) => {
-      toast({ title: "Failed to update chapter status", description: error.message, variant: "destructive" });
+      toast({
+        title: "Failed to update chapter status",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
   // === DATA FETCHING SECTION ===
-  
+
   // Fetch chapter details
   const { data: chapter, isLoading: chapterLoading } = useQuery<ChapterData>({
     queryKey: [`/api/admin/chapters/${chapterId}/details`],
@@ -363,7 +436,10 @@ export default function ChapterEditor() {
   });
 
   // Fetch media segments for selected audio file
-  const selectedAudioFileId = typeof selectedAudioFile === 'object' ? selectedAudioFile?.id : selectedAudioFile;
+  const selectedAudioFileId =
+    typeof selectedAudioFile === "object"
+      ? selectedAudioFile?.id
+      : selectedAudioFile;
   const { data: mediaSegments = [] } = useQuery({
     queryKey: [`/api/admin/media-segments/${selectedAudioFileId}`],
     enabled: !!selectedAudioFileId,
@@ -372,40 +448,57 @@ export default function ChapterEditor() {
   const isPublished = chapter?.status === "published";
 
   // === MUTATIONS SECTION ===
-  
+
   // Audio file upload mutation
   const audioUploadMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("audio", file);
-      
-      const response = await fetch(`/api/admin/audio-files/${chapterId}/upload`, {
-        method: "POST",
-        body: formData,
-      });
-      
+
+      const response = await fetch(
+        `/api/admin/audio-files/${chapterId}/upload`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "Upload failed");
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
       toast({ title: "Audio file uploaded successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/admin/audio-files/${chapterId}`],
+      });
     },
     onError: (error: any) => {
-      toast({ title: "Failed to upload audio file", description: error.message, variant: "destructive" });
+      toast({
+        title: "Failed to upload audio file",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
   // Update media segment mutation
   const updateMediaSegmentMutation = useMutation({
-    mutationFn: async ({ id, startTime, endTime }: { id: number; startTime: number; endTime: number }) => {
+    mutationFn: async ({
+      id,
+      startTime,
+      endTime,
+    }: {
+      id: number;
+      startTime: number;
+      endTime: number;
+    }) => {
       await apiRequest("PATCH", `/api/admin/media-segments/${id}`, {
         startTimestamp: startTime,
-        endTimestamp: endTime
+        endTimestamp: endTime,
       });
     },
     onSuccess: () => {
@@ -413,14 +506,16 @@ export default function ChapterEditor() {
       setEditingSegmentId(null);
       setEditingSegmentData(null);
       if (selectedAudioFile?.id) {
-        queryClient.invalidateQueries({ queryKey: [`/api/admin/media-segments/${selectedAudioFile.id}`] });
+        queryClient.invalidateQueries({
+          queryKey: [`/api/admin/media-segments/${selectedAudioFile.id}`],
+        });
       }
     },
     onError: (error: any) => {
-      toast({ 
-        title: "Failed to update segment", 
-        description: error.message || "Unknown error occurred", 
-        variant: "destructive" 
+      toast({
+        title: "Failed to update segment",
+        description: error.message || "Unknown error occurred",
+        variant: "destructive",
       });
     },
   });
@@ -433,14 +528,16 @@ export default function ChapterEditor() {
     onSuccess: () => {
       toast({ title: "Segment deleted successfully" });
       if (selectedAudioFile?.id) {
-        queryClient.invalidateQueries({ queryKey: [`/api/admin/media-segments/${selectedAudioFile.id}`] });
+        queryClient.invalidateQueries({
+          queryKey: [`/api/admin/media-segments/${selectedAudioFile.id}`],
+        });
       }
     },
     onError: (error: any) => {
-      toast({ 
-        title: "Failed to delete segment", 
-        description: error.message || "Unknown error occurred", 
-        variant: "destructive" 
+      toast({
+        title: "Failed to delete segment",
+        description: error.message || "Unknown error occurred",
+        variant: "destructive",
       });
     },
   });
@@ -448,26 +545,34 @@ export default function ChapterEditor() {
   // Content update mutation
   const updateContentMutation = useMutation({
     mutationFn: async (content: any) => {
-      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}`, { content });
+      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}`, {
+        content,
+      });
     },
     onSuccess: () => {
       toast({ title: "Content saved" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${chapterId}/details`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/admin/chapters/${chapterId}/details`],
+      });
     },
     onError: (error: any) => {
-      toast({ title: "Failed to save content", description: error.message, variant: "destructive" });
+      toast({
+        title: "Failed to save content",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
   // === CUSTOM HOOKS SECTION ===
-  
+
   // Initialize text content when chapter loads
   useEffect(() => {
     if (chapter?.content) {
       setTextContent({
         te: chapter.content.te || "",
         hi: chapter.content.hi || "",
-        en: chapter.content.en || ""
+        en: chapter.content.en || "",
       });
     }
   }, [chapter]);
@@ -476,7 +581,7 @@ export default function ChapterEditor() {
   useEffect(() => {
     if (!chapter?.content || isPublished) return;
 
-    const hasChanges = 
+    const hasChanges =
       textContent.te !== (chapter.content.te || "") ||
       textContent.hi !== (chapter.content.hi || "") ||
       textContent.en !== (chapter.content.en || "");
@@ -493,11 +598,11 @@ export default function ChapterEditor() {
   // Add global mouse event listeners for dragging
   useEffect(() => {
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
       return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
       };
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
@@ -507,9 +612,9 @@ export default function ChapterEditor() {
     return () => {
       if (audioPlayer) {
         audioPlayer.pause();
-        audioPlayer.removeEventListener('loadedmetadata', () => {});
-        audioPlayer.removeEventListener('timeupdate', () => {});
-        audioPlayer.removeEventListener('error', () => {});
+        audioPlayer.removeEventListener("loadedmetadata", () => {});
+        audioPlayer.removeEventListener("timeupdate", () => {});
+        audioPlayer.removeEventListener("error", () => {});
         setAudioPlayer(null);
       }
     };
@@ -524,39 +629,48 @@ export default function ChapterEditor() {
 
       const segments = [];
       const sortedMarks = [...timeMarks].sort((a, b) => a - b);
-      
+
       // Create segments from start to each mark, and between marks
       for (let i = 0; i <= sortedMarks.length; i++) {
         const startTime = i === 0 ? 0 : sortedMarks[i - 1];
         const endTime = i === sortedMarks.length ? duration : sortedMarks[i];
-        
+
         segments.push({
-          audioFileId: typeof selectedAudioFile === 'object' ? selectedAudioFile.id : selectedAudioFile,
+          audioFileId:
+            typeof selectedAudioFile === "object"
+              ? selectedAudioFile.id
+              : selectedAudioFile,
           startTime,
           endTime,
-          name: `Segment ${i + 1}`
+          name: `Segment ${i + 1}`,
         });
       }
 
-      const response = await apiRequest("POST", "/api/admin/media-segments/bulk", { segments });
+      const response = await apiRequest(
+        "POST",
+        "/api/admin/media-segments/bulk",
+        { segments },
+      );
       return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/media-segments/${selectedAudioFileId}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/admin/media-segments/${selectedAudioFileId}`],
+      });
       setTimeMarks([]);
       setSelectedMark(null);
       toast({
         title: "Audio Segments Created",
-        description: `Successfully created ${timeMarks.length + 1} audio segments`
+        description: `Successfully created ${timeMarks.length + 1} audio segments`,
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error Creating Segments",
         description: error.message || "Failed to create audio segments",
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // Delete audio file mutation
@@ -567,7 +681,9 @@ export default function ChapterEditor() {
     },
     onSuccess: (deletedFileId) => {
       toast({ title: "Audio file deleted successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/admin/audio-files/${chapterId}`],
+      });
       if (selectedAudioFile === deletedFileId) {
         setSelectedAudioFile(null);
         setAudioPlayer(null);
@@ -575,30 +691,48 @@ export default function ChapterEditor() {
       }
     },
     onError: (error: any) => {
-      toast({ title: "Failed to delete audio file", description: error.message, variant: "destructive" });
+      toast({
+        title: "Failed to delete audio file",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
   // Update filename mutation
   const updateFileNameMutation = useMutation({
-    mutationFn: async ({ fileId, newName }: { fileId: number; newName: string }) => {
-      await apiRequest("PATCH", `/api/admin/audio-files/${fileId}`, { displayName: newName });
+    mutationFn: async ({
+      fileId,
+      newName,
+    }: {
+      fileId: number;
+      newName: string;
+    }) => {
+      await apiRequest("PATCH", `/api/admin/audio-files/${fileId}`, {
+        displayName: newName,
+      });
     },
     onSuccess: () => {
       toast({ title: "Filename updated successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/admin/audio-files/${chapterId}`],
+      });
       setEditingFileId(null);
       setEditingFileName("");
     },
     onError: (error: any) => {
-      toast({ title: "Failed to update filename", description: error.message, variant: "destructive" });
+      toast({
+        title: "Failed to update filename",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
   // Audio control functions
   const handlePlayPause = async () => {
     if (!audioPlayer) return;
-    
+
     try {
       if (isPlaying) {
         audioPlayer.pause();
@@ -620,7 +754,7 @@ export default function ChapterEditor() {
 
   const handleStop = () => {
     if (!audioPlayer) return;
-    
+
     audioPlayer.pause();
     audioPlayer.currentTime = 0;
     setIsPlaying(false);
@@ -629,16 +763,16 @@ export default function ChapterEditor() {
 
   const handleMarkTime = () => {
     if (!audioPlayer) return;
-    
+
     const markTime = audioPlayer.currentTime;
-    setTimeMarks(prev => [...prev, markTime].sort((a, b) => a - b));
+    setTimeMarks((prev) => [...prev, markTime].sort((a, b) => a - b));
     toast({ title: `Time mark added at ${formatTime(markTime)}` });
   };
 
   const handleClearMark = () => {
     if (selectedMark === null) return;
-    
-    setTimeMarks(prev => prev.filter(mark => mark !== selectedMark));
+
+    setTimeMarks((prev) => prev.filter((mark) => mark !== selectedMark));
     setSelectedMark(null);
     toast({ title: "Time mark cleared" });
   };
@@ -649,14 +783,12 @@ export default function ChapterEditor() {
     toast({ title: "All time marks cleared" });
   };
 
-
-
   const handleCreateAudioSegments = () => {
     if (timeMarks.length === 0) {
       toast({
         title: "No Time Marks",
         description: "Please add time marks to create segments",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -670,7 +802,7 @@ export default function ChapterEditor() {
     setSelectedMark(null);
     setCurrentTime(0);
     setIsPlaying(false);
-    
+
     const file = (audioFiles as any)?.find((f: any) => f.id === fileId);
     if (file && audioRef.current) {
       audioRef.current.src = file.url;
@@ -691,24 +823,24 @@ export default function ChapterEditor() {
     };
     const handleEnded = () => setIsPlaying(false);
 
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("ended", handleEnded);
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("ended", handleEnded);
     };
   }, [selectedAudioFile]);
 
   const validateFileType = (file: File) => {
-    const allowedTypes = ['audio/', 'video/'];
-    if (!allowedTypes.some(type => file.type.startsWith(type))) {
-      toast({ 
-        title: "Invalid file type", 
-        description: "Please upload audio or video files only", 
-        variant: "destructive" 
+    const allowedTypes = ["audio/", "video/"];
+    if (!allowedTypes.some((type) => file.type.startsWith(type))) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload audio or video files only",
+        variant: "destructive",
       });
       return false;
     }
@@ -734,14 +866,17 @@ export default function ChapterEditor() {
 
   const handleSaveFileName = (fileId: number) => {
     if (editingFileName.trim()) {
-      updateFileNameMutation.mutate({ fileId, newName: editingFileName.trim() });
+      updateFileNameMutation.mutate({
+        fileId,
+        newName: editingFileName.trim(),
+      });
     }
   };
 
   const handleContentSave = (language: string) => {
     updateContentMutation.mutate({
       ...chapter?.content,
-      [language]: textContent[language as keyof typeof textContent]
+      [language]: textContent[language as keyof typeof textContent],
     });
   };
 
@@ -753,31 +888,34 @@ export default function ChapterEditor() {
     const range = selection.getRangeAt(0);
     const container = range.commonAncestorContainer;
     let element: Element | null = null;
-    
+
     if (container.nodeType === Node.TEXT_NODE) {
       element = container.parentElement;
     } else if (container.nodeType === Node.ELEMENT_NODE) {
       element = container as Element;
     }
-    
-    if (!element?.closest('[data-segmentable]')) return;
+
+    if (!element?.closest("[data-segmentable]")) return;
 
     const selectedText = selection.toString().trim();
     if (!selectedText) return;
 
     // Calculate character positions within the full text
     const fullText = textContent[selectedLanguage] || "";
-    const beforeText = range.startContainer.textContent?.substring(0, range.startOffset) || "";
+    const beforeText =
+      range.startContainer.textContent?.substring(0, range.startOffset) || "";
     const startPos = fullText.indexOf(beforeText + selectedText.charAt(0));
     const endPos = startPos + selectedText.length;
 
     setTextSelection({
       start: startPos,
       end: endPos,
-      text: selectedText
+      text: selectedText,
     });
 
-    setSegmentName(`${selectedText.substring(0, 30)}${selectedText.length > 30 ? '...' : ''}`);
+    setSegmentName(
+      `${selectedText.substring(0, 30)}${selectedText.length > 30 ? "..." : ""}`,
+    );
   };
 
   const createTextSegmentMutation = useMutation({
@@ -790,18 +928,27 @@ export default function ChapterEditor() {
     },
     onSuccess: () => {
       toast({ title: "Text segment created successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/admin/segments/${chapterId}`],
+      });
       setTextSelection(null);
       setSegmentName("");
     },
     onError: (error: any) => {
-      toast({ title: "Failed to create text segment", description: error.message, variant: "destructive" });
+      toast({
+        title: "Failed to create text segment",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
   const handleCreateTextSegment = () => {
     if (!textSelection || !segmentName.trim()) {
-      toast({ title: "Please select text and provide a segment name", variant: "destructive" });
+      toast({
+        title: "Please select text and provide a segment name",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -811,9 +958,9 @@ export default function ChapterEditor() {
       textReferences: {
         [selectedLanguage]: {
           start: textSelection.start,
-          end: textSelection.end
-        }
-      }
+          end: textSelection.end,
+        },
+      },
     });
   };
 
@@ -823,10 +970,16 @@ export default function ChapterEditor() {
     },
     onSuccess: () => {
       toast({ title: "Segment deleted successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/admin/segments/${chapterId}`],
+      });
     },
     onError: (error: any) => {
-      toast({ title: "Failed to delete segment", description: error.message, variant: "destructive" });
+      toast({
+        title: "Failed to delete segment",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -841,10 +994,16 @@ export default function ChapterEditor() {
     },
     onSuccess: () => {
       toast({ title: "Audio mapping created successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/admin/segments/${chapterId}`],
+      });
     },
     onError: (error: any) => {
-      toast({ title: "Failed to create audio mapping", description: error.message, variant: "destructive" });
+      toast({
+        title: "Failed to create audio mapping",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -860,7 +1019,9 @@ export default function ChapterEditor() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/media-segments"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/admin/media-segments"],
+      });
       toast({ title: "Media segment created successfully" });
       setMediaSegmentName("");
       setStartTime(0);
@@ -868,24 +1029,43 @@ export default function ChapterEditor() {
     },
   });
 
-
-
-
-
   // Enhanced segment rendering with text highlighting
-  const renderTextWithSegments = (text: string, language: 'te' | 'hi' | 'en') => {
+  const renderTextWithSegments = (
+    text: string,
+    language: "te" | "hi" | "en",
+  ) => {
     if (!segments || segments.length === 0) {
-      return <div data-segmentable className="whitespace-pre-wrap cursor-text" onMouseUp={handleTextSelection}>{text}</div>;
+      return (
+        <div
+          data-segmentable
+          className="whitespace-pre-wrap cursor-text"
+          onMouseUp={handleTextSelection}
+        >
+          {text}
+        </div>
+      );
     }
 
-    const segmentsForLang = segments.filter(seg => seg.textReferences[language]);
+    const segmentsForLang = segments.filter(
+      (seg) => seg.textReferences[language],
+    );
     if (segmentsForLang.length === 0) {
-      return <div data-segmentable className="whitespace-pre-wrap cursor-text" onMouseUp={handleTextSelection}>{text}</div>;
+      return (
+        <div
+          data-segmentable
+          className="whitespace-pre-wrap cursor-text"
+          onMouseUp={handleTextSelection}
+        >
+          {text}
+        </div>
+      );
     }
 
     // Sort segments by start position
-    const sortedSegments = segmentsForLang.sort((a, b) => 
-      (a.textReferences[language]?.start || 0) - (b.textReferences[language]?.start || 0)
+    const sortedSegments = segmentsForLang.sort(
+      (a, b) =>
+        (a.textReferences[language]?.start || 0) -
+        (b.textReferences[language]?.start || 0),
     );
 
     const parts = [];
@@ -900,23 +1080,28 @@ export default function ChapterEditor() {
         parts.push(
           <span key={`before-${index}`} className="cursor-text">
             {text.substring(lastEnd, ref.start)}
-          </span>
+          </span>,
         );
       }
 
       // Add the segmented text with highlighting
-      const hasAudioMapping = segment.audioFileId && segment.startTime !== undefined;
+      const hasAudioMapping =
+        segment.audioFileId && segment.startTime !== undefined;
       parts.push(
         <span
           key={`segment-${segment.id}`}
           className={`px-1 py-0.5 rounded cursor-pointer transition-colors ${
-            hasAudioMapping 
-              ? 'bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700' 
-              : 'bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700'
+            hasAudioMapping
+              ? "bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700"
+              : "bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700"
           } hover:opacity-80`}
-          title={`${segment.conceptualName}${hasAudioMapping ? ' (Audio Mapped)' : ' (No Audio)'}`}
+          title={`${segment.conceptualName}${hasAudioMapping ? " (Audio Mapped)" : " (No Audio)"}`}
           onClick={() => {
-            if (hasAudioMapping && audioPlayer && segment.startTime !== undefined) {
+            if (
+              hasAudioMapping &&
+              audioPlayer &&
+              segment.startTime !== undefined
+            ) {
               audioPlayer.currentTime = segment.startTime;
               audioPlayer.play();
               setIsPlaying(true);
@@ -924,7 +1109,7 @@ export default function ChapterEditor() {
           }}
         >
           {text.substring(ref.start, ref.end)}
-        </span>
+        </span>,
       );
 
       lastEnd = ref.end;
@@ -935,19 +1120,23 @@ export default function ChapterEditor() {
       parts.push(
         <span key="after" className="cursor-text">
           {text.substring(lastEnd)}
-        </span>
+        </span>,
       );
     }
 
     return (
-      <div data-segmentable className="whitespace-pre-wrap" onMouseUp={handleTextSelection}>
+      <div
+        data-segmentable
+        className="whitespace-pre-wrap"
+        onMouseUp={handleTextSelection}
+      >
         {parts}
       </div>
     );
   };
 
   // === RENDER LOGIC SECTION ===
-  
+
   if (chapterLoading) {
     return <div className="p-6">Loading chapter...</div>;
   }
@@ -955,50 +1144,63 @@ export default function ChapterEditor() {
   return (
     <div className="min-h-screen bg-background">
       <audio ref={audioRef} preload="metadata" />
-      
+
       {/* Header */}
       <div className="border-b bg-background">
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" onClick={() => {
-                // Get the track ID from the chapter data
-                if (chapter?.trackId) {
-                  // Invalidate chapters query to refresh data
-                  queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${chapter.trackId}`] });
-                  // Navigate to content management track page
-                  setLocation(`/content-management/track/${chapter.trackId}`);
-                } else {
-                  // Fallback to content management dashboard if no track ID
-                  setLocation('/content-management');
-                }
-              }}>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  // Get the track ID from the chapter data
+                  if (chapter?.trackId) {
+                    // Invalidate chapters query to refresh data
+                    queryClient.invalidateQueries({
+                      queryKey: [`/api/admin/chapters/${chapter.trackId}`],
+                    });
+                    // Navigate to content management track page
+                    setLocation(`/content-management/track/${chapter.trackId}`);
+                  } else {
+                    // Fallback to content management dashboard if no track ID
+                    setLocation("/content-management");
+                  }
+                }}
+              >
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 Back to Chapters
               </Button>
               <div>
                 <h1 className="text-3xl font-bold">{chapter?.title}</h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    chapter?.status === 'published' 
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                      : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-                  }`}>
-{chapter?.status ? chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1) : 'Draft'}
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full ${
+                      chapter?.status === "published"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                    }`}
+                  >
+                    {chapter?.status
+                      ? chapter.status.charAt(0).toUpperCase() +
+                        chapter.status.slice(1)
+                      : "Draft"}
                   </span>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <Button
-                variant={chapter?.status === 'published' ? 'destructive' : 'default'}
+                variant={
+                  chapter?.status === "published" ? "destructive" : "default"
+                }
                 onClick={() => {
-                  const newStatus = chapter?.status === 'published' ? 'draft' : 'published';
+                  const newStatus =
+                    chapter?.status === "published" ? "draft" : "published";
                   toggleStatusMutation.mutate(newStatus);
                 }}
                 disabled={toggleStatusMutation.isPending}
               >
-                {chapter?.status === 'published' ? 'Unpublish' : 'Publish'}
+                {chapter?.status === "published" ? "Unpublish" : "Publish"}
               </Button>
             </div>
           </div>
@@ -1017,11 +1219,13 @@ export default function ChapterEditor() {
               <Upload className="w-4 h-4" />
               Media Content
             </TabsTrigger>
-            <TabsTrigger value="segmentation" className="flex items-center gap-2">
+            <TabsTrigger
+              value="segmentation"
+              className="flex items-center gap-2"
+            >
               <Music className="w-4 h-4" />
               Segment & Map
             </TabsTrigger>
-
           </TabsList>
 
           {/* Text Content Tab */}
@@ -1029,7 +1233,12 @@ export default function ChapterEditor() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <Select value={contentLanguage} onValueChange={(value: 'te' | 'hi' | 'en') => setContentLanguage(value)}>
+                  <Select
+                    value={contentLanguage}
+                    onValueChange={(value: "te" | "hi" | "en") =>
+                      setContentLanguage(value)
+                    }
+                  >
                     <SelectTrigger className="w-48">
                       <SelectValue />
                     </SelectTrigger>
@@ -1057,9 +1266,14 @@ export default function ChapterEditor() {
               <CardContent>
                 <Textarea
                   value={textContent[contentLanguage]}
-                  onChange={(e) => setTextContent(prev => ({ ...prev, [contentLanguage]: e.target.value }))}
+                  onChange={(e) =>
+                    setTextContent((prev) => ({
+                      ...prev,
+                      [contentLanguage]: e.target.value,
+                    }))
+                  }
                   disabled={isPublished}
-                  placeholder={`Enter ${contentLanguage === 'te' ? 'Telugu' : contentLanguage === 'hi' ? 'Hindi' : 'English/IAST'} content...`}
+                  placeholder={`Enter ${contentLanguage === "te" ? "Telugu" : contentLanguage === "hi" ? "Hindi" : "English/IAST"} content...`}
                   className="min-h-[400px] text-base leading-relaxed"
                 />
               </CardContent>
@@ -1069,12 +1283,14 @@ export default function ChapterEditor() {
           {/* Media Content Tab */}
           <TabsContent value="media" className="space-y-6">
             <Card>
-              <CardContent className="pt-8">
+              <CardContent className="pt-6">
                 <div className="space-y-4">
                   {!isPublished && (
-                    <div 
+                    <div
                       className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                        isDragOver ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600'
+                        isDragOver
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                          : "border-gray-300 dark:border-gray-600"
                       }`}
                       onDragOver={(e) => {
                         e.preventDefault();
@@ -1095,18 +1311,23 @@ export default function ChapterEditor() {
                     >
                       <Upload className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
                       <div className="space-y-2">
-                        <p className="text-sm font-medium">Upload Audio Files</p>
+                        <p className="text-sm font-medium">
+                          Upload Audio Files
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           Drag and drop files here, or click to browse
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Supports: MP3, WAV, M4A, MP4, and other audio/video formats
+                          Supports: MP3, WAV, M4A, MP4, and other audio/video
+                          formats
                         </p>
                       </div>
                       <Button
                         variant="outline"
                         className="mt-2"
-                        onClick={() => document.getElementById('audio-upload-input')?.click()}
+                        onClick={() =>
+                          document.getElementById("audio-upload-input")?.click()
+                        }
                         disabled={audioUploadMutation.isPending}
                       >
                         <Upload className="w-4 h-4 mr-2" />
@@ -1123,14 +1344,19 @@ export default function ChapterEditor() {
                     </div>
                   )}
 
-                  {audioFiles && Array.isArray(audioFiles) && audioFiles.length > 0 ? (
+                  {audioFiles &&
+                  Array.isArray(audioFiles) &&
+                  audioFiles.length > 0 ? (
                     <div className="space-y-3">
                       <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                         Uploaded Files ({audioFiles.length})
                       </h4>
-                      
+
                       {(audioFiles as any).map((file: any) => (
-                        <div key={file.id} className="group border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div
+                          key={file.id}
+                          className="group border rounded-lg p-4 hover:shadow-md transition-shadow"
+                        >
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
                               {editingFileId === file.id ? (
@@ -1138,11 +1364,13 @@ export default function ChapterEditor() {
                                   <input
                                     type="text"
                                     value={editingFileName}
-                                    onChange={(e) => setEditingFileName(e.target.value)}
+                                    onChange={(e) =>
+                                      setEditingFileName(e.target.value)
+                                    }
                                     onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
+                                      if (e.key === "Enter") {
                                         handleSaveFileName(file.id);
-                                      } else if (e.key === 'Escape') {
+                                      } else if (e.key === "Escape") {
                                         cancelEditing();
                                       }
                                     }}
@@ -1150,17 +1378,21 @@ export default function ChapterEditor() {
                                     autoFocus
                                   />
                                   <div className="flex gap-2">
-                                    <Button 
-                                      size="sm" 
-                                      onClick={() => handleSaveFileName(file.id)}
-                                      disabled={updateFileNameMutation.isPending}
+                                    <Button
+                                      size="sm"
+                                      onClick={() =>
+                                        handleSaveFileName(file.id)
+                                      }
+                                      disabled={
+                                        updateFileNameMutation.isPending
+                                      }
                                     >
                                       <Save className="w-3 h-3 mr-1" />
                                       Save
                                     </Button>
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline" 
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
                                       onClick={cancelEditing}
                                     >
                                       <X className="w-3 h-3 mr-1" />
@@ -1177,19 +1409,34 @@ export default function ChapterEditor() {
                                     </p>
                                   </div>
                                   <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
-                                    <span>Duration: {file.duration ? `${file.duration.toFixed(2)}s` : 'Unknown'}</span>
-                                    <span>Size: {file.fileSize ? `${(file.fileSize / (1024 * 1024)).toFixed(1)} MB` : 'Unknown'}</span>
+                                    <span>
+                                      Duration:{" "}
+                                      {file.duration
+                                        ? `${file.duration.toFixed(2)}s`
+                                        : "Unknown"}
+                                    </span>
+                                    <span>
+                                      Size:{" "}
+                                      {file.fileSize
+                                        ? `${(file.fileSize / (1024 * 1024)).toFixed(1)} MB`
+                                        : "Unknown"}
+                                    </span>
                                   </div>
                                 </>
                               )}
                             </div>
-                            
+
                             {!isPublished && editingFileId !== file.id && (
                               <div className="flex items-center gap-1">
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => startEditing(file.id, file.displayName || file.filename)}
+                                  onClick={() =>
+                                    startEditing(
+                                      file.id,
+                                      file.displayName || file.filename,
+                                    )
+                                  }
                                   className="h-8 w-8 p-0"
                                 >
                                   <Edit2 className="w-3 h-3" />
@@ -1197,7 +1444,9 @@ export default function ChapterEditor() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => deleteAudioMutation.mutate(file.id)}
+                                  onClick={() =>
+                                    deleteAudioMutation.mutate(file.id)
+                                  }
                                   disabled={deleteAudioMutation.isPending}
                                   className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                                 >
@@ -1213,9 +1462,12 @@ export default function ChapterEditor() {
                     <Card>
                       <CardContent className="p-12 text-center">
                         <Music className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                        <h3 className="text-lg font-medium mb-2">No Audio Files</h3>
+                        <h3 className="text-lg font-medium mb-2">
+                          No Audio Files
+                        </h3>
                         <p className="text-muted-foreground">
-                          Upload audio files to start creating segments for this chapter.
+                          Upload audio files to start creating segments for this
+                          chapter.
                         </p>
                       </CardContent>
                     </Card>
@@ -1242,45 +1494,62 @@ export default function ChapterEditor() {
                   <CardContent className="space-y-6">
                     {/* Audio File Selection Section */}
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium">Select Media</Label>
+                      <Label className="text-sm font-medium">
+                        Select Media
+                      </Label>
                       <Select
                         value={selectedAudioFile?.id?.toString() || ""}
                         onValueChange={(value) => {
-                          const file = audioFiles && Array.isArray(audioFiles) 
-                            ? audioFiles.find((f: any) => f.id.toString() === value)
-                            : null;
+                          const file =
+                            audioFiles && Array.isArray(audioFiles)
+                              ? audioFiles.find(
+                                  (f: any) => f.id.toString() === value,
+                                )
+                              : null;
                           setSelectedAudioFile(file);
-                          
+
                           // Load the audio file for playback
                           if (file && file.filename) {
                             // Clean up existing audio player
                             if (audioPlayer) {
                               audioPlayer.pause();
-                              audioPlayer.removeEventListener('loadedmetadata', () => {});
-                              audioPlayer.removeEventListener('timeupdate', () => {});
+                              audioPlayer.removeEventListener(
+                                "loadedmetadata",
+                                () => {},
+                              );
+                              audioPlayer.removeEventListener(
+                                "timeupdate",
+                                () => {},
+                              );
                             }
-                            
-                            const audio = new Audio(`/uploads/${file.filename}`);
-                            audio.addEventListener('loadedmetadata', () => {
+
+                            const audio = new Audio(
+                              `/uploads/${file.filename}`,
+                            );
+                            audio.addEventListener("loadedmetadata", () => {
                               setDuration(audio.duration);
                               setCurrentTime(0);
                               setIsPlaying(false);
-                              console.log('Audio loaded successfully');
+                              console.log("Audio loaded successfully");
                             });
-                            audio.addEventListener('error', (e) => {
-                              console.error('Audio loading error:', e);
+                            audio.addEventListener("error", (e) => {
+                              console.error("Audio loading error:", e);
                               toast({
                                 title: "Audio Load Error",
                                 description: "Failed to load audio file",
-                                variant: "destructive"
+                                variant: "destructive",
                               });
                             });
                             setAudioPlayer(audio);
                           }
-                          
+
                           // Refresh media segments for the selected audio file
                           if (file?.id) {
-                            queryClient.invalidateQueries({ queryKey: [`/api/admin/media-segments/${file.id}`] });
+                            queryClient.invalidateQueries({
+                              queryKey: [
+                                `/api/admin/media-segments/${file.id}`,
+                              ],
+                            });
                           }
                         }}
                       >
@@ -1288,14 +1557,19 @@ export default function ChapterEditor() {
                           <SelectValue placeholder="Choose an audio file" />
                         </SelectTrigger>
                         <SelectContent>
-                          {audioFiles && Array.isArray(audioFiles) && audioFiles.map((file: any) => (
-                            <SelectItem key={file.id} value={file.id.toString()}>
-                              <div className="flex items-center gap-2">
-                                <Music className="h-4 w-4" />
-                                {file.displayName || file.filename}
-                              </div>
-                            </SelectItem>
-                          ))}
+                          {audioFiles &&
+                            Array.isArray(audioFiles) &&
+                            audioFiles.map((file: any) => (
+                              <SelectItem
+                                key={file.id}
+                                value={file.id.toString()}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Music className="h-4 w-4" />
+                                  {file.displayName || file.filename}
+                                </div>
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -1305,17 +1579,25 @@ export default function ChapterEditor() {
                       <div className="space-y-4 border-t pt-4">
                         <div className="flex items-center gap-2">
                           <Settings className="h-4 w-4" />
-                          <Label className="text-sm font-medium">Media Controls</Label>
+                          <Label className="text-sm font-medium">
+                            Media Controls
+                          </Label>
                         </div>
                         <audio
                           ref={audioRef}
                           src={`/uploads/${selectedAudioFile.hashedFilename || selectedAudioFile.filename}`}
                           onError={(e) => {
-                            console.error("Audio play error:", e, "Trying path:", `/uploads/${selectedAudioFile.hashedFilename || selectedAudioFile.filename}`);
-                            toast({ 
-                              title: "Audio Playback Error", 
-                              description: "Failed to play audio. Please check the file format and path.", 
-                              variant: "destructive" 
+                            console.error(
+                              "Audio play error:",
+                              e,
+                              "Trying path:",
+                              `/uploads/${selectedAudioFile.hashedFilename || selectedAudioFile.filename}`,
+                            );
+                            toast({
+                              title: "Audio Playback Error",
+                              description:
+                                "Failed to play audio. Please check the file format and path.",
+                              variant: "destructive",
                             });
                           }}
                           onCanPlayThrough={() => {
@@ -1324,12 +1606,18 @@ export default function ChapterEditor() {
                           crossOrigin="anonymous"
                           preload="metadata"
                         />
-                        
+
                         {/* Time Display */}
                         <div className="text-center">
                           <span className="text-sm font-mono">
-                            {Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, '0')} / 
-                            {Math.floor(duration / 60)}:{Math.floor(duration % 60).toString().padStart(2, '0')}
+                            {Math.floor(currentTime / 60)}:
+                            {Math.floor(currentTime % 60)
+                              .toString()
+                              .padStart(2, "0")}{" "}
+                            /{Math.floor(duration / 60)}:
+                            {Math.floor(duration % 60)
+                              .toString()
+                              .padStart(2, "0")}
                           </span>
                         </div>
 
@@ -1344,7 +1632,9 @@ export default function ChapterEditor() {
                               value={currentTime}
                               onChange={(e) => {
                                 if (audioRef.current) {
-                                  audioRef.current.currentTime = parseFloat(e.target.value);
+                                  audioRef.current.currentTime = parseFloat(
+                                    e.target.value,
+                                  );
                                   setCurrentTime(parseFloat(e.target.value));
                                 }
                               }}
@@ -1353,20 +1643,27 @@ export default function ChapterEditor() {
                             {/* Time Mark Triangles */}
                             {timeMarks.map((mark, index) => {
                               const position = (mark / duration) * 100;
-                              const timestamp = `${Math.floor(mark / 60)}:${Math.floor(mark % 60).toString().padStart(2, '0')}`;
+                              const timestamp = `${Math.floor(mark / 60)}:${Math.floor(
+                                mark % 60,
+                              )
+                                .toString()
+                                .padStart(2, "0")}`;
                               return (
                                 <div
                                   key={index}
                                   className="absolute top-full flex flex-col items-center"
-                                  style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
+                                  style={{
+                                    left: `${position}%`,
+                                    transform: "translateX(-50%)",
+                                  }}
                                 >
                                   {/* Triangle pointing up */}
-                                  <div 
+                                  <div
                                     className={`w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] cursor-pointer ${
-                                      selectedMark === mark 
-                                        ? 'border-l-transparent border-r-transparent border-b-red-500 hover:border-b-red-600' 
-                                        : 'border-l-transparent border-r-transparent border-b-green-500 hover:border-b-green-600'
-                                    } transition-colors ${isDragging && selectedMark === mark ? 'cursor-grabbing' : 'cursor-grab'}`}
+                                      selectedMark === mark
+                                        ? "border-l-transparent border-r-transparent border-b-red-500 hover:border-b-red-600"
+                                        : "border-l-transparent border-r-transparent border-b-green-500 hover:border-b-green-600"
+                                    } transition-colors ${isDragging && selectedMark === mark ? "cursor-grabbing" : "cursor-grab"}`}
                                     onMouseDown={(e) => {
                                       e.preventDefault();
                                       setSelectedMark(mark);
@@ -1375,7 +1672,9 @@ export default function ChapterEditor() {
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       if (!isDragging) {
-                                        setSelectedMark(selectedMark === mark ? null : mark);
+                                        setSelectedMark(
+                                          selectedMark === mark ? null : mark,
+                                        );
                                         if (audioRef.current) {
                                           audioRef.current.currentTime = mark;
                                           setCurrentTime(mark);
@@ -1392,21 +1691,29 @@ export default function ChapterEditor() {
                                       className="text-xs mt-1 font-mono w-12 text-center border rounded px-1"
                                       autoFocus
                                       onBlur={(e) => {
-                                        updateMarkTimestamp(mark, e.target.value);
+                                        updateMarkTimestamp(
+                                          mark,
+                                          e.target.value,
+                                        );
                                       }}
                                       onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                          updateMarkTimestamp(mark, e.currentTarget.value);
-                                        } else if (e.key === 'Escape') {
+                                        if (e.key === "Enter") {
+                                          updateMarkTimestamp(
+                                            mark,
+                                            e.currentTarget.value,
+                                          );
+                                        } else if (e.key === "Escape") {
                                           setEditingTimestamp(null);
                                         }
                                       }}
                                       onClick={(e) => e.stopPropagation()}
                                     />
                                   ) : (
-                                    <div 
+                                    <div
                                       className={`text-xs mt-1 font-mono cursor-pointer hover:underline ${
-                                        selectedMark === mark ? 'text-red-600 font-semibold' : 'text-green-600'
+                                        selectedMark === mark
+                                          ? "text-red-600 font-semibold"
+                                          : "text-green-600"
                                       }`}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -1425,20 +1732,27 @@ export default function ChapterEditor() {
 
                         {/* Player Controls */}
                         <div className="flex items-center justify-center gap-2">
-                          <Button onClick={() => {
-                            if (audioRef.current) {
-                              if (isPlaying) {
-                                audioRef.current.pause();
-                                setIsPlaying(false);
-                              } else {
-                                audioRef.current.play();
-                                setIsPlaying(true);
+                          <Button
+                            onClick={() => {
+                              if (audioRef.current) {
+                                if (isPlaying) {
+                                  audioRef.current.pause();
+                                  setIsPlaying(false);
+                                } else {
+                                  audioRef.current.play();
+                                  setIsPlaying(true);
+                                }
                               }
-                            }
-                          }} size="sm">
-                            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                            }}
+                            size="sm"
+                          >
+                            {isPlaying ? (
+                              <Pause className="h-4 w-4" />
+                            ) : (
+                              <Play className="h-4 w-4" />
+                            )}
                           </Button>
-                          <Button 
+                          <Button
                             onClick={() => {
                               if (audioRef.current) {
                                 audioRef.current.pause();
@@ -1447,59 +1761,68 @@ export default function ChapterEditor() {
                                 setCurrentTime(0);
                               }
                             }}
-                            size="sm" 
+                            size="sm"
                             variant="outline"
                           >
                             <Square className="h-4 w-4" />
                           </Button>
-                          <Button 
+                          <Button
                             onClick={() => {
                               if (audioRef.current) {
                                 const newMark = audioRef.current.currentTime;
-                                setTimeMarks(prev => [...prev, newMark].sort((a, b) => a - b));
+                                setTimeMarks((prev) =>
+                                  [...prev, newMark].sort((a, b) => a - b),
+                                );
                                 toast({
                                   title: "Time Mark Added",
-                                  description: `Mark added at ${Math.floor(newMark / 60)}:${Math.floor(newMark % 60).toString().padStart(2, '0')}`
+                                  description: `Mark added at ${Math.floor(newMark / 60)}:${Math.floor(
+                                    newMark % 60,
+                                  )
+                                    .toString()
+                                    .padStart(2, "0")}`,
                                 });
                               }
                             }}
-                            size="sm" 
+                            size="sm"
                             variant="outline"
                           >
                             <MapPin className="h-4 w-4" />
                           </Button>
-                          <Button 
+                          <Button
                             onClick={() => {
                               if (selectedMark !== null) {
-                                setTimeMarks(prev => prev.filter(mark => mark !== selectedMark));
+                                setTimeMarks((prev) =>
+                                  prev.filter((mark) => mark !== selectedMark),
+                                );
                                 setSelectedMark(null);
                                 toast({
                                   title: "Time Mark Cleared",
-                                  description: "Selected mark has been removed"
+                                  description: "Selected mark has been removed",
                                 });
                               } else {
                                 toast({
                                   title: "No Mark Selected",
-                                  description: "Please select a mark on the timeline first",
-                                  variant: "destructive"
+                                  description:
+                                    "Please select a mark on the timeline first",
+                                  variant: "destructive",
                                 });
                               }
                             }}
-                            size="sm" 
+                            size="sm"
                             variant="outline"
                           >
                             <X className="h-4 w-4" />
                           </Button>
-                          <Button 
+                          <Button
                             onClick={() => {
                               setTimeMarks([]);
                               setSelectedMark(null);
                               toast({
                                 title: "All Marks Cleared",
-                                description: "All time marks have been removed"
+                                description: "All time marks have been removed",
                               });
                             }}
-                            size="sm" 
+                            size="sm"
                             variant="outline"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -1509,13 +1832,18 @@ export default function ChapterEditor() {
                         {/* Create Segments Button */}
                         {timeMarks.length > 0 && (
                           <div className="mt-4 flex justify-center">
-                            <Button 
+                            <Button
                               onClick={handleCreateAudioSegments}
-                              disabled={createAudioSegmentsMutation.isPending || isPublished}
+                              disabled={
+                                createAudioSegmentsMutation.isPending ||
+                                isPublished
+                              }
                               className="flex items-center gap-2"
                             >
                               <Clock className="h-4 w-4" />
-                              {createAudioSegmentsMutation.isPending ? 'Creating...' : 'Create Audio Segments'}
+                              {createAudioSegmentsMutation.isPending
+                                ? "Creating..."
+                                : "Create Audio Segments"}
                             </Button>
                           </div>
                         )}
@@ -1527,181 +1855,283 @@ export default function ChapterEditor() {
                       <div className="space-y-4 border-t pt-4">
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4" />
-                          <Label className="text-sm font-medium">Media Segments ({Array.isArray(mediaSegments) ? mediaSegments.length : 0})</Label>
+                          <Label className="text-sm font-medium">
+                            Media Segments (
+                            {Array.isArray(mediaSegments)
+                              ? mediaSegments.length
+                              : 0}
+                            )
+                          </Label>
                         </div>
                         {/* Segments List */}
                         <div className="space-y-2">
                           <div className="max-h-64 overflow-y-auto space-y-2">
-                        {Array.isArray(mediaSegments) && mediaSegments.length > 0 ? (
-                          (mediaSegments as any[]).map((segment, index) => (
-                            <div key={segment.id} className="p-2 border rounded-lg bg-white dark:bg-gray-800">
-                              {editingSegmentId === segment.id ? (
-                                // Edit mode
-                                <div className="space-y-3">
-                                  <div className="font-medium text-sm">{segment.segmentName || segment.name}</div>
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div className="space-y-1">
-                                      <Label className="text-xs">Start Time (MM:SS)</Label>
-                                      <Input
-                                        type="text"
-                                        value={editingSegmentData?.startTime || ""}
-                                        onChange={(e) => setEditingSegmentData(prev => prev ? {...prev, startTime: e.target.value} : null)}
-                                        placeholder="0:00"
-                                        className="text-sm h-8"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-xs">End Time (MM:SS)</Label>
-                                      <Input
-                                        type="text"
-                                        value={editingSegmentData?.endTime || ""}
-                                        onChange={(e) => setEditingSegmentData(prev => prev ? {...prev, endTime: e.target.value} : null)}
-                                        placeholder="0:00"
-                                        className="text-sm h-8"
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-2 justify-end">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={cancelEditingSegment}
-                                      className="h-7 px-2 text-xs"
-                                    >
-                                      Cancel
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      onClick={saveSegmentEdit}
-                                      disabled={updateMediaSegmentMutation.isPending}
-                                      className="h-7 px-2 text-xs"
-                                    >
-                                      {updateMediaSegmentMutation.isPending ? "Saving..." : "Save"}
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                // View mode - compact single row layout
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    <div className="font-medium text-sm truncate">{segment.segmentName || segment.name}</div>
-                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                      <span className="flex items-center gap-1">
-                                        <Timer className="w-3 h-3" />
-                                        {formatTime(segment.startTimestamp || segment.startTime || 0)} - {formatTime(segment.endTimestamp || segment.endTime || 0)}
-                                      </span>
-                                      <span className="text-blue-600 flex items-center gap-1">
-                                        <Ruler className="w-3 h-3" />
-                                        {(() => {
-                                          const start = segment.startTimestamp || segment.startTime || 0;
-                                          const end = segment.endTimestamp || segment.endTime || 0;
-                                          const length = Math.max(0, end - start);
-                                          return Math.round(length) + 's';
-                                        })()}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-1 ml-2">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => {
-                                        // Ensure audio player is set up
-                                        if (!audioPlayer && audioRef.current) {
-                                          setAudioPlayer(audioRef.current);
-                                        }
-                                        
-                                        // Use audioRef.current directly if audioPlayer state is not ready
-                                        const audio = audioPlayer || audioRef.current;
-                                        if (audio) {
-                                          // Update playAudioSegment to use the audio element directly
-                                          const startTime = segment.startTimestamp || segment.startTime || 0;
-                                          const endTime = segment.endTimestamp || segment.endTime || 0;
-                                          
-                                          if (endTime <= startTime) {
-                                            toast({
-                                              title: "Invalid Segment",
-                                              description: "This segment has invalid timestamps",
-                                              variant: "destructive"
-                                            });
-                                            return;
-                                          }
-
-                                          // Remove any existing boundary listener
-                                          if (segmentBoundaryListenerRef.current) {
-                                            audio.removeEventListener('timeupdate', segmentBoundaryListenerRef.current);
-                                          }
-
-                                          // Create boundary listener
-                                          const boundaryListener = () => {
-                                            if (audio.currentTime >= endTime) {
-                                              audio.pause();
-                                              setIsPlaying(false);
-                                              audio.removeEventListener('timeupdate', boundaryListener);
-                                              segmentBoundaryListenerRef.current = null;
+                            {Array.isArray(mediaSegments) &&
+                            mediaSegments.length > 0 ? (
+                              (mediaSegments as any[]).map((segment, index) => (
+                                <div
+                                  key={segment.id}
+                                  className="p-2 border rounded-lg bg-white dark:bg-gray-800"
+                                >
+                                  {editingSegmentId === segment.id ? (
+                                    // Edit mode
+                                    <div className="space-y-3">
+                                      <div className="font-medium text-sm">
+                                        {segment.segmentName || segment.name}
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Start Time (MM:SS)
+                                          </Label>
+                                          <Input
+                                            type="text"
+                                            value={
+                                              editingSegmentData?.startTime ||
+                                              ""
                                             }
-                                          };
+                                            onChange={(e) =>
+                                              setEditingSegmentData((prev) =>
+                                                prev
+                                                  ? {
+                                                      ...prev,
+                                                      startTime: e.target.value,
+                                                    }
+                                                  : null,
+                                              )
+                                            }
+                                            placeholder="0:00"
+                                            className="text-sm h-8"
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            End Time (MM:SS)
+                                          </Label>
+                                          <Input
+                                            type="text"
+                                            value={
+                                              editingSegmentData?.endTime || ""
+                                            }
+                                            onChange={(e) =>
+                                              setEditingSegmentData((prev) =>
+                                                prev
+                                                  ? {
+                                                      ...prev,
+                                                      endTime: e.target.value,
+                                                    }
+                                                  : null,
+                                              )
+                                            }
+                                            placeholder="0:00"
+                                            className="text-sm h-8"
+                                          />
+                                        </div>
+                                      </div>
+                                      <div className="flex gap-2 justify-end">
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={cancelEditingSegment}
+                                          className="h-7 px-2 text-xs"
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          onClick={saveSegmentEdit}
+                                          disabled={
+                                            updateMediaSegmentMutation.isPending
+                                          }
+                                          className="h-7 px-2 text-xs"
+                                        >
+                                          {updateMediaSegmentMutation.isPending
+                                            ? "Saving..."
+                                            : "Save"}
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    // View mode - compact single row layout
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <div className="font-medium text-sm truncate">
+                                          {segment.segmentName || segment.name}
+                                        </div>
+                                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                          <span className="flex items-center gap-1">
+                                            <Timer className="w-3 h-3" />
+                                            {formatTime(
+                                              segment.startTimestamp ||
+                                                segment.startTime ||
+                                                0,
+                                            )}{" "}
+                                            -{" "}
+                                            {formatTime(
+                                              segment.endTimestamp ||
+                                                segment.endTime ||
+                                                0,
+                                            )}
+                                          </span>
+                                          <span className="text-blue-600 flex items-center gap-1">
+                                            <Ruler className="w-3 h-3" />
+                                            {(() => {
+                                              const start =
+                                                segment.startTimestamp ||
+                                                segment.startTime ||
+                                                0;
+                                              const end =
+                                                segment.endTimestamp ||
+                                                segment.endTime ||
+                                                0;
+                                              const length = Math.max(
+                                                0,
+                                                end - start,
+                                              );
+                                              return Math.round(length) + "s";
+                                            })()}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="flex gap-1 ml-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => {
+                                            // Ensure audio player is set up
+                                            if (
+                                              !audioPlayer &&
+                                              audioRef.current
+                                            ) {
+                                              setAudioPlayer(audioRef.current);
+                                            }
 
-                                          segmentBoundaryListenerRef.current = boundaryListener;
-                                          audio.addEventListener('timeupdate', boundaryListener);
+                                            // Use audioRef.current directly if audioPlayer state is not ready
+                                            const audio =
+                                              audioPlayer || audioRef.current;
+                                            if (audio) {
+                                              // Update playAudioSegment to use the audio element directly
+                                              const startTime =
+                                                segment.startTimestamp ||
+                                                segment.startTime ||
+                                                0;
+                                              const endTime =
+                                                segment.endTimestamp ||
+                                                segment.endTime ||
+                                                0;
 
-                                          // Set position and play
-                                          audio.currentTime = startTime;
-                                          setCurrentTime(startTime);
-                                          audio.play();
-                                          setIsPlaying(true);
-                                          
-                                          toast({
-                                            title: "Playing Segment",
-                                            description: `${formatTime(startTime)} - ${formatTime(endTime)} (${Math.round(endTime - startTime)}s)`
-                                          });
-                                        } else {
-                                          toast({
-                                            title: "Audio Not Ready",
-                                            description: "Please select an audio file first",
-                                            variant: "destructive"
-                                          });
-                                        }
-                                      }}
-                                      className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700"
-                                      title="Play segment"
-                                    >
-                                      <Play className="w-3 h-3" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => startEditingSegment(segment)}
-                                      disabled={isPublished}
-                                      className="h-7 w-7 p-0 text-gray-600 hover:text-gray-700"
-                                      title="Edit segment"
-                                    >
-                                      <Edit2 className="w-3 h-3" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => deleteSegment(segment.id)}
-                                      disabled={isPublished || deleteMediaSegmentMutation.isPending}
-                                      className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
-                                      title="Delete segment"
-                                    >
-                                      <Trash2 className="w-3 h-3" />
-                                    </Button>
-                                  </div>
+                                              if (endTime <= startTime) {
+                                                toast({
+                                                  title: "Invalid Segment",
+                                                  description:
+                                                    "This segment has invalid timestamps",
+                                                  variant: "destructive",
+                                                });
+                                                return;
+                                              }
+
+                                              // Remove any existing boundary listener
+                                              if (
+                                                segmentBoundaryListenerRef.current
+                                              ) {
+                                                audio.removeEventListener(
+                                                  "timeupdate",
+                                                  segmentBoundaryListenerRef.current,
+                                                );
+                                              }
+
+                                              // Create boundary listener
+                                              const boundaryListener = () => {
+                                                if (
+                                                  audio.currentTime >= endTime
+                                                ) {
+                                                  audio.pause();
+                                                  setIsPlaying(false);
+                                                  audio.removeEventListener(
+                                                    "timeupdate",
+                                                    boundaryListener,
+                                                  );
+                                                  segmentBoundaryListenerRef.current =
+                                                    null;
+                                                }
+                                              };
+
+                                              segmentBoundaryListenerRef.current =
+                                                boundaryListener;
+                                              audio.addEventListener(
+                                                "timeupdate",
+                                                boundaryListener,
+                                              );
+
+                                              // Set position and play
+                                              audio.currentTime = startTime;
+                                              setCurrentTime(startTime);
+                                              audio.play();
+                                              setIsPlaying(true);
+
+                                              toast({
+                                                title: "Playing Segment",
+                                                description: `${formatTime(startTime)} - ${formatTime(endTime)} (${Math.round(endTime - startTime)}s)`,
+                                              });
+                                            } else {
+                                              toast({
+                                                title: "Audio Not Ready",
+                                                description:
+                                                  "Please select an audio file first",
+                                                variant: "destructive",
+                                              });
+                                            }
+                                          }}
+                                          className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700"
+                                          title="Play segment"
+                                        >
+                                          <Play className="w-3 h-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() =>
+                                            startEditingSegment(segment)
+                                          }
+                                          disabled={isPublished}
+                                          className="h-7 w-7 p-0 text-gray-600 hover:text-gray-700"
+                                          title="Edit segment"
+                                        >
+                                          <Edit2 className="w-3 h-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() =>
+                                            deleteSegment(segment.id)
+                                          }
+                                          disabled={
+                                            isPublished ||
+                                            deleteMediaSegmentMutation.isPending
+                                          }
+                                          className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                                          title="Delete segment"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
-                              )}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">No audio segments created yet</p>
-                            <p className="text-xs">Add time marks and create segments</p>
+                              ))
+                            ) : (
+                              <div className="text-center py-8 text-muted-foreground">
+                                <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                <p className="text-sm">
+                                  No audio segments created yet
+                                </p>
+                                <p className="text-xs">
+                                  Add time marks and create segments
+                                </p>
+                              </div>
+                            )}
                           </div>
-                        )}
                         </div>
-                      </div>
                       </div>
                     )}
                   </CardContent>
@@ -1721,9 +2151,11 @@ export default function ChapterEditor() {
                     {/* Language Selection */}
                     <div className="space-y-2">
                       <Label>Language</Label>
-                      <Select 
-                        value={selectedLanguage} 
-                        onValueChange={(value: 'te' | 'hi' | 'en') => setSelectedLanguage(value)}
+                      <Select
+                        value={selectedLanguage}
+                        onValueChange={(value: "te" | "hi" | "en") =>
+                          setSelectedLanguage(value)
+                        }
                         disabled={isPublished}
                       >
                         <SelectTrigger>
@@ -1741,15 +2173,25 @@ export default function ChapterEditor() {
                     <div className="space-y-3">
                       <Label>Text Content (Click and drag to select)</Label>
                       <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900 max-h-96 overflow-y-auto">
-                        <div className={`text-sm leading-relaxed ${
-                          selectedLanguage === 'te' ? 'font-telugu' : 
-                          selectedLanguage === 'hi' ? 'font-devanagari' : 
-                          'font-mono'
-                        }`}>
-                          {textContent[selectedLanguage] ? 
-                            renderTextWithSegments(textContent[selectedLanguage], selectedLanguage) :
-                            <div className="text-muted-foreground italic">No content available for this language</div>
-                          }
+                        <div
+                          className={`text-sm leading-relaxed ${
+                            selectedLanguage === "te"
+                              ? "font-telugu"
+                              : selectedLanguage === "hi"
+                                ? "font-devanagari"
+                                : "font-mono"
+                          }`}
+                        >
+                          {textContent[selectedLanguage] ? (
+                            renderTextWithSegments(
+                              textContent[selectedLanguage],
+                              selectedLanguage,
+                            )
+                          ) : (
+                            <div className="text-muted-foreground italic">
+                              No content available for this language
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1757,7 +2199,9 @@ export default function ChapterEditor() {
                     {/* Text Selection Info */}
                     {textSelection && (
                       <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                        <Label className="text-sm font-medium">Selected Text</Label>
+                        <Label className="text-sm font-medium">
+                          Selected Text
+                        </Label>
                         <div className="text-sm text-muted-foreground mt-1">
                           Characters {textSelection.start}-{textSelection.end}
                         </div>
@@ -1780,10 +2224,15 @@ export default function ChapterEditor() {
                           className="w-full px-3 py-2 border rounded-md text-sm"
                         />
                       </div>
-                      
+
                       <Button
                         onClick={handleCreateTextSegment}
-                        disabled={!textSelection || !segmentName.trim() || createTextSegmentMutation.isPending || isPublished}
+                        disabled={
+                          !textSelection ||
+                          !segmentName.trim() ||
+                          createTextSegmentMutation.isPending ||
+                          isPublished
+                        }
                         size="sm"
                         className="w-full"
                       >
@@ -1794,31 +2243,41 @@ export default function ChapterEditor() {
 
                     {/* Segment List */}
                     <div className="space-y-2">
-                      <Label className="text-sm">Text Segments ({segments?.length || 0})</Label>
+                      <Label className="text-sm">
+                        Text Segments ({segments?.length || 0})
+                      </Label>
                       <div className="max-h-64 overflow-y-auto space-y-2">
                         {segments && segments.length > 0 ? (
                           segments.map((segment) => (
-                            <div key={segment.id} className="p-3 border rounded-lg bg-white dark:bg-gray-800">
+                            <div
+                              key={segment.id}
+                              className="p-3 border rounded-lg bg-white dark:bg-gray-800"
+                            >
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                  <div className="font-medium text-sm">{segment.conceptualName}</div>
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    {segment.textReferences[selectedLanguage] ? 
-                                      `${selectedLanguage.toUpperCase()}: ${segment.textReferences[selectedLanguage]?.start}-${segment.textReferences[selectedLanguage]?.end}` :
-                                      'No reference for selected language'
-                                    }
+                                  <div className="font-medium text-sm">
+                                    {segment.conceptualName}
                                   </div>
-                                  {segment.audioFileId && segment.startTime !== undefined && (
-                                    <div className="text-xs text-green-600 mt-1">
-                                      Audio: {formatTime(segment.startTime)} - {formatTime(segment.endTime || 0)}
-                                    </div>
-                                  )}
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {segment.textReferences[selectedLanguage]
+                                      ? `${selectedLanguage.toUpperCase()}: ${segment.textReferences[selectedLanguage]?.start}-${segment.textReferences[selectedLanguage]?.end}`
+                                      : "No reference for selected language"}
+                                  </div>
+                                  {segment.audioFileId &&
+                                    segment.startTime !== undefined && (
+                                      <div className="text-xs text-green-600 mt-1">
+                                        Audio: {formatTime(segment.startTime)} -{" "}
+                                        {formatTime(segment.endTime || 0)}
+                                      </div>
+                                    )}
                                 </div>
                                 {!isPublished && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => deleteSegmentMutation.mutate(segment.id)}
+                                    onClick={() =>
+                                      deleteSegmentMutation.mutate(segment.id)
+                                    }
                                     disabled={deleteSegmentMutation.isPending}
                                     className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
                                   >
@@ -1831,8 +2290,12 @@ export default function ChapterEditor() {
                         ) : (
                           <div className="text-center py-8 text-muted-foreground">
                             <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">No text segments created yet</p>
-                            <p className="text-xs">Select text above to create segments</p>
+                            <p className="text-sm">
+                              No text segments created yet
+                            </p>
+                            <p className="text-xs">
+                              Select text above to create segments
+                            </p>
                           </div>
                         )}
                       </div>
@@ -1842,7 +2305,6 @@ export default function ChapterEditor() {
               </div>
             </div>
           </TabsContent>
-
         </Tabs>
       </div>
     </div>
