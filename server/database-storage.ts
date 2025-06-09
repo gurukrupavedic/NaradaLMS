@@ -301,16 +301,12 @@ export class DatabaseStorage implements IStorage {
   async getChaptersByTrack(trackId: number): Promise<any[]> {
     await this.ensureInitialized();
     if (!this.initialized) {
-      console.log('Database not initialized, using memory storage for chapters');
       return memStorage.getChaptersByTrack(trackId);
     }
     
     try {
-      console.log(`Fetching chapters for track ${trackId} with enriched data`);
-      
       // Get base chapters
       const chapterList = await db.select().from(chapters).where(eq(chapters.trackId, trackId)).orderBy(chapters.order);
-      console.log(`Found ${chapterList.length} chapters for track ${trackId}`);
       
       // Enrich each chapter with counts
       const enrichedChapters = await Promise.all(chapterList.map(async (chapter) => {
@@ -329,8 +325,6 @@ export class DatabaseStorage implements IStorage {
           // Count text segments  
           const textSegmentsList = await db.select().from(textSegments).where(eq(textSegments.chapterId, chapter.id));
           const segmentCount = textSegmentsList.length;
-          
-          console.log(`Chapter ${chapter.id}: hasContent=${hasContent}, audioFiles=${audioFileCount}, segments=${segmentCount}`);
           
           return {
             ...chapter,
