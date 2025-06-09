@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -909,6 +909,8 @@ export default function ChapterEditor() {
     );
   };
 
+  // === RENDER LOGIC SECTION ===
+  
   if (chapterLoading) {
     return <div className="p-6">Loading chapter...</div>;
   }
