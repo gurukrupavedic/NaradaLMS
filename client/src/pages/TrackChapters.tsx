@@ -175,10 +175,12 @@ export default function TrackChapters() {
                       
                       {/* Progress Indicators */}
                       <div className="flex items-center gap-6 pt-1">
-                        <div className={`flex items-center gap-1.5 ${chapter.hasContent ? 'text-green-600' : 'text-orange-500'}`}>
-                          <FileText className="w-3.5 h-3.5" />
-                          <span className="text-xs font-medium">
-                            {chapter.hasContent ? "Content ready" : "No content"}
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <FileText className={`w-3.5 h-3.5 ${chapter.hasContent ? 'text-green-600' : 'text-orange-500'}`} />
+                          <span className="text-xs">
+                            <span className={`font-semibold ${chapter.hasContent ? 'text-green-600' : 'text-orange-500'}`}>
+                              {chapter.hasContent ? "Ready" : "Missing"}
+                            </span> content
                           </span>
                         </div>
                         
