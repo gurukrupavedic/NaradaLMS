@@ -183,7 +183,7 @@ export default function ContentManagement() {
                       </Button>
                     </div>
                     
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1">
                         <span className="text-sm text-muted-foreground font-medium">
                           Track {track.order || index + 1} • {track.chapterCount || 0} chapters

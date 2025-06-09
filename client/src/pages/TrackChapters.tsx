@@ -200,14 +200,14 @@ export default function TrackChapters() {
                       </Button>
                     </div>
                     
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1">
-                        <span className="text-sm text-muted-foreground font-medium">
+                        <span className="text-sm text-muted-foreground font-medium flex-shrink-0">
                           Chapter {chapter.order}
                         </span>
-                        <h3 className="text-xl font-semibold truncate">{chapter.title}</h3>
+                        <h3 className="text-xl font-semibold truncate flex-1 min-w-0">{chapter.title}</h3>
                         <span
-                          className={`px-2 py-1 text-xs rounded-full ${
+                          className={`px-2 py-1 text-xs rounded-full flex-shrink-0 ${
                             chapter.status === "published"
                               ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                               : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
