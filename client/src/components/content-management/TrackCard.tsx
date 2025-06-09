@@ -77,17 +77,17 @@ export function TrackCard({
                 <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-1 text-xs text-muted-foreground">
+                  <span className="font-medium">Track {track.order || index + 1}</span>
+                  <span>•</span>
+                  <span>{track.chapterCount} chapters</span>
+                </div>
                 <h3 className="font-semibold text-sm sm:text-base text-foreground truncate group-hover:text-primary transition-colors">
                   {track.title}
                 </h3>
                 <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">
                   {track.description}
                 </p>
-                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                  <span className="font-medium">Track {track.order || index + 1}</span>
-                  <span>•</span>
-                  <span>{track.chapterCount} chapters</span>
-                </div>
               </div>
             </div>
           </div>
