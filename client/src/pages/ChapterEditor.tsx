@@ -916,6 +916,35 @@ export default function ChapterEditor() {
     });
   };
 
+  // Chapter metadata editing handlers
+  const handleEditMetadata = () => {
+    setEditingTitle(chapter?.title || "");
+    setEditingDescription(chapter?.description || "");
+    setIsEditingMetadata(true);
+  };
+
+  const handleSaveMetadata = () => {
+    if (!editingTitle.trim()) {
+      toast({
+        title: "Title required",
+        description: "Chapter title cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    updateChapterMetadataMutation.mutate({
+      title: editingTitle.trim(),
+      description: editingDescription.trim(),
+    });
+  };
+
+  const handleCancelMetadataEdit = () => {
+    setIsEditingMetadata(false);
+    setEditingTitle("");
+    setEditingDescription("");
+  };
+
   // Text segmentation functions
   const handleTextSelection = () => {
     const selection = window.getSelection();
@@ -1207,37 +1236,119 @@ export default function ChapterEditor() {
             </Button>
             
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold">{chapter?.title}</h1>
-                <span
-                  className={`px-2 py-1 text-xs rounded-full ${
-                    chapter?.status === "published"
-                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                      : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-                  }`}
-                >
-                  {chapter?.status
-                    ? chapter.status.charAt(0).toUpperCase() +
-                      chapter.status.slice(1)
-                    : "Draft"}
-                </span>
-              </div>
+              {isEditingMetadata ? (
+                <div className="flex-1 space-y-4">
+                  <div>
+                    <Label htmlFor="editing-title" className="text-sm font-medium">Chapter Title</Label>
+                    <Input
+                      id="editing-title"
+                      value={editingTitle}
+                      onChange={(e) => setEditingTitle(e.target.value)}
+                      placeholder="Enter chapter title"
+                      className="text-2xl font-bold h-12 mt-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSaveMetadata();
+                        } else if (e.key === "Escape") {
+                          handleCancelMetadataEdit();
+                        }
+                      }}
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="editing-description" className="text-sm font-medium">Description (Optional)</Label>
+                    <Textarea
+                      id="editing-description"
+                      value={editingDescription}
+                      onChange={(e) => setEditingDescription(e.target.value)}
+                      placeholder="Enter chapter description"
+                      rows={2}
+                      className="mt-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && e.ctrlKey) {
+                          e.preventDefault();
+                          handleSaveMetadata();
+                        } else if (e.key === "Escape") {
+                          handleCancelMetadataEdit();
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      onClick={handleSaveMetadata}
+                      disabled={updateChapterMetadataMutation.isPending || !editingTitle.trim()}
+                      size="sm"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleCancelMetadataEdit}
+                      disabled={updateChapterMetadataMutation.isPending}
+                      size="sm"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h1 className="text-3xl font-bold">{chapter?.title}</h1>
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full ${
+                          chapter?.status === "published"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                        }`}
+                      >
+                        {chapter?.status
+                          ? chapter.status.charAt(0).toUpperCase() +
+                            chapter.status.slice(1)
+                          : "Draft"}
+                      </span>
+                    </div>
+                    {chapter?.description && (
+                      <p className="text-muted-foreground">{chapter.description}</p>
+                    )}
+                  </div>
+                  {chapter?.status !== "published" && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={handleEditMetadata}
+                      className="flex-shrink-0"
+                      title="Edit chapter title and description"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
               
-              <div className="flex items-center gap-3">
-                <Button
-                  variant={
-                    chapter?.status === "published" ? "destructive" : "default"
-                  }
-                  onClick={() => {
-                    const newStatus =
-                      chapter?.status === "published" ? "draft" : "published";
-                    toggleStatusMutation.mutate(newStatus);
-                  }}
-                  disabled={toggleStatusMutation.isPending}
-                >
-                  {chapter?.status === "published" ? "Unpublish" : "Publish"}
-                </Button>
-              </div>
+              {!isEditingMetadata && (
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <Button
+                    variant={
+                      chapter?.status === "published" ? "destructive" : "default"
+                    }
+                    onClick={() => {
+                      const newStatus =
+                        chapter?.status === "published" ? "draft" : "published";
+                      toggleStatusMutation.mutate(newStatus);
+                    }}
+                    disabled={toggleStatusMutation.isPending}
+                  >
+                    {chapter?.status === "published" ? "Unpublish" : "Publish"}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
