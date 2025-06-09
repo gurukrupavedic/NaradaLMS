@@ -185,14 +185,14 @@ export default function TrackChapters() {
                         </div>
                         
                         <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <Music className="w-3.5 h-3.5" />
+                          <Music className="w-3.5 h-3.5 text-blue-500" />
                           <span className="text-xs">
                             <span className="font-semibold text-foreground">{chapter.audioFileCount || 0}</span> audio
                           </span>
                         </div>
                         
                         <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <Clock className="w-3.5 h-3.5" />
+                          <Clock className="w-3.5 h-3.5 text-purple-500" />
                           <span className="text-xs">
                             <span className="font-semibold text-foreground">{chapter.segmentCount || 0}</span> segments
                           </span>
