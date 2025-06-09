@@ -52,25 +52,30 @@ export default function SegmentationEditor() {
   });
 
   // Fetch audio files for the chapter
-  const { data: audioFiles = [] } = useQuery({
+  const { data: audioFiles = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/audio-files", chapterId],
     enabled: !!chapterId,
   });
 
-  // Fetch text segments for the chapter
-  const { data: textSegments = [] } = useQuery({
+  // Fetch text segments for the chapter with memoized sorting
+  const { data: textSegmentsData = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/segments", chapterId],
     enabled: !!chapterId,
   });
 
+  const textSegments = useMemo(() => 
+    textSegmentsData.sort((a: any, b: any) => (a.order || 0) - (b.order || 0)), 
+    [textSegmentsData]
+  );
+
   // Fetch media segments for selected audio file
-  const { data: mediaSegmentsData = [] } = useQuery({
+  const { data: mediaSegmentsData = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/media-segments", selectedAudioFile?.id],
     enabled: !!selectedAudioFile?.id,
   });
 
   // Fetch segment mappings for the chapter
-  const { data: segmentMappings = [] } = useQuery({
+  const { data: segmentMappings = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/segment-mappings", chapterId],
     enabled: !!chapterId,
   });
@@ -258,7 +263,7 @@ export default function SegmentationEditor() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Audio-Text Segmentation</h1>
-          <p className="text-muted-foreground">Chapter: {chapter.title}</p>
+          <p className="text-muted-foreground">Chapter: {chapter?.title || 'Loading...'}</p>
         </div>
       </div>
 
