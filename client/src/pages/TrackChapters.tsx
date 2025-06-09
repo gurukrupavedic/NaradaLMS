@@ -201,15 +201,12 @@ export default function TrackChapters() {
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="text-sm text-muted-foreground font-medium flex-shrink-0">
+                      <div className="flex items-center justify-between gap-3 mb-1">
+                        <span className="text-sm text-muted-foreground font-medium">
                           Chapter {chapter.order}
                         </span>
-                        <h3 className="text-xl font-semibold truncate" title={chapter.title}>
-                          {chapter.title.length > 25 ? `${chapter.title.substring(0, 25)}...` : chapter.title}
-                        </h3>
                         <span
-                          className={`px-2 py-1 text-xs rounded-full flex-shrink-0 ${
+                          className={`px-2 py-1 text-xs rounded-full ${
                             chapter.status === "published"
                               ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                               : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
@@ -218,6 +215,9 @@ export default function TrackChapters() {
                           {chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1)}
                         </span>
                       </div>
+                      <h3 className="text-xl font-semibold mb-1 truncate" title={chapter.title}>
+                        {chapter.title.length > 25 ? `${chapter.title.substring(0, 25)}...` : chapter.title}
+                      </h3>
                       {chapter.description && (
                         <p className="text-muted-foreground mb-2 line-clamp-2">{chapter.description}</p>
                       )}
