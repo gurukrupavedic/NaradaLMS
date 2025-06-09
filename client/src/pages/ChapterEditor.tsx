@@ -1494,7 +1494,7 @@ export default function ChapterEditor() {
                           <div className="max-h-64 overflow-y-auto space-y-2">
                         {Array.isArray(mediaSegments) && mediaSegments.length > 0 ? (
                           (mediaSegments as any[]).map((segment, index) => (
-                            <div key={segment.id} className="p-3 border rounded-lg bg-white dark:bg-gray-800">
+                            <div key={segment.id} className="p-2 border rounded-lg bg-white dark:bg-gray-800">
                               {editingSegmentId === segment.id ? (
                                 // Edit mode
                                 <div className="space-y-3">
@@ -1541,11 +1541,11 @@ export default function ChapterEditor() {
                                   </div>
                                 </div>
                               ) : (
-                                // View mode
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <div className="font-medium text-sm">{segment.segmentName || segment.name}</div>
-                                    <div className="text-xs text-muted-foreground mt-1 flex items-center gap-4">
+                                // View mode - compact single row layout
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <div className="font-medium text-sm truncate">{segment.segmentName || segment.name}</div>
+                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                       <span className="flex items-center gap-1">
                                         <Timer className="w-3 h-3" />
                                         {formatTime(segment.startTimestamp || segment.startTime || 0)} - {formatTime(segment.endTimestamp || segment.endTime || 0)}
@@ -1561,7 +1561,7 @@ export default function ChapterEditor() {
                                       </span>
                                     </div>
                                   </div>
-                                  <div className="flex gap-1">
+                                  <div className="flex gap-1 ml-2">
                                     <Button
                                       variant="ghost"
                                       size="sm"
