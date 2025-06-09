@@ -977,7 +977,7 @@ export default function ChapterEditor() {
             </TabsTrigger>
             <TabsTrigger value="segmentation" className="flex items-center gap-2">
               <Music className="w-4 h-4" />
-              Segmentation & Mapping
+              Segment & Map
             </TabsTrigger>
 
           </TabsList>
