@@ -219,7 +219,7 @@ export default function TrackChapters() {
                       <ResponsiveTitle
                         title={chapter.title}
                         className="text-xl font-semibold mb-1"
-                        reservedSpace={100}
+                        reservedSpace={70}
                       />
                       {chapter.description && (
                         <p className="text-muted-foreground mb-2 line-clamp-2">{chapter.description}</p>

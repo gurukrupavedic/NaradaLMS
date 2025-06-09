@@ -193,7 +193,7 @@ export default function ContentManagement() {
                       <ResponsiveTitle
                         title={track.title}
                         className="text-xl font-semibold mb-1"
-                        reservedSpace={140}
+                        reservedSpace={90}
                       />
                       <p className="text-muted-foreground mb-2 line-clamp-2">{track.description}</p>
                     </div>
