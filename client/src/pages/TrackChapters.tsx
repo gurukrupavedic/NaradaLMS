@@ -173,38 +173,39 @@ export default function TrackChapters() {
         <div className="grid gap-4">
           {(chapters as any[]).sort((a, b) => a.order - b.order).map((chapter: any, index: number) => (
             <Card key={chapter.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     {/* Chapter Ordering Controls */}
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-0.5">
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-6 w-6 p-0"
+                        className="h-5 w-5 p-0"
                         disabled={chapter.order === 1 || moveChapterMutation.isPending}
                         onClick={() => handleMoveChapter(chapter.id, 'up')}
                         title="Move chapter up"
                       >
-                        <ChevronUp className="w-4 h-4" />
+                        <ChevronUp className="w-3 h-3" />
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-6 w-6 p-0"
+                        className="h-5 w-5 p-0"
                         disabled={chapter.order === (chapters as any[]).length || moveChapterMutation.isPending}
                         onClick={() => handleMoveChapter(chapter.id, 'down')}
                         title="Move chapter down"
                       >
-                        <ChevronDown className="w-4 h-4" />
+                        <ChevronDown className="w-3 h-3" />
                       </Button>
                     </div>
                     
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+                      <div className="flex items-center gap-3 mb-1">
                         <span className="text-sm text-muted-foreground font-medium">
                           Chapter {chapter.order}
                         </span>
+                        <h3 className="text-xl font-semibold">{chapter.title}</h3>
                         <span
                           className={`px-2 py-1 text-xs rounded-full ${
                             chapter.status === "published"
@@ -215,15 +216,14 @@ export default function TrackChapters() {
                           {chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1)}
                         </span>
                       </div>
-                      <h3 className="text-xl font-semibold mb-2">{chapter.title}</h3>
                       {chapter.description && (
-                        <p className="text-muted-foreground mb-3">{chapter.description}</p>
+                        <p className="text-muted-foreground mb-2">{chapter.description}</p>
                       )}
                     </div>
                   </div>
                   
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1">
                       <Button 
                         variant="outline" 
                         size="sm"

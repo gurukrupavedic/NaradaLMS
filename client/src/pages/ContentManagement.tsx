@@ -156,45 +156,45 @@ export default function ContentManagement() {
         <div className="grid gap-4">
           {(tracks as any[]).sort((a, b) => a.order - b.order).map((track: any, index: number) => (
             <Card key={track.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     {/* Track Ordering Controls */}
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-0.5">
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-6 w-6 p-0"
+                        className="h-5 w-5 p-0"
                         disabled={track.order === 1 || moveTrackMutation.isPending}
                         onClick={() => handleMoveTrack(track.id, 'up')}
                         title="Move track up"
                       >
-                        <ChevronUp className="w-4 h-4" />
+                        <ChevronUp className="w-3 h-3" />
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-6 w-6 p-0"
+                        className="h-5 w-5 p-0"
                         disabled={track.order === (tracks as any[]).length || moveTrackMutation.isPending}
                         onClick={() => handleMoveTrack(track.id, 'down')}
                         title="Move track down"
                       >
-                        <ChevronDown className="w-4 h-4" />
+                        <ChevronDown className="w-3 h-3" />
                       </Button>
                     </div>
                     
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+                      <div className="flex items-center gap-3 mb-1">
                         <span className="text-sm text-muted-foreground font-medium">
                           Track {track.order || index + 1} • {track.chapterCount || 0} chapters
                         </span>
                       </div>
-                      <h3 className="text-xl font-semibold mb-2">{track.title}</h3>
-                      <p className="text-muted-foreground mb-3">{track.description}</p>
+                      <h3 className="text-xl font-semibold mb-1">{track.title}</h3>
+                      <p className="text-muted-foreground mb-2">{track.description}</p>
                     </div>
                   </div>
                   
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                       <Button 
                         variant="default" 
@@ -206,7 +206,7 @@ export default function ContentManagement() {
                         <ChevronRight className="w-4 h-4 ml-2" />
                       </Button>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <Button 
                         variant="outline" 
                         size="sm"
