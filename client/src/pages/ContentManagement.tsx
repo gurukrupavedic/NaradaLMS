@@ -190,7 +190,15 @@ export default function ContentManagement() {
                         </span>
                       </div>
                       <h3 className="text-xl font-semibold mb-1 truncate" title={track.title}>
-                        {track.title.length > 30 ? `${track.title.substring(0, 30)}...` : track.title}
+                        <span className="block sm:hidden">
+                          {track.title.length > 20 ? `${track.title.substring(0, 20)}...` : track.title}
+                        </span>
+                        <span className="hidden sm:block md:hidden">
+                          {track.title.length > 35 ? `${track.title.substring(0, 35)}...` : track.title}
+                        </span>
+                        <span className="hidden md:block">
+                          {track.title}
+                        </span>
                       </h3>
                       <p className="text-muted-foreground mb-2 line-clamp-2">{track.description}</p>
                     </div>
