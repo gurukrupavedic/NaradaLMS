@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, ChevronUp, ChevronDown, FileText } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ResponsiveTitle } from "@/components/ResponsiveTitle";
+import { TrackCard, ConfirmationModal } from "@/components/content-management";
 
 interface Track {
   id: number;
@@ -28,8 +29,12 @@ export default function ContentManagement() {
   
   const [createTrackModalOpen, setCreateTrackModalOpen] = useState(false);
   const [editTrackModalOpen, setEditTrackModalOpen] = useState(false);
-  const [editingTrack, setEditingTrack] = useState<any>(null);
+  const [editingTrack, setEditingTrack] = useState<Track | null>(null);
   const [newTrack, setNewTrack] = useState({ title: "", description: "" });
+  const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean, track: Track | null}>({
+    show: false,
+    track: null
+  });
 
   // Fetch tracks
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
@@ -123,9 +128,20 @@ export default function ContentManagement() {
     setLocation(`/content-management/track/${trackId}`);
   };
 
-  const handleEditTrack = (track: any) => {
+  const handleEditTrack = (track: Track) => {
     setEditingTrack(track);
     setEditTrackModalOpen(true);
+  };
+
+  const handleDeleteTrack = (track: Track) => {
+    setDeleteConfirm({ show: true, track });
+  };
+
+  const confirmDeleteTrack = () => {
+    if (deleteConfirm.track) {
+      deleteTrackMutation.mutate(deleteConfirm.track.id);
+      setDeleteConfirm({ show: false, track: null });
+    }
   };
 
   const handleUpdateTrack = () => {
@@ -140,11 +156,7 @@ export default function ContentManagement() {
     editTrackMutation.mutate(editingTrack);
   };
 
-  const handleDeleteTrack = (trackId: number) => {
-    if (confirm("Are you sure you want to delete this track? This will also delete all its chapters.")) {
-      deleteTrackMutation.mutate(trackId);
-    }
-  };
+
 
   const handleMoveTrack = (trackId: number, direction: 'up' | 'down') => {
     moveTrackMutation.mutate({ trackId, direction });
@@ -173,88 +185,17 @@ export default function ContentManagement() {
         {/* Track List */}
         <div className="flex flex-col gap-3 sm:gap-4">
           {sortedTracks.map((track: Track, index: number) => (
-            <Card 
-              key={track.id} 
-              className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto hover:shadow-md transition-shadow cursor-pointer group"
-              onClick={() => handleTrackClick(track.id)}
-            >
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    {/* Track Ordering Controls */}
-                    <div className="flex flex-col gap-0.5 flex-shrink-0">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-4 w-4 sm:h-5 sm:w-5 p-0"
-                        disabled={track.order === 1 || moveTrackMutation.isPending}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMoveTrack(track.id, 'up');
-                        }}
-                        title="Move track up"
-                      >
-                        <ChevronUp className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-4 w-4 sm:h-5 sm:w-5 p-0"
-                        disabled={track.order === (tracks as any[]).length || moveTrackMutation.isPending}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMoveTrack(track.id, 'down');
-                        }}
-                        title="Move track down"
-                      >
-                        <ChevronDown className="w-3 h-3" />
-                      </Button>
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="text-sm text-muted-foreground font-medium">
-                          Track {track.order || index + 1} • {track.chapterCount || 0} chapters
-                        </span>
-                      </div>
-                      <ResponsiveTitle
-                        title={track.title}
-                        className="text-lg font-semibold mb-1 group-hover:text-primary transition-colors"
-                      />
-                      <p className="text-muted-foreground mb-2 line-clamp-2 text-sm">{track.description}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditTrack(track);
-                      }}
-                      className="h-8 w-8 p-0"
-                      title="Edit Track"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteTrack(track.id);
-                      }}
-                      disabled={deleteTrackMutation.isPending}
-                      className="h-8 w-8 p-0"
-                      title="Delete Track"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <TrackCard
+              key={track.id}
+              track={track}
+              index={index}
+              totalTracks={sortedTracks.length}
+              isMovePending={moveTrackMutation.isPending}
+              onNavigate={handleTrackClick}
+              onEdit={handleEditTrack}
+              onDelete={handleDeleteTrack}
+              onMove={handleMoveTrack}
+            />
           ))}
         </div>
 
