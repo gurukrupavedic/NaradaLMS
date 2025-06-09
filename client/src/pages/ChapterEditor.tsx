@@ -684,7 +684,10 @@ export default function ChapterEditor() {
     if (!audio) return;
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleLoadedMetadata = () => setDuration(audio.duration);
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      setAudioPlayer(audio);
+    };
     const handleEnded = () => setIsPlaying(false);
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -696,7 +699,7 @@ export default function ChapterEditor() {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, []);
+  }, [selectedAudioFile]);
 
   const validateFileType = (file: File) => {
     const allowedTypes = ['audio/', 'video/'];
@@ -1306,9 +1309,6 @@ export default function ChapterEditor() {
                         <audio
                           ref={audioRef}
                           src={`/uploads/${selectedAudioFile.hashedFilename || selectedAudioFile.filename}`}
-                          onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
-                          onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
-                          onEnded={() => setIsPlaying(false)}
                           onError={(e) => {
                             console.error("Audio play error:", e, "Trying path:", `/uploads/${selectedAudioFile.hashedFilename || selectedAudioFile.filename}`);
                             toast({ 
