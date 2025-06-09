@@ -200,37 +200,35 @@ export default function ContentManagement() {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-end gap-1">
                     <Button 
-                      variant="default" 
+                      variant="ghost" 
                       size="sm"
                       onClick={() => handleTrackClick(track.id)}
-                      className="w-full justify-center"
+                      className="h-8 w-8 p-0"
+                      title="Manage Chapters"
                     >
-                      Manage Chapters
-                      <ChevronRight className="w-4 h-4 ml-2" />
+                      <ChevronRight className="w-4 h-4" />
                     </Button>
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEditTrack(track)}
-                        className="flex-1 justify-center"
-                      >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDeleteTrack(track.id)}
-                        disabled={deleteTrackMutation.isPending}
-                        className="flex-1 justify-center"
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
-                      </Button>
-                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleEditTrack(track)}
+                      className="h-8 w-8 p-0"
+                      title="Edit Track"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleDeleteTrack(track.id)}
+                      disabled={deleteTrackMutation.isPending}
+                      className="h-8 w-8 p-0"
+                      title="Delete Track"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
               </CardContent>
