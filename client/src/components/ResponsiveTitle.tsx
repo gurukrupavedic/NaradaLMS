@@ -17,12 +17,15 @@ export function ResponsiveTitle({ title, className = "" }: ResponsiveTitleProps)
       const container = titleRef.current;
       const measurer = measureRef.current;
       const containerWidth = container.offsetWidth;
+      
+      // Reserve 24px minimum spacing from the right edge for action buttons
+      const availableWidth = containerWidth - 24;
 
       // Reset to full title to measure
       measurer.textContent = title;
       let fullWidth = measurer.offsetWidth;
 
-      if (fullWidth <= containerWidth) {
+      if (fullWidth <= availableWidth) {
         setTruncatedTitle(title);
         return;
       }
@@ -39,7 +42,7 @@ export function ResponsiveTitle({ title, className = "" }: ResponsiveTitleProps)
         measurer.textContent = testText;
         const testWidth = measurer.offsetWidth;
 
-        if (testWidth <= containerWidth) {
+        if (testWidth <= availableWidth) {
           bestFit = testText;
           left = mid + 1;
         } else {
