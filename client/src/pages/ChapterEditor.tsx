@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   FileText, Upload, Music, Eye, ChevronLeft, Play, Pause, Square, 
-  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2, Clock, Edit, Timer, Ruler, Type
+  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2, Clock, Edit, Timer, Ruler, Type, Settings
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -1262,8 +1262,8 @@ export default function ChapterEditor() {
                     {selectedAudioFile && (
                       <div className="space-y-4 border-t pt-4">
                         <div className="flex items-center gap-2">
-                          <Timer className="h-4 w-4" />
-                          <Label className="text-sm font-medium">Audio Segmentation</Label>
+                          <Settings className="h-4 w-4" />
+                          <Label className="text-sm font-medium">Media Controls</Label>
                         </div>
                         <audio
                           ref={audioRef}
