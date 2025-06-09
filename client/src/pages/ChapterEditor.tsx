@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   FileText, Upload, Music, Eye, ChevronLeft, Play, Pause, Square, 
-  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2, Clock, Edit, Timer, Ruler
+  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2, Clock, Edit, Timer, Ruler, Type
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -1626,7 +1626,7 @@ export default function ChapterEditor() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
+                      <Type className="h-5 w-5" />
                       Text Segmentation & Mapping
                     </CardTitle>
                   </CardHeader>
