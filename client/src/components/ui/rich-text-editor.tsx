@@ -12,7 +12,9 @@ import BulletList from '@tiptap/extension-bullet-list'
 import ListItem from '@tiptap/extension-list-item'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
+import FontFamily from '@tiptap/extension-font-family'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { 
   Bold, 
   Italic, 
@@ -30,7 +32,8 @@ import {
   Minus,
   Link as LinkIcon,
   ImageIcon,
-  Type
+  Type,
+  ChevronDown
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCallback, useEffect } from 'react'
@@ -99,6 +102,9 @@ export function RichTextEditor({
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      FontFamily.configure({
+        types: ['textStyle'],
+      }),
     ],
     editorProps: {
       handleKeyDown: (view, event) => {
@@ -154,6 +160,14 @@ export function RichTextEditor({
     const url = window.prompt('Enter image URL:');
     if (url) {
       editor?.chain().focus().setImage({ src: url }).run();
+    }
+  }, [editor]);
+
+  const setFontFamily = useCallback((fontFamily: string) => {
+    if (fontFamily === 'default') {
+      editor?.chain().focus().unsetFontFamily().run();
+    } else {
+      editor?.chain().focus().setFontFamily(fontFamily).run();
     }
   }, [editor]);
 
@@ -248,6 +262,31 @@ export function RichTextEditor({
             <div className="w-4 h-4 bg-black dark:bg-white rounded"></div>
           </Button>
         </div>
+
+        <div className="w-px h-6 bg-border mx-1" />
+
+        {/* Font Family */}
+        <Select
+          value={editor?.getAttributes('textStyle')?.fontFamily || 'default'}
+          onValueChange={setFontFamily}
+          disabled={disabled}
+        >
+          <SelectTrigger className="w-[140px] h-8 text-sm">
+            <SelectValue placeholder="Font" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="default">Default</SelectItem>
+            <SelectItem value="Arial, sans-serif">Arial</SelectItem>
+            <SelectItem value="Times New Roman, serif">Times New Roman</SelectItem>
+            <SelectItem value="Courier New, monospace">Courier New</SelectItem>
+            <SelectItem value="'Noto Sans Telugu', sans-serif">Noto Sans Telugu</SelectItem>
+            <SelectItem value="'Noto Sans Devanagari', sans-serif">Noto Sans Devanagari</SelectItem>
+            <SelectItem value="'Noto Sans', sans-serif">Noto Sans</SelectItem>
+            <SelectItem value="'Sanskrit 2003', serif">Sanskrit 2003</SelectItem>
+            <SelectItem value="Georgia, serif">Georgia</SelectItem>
+            <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
+          </SelectContent>
+        </Select>
 
         <div className="w-px h-6 bg-border mx-1" />
 
