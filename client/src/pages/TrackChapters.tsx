@@ -39,7 +39,7 @@ export default function TrackChapters() {
 
   // Fetch chapters for this track
   const { data: chapters = [], isLoading } = useQuery<any[]>({
-    queryKey: [`/api/admin/tracks/${trackId}/chapters`],
+    queryKey: [`/api/admin/chapters/${trackId}`],
     enabled: !!trackId,
   });
 
