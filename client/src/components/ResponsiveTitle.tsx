@@ -1,21 +1,12 @@
 interface ResponsiveTitleProps {
   title: string;
   className?: string;
-  spacing?: number; // Default 25px
 }
 
-export function ResponsiveTitle({ title, className = "", spacing = 25 }: ResponsiveTitleProps) {
-  const titleStyle = {
-    maxWidth: `calc(100% - ${spacing}px)`,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap' as const,
-  };
-
+export function ResponsiveTitle({ title, className = "" }: ResponsiveTitleProps) {
   return (
     <h3 
-      className={className} 
-      style={titleStyle}
+      className={`${className} overflow-hidden text-ellipsis whitespace-nowrap max-w-[calc(100%-15px)] sm:max-w-[calc(100%-25px)]`}
       title={title}
     >
       {title}

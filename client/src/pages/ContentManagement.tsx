@@ -154,18 +154,18 @@ export default function ContentManagement() {
         </div>
 
         {/* Track List */}
-        <div className="grid gap-4">
+        <div className="grid gap-3 sm:gap-4">
           {(tracks as any[]).sort((a, b) => a.order - b.order).map((track: any, index: number) => (
             <Card key={track.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between gap-4">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     {/* Track Ordering Controls */}
                     <div className="flex flex-col gap-0.5 flex-shrink-0">
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-5 w-5 p-0"
+                        className="h-4 w-4 sm:h-5 sm:w-5 p-0"
                         disabled={track.order === 1 || moveTrackMutation.isPending}
                         onClick={() => handleMoveTrack(track.id, 'up')}
                         title="Move track up"
@@ -175,7 +175,7 @@ export default function ContentManagement() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-5 w-5 p-0"
+                        className="h-4 w-4 sm:h-5 sm:w-5 p-0"
                         disabled={track.order === (tracks as any[]).length || moveTrackMutation.isPending}
                         onClick={() => handleMoveTrack(track.id, 'down')}
                         title="Move track down"
@@ -192,42 +192,44 @@ export default function ContentManagement() {
                       </div>
                       <ResponsiveTitle
                         title={track.title}
-                        className="text-xl font-semibold mb-1"
-                        spacing={25}
+                        className="text-lg sm:text-xl font-semibold mb-1"
                       />
-                      <p className="text-muted-foreground mb-2 line-clamp-2">{track.description}</p>
+                      <p className="text-muted-foreground mb-2 line-clamp-1 sm:line-clamp-2">{track.description}</p>
                     </div>
                   </div>
                   
-                  <div className="flex flex-col gap-1 flex-shrink-0 ml-6">
-                    <div className="flex items-center gap-2">
+                  <div className="flex sm:flex-col gap-1 flex-shrink-0 sm:ml-6">
+                    <div className="flex items-center gap-2 w-full">
                       <Button 
                         variant="default" 
                         size="sm"
                         onClick={() => handleTrackClick(track.id)}
-                        className="w-full"
+                        className="w-full justify-center sm:justify-start"
                       >
-                        Manage Chapters
-                        <ChevronRight className="w-4 h-4 ml-2" />
+                        <span className="sm:hidden">Manage</span>
+                        <span className="hidden sm:inline">Manage Chapters</span>
+                        <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
                       </Button>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 w-full">
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => handleEditTrack(track)}
+                        className="flex-1 sm:flex-none justify-center"
                       >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edit
+                        <Edit className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Edit</span>
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => handleDeleteTrack(track.id)}
                         disabled={deleteTrackMutation.isPending}
+                        className="flex-1 sm:flex-none justify-center"
                       >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
+                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Delete</span>
                       </Button>
                     </div>
                   </div>
