@@ -205,7 +205,7 @@ export default function TrackChapters() {
                         <span className="text-sm text-muted-foreground font-medium">
                           Chapter {chapter.order}
                         </span>
-                        <h3 className="text-xl font-semibold">{chapter.title}</h3>
+                        <h3 className="text-xl font-semibold truncate">{chapter.title}</h3>
                         <span
                           className={`px-2 py-1 text-xs rounded-full ${
                             chapter.status === "published"
@@ -217,7 +217,7 @@ export default function TrackChapters() {
                         </span>
                       </div>
                       {chapter.description && (
-                        <p className="text-muted-foreground mb-2">{chapter.description}</p>
+                        <p className="text-muted-foreground mb-2 line-clamp-2">{chapter.description}</p>
                       )}
                     </div>
                   </div>
