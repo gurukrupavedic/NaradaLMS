@@ -1071,63 +1071,24 @@ export default function ChapterEditor() {
             <Card>
               <CardContent>
                 <div className="space-y-4">
-                  {!isPublished && (
-                    <div 
-                      className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                        isDragOver ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600'
-                      }`}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setIsDragOver(true);
-                      }}
-                      onDragLeave={() => setIsDragOver(false)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setIsDragOver(false);
-                        const files = Array.from(e.dataTransfer.files);
-                        if (files.length > 0) {
-                          const file = files[0];
-                          if (validateFileType(file)) {
-                            audioUploadMutation.mutate(file);
-                          }
-                        }
-                      }}
-                    >
-                      <Upload className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Upload Audio Files</p>
-                        <p className="text-xs text-muted-foreground">
-                          Drag and drop files here, or click to browse
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Supports: MP3, WAV, M4A, MP4, and other audio/video formats
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        className="mt-2"
-                        onClick={() => document.getElementById('audio-upload-input')?.click()}
-                        disabled={audioUploadMutation.isPending}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Browse Files
-                      </Button>
-                      <input
-                        id="audio-upload-input"
-                        type="file"
-                        accept="audio/*,video/*"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        disabled={audioUploadMutation.isPending}
-                      />
-                    </div>
-                  )}
-
                   {audioFiles && Array.isArray(audioFiles) && audioFiles.length > 0 ? (
                     <div className="space-y-3">
-                      <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-                        Uploaded Files ({audioFiles.length})
-                      </h4>
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                          Uploaded Files ({audioFiles.length})
+                        </h4>
+                        {!isPublished && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => document.getElementById('audio-upload-input')?.click()}
+                            disabled={audioUploadMutation.isPending}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Add More Files
+                          </Button>
+                        )}
+                      </div>
                       
                       {(audioFiles as any).map((file: any) => (
                         <div key={file.id} className="group border rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -1210,16 +1171,69 @@ export default function ChapterEditor() {
                       ))}
                     </div>
                   ) : (
-                    <Card>
-                      <CardContent className="p-12 text-center">
-                        <Music className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                        <h3 className="text-lg font-medium mb-2">No Audio Files</h3>
-                        <p className="text-muted-foreground">
-                          Upload audio files to start creating segments for this chapter.
-                        </p>
-                      </CardContent>
-                    </Card>
+                    !isPublished ? (
+                      <div 
+                        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                          isDragOver ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600'
+                        }`}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setIsDragOver(true);
+                        }}
+                        onDragLeave={() => setIsDragOver(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsDragOver(false);
+                          const files = Array.from(e.dataTransfer.files);
+                          if (files.length > 0) {
+                            const file = files[0];
+                            if (validateFileType(file)) {
+                              audioUploadMutation.mutate(file);
+                            }
+                          }
+                        }}
+                      >
+                        <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                        <div className="space-y-3">
+                          <h3 className="text-lg font-medium">Upload Audio Files</h3>
+                          <p className="text-muted-foreground">
+                            Drag and drop files here, or click to browse
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Supports: MP3, WAV, M4A, MP4, and other audio/video formats
+                          </p>
+                          <Button
+                            variant="outline"
+                            onClick={() => document.getElementById('audio-upload-input')?.click()}
+                            disabled={audioUploadMutation.isPending}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            {audioUploadMutation.isPending ? 'Uploading...' : 'Browse Files'}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Card>
+                        <CardContent className="p-12 text-center">
+                          <Music className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                          <h3 className="text-lg font-medium mb-2">No Audio Files</h3>
+                          <p className="text-muted-foreground">
+                            This published chapter contains no audio files.
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )
                   )}
+                  
+                  {/* Hidden file input for both scenarios */}
+                  <input
+                    id="audio-upload-input"
+                    type="file"
+                    accept="audio/*,video/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    disabled={audioUploadMutation.isPending || isPublished}
+                  />
                 </div>
               </CardContent>
             </Card>
