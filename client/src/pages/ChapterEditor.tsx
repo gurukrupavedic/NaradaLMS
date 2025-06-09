@@ -1297,37 +1297,35 @@ export default function ChapterEditor() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <h1 className="text-3xl font-bold">{chapter?.title}</h1>
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full ${
-                          chapter?.status === "published"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-                        }`}
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <h1 className="text-3xl font-bold">{chapter?.title}</h1>
+                    {chapter?.status !== "published" && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={handleEditMetadata}
+                        className="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+                        title="Edit chapter title and description"
                       >
-                        {chapter?.status
-                          ? chapter.status.charAt(0).toUpperCase() +
-                            chapter.status.slice(1)
-                          : "Draft"}
-                      </span>
-                    </div>
-                    {chapter?.description && (
-                      <p className="text-muted-foreground">{chapter.description}</p>
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
                     )}
-                  </div>
-                  {chapter?.status !== "published" && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={handleEditMetadata}
-                      className="flex-shrink-0"
-                      title="Edit chapter title and description"
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        chapter?.status === "published"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                      }`}
                     >
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
+                      {chapter?.status
+                        ? chapter.status.charAt(0).toUpperCase() +
+                          chapter.status.slice(1)
+                        : "Draft"}
+                    </span>
+                  </div>
+                  {chapter?.description && (
+                    <p className="text-muted-foreground">{chapter.description}</p>
                   )}
                 </div>
               )}
