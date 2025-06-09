@@ -46,7 +46,7 @@ export default function SegmentationEditor() {
   const [endTime, setEndTime] = useState(0);
 
   // Fetch chapter data
-  const { data: chapter } = useQuery({
+  const { data: chapter } = useQuery<any>({
     queryKey: ["/api/admin/chapters", chapterId],
     enabled: !!chapterId,
   });
@@ -80,10 +80,16 @@ export default function SegmentationEditor() {
     enabled: !!chapterId,
   });
 
+  // Memoized sorted media segments for performance
+  const sortedMediaSegments = useMemo(() => 
+    mediaSegmentsData.sort((a: any, b: any) => (a.startTime || 0) - (b.startTime || 0)), 
+    [mediaSegmentsData]
+  );
+
   // Update media segments when data changes
   useEffect(() => {
-    setMediaSegments(mediaSegmentsData);
-  }, [mediaSegmentsData]);
+    setMediaSegments(sortedMediaSegments);
+  }, [sortedMediaSegments]);
 
   // Create media segment mutation
   const createMediaSegmentMutation = useMutation({
