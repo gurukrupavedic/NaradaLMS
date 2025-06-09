@@ -961,7 +961,6 @@ export default function ChapterEditor() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <CardTitle>Text Content Editor</CardTitle>
                     <Select value={contentLanguage} onValueChange={(value: 'te' | 'hi' | 'en') => setContentLanguage(value)}>
                       <SelectTrigger className="w-48">
                         <SelectValue />
