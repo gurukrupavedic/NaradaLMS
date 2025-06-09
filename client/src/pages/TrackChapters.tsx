@@ -34,10 +34,11 @@ export default function TrackChapters() {
   const trackId = params?.trackId;
 
   // Fetch track info
-  const { data: track } = useQuery<any>({
-    queryKey: ["/api/admin/tracks", trackId],
-    enabled: !!trackId,
+  const { data: tracks } = useQuery<any[]>({
+    queryKey: ["/api/admin/tracks"],
   });
+  
+  const track = tracks?.find(t => t.id.toString() === trackId);
 
   // Fetch chapters for this track
   const { data: chapters = [], isLoading } = useQuery<any[]>({
