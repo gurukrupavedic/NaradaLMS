@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import StudentDashboard from "./student-dashboard";
 import InstructorPanel from "./simple-instructor-panel";
-import ContentManager from "./simple-content-manager";
+
 import AdminPanel from "./simple-admin-panel";
 import type { User } from "@shared/schema";
 
@@ -92,7 +92,8 @@ export default function RoleTabs({ user }: RoleTabsProps) {
       case 'instructor-panel':
         return <InstructorPanel user={user} />;
       case 'manage-content':
-        return <ContentManager user={user} />;
+        window.location.href = '/content-management';
+        return null;
       case 'administration':
         return <AdminPanel user={user} />;
       default:
