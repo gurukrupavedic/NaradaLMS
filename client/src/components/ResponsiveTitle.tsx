@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 interface ResponsiveTitleProps {
   title: string;
   className?: string;
+  reservedSpace?: number; // pixels to reserve for buttons/other content
 }
 
-export function ResponsiveTitle({ title, className = "" }: ResponsiveTitleProps) {
+export function ResponsiveTitle({ title, className = "", reservedSpace = 200 }: ResponsiveTitleProps) {
   const [truncatedTitle, setTruncatedTitle] = useState(title);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const measureRef = useRef<HTMLSpanElement>(null);
@@ -16,7 +17,7 @@ export function ResponsiveTitle({ title, className = "" }: ResponsiveTitleProps)
 
       const container = titleRef.current;
       const measurer = measureRef.current;
-      const containerWidth = container.offsetWidth;
+      const containerWidth = container.offsetWidth - reservedSpace;
 
       // Reset to full title to measure
       measurer.textContent = title;
