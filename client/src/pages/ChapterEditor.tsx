@@ -52,7 +52,7 @@ export default function ChapterEditor() {
   const [englishContent, setEnglishContent] = useState('');
 
   // Fetch chapter data
-  const { data: chapterData, isLoading, error } = useQuery({
+  const { data: chapterData, isLoading, error } = useQuery<any>({
     queryKey: [`/api/admin/chapters/${id}`],
     enabled: !!id,
   });
@@ -76,10 +76,7 @@ export default function ChapterEditor() {
   // Save chapter mutation
   const saveChapterMutation = useMutation({
     mutationFn: async (chapterUpdate: any) => {
-      return apiRequest(`/api/admin/chapters/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(chapterUpdate),
-      });
+      return apiRequest('PUT', `/api/admin/chapters/${id}`, chapterUpdate);
     },
     onSuccess: () => {
       toast({
