@@ -155,18 +155,44 @@ export default function ContentManagement() {
 
         {/* Track List */}
         <div className="grid gap-4">
-          {tracks.map((track: any, index: number) => (
+          {(tracks as any[]).sort((a, b) => a.order - b.order).map((track: any, index: number) => (
             <Card key={track.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-sm text-muted-foreground font-medium">
-                        Track {track.order || index + 1} • {track.chapterCount || 0} chapters
-                      </span>
+                  <div className="flex items-center gap-3">
+                    {/* Track Ordering Controls */}
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                        disabled={track.order === 1 || moveTrackMutation.isPending}
+                        onClick={() => handleMoveTrack(track.id, 'up')}
+                        title="Move track up"
+                      >
+                        <ChevronUp className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                        disabled={track.order === (tracks as any[]).length || moveTrackMutation.isPending}
+                        onClick={() => handleMoveTrack(track.id, 'down')}
+                        title="Move track down"
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </Button>
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">{track.title}</h3>
-                    <p className="text-muted-foreground mb-3">{track.description}</p>
+                    
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-sm text-muted-foreground font-medium">
+                          Track {track.order || index + 1} • {track.chapterCount || 0} chapters
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-semibold mb-2">{track.title}</h3>
+                      <p className="text-muted-foreground mb-3">{track.description}</p>
+                    </div>
                   </div>
                   
                   <div className="flex flex-col gap-2">
@@ -205,7 +231,7 @@ export default function ContentManagement() {
           ))}
         </div>
 
-        {tracks.length === 0 && (
+        {(tracks as any[]).length === 0 && (
           <Card>
             <CardContent className="p-12 text-center">
               <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
