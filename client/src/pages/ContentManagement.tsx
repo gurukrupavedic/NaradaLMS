@@ -8,9 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, ChevronUp, ChevronDown, FileText } from "lucide-react";
+import { Plus, FileText } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ResponsiveTitle } from "@/components/ResponsiveTitle";
 import { TrackCard, ConfirmationModal } from "@/components/content-management";
 
 interface Track {
@@ -308,6 +307,17 @@ export default function ContentManagement() {
             </Card>
           </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={deleteConfirm.show}
+          onClose={() => setDeleteConfirm({ show: false, track: null })}
+          onConfirm={confirmDeleteTrack}
+          title="Delete Track"
+          message={`Are you sure you want to delete "${deleteConfirm.track?.title}"? This will also delete all its chapters and cannot be undone.`}
+          confirmLabel="Delete Track"
+          isLoading={deleteTrackMutation.isPending}
+        />
       </div>
     </div>
   );

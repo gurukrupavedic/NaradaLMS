@@ -9,17 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveTitle } from "@/components/ResponsiveTitle";
-import { 
-  ArrowLeft, 
-  Plus, 
-  Trash2, 
-  ChevronUp,
-  ChevronDown, 
-  FileText,
-  Eye,
-  EyeOff 
-} from "lucide-react";
+import { ArrowLeft, Plus, FileText } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { ChapterCard, ConfirmationModal } from "@/components/content-management";
 
 interface Chapter {
   id: number;
@@ -37,6 +29,10 @@ export default function TrackChapters() {
   
   const [createChapterModalOpen, setCreateChapterModalOpen] = useState(false);
   const [newChapter, setNewChapter] = useState({ title: "", description: "" });
+  const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean, chapter: Chapter | null}>({
+    show: false,
+    chapter: null
+  });
 
   const trackId = params?.trackId;
 
@@ -138,9 +134,14 @@ export default function TrackChapters() {
     setLocation(`/chapter-editor/${chapterId}`);
   };
 
-  const handleDeleteChapter = (chapterId: number) => {
-    if (confirm("Are you sure you want to delete this chapter?")) {
-      deleteChapterMutation.mutate(chapterId);
+  const handleDeleteChapter = (chapter: Chapter) => {
+    setDeleteConfirm({ show: true, chapter });
+  };
+
+  const confirmDeleteChapter = () => {
+    if (deleteConfirm.chapter) {
+      deleteChapterMutation.mutate(deleteConfirm.chapter.id);
+      setDeleteConfirm({ show: false, chapter: null });
     }
   };
 
@@ -186,101 +187,24 @@ export default function TrackChapters() {
         {/* Chapter List */}
         <div className="flex flex-col gap-3 sm:gap-4">
           {sortedChapters.map((chapter: Chapter, index: number) => (
-            <Card 
-              key={chapter.id} 
-              className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto hover:shadow-md transition-shadow cursor-pointer group"
-              onClick={() => handleEditChapter(chapter.id)}
-            >
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    {/* Chapter Ordering Controls */}
-                    <div className="flex flex-col gap-0.5 flex-shrink-0">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-4 w-4 sm:h-5 sm:w-5 p-0"
-                        disabled={chapter.order === 1 || moveChapterMutation.isPending}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMoveChapter(chapter.id, 'up');
-                        }}
-                        title="Move chapter up"
-                      >
-                        <ChevronUp className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-4 w-4 sm:h-5 sm:w-5 p-0"
-                        disabled={chapter.order === (chapters as any[]).length || moveChapterMutation.isPending}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMoveChapter(chapter.id, 'down');
-                        }}
-                        title="Move chapter down"
-                      >
-                        <ChevronDown className="w-3 h-3" />
-                      </Button>
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm text-muted-foreground font-medium flex-shrink-0">
-                          Chapter {chapter.order}
-                        </span>
-                        <span
-                          className={`px-2 py-1 text-xs rounded-full flex-shrink-0 ${
-                            chapter.status === "published"
-                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                              : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-                          }`}
-                        >
-                          {chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1)}
-                        </span>
-                      </div>
-                      <ResponsiveTitle
-                        title={chapter.title}
-                        className="text-lg font-semibold mb-1 group-hover:text-primary transition-colors"
-                      />
-                      {chapter.description && (
-                        <p className="text-muted-foreground mb-2 line-clamp-2 text-sm">{chapter.description}</p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteChapter(chapter.id);
-                      }}
-                      disabled={deleteChapterMutation.isPending}
-                      className="h-8 w-8 p-0"
-                      title="Delete Chapter"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const newStatus = chapter.status === "published" ? "draft" : "published";
-                        toggleStatusMutation.mutate({ chapterId: chapter.id, status: newStatus });
-                      }}
-                      disabled={toggleStatusMutation.isPending}
-                      className="h-8 w-8 p-0"
-                      title={chapter.status === "published" ? "Unpublish Chapter" : "Publish Chapter"}
-                    >
-                      {chapter.status === "published" ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <ChapterCard
+              key={chapter.id}
+              chapter={chapter}
+              index={index}
+              totalChapters={sortedChapters.length}
+              isMovePending={moveChapterMutation.isPending}
+              isTogglePending={toggleStatusMutation.isPending}
+              onEdit={handleEditChapter}
+              onDelete={handleDeleteChapter}
+              onMove={handleMoveChapter}
+              onToggleStatus={(chapterId) => {
+                const chapter = sortedChapters.find(c => c.id === chapterId);
+                if (chapter) {
+                  const newStatus = chapter.status === "published" ? "draft" : "published";
+                  toggleStatusMutation.mutate({ chapterId, status: newStatus });
+                }
+              }}
+            />
           ))}
         </div>
 
