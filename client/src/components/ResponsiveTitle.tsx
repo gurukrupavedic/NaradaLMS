@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 interface ResponsiveTitleProps {
   title: string;
   className?: string;
+  reservedSpace?: number; // Optional spacing override
 }
 
-export function ResponsiveTitle({ title, className = "" }: ResponsiveTitleProps) {
+export function ResponsiveTitle({ title, className = "", reservedSpace }: ResponsiveTitleProps) {
   const [truncatedTitle, setTruncatedTitle] = useState(title);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const measureRef = useRef<HTMLSpanElement>(null);
@@ -18,8 +19,9 @@ export function ResponsiveTitle({ title, className = "" }: ResponsiveTitleProps)
       const measurer = measureRef.current;
       const containerWidth = container.offsetWidth;
       
-      // Reserve 24px minimum spacing from the right edge for action buttons
-      const availableWidth = containerWidth - 24;
+      // Reserve spacing equivalent to button width + small gap (default 80px for typical button)
+      const spacing = reservedSpace || 80;
+      const availableWidth = containerWidth - spacing;
 
       // Reset to full title to measure
       measurer.textContent = title;
