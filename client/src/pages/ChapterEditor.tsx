@@ -18,6 +18,7 @@ import { useLocation } from "wouter";
 
 interface ChapterData {
   id: number;
+  trackId: number;
   title: string;
   status: "draft" | "published";
   content: {

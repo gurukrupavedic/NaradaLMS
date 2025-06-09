@@ -102,6 +102,9 @@ export default function TrackChapters() {
   };
 
   const handleEditChapter = (chapterId: number) => {
+    // Invalidate chapter details query to ensure fresh data loads
+    queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${chapterId}/details`] });
+    // Navigate to chapter editor
     setLocation(`/chapter-editor/${chapterId}`);
   };
 
