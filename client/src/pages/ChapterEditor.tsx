@@ -1725,6 +1725,7 @@ export default function ChapterEditor() {
               </Card>
               </div>
             </div>
+          </div>
           </TabsContent>
 
           {/* Preview Tab */}
