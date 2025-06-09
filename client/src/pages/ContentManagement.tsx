@@ -140,13 +140,12 @@ export default function ContentManagement() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Content Management</h1>
-          <p className="text-muted-foreground">Manage learning tracks and chapters</p>
-        </div>
-
-        <div className="mb-6">
+      <div className="container mx-auto px-6 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Content Management</h1>
+            <p className="text-muted-foreground">Manage learning tracks and chapters</p>
+          </div>
           <Button onClick={() => setCreateTrackModalOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add New Track
