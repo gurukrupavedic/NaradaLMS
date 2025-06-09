@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, ChevronRight, FileText, Music } from "lucide-react";
+import { Plus, Edit, Trash2, ChevronRight, ChevronUp, ChevronDown, FileText, Music } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function ContentManagement() {
@@ -76,6 +76,21 @@ export default function ContentManagement() {
     },
   });
 
+  // Move track mutation
+  const moveTrackMutation = useMutation({
+    mutationFn: async ({ trackId, direction }: { trackId: number; direction: 'up' | 'down' }) => {
+      const response = await apiRequest("POST", `/api/admin/tracks/${trackId}/move`, { direction });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Track order updated successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to update track order", description: error.message, variant: "destructive" });
+    },
+  });
+
   const handleCreateTrack = () => {
     if (!newTrack.title.trim()) {
       toast({ title: "Please enter a track title", variant: "destructive" });
@@ -113,6 +128,10 @@ export default function ContentManagement() {
     if (confirm("Are you sure you want to delete this track? This will also delete all its chapters.")) {
       deleteTrackMutation.mutate(trackId);
     }
+  };
+
+  const handleMoveTrack = (trackId: number, direction: 'up' | 'down') => {
+    moveTrackMutation.mutate({ trackId, direction });
   };
 
   if (isLoading) {

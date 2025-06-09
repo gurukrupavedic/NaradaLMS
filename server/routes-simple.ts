@@ -105,6 +105,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/admin/tracks/:id', async (req, res) => {
+    try {
+      const trackId = parseInt(req.params.id);
+      const track = await storage.updateTrack(trackId, req.body);
+      res.json(track);
+    } catch (error) {
+      console.error("Error updating track:", error);
+      res.status(500).json({ message: "Failed to update track" });
+    }
+  });
+
+  app.delete('/api/admin/tracks/:id', async (req, res) => {
+    try {
+      const trackId = parseInt(req.params.id);
+      await storage.deleteTrack(trackId);
+      res.json({ message: "Track deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting track:", error);
+      res.status(500).json({ message: "Failed to delete track" });
+    }
+  });
+
+  app.post('/api/admin/tracks/:id/move', async (req, res) => {
+    try {
+      const trackId = parseInt(req.params.id);
+      const { direction } = req.body;
+      
+      if (!['up', 'down'].includes(direction)) {
+        return res.status(400).json({ message: "Invalid direction. Must be 'up' or 'down'" });
+      }
+      
+      // Get all tracks to determine current positions
+      const tracks = await storage.getAllTracks();
+      const currentTrack = tracks.find(t => t.id === trackId);
+      
+      if (!currentTrack) {
+        return res.status(404).json({ message: "Track not found" });
+      }
+      
+      // Sort tracks by order to ensure correct positioning
+      const sortedTracks = tracks.sort((a, b) => a.order - b.order);
+      const currentIndex = sortedTracks.findIndex(t => t.id === trackId);
+      
+      if (direction === 'up' && currentIndex > 0) {
+        // Swap with previous track
+        const previousTrack = sortedTracks[currentIndex - 1];
+        await storage.updateTrack(trackId, { order: previousTrack.order });
+        await storage.updateTrack(previousTrack.id, { order: currentTrack.order });
+      } else if (direction === 'down' && currentIndex < sortedTracks.length - 1) {
+        // Swap with next track
+        const nextTrack = sortedTracks[currentIndex + 1];
+        await storage.updateTrack(trackId, { order: nextTrack.order });
+        await storage.updateTrack(nextTrack.id, { order: currentTrack.order });
+      } else {
+        return res.status(400).json({ message: "Cannot move track in that direction" });
+      }
+      
+      res.json({ message: "Track order updated successfully" });
+    } catch (error) {
+      console.error("Error moving track:", error);
+      res.status(500).json({ message: "Failed to move track" });
+    }
+  });
+
   app.post('/api/admin/chapters', async (req, res) => {
     try {
       const chapter = await storage.createChapter({
