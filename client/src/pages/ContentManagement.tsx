@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, ChevronRight, ChevronUp, ChevronDown, FileText, Music } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { ResponsiveTitle } from "@/components/ResponsiveTitle";
 
 export default function ContentManagement() {
   const [location, setLocation] = useLocation();
@@ -189,9 +190,10 @@ export default function ContentManagement() {
                           Track {track.order || index + 1} • {track.chapterCount || 0} chapters
                         </span>
                       </div>
-                      <h3 className="text-xl font-semibold mb-1 truncate flex-1 min-w-0" title={track.title}>
-                        {track.title}
-                      </h3>
+                      <ResponsiveTitle
+                        title={track.title}
+                        className="text-xl font-semibold mb-1"
+                      />
                       <p className="text-muted-foreground mb-2 line-clamp-2">{track.description}</p>
                     </div>
                   </div>

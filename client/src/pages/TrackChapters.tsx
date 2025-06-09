@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { ResponsiveTitle } from "@/components/ResponsiveTitle";
 import { 
   ArrowLeft, 
   Plus, 
@@ -215,9 +216,10 @@ export default function TrackChapters() {
                           {chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1)}
                         </span>
                       </div>
-                      <h3 className="text-xl font-semibold mb-1 truncate flex-1 min-w-0" title={chapter.title}>
-                        {chapter.title}
-                      </h3>
+                      <ResponsiveTitle
+                        title={chapter.title}
+                        className="text-xl font-semibold mb-1"
+                      />
                       {chapter.description && (
                         <p className="text-muted-foreground mb-2 line-clamp-2">{chapter.description}</p>
                       )}
