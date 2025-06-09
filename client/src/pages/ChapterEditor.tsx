@@ -212,30 +212,7 @@ export default function ChapterEditor() {
     });
   };
 
-  // Add global mouse event listeners for dragging
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
 
-  // Cleanup audio player on unmount
-  useEffect(() => {
-    return () => {
-      if (audioPlayer) {
-        audioPlayer.pause();
-        audioPlayer.removeEventListener('loadedmetadata', () => {});
-        audioPlayer.removeEventListener('timeupdate', () => {});
-        audioPlayer.removeEventListener('error', () => {});
-        setAudioPlayer(null);
-      }
-    };
-  }, [audioPlayer]);
 
   // Helper functions for segment editing
   const startEditingSegment = (segment: any) => {
@@ -356,17 +333,6 @@ export default function ChapterEditor() {
 
   const isPublished = chapter?.status === "published";
 
-  // Initialize text content when chapter loads
-  useEffect(() => {
-    if (chapter?.content) {
-      setTextContent({
-        te: chapter.content.te || "",
-        hi: chapter.content.hi || "",
-        en: chapter.content.en || ""
-      });
-    }
-  }, [chapter]);
-
   // === MUTATIONS SECTION ===
   
   // Audio file upload mutation
@@ -455,6 +421,19 @@ export default function ChapterEditor() {
     },
   });
 
+  // === CUSTOM HOOKS SECTION ===
+  
+  // Initialize text content when chapter loads
+  useEffect(() => {
+    if (chapter?.content) {
+      setTextContent({
+        te: chapter.content.te || "",
+        hi: chapter.content.hi || "",
+        en: chapter.content.en || ""
+      });
+    }
+  }, [chapter]);
+
   // Auto-save functionality with debounce
   useEffect(() => {
     if (!chapter?.content || isPublished) return;
@@ -472,6 +451,31 @@ export default function ChapterEditor() {
 
     return () => clearTimeout(timeoutId);
   }, [textContent, chapter?.content, isPublished, updateContentMutation]);
+
+  // Add global mouse event listeners for dragging
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  // Cleanup audio player on unmount
+  useEffect(() => {
+    return () => {
+      if (audioPlayer) {
+        audioPlayer.pause();
+        audioPlayer.removeEventListener('loadedmetadata', () => {});
+        audioPlayer.removeEventListener('timeupdate', () => {});
+        audioPlayer.removeEventListener('error', () => {});
+        setAudioPlayer(null);
+      }
+    };
+  }, [audioPlayer]);
 
   // Create audio segments from marks mutation
   const createAudioSegmentsMutation = useMutation({
