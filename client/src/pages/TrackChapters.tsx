@@ -179,7 +179,7 @@ export default function TrackChapters() {
                           <FileText className={`w-3.5 h-3.5 ${chapter.hasContent ? 'text-green-600' : 'text-orange-500'}`} />
                           <span className="text-xs">
                             <span className={`font-semibold text-foreground`}>
-                              {chapter.hasContent ? "Content ready" : "No content"}
+                              {chapter.hasContent ? "content ready" : "no content"}
                             </span>
                           </span>
                         </div>
