@@ -1148,60 +1148,60 @@ export default function ChapterEditor() {
       {/* Header */}
       <div className="border-b bg-background">
         <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  // Get the track ID from the chapter data
-                  if (chapter?.trackId) {
-                    // Invalidate chapters query to refresh data
-                    queryClient.invalidateQueries({
-                      queryKey: [`/api/admin/chapters/${chapter.trackId}`],
-                    });
-                    // Navigate to content management track page
-                    setLocation(`/content-management/track/${chapter.trackId}`);
-                  } else {
-                    // Fallback to content management dashboard if no track ID
-                    setLocation("/content-management");
-                  }
-                }}
-              >
-                <ChevronLeft className="w-4 h-4 mr-2" />
-                Back to Chapters
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold">{chapter?.title}</h1>
-                <div className="flex items-center gap-2 mt-1">
-                  <span
-                    className={`px-2 py-1 text-xs rounded-full ${
-                      chapter?.status === "published"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                        : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-                    }`}
-                  >
-                    {chapter?.status
-                      ? chapter.status.charAt(0).toUpperCase() +
-                        chapter.status.slice(1)
-                      : "Draft"}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button
-                variant={
-                  chapter?.status === "published" ? "destructive" : "default"
+          <div className="space-y-4">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                // Get the track ID from the chapter data
+                if (chapter?.trackId) {
+                  // Invalidate chapters query to refresh data
+                  queryClient.invalidateQueries({
+                    queryKey: [`/api/admin/chapters/${chapter.trackId}`],
+                  });
+                  // Navigate to content management track page
+                  setLocation(`/content-management/track/${chapter.trackId}`);
+                } else {
+                  // Fallback to content management dashboard if no track ID
+                  setLocation("/content-management");
                 }
-                onClick={() => {
-                  const newStatus =
-                    chapter?.status === "published" ? "draft" : "published";
-                  toggleStatusMutation.mutate(newStatus);
-                }}
-                disabled={toggleStatusMutation.isPending}
-              >
-                {chapter?.status === "published" ? "Unpublish" : "Publish"}
-              </Button>
+              }}
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Back to Chapters
+            </Button>
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold">{chapter?.title}</h1>
+                <span
+                  className={`px-2 py-1 text-xs rounded-full ${
+                    chapter?.status === "published"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                      : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                  }`}
+                >
+                  {chapter?.status
+                    ? chapter.status.charAt(0).toUpperCase() +
+                      chapter.status.slice(1)
+                    : "Draft"}
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Button
+                  variant={
+                    chapter?.status === "published" ? "destructive" : "default"
+                  }
+                  onClick={() => {
+                    const newStatus =
+                      chapter?.status === "published" ? "draft" : "published";
+                    toggleStatusMutation.mutate(newStatus);
+                  }}
+                  disabled={toggleStatusMutation.isPending}
+                >
+                  {chapter?.status === "published" ? "Unpublish" : "Publish"}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
