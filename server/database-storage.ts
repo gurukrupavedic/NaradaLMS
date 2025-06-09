@@ -3,6 +3,7 @@ import {
   tracks, chapters, audioFiles, textSegments, mediaSegments, segmentMappings, audioMappings, users
 } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { MemStorage } from "./storage-simplified";
 const memStorage = new MemStorage();
 
@@ -234,8 +235,27 @@ export class DatabaseStorage implements IStorage {
     if (!this.initialized) return memStorage.getAllTracks();
     
     try {
-      return await db.select().from(tracks).orderBy(tracks.order);
+      // Get all tracks first
+      const allTracks = await db.select().from(tracks).orderBy(tracks.order);
+      
+      // For each track, count its chapters
+      const tracksWithCounts = await Promise.all(
+        allTracks.map(async (track) => {
+          const chapterCount = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(chapters)
+            .where(eq(chapters.trackId, track.id));
+          
+          return {
+            ...track,
+            chapterCount: Number(chapterCount[0]?.count || 0)
+          };
+        })
+      );
+      
+      return tracksWithCounts;
     } catch (error) {
+      console.error("Error fetching tracks with chapter counts:", error);
       return memStorage.getAllTracks();
     }
   }
