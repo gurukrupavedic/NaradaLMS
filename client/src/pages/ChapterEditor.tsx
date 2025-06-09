@@ -1487,11 +1487,10 @@ export default function ChapterEditor() {
                       <div className="space-y-4 border-t pt-4">
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4" />
-                          <Label className="text-sm font-medium">Audio Segments</Label>
+                          <Label className="text-sm font-medium">Media Segments ({Array.isArray(mediaSegments) ? mediaSegments.length : 0})</Label>
                         </div>
                         {/* Segments List */}
                         <div className="space-y-2">
-                          <Label className="text-sm">Media Segments ({Array.isArray(mediaSegments) ? mediaSegments.length : 0})</Label>
                           <div className="max-h-64 overflow-y-auto space-y-2">
                         {Array.isArray(mediaSegments) && mediaSegments.length > 0 ? (
                           (mediaSegments as any[]).map((segment, index) => (
