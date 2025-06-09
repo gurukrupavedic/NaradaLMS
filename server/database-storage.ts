@@ -327,9 +327,7 @@ export class DatabaseStorage implements IStorage {
           for (const audioFile of audioFilesList) {
             const mediaSegmentsList = await db.select().from(mediaSegments).where(eq(mediaSegments.audioFileId, audioFile.id));
             segmentCount += mediaSegmentsList.length;
-            console.log(`Chapter ${chapter.id}, Audio File ${audioFile.id}: ${mediaSegmentsList.length} segments`);
           }
-          console.log(`Chapter ${chapter.id} total segments: ${segmentCount}`);
           
           return {
             ...chapter,
