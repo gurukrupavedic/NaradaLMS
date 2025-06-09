@@ -158,6 +158,8 @@ export default function ChapterEditor() {
   // Content editor language state
   const [contentLanguage, setContentLanguage] = useState<'te' | 'hi' | 'en'>('te');
 
+  // === HELPER FUNCTIONS SECTION ===
+  
   // Helper functions for drag operations
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging || !selectedMark || !timelineRef.current) return;
@@ -325,6 +327,8 @@ export default function ChapterEditor() {
     },
   });
 
+  // === DATA FETCHING SECTION ===
+  
   // Fetch chapter details
   const { data: chapter, isLoading: chapterLoading } = useQuery<ChapterData>({
     queryKey: [`/api/admin/chapters/${chapterId}/details`],
@@ -363,8 +367,8 @@ export default function ChapterEditor() {
     }
   }, [chapter]);
 
-
-
+  // === MUTATIONS SECTION ===
+  
   // Audio file upload mutation
   const audioUploadMutation = useMutation({
     mutationFn: async (file: File) => {
