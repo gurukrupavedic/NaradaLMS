@@ -158,10 +158,10 @@ export default function ContentManagement() {
           {(tracks as any[]).sort((a, b) => a.order - b.order).map((track: any, index: number) => (
             <Card key={track.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
                     {/* Track Ordering Controls */}
-                    <div className="flex flex-col gap-0.5">
+                    <div className="flex flex-col gap-0.5 flex-shrink-0">
                       <Button
                         size="sm"
                         variant="ghost"
@@ -193,13 +193,13 @@ export default function ContentManagement() {
                       <ResponsiveTitle
                         title={track.title}
                         className="text-xl font-semibold mb-1"
-                        reservedSpace={25}
+                        spacing={25}
                       />
                       <p className="text-muted-foreground mb-2 line-clamp-2">{track.description}</p>
                     </div>
                   </div>
                   
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1 flex-shrink-0 ml-6">
                     <div className="flex items-center gap-2">
                       <Button 
                         variant="default" 
