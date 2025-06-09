@@ -20,6 +20,8 @@ import {
   FileText, 
   Music,
   Clock,
+  Eye,
+  EyeOff,
   CheckCircle 
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -177,8 +179,8 @@ export default function TrackChapters() {
           {(chapters as any[]).sort((a, b) => a.order - b.order).map((chapter: any, index: number) => (
             <Card key={chapter.id} className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto hover:shadow-md transition-shadow">
               <CardContent className="p-3 sm:p-4">
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
                     {/* Chapter Ordering Controls */}
                     <div className="flex flex-col gap-0.5 flex-shrink-0">
                       <Button
@@ -228,39 +230,38 @@ export default function TrackChapters() {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEditChapter(chapter.id)}
-                        className="flex-1 justify-center"
-                      >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDeleteChapter(chapter.id)}
-                        disabled={deleteChapterMutation.isPending}
-                        className="flex-1 justify-center"
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
-                      </Button>
-                    </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     <Button 
-                      variant={chapter.status === "published" ? "destructive" : "default"}
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleEditChapter(chapter.id)}
+                      className="h-8 w-8 p-0"
+                      title="Edit Chapter"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleDeleteChapter(chapter.id)}
+                      disabled={deleteChapterMutation.isPending}
+                      className="h-8 w-8 p-0"
+                      title="Delete Chapter"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
                       size="sm"
                       onClick={() => {
                         const newStatus = chapter.status === "published" ? "draft" : "published";
                         toggleStatusMutation.mutate({ chapterId: chapter.id, status: newStatus });
                       }}
                       disabled={toggleStatusMutation.isPending}
-                      className="w-full"
+                      className="h-8 w-8 p-0"
+                      title={chapter.status === "published" ? "Unpublish Chapter" : "Publish Chapter"}
                     >
-                      {chapter.status === "published" ? "Unpublish" : "Publish"}
+                      {chapter.status === "published" ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </Button>
                   </div>
                 </div>

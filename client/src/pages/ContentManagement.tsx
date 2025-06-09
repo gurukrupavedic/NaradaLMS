@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, ChevronRight, ChevronUp, ChevronDown, FileText, Music } from "lucide-react";
+import { Plus, Edit, Trash2, ChevronRight, ChevronUp, ChevronDown, FileText, Music, Eye, EyeOff } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ResponsiveTitle } from "@/components/ResponsiveTitle";
 
@@ -160,8 +160,8 @@ export default function ContentManagement() {
           {(tracks as any[]).sort((a, b) => a.order - b.order).map((track: any, index: number) => (
             <Card key={track.id} className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto hover:shadow-md transition-shadow">
               <CardContent className="p-3 sm:p-4">
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
                     {/* Track Ordering Controls */}
                     <div className="flex flex-col gap-0.5 flex-shrink-0">
                       <Button
@@ -200,7 +200,7 @@ export default function ContentManagement() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-end gap-1">
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     <Button 
                       variant="ghost" 
                       size="sm"
