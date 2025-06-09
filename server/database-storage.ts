@@ -300,11 +300,58 @@ export class DatabaseStorage implements IStorage {
   // Chapter operations
   async getChaptersByTrack(trackId: number): Promise<any[]> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.getChaptersByTrack(trackId);
+    if (!this.initialized) {
+      console.log('Database not initialized, using memory storage for chapters');
+      return memStorage.getChaptersByTrack(trackId);
+    }
     
     try {
-      return await db.select().from(chapters).where(eq(chapters.trackId, trackId)).orderBy(chapters.order);
+      console.log(`Fetching chapters for track ${trackId} with enriched data`);
+      
+      // Get base chapters
+      const chapterList = await db.select().from(chapters).where(eq(chapters.trackId, trackId)).orderBy(chapters.order);
+      console.log(`Found ${chapterList.length} chapters for track ${trackId}`);
+      
+      // Enrich each chapter with counts
+      const enrichedChapters = await Promise.all(chapterList.map(async (chapter) => {
+        try {
+          // Check if content exists (any language has content)
+          const hasContent = Boolean(
+            (chapter.content?.te && chapter.content.te.trim().length > 0) ||
+            (chapter.content?.hi && chapter.content.hi.trim().length > 0) ||
+            (chapter.content?.en && chapter.content.en.trim().length > 0)
+          );
+          
+          // Count audio files
+          const audioFilesList = await db.select().from(audioFiles).where(eq(audioFiles.chapterId, chapter.id));
+          const audioFileCount = audioFilesList.length;
+          
+          // Count text segments  
+          const textSegmentsList = await db.select().from(textSegments).where(eq(textSegments.chapterId, chapter.id));
+          const segmentCount = textSegmentsList.length;
+          
+          console.log(`Chapter ${chapter.id}: hasContent=${hasContent}, audioFiles=${audioFileCount}, segments=${segmentCount}`);
+          
+          return {
+            ...chapter,
+            hasContent,
+            audioFileCount,
+            segmentCount
+          };
+        } catch (chapterError) {
+          console.error(`Error enriching chapter ${chapter.id}:`, chapterError);
+          return {
+            ...chapter,
+            hasContent: false,
+            audioFileCount: 0,
+            segmentCount: 0
+          };
+        }
+      }));
+      
+      return enrichedChapters;
     } catch (error) {
+      console.error('Error fetching enriched chapters:', error);
       return memStorage.getChaptersByTrack(trackId);
     }
   }
