@@ -1069,7 +1069,7 @@ export default function ChapterEditor() {
           {/* Media Content Tab */}
           <TabsContent value="media" className="space-y-6">
             <Card>
-              <CardContent>
+              <CardContent className="pt-8">
                 <div className="space-y-4">
                   {!isPublished && (
                     <div 
