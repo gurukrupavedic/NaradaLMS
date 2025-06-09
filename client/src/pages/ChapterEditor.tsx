@@ -1186,90 +1186,93 @@ export default function ChapterEditor() {
 
           {/* Segmentation & Mapping Tab */}
           <TabsContent value="segmentation" className="space-y-6">
-            {/* Shared Audio File Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Music className="h-5 w-5" />
-                  Audio File Selection
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Label>Select Audio File for Segmentation</Label>
-                  <Select
-                    value={selectedAudioFile?.id?.toString() || ""}
-                    onValueChange={(value) => {
-                      const file = audioFiles && Array.isArray(audioFiles) 
-                        ? audioFiles.find((f: any) => f.id.toString() === value)
-                        : null;
-                      setSelectedAudioFile(file);
-                      
-                      // Load the audio file for playback
-                      if (file && file.filename) {
-                        // Clean up existing audio player
-                        if (audioPlayer) {
-                          audioPlayer.pause();
-                          audioPlayer.removeEventListener('loadedmetadata', () => {});
-                          audioPlayer.removeEventListener('timeupdate', () => {});
-                        }
-                        
-                        const audio = new Audio(`/uploads/${file.filename}`);
-                        audio.addEventListener('loadedmetadata', () => {
-                          setDuration(audio.duration);
-                          setCurrentTime(0);
-                          setIsPlaying(false);
-                          console.log('Audio loaded successfully');
-                        });
-                        audio.addEventListener('error', (e) => {
-                          console.error('Audio loading error:', e);
-                          toast({
-                            title: "Audio Load Error",
-                            description: "Failed to load audio file",
-                            variant: "destructive"
-                          });
-                        });
-                        setAudioPlayer(audio);
-                      }
-                      
-                      // Refresh media segments for the selected audio file
-                      if (file?.id) {
-                        queryClient.invalidateQueries({ queryKey: [`/api/admin/media-segments/${file.id}`] });
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose an audio file" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {audioFiles && Array.isArray(audioFiles) && audioFiles.map((file: any) => (
-                        <SelectItem key={file.id} value={file.id.toString()}>
-                          <div className="flex items-center gap-2">
-                            <Music className="h-4 w-4" />
-                            {file.displayName || file.filename}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedAudioFile && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Selected: {selectedAudioFile.displayName || selectedAudioFile.filename}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
+            {/* Two-Panel Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Audio Segmentation Panel */}
-              <Card className="lg:col-span-1">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Music className="h-5 w-5" />
-                    Audio Segmentation
-                  </CardTitle>
-                </CardHeader>
+              {/* LEFT PANEL: Audio Operations */}
+              <div className="space-y-6">
+                {/* Audio File Selection */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Music className="h-5 w-5" />
+                      Audio File Selection
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <Label>Select Audio File for Segmentation</Label>
+                      <Select
+                        value={selectedAudioFile?.id?.toString() || ""}
+                        onValueChange={(value) => {
+                          const file = audioFiles && Array.isArray(audioFiles) 
+                            ? audioFiles.find((f: any) => f.id.toString() === value)
+                            : null;
+                          setSelectedAudioFile(file);
+                          
+                          // Load the audio file for playback
+                          if (file && file.filename) {
+                            // Clean up existing audio player
+                            if (audioPlayer) {
+                              audioPlayer.pause();
+                              audioPlayer.removeEventListener('loadedmetadata', () => {});
+                              audioPlayer.removeEventListener('timeupdate', () => {});
+                            }
+                            
+                            const audio = new Audio(`/uploads/${file.filename}`);
+                            audio.addEventListener('loadedmetadata', () => {
+                              setDuration(audio.duration);
+                              setCurrentTime(0);
+                              setIsPlaying(false);
+                              console.log('Audio loaded successfully');
+                            });
+                            audio.addEventListener('error', (e) => {
+                              console.error('Audio loading error:', e);
+                              toast({
+                                title: "Audio Load Error",
+                                description: "Failed to load audio file",
+                                variant: "destructive"
+                              });
+                            });
+                            setAudioPlayer(audio);
+                          }
+                          
+                          // Refresh media segments for the selected audio file
+                          if (file?.id) {
+                            queryClient.invalidateQueries({ queryKey: [`/api/admin/media-segments/${file.id}`] });
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose an audio file" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {audioFiles && Array.isArray(audioFiles) && audioFiles.map((file: any) => (
+                            <SelectItem key={file.id} value={file.id.toString()}>
+                              <div className="flex items-center gap-2">
+                                <Music className="h-4 w-4" />
+                                {file.displayName || file.filename}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {selectedAudioFile && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Selected: {selectedAudioFile.displayName || selectedAudioFile.filename}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Audio Segmentation */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Timer className="h-5 w-5" />
+                      Audio Segmentation
+                    </CardTitle>
+                  </CardHeader>
                 <CardContent className="space-y-4">
                   {selectedAudioFile && (
                     <>
@@ -1631,148 +1634,151 @@ export default function ChapterEditor() {
                   </CardContent>
                 </Card>
               )}
+              </div>
 
-              {/* Text Segmentation Panel */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
-                      Text Segmentation & Mapping
-                    </CardTitle>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowTextSegmentation(!showTextSegmentation)}
-                    >
-                      {showTextSegmentation ? 'Hide' : 'Show'} Text
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Language Selection */}
-                  <div className="space-y-2">
-                    <Label>Language</Label>
-                    <Select 
-                      value={selectedLanguage} 
-                      onValueChange={(value: 'te' | 'hi' | 'en') => setSelectedLanguage(value)}
-                      disabled={isPublished}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="te">Telugu</SelectItem>
-                        <SelectItem value="hi">Hindi</SelectItem>
-                        <SelectItem value="en">English/IAST</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+              {/* RIGHT PANEL: Text Segmentation & Mapping */}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Text Segmentation & Mapping
+                      </CardTitle>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowTextSegmentation(!showTextSegmentation)}
+                      >
+                        {showTextSegmentation ? 'Hide' : 'Show'} Text
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Language Selection */}
+                    <div className="space-y-2">
+                      <Label>Language</Label>
+                      <Select 
+                        value={selectedLanguage} 
+                        onValueChange={(value: 'te' | 'hi' | 'en') => setSelectedLanguage(value)}
+                        disabled={isPublished}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="te">Telugu</SelectItem>
+                          <SelectItem value="hi">Hindi</SelectItem>
+                          <SelectItem value="en">English/IAST</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  {/* Text Content with Segmentation */}
-                  {showTextSegmentation && (
-                    <div className="space-y-3">
-                      <Label>Text Content (Click and drag to select)</Label>
-                      <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900 max-h-96 overflow-y-auto">
-                        <div className={`text-sm leading-relaxed ${
-                          selectedLanguage === 'te' ? 'font-telugu' : 
-                          selectedLanguage === 'hi' ? 'font-devanagari' : 
-                          'font-mono'
-                        }`}>
-                          {textContent[selectedLanguage] ? 
-                            renderTextWithSegments(textContent[selectedLanguage], selectedLanguage) :
-                            <div className="text-muted-foreground italic">No content available for this language</div>
-                          }
+                    {/* Text Content with Segmentation */}
+                    {showTextSegmentation && (
+                      <div className="space-y-3">
+                        <Label>Text Content (Click and drag to select)</Label>
+                        <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900 max-h-96 overflow-y-auto">
+                          <div className={`text-sm leading-relaxed ${
+                            selectedLanguage === 'te' ? 'font-telugu' : 
+                            selectedLanguage === 'hi' ? 'font-devanagari' : 
+                            'font-mono'
+                          }`}>
+                            {textContent[selectedLanguage] ? 
+                              renderTextWithSegments(textContent[selectedLanguage], selectedLanguage) :
+                              <div className="text-muted-foreground italic">No content available for this language</div>
+                            }
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Text Selection Info */}
-                  {textSelection && (
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                      <Label className="text-sm font-medium">Selected Text</Label>
-                      <div className="text-sm text-muted-foreground mt-1">
-                        Characters {textSelection.start}-{textSelection.end}
+                    {/* Text Selection Info */}
+                    {textSelection && (
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <Label className="text-sm font-medium">Selected Text</Label>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          Characters {textSelection.start}-{textSelection.end}
+                        </div>
+                        <div className="text-sm mt-2 p-2 bg-white dark:bg-gray-800 rounded border">
+                          "{textSelection.text}"
+                        </div>
                       </div>
-                      <div className="text-sm mt-2 p-2 bg-white dark:bg-gray-800 rounded border">
-                        "{textSelection.text}"
-                      </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Segment Creation */}
-                  <div className="space-y-3">
+                    {/* Segment Creation */}
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label>Segment Name</Label>
+                        <input
+                          type="text"
+                          value={segmentName}
+                          onChange={(e) => setSegmentName(e.target.value)}
+                          placeholder="Enter segment name..."
+                          disabled={isPublished}
+                          className="w-full px-3 py-2 border rounded-md text-sm"
+                        />
+                      </div>
+                      
+                      <Button
+                        onClick={handleCreateTextSegment}
+                        disabled={!textSelection || !segmentName.trim() || createTextSegmentMutation.isPending || isPublished}
+                        size="sm"
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Text Segment
+                      </Button>
+                    </div>
+
+                    {/* Segment List */}
                     <div className="space-y-2">
-                      <Label>Segment Name</Label>
-                      <input
-                        type="text"
-                        value={segmentName}
-                        onChange={(e) => setSegmentName(e.target.value)}
-                        placeholder="Enter segment name..."
-                        disabled={isPublished}
-                        className="w-full px-3 py-2 border rounded-md text-sm"
-                      />
-                    </div>
-                    
-                    <Button
-                      onClick={handleCreateTextSegment}
-                      disabled={!textSelection || !segmentName.trim() || createTextSegmentMutation.isPending || isPublished}
-                      size="sm"
-                      className="w-full"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Text Segment
-                    </Button>
-                  </div>
-
-                  {/* Segment List */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">Text Segments ({segments?.length || 0})</Label>
-                    <div className="max-h-64 overflow-y-auto space-y-2">
-                      {segments && segments.length > 0 ? (
-                        segments.map((segment) => (
-                          <div key={segment.id} className="p-3 border rounded-lg bg-white dark:bg-gray-800">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="font-medium text-sm">{segment.conceptualName}</div>
-                                <div className="text-xs text-muted-foreground mt-1">
-                                  {segment.textReferences[selectedLanguage] ? 
-                                    `${selectedLanguage.toUpperCase()}: ${segment.textReferences[selectedLanguage]?.start}-${segment.textReferences[selectedLanguage]?.end}` :
-                                    'No reference for selected language'
-                                  }
-                                </div>
-                                {segment.audioFileId && segment.startTime !== undefined && (
-                                  <div className="text-xs text-green-600 mt-1">
-                                    Audio: {formatTime(segment.startTime)} - {formatTime(segment.endTime || 0)}
+                      <Label className="text-sm">Text Segments ({segments?.length || 0})</Label>
+                      <div className="max-h-64 overflow-y-auto space-y-2">
+                        {segments && segments.length > 0 ? (
+                          segments.map((segment) => (
+                            <div key={segment.id} className="p-3 border rounded-lg bg-white dark:bg-gray-800">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm">{segment.conceptualName}</div>
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {segment.textReferences[selectedLanguage] ? 
+                                      `${selectedLanguage.toUpperCase()}: ${segment.textReferences[selectedLanguage]?.start}-${segment.textReferences[selectedLanguage]?.end}` :
+                                      'No reference for selected language'
+                                    }
                                   </div>
+                                  {segment.audioFileId && segment.startTime !== undefined && (
+                                    <div className="text-xs text-green-600 mt-1">
+                                      Audio: {formatTime(segment.startTime)} - {formatTime(segment.endTime || 0)}
+                                    </div>
+                                  )}
+                                </div>
+                                {!isPublished && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => deleteSegmentMutation.mutate(segment.id)}
+                                    disabled={deleteSegmentMutation.isPending}
+                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
                                 )}
                               </div>
-                              {!isPublished && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => deleteSegmentMutation.mutate(segment.id)}
-                                  disabled={deleteSegmentMutation.isPending}
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
-                              )}
                             </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">No text segments created yet</p>
+                            <p className="text-xs">Select text above to create segments</p>
                           </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-8 text-muted-foreground">
-                          <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                          <p className="text-sm">No text segments created yet</p>
-                          <p className="text-xs">Select text above to create segments</p>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
