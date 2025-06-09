@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./database-storage";
+import { storage } from "./storage-simplified";
 // Removed schema validation for simplified implementation
 import multer from "multer";
 import path from "path";

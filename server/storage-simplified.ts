@@ -1,5 +1,12 @@
 // Simplified in-memory storage without authentication
 export interface IStorage {
+  // User operations (required for Replit Auth)
+  getUser(id: string): Promise<any>;
+  upsertUser(user: any): Promise<any>;
+  getAllUsers(): Promise<any[]>;
+  updateUserRoles(userId: string, roles: string[]): Promise<any>;
+  updateUserStatus(userId: string, status: string): Promise<any>;
+  
   // Track operations
   getAllTracks(): Promise<any[]>;
   getTrack(id: number): Promise<any | undefined>;
@@ -26,11 +33,26 @@ export interface IStorage {
   updateTextSegment(id: number, segment: any): Promise<any>;
   deleteTextSegment(id: number): Promise<void>;
 
-  // Audio mapping operations
+  // Media segment operations
+  getMediaSegmentsByAudioFile(audioFileId: number): Promise<any[]>;
+  createMediaSegment(segment: any): Promise<any>;
+  updateMediaSegment(id: number, segment: any): Promise<any>;
+  deleteMediaSegment(id: number): Promise<void>;
+
+  // Segment mapping operations
+  getSegmentMappingsByChapter(chapterId: number): Promise<any[]>;
+  createSegmentMapping(mapping: any): Promise<any>;
+  deleteSegmentMapping(id: number): Promise<void>;
+
+  // Audio mapping operations (legacy)
   getMappingsByAudioFile(audioFileId: number): Promise<any[]>;
   getMappingsBySegment(segmentId: number): Promise<any[]>;
   createAudioMapping(mapping: any): Promise<any>;
   deleteAudioMapping(audioFileId: number, segmentId: number): Promise<void>;
+
+  // Student progress
+  getStudentProgress(studentId: string): Promise<any[]>;
+  getStudentStats(studentId: string): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
