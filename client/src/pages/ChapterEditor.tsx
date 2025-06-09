@@ -60,6 +60,7 @@ export default function ChapterEditor() {
   const { chapterId } = useParams<{ chapterId: string }>();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const audioRef = useRef<HTMLAudioElement>(null);
 
   // Safe time formatting function
@@ -891,7 +892,18 @@ export default function ChapterEditor() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
+              <Button variant="ghost" size="sm" onClick={() => {
+                // Get the track ID from the chapter data
+                if (chapter?.trackId) {
+                  // Invalidate chapters query to refresh data
+                  queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${chapter.trackId}`] });
+                  // Navigate to track chapters page
+                  setLocation(`/track-chapters/${chapter.trackId}`);
+                } else {
+                  // Fallback to admin dashboard if no track ID
+                  setLocation('/admin');
+                }
+              }}>
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 Back to Chapters
               </Button>
