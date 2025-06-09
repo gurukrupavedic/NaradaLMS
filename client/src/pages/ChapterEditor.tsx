@@ -1385,7 +1385,7 @@ export default function ChapterEditor() {
                         </div>
 
                         {/* Player Controls */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center gap-2">
                           <Button onClick={() => {
                             if (audioRef.current) {
                               if (isPlaying) {
