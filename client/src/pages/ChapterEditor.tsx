@@ -1072,21 +1072,42 @@ export default function ChapterEditor() {
               <CardContent className="pt-6">
                 <div className="space-y-4">
                   {audioFiles && Array.isArray(audioFiles) && audioFiles.length > 0 ? (
-                    <div className="space-y-3">
+                    <div 
+                      className={`space-y-3 ${!isPublished ? 'p-3 border-2 border-dashed rounded-lg transition-colors ' + (isDragOver ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600') : ''}`}
+                      onDragOver={!isPublished ? (e) => {
+                        e.preventDefault();
+                        setIsDragOver(true);
+                      } : undefined}
+                      onDragLeave={!isPublished ? () => setIsDragOver(false) : undefined}
+                      onDrop={!isPublished ? (e) => {
+                        e.preventDefault();
+                        setIsDragOver(false);
+                        const files = Array.from(e.dataTransfer.files);
+                        if (files.length > 0) {
+                          const file = files[0];
+                          if (validateFileType(file)) {
+                            audioUploadMutation.mutate(file);
+                          }
+                        }
+                      } : undefined}
+                    >
                       <div className="flex items-center justify-between">
                         <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                           Uploaded Files ({audioFiles.length})
                         </h4>
                         {!isPublished && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => document.getElementById('audio-upload-input')?.click()}
-                            disabled={audioUploadMutation.isPending}
-                          >
-                            <Upload className="w-4 h-4 mr-2" />
-                            Add More Files
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Drop files here or</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => document.getElementById('audio-upload-input')?.click()}
+                              disabled={audioUploadMutation.isPending}
+                            >
+                              <Upload className="w-4 h-4 mr-2" />
+                              Add More Files
+                            </Button>
+                          </div>
                         )}
                       </div>
                       
