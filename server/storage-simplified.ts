@@ -56,6 +56,11 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  private users: Map<string, any> = new Map();
+  private mediaSegments: any[] = [];
+  private segmentMappings: any[] = [];
+  private studentProgress: any[] = [];
+  
   private tracks: any[] = [
     {
       id: 1,
@@ -261,6 +266,49 @@ export class MemStorage implements IStorage {
   ];
   private nextId = 100;
 
+  // User operations (required for Replit Auth)
+  async getUser(id: string): Promise<any> {
+    return this.users.get(id);
+  }
+
+  async upsertUser(userData: any): Promise<any> {
+    const user = {
+      id: userData.id,
+      email: userData.email || `user${userData.id}@example.com`,
+      firstName: userData.firstName || "User",
+      lastName: userData.lastName || "",
+      roles: userData.roles || ["student"],
+      status: userData.status || "active",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...userData
+    };
+    this.users.set(user.id, user);
+    return user;
+  }
+
+  async getAllUsers(): Promise<any[]> {
+    return Array.from(this.users.values());
+  }
+
+  async updateUserRoles(userId: string, roles: string[]): Promise<any> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error("User not found");
+    user.roles = roles;
+    user.updatedAt = new Date();
+    this.users.set(userId, user);
+    return user;
+  }
+
+  async updateUserStatus(userId: string, status: string): Promise<any> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error("User not found");
+    user.status = status;
+    user.updatedAt = new Date();
+    this.users.set(userId, user);
+    return user;
+  }
+
   // Track operations
   async getAllTracks(): Promise<any[]> {
     return [...this.tracks];
@@ -428,6 +476,76 @@ export class MemStorage implements IStorage {
     );
     if (index === -1) throw new Error("Mapping not found");
     this.mappings.splice(index, 1);
+  }
+
+  // Media segment operations
+  async getMediaSegmentsByAudioFile(audioFileId: number): Promise<any[]> {
+    return this.mediaSegments.filter(segment => segment.audioFileId === audioFileId);
+  }
+
+  async createMediaSegment(segment: any): Promise<any> {
+    const newSegment = {
+      ...segment,
+      id: this.nextId++,
+      createdAt: new Date()
+    };
+    this.mediaSegments.push(newSegment);
+    return newSegment;
+  }
+
+  async updateMediaSegment(id: number, segmentUpdate: any): Promise<any> {
+    const index = this.mediaSegments.findIndex(s => s.id === id);
+    if (index === -1) throw new Error("Media segment not found");
+    this.mediaSegments[index] = { ...this.mediaSegments[index], ...segmentUpdate, updatedAt: new Date() };
+    return this.mediaSegments[index];
+  }
+
+  async deleteMediaSegment(id: number): Promise<void> {
+    const index = this.mediaSegments.findIndex(s => s.id === id);
+    if (index === -1) throw new Error("Media segment not found");
+    this.mediaSegments.splice(index, 1);
+  }
+
+  // Segment mapping operations
+  async getSegmentMappingsByChapter(chapterId: number): Promise<any[]> {
+    return this.segmentMappings.filter(mapping => mapping.chapterId === chapterId);
+  }
+
+  async createSegmentMapping(mapping: any): Promise<any> {
+    const newMapping = {
+      ...mapping,
+      id: this.nextId++,
+      createdAt: new Date()
+    };
+    this.segmentMappings.push(newMapping);
+    return newMapping;
+  }
+
+  async deleteSegmentMapping(id: number): Promise<void> {
+    const index = this.segmentMappings.findIndex(m => m.id === id);
+    if (index === -1) throw new Error("Segment mapping not found");
+    this.segmentMappings.splice(index, 1);
+  }
+
+  // Student progress operations
+  async getStudentProgress(studentId: string): Promise<any[]> {
+    return this.studentProgress.filter(progress => progress.studentId === studentId);
+  }
+
+  async getStudentStats(studentId: string): Promise<any> {
+    const progress = this.studentProgress.filter(p => p.studentId === studentId);
+    const totalChapters = this.chapters.length;
+    const completedChapters = progress.filter(p => p.proficiencyLevel >= 3).length;
+    const averageProficiency = progress.length > 0 
+      ? progress.reduce((sum, p) => sum + p.proficiencyLevel, 0) / progress.length 
+      : 0;
+
+    return {
+      totalChapters,
+      completedChapters,
+      averageProficiency: Math.round(averageProficiency * 100) / 100,
+      progressPercentage: totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0
+    };
   }
 }
 
