@@ -234,6 +234,9 @@ export default function ChapterEditor() {
   const [segmentName, setSegmentName] = useState("");
   const [showTextSegmentation, setShowTextSegmentation] = useState(false);
 
+  // Content editor language state
+  const [contentLanguage, setContentLanguage] = useState<'te' | 'hi' | 'en'>('te');
+
   // Helper functions for segment editing
   const startEditingSegment = (segment: any) => {
     const startTime = segment.startTimestamp || segment.startTime || 0;
@@ -954,32 +957,42 @@ export default function ChapterEditor() {
 
           {/* Text Content Tab */}
           <TabsContent value="content" className="space-y-6">
-            {['te', 'hi', 'en'].map((lang) => (
-              <Card key={lang}>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    {lang === 'te' ? 'Telugu' : lang === 'hi' ? 'Hindi' : 'English/IAST'}
-                    <Button
-                      onClick={() => handleContentSave(lang)}
-                      disabled={updateContentMutation.isPending || isPublished}
-                      size="sm"
-                    >
-                      <Save className="w-4 h-4 mr-2" />
-                      Save
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Textarea
-                    value={textContent[lang as keyof typeof textContent]}
-                    onChange={(e) => setTextContent(prev => ({ ...prev, [lang]: e.target.value }))}
-                    disabled={isPublished}
-                    placeholder={`Enter ${lang === 'te' ? 'Telugu' : lang === 'hi' ? 'Hindi' : 'English/IAST'} content...`}
-                    className="min-h-[200px]"
-                  />
-                </CardContent>
-              </Card>
-            ))}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <CardTitle>Text Content Editor</CardTitle>
+                    <Select value={contentLanguage} onValueChange={(value: 'te' | 'hi' | 'en') => setContentLanguage(value)}>
+                      <SelectTrigger className="w-48">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="te">తెలుగు (Telugu)</SelectItem>
+                        <SelectItem value="hi">देवनागरी (Hindi)</SelectItem>
+                        <SelectItem value="en">English/IAST</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    onClick={() => handleContentSave(contentLanguage)}
+                    disabled={updateContentMutation.isPending || isPublished}
+                    size="sm"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Save {contentLanguage === 'te' ? 'Telugu' : contentLanguage === 'hi' ? 'Hindi' : 'English/IAST'}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={textContent[contentLanguage]}
+                  onChange={(e) => setTextContent(prev => ({ ...prev, [contentLanguage]: e.target.value }))}
+                  disabled={isPublished}
+                  placeholder={`Enter ${contentLanguage === 'te' ? 'Telugu' : contentLanguage === 'hi' ? 'Hindi' : 'English/IAST'} content...`}
+                  className="min-h-[400px] text-base leading-relaxed"
+                />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Media Content Tab */}
