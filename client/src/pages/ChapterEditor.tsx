@@ -1209,12 +1209,13 @@ export default function ChapterEditor() {
             </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Audio Segmentation Panel */}
-              <Card className="lg:col-span-1">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Music className="h-5 w-5" />
-                    Audio Segmentation
+              {/* Left Column: Audio Segmentation Panel */}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Music className="h-5 w-5" />
+                      Audio Segmentation
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1577,15 +1578,16 @@ export default function ChapterEditor() {
                     </div>
                   </CardContent>
                 </Card>
-              )}
+              </div>
 
-              {/* Text Segmentation Panel */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
-                      Text Segmentation & Mapping
+              {/* Right Column: Text Segmentation Panel */}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Text Segmentation & Mapping
                     </CardTitle>
                     <Button
                       variant="outline"
@@ -1720,6 +1722,7 @@ export default function ChapterEditor() {
                   </div>
                 </CardContent>
               </Card>
+              </div>
             </div>
           </TabsContent>
 
