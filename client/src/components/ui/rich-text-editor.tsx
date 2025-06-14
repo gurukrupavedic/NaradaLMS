@@ -106,7 +106,7 @@ const TextMarker = Node.create({
 
   addCommands() {
     return {
-      setTextMarker: (options: any) => ({ commands }: any) => {
+      setTextMarker: (options: any) => ({ commands }) => {
         return commands.insertContent({
           type: this.name,
           attrs: options,
@@ -142,6 +142,10 @@ export function RichTextEditor({
         orderedList: false,
         bulletList: false,
         listItem: false,
+        history: {
+          depth: 100,
+          newGroupDelay: 500,
+        },
       }),
       TextStyle,
       Color,
@@ -181,10 +185,14 @@ export function RichTextEditor({
       FontFamily.configure({
         types: ['textStyle'],
       }),
-      TextMarker,
     ],
     editorProps: {
+      attributes: {
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl mx-auto focus:outline-none',
+        spellcheck: 'false',
+      },
       handleKeyDown: (view, event) => {
+        // Allow all normal typing and editing
         if (event.key === 'Enter') {
           if (event.shiftKey) {
             return false; // Shift+Enter: Create paragraph
@@ -195,6 +203,10 @@ export function RichTextEditor({
             return true;
           }
         }
+        return false; // Let other keys work normally
+      },
+      handlePaste: () => {
+        // Allow pasting
         return false;
       },
     },
@@ -206,11 +218,22 @@ export function RichTextEditor({
     },
   });
 
+  // Update editor content when value changes externally
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value);
+      // Only update if the editor is not focused (user is not typing)
+      if (!editor.isFocused) {
+        editor.commands.setContent(value, false);
+      }
     }
   }, [value, editor]);
+
+  // Ensure editor is editable when initialized or disabled state changes
+  useEffect(() => {
+    if (editor) {
+      editor.setEditable(!disabled);
+    }
+  }, [editor, disabled]);
 
   const setColor = useCallback((color: string) => {
     editor?.chain().focus().setColor(color).run();
@@ -243,19 +266,10 @@ export function RichTextEditor({
   }, [editor]);
 
   const insertTextMarker = useCallback((type: 'audio' | 'verse' | 'section' = 'audio') => {
-    const timestamp = prompt('Enter timestamp (seconds):');
-    const label = prompt('Enter marker label (optional):');
-    
-    if (timestamp !== null) {
-      editor?.chain().focus().insertContent({
-        type: 'textMarker',
-        attrs: {
-          id: `marker-${Date.now()}`,
-          timestamp: timestamp ? parseFloat(timestamp) : null,
-          type,
-          label: label || '',
-        },
-      }).run();
+    // Placeholder for future marker functionality
+    const label = prompt('Enter marker label:');
+    if (label) {
+      editor?.chain().focus().insertContent(`[${type.toUpperCase()}: ${label}]`).run();
     }
   }, [editor]);
 
