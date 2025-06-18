@@ -100,18 +100,32 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
       return;
     }
 
-    const newSegments = [...segments];
-    const draggedSegment = newSegments[draggedIndex];
-    newSegments.splice(draggedIndex, 1);
-    newSegments.splice(dropIndex, 0, draggedSegment);
+    // Work with filtered segments for current language
+    const reorderedCurrentLanguageSegments = [...currentLanguageSegments];
+    const draggedSegment = reorderedCurrentLanguageSegments[draggedIndex];
+    reorderedCurrentLanguageSegments.splice(draggedIndex, 1);
+    reorderedCurrentLanguageSegments.splice(dropIndex, 0, draggedSegment);
     
-    // Update order property
-    const reorderedSegments = newSegments.map((segment, index) => ({
-      ...segment,
-      order: index + 1
-    }));
+    // Merge back with all segments, preserving other languages' segments
+    const updatedAllSegments = segments.map(segment => {
+      // If this segment is not for current language, keep it unchanged
+      if (!segment.textReferences[currentLanguage]) {
+        return segment;
+      }
+      
+      // Find the new position of this segment in the reordered current language segments
+      const newIndex = reorderedCurrentLanguageSegments.findIndex(s => s.id === segment.id);
+      if (newIndex >= 0) {
+        return {
+          ...reorderedCurrentLanguageSegments[newIndex],
+          order: newIndex + 1
+        };
+      }
+      
+      return segment;
+    });
     
-    onSegmentReorder(reorderedSegments);
+    onSegmentReorder(updatedAllSegments);
     setDraggedIndex(null);
     setDraggedOver(null);
   };
@@ -122,9 +136,13 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // EXPERIMENT1: Calculate statistics
-  const mappedCount = segments.filter(s => getSegmentMapping(s.id)).length;
-  const totalCount = segments.length;
+  // EXPERIMENT1: Filter segments by current language and calculate statistics
+  const currentLanguageSegments = segments.filter(segment => 
+    segment.textReferences[currentLanguage]
+  );
+  
+  const mappedCount = currentLanguageSegments.filter(s => getSegmentMapping(s.id)).length;
+  const totalCount = currentLanguageSegments.length;
 
   return (
     <Card className="h-full">
@@ -141,14 +159,14 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="h-[500px] px-6 pb-6">
-          {segments.length === 0 ? (
+          {currentLanguageSegments.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p>No segments created yet.</p>
+              <p>No segments created for {currentLanguage.toUpperCase()} yet.</p>
               <p className="text-xs mt-1">Use the annotation layer to create segments.</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {segments.map((segment, index) => {
+              {currentLanguageSegments.map((segment, index) => {
                 const mapping = getSegmentMapping(segment.id);
                 const isActive = currentSegmentId === segment.id;
                 const segmentText = getSegmentText(segment);
