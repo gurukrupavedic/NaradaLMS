@@ -201,10 +201,10 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
                     onDragOver={(e) => handleDragOver(e, index)}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, index)}
-                    className={`p-3 border rounded-lg transition-all cursor-move ${
+                    className={`border border-gray-200 rounded-lg transition-all cursor-move hover:bg-gray-50 ${
                       isActive 
                         ? 'border-blue-300 bg-blue-50 shadow-sm' 
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        : 'hover:border-gray-300'
                     } ${
                       isDragging ? 'opacity-50 scale-95' : ''
                     } ${
@@ -212,74 +212,74 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
                     }`}
                     onClick={() => onSegmentSelect(segment.id)}
                   >
-                    {/* EXPERIMENT1: Segment header with drag handle */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        {/* Drag handle and order number */}
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <GripVertical className="h-4 w-4 text-gray-400" />
-                          <h3 className="font-medium text-lg">#{index + 1}</h3>
+                    {/* EXPERIMENT1: Table-like row layout */}
+                    <div className="flex items-center px-4 py-3">
+                      {/* Left: Extended drag handle area */}
+                      <div className="flex items-center gap-3 cursor-grab active:cursor-grabbing mr-4">
+                        <GripVertical className="h-5 w-5 text-gray-400" />
+                        <span className="font-medium text-lg text-gray-700 min-w-8">#{index + 1}</span>
+                      </div>
+                      
+                      {/* Middle: Content area */}
+                      <div className="flex-1 min-w-0 mr-4">
+                        <div className="text-sm text-gray-700 truncate mb-1">
+                          {segmentText}
                         </div>
-                        
-                        {/* Mapping status */}
-                        {mapping ? (
-                          <Badge variant="default" className="text-xs bg-green-100 text-green-700">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Mapped
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-xs">
-                            <Circle className="h-3 w-3 mr-1" />
-                            Not Mapped
-                          </Badge>
+                        {mapping && (
+                          <div className="text-xs text-green-600">
+                            {formatTime(mapping.startTime)} - {formatTime(mapping.endTime)}
+                          </div>
                         )}
                       </div>
                       
-                      {/* EXPERIMENT1: Action buttons */}
-                      <div className="flex gap-1">
-                        {mapping && (
+                      {/* Right: Status and actions */}
+                      <div className="flex items-center gap-3">
+                        {/* Mapping status */}
+                        <div className="flex-shrink-0">
+                          {mapping ? (
+                            <Badge variant="default" className="text-xs bg-green-100 text-green-700">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Mapped
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs">
+                              <Circle className="h-3 w-3 mr-1" />
+                              Not Mapped
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        {/* Action buttons */}
+                        <div className="flex gap-1">
+                          {mapping && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onPlayMapping(mapping);
+                              }}
+                              title="Play audio segment"
+                            >
+                              <Play className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 w-6 p-0"
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
                             onClick={(e) => {
                               e.stopPropagation();
-                              onPlayMapping(mapping);
+                              onSegmentDelete(segment.id);
                             }}
-                            title="Play audio segment"
+                            title="Delete segment"
                           >
-                            <Play className="h-3 w-3" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSegmentDelete(segment.id);
-                          }}
-                          title="Delete segment"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        </div>
                       </div>
                     </div>
-
-                    {/* EXPERIMENT1: Segment text preview */}
-                    <div className="text-sm text-gray-700 mb-2 line-clamp-2">
-                      {segmentText}
-                    </div>
-
-                    {/* EXPERIMENT1: Mapping info */}
-                    {mapping && (
-                      <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
-                        Audio: {formatTime(mapping.startTime)} - {formatTime(mapping.endTime)}
-                        <span className="ml-2 text-gray-500">
-                          ({formatTime(mapping.endTime - mapping.startTime)} duration)
-                        </span>
-                      </div>
-                    )}
 
 
                   </div>
