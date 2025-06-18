@@ -100,33 +100,54 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
       return;
     }
 
-    // Create a new array of current language segments with reordering
-    const reorderedSegments = [...currentLanguageSegments];
-    const draggedSegment = reorderedSegments[draggedIndex];
-    
-    // Remove the dragged segment and insert it at the new position
-    reorderedSegments.splice(draggedIndex, 1);
-    reorderedSegments.splice(dropIndex, 0, draggedSegment);
-    
-    // Update order properties for the reordered segments
-    const reorderedWithNewOrder = reorderedSegments.map((segment, index) => ({
-      ...segment,
-      order: index + 1
-    }));
-    
-    // Create updated segments array: replace current language segments, keep others unchanged
-    const updatedAllSegments = segments.map(segment => {
-      if (segment.textReferences[currentLanguage]) {
-        // Find this segment in the reordered array
-        const reorderedSegment = reorderedWithNewOrder.find(s => s.id === segment.id);
-        return reorderedSegment || segment;
+    try {
+      // Validate indices
+      if (draggedIndex < 0 || draggedIndex >= currentLanguageSegments.length ||
+          dropIndex < 0 || dropIndex >= currentLanguageSegments.length) {
+        console.error('Invalid drag indices:', { draggedIndex, dropIndex, segmentCount: currentLanguageSegments.length });
+        setDraggedIndex(null);
+        setDraggedOver(null);
+        return;
       }
-      return segment; // Keep other language segments unchanged
-    });
-    
-    onSegmentReorder(updatedAllSegments);
-    setDraggedIndex(null);
-    setDraggedOver(null);
+
+      // Create a new array of current language segments with reordering
+      const reorderedSegments = [...currentLanguageSegments];
+      const draggedSegment = reorderedSegments[draggedIndex];
+      
+      if (!draggedSegment) {
+        console.error('Dragged segment not found at index:', draggedIndex);
+        setDraggedIndex(null);
+        setDraggedOver(null);
+        return;
+      }
+      
+      // Remove the dragged segment and insert it at the new position
+      reorderedSegments.splice(draggedIndex, 1);
+      reorderedSegments.splice(dropIndex, 0, draggedSegment);
+      
+      // Update order properties for the reordered segments
+      const reorderedWithNewOrder = reorderedSegments.map((segment, index) => ({
+        ...segment,
+        order: index + 1
+      }));
+      
+      // Create updated segments array: replace current language segments, keep others unchanged
+      const updatedAllSegments = segments.map(segment => {
+        if (segment.textReferences[currentLanguage]) {
+          // Find this segment in the reordered array
+          const reorderedSegment = reorderedWithNewOrder.find(s => s.id === segment.id);
+          return reorderedSegment || segment;
+        }
+        return segment; // Keep other language segments unchanged
+      });
+      
+      onSegmentReorder(updatedAllSegments);
+    } catch (error) {
+      console.error('Error during drag and drop:', error);
+    } finally {
+      setDraggedIndex(null);
+      setDraggedOver(null);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -264,6 +285,20 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
                   </div>
                 );
               })}
+              
+              {/* Drop zone at the end for dropping items at the last position */}
+              {currentLanguageSegments.length > 0 && (
+                <div
+                  onDragOver={(e) => handleDragOver(e, currentLanguageSegments.length)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, currentLanguageSegments.length - 1)}
+                  className={`h-8 border-2 border-dashed rounded transition-colors ${
+                    draggedOver === currentLanguageSegments.length 
+                      ? 'border-blue-400 bg-blue-50' 
+                      : 'border-transparent hover:border-gray-300'
+                  }`}
+                />
+              )}
             </div>
           )}
         </ScrollArea>

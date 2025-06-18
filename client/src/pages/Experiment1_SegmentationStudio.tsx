@@ -57,8 +57,26 @@ export default function Experiment1_SegmentationStudio() {
   const queryClient = useQueryClient();
 
   // EXPERIMENT1: Local state for experimental data
-  const [experimentalSegments, setExperimentalSegments] = useState<TextSegment[]>([]);
-  const [experimentalMappings, setExperimentalMappings] = useState<AudioMapping[]>([]);
+  // EXPERIMENT1: Load segments from localStorage on init
+  const [experimentalSegments, setExperimentalSegments] = useState<TextSegment[]>(() => {
+    const saved = localStorage.getItem(`exp1_segments_${chapterId}`);
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [experimentalMappings, setExperimentalMappings] = useState<AudioMapping[]>(() => {
+    const saved = localStorage.getItem(`exp1_mappings_${chapterId}`);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // EXPERIMENT1: Save segments to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem(`exp1_segments_${chapterId}`, JSON.stringify(experimentalSegments));
+  }, [experimentalSegments, chapterId]);
+
+  // EXPERIMENT1: Save mappings to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem(`exp1_mappings_${chapterId}`, JSON.stringify(experimentalMappings));
+  }, [experimentalMappings, chapterId]);
   const [currentLanguage, setCurrentLanguage] = useState<'te' | 'hi' | 'en'>('en');
   const [selectedAudioFile, setSelectedAudioFile] = useState<AudioFile | null>(null);
   const [currentSegmentId, setCurrentSegmentId] = useState<string | undefined>();
