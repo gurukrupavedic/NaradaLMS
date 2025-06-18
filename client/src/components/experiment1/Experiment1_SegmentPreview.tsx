@@ -175,33 +175,26 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
                     onClick={() => onSegmentSelect(segment.id)}
                   >
                     {/* EXPERIMENT1: Segment header with drag handle */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-start gap-3 flex-1">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
                         {/* Drag handle and order number */}
-                        <div className="flex items-center gap-1 text-gray-400 mt-1">
-                          <GripVertical className="h-4 w-4" />
-                          <span className="text-xs font-medium">#{index + 1}</span>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <GripVertical className="h-4 w-4 text-gray-400" />
+                          <h3 className="font-medium text-lg">#{index + 1}</h3>
                         </div>
                         
-                        {/* Segment name - now prominent */}
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-900 mb-1 text-sm">
-                            {segment.conceptualName}
-                          </h3>
-                          <div className="flex items-center gap-2">
-                            {mapping ? (
-                              <Badge variant="default" className="text-xs bg-green-100 text-green-700">
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Mapped
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-xs">
-                                <Circle className="h-3 w-3 mr-1" />
-                                Not Mapped
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
+                        {/* Mapping status */}
+                        {mapping ? (
+                          <Badge variant="default" className="text-xs bg-green-100 text-green-700">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Mapped
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs">
+                            <Circle className="h-3 w-3 mr-1" />
+                            Not Mapped
+                          </Badge>
+                        )}
                       </div>
                       
                       {/* EXPERIMENT1: Action buttons */}

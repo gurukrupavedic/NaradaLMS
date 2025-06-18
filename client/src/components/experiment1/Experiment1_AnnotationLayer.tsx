@@ -99,16 +99,15 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
     if (start !== end && selectedText) {
       setSelectedRange({ start, end });
       setIsSelecting(true);
-      setNewSegmentName(`#${segments.length + 1}`);
     }
   }, [content, currentLanguage, segments.length]);
 
   // EXPERIMENT1: Create new segment from selection
   const handleCreateSegment = () => {
-    if (!selectedRange || !newSegmentName.trim()) return;
+    if (!selectedRange) return;
 
     const newSegment = {
-      conceptualName: newSegmentName.trim(),
+      conceptualName: `#${segments.length + 1}`, // Auto-generated, will be replaced by fluid numbering
       textReferences: {
         [currentLanguage]: selectedRange
       }
@@ -269,15 +268,8 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
               </div>
               
               <div className="flex gap-2">
-                <Input
-                  placeholder="Enter segment name (e.g., #1, verse-1)"
-                  value={newSegmentName}
-                  onChange={(e) => setNewSegmentName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleCreateSegment()}
-                  className="flex-1"
-                />
-                <Button onClick={handleCreateSegment} disabled={!newSegmentName.trim()}>
-                  Create Segment
+                <Button onClick={handleCreateSegment} className="flex-1">
+                  Create Segment #{segments.length + 1}
                 </Button>
                 <Button variant="outline" onClick={handleCancelSelection}>
                   Cancel
@@ -295,10 +287,10 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
             <h4 className="font-medium mb-2">How to use:</h4>
             <ol className="list-decimal list-inside space-y-1">
               <li>Select text by clicking and dragging</li>
-              <li>Enter a descriptive name for the segment</li>
-              <li>Click "Create Segment" to save</li>
-              <li>Existing segments appear highlighted with labels</li>
-              <li>Click on segments to edit or delete them</li>
+              <li>Click "Create Segment" to save (automatically numbered)</li>
+              <li>Existing segments appear highlighted with numbers</li>
+              <li>Drag segments in the right panel to reorder</li>
+              <li>Click on segments to select or delete them</li>
             </ol>
           </div>
         </CardContent>
