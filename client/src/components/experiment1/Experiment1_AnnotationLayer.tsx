@@ -75,7 +75,7 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
     if (start !== end && range.toString().trim()) {
       setSelectedRange({ start, end });
       setIsSelecting(true);
-      setNewSegmentName(`Segment ${segments.length + 1}`);
+      setNewSegmentName(`#${segments.length + 1}`);
     }
   }, [content, currentLanguage, segments.length]);
 
@@ -253,7 +253,7 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
               
               <div className="flex gap-2">
                 <Input
-                  placeholder="Enter segment name"
+                  placeholder="Enter segment name (e.g., #1, verse-1)"
                   value={newSegmentName}
                   onChange={(e) => setNewSegmentName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCreateSegment()}
