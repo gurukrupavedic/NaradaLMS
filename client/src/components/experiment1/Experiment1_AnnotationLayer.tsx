@@ -154,14 +154,40 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
       });
   };
 
-  // EXPERIMENT1: Pure CSS overlay approach - no DOM manipulation
+  // EXPERIMENT1: Render text with highlighting for selected segment
   const renderTextWithOverlays = () => {
     const textContent = content[currentLanguage] || '';
     if (!textContent) return <p className="text-muted-foreground">No content available for this language</p>;
 
-    return (
-      <div className="relative">
-        {/* EXPERIMENT1: Original text - never modified */}
+    // Find the selected segment for highlighting
+    const selectedSegment = selectedSegmentId 
+      ? segments.find(s => s.id === selectedSegmentId && s.textReferences[currentLanguage])
+      : null;
+
+    // Render text with highlighted selection
+    let textElement;
+    if (selectedSegment) {
+      const selectedRange = selectedSegment.textReferences[currentLanguage]!;
+      const beforeText = textContent.slice(0, selectedRange.start);
+      const highlightedText = textContent.slice(selectedRange.start, selectedRange.end);
+      const afterText = textContent.slice(selectedRange.end);
+
+      textElement = (
+        <div 
+          ref={textRef}
+          className="whitespace-pre-wrap leading-relaxed cursor-text p-4 border rounded-lg bg-white relative"
+          onMouseUp={handleMouseUp}
+          style={{ userSelect: 'text' }}
+        >
+          {beforeText}
+          <span className="bg-blue-200 border border-blue-300 rounded px-1 py-0.5 text-blue-900 font-medium">
+            {highlightedText}
+          </span>
+          {afterText}
+        </div>
+      );
+    } else {
+      textElement = (
         <div 
           ref={textRef}
           className="whitespace-pre-wrap leading-relaxed cursor-text p-4 border rounded-lg bg-white relative"
@@ -170,6 +196,12 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
         >
           {textContent}
         </div>
+      );
+    }
+
+    return (
+      <div className="relative">
+        {textElement}
         
         {/* EXPERIMENT1: Visual indicators for segments (outside main text) */}
         {segments.length > 0 && (
@@ -192,21 +224,6 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
                     }`}
                     style={{ backgroundColor: color }}
                     title={`Characters ${range.start}-${range.end}`}
-                    onClick={() => {
-                      // Highlight the text in the original content
-                      const textElement = textRef.current;
-                      if (textElement && window.getSelection) {
-                        const selection = window.getSelection();
-                        const range = document.createRange();
-                        const textNode = textElement.firstChild;
-                        if (textNode) {
-                          range.setStart(textNode, segment.textReferences[currentLanguage]!.start);
-                          range.setEnd(textNode, segment.textReferences[currentLanguage]!.end);
-                          selection?.removeAllRanges();
-                          selection?.addRange(range);
-                        }
-                      }
-                    }}
                   >
                     <span className="font-mono">#{index + 1}</span>
                     <span className="truncate max-w-32" title={segmentText}>
