@@ -370,6 +370,7 @@ export default function Experiment1_SegmentationStudio() {
 
             onSegmentDelete={handleSegmentDelete}
             onPlayMapping={handlePlayMapping}
+            onSegmentReorder={handleSegmentReorder}
           />
         </div>
       </div>
