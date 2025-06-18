@@ -132,27 +132,7 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
     window.getSelection()?.removeAllRanges();
   };
 
-  // EXPERIMENT1: Generate overlay styles for existing segments
-  const getSegmentOverlays = () => {
-    const textContent = content[currentLanguage] || '';
-    if (!textContent) return [];
 
-    return segments
-      .filter(segment => segment.textReferences[currentLanguage])
-      .map((segment, index) => {
-        const range = segment.textReferences[currentLanguage]!;
-        const segmentText = textContent.slice(range.start, range.end);
-        
-        return {
-          id: segment.id,
-          name: segment.conceptualName,
-          text: segmentText,
-          start: range.start,
-          end: range.end,
-          color: `hsl(${(index * 137.5) % 360}, 70%, 85%)` // EXPERIMENT1: Generate distinct colors
-        };
-      });
-  };
 
   // EXPERIMENT1: Render text with highlighting for selected segment
   const renderTextWithOverlays = () => {
@@ -202,47 +182,7 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
     return (
       <div className="relative">
         {textElement}
-        
-        {/* EXPERIMENT1: Visual indicators for segments (outside main text) */}
-        {segments.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {segments
-              .filter(segment => segment.textReferences[currentLanguage])
-              .map((segment, index) => {
-                const range = segment.textReferences[currentLanguage]!;
-                const segmentText = textContent.slice(range.start, range.end);
-                const isSelected = segment.id === selectedSegmentId;
-                const color = isSelected 
-                  ? 'hsl(220, 90%, 85%)' // Blue highlight for selected
-                  : `hsl(${(index * 137.5) % 360}, 70%, 85%)`;
-                
-                return (
-                  <div
-                    key={segment.id}
-                    className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs border cursor-pointer hover:shadow-sm transition-all ${
-                      isSelected ? 'border-blue-400 shadow-md' : 'border-gray-300'
-                    }`}
-                    style={{ backgroundColor: color }}
-                    title={`Characters ${range.start}-${range.end}`}
-                  >
-                    <span className="font-mono">#{index + 1}</span>
-                    <span className="truncate max-w-32" title={segmentText}>
-                      {segmentText.length > 20 ? segmentText.slice(0, 20) + '...' : segmentText}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSegmentDelete(segment.id);
-                      }}
-                      className="text-red-600 hover:text-red-800 ml-1"
-                    >
-                      ×
-                    </button>
-                  </div>
-                );
-              })}
-          </div>
-        )}
+
       </div>
     );
   };
@@ -312,9 +252,9 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
             <ol className="list-decimal list-inside space-y-1">
               <li>Select text by clicking and dragging</li>
               <li>Click "Create Segment" to save (automatically numbered)</li>
-              <li>Existing segments appear highlighted with numbers</li>
-              <li>Drag segments in the right panel to reorder</li>
-              <li>Click on segments to select or delete them</li>
+              <li>Manage all segments using the cards in the right panel</li>
+              <li>Click segment cards to highlight text in content</li>
+              <li>Drag cards to reorder segments or delete as needed</li>
             </ol>
           </div>
         </CardContent>
