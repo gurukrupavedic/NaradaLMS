@@ -162,6 +162,12 @@ export default function Experiment1_SegmentationStudio() {
     });
   };
 
+  // EXPERIMENT1: Segment reordering
+  const handleSegmentReorder = (reorderedSegments: any[]) => {
+    setExperimentalSegments(reorderedSegments);
+    toast({ title: "Segments Reordered", description: "Segment order has been updated" });
+  };
+
   // EXPERIMENT1: Export experimental data to production
   const handleExportToProduction = () => {
     // This would convert experimental segments to real segments

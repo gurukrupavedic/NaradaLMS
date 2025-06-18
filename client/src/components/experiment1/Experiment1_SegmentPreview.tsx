@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, Circle, Edit3, Trash2, Play } from 'lucide-react';
+import { CheckCircle, Circle, Trash2, Play, GripVertical } from 'lucide-react';
 
 interface TextSegment {
   id: string;
@@ -46,6 +46,7 @@ interface Experiment1_SegmentPreviewProps {
   onSegmentSelect: (segmentId: string) => void;
   onSegmentDelete: (segmentId: string) => void;
   onPlayMapping: (mapping: AudioMapping) => void;
+  onSegmentReorder: (segments: TextSegment[]) => void;
 }
 
 export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProps> = ({
@@ -56,8 +57,13 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
   currentSegmentId,
   onSegmentSelect,
   onSegmentDelete,
-  onPlayMapping
+  onPlayMapping,
+  onSegmentReorder
 }) => {
+  // EXPERIMENT1: Drag and drop state
+  const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
+  const [draggedOver, setDraggedOver] = React.useState<number | null>(null);
+
   // EXPERIMENT1: Helper functions
   const getSegmentText = (segment: TextSegment) => {
     const textContent = content[currentLanguage] || '';
@@ -68,6 +74,46 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
 
   const getSegmentMapping = (segmentId: string) => {
     return mappings.find(m => m.segmentId === segmentId);
+  };
+
+  // EXPERIMENT1: Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDraggedOver(index);
+  };
+
+  const handleDragLeave = () => {
+    setDraggedOver(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDraggedOver(null);
+      return;
+    }
+
+    const newSegments = [...segments];
+    const draggedSegment = newSegments[draggedIndex];
+    newSegments.splice(draggedIndex, 1);
+    newSegments.splice(dropIndex, 0, draggedSegment);
+    
+    // Update order property
+    const reorderedSegments = newSegments.map((segment, index) => ({
+      ...segment,
+      order: index + 1
+    }));
+    
+    onSegmentReorder(reorderedSegments);
+    setDraggedIndex(null);
+    setDraggedOver(null);
   };
 
   const formatTime = (seconds: number) => {
@@ -106,34 +152,56 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
                 const mapping = getSegmentMapping(segment.id);
                 const isActive = currentSegmentId === segment.id;
                 const segmentText = getSegmentText(segment);
+                const isDragging = draggedIndex === index;
+                const isDraggedOver = draggedOver === index;
                 
                 return (
                   <div
                     key={segment.id}
-                    className={`p-3 border rounded-lg transition-all cursor-pointer ${
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, index)}
+                    className={`p-3 border rounded-lg transition-all cursor-move ${
                       isActive 
                         ? 'border-blue-300 bg-blue-50 shadow-sm' 
                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    } ${
+                      isDragging ? 'opacity-50 scale-95' : ''
+                    } ${
+                      isDraggedOver ? 'border-blue-400 bg-blue-25' : ''
                     }`}
                     onClick={() => onSegmentSelect(segment.id)}
                   >
-                    {/* EXPERIMENT1: Segment header */}
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {segment.conceptualName}
-                        </Badge>
-                        {mapping ? (
-                          <Badge variant="default" className="text-xs bg-green-100 text-green-700">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Mapped
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-xs">
-                            <Circle className="h-3 w-3 mr-1" />
-                            Not Mapped
-                          </Badge>
-                        )}
+                    {/* EXPERIMENT1: Segment header with drag handle */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start gap-3 flex-1">
+                        {/* Drag handle and order number */}
+                        <div className="flex items-center gap-1 text-gray-400 mt-1">
+                          <GripVertical className="h-4 w-4" />
+                          <span className="text-xs font-medium">#{index + 1}</span>
+                        </div>
+                        
+                        {/* Segment name - now prominent */}
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900 mb-1 text-sm">
+                            {segment.conceptualName}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            {mapping ? (
+                              <Badge variant="default" className="text-xs bg-green-100 text-green-700">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Mapped
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs">
+                                <Circle className="h-3 w-3 mr-1" />
+                                Not Mapped
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
                       </div>
                       
                       {/* EXPERIMENT1: Action buttons */}
