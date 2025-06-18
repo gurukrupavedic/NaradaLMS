@@ -44,7 +44,6 @@ interface Experiment1_SegmentPreviewProps {
   };
   currentSegmentId?: string;
   onSegmentSelect: (segmentId: string) => void;
-  onSegmentEdit: (segmentId: string) => void;
   onSegmentDelete: (segmentId: string) => void;
   onPlayMapping: (mapping: AudioMapping) => void;
 }
@@ -56,7 +55,6 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
   content,
   currentSegmentId,
   onSegmentSelect,
-  onSegmentEdit,
   onSegmentDelete,
   onPlayMapping
 }) => {
@@ -122,9 +120,6 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
                     {/* EXPERIMENT1: Segment header */}
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-gray-500">
-                          #{index + 1}
-                        </span>
                         <Badge variant="secondary" className="text-xs">
                           {segment.conceptualName}
                         </Badge>
