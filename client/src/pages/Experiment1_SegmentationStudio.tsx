@@ -327,6 +327,7 @@ export default function Experiment1_SegmentationStudio() {
                 content={chapter?.content || {}}
                 currentLanguage={currentLanguage}
                 segments={experimentalSegments}
+                selectedSegmentId={currentSegmentId}
                 onSegmentCreate={handleSegmentCreate}
                 onSegmentUpdate={handleSegmentUpdate}
                 onSegmentDelete={handleSegmentDelete}

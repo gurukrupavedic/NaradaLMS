@@ -40,6 +40,7 @@ interface Experiment1_AnnotationLayerProps {
   };
   currentLanguage: 'te' | 'hi' | 'en';
   segments: TextSegment[];
+  selectedSegmentId?: string;
   onSegmentCreate: (segment: Omit<TextSegment, 'id' | 'order'>) => void;
   onSegmentUpdate: (id: string, updates: Partial<TextSegment>) => void;
   onSegmentDelete: (id: string) => void;
@@ -49,6 +50,7 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
   content,
   currentLanguage,
   segments,
+  selectedSegmentId,
   onSegmentCreate,
   onSegmentUpdate,
   onSegmentDelete
@@ -177,12 +179,17 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
               .map((segment, index) => {
                 const range = segment.textReferences[currentLanguage]!;
                 const segmentText = textContent.slice(range.start, range.end);
-                const color = `hsl(${(index * 137.5) % 360}, 70%, 85%)`;
+                const isSelected = segment.id === selectedSegmentId;
+                const color = isSelected 
+                  ? 'hsl(220, 90%, 85%)' // Blue highlight for selected
+                  : `hsl(${(index * 137.5) % 360}, 70%, 85%)`;
                 
                 return (
                   <div
                     key={segment.id}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs border cursor-pointer hover:shadow-sm"
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs border cursor-pointer hover:shadow-sm transition-all ${
+                      isSelected ? 'border-blue-400 shadow-md' : 'border-gray-300'
+                    }`}
                     style={{ backgroundColor: color }}
                     title={`Characters ${range.start}-${range.end}`}
                     onClick={() => {
@@ -201,7 +208,7 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
                       }
                     }}
                   >
-                    <span className="font-mono">{segment.conceptualName}</span>
+                    <span className="font-mono">#{index + 1}</span>
                     <span className="truncate max-w-32" title={segmentText}>
                       {segmentText.length > 20 ? segmentText.slice(0, 20) + '...' : segmentText}
                     </span>
