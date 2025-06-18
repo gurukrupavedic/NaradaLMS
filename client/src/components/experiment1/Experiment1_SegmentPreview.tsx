@@ -213,16 +213,16 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
                     onClick={() => onSegmentSelect(segment.id)}
                   >
                     {/* EXPERIMENT1: Table-like row layout */}
-                    <div className="flex items-center px-4 py-3">
+                    <div className="flex items-start px-4 py-3">
                       {/* Left: Extended drag handle area */}
-                      <div className="flex items-center gap-3 cursor-grab active:cursor-grabbing mr-4">
+                      <div className="flex items-center gap-3 cursor-grab active:cursor-grabbing mr-4 pt-0.5">
                         <GripVertical className="h-5 w-5 text-gray-400" />
                         <span className="font-medium text-lg text-gray-700 min-w-8">#{index + 1}</span>
                       </div>
                       
                       {/* Middle: Content area */}
                       <div className="flex-1 min-w-0 mr-4">
-                        <div className="text-sm text-gray-700 truncate mb-1">
+                        <div className="text-sm text-gray-700 mb-1 leading-relaxed">
                           {segmentText}
                         </div>
                         {mapping && (
@@ -233,7 +233,7 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
                       </div>
                       
                       {/* Right: Status and actions */}
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-3 pt-0.5">
                         {/* Mapping status */}
                         <div className="flex-shrink-0">
                           {mapping ? (
