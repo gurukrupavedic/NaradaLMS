@@ -64,13 +64,13 @@ export default function Experiment1_SegmentationStudio() {
   const [currentSegmentId, setCurrentSegmentId] = useState<string | undefined>();
 
   // EXPERIMENT1: Fetch chapter data (read-only)
-  const { data: chapter, isLoading: chapterLoading } = useQuery({
+  const { data: chapter, isLoading: chapterLoading } = useQuery<any>({
     queryKey: [`/api/admin/chapters/${chapterId}/details`],
     enabled: !!chapterId
   });
 
   // EXPERIMENT1: Fetch audio files (read-only)
-  const { data: audioFiles = [], isLoading: audioLoading } = useQuery({
+  const { data: audioFiles = [], isLoading: audioLoading } = useQuery<AudioFile[]>({
     queryKey: [`/api/admin/audio-files/${chapterId}`],
     enabled: !!chapterId
   });
@@ -228,7 +228,7 @@ export default function Experiment1_SegmentationStudio() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold">Segmentation Studio</h1>
-            <p className="text-muted-foreground">Chapter: {chapter.title}</p>
+            <p className="text-muted-foreground">Chapter: {chapter?.title || 'Loading...'}</p>
           </div>
         </div>
         <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
@@ -318,7 +318,7 @@ export default function Experiment1_SegmentationStudio() {
 
             <TabsContent value="annotation" className="space-y-0">
               <Experiment1_AnnotationLayer
-                content={chapter.content || {}}
+                content={chapter?.content || {}}
                 currentLanguage={currentLanguage}
                 segments={experimentalSegments}
                 onSegmentCreate={handleSegmentCreate}
@@ -333,7 +333,7 @@ export default function Experiment1_SegmentationStudio() {
                   audioUrl={audioUrl}
                   segments={experimentalSegments}
                   currentLanguage={currentLanguage}
-                  content={chapter.content || {}}
+                  content={chapter?.content || {}}
                   mappings={experimentalMappings}
                   onMappingCreate={handleMappingCreate}
                   onMappingUpdate={handleMappingUpdate}
@@ -358,7 +358,7 @@ export default function Experiment1_SegmentationStudio() {
             segments={experimentalSegments}
             mappings={experimentalMappings}
             currentLanguage={currentLanguage}
-            content={chapter.content || {}}
+            content={chapter?.content || {}}
             currentSegmentId={currentSegmentId}
             onSegmentSelect={setCurrentSegmentId}
             onSegmentEdit={(id) => {
