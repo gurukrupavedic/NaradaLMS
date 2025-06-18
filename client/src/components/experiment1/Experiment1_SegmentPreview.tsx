@@ -160,18 +160,6 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSegmentEdit(segment.id);
-                          }}
-                          title="Edit segment"
-                        >
-                          <Edit3 className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
                           className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -199,24 +187,7 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
                       </div>
                     )}
 
-                    {/* EXPERIMENT1: Language availability indicators */}
-                    <div className="flex gap-1 mt-2">
-                      {(['te', 'hi', 'en'] as const).map(lang => (
-                        <Badge
-                          key={lang}
-                          variant={segment.textReferences[lang] ? "default" : "outline"}
-                          className={`text-xs ${
-                            segment.textReferences[lang] 
-                              ? lang === currentLanguage 
-                                ? 'bg-blue-100 text-blue-700' 
-                                : 'bg-gray-100 text-gray-600'
-                              : 'text-gray-400'
-                          }`}
-                        >
-                          {lang.toUpperCase()}
-                        </Badge>
-                      ))}
-                    </div>
+
                   </div>
                 );
               })}

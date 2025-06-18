@@ -361,10 +361,7 @@ export default function Experiment1_SegmentationStudio() {
             content={chapter?.content || {}}
             currentSegmentId={currentSegmentId}
             onSegmentSelect={setCurrentSegmentId}
-            onSegmentEdit={(id) => {
-              // Future: Open edit dialog
-              toast({ title: "Edit Feature", description: "Edit functionality not implemented yet" });
-            }}
+
             onSegmentDelete={handleSegmentDelete}
             onPlayMapping={handlePlayMapping}
           />
