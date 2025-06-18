@@ -68,11 +68,35 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
     const range = selection.getRangeAt(0);
     const textContent = content[currentLanguage] || '';
     
-    // EXPERIMENT1: Calculate character offsets relative to the text content
-    const start = range.startOffset;
-    const end = range.endOffset;
+    // EXPERIMENT1: Calculate character offsets relative to the entire text content
+    const containerElement = textRef.current;
+    if (!containerElement) return;
+
+    // Get the text content and calculate positions
+    const fullText = containerElement.textContent || '';
+    const selectedText = range.toString().trim();
     
-    if (start !== end && range.toString().trim()) {
+    if (!selectedText) return;
+
+    // Find the start position of selected text in the full content
+    const rangeStartContainer = range.startContainer;
+    const rangeEndContainer = range.endContainer;
+    
+    // Calculate character offset from the beginning of the text
+    let start = 0;
+    let end = 0;
+    
+    // Create a temporary range to calculate positions
+    const tempRange = document.createRange();
+    tempRange.selectNodeContents(containerElement);
+    tempRange.setEnd(rangeStartContainer, range.startOffset);
+    start = tempRange.toString().length;
+    
+    tempRange.selectNodeContents(containerElement);
+    tempRange.setEnd(rangeEndContainer, range.endOffset);
+    end = tempRange.toString().length;
+    
+    if (start !== end && selectedText) {
       setSelectedRange({ start, end });
       setIsSelecting(true);
       setNewSegmentName(`#${segments.length + 1}`);
@@ -129,12 +153,13 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
       });
   };
 
-  // EXPERIMENT1: Render text with segment overlays
+  // EXPERIMENT1: Render text with inline segment highlighting (preserves original layout)
   const renderTextWithOverlays = () => {
     const textContent = content[currentLanguage] || '';
     if (!textContent) return <p className="text-muted-foreground">No content available for this language</p>;
 
-    const overlays = getSegmentOverlays();
+    const overlays = getSegmentOverlays().sort((a, b) => a.start - b.start);
+    
     if (overlays.length === 0) {
       return (
         <div 
@@ -148,48 +173,48 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
       );
     }
 
-    // EXPERIMENT1: Split text into segments with overlays
-    let lastIndex = 0;
+    // EXPERIMENT1: Build text with inline highlights (non-destructive approach)
     const elements: React.ReactNode[] = [];
+    let lastIndex = 0;
 
-    overlays
-      .sort((a, b) => a.start - b.start)
-      .forEach((overlay, index) => {
-        // Add text before this segment
-        if (overlay.start > lastIndex) {
-          elements.push(
-            <span key={`text-${index}`}>
-              {textContent.slice(lastIndex, overlay.start)}
-            </span>
-          );
-        }
-
-        // Add segment with overlay
+    overlays.forEach((overlay, index) => {
+      // Add text before this segment (unmodified)
+      if (overlay.start > lastIndex) {
         elements.push(
-          <span
-            key={overlay.id}
-            className="relative px-1 py-0.5 rounded cursor-pointer transition-all hover:ring-2 hover:ring-blue-400"
-            style={{ backgroundColor: overlay.color }}
-            title={`Segment: ${overlay.name}`}
-            onClick={() => setEditingSegment(overlay.id)}
-          >
-            {overlay.text}
-            <Badge 
-              variant="secondary" 
-              className="absolute -top-6 left-0 text-xs opacity-80 hover:opacity-100"
-            >
-              {overlay.name}
-            </Badge>
+          <span key={`text-${index}`} className="relative">
+            {textContent.slice(lastIndex, overlay.start)}
           </span>
         );
+      }
 
-        lastIndex = overlay.end;
-      });
+      // Add highlighted segment with minimal visual disruption
+      elements.push(
+        <span
+          key={overlay.id}
+          className="relative inline-block rounded-sm px-0.5 -mx-0.5 cursor-pointer transition-all hover:shadow-sm"
+          style={{ 
+            backgroundColor: overlay.color,
+            boxShadow: `inset 0 0 0 1px ${overlay.color}`,
+          }}
+          title={`Segment: ${overlay.name}`}
+          onClick={() => setEditingSegment(overlay.id)}
+        >
+          {overlay.text}
+          <span 
+            className="absolute -top-5 left-0 text-xs font-mono px-1 py-0.5 bg-gray-800 text-white rounded opacity-0 hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10"
+          >
+            {overlay.name}
+          </span>
+        </span>
+      );
 
-    // Add remaining text
+      lastIndex = overlay.end;
+    });
+
+    // Add remaining text (unmodified)
     if (lastIndex < textContent.length) {
       elements.push(
-        <span key="text-end">
+        <span key="text-end" className="relative">
           {textContent.slice(lastIndex)}
         </span>
       );
