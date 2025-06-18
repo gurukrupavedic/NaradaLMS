@@ -153,50 +153,93 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
       });
   };
 
-  // EXPERIMENT1: Simple approach - show segments in a separate list for now
+  // EXPERIMENT1: Render text with CSS-based highlighting overlays
   const renderTextWithOverlays = () => {
     const textContent = content[currentLanguage] || '';
     if (!textContent) return <p className="text-muted-foreground">No content available for this language</p>;
 
+    // Generate CSS for segment highlighting
+    const segmentStyles = segments
+      .filter(segment => segment.textReferences[currentLanguage])
+      .map((segment, index) => {
+        const range = segment.textReferences[currentLanguage]!;
+        const color = `hsl(${(index * 137.5) % 360}, 70%, 85%)`;
+        
+        return `
+          .segment-${segment.id}::selection {
+            background-color: ${color};
+          }
+        `;
+      }).join('\n');
+
     return (
-      <div className="space-y-4">
-        {/* EXPERIMENT1: Original text - completely unmodified */}
+      <div className="relative">
+        {/* EXPERIMENT1: Dynamic CSS for segment highlights */}
+        {segmentStyles && (
+          <style>{segmentStyles}</style>
+        )}
+        
+        {/* EXPERIMENT1: Text with data attributes for CSS targeting */}
         <div 
           ref={textRef}
-          className="whitespace-pre-wrap leading-relaxed cursor-text p-4 border rounded-lg bg-white"
+          className="whitespace-pre-wrap leading-relaxed cursor-text p-4 border rounded-lg bg-white relative"
           onMouseUp={handleMouseUp}
           style={{ userSelect: 'text' }}
-        >
-          {textContent}
-        </div>
-        
-        {/* EXPERIMENT1: Segments list for reference */}
-        {segments.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium text-gray-600">Created Segments:</h4>
-            {segments.map((segment, index) => {
-              const range = segment.textReferences[currentLanguage];
-              if (!range) return null;
-              
-              const segmentText = textContent.slice(range.start, range.end);
-              return (
-                <div key={segment.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-sm">
-                  <span className="font-mono text-xs bg-gray-200 px-1 rounded">{segment.conceptualName}</span>
-                  <span className="flex-1 truncate">{segmentText}</span>
-                  <span className="text-xs text-gray-500">{range.start}-{range.end}</span>
-                  <button 
-                    onClick={() => handleSegmentDelete(segment.id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    ×
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
+          dangerouslySetInnerHTML={{
+            __html: highlightSegments(textContent)
+          }}
+        />
       </div>
     );
+  };
+
+  // EXPERIMENT1: Create HTML with span elements for highlighting
+  const highlightSegments = (text: string) => {
+    const overlays = segments
+      .filter(segment => segment.textReferences[currentLanguage])
+      .map((segment, index) => {
+        const range = segment.textReferences[currentLanguage]!;
+        return {
+          ...segment,
+          start: range.start,
+          end: range.end,
+          color: `hsl(${(index * 137.5) % 360}, 70%, 85%)`
+        };
+      })
+      .sort((a, b) => a.start - b.start);
+
+    if (overlays.length === 0) {
+      return text.replace(/\n/g, '<br/>');
+    }
+
+    let result = '';
+    let lastIndex = 0;
+
+    overlays.forEach((overlay) => {
+      // Add text before segment
+      if (overlay.start > lastIndex) {
+        result += text.slice(lastIndex, overlay.start).replace(/\n/g, '<br/>');
+      }
+
+      // Add highlighted segment
+      const segmentText = text.slice(overlay.start, overlay.end);
+      result += `<span 
+        style="background-color: ${overlay.color}; border-radius: 2px; padding: 0 2px; margin: 0 -2px; cursor: pointer; position: relative; display: inline;" 
+        title="${overlay.conceptualName}"
+        data-segment-id="${overlay.id}"
+        onmouseover="this.style.boxShadow='0 0 0 2px ${overlay.color}'"
+        onmouseout="this.style.boxShadow='none'"
+      >${segmentText.replace(/\n/g, '<br/>')}</span>`;
+
+      lastIndex = overlay.end;
+    });
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+      result += text.slice(lastIndex).replace(/\n/g, '<br/>');
+    }
+
+    return result;
   };
 
   return (
