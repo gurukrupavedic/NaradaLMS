@@ -100,29 +100,28 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
       return;
     }
 
-    // Work with filtered segments for current language
-    const reorderedCurrentLanguageSegments = [...currentLanguageSegments];
-    const draggedSegment = reorderedCurrentLanguageSegments[draggedIndex];
-    reorderedCurrentLanguageSegments.splice(draggedIndex, 1);
-    reorderedCurrentLanguageSegments.splice(dropIndex, 0, draggedSegment);
+    // Create a new array of current language segments with reordering
+    const reorderedSegments = [...currentLanguageSegments];
+    const draggedSegment = reorderedSegments[draggedIndex];
     
-    // Merge back with all segments, preserving other languages' segments
+    // Remove the dragged segment and insert it at the new position
+    reorderedSegments.splice(draggedIndex, 1);
+    reorderedSegments.splice(dropIndex, 0, draggedSegment);
+    
+    // Update order properties for the reordered segments
+    const reorderedWithNewOrder = reorderedSegments.map((segment, index) => ({
+      ...segment,
+      order: index + 1
+    }));
+    
+    // Create updated segments array: replace current language segments, keep others unchanged
     const updatedAllSegments = segments.map(segment => {
-      // If this segment is not for current language, keep it unchanged
-      if (!segment.textReferences[currentLanguage]) {
-        return segment;
+      if (segment.textReferences[currentLanguage]) {
+        // Find this segment in the reordered array
+        const reorderedSegment = reorderedWithNewOrder.find(s => s.id === segment.id);
+        return reorderedSegment || segment;
       }
-      
-      // Find the new position of this segment in the reordered current language segments
-      const newIndex = reorderedCurrentLanguageSegments.findIndex(s => s.id === segment.id);
-      if (newIndex >= 0) {
-        return {
-          ...reorderedCurrentLanguageSegments[newIndex],
-          order: newIndex + 1
-        };
-      }
-      
-      return segment;
+      return segment; // Keep other language segments unchanged
     });
     
     onSegmentReorder(updatedAllSegments);
@@ -136,10 +135,10 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // EXPERIMENT1: Filter segments by current language and calculate statistics
-  const currentLanguageSegments = segments.filter(segment => 
-    segment.textReferences[currentLanguage]
-  );
+  // EXPERIMENT1: Filter segments by current language and sort by order
+  const currentLanguageSegments = segments
+    .filter(segment => segment.textReferences[currentLanguage])
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
   
   const mappedCount = currentLanguageSegments.filter(s => getSegmentMapping(s.id)).length;
   const totalCount = currentLanguageSegments.length;

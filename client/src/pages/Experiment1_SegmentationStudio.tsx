@@ -85,12 +85,18 @@ export default function Experiment1_SegmentationStudio() {
   // EXPERIMENT1: Generate unique segment ID
   const generateSegmentId = () => `exp1_seg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  // EXPERIMENT1: Segment management functions
+  // EXPERIMENT1: Segment management functions  
   const handleSegmentCreate = (segmentData: Omit<TextSegment, 'id' | 'order'>) => {
+    // Calculate next order number for the current language
+    const currentLanguageSegments = experimentalSegments.filter(segment => 
+      segment.textReferences[currentLanguage]
+    );
+    const nextOrder = currentLanguageSegments.length + 1;
+    
     const newSegment: TextSegment = {
       ...segmentData,
       id: generateSegmentId(),
-      order: experimentalSegments.length + 1
+      order: nextOrder
     };
     
     setExperimentalSegments(prev => [...prev, newSegment]);
