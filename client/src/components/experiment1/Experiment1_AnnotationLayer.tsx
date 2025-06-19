@@ -266,15 +266,15 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Integrated Header */}
-      <div className="flex-shrink-0 px-6 py-3 bg-gray-50 border-b">
+    <div className="h-full overflow-y-auto">
+      {/* Header - now inside scrollable area and sticky */}
+      <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
         <h2 className="text-base font-semibold text-gray-700">Content ({getLanguageLabel(currentLanguage)})</h2>
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="h-full">
+      <div className="p-4">
+        <div>
           {/* Text Content with Highlighting */}
           <div
             ref={textRef}
