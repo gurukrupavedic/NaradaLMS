@@ -104,7 +104,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
 
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full overflow-auto">
       {/* Header - now inside scrollable area and sticky */}
       <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
         <h2 className="text-base font-semibold text-gray-700">Segments ({getLanguageLabel(currentLanguage)})</h2>
