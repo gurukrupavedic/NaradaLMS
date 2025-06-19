@@ -280,14 +280,6 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
       {/* Content Area */}
       <div className="flex-1 overflow-auto p-6">
         <div className="space-y-4">
-          {/* Instructions */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-700">
-              <strong>How to create segments:</strong> Select any text below and use the floating toolbar to create a new segment.
-              Click on highlighted segments to select them or right-click to edit.
-            </p>
-          </div>
-
           {/* Text Content with Highlighting */}
           <div
             ref={textRef}
