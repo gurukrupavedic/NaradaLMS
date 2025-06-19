@@ -25,9 +25,9 @@ import { AlertCircle, ArrowLeft, Download, Upload, Music } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 
-import { Experiment1_AnnotationLayer_v2 } from '@/components/experiment1/Experiment1_AnnotationLayer_v2';
+import { Experiment1_AnnotationLayer } from '@/components/experiment1/Experiment1_AnnotationLayer';
 import { Experiment1_ProgressiveMapper } from '@/components/experiment1/Experiment1_ProgressiveMapper';
-import { SegmentPanel_v2 } from '@/components/experiment1/SegmentPanel_v2';
+import { SegmentPanel } from '@/components/experiment1/SegmentPanel';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 interface TextSegment {
@@ -348,7 +348,7 @@ export function Experiment1_SegmentationStudio_v2() {
             <PanelGroup direction="horizontal" className="h-full">
               {/* Left Panel: Content Area */}
               <Panel defaultSize={50} minSize={30}>
-                <Experiment1_AnnotationLayer_v2
+                <Experiment1_AnnotationLayer
                   content={chapter?.content || {}}
                   currentLanguage={currentLanguage}
                   segments={experimentalSegments}
@@ -366,7 +366,7 @@ export function Experiment1_SegmentationStudio_v2() {
               
               {/* Right Panel: Segment Management */}
               <Panel defaultSize={50} minSize={30}>
-                <SegmentPanel_v2
+                <SegmentPanel
                   segments={experimentalSegments}
                   mappings={experimentalMappings}
                   currentLanguage={currentLanguage}

@@ -1,21 +1,23 @@
 /**
- * EXPERIMENT 1: Annotation Layer + Progressive Mapping Segmentation
+ * EXPERIMENT 1: Clean Annotation Layer with Integrated Header
  * 
- * This component provides an annotation overlay system for text segmentation.
- * Users can select text ranges to create segments without modifying the source content.
+ * Rebuilt from scratch with:
+ * - Integrated header with segment count
+ * - Full height responsive layout
+ * - Independent scrolling content area
+ * - Clean text selection and highlighting
  * 
  * Status: Experimental - Do not use in production
  * Created: January 2025
- * Purpose: Test intuitive text segmentation workflow using overlay approach
+ * Purpose: Test clean annotation workflow with improved UX
  */
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Edit3 } from 'lucide-react';
-import { FloatingSelectionToolbar } from './FloatingSelectionToolbar';
+import { Plus, X } from 'lucide-react';
 
 interface TextRange {
   start: number;
@@ -33,7 +35,7 @@ interface TextSegment {
   order: number;
 }
 
-interface Experiment1_AnnotationLayerProps {
+interface Experiment1_AnnotationLayer_v2Props {
   content: {
     te?: string;
     hi?: string;
@@ -42,12 +44,12 @@ interface Experiment1_AnnotationLayerProps {
   currentLanguage: 'te' | 'hi' | 'en';
   segments: TextSegment[];
   selectedSegmentId?: string;
-  onSegmentCreate: (segment: Omit<TextSegment, 'id' | 'order'>) => void;
+  onSegmentCreate: (segment: TextSegment) => void;
   onSegmentUpdate: (id: string, updates: Partial<TextSegment>) => void;
   onSegmentDelete: (id: string) => void;
 }
 
-export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerProps> = ({
+export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayer_v2Props> = ({
   content,
   currentLanguage,
   segments,
@@ -61,6 +63,9 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
   const [showFloatingToolbar, setShowFloatingToolbar] = useState<boolean>(false);
   const [editingSegment, setEditingSegment] = useState<string | null>(null);
   const textRef = useRef<HTMLDivElement>(null);
+
+  // Get current text content
+  const currentText = content[currentLanguage] || '';
 
   // Hide floating toolbar when selection changes or user clicks elsewhere
   useEffect(() => {
@@ -80,18 +85,17 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
       if (toolbarElement && toolbarElement.contains(target)) {
         return;
       }
-      
-      // Hide if clicking outside the text area
-      if (textRef.current && !textRef.current.contains(target)) {
-        setShowFloatingToolbar(false);
-        setSelectedRange(null);
-        window.getSelection()?.removeAllRanges();
+
+      // Don't hide if clicking within the text content area
+      if (textRef.current && textRef.current.contains(target)) {
+        return;
       }
+
+      setShowFloatingToolbar(false);
+      setSelectedRange(null);
     };
 
-    // Listen for selection changes
     document.addEventListener('selectionchange', handleSelectionChange);
-    // Listen for clicks outside the text area
     document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
@@ -100,153 +104,252 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
     };
   }, []);
 
-  // EXPERIMENT1: Handle text selection for segment creation
-  const handleMouseUp = useCallback(() => {
+  // Handle text selection
+  const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
+    if (!selection || selection.isCollapsed) return;
 
-    const range = selection.getRangeAt(0);
-    const textContent = content[currentLanguage] || '';
-    
-    // EXPERIMENT1: Calculate character offsets relative to the entire text content
-    const containerElement = textRef.current;
-    if (!containerElement) return;
-
-    // Get the text content and calculate positions
-    const fullText = containerElement.textContent || '';
-    const selectedText = range.toString().trim();
-    
+    const selectedText = selection.toString().trim();
     if (!selectedText) return;
 
-    // Find the start position of selected text in the full content
-    const rangeStartContainer = range.startContainer;
-    const rangeEndContainer = range.endContainer;
-    
-    // Calculate character offset from the beginning of the text
-    let start = 0;
-    let end = 0;
-    
-    // Create a temporary range to calculate positions
-    const tempRange = document.createRange();
-    tempRange.selectNodeContents(containerElement);
-    tempRange.setEnd(rangeStartContainer, range.startOffset);
-    start = tempRange.toString().length;
-    
-    tempRange.selectNodeContents(containerElement);
-    tempRange.setEnd(rangeEndContainer, range.endOffset);
-    end = tempRange.toString().length;
-    
-    if (start !== end && selectedText) {
-      setSelectedRange({ start, end });
-      setShowFloatingToolbar(true);
-    }
-  }, [content, currentLanguage, segments.length]);
+    // Get the range relative to the text container
+    const range = selection.getRangeAt(0);
+    const textContainer = textRef.current;
+    if (!textContainer) return;
+
+    // Calculate character positions
+    const preSelectionRange = document.createRange();
+    preSelectionRange.selectNodeContents(textContainer);
+    preSelectionRange.setEnd(range.startContainer, range.startOffset);
+    const start = preSelectionRange.toString().length;
+    const end = start + selectedText.length;
+
+    setSelectedRange({ start, end });
+    setShowFloatingToolbar(true);
+  }, []);
 
   // Create new segment from selection
-  const handleCreateSegment = () => {
+  const handleCreateSegment = useCallback((conceptualName: string) => {
     if (!selectedRange) return;
 
-    const newSegment = {
-      conceptualName: `#${segments.length + 1}`, // Auto-generated, will be replaced by fluid numbering
+    const newSegment: TextSegment = {
+      id: `segment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      conceptualName,
       textReferences: {
         [currentLanguage]: selectedRange
-      }
+      },
+      order: segments.length
     };
 
     onSegmentCreate(newSegment);
-    
-    // Reset selection state
     setSelectedRange(null);
     setShowFloatingToolbar(false);
+
+    // Clear selection
     window.getSelection()?.removeAllRanges();
-  };
+  }, [selectedRange, currentLanguage, segments.length, onSegmentCreate]);
 
-  // Cancel segment creation
-  const handleCancelSelection = () => {
-    setSelectedRange(null);
-    setShowFloatingToolbar(false);
-    window.getSelection()?.removeAllRanges();
-  };
+  // Render highlighted text with segment overlays
+  const renderHighlightedText = () => {
+    if (!currentText) return <div className="text-muted-foreground">No content available for {currentLanguage}</div>;
 
+    // Get all segments for current language
+    const languageSegments = segments
+      .filter(segment => segment.textReferences[currentLanguage])
+      .sort((a, b) => a.textReferences[currentLanguage]!.start - b.textReferences[currentLanguage]!.start);
 
+    if (languageSegments.length === 0) {
+      return <div className="whitespace-pre-wrap leading-relaxed">{currentText}</div>;
+    }
 
-  // EXPERIMENT1: Render text with highlighting for selected segment
-  const renderTextWithOverlays = () => {
-    const textContent = content[currentLanguage] || '';
-    if (!textContent) return <p className="text-muted-foreground">No content available for this language</p>;
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
 
-    // Find the selected segment for highlighting
-    const selectedSegment = selectedSegmentId 
-      ? segments.find(s => s.id === selectedSegmentId && s.textReferences[currentLanguage])
-      : null;
-
-    // Render text with highlighted selection
-    let textElement;
-    if (selectedSegment) {
-      const selectedRange = selectedSegment.textReferences[currentLanguage]!;
-      const beforeText = textContent.slice(0, selectedRange.start);
-      const highlightedText = textContent.slice(selectedRange.start, selectedRange.end);
-      const afterText = textContent.slice(selectedRange.end);
-
-      textElement = (
-        <div 
-          ref={textRef}
-          className="whitespace-pre-wrap leading-relaxed cursor-text p-4 border rounded-lg bg-white relative"
-          onMouseUp={handleMouseUp}
-          style={{ userSelect: 'text' }}
-        >
-          {beforeText}
-          <span className="bg-blue-200 border border-blue-300 rounded px-1 py-0.5 text-blue-900 font-medium">
-            {highlightedText}
+    languageSegments.forEach((segment, index) => {
+      const range = segment.textReferences[currentLanguage]!;
+      
+      // Add text before this segment
+      if (range.start > lastIndex) {
+        parts.push(
+          <span key={`text-${index}`} className="whitespace-pre-wrap">
+            {currentText.slice(lastIndex, range.start)}
           </span>
-          {afterText}
-        </div>
-      );
-    } else {
-      textElement = (
-        <div 
-          ref={textRef}
-          className="whitespace-pre-wrap leading-relaxed cursor-text p-4 border rounded-lg bg-white relative"
-          onMouseUp={handleMouseUp}
-          style={{ userSelect: 'text' }}
+        );
+      }
+
+      // Add highlighted segment
+      const isSelected = segment.id === selectedSegmentId;
+      parts.push(
+        <span
+          key={segment.id}
+          className={`relative rounded px-1 py-0.5 cursor-pointer transition-colors ${
+            isSelected 
+              ? 'bg-blue-200 text-blue-900 ring-2 ring-blue-400' 
+              : 'bg-yellow-100 text-yellow-900 hover:bg-yellow-200'
+          }`}
+          title={segment.conceptualName}
         >
-          {textContent}
-        </div>
+          {currentText.slice(range.start, range.end)}
+          {editingSegment === segment.id && (
+            <div className="absolute top-full left-0 z-10 mt-1 p-2 bg-white border rounded shadow-lg min-w-48">
+              <Input
+                defaultValue={segment.conceptualName}
+                placeholder="Segment name"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const newName = (e.target as HTMLInputElement).value.trim();
+                    if (newName) {
+                      onSegmentUpdate(segment.id, { conceptualName: newName });
+                    }
+                    setEditingSegment(null);
+                  } else if (e.key === 'Escape') {
+                    setEditingSegment(null);
+                  }
+                }}
+                onBlur={(e) => {
+                  const newName = e.target.value.trim();
+                  if (newName && newName !== segment.conceptualName) {
+                    onSegmentUpdate(segment.id, { conceptualName: newName });
+                  }
+                  setEditingSegment(null);
+                }}
+                autoFocus
+                className="text-sm"
+              />
+              <div className="flex gap-1 mt-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setEditingSegment(null)}
+                  className="text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => {
+                    onSegmentDelete(segment.id);
+                    setEditingSegment(null);
+                  }}
+                  className="text-xs"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </span>
+      );
+
+      lastIndex = range.end;
+    });
+
+    // Add remaining text
+    if (lastIndex < currentText.length) {
+      parts.push(
+        <span key="text-end" className="whitespace-pre-wrap">
+          {currentText.slice(lastIndex)}
+        </span>
       );
     }
 
-    return (
-      <div className="relative">
-        {textElement}
+    return <div className="leading-relaxed">{parts}</div>;
+  };
 
-      </div>
-    );
+  const getLanguageLabel = () => {
+    switch (currentLanguage) {
+      case 'te': return 'Telugu';
+      case 'hi': return 'Hindi';
+      case 'en': return 'English';
+    }
   };
 
   return (
-    <div className="h-full flex flex-col p-4">
-      {/* Clean header */}
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-1">Content ({currentLanguage.toUpperCase()})</h3>
-        <p className="text-sm text-muted-foreground">
-          {segments.filter(s => s.textReferences[currentLanguage]).length} segments created • Select text to create segments
-        </p>
-      </div>
-
-      {/* Clean content area */}
-      <div className="flex-1 p-6 bg-white rounded-lg border border-gray-200 shadow-sm overflow-auto">
-        <div ref={textRef} className="leading-relaxed text-gray-800 text-base">
-          {renderTextWithOverlays()}
+    <div className="h-full flex flex-col">
+      {/* Integrated Header */}
+      <div className="flex-shrink-0 px-6 py-4 bg-muted/30 border-b">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Content ({getLanguageLabel()})</h2>
+          <Badge variant="secondary">
+            {segments.length} segments created
+          </Badge>
         </div>
       </div>
 
-      {/* Floating toolbar for text selection */}
-      <FloatingSelectionToolbar
-        isVisible={showFloatingToolbar}
-        onCreateSegment={handleCreateSegment}
-        onCancel={handleCancelSelection}
-        nextSegmentNumber={segments.length + 1}
-      />
+      {/* Content Area */}
+      <div className="flex-1 overflow-auto p-6">
+        <div className="space-y-4">
+          {/* Instructions */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-700">
+              <strong>How to create segments:</strong> Select any text below and use the floating toolbar to create a new segment.
+              Click on highlighted segments to select them or right-click to edit.
+            </p>
+          </div>
+
+          {/* Text Content with Highlighting */}
+          <div
+            ref={textRef}
+            className="relative p-6 bg-white border rounded-lg min-h-96 cursor-text font-serif text-base leading-relaxed"
+            onMouseUp={handleTextSelection}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              const target = e.target as HTMLElement;
+              const segmentElement = target.closest('[title]');
+              if (segmentElement) {
+                const segmentTitle = segmentElement.getAttribute('title');
+                const segment = segments.find(s => s.conceptualName === segmentTitle);
+                if (segment) {
+                  setEditingSegment(segment.id);
+                }
+              }
+            }}
+          >
+            {renderHighlightedText()}
+          </div>
+
+          {/* Simple Floating Toolbar */}
+          {showFloatingToolbar && selectedRange && (
+            <div
+              data-floating-toolbar
+              className="fixed z-50 flex items-center gap-1 bg-white border border-gray-300 rounded-lg shadow-lg p-1"
+              style={{
+                top: '100px',
+                left: '50%',
+                transform: 'translateX(-50%)'
+              }}
+            >
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-700"
+                onClick={() => {
+                  const segmentName = `Segment ${segments.length + 1}`;
+                  handleCreateSegment(segmentName);
+                }}
+                title={`Create Segment #${segments.length + 1}`}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                onClick={() => {
+                  setShowFloatingToolbar(false);
+                  setSelectedRange(null);
+                  window.getSelection()?.removeAllRanges();
+                }}
+                title="Cancel selection"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
