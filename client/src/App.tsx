@@ -40,7 +40,9 @@ function Router() {
           <Route path="/chapter-editor/:chapterId" component={() => <ChapterEditor />} />
           <Route path="/admin/chapters/:chapterId/segmentation" component={() => <SegmentationEditor />} />
           {/* EXPERIMENT1: Experimental segmentation studio route */}
-          <Route path="/experiment1/segmentation-studio/:chapterId" component={() => <Experiment1_SegmentationStudio />} />
+          <Route path="/experiment1/segmentation-studio/:chapterId">
+            <Experiment1_SegmentationStudio />
+          </Route>
           <Route path="/tracks/:trackId" component={TrackView} />
           <Route path="/chapters/:id" component={ChapterView} />
         </>
