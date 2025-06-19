@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Edit3 } from 'lucide-react';
+import { FloatingSelectionToolbar } from './FloatingSelectionToolbar';
 
 interface TextRange {
   start: number;
@@ -55,10 +56,9 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
   onSegmentUpdate,
   onSegmentDelete
 }) => {
-  // EXPERIMENT1: State for text selection and segment creation
-  const [isSelecting, setIsSelecting] = useState(false);
+  // State for text selection and segment creation
   const [selectedRange, setSelectedRange] = useState<TextRange | null>(null);
-  const [newSegmentName, setNewSegmentName] = useState('');
+  const [showFloatingToolbar, setShowFloatingToolbar] = useState<boolean>(false);
   const [editingSegment, setEditingSegment] = useState<string | null>(null);
   const textRef = useRef<HTMLDivElement>(null);
 
@@ -100,11 +100,11 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
     
     if (start !== end && selectedText) {
       setSelectedRange({ start, end });
-      setIsSelecting(true);
+      setShowFloatingToolbar(true);
     }
   }, [content, currentLanguage, segments.length]);
 
-  // EXPERIMENT1: Create new segment from selection
+  // Create new segment from selection
   const handleCreateSegment = () => {
     if (!selectedRange) return;
 
@@ -117,18 +117,16 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
 
     onSegmentCreate(newSegment);
     
-    // EXPERIMENT1: Reset selection state
+    // Reset selection state
     setSelectedRange(null);
-    setIsSelecting(false);
-    setNewSegmentName('');
+    setShowFloatingToolbar(false);
     window.getSelection()?.removeAllRanges();
   };
 
-  // EXPERIMENT1: Cancel segment creation
+  // Cancel segment creation
   const handleCancelSelection = () => {
     setSelectedRange(null);
-    setIsSelecting(false);
-    setNewSegmentName('');
+    setShowFloatingToolbar(false);
     window.getSelection()?.removeAllRanges();
   };
 
