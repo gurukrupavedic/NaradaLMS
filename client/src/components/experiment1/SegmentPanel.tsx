@@ -32,7 +32,7 @@ interface SegmentPanelProps {
   onSegmentReorder: (segments: TextSegment[]) => void;
 }
 
-export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
+export const SegmentPanel: React.FC<SegmentPanelProps> = ({
   segments,
   mappings,
   currentLanguage,
