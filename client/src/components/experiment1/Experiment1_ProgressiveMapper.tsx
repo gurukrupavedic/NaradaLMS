@@ -419,13 +419,16 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
                               segmentId={segment.id}
                               startTime={mapping.startTime}
                               endTime={mapping.endTime}
-                              onPlay={(start, end) => handlePlaySegment(mapping, null)}
+                              onPlay={(start, end) => {
+                                const fakeEvent = { stopPropagation: () => {} } as React.MouseEvent;
+                                handlePlaySegment(mapping, fakeEvent);
+                              }}
                               onDelete={(segmentId) => onMappingDelete(segmentId)}
                               onTimestampUpdate={onMappingUpdate}
                               duration={duration}
                             />
                           ) : (
-                            <div className="w-full h-8 rounded-full bg-gray-200 opacity-50"></div>
+                            <div className="w-full h-8 rounded-full bg-gray-100 border border-gray-200"></div>
                           )}
                         </div>
                       );
