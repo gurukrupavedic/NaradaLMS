@@ -301,47 +301,107 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
             {renderHighlightedText()}
           </div>
 
-          {/* Simple Floating Toolbar */}
+          {/* Floating Toolbar with proper positioning */}
           {showFloatingToolbar && selectedRange && (
-            <div
-              data-floating-toolbar
-              className="fixed z-50 flex items-center gap-1 bg-white border border-gray-300 rounded-lg shadow-lg p-1"
-              style={{
-                top: '100px',
-                left: '50%',
-                transform: 'translateX(-50%)'
+            <FloatingSelectionToolbar
+              segments={segments}
+              onCreateSegment={handleCreateSegment}
+              onCancel={() => {
+                setShowFloatingToolbar(false);
+                setSelectedRange(null);
+                window.getSelection()?.removeAllRanges();
               }}
-            >
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-700"
-                onClick={() => {
-                  const segmentName = `Segment ${segments.length + 1}`;
-                  handleCreateSegment(segmentName);
-                }}
-                title={`Create Segment #${segments.length + 1}`}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
-                onClick={() => {
-                  setShowFloatingToolbar(false);
-                  setSelectedRange(null);
-                  window.getSelection()?.removeAllRanges();
-                }}
-                title="Cancel selection"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            />
           )}
         </div>
       </div>
+    </div>
+  );
+};
+
+// Custom floating toolbar component with proper positioning near text selection
+const FloatingSelectionToolbar: React.FC<{
+  segments: TextSegment[];
+  onCreateSegment: (segmentName: string) => void;
+  onCancel: () => void;
+}> = ({ segments, onCreateSegment, onCancel }) => {
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    const updatePosition = () => {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      if (rect.width === 0 && rect.height === 0) return;
+
+      // Position toolbar above the selection
+      const toolbarHeight = 40;
+      const offset = 8;
+      
+      let top = rect.top - toolbarHeight - offset;
+      let left = rect.left + (rect.width / 2);
+
+      // If toolbar would be above viewport, show below selection
+      if (top < 0) {
+        top = rect.bottom + offset;
+      }
+
+      // Keep toolbar within viewport horizontally
+      const toolbarWidth = 80; // Approximate width
+      if (left - toolbarWidth / 2 < 0) {
+        left = toolbarWidth / 2;
+      } else if (left + toolbarWidth / 2 > window.innerWidth) {
+        left = window.innerWidth - toolbarWidth / 2;
+      }
+
+      setPosition({ top, left });
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition);
+
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition);
+    };
+  }, []);
+
+  return (
+    <div
+      data-floating-toolbar
+      className="fixed z-50 flex items-center gap-1 bg-white border border-gray-300 rounded-lg shadow-lg p-1"
+      style={{
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        transform: 'translateX(-50%)'
+      }}
+    >
+      <Button
+        size="sm"
+        variant="ghost"
+        className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-700"
+        onClick={() => {
+          const segmentName = `Segment ${segments.length + 1}`;
+          onCreateSegment(segmentName);
+        }}
+        title={`Create Segment #${segments.length + 1}`}
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
+      
+      <Button
+        size="sm"
+        variant="ghost"
+        className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+        onClick={onCancel}
+        title="Cancel selection"
+      >
+        <X className="h-4 w-4" />
+      </Button>
     </div>
   );
 };
