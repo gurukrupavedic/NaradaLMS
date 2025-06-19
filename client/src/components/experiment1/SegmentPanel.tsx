@@ -200,19 +200,18 @@ export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
                   </div>
 
                   {/* Content */}
-                  <div className="ml-6">
+                  <div className="ml-6 flex flex-col min-w-0">
                     {/* Header */}
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2 flex-shrink-0">
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1">
                           <span className="text-sm font-medium text-gray-600">
                             #{segment.order + 1}
                           </span>
                         </div>
-
                       </div>
                       
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 flex-shrink-0">
                         <Button
                           size="sm"
                           variant="ghost"
@@ -227,13 +226,9 @@ export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
                       </div>
                     </div>
 
-
-
                     {/* Segment Text Preview */}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm text-gray-700 leading-relaxed">
-                        {segmentText}
-                      </div>
+                    <div className="text-sm text-gray-700 leading-relaxed break-words">
+                      {segmentText}
                     </div>
                   </div>
                 </div>
