@@ -84,24 +84,24 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
   };
 
   return (
-    <div className="flex items-center bg-white border border-gray-300 rounded-full px-2 py-1 text-xs font-mono min-w-[80px] shadow-sm">
+    <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium min-w-[85px] shadow-sm">
       {/* Delete button */}
       <button
         onClick={handleDelete}
-        className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-red-50 text-gray-500 hover:text-red-600 mr-1 transition-colors"
+        className="flex items-center justify-center w-4 h-4 rounded hover:bg-red-50 text-gray-400 hover:text-red-600 mr-2 transition-colors"
         title="Delete mapping"
       >
         <X className="h-3 w-3" />
       </button>
 
       {/* End timestamp display */}
-      <div className="flex-1 flex items-center justify-center text-gray-700">
+      <div className="flex-1 flex items-center justify-center text-gray-600">
         {isEditing ? (
           <div className="flex items-center gap-1">
             <Input
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
-              className="h-5 w-12 text-xs bg-white border-gray-300 text-gray-700"
+              className="h-5 w-14 text-xs bg-white border-gray-300 text-gray-700"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') saveTimestampEdit();
                 if (e.key === 'Escape') cancelTimestampEdit();
@@ -118,7 +118,7 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
         ) : (
           <button 
             onClick={startEditingTimestamp}
-            className="hover:bg-gray-100 px-1 rounded transition-colors"
+            className="hover:bg-gray-100 px-2 py-1 rounded transition-colors font-mono"
           >
             {formatTime(endTime)}
           </button>
@@ -128,7 +128,7 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
       {/* Play button */}
       <button
         onClick={handlePlay}
-        className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-50 text-gray-500 hover:text-blue-600 ml-1 transition-colors"
+        className="flex items-center justify-center w-4 h-4 rounded hover:bg-blue-50 text-gray-400 hover:text-blue-600 ml-2 transition-colors"
         title="Play this segment"
       >
         <Play className="h-3 w-3" />

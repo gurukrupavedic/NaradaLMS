@@ -404,48 +404,37 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[calc(100vh-450px)]">
-              <div className="flex gap-4">
-                {/* Left column: Timestamp pills */}
-                <div className="w-32 flex-shrink-0">
-                  <div className="space-y-3">
-                    {currentLanguageSegments.map((segment, index) => {
-                      const mapping = getSegmentMapping(segment.id);
-                      const status = getSegmentStatus(segment.id);
-                      
-                      return (
-                        <div key={`pill-${segment.id}`} className="h-[72px] flex items-center">
-                          {mapping && status === 'completed' ? (
-                            <TimestampPill
-                              segmentId={segment.id}
-                              startTime={mapping.startTime}
-                              endTime={mapping.endTime}
-                              onPlay={(start, end) => {
-                                const fakeEvent = { stopPropagation: () => {} } as React.MouseEvent;
-                                handlePlaySegment(mapping, fakeEvent);
-                              }}
-                              onDelete={(segmentId) => onMappingDelete(segmentId)}
-                              onTimestampUpdate={onMappingUpdate}
-                              duration={duration}
-                            />
-                          ) : (
-                            <div className="w-full h-8 rounded-full bg-gray-100 border border-gray-200"></div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+              <div className="space-y-3">
+                {currentLanguageSegments.map((segment, index) => {
+                  const mapping = getSegmentMapping(segment.id);
+                  const status = getSegmentStatus(segment.id);
+                  const segmentText = getSegmentText(segment);
+                  
+                  return (
+                    <div key={segment.id} className="flex items-start gap-4">
+                      {/* Left: Timestamp pill */}
+                      <div className="w-32 flex-shrink-0 flex items-start pt-3">
+                        {mapping && status === 'completed' ? (
+                          <TimestampPill
+                            segmentId={segment.id}
+                            startTime={mapping.startTime}
+                            endTime={mapping.endTime}
+                            onPlay={(start, end) => {
+                              const fakeEvent = { stopPropagation: () => {} } as React.MouseEvent;
+                              handlePlaySegment(mapping, fakeEvent);
+                            }}
+                            onDelete={(segmentId) => onMappingDelete(segmentId)}
+                            onTimestampUpdate={onMappingUpdate}
+                            duration={duration}
+                          />
+                        ) : (
+                          <div className="w-full h-8 rounded-lg bg-gray-100 border border-gray-200 opacity-50"></div>
+                        )}
+                      </div>
 
-                {/* Right column: Segment cards */}
-                <div className="flex-1">
-                  <div className="space-y-3">
-                    {currentLanguageSegments.map((segment, index) => {
-                      const status = getSegmentStatus(segment.id);
-                      const segmentText = getSegmentText(segment);
-                      
-                      return (
+                      {/* Right: Segment card */}
+                      <div className="flex-1">
                         <div
-                          key={segment.id}
                           onClick={() => handleSegmentClick(segment.id)}
                           className={`border rounded-lg transition-all cursor-pointer ${
                             status === 'active' 
@@ -487,10 +476,10 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
                             </div>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </ScrollArea>
           </CardContent>
