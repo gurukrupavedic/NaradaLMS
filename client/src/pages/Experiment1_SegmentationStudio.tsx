@@ -275,10 +275,10 @@ function Experiment1_SegmentationStudio() {
               </div>
               <div className="flex gap-2">
                 <Badge variant="secondary" className="text-xs">
-                  {experimentalSegments.filter(s => s.textReferences[currentLanguage]).length} segments created
+                  {experimentalSegments.filter(s => s.textReferences[currentLanguage]).length} created
                 </Badge>
                 <Badge variant="secondary" className="text-xs">
-                  {experimentalMappings.length} of {experimentalSegments.filter(s => s.textReferences[currentLanguage]).length} segments mapped
+                  {experimentalMappings.length} mapped
                 </Badge>
               </div>
             </div>
@@ -372,7 +372,7 @@ function Experiment1_SegmentationStudio() {
                 </div>
               </div>
               <Badge variant="secondary" className="text-xs">
-                {experimentalMappings.length} of {experimentalSegments.filter(s => s.textReferences[currentLanguage]).length} segments mapped
+                {experimentalMappings.length} mapped
               </Badge>
             </div>
 
