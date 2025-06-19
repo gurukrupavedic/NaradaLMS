@@ -16,8 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
-import { Play, Pause, Square, RotateCcw, CheckCircle, Circle, Clock, Edit2, Check, X } from 'lucide-react';
+import { Play, Pause, Square, RotateCcw, CheckCircle, Circle, Clock } from 'lucide-react';
+import { TimestampPill } from './TimestampPill';
 
 interface TextSegment {
   id: string;
@@ -71,9 +71,7 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
   const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number>(0);
   
-  // EXPERIMENT1: Inline editing state
-  const [editingTimestamp, setEditingTimestamp] = useState<{segmentId: string, field: 'start' | 'end'} | null>(null);
-  const [editValue, setEditValue] = useState<string>('');
+  // Removed inline editing state - now handled by TimestampPill component
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -262,51 +260,7 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
     audio.addEventListener('timeupdate', checkEndTime);
   };
 
-  // EXPERIMENT1: Timestamp editing handlers
-  const startEditingTimestamp = (segmentId: string, field: 'start' | 'end', currentValue: number) => {
-    setEditingTimestamp({ segmentId, field });
-    setEditValue(formatTimeForEdit(currentValue));
-  };
-
-  const saveTimestampEdit = () => {
-    if (!editingTimestamp) return;
-    
-    const newTime = parseTimeFromEdit(editValue);
-    if (newTime >= 0 && newTime <= duration) {
-      const updates = editingTimestamp.field === 'start' 
-        ? { startTime: newTime }
-        : { endTime: newTime };
-      
-      onMappingUpdate(editingTimestamp.segmentId, updates);
-    }
-    
-    setEditingTimestamp(null);
-    setEditValue('');
-  };
-
-  const cancelTimestampEdit = () => {
-    setEditingTimestamp(null);
-    setEditValue('');
-  };
-
-  // EXPERIMENT1: Time formatting helpers
-  const formatTimeForEdit = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = (seconds % 60).toFixed(1);
-    return `${mins}:${secs.padStart(4, '0')}`;
-  };
-
-  const parseTimeFromEdit = (timeString: string): number => {
-    const parts = timeString.split(':');
-    if (parts.length !== 2) return -1;
-    
-    const mins = parseInt(parts[0]);
-    const secs = parseFloat(parts[1]);
-    
-    if (isNaN(mins) || isNaN(secs)) return -1;
-    
-    return mins * 60 + secs;
-  };
+  // Timestamp editing now handled by TimestampPill component
 
   // EXPERIMENT1: Helper functions
   const formatTime = (seconds: number) => {
@@ -450,144 +404,92 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[calc(100vh-450px)]">
-              <div className="space-y-3">
-                {currentLanguageSegments.map((segment, index) => {
-                  const status = getSegmentStatus(segment.id);
-                  const mapping = getSegmentMapping(segment.id);
-                  const segmentText = getSegmentText(segment);
-                  
-                  return (
-                    <div
-                      key={segment.id}
-                      onClick={() => handleSegmentClick(segment.id)}
-                      className={`border rounded-lg transition-all cursor-pointer ${
-                        status === 'active' 
-                          ? 'border-blue-500 bg-blue-50 shadow-md' 
-                          : status === 'completed'
-                          ? 'border-green-300 bg-green-50'
-                          : mappingSession === 'active'
-                          ? 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                          : 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                      }`}
-                    >
-                      <div className="flex items-start px-4 py-3">
-                        {/* Left: Number and status */}
-                        <div className="flex items-center gap-3 mr-4">
-                          <span className="font-medium text-lg text-gray-700 min-w-8">#{index + 1}</span>
-                          <div className="flex-shrink-0">
-                            {status === 'active' ? (
-                              <Badge variant="default" className="text-xs bg-blue-100 text-blue-700">
-                                <Clock className="h-3 w-3 mr-1" />
-                                Recording
-                              </Badge>
-                            ) : status === 'completed' ? (
-                              <Badge variant="default" className="text-xs bg-green-100 text-green-700">
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Mapped
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-xs">
-                                <Circle className="h-3 w-3 mr-1" />
-                                Ready
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {/* Middle: Content */}
-                        <div className="flex-1 min-w-0 mr-4">
-                          <div className="text-sm text-gray-700 mb-1 leading-relaxed">
-                            {segmentText}
-                          </div>
-                          {mapping && status === 'completed' && (
-                            <div className="text-xs text-green-600 flex items-center gap-2">
-                              {/* Start time */}
-                              {editingTimestamp?.segmentId === segment.id && editingTimestamp.field === 'start' ? (
-                                <div className="flex items-center gap-1">
-                                  <Input
-                                    value={editValue}
-                                    onChange={(e) => setEditValue(e.target.value)}
-                                    className="h-6 w-16 text-xs"
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') saveTimestampEdit();
-                                      if (e.key === 'Escape') cancelTimestampEdit();
-                                    }}
-                                    autoFocus
-                                  />
-                                  <button onClick={saveTimestampEdit} className="text-green-600 hover:text-green-800">
-                                    <Check className="h-3 w-3" />
-                                  </button>
-                                  <button onClick={cancelTimestampEdit} className="text-red-600 hover:text-red-800">
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    startEditingTimestamp(segment.id, 'start', mapping.startTime);
-                                  }}
-                                  className="hover:bg-green-100 px-1 rounded flex items-center gap-1"
-                                >
-                                  {formatTime(mapping.startTime)}
-                                  <Edit2 className="h-2 w-2 opacity-50" />
-                                </button>
-                              )}
-                              
-                              <span>-</span>
-                              
-                              {/* End time */}
-                              {editingTimestamp?.segmentId === segment.id && editingTimestamp.field === 'end' ? (
-                                <div className="flex items-center gap-1">
-                                  <Input
-                                    value={editValue}
-                                    onChange={(e) => setEditValue(e.target.value)}
-                                    className="h-6 w-16 text-xs"
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') saveTimestampEdit();
-                                      if (e.key === 'Escape') cancelTimestampEdit();
-                                    }}
-                                    autoFocus
-                                  />
-                                  <button onClick={saveTimestampEdit} className="text-green-600 hover:text-green-800">
-                                    <Check className="h-3 w-3" />
-                                  </button>
-                                  <button onClick={cancelTimestampEdit} className="text-red-600 hover:text-red-800">
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <button 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    startEditingTimestamp(segment.id, 'end', mapping.endTime);
-                                  }}
-                                  className="hover:bg-green-100 px-1 rounded flex items-center gap-1"
-                                >
-                                  {formatTime(mapping.endTime)}
-                                  <Edit2 className="h-2 w-2 opacity-50" />
-                                </button>
-                              )}
-                            </div>
+              <div className="flex gap-4">
+                {/* Left column: Timestamp pills */}
+                <div className="w-32 flex-shrink-0">
+                  <div className="space-y-3">
+                    {currentLanguageSegments.map((segment, index) => {
+                      const mapping = getSegmentMapping(segment.id);
+                      const status = getSegmentStatus(segment.id);
+                      
+                      return (
+                        <div key={`pill-${segment.id}`} className="h-[72px] flex items-center">
+                          {mapping && status === 'completed' ? (
+                            <TimestampPill
+                              segmentId={segment.id}
+                              startTime={mapping.startTime}
+                              endTime={mapping.endTime}
+                              onPlay={(start, end) => handlePlaySegment(mapping, null)}
+                              onDelete={(segmentId) => onMappingDelete(segmentId)}
+                              onTimestampUpdate={onMappingUpdate}
+                              duration={duration}
+                            />
+                          ) : (
+                            <div className="w-full h-8 rounded-full bg-gray-200 opacity-50"></div>
                           )}
                         </div>
-                        
-                        {/* Right: Play button for completed segments */}
-                        {mapping && status === 'completed' && (
-                          <div className="flex-shrink-0">
-                            <button
-                              onClick={(e) => handlePlaySegment(mapping, e)}
-                              className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 text-green-700 transition-colors"
-                              title="Play this segment"
-                            >
-                              <Play className="h-4 w-4" />
-                            </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Right column: Segment cards */}
+                <div className="flex-1">
+                  <div className="space-y-3">
+                    {currentLanguageSegments.map((segment, index) => {
+                      const status = getSegmentStatus(segment.id);
+                      const segmentText = getSegmentText(segment);
+                      
+                      return (
+                        <div
+                          key={segment.id}
+                          onClick={() => handleSegmentClick(segment.id)}
+                          className={`border rounded-lg transition-all cursor-pointer ${
+                            status === 'active' 
+                              ? 'border-blue-500 bg-blue-50 shadow-md' 
+                              : status === 'completed'
+                              ? 'border-green-300 bg-green-50'
+                              : mappingSession === 'active'
+                              ? 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                              : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                          }`}
+                        >
+                          <div className="flex items-start px-4 py-3">
+                            {/* Left: Number and status */}
+                            <div className="flex items-center gap-3 mr-4">
+                              <span className="font-medium text-lg text-gray-700 min-w-8">#{index + 1}</span>
+                              <div className="flex-shrink-0">
+                                {status === 'active' ? (
+                                  <Badge variant="default" className="text-xs bg-blue-100 text-blue-700">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    Recording
+                                  </Badge>
+                                ) : status === 'completed' ? (
+                                  <Badge variant="default" className="text-xs bg-green-100 text-green-700">
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Mapped
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-xs">
+                                    <Circle className="h-3 w-3 mr-1" />
+                                    Ready
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Right: Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm text-gray-700 leading-relaxed">
+                                {segmentText}
+                              </div>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </ScrollArea>
           </CardContent>
