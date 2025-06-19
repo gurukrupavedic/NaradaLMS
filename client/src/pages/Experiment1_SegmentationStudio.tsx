@@ -252,7 +252,7 @@ function Experiment1_SegmentationStudio() {
         <Tabs defaultValue="annotation" className="h-full flex flex-col">
           <TabsList className="flex-shrink-0">
             <TabsTrigger value="annotation">Text Annotation</TabsTrigger>
-            <TabsTrigger value="mapping" disabled={experimentalSegments.length === 0}>
+            <TabsTrigger value="mapping">
               Audio Mapping
             </TabsTrigger>
           </TabsList>
