@@ -450,11 +450,9 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
                           className={`border rounded-lg transition-all cursor-pointer ${
                             status === 'active' 
                               ? 'border-blue-500 bg-blue-50 shadow-md' 
-                              : status === 'completed'
-                              ? 'border-green-300 bg-green-50'
                               : mappingSession === 'active'
                               ? 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                              : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                              : 'border-gray-200 bg-white hover:bg-gray-50'
                           }`}
                         >
                           <div className="flex items-start px-4 py-3">

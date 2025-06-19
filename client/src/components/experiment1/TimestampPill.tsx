@@ -91,32 +91,32 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
   };
 
   return (
-    <div className="flex items-center bg-green-100 border border-green-200 rounded-full px-2 py-1 text-xs font-medium min-w-[110px] shadow-sm">
+    <div className="flex items-center bg-white border border-gray-300 rounded-full px-2 py-1 text-xs font-mono min-w-[110px] shadow-sm">
       {/* Delete button */}
       <button
         onClick={handleDelete}
-        className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-red-100 text-red-600 hover:text-red-700 mr-1 transition-colors"
+        className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-red-50 text-gray-500 hover:text-red-600 mr-1 transition-colors"
         title="Delete mapping"
       >
         <X className="h-3 w-3" />
       </button>
 
       {/* Timestamp display */}
-      <div className="flex-1 flex items-center justify-center gap-1 text-green-800">
+      <div className="flex-1 flex items-center justify-center gap-1 text-gray-700">
         {/* Start time */}
         {editingField === 'start' ? (
           <div className="flex items-center gap-1">
             <Input
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
-              className="h-5 w-12 text-xs bg-white border-green-300 text-green-800"
+              className="h-5 w-12 text-xs bg-white border-gray-300 text-gray-700"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') saveTimestampEdit();
                 if (e.key === 'Escape') cancelTimestampEdit();
               }}
               autoFocus
             />
-            <button onClick={saveTimestampEdit} className="text-green-600 hover:text-green-700">
+            <button onClick={saveTimestampEdit} className="text-blue-600 hover:text-blue-700">
               <Check className="h-3 w-3" />
             </button>
             <button onClick={cancelTimestampEdit} className="text-red-600 hover:text-red-700">
@@ -126,13 +126,13 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
         ) : (
           <button 
             onClick={() => startEditingTimestamp('start')}
-            className="hover:bg-green-200 px-1 rounded transition-colors"
+            className="hover:bg-gray-100 px-1 rounded transition-colors"
           >
             {formatTime(startTime)}
           </button>
         )}
 
-        <span className="text-green-600">-</span>
+        <span className="text-gray-400">-</span>
 
         {/* End time */}
         {editingField === 'end' ? (
@@ -140,14 +140,14 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
             <Input
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
-              className="h-5 w-12 text-xs bg-white border-green-300 text-green-800"
+              className="h-5 w-12 text-xs bg-white border-gray-300 text-gray-700"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') saveTimestampEdit();
                 if (e.key === 'Escape') cancelTimestampEdit();
               }}
               autoFocus
             />
-            <button onClick={saveTimestampEdit} className="text-green-600 hover:text-green-700">
+            <button onClick={saveTimestampEdit} className="text-blue-600 hover:text-blue-700">
               <Check className="h-3 w-3" />
             </button>
             <button onClick={cancelTimestampEdit} className="text-red-600 hover:text-red-700">
@@ -157,7 +157,7 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
         ) : (
           <button 
             onClick={() => startEditingTimestamp('end')}
-            className="hover:bg-green-200 px-1 rounded transition-colors"
+            className="hover:bg-gray-100 px-1 rounded transition-colors"
           >
             {formatTime(endTime)}
           </button>
@@ -167,7 +167,7 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
       {/* Play button */}
       <button
         onClick={handlePlay}
-        className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-green-200 text-green-700 hover:text-green-800 ml-1 transition-colors"
+        className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-50 text-gray-500 hover:text-blue-600 ml-1 transition-colors"
         title="Play this segment"
       >
         <Play className="h-3 w-3" />
