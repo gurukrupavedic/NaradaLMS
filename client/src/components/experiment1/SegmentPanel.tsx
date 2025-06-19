@@ -209,28 +209,10 @@ export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
                             #{segment.order + 1}
                           </span>
                         </div>
-                        {mapping && (
-                          <Badge variant="outline" className="text-xs">
-                            {formatTime(mapping.startTime)} - {formatTime(mapping.endTime)}
-                          </Badge>
-                        )}
+
                       </div>
                       
                       <div className="flex items-center gap-1">
-                        {mapping && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onPlayMapping(mapping);
-                            }}
-                            className="h-6 w-6 p-0"
-                          >
-                            <Play className="h-3 w-3" />
-                          </Button>
-                        )}
-
                         <Button
                           size="sm"
                           variant="ghost"
