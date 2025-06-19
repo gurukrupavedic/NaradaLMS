@@ -411,9 +411,9 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
                   const segmentText = getSegmentText(segment);
                   
                   return (
-                    <div key={segment.id} className="flex items-start gap-4">
+                    <div key={segment.id} className="flex items-center gap-4">
                       {/* Left: Timestamp pill */}
-                      <div className="w-32 flex-shrink-0 flex items-start pt-3">
+                      <div className="w-32 flex-shrink-0 flex items-center justify-start">
                         {mapping && status === 'completed' ? (
                           <TimestampPill
                             segmentId={segment.id}
