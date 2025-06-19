@@ -409,7 +409,9 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
                           <div className="flex items-start px-4 py-3">
                             {/* Left: Number and status */}
                             <div className="flex items-center gap-3 mr-4">
-                              <span className="font-medium text-sm text-gray-700 min-w-8">#{index + 1}</span>
+                              <Badge variant="secondary" className="text-xs px-2 py-0.5 min-w-6 justify-center">
+                                {index + 1}
+                              </Badge>
                               <div className="flex-shrink-0">
                                 {status === 'active' ? (
                                   <Badge variant="default" className="text-xs bg-blue-100 text-blue-700">

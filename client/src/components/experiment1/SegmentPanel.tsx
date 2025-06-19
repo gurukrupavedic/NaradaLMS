@@ -149,9 +149,9 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                 >
                   {/* Top Left Area - Drag Handle and Number */}
                   <div className="absolute top-2 left-2 flex flex-col items-center gap-1">
-                    <span className="font-medium text-sm text-gray-700">
-                      #{segment.order + 1}
-                    </span>
+                    <Badge variant="secondary" className="text-xs px-2 py-0.5 min-w-6 justify-center">
+                      {segment.order + 1}
+                    </Badge>
                     <div className="text-gray-400 hover:text-gray-600">
                       <GripVertical className="h-4 w-4" />
                     </div>
