@@ -49,6 +49,25 @@ We attempted to solve line break inconsistencies by normalizing content at stora
 
 ## Proposed Solution: Selection-Time Normalization
 
+### Simple Approach (TL;DR)
+
+**The Problem**: User selects text in browser, but our position calculation doesn't match because browser text ≠ stored text.
+
+**The Fix**: 
+1. Store content exactly as it appears to user (no changes)
+2. When user selects text, temporarily clean both the selection and stored text 
+3. Calculate position using the cleaned versions
+4. Save the position relative to the original content
+
+**Why This Works**: Browser and storage will always match perfectly since we don't modify stored content. We only use cleaning for the brief moment of position calculation.
+
+**Implementation**: 
+- Keep original content exactly as entered (for display and DOM matching)
+- When user selects text: temporarily normalize both selection and stored content
+- Calculate positions using normalized versions
+- Store the segment with positions relative to original content
+- Display always uses original content
+
 ### Core Strategy
 Normalize at the moment of text selection for position calculation only, while keeping original content for display.
 
