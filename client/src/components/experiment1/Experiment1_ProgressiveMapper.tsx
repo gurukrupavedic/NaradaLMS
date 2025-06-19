@@ -19,6 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Play, Pause, Square, RotateCcw, CheckCircle, Circle, Clock } from 'lucide-react';
 import { TimestampPill } from './TimestampPill';
 import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/experiment1-types';
+import { getSegmentText, filterSegmentsByLanguage, getSegmentMapping, formatTime } from '@shared/experiment1-utils';
 
 interface Experiment1_ProgressiveMapperProps {
   audioUrl: string;

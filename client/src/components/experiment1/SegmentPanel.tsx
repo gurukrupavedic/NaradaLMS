@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Play, GripVertical, Circle } from 'lucide-react';
 import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/experiment1-types';
+import { getSegmentText, filterSegmentsByLanguage, getSegmentMapping, getLanguageLabel, formatTime } from '@shared/experiment1-utils';
 
 interface SegmentPanel_v2Props {
   segments: TextSegment[];
@@ -48,27 +49,12 @@ export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
   const [draggedOver, setDraggedOver] = useState<number | null>(null);
 
   // Filter segments for current language
-  const currentLanguageSegments = segments.filter(s => s.textReferences[currentLanguage]);
+  const currentLanguageSegments = filterSegmentsByLanguage(segments, currentLanguage);
 
   // Count mapped segments
   const mappedCount = currentLanguageSegments.filter(segment => 
-    mappings.some(mapping => mapping.segmentId === segment.id)
+    getSegmentMapping(segment.id, mappings)
   ).length;
-
-  // Get segment mapping
-  const getSegmentMapping = (segmentId: string) => {
-    return mappings.find(mapping => mapping.segmentId === segmentId);
-  };
-
-  // Get segment text for display
-  const getSegmentText = (segment: TextSegment) => {
-    const range = segment.textReferences[currentLanguage];
-    const text = content[currentLanguage];
-    if (!range || !text) return segment.conceptualName;
-    
-    const segmentText = text.slice(range.start, range.end);
-    return segmentText.length > 50 ? segmentText.slice(0, 50) + '...' : segmentText;
-  };
 
   // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
@@ -115,25 +101,13 @@ export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
     setDraggedOver(null);
   };
 
-  const getLanguageLabel = () => {
-    switch (currentLanguage) {
-      case 'te': return 'Telugu';
-      case 'hi': return 'Hindi';
-      case 'en': return 'English';
-    }
-  };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   return (
     <div className="h-full flex flex-col">
       {/* Integrated Header */}
       <div className="flex-shrink-0 px-6 py-4 bg-muted/30 border-b">
-        <h2 className="text-lg font-semibold">Segments ({getLanguageLabel()})</h2>
+        <h2 className="text-lg font-semibold">Segments ({getLanguageLabel(currentLanguage)})</h2>
       </div>
 
       {/* Content Area */}
@@ -149,12 +123,12 @@ export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
             </div>
           ) : (
             currentLanguageSegments.map((segment, index) => {
-              const mapping = getSegmentMapping(segment.id);
+              const mapping = getSegmentMapping(segment.id, mappings);
               const isSelected = segment.id === currentSegmentId;
 
               const isDragging = draggedIndex === index;
               const isDraggedOver = draggedOver === index;
-              const segmentText = getSegmentText(segment);
+              const segmentText = getSegmentText(segment, content, currentLanguage, true);
 
               return (
                 <div
