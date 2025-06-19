@@ -9,7 +9,7 @@
  * Purpose: Test intuitive text segmentation workflow using overlay approach
  */
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,6 +61,44 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
   const [showFloatingToolbar, setShowFloatingToolbar] = useState<boolean>(false);
   const [editingSegment, setEditingSegment] = useState<string | null>(null);
   const textRef = useRef<HTMLDivElement>(null);
+
+  // Hide floating toolbar when selection changes or user clicks elsewhere
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed || selection.toString().trim() === '') {
+        setShowFloatingToolbar(false);
+        setSelectedRange(null);
+      }
+    };
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      // Don't hide if clicking on the floating toolbar itself
+      const toolbarElement = document.querySelector('[data-floating-toolbar]');
+      if (toolbarElement && toolbarElement.contains(target)) {
+        return;
+      }
+      
+      // Hide if clicking outside the text area
+      if (textRef.current && !textRef.current.contains(target)) {
+        setShowFloatingToolbar(false);
+        setSelectedRange(null);
+        window.getSelection()?.removeAllRanges();
+      }
+    };
+
+    // Listen for selection changes
+    document.addEventListener('selectionchange', handleSelectionChange);
+    // Listen for clicks outside the text area
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // EXPERIMENT1: Handle text selection for segment creation
   const handleMouseUp = useCallback(() => {

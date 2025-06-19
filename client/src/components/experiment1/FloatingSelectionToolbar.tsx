@@ -67,6 +67,7 @@ export const FloatingSelectionToolbar: React.FC<FloatingSelectionToolbarProps> =
   return (
     <div
       ref={toolbarRef}
+      data-floating-toolbar
       className="fixed z-50 flex items-center gap-1 bg-white border border-gray-300 rounded-lg shadow-lg p-1 animate-in fade-in-0 zoom-in-95 duration-150"
       style={{
         top: `${position.top}px`,
