@@ -205,11 +205,6 @@ export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1">
-                          {mapping ? (
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <Circle className="h-4 w-4 text-gray-400" />
-                          )}
                           <span className="text-sm font-medium text-gray-600">
                             #{segment.order + 1}
                           </span>
