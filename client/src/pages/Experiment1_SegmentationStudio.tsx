@@ -26,6 +26,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Experiment1_AnnotationLayer } from '@/components/experiment1/Experiment1_AnnotationLayer';
 import { Experiment1_ProgressiveMapper } from '@/components/experiment1/Experiment1_ProgressiveMapper';
 import { Experiment1_SegmentPreview } from '@/components/experiment1/Experiment1_SegmentPreview';
+import { SegmentPanel } from '@/components/experiment1/SegmentPanel';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 interface TextSegment {
   id: string;
@@ -421,9 +423,9 @@ export default function Experiment1_SegmentationStudio() {
         </TabsList>
 
         <TabsContent value="annotation" className="space-y-0">
-          <div className="grid grid-cols-12 gap-6">
-            {/* Left column: Annotation */}
-            <div className="col-span-8">
+          <PanelGroup direction="horizontal" className="h-[600px]">
+            {/* Left Panel: Content Area */}
+            <Panel defaultSize={50} minSize={30}>
               <Experiment1_AnnotationLayer
                 content={chapter?.content || {}}
                 currentLanguage={currentLanguage}
@@ -433,11 +435,14 @@ export default function Experiment1_SegmentationStudio() {
                 onSegmentUpdate={handleSegmentUpdate}
                 onSegmentDelete={handleSegmentDelete}
               />
-            </div>
-
-            {/* Right column: Segment preview */}
-            <div className="col-span-4">
-              <Experiment1_SegmentPreview
+            </Panel>
+            
+            {/* Resize Handle */}
+            <PanelResizeHandle className="w-2 bg-gray-200 hover:bg-gray-300 transition-colors" />
+            
+            {/* Right Panel: Segment Management */}
+            <Panel defaultSize={50} minSize={30}>
+              <SegmentPanel
                 segments={experimentalSegments}
                 mappings={experimentalMappings}
                 currentLanguage={currentLanguage}
@@ -445,11 +450,12 @@ export default function Experiment1_SegmentationStudio() {
                 currentSegmentId={currentSegmentId}
                 onSegmentSelect={setCurrentSegmentId}
                 onSegmentDelete={handleSegmentDelete}
+                onSegmentUpdate={handleSegmentUpdate}
                 onPlayMapping={handlePlayMapping}
                 onSegmentReorder={handleSegmentReorder}
               />
-            </div>
-          </div>
+            </Panel>
+          </PanelGroup>
         </TabsContent>
 
         <TabsContent value="mapping" className="space-y-0">

@@ -224,31 +224,21 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h3 className="text-lg font-semibold">Text Segmentation Studio</h3>
+    <div className="h-full flex flex-col">
+      {/* Clean header */}
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold mb-1">Content ({currentLanguage.toUpperCase()})</h3>
         <p className="text-sm text-muted-foreground">
-          Select text to create segments for audio synchronization
+          {segments.filter(s => s.textReferences[currentLanguage]).length} segments created
         </p>
       </div>
 
-      {/* EXPERIMENT1: Text content with annotation overlays */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            Content ({currentLanguage.toUpperCase()})
-            <span className="ml-2 text-sm font-normal text-muted-foreground">
-              {segments.filter(s => s.textReferences[currentLanguage]).length} segments created
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="min-h-[200px] p-4 border rounded-lg bg-slate-50">
-            {renderTextWithOverlays()}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Clean content area */}
+      <div className="flex-1 min-h-[400px] p-6 bg-slate-50 rounded-lg border border-gray-200">
+        <div ref={textRef} className="leading-relaxed text-gray-800">
+          {renderTextWithOverlays()}
+        </div>
+      </div>
 
       {/* Floating toolbar for text selection */}
       <FloatingSelectionToolbar
@@ -257,22 +247,6 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
         onCancel={handleCancelSelection}
         nextSegmentNumber={segments.length + 1}
       />
-
-      {/* Instructions */}
-      <Card className="bg-gray-50">
-        <CardContent className="pt-6">
-          <div className="text-sm text-gray-600">
-            <h4 className="font-medium mb-2">How to use:</h4>
-            <ol className="list-decimal list-inside space-y-1">
-              <li>Select text by clicking and dragging</li>
-              <li>Use the floating toolbar (+ icon) to create segments</li>
-              <li>Manage all segments using the cards in the right panel</li>
-              <li>Click segment cards to highlight text in content</li>
-              <li>Drag cards to reorder segments or delete as needed</li>
-            </ol>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
