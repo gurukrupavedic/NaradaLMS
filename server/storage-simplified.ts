@@ -414,9 +414,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`)
         if (typeof content === 'string') {
           normalizedContent[lang] = normalizeLineBreaks(content);
         } else if (content && typeof content === 'object') {
+          const contentObj = content as any;
           normalizedContent[lang] = {
-            display: normalizeLineBreaks(content.display || ''),
-            segmentation: normalizeLineBreaks(content.segmentation || '')
+            display: normalizeLineBreaks(contentObj.display || ''),
+            segmentation: normalizeLineBreaks(contentObj.segmentation || '')
           };
         }
       }

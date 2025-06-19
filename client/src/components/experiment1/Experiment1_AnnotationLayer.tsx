@@ -130,7 +130,7 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     };
   }, []);
 
-  // Handle text selection with pure text-based approach
+  // Handle text selection with normalized line break matching
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) return;
@@ -144,51 +144,23 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
       isMultiLine: selectedText.includes('\n')
     });
 
-    // Try exact match first (preserving original whitespace)
-    let startIndex = segmentationText.indexOf(selectedText);
+    // Normalize both selection and target text for consistent line break handling
+    const normalizedSelected = normalizeLineBreaks(selectedText);
+    const normalizedSegmentation = normalizeLineBreaks(segmentationText);
     
-    if (startIndex >= 0) {
-      console.log('Exact match found at:', startIndex);
-      setSelectedRange({ start: startIndex, end: startIndex + selectedText.length });
-      setShowFloatingToolbar(true);
-      return;
-    }
+    console.log('Normalized selection:', normalizedSelected.substring(0, 50) + '...');
 
-    // For multi-line selections, normalize whitespace and try again
-    const normalizedSelected = selectedText.replace(/\s+/g, ' ').trim();
-    const normalizedOriginal = segmentationText.replace(/\s+/g, ' ');
-    
-    startIndex = normalizedOriginal.indexOf(normalizedSelected);
+    // Find exact match in normalized text
+    const startIndex = normalizedSegmentation.indexOf(normalizedSelected);
     
     if (startIndex >= 0) {
-      // Map back to original text position
-      let originalPos = 0;
-      let normalizedPos = 0;
-      
-      // Find the corresponding position in original text
-      while (normalizedPos < startIndex && originalPos < segmentationText.length) {
-        const originalChar = segmentationText[originalPos];
-        if (/\s/.test(originalChar)) {
-          // Multiple whitespace chars in original might map to single space in normalized
-          while (originalPos < segmentationText.length && /\s/.test(segmentationText[originalPos])) {
-            originalPos++;
-          }
-          if (normalizedOriginal[normalizedPos] === ' ') {
-            normalizedPos++;
-          }
-        } else {
-          originalPos++;
-          normalizedPos++;
-        }
-      }
-      
-      console.log('Normalized match found, mapped to original position:', originalPos);
-      setSelectedRange({ start: originalPos, end: originalPos + selectedText.length });
+      console.log('Normalized match found at position:', startIndex, 'to', startIndex + normalizedSelected.length);
+      setSelectedRange({ start: startIndex, end: startIndex + normalizedSelected.length });
       setShowFloatingToolbar(true);
       return;
     }
     
-    console.warn('Could not find selected text in original content');
+    console.warn('Could not find selected text in normalized content');
   }, [segmentationText]);
 
   // Create new segment from selection
