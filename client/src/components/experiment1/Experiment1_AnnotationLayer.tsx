@@ -189,17 +189,12 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
 
   return (
     <div className="space-y-6">
-      {/* EXPERIMENT1: Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">Text Segmentation Studio</h3>
-          <p className="text-sm text-muted-foreground">
-            Select text to create segments for audio synchronization
-          </p>
-        </div>
-        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
-          Experiment 1
-        </Badge>
+      {/* Header */}
+      <div>
+        <h3 className="text-lg font-semibold">Text Segmentation Studio</h3>
+        <p className="text-sm text-muted-foreground">
+          Select text to create segments for audio synchronization
+        </p>
       </div>
 
       {/* EXPERIMENT1: Text content with annotation overlays */}
@@ -244,7 +239,7 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
         </Card>
       )}
 
-      {/* EXPERIMENT1: Instructions */}
+      {/* Instructions */}
       <Card className="bg-gray-50">
         <CardContent className="pt-6">
           <div className="text-sm text-gray-600">

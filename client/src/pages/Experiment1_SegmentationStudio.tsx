@@ -316,12 +316,12 @@ export default function Experiment1_SegmentationStudio() {
         </Badge>
       </div>
 
-      {/* EXPERIMENT1: Experiment controls */}
-      <Card className="bg-yellow-50 border-yellow-200">
+      {/* Environment controls */}
+      <Card className="bg-gray-50 border-gray-200">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium">Experimental Environment</h3>
+              <h3 className="font-medium">Segmentation Environment</h3>
               <p className="text-sm text-muted-foreground">
                 {experimentalSegments.length} segments, {experimentalMappings.length} mappings created
               </p>
@@ -336,7 +336,7 @@ export default function Experiment1_SegmentationStudio() {
                 Export to Production
               </Button>
               <Button variant="outline" size="sm" onClick={handleClearExperiment}>
-                Clear Experiment
+                Clear Environment
               </Button>
             </div>
           </div>
