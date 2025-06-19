@@ -16,7 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Play, Pause, Square, RotateCcw, CheckCircle, Circle, Clock } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Play, Pause, Square, RotateCcw, CheckCircle, Circle, Clock, Edit2, Check, X } from 'lucide-react';
 
 interface TextSegment {
   id: string;
@@ -69,6 +70,10 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
   const [mappingSession, setMappingSession] = useState<'idle' | 'active' | 'paused'>('idle');
   const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number>(0);
+  
+  // EXPERIMENT1: Inline editing state
+  const [editingTimestamp, setEditingTimestamp] = useState<{segmentId: string, field: 'start' | 'end'} | null>(null);
+  const [editValue, setEditValue] = useState<string>('');
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -255,6 +260,52 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
     };
     
     audio.addEventListener('timeupdate', checkEndTime);
+  };
+
+  // EXPERIMENT1: Timestamp editing handlers
+  const startEditingTimestamp = (segmentId: string, field: 'start' | 'end', currentValue: number) => {
+    setEditingTimestamp({ segmentId, field });
+    setEditValue(formatTimeForEdit(currentValue));
+  };
+
+  const saveTimestampEdit = () => {
+    if (!editingTimestamp) return;
+    
+    const newTime = parseTimeFromEdit(editValue);
+    if (newTime >= 0 && newTime <= duration) {
+      const updates = editingTimestamp.field === 'start' 
+        ? { startTime: newTime }
+        : { endTime: newTime };
+      
+      onMappingUpdate(editingTimestamp.segmentId, updates);
+    }
+    
+    setEditingTimestamp(null);
+    setEditValue('');
+  };
+
+  const cancelTimestampEdit = () => {
+    setEditingTimestamp(null);
+    setEditValue('');
+  };
+
+  // EXPERIMENT1: Time formatting helpers
+  const formatTimeForEdit = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = (seconds % 60).toFixed(1);
+    return `${mins}:${secs.padStart(4, '0')}`;
+  };
+
+  const parseTimeFromEdit = (timeString: string): number => {
+    const parts = timeString.split(':');
+    if (parts.length !== 2) return -1;
+    
+    const mins = parseInt(parts[0]);
+    const secs = parseFloat(parts[1]);
+    
+    if (isNaN(mins) || isNaN(secs)) return -1;
+    
+    return mins * 60 + secs;
   };
 
   // EXPERIMENT1: Helper functions
@@ -449,8 +500,74 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
                             {segmentText}
                           </div>
                           {mapping && status === 'completed' && (
-                            <div className="text-xs text-green-600">
-                              {formatTime(mapping.startTime)} - {formatTime(mapping.endTime)}
+                            <div className="text-xs text-green-600 flex items-center gap-2">
+                              {/* Start time */}
+                              {editingTimestamp?.segmentId === segment.id && editingTimestamp.field === 'start' ? (
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    className="h-6 w-16 text-xs"
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') saveTimestampEdit();
+                                      if (e.key === 'Escape') cancelTimestampEdit();
+                                    }}
+                                    autoFocus
+                                  />
+                                  <button onClick={saveTimestampEdit} className="text-green-600 hover:text-green-800">
+                                    <Check className="h-3 w-3" />
+                                  </button>
+                                  <button onClick={cancelTimestampEdit} className="text-red-600 hover:text-red-800">
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    startEditingTimestamp(segment.id, 'start', mapping.startTime);
+                                  }}
+                                  className="hover:bg-green-100 px-1 rounded flex items-center gap-1"
+                                >
+                                  {formatTime(mapping.startTime)}
+                                  <Edit2 className="h-2 w-2 opacity-50" />
+                                </button>
+                              )}
+                              
+                              <span>-</span>
+                              
+                              {/* End time */}
+                              {editingTimestamp?.segmentId === segment.id && editingTimestamp.field === 'end' ? (
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    className="h-6 w-16 text-xs"
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') saveTimestampEdit();
+                                      if (e.key === 'Escape') cancelTimestampEdit();
+                                    }}
+                                    autoFocus
+                                  />
+                                  <button onClick={saveTimestampEdit} className="text-green-600 hover:text-green-800">
+                                    <Check className="h-3 w-3" />
+                                  </button>
+                                  <button onClick={cancelTimestampEdit} className="text-red-600 hover:text-red-800">
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    startEditingTimestamp(segment.id, 'end', mapping.endTime);
+                                  }}
+                                  className="hover:bg-green-100 px-1 rounded flex items-center gap-1"
+                                >
+                                  {formatTime(mapping.endTime)}
+                                  <Edit2 className="h-2 w-2 opacity-50" />
+                                </button>
+                              )}
                             </div>
                           )}
                         </div>
