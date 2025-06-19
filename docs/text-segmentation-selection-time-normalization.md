@@ -1,7 +1,7 @@
 # Text Segmentation: Selection-Time Normalization Fix
 
 **Status**: TODO - Critical Priority  
-**Date**: December 19, 2024  
+**Date**: June 19, 2025  
 **Component**: Experiment 1 - Text Segmentation Studio  
 
 ## Problem Statement
