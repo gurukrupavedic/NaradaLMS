@@ -47,50 +47,27 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   const [editingSegment, setEditingSegment] = useState<string | null>(null);
   const textRef = useRef<HTMLDivElement>(null);
 
-  // Get both versions of text content
-  const displayText = getDisplayText(content, currentLanguage);
-  const segmentationText = getSegmentationText(content, currentLanguage);
+  // Get normalized text content (same for both display and segmentation)
+  const normalizedText = getDisplayText(content, currentLanguage);
 
-  // Simple and reliable text position calculation
-  const getTextPosition = (selectedText: string, originalText: string): { start: number, end: number } => {
+  // Simplified text position calculation with normalization
+  const getTextPosition = (selectedText: string): { start: number, end: number } => {
     const trimmedSelection = selectedText.trim();
+    if (!trimmedSelection) return { start: 0, end: 0 };
     
-    if (!trimmedSelection) {
+    // Normalize both texts for consistent position calculation
+    const normalizedSelection = normalizeLineBreaks(trimmedSelection);
+    const startIndex = normalizedText.indexOf(normalizedSelection);
+    
+    if (startIndex === -1) {
+      console.warn('Could not find selection in normalized text');
       return { start: 0, end: 0 };
     }
     
-    // Try exact match first
-    const exactMatch = originalText.indexOf(trimmedSelection);
-    if (exactMatch >= 0) {
-      return { start: exactMatch, end: exactMatch + trimmedSelection.length };
-    }
-    
-    // For multi-line selections, find the best match by looking for unique phrases
-    const words = trimmedSelection.split(/\s+/).filter(w => w.length > 2);
-    if (words.length === 0) {
-      return { start: 0, end: 0 };
-    }
-    
-    // Find the first significant word
-    const firstWord = words[0];
-    const lastWord = words[words.length - 1];
-    
-    const firstWordIndex = originalText.indexOf(firstWord);
-    if (firstWordIndex < 0) {
-      console.warn('Could not find selection in text');
-      return { start: 0, end: 0 };
-    }
-    
-    // Find the end by looking for the last word after the first word
-    const searchAfter = firstWordIndex + firstWord.length;
-    const lastWordIndex = originalText.indexOf(lastWord, searchAfter);
-    
-    if (lastWordIndex < 0) {
-      // Single word or last word not found, use first word + selection length estimate
-      return { start: firstWordIndex, end: Math.min(firstWordIndex + trimmedSelection.length, originalText.length) };
-    }
-    
-    return { start: firstWordIndex, end: lastWordIndex + lastWord.length };
+    return {
+      start: startIndex,
+      end: startIndex + normalizedSelection.length
+    };
   };
 
   // Hide floating toolbar when selection changes or user clicks elsewhere
@@ -144,24 +121,18 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
       isMultiLine: selectedText.includes('\n')
     });
 
-    // Normalize both selection and target text for consistent line break handling
-    const normalizedSelected = normalizeLineBreaks(selectedText);
-    const normalizedSegmentation = normalizeLineBreaks(segmentationText);
+    // Use the simplified position calculation
+    const range = getTextPosition(selectedText);
     
-    console.log('Normalized selection:', normalizedSelected.substring(0, 50) + '...');
-
-    // Find exact match in normalized text
-    const startIndex = normalizedSegmentation.indexOf(normalizedSelected);
-    
-    if (startIndex >= 0) {
-      console.log('Normalized match found at position:', startIndex, 'to', startIndex + normalizedSelected.length);
-      setSelectedRange({ start: startIndex, end: startIndex + normalizedSelected.length });
+    if (range.start >= 0) {
+      console.log('Match found at position:', range.start, 'to', range.end);
+      setSelectedRange(range);
       setShowFloatingToolbar(true);
       return;
     }
     
-    console.warn('Could not find selected text in normalized content');
-  }, [segmentationText]);
+    console.warn('Could not find selected text in content');
+  }, [normalizedText]);
 
   // Create new segment from selection
   const handleCreateSegment = useCallback((conceptualName: string) => {
