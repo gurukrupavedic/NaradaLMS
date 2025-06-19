@@ -158,7 +158,7 @@ export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-y-auto p-6">
         <div className="space-y-4">
           {currentLanguageSegments.length === 0 ? (
             <div className="text-center py-12">
