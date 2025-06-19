@@ -262,16 +262,38 @@ function Experiment1_SegmentationStudio() {
             <div className="flex justify-between items-center mb-6 p-4 bg-gray-50 border rounded-lg">
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium">Language:</label>
-                <Select value={currentLanguage} onValueChange={(value: any) => setCurrentLanguage(value)}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="te">Telugu</SelectItem>
-                    <SelectItem value="hi">Hindi</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex border rounded-lg bg-white">
+                  <button
+                    onClick={() => setCurrentLanguage('te')}
+                    className={`px-3 py-1 text-sm font-medium rounded-l-lg transition-colors ${
+                      currentLanguage === 'te' 
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    TE
+                  </button>
+                  <button
+                    onClick={() => setCurrentLanguage('hi')}
+                    className={`px-3 py-1 text-sm font-medium border-l transition-colors ${
+                      currentLanguage === 'hi' 
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    HI
+                  </button>
+                  <button
+                    onClick={() => setCurrentLanguage('en')}
+                    className={`px-3 py-1 text-sm font-medium rounded-r-lg border-l transition-colors ${
+                      currentLanguage === 'en' 
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    EN-IAST
+                  </button>
+                </div>
               </div>
               <div className="flex gap-2">
                 <Badge variant="secondary" className="text-xs">
