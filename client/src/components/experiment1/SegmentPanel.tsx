@@ -156,12 +156,10 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                   <div className="ml-6 flex flex-col min-w-0">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-2 flex-shrink-0">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          <span className="text-sm font-medium text-gray-600">
-                            #{segment.order + 1}
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-3">
+                        <span className="font-medium text-sm text-gray-700 min-w-8">
+                          #{segment.order + 1}
+                        </span>
                       </div>
                       
                       <div className="flex items-center gap-1 flex-shrink-0">
