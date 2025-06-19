@@ -52,3 +52,8 @@ export interface ContentMap {
   hi?: string;
   en?: string;
 }
+
+export interface TextRange {
+  start: number;
+  end: number;
+}

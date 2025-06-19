@@ -19,30 +19,11 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Edit3 } from 'lucide-react';
 import { Plus, X } from 'lucide-react';
-
-interface TextRange {
-  start: number;
-  end: number;
-}
-
-interface TextSegment {
-  id: string;
-  conceptualName: string;
-  textReferences: {
-    te?: TextRange;
-    hi?: TextRange;
-    en?: TextRange;
-  };
-  order: number;
-}
+import type { TextSegment, Language, ContentMap, TextRange } from '@shared/experiment1-types';
 
 interface Experiment1_AnnotationLayerProps {
-  content: {
-    te?: string;
-    hi?: string;
-    en?: string;
-  };
-  currentLanguage: 'te' | 'hi' | 'en';
+  content: ContentMap;
+  currentLanguage: Language;
   segments: TextSegment[];
   selectedSegmentId?: string;
   onSegmentCreate: (segment: TextSegment) => void;

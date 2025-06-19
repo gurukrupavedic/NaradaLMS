@@ -18,33 +18,13 @@ import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Play, Pause, Square, RotateCcw, CheckCircle, Circle, Clock } from 'lucide-react';
 import { TimestampPill } from './TimestampPill';
-
-interface TextSegment {
-  id: string;
-  conceptualName: string;
-  textReferences: {
-    te?: { start: number; end: number };
-    hi?: { start: number; end: number };
-    en?: { start: number; end: number };
-  };
-  order: number;
-}
-
-interface AudioMapping {
-  segmentId: string;
-  startTime: number;
-  endTime: number;
-}
+import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/experiment1-types';
 
 interface Experiment1_ProgressiveMapperProps {
   audioUrl: string;
   segments: TextSegment[];
-  currentLanguage: 'te' | 'hi' | 'en';
-  content: {
-    te?: string;
-    hi?: string;
-    en?: string;
-  };
+  currentLanguage: Language;
+  content: ContentMap;
   mappings: AudioMapping[];
   onMappingCreate: (mapping: AudioMapping) => void;
   onMappingUpdate: (segmentId: string, mapping: Partial<AudioMapping>) => void;

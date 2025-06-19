@@ -15,35 +15,14 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
 import { Trash2, Play, GripVertical, Circle } from 'lucide-react';
-
-interface TextSegment {
-  id: string;
-  conceptualName: string;
-  textReferences: {
-    te?: { start: number; end: number };
-    hi?: { start: number; end: number };
-    en?: { start: number; end: number };
-  };
-  order: number;
-}
-
-interface AudioMapping {
-  segmentId: string;
-  startTime: number;
-  endTime: number;
-}
+import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/experiment1-types';
 
 interface SegmentPanel_v2Props {
   segments: TextSegment[];
   mappings: AudioMapping[];
-  currentLanguage: 'te' | 'hi' | 'en';
-  content: {
-    te?: string;
-    hi?: string;
-    en?: string;
-  };
+  currentLanguage: Language;
+  content: ContentMap;
   currentSegmentId?: string;
   onSegmentSelect: (segmentId: string) => void;
   onSegmentDelete: (segmentId: string) => void;
