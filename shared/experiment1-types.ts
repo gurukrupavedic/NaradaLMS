@@ -47,11 +47,23 @@ export interface Chapter {
 
 export type Language = 'te' | 'hi' | 'en';
 
-export interface ContentMap {
-  te?: string;
-  hi?: string;
-  en?: string;
+// New content entry structure
+export interface ContentEntry {
+  display: string;
+  segmentation: string;
 }
+
+// Updated ContentMap with backward compatibility
+export interface ContentMap {
+  te?: ContentEntry | string;  // Support both old and new format
+  hi?: ContentEntry | string;
+  en?: ContentEntry | string;
+}
+
+// Helper type guard
+export const isContentEntry = (content: ContentEntry | string | undefined): content is ContentEntry => {
+  return typeof content === 'object' && content !== null && 'display' in content && 'segmentation' in content;
+};
 
 export interface TextRange {
   start: number;

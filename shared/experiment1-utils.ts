@@ -11,6 +11,7 @@
  */
 
 import type { TextSegment, AudioMapping, Language, ContentMap } from './experiment1-types';
+import { isContentEntry } from './experiment1-types';
 
 /**
  * Extracts text content for a segment in the specified language
@@ -29,7 +30,7 @@ export const getSegmentText = (
   maxLength: number = 50
 ): string => {
   const range = segment.textReferences[language];
-  const text = content[language];
+  const text = getDisplayText(content, language);
   
   if (!range || !text) {
     return segment.conceptualName;
@@ -95,4 +96,61 @@ export const formatTime = (seconds: number): string => {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+/**
+ * Conservative normalization function - safe for all scripts
+ * @param text - Text to normalize for segmentation
+ * @returns Normalized text with consistent line endings and cleaned whitespace
+ */
+export const normalizeTextForSegmentation = (text: string): string => {
+  return text
+    // Universal safe normalizations only
+    .replace(/\r\n/g, '\n')      // Windows line endings
+    .replace(/\r/g, '\n')        // Mac line endings  
+    .replace(/\uFEFF/g, '')      // Byte order mark
+    .replace(/[\t ]+$/gm, '')    // Trailing whitespace
+    .replace(/\n{3,}/g, '\n\n')  // Excessive line breaks
+    .normalize('NFC');           // Unicode composition
+};
+
+/**
+ * Helper to create dual-version content entry
+ * @param displayText - Original formatted text for display
+ * @returns Object with both display and segmentation versions
+ */
+export const createContentEntry = (displayText: string): { display: string; segmentation: string } => {
+  return {
+    display: displayText,
+    segmentation: normalizeTextForSegmentation(displayText)
+  };
+};
+
+/**
+ * Get display text (what user sees) with backward compatibility
+ * @param content - ContentMap containing language content
+ * @param language - Target language
+ * @returns Display text for the specified language
+ */
+export const getDisplayText = (content: ContentMap, language: Language): string => {
+  const entry = content[language];
+  if (isContentEntry(entry)) {
+    return entry.display;
+  }
+  return entry || ''; // Backward compatibility for string format
+};
+
+/**
+ * Get segmentation text (for position calculation) with backward compatibility
+ * @param content - ContentMap containing language content
+ * @param language - Target language
+ * @returns Normalized text for segmentation
+ */
+export const getSegmentationText = (content: ContentMap, language: Language): string => {
+  const entry = content[language];
+  if (isContentEntry(entry)) {
+    return entry.segmentation;
+  }
+  // Auto-normalize old string format
+  return entry ? normalizeTextForSegmentation(entry) : '';
 };
