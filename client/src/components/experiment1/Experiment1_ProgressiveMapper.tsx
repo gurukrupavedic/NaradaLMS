@@ -265,8 +265,8 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
   // EXPERIMENT1: Helper functions
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    const secs = (seconds % 60).toFixed(1);
+    return `${mins}:${secs.padStart(4, '0')}`;
   };
 
   const getSegmentText = (segment: TextSegment) => {
