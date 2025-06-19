@@ -220,9 +220,9 @@ function Experiment1_SegmentationStudio() {
       <div className="flex-1 container mx-auto p-6">
         <Tabs defaultValue="annotation" className="h-full flex flex-col">
           <TabsList className="flex-shrink-0">
-            <TabsTrigger value="annotation">Text Annotation</TabsTrigger>
+            <TabsTrigger value="annotation">Text Segmentation</TabsTrigger>
             <TabsTrigger value="mapping">
-              Audio Mapping
+              Audio & Mapping
             </TabsTrigger>
           </TabsList>
 
