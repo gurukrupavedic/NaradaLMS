@@ -230,6 +230,33 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
     setActiveSegmentId(null);
   };
 
+  // EXPERIMENT1: Play specific segment
+  const handlePlaySegment = (mapping: AudioMapping, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent segment click when clicking play button
+    
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Set audio to start time
+    audio.currentTime = mapping.startTime;
+    setCurrentTime(mapping.startTime);
+    
+    // Play audio
+    audio.play();
+    setIsPlaying(true);
+
+    // Set up end time listener
+    const checkEndTime = () => {
+      if (audio.currentTime >= mapping.endTime) {
+        audio.pause();
+        setIsPlaying(false);
+        audio.removeEventListener('timeupdate', checkEndTime);
+      }
+    };
+    
+    audio.addEventListener('timeupdate', checkEndTime);
+  };
+
   // EXPERIMENT1: Helper functions
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -427,6 +454,19 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
                             </div>
                           )}
                         </div>
+                        
+                        {/* Right: Play button for completed segments */}
+                        {mapping && status === 'completed' && (
+                          <div className="flex-shrink-0">
+                            <button
+                              onClick={(e) => handlePlaySegment(mapping, e)}
+                              className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 text-green-700 transition-colors"
+                              title="Play this segment"
+                            >
+                              <Play className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
