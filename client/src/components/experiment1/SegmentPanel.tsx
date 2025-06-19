@@ -152,10 +152,10 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                       onClick={() => onSegmentSelect(segment.id)}
                     >
                       {/* Main Content Layout */}
-                      <div className="flex items-start gap-3">
-                        {/* Left: Drag Handle */}
-                        <div className="text-gray-400 hover:text-gray-600 flex-shrink-0 mt-0.5">
-                          <GripVertical className="h-4 w-4" />
+                      <div className="flex gap-3">
+                        {/* Left: Drag Handle - Full Height */}
+                        <div className="text-gray-400 hover:text-gray-600 flex-shrink-0 flex items-center h-full">
+                          <GripVertical className="h-full w-4" />
                         </div>
                         
                         {/* Center: Number Badge */}
