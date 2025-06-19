@@ -29,40 +29,9 @@ import { Experiment1_AnnotationLayer } from '@/components/experiment1/Experiment
 import { Experiment1_ProgressiveMapper } from '@/components/experiment1/Experiment1_ProgressiveMapper';
 import { SegmentPanel } from '@/components/experiment1/SegmentPanel';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import type { TextSegment, AudioMapping, AudioFile, Chapter, Language } from '@shared/experiment1-types';
 
-interface TextSegment {
-  id: string;
-  conceptualName: string;
-  textReferences: {
-    te?: { start: number; end: number };
-    hi?: { start: number; end: number };
-    en?: { start: number; end: number };
-  };
-  order: number;
-}
 
-interface AudioMapping {
-  segmentId: string;
-  startTime: number;
-  endTime: number;
-}
-
-interface AudioFile {
-  id: number;
-  filename: string;
-  displayName?: string;
-  chapterId: number;
-}
-
-interface Chapter {
-  id: number;
-  title: string;
-  content: {
-    te?: string;
-    hi?: string;
-    en?: string;
-  };
-}
 
 function Experiment1_SegmentationStudio() {
   const { chapterId } = useParams();
