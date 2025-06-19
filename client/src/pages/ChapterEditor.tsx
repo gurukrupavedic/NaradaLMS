@@ -1359,7 +1359,7 @@ export default function ChapterEditor() {
                   {/* EXPERIMENT1: Link to experimental segmentation studio */}
                   <Button
                     variant="outline"
-                    onClick={() => setLocation(`/experiment1-segmentation-studio/${chapter?.id}`)}
+                    onClick={() => setLocation(`/experiment1/segmentation-studio/${chapter?.id}`)}
                     className="bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100"
                   >
                     🧪 Try Experiment1 Studio
