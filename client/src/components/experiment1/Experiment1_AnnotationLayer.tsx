@@ -278,7 +278,7 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
           {/* Text Content with Highlighting */}
           <div
             ref={textRef}
-            className="relative p-6 bg-white border rounded-lg min-h-96 cursor-text font-serif text-base leading-relaxed shadow-sm"
+            className="relative p-6 bg-white border rounded-lg h-[600px] overflow-auto cursor-text font-serif text-base leading-relaxed shadow-sm"
             onMouseUp={handleTextSelection}
             onContextMenu={(e) => {
               e.preventDefault();

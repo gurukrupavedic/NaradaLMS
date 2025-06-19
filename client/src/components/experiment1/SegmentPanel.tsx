@@ -113,7 +113,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
       {/* Content Area */}
       <div className="p-4">
         {/* White Container - matching Audio tab style */}
-        <div className="bg-white rounded-lg border shadow-sm p-4 min-h-96">
+        <div className="bg-white rounded-lg border shadow-sm p-4 h-[600px] overflow-auto">
           <div className="space-y-3">
           {currentLanguageSegments.length === 0 ? (
             <div className="text-center py-12">
