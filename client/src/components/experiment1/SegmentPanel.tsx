@@ -148,17 +148,17 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                   onClick={() => onSegmentSelect(segment.id)}
                 >
                   {/* Top Left Area - Drag Handle and Number */}
-                  <div className="absolute top-2 left-2 flex flex-col items-center gap-1">
-                    <Badge variant="secondary" className="text-xs px-2 py-0.5 min-w-6 justify-center">
-                      {segment.order + 1}
-                    </Badge>
+                  <div className="absolute top-3 left-2 flex items-center gap-2">
                     <div className="text-gray-400 hover:text-gray-600">
                       <GripVertical className="h-4 w-4" />
                     </div>
+                    <Badge variant="secondary" className="text-xs px-2 py-0.5 min-w-6 justify-center">
+                      {segment.order + 1}
+                    </Badge>
                   </div>
 
                   {/* Content */}
-                  <div className="ml-3 mt-8 flex flex-col min-w-0">
+                  <div className="ml-12 mt-3 flex flex-col min-w-0">
                     {/* Header */}
                     <div className="flex items-center justify-end mb-2 flex-shrink-0">
                       <div className="flex items-center gap-1 flex-shrink-0">
