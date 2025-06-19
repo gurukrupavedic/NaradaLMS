@@ -243,69 +243,7 @@ function Experiment1_SegmentationStudio() {
 
 
 
-          {/* Language and Audio Selection */}
-          <div className="flex gap-4">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Language:</label>
-              <Select value={currentLanguage} onValueChange={(value: any) => setCurrentLanguage(value)}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="te">Telugu</SelectItem>
-                  <SelectItem value="hi">Hindi</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
-            {audioFiles.length > 0 ? (
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Audio File:</label>
-                <Select
-                  value={selectedAudioFile?.id.toString() || ''}
-                  onValueChange={(value) => {
-                    const file = audioFiles.find(f => f.id.toString() === value);
-                    setSelectedAudioFile(file || null);
-                  }}
-                >
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Select audio file" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {audioFiles.map(file => (
-                      <SelectItem key={file.id} value={file.id.toString()}>
-                        {file.displayName || file.filename}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Music className="h-4 w-4 text-gray-400" />
-                <span className="text-sm text-gray-500">No audio files uploaded</span>
-              </div>
-            )}
-            
-            <div className="flex items-center gap-2">
-              <label htmlFor="audio-upload" className="cursor-pointer">
-                <Button variant="outline" size="sm" asChild disabled={uploadAudioMutation.isPending}>
-                  <span>
-                    <Upload className="h-4 w-4 mr-2" />
-                    {uploadAudioMutation.isPending ? 'Uploading...' : 'Upload Audio'}
-                  </span>
-                </Button>
-              </label>
-              <Input
-                id="audio-upload"
-                type="file"
-                accept="audio/*"
-                onChange={handleAudioUpload}
-                className="hidden"
-              />
-            </div>
-          </div>
         </div>
       </div>
 
@@ -320,6 +258,70 @@ function Experiment1_SegmentationStudio() {
           </TabsList>
 
           <TabsContent value="annotation" className="flex-1 mt-6">
+            {/* Language and Audio Selection Controls */}
+            <div className="flex gap-4 mb-6 p-4 bg-gray-50 border rounded-lg">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Language:</label>
+                <Select value={currentLanguage} onValueChange={(value: any) => setCurrentLanguage(value)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="te">Telugu</SelectItem>
+                    <SelectItem value="hi">Hindi</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {audioFiles.length > 0 ? (
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium">Audio File:</label>
+                  <Select
+                    value={selectedAudioFile?.id.toString() || ''}
+                    onValueChange={(value) => {
+                      const file = audioFiles.find(f => f.id.toString() === value);
+                      setSelectedAudioFile(file || null);
+                    }}
+                  >
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Select audio file" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {audioFiles.map(file => (
+                        <SelectItem key={file.id} value={file.id.toString()}>
+                          {file.displayName || file.filename}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Music className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm text-gray-500">No audio files uploaded</span>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2">
+                <label htmlFor="audio-upload" className="cursor-pointer">
+                  <Button variant="outline" size="sm" asChild disabled={uploadAudioMutation.isPending}>
+                    <span>
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploadAudioMutation.isPending ? 'Uploading...' : 'Upload Audio'}
+                    </span>
+                  </Button>
+                </label>
+                <Input
+                  id="audio-upload"
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleAudioUpload}
+                  className="hidden"
+                />
+              </div>
+            </div>
+
             <PanelGroup direction="horizontal" className="h-full">
               {/* Left Panel: Content Area */}
               <Panel defaultSize={50} minSize={30}>
