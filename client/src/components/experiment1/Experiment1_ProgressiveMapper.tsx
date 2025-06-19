@@ -365,14 +365,14 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
           </CardHeader>
           <CardContent className="p-0 h-[calc(100vh-450px)] flex flex-col">
             <ScrollArea className="flex-1 px-6 py-4" type="always">
-              <div className="space-y-3 min-w-fit">
+              <div className="space-y-3 min-w-[800px]">
                 {currentLanguageSegments.map((segment, index) => {
                   const mapping = getSegmentMapping(segment.id, mappings);
                   const status = getSegmentStatus(segment.id);
                   const segmentText = getSegmentText(segment, content, currentLanguage);
                   
                   return (
-                    <div key={segment.id} className="flex items-center gap-4">
+                    <div key={segment.id} className="flex items-center gap-4 min-w-fit">
                       {/* Left: Timestamp pill */}
                       <div className="w-32 flex-shrink-0 flex items-center justify-start">
                         {mapping && status === 'completed' ? (
