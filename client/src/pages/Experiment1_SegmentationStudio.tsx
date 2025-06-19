@@ -259,7 +259,7 @@ function Experiment1_SegmentationStudio() {
 
           <TabsContent value="annotation" className="flex-1 mt-6">
             {/* Language Selection */}
-            <div className="flex gap-4 mb-6 p-4 bg-gray-50 border rounded-lg">
+            <div className="flex justify-between items-center mb-6 p-4 bg-gray-50 border rounded-lg">
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium">Language:</label>
                 <Select value={currentLanguage} onValueChange={(value: any) => setCurrentLanguage(value)}>
@@ -273,6 +273,9 @@ function Experiment1_SegmentationStudio() {
                   </SelectContent>
                 </Select>
               </div>
+              <Badge variant="secondary" className="text-xs">
+                {experimentalSegments.filter(s => s.textReferences[currentLanguage]).length} segments created
+              </Badge>
             </div>
 
             <PanelGroup direction="horizontal" className="h-full">
@@ -314,53 +317,58 @@ function Experiment1_SegmentationStudio() {
 
           <TabsContent value="mapping" className="flex-1 mt-6">
             {/* Audio Controls */}
-            <div className="flex gap-4 mb-6 p-4 bg-gray-50 border rounded-lg">
-              {audioFiles.length > 0 ? (
+            <div className="flex justify-between items-center mb-6 p-4 bg-gray-50 border rounded-lg">
+              <div className="flex gap-4">
+                {audioFiles.length > 0 ? (
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium">Audio File:</label>
+                    <Select
+                      value={selectedAudioFile?.id.toString() || ''}
+                      onValueChange={(value) => {
+                        const file = audioFiles.find(f => f.id.toString() === value);
+                        setSelectedAudioFile(file || null);
+                      }}
+                    >
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Select audio file" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {audioFiles.map(file => (
+                          <SelectItem key={file.id} value={file.id.toString()}>
+                            {file.displayName || file.filename}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Music className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-500">No audio files uploaded</span>
+                  </div>
+                )}
+                
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium">Audio File:</label>
-                  <Select
-                    value={selectedAudioFile?.id.toString() || ''}
-                    onValueChange={(value) => {
-                      const file = audioFiles.find(f => f.id.toString() === value);
-                      setSelectedAudioFile(file || null);
-                    }}
-                  >
-                    <SelectTrigger className="w-48">
-                      <SelectValue placeholder="Select audio file" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {audioFiles.map(file => (
-                        <SelectItem key={file.id} value={file.id.toString()}>
-                          {file.displayName || file.filename}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <label htmlFor="audio-upload-mapping" className="cursor-pointer">
+                    <Button variant="outline" size="sm" asChild disabled={uploadAudioMutation.isPending}>
+                      <span>
+                        <Upload className="h-4 w-4 mr-2" />
+                        {uploadAudioMutation.isPending ? 'Uploading...' : 'Upload Audio'}
+                      </span>
+                    </Button>
+                  </label>
+                  <Input
+                    id="audio-upload-mapping"
+                    type="file"
+                    accept="audio/*"
+                    onChange={handleAudioUpload}
+                    className="hidden"
+                  />
                 </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Music className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-500">No audio files uploaded</span>
-                </div>
-              )}
-              
-              <div className="flex items-center gap-2">
-                <label htmlFor="audio-upload-mapping" className="cursor-pointer">
-                  <Button variant="outline" size="sm" asChild disabled={uploadAudioMutation.isPending}>
-                    <span>
-                      <Upload className="h-4 w-4 mr-2" />
-                      {uploadAudioMutation.isPending ? 'Uploading...' : 'Upload Audio'}
-                    </span>
-                  </Button>
-                </label>
-                <Input
-                  id="audio-upload-mapping"
-                  type="file"
-                  accept="audio/*"
-                  onChange={handleAudioUpload}
-                  className="hidden"
-                />
               </div>
+              <Badge variant="secondary" className="text-xs">
+                {experimentalMappings.length} of {experimentalSegments.filter(s => s.textReferences[currentLanguage]).length} segments mapped
+              </Badge>
             </div>
 
             {selectedAudioFile && audioUrl ? (
