@@ -149,17 +149,16 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
   };
 
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="text-base">
-          Segments ({currentLanguage.toUpperCase()})
-        </CardTitle>
-        <div className="text-sm text-muted-foreground">
+    <div className="h-full flex flex-col p-4">
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold mb-1">Segments ({currentLanguage.toUpperCase()})</h3>
+        <p className="text-sm text-muted-foreground">
           {mappedCount} of {currentLanguageSegments.length} segments mapped
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        <ScrollArea className="h-[500px] px-6 pb-6">
+        </p>
+      </div>
+      
+      <div className="flex-1">
+        <ScrollArea className="h-full pr-2">
           {currentLanguageSegments.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>No segments created for {currentLanguage.toUpperCase()} yet.</p>
@@ -283,7 +282,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
             </div>
           )}
         </ScrollArea>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

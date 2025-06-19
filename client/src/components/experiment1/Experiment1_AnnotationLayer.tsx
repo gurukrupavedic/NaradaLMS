@@ -224,18 +224,18 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col p-4">
       {/* Clean header */}
       <div className="mb-4">
         <h3 className="text-lg font-semibold mb-1">Content ({currentLanguage.toUpperCase()})</h3>
         <p className="text-sm text-muted-foreground">
-          {segments.filter(s => s.textReferences[currentLanguage]).length} segments created
+          {segments.filter(s => s.textReferences[currentLanguage]).length} segments created • Select text to create segments
         </p>
       </div>
 
       {/* Clean content area */}
-      <div className="flex-1 min-h-[400px] p-6 bg-slate-50 rounded-lg border border-gray-200">
-        <div ref={textRef} className="leading-relaxed text-gray-800">
+      <div className="flex-1 p-6 bg-white rounded-lg border border-gray-200 shadow-sm overflow-auto">
+        <div ref={textRef} className="leading-relaxed text-gray-800 text-base">
           {renderTextWithOverlays()}
         </div>
       </div>
