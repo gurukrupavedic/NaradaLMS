@@ -412,18 +412,18 @@ export default function Experiment1_SegmentationStudio() {
       </div>
 
       {/* EXPERIMENT1: Main interface */}
-      <div className="grid grid-cols-12 gap-6">
-        {/* Left column: Annotation and Mapping */}
-        <div className="col-span-8">
-          <Tabs defaultValue="annotation" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="annotation">Text Annotation</TabsTrigger>
-              <TabsTrigger value="mapping" disabled={experimentalSegments.length === 0}>
-                Audio Mapping
-              </TabsTrigger>
-            </TabsList>
+      <Tabs defaultValue="annotation" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="annotation">Text Annotation</TabsTrigger>
+          <TabsTrigger value="mapping" disabled={experimentalSegments.length === 0}>
+            Audio Mapping
+          </TabsTrigger>
+        </TabsList>
 
-            <TabsContent value="annotation" className="space-y-0">
+        <TabsContent value="annotation" className="space-y-0">
+          <div className="grid grid-cols-12 gap-6">
+            {/* Left column: Annotation */}
+            <div className="col-span-8">
               <Experiment1_AnnotationLayer
                 content={chapter?.content || {}}
                 currentLanguage={currentLanguage}
@@ -433,49 +433,48 @@ export default function Experiment1_SegmentationStudio() {
                 onSegmentUpdate={handleSegmentUpdate}
                 onSegmentDelete={handleSegmentDelete}
               />
-            </TabsContent>
+            </div>
 
-            <TabsContent value="mapping" className="space-y-0">
-              {selectedAudioFile && audioUrl ? (
-                <Experiment1_ProgressiveMapper
-                  audioUrl={audioUrl}
-                  segments={experimentalSegments}
-                  currentLanguage={currentLanguage}
-                  content={chapter?.content || {}}
-                  mappings={experimentalMappings}
-                  onMappingCreate={handleMappingCreate}
-                  onMappingUpdate={handleMappingUpdate}
-                  onMappingDelete={handleMappingDelete}
-                />
-              ) : (
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-center text-muted-foreground">
-                      No audio file available. Upload an audio file to start mapping.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
+            {/* Right column: Segment preview */}
+            <div className="col-span-4">
+              <Experiment1_SegmentPreview
+                segments={experimentalSegments}
+                mappings={experimentalMappings}
+                currentLanguage={currentLanguage}
+                content={chapter?.content || {}}
+                currentSegmentId={currentSegmentId}
+                onSegmentSelect={setCurrentSegmentId}
+                onSegmentDelete={handleSegmentDelete}
+                onPlayMapping={handlePlayMapping}
+                onSegmentReorder={handleSegmentReorder}
+              />
+            </div>
+          </div>
+        </TabsContent>
 
-        {/* Right column: Segment preview */}
-        <div className="col-span-4">
-          <Experiment1_SegmentPreview
-            segments={experimentalSegments}
-            mappings={experimentalMappings}
-            currentLanguage={currentLanguage}
-            content={chapter?.content || {}}
-            currentSegmentId={currentSegmentId}
-            onSegmentSelect={setCurrentSegmentId}
-
-            onSegmentDelete={handleSegmentDelete}
-            onPlayMapping={handlePlayMapping}
-            onSegmentReorder={handleSegmentReorder}
-          />
-        </div>
-      </div>
+        <TabsContent value="mapping" className="space-y-0">
+          {selectedAudioFile && audioUrl ? (
+            <Experiment1_ProgressiveMapper
+              audioUrl={audioUrl}
+              segments={experimentalSegments}
+              currentLanguage={currentLanguage}
+              content={chapter?.content || {}}
+              mappings={experimentalMappings}
+              onMappingCreate={handleMappingCreate}
+              onMappingUpdate={handleMappingUpdate}
+              onMappingDelete={handleMappingDelete}
+            />
+          ) : (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">
+                  No audio file available. Upload an audio file to start mapping.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
