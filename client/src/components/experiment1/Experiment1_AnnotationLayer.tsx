@@ -138,38 +138,57 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     const selectedText = selection.toString().trim();
     if (!selectedText) return;
 
-    // COMPLETELY BYPASS DOM POSITION CALCULATION
-    // Instead, find the selected text directly in the segmentation text
-    const cleanSelectedText = selectedText.replace(/\s+/g, ' ').trim();
+    console.log('Selection detected:', { 
+      selectedText: selectedText.substring(0, 50) + '...', 
+      length: selectedText.length,
+      isMultiLine: selectedText.includes('\n')
+    });
+
+    // Try exact match first (preserving original whitespace)
+    let startIndex = segmentationText.indexOf(selectedText);
     
-    // Find all possible matches in the original text
-    const matches = [];
-    let searchStart = 0;
-    
-    while (true) {
-      const index = segmentationText.indexOf(cleanSelectedText, searchStart);
-      if (index === -1) break;
-      
-      matches.push({
-        start: index,
-        end: index + cleanSelectedText.length,
-        text: segmentationText.slice(index, index + cleanSelectedText.length)
-      });
-      
-      searchStart = index + 1;
+    if (startIndex >= 0) {
+      console.log('Exact match found at:', startIndex);
+      setSelectedRange({ start: startIndex, end: startIndex + selectedText.length });
+      setShowFloatingToolbar(true);
+      return;
     }
+
+    // For multi-line selections, normalize whitespace and try again
+    const normalizedSelected = selectedText.replace(/\s+/g, ' ').trim();
+    const normalizedOriginal = segmentationText.replace(/\s+/g, ' ');
     
-    if (matches.length === 0) {
-      console.warn('Selected text not found in original content:', cleanSelectedText);
+    startIndex = normalizedOriginal.indexOf(normalizedSelected);
+    
+    if (startIndex >= 0) {
+      // Map back to original text position
+      let originalPos = 0;
+      let normalizedPos = 0;
+      
+      // Find the corresponding position in original text
+      while (normalizedPos < startIndex && originalPos < segmentationText.length) {
+        const originalChar = segmentationText[originalPos];
+        if (/\s/.test(originalChar)) {
+          // Multiple whitespace chars in original might map to single space in normalized
+          while (originalPos < segmentationText.length && /\s/.test(segmentationText[originalPos])) {
+            originalPos++;
+          }
+          if (normalizedOriginal[normalizedPos] === ' ') {
+            normalizedPos++;
+          }
+        } else {
+          originalPos++;
+          normalizedPos++;
+        }
+      }
+      
+      console.log('Normalized match found, mapped to original position:', originalPos);
+      setSelectedRange({ start: originalPos, end: originalPos + selectedText.length });
+      setShowFloatingToolbar(true);
       return;
     }
     
-    // Use the first match (or implement smarter logic if needed)
-    const match = matches[0];
-    console.log('Selected text found at position:', match.start, '-', match.end);
-    
-    setSelectedRange({ start: match.start, end: match.end });
-    setShowFloatingToolbar(true);
+    console.warn('Could not find selected text in original content');
   }, [segmentationText]);
 
   // Create new segment from selection
