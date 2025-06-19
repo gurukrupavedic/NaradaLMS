@@ -412,10 +412,9 @@ function Experiment1_SegmentationStudio() {
                 
                 <div className="flex items-center gap-2">
                   <label htmlFor="audio-upload-mapping" className="cursor-pointer">
-                    <Button variant="outline" size="sm" asChild disabled={uploadAudioMutation.isPending}>
-                      <span>
-                        <Upload className="h-4 w-4 mr-2" />
-                        {uploadAudioMutation.isPending ? 'Uploading...' : 'Upload Audio'}
+                    <Button variant="outline" size="sm" asChild disabled={uploadAudioMutation.isPending} className="h-8 w-8 p-0">
+                      <span title={uploadAudioMutation.isPending ? 'Uploading...' : 'Upload Audio'}>
+                        <Upload className="h-4 w-4" />
                       </span>
                     </Button>
                   </label>
