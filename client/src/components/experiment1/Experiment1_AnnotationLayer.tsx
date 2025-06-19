@@ -157,7 +157,7 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
   // Render highlighted text with segment overlays
   const renderHighlightedText = () => {
-    if (!displayText) return <div className="text-muted-foreground">No content available for {currentLanguage}</div>;
+    if (!normalizedText) return <div className="text-muted-foreground">No content available for {currentLanguage}</div>;
 
     // Get all segments for current language
     const languageSegments = segments
@@ -165,7 +165,7 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
       .sort((a, b) => a.textReferences[currentLanguage]!.start - b.textReferences[currentLanguage]!.start);
 
     if (languageSegments.length === 0) {
-      return <div className="whitespace-pre-wrap leading-relaxed">{displayText}</div>;
+      return <div className="whitespace-pre-wrap leading-relaxed">{normalizedText}</div>;
     }
 
     const parts: React.ReactNode[] = [];
@@ -178,7 +178,7 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
       if (range.start > lastIndex) {
         parts.push(
           <span key={`text-${index}`} className="whitespace-pre-wrap">
-            {displayText.slice(lastIndex, range.start)}
+            {normalizedText.slice(lastIndex, range.start)}
           </span>
         );
       }
@@ -195,7 +195,7 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
           }`}
           title={segment.conceptualName}
         >
-          {displayText.slice(range.start, range.end)}
+          {normalizedText.slice(range.start, range.end)}
           {editingSegment === segment.id && (
             <div className="absolute top-full left-0 z-10 mt-1 p-2 bg-white border rounded shadow-lg min-w-48">
               <Input
@@ -252,10 +252,10 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     });
 
     // Add remaining text
-    if (lastIndex < displayText.length) {
+    if (lastIndex < normalizedText.length) {
       parts.push(
         <span key="text-end" className="whitespace-pre-wrap">
-          {displayText.slice(lastIndex)}
+          {normalizedText.slice(lastIndex)}
         </span>
       );
     }
