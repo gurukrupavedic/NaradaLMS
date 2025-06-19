@@ -266,154 +266,176 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
   }
 
   return (
-    <div className="space-y-6">
-      {/* EXPERIMENT1: Audio player */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Audio Mapping Session</span>
-            <Badge variant={mappingSession === 'active' ? 'default' : mappingSession === 'paused' ? 'secondary' : 'outline'}>
-              {mappingSession === 'active' ? 'Recording' : mappingSession === 'paused' ? 'Paused' : 'Ready'}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Audio element */}
-          <audio ref={audioRef} src={audioUrl} preload="metadata" />
-          
-          {/* Progress bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
-            </div>
-            <Slider
-              value={[currentTime]}
-              max={duration}
-              step={0.1}
-              onValueChange={([value]) => seekTo(value)}
-              className="w-full"
-            />
-          </div>
-          
-          {/* Controls */}
-          <div className="flex items-center justify-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={togglePlayPause}
-              disabled={mappingSession === 'idle'}
-            >
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            </Button>
+    <div className="grid grid-cols-12 gap-6 h-[calc(100vh-300px)]">
+      {/* Left Column: Audio Mapping Session (1/3) */}
+      <div className="col-span-4">
+        <Card className="h-full">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Audio Mapping Session</span>
+              <Badge variant={mappingSession === 'active' ? 'default' : mappingSession === 'paused' ? 'secondary' : 'outline'}>
+                {mappingSession === 'active' ? 'Recording' : mappingSession === 'paused' ? 'Paused' : 'Ready'}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Audio element */}
+            <audio ref={audioRef} src={audioUrl} preload="metadata" />
             
-            {mappingSession === 'idle' ? (
-              <Button onClick={startMappingSession}>
-                Start Mapping Session
-              </Button>
-            ) : (
-              <>
-                <Button variant="outline" onClick={pauseMappingSession}>
-                  {mappingSession === 'paused' ? 'Resume' : 'Pause'}
-                </Button>
-                <Button variant="outline" onClick={stopMappingSession}>
-                  <Square className="h-4 w-4 mr-2" />
-                  Stop
-                </Button>
-                <Button variant="outline" onClick={resetMappingSession}>
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Reset
-                </Button>
-              </>
-            )}
-          </div>
-          
-          {/* Progress */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Mapping Progress</span>
-              <span>{mappedSegments.length} / {currentLanguageSegments.length} segments</span>
+            {/* Progress bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+              <Slider
+                value={[currentTime]}
+                max={duration}
+                step={0.1}
+                onValueChange={([value]) => seekTo(value)}
+                className="w-full"
+              />
             </div>
-            <Progress value={progressPercentage} className="w-full" />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* EXPERIMENT1: Segment cards */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Text Segments - Click When Heard</CardTitle>
-          {mappingSession === 'active' && (
-            <p className="text-sm text-muted-foreground">
-              Click on each segment card when you hear it being recited in the audio.
-            </p>
-          )}
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-96">
-            <div className="space-y-3">
-              {currentLanguageSegments.map((segment, index) => {
-                const status = getSegmentStatus(segment.id);
-                const mapping = getSegmentMapping(segment.id);
-                const segmentText = getSegmentText(segment);
-                
-                return (
-                  <div
-                    key={segment.id}
-                    onClick={() => handleSegmentClick(segment.id)}
-                    className={`border rounded-lg transition-all cursor-pointer ${
-                      status === 'active' 
-                        ? 'border-blue-500 bg-blue-50 shadow-md' 
-                        : status === 'completed'
-                        ? 'border-green-300 bg-green-50'
-                        : mappingSession === 'active'
-                        ? 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                        : 'border-gray-200 bg-gray-50 cursor-not-allowed'
-                    }`}
+            
+            {/* Controls */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={togglePlayPause}
+                  disabled={mappingSession === 'idle'}
+                >
+                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                </Button>
+              </div>
+              
+              {mappingSession === 'idle' ? (
+                <Button onClick={startMappingSession} className="w-full">
+                  Start Mapping Session
+                </Button>
+              ) : (
+                <div className="space-y-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={pauseMappingSession}
+                    className="w-full"
                   >
-                    <div className="flex items-start px-4 py-3">
-                      {/* Left: Number and status */}
-                      <div className="flex items-center gap-3 mr-4">
-                        <span className="font-medium text-lg text-gray-700 min-w-8">#{index + 1}</span>
-                        <div className="flex-shrink-0">
-                          {status === 'active' ? (
-                            <Badge variant="default" className="text-xs bg-blue-100 text-blue-700">
-                              <Clock className="h-3 w-3 mr-1" />
-                              Recording
-                            </Badge>
-                          ) : status === 'completed' ? (
-                            <Badge variant="default" className="text-xs bg-green-100 text-green-700">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Mapped
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-xs">
-                              <Circle className="h-3 w-3 mr-1" />
-                              Ready
-                            </Badge>
+                    {mappingSession === 'paused' ? 'Resume' : 'Pause'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={stopMappingSession}
+                    className="w-full"
+                  >
+                    <Square className="h-4 w-4 mr-2" />
+                    Stop
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={resetMappingSession}
+                    className="w-full"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Reset
+                  </Button>
+                </div>
+              )}
+            </div>
+            
+            {/* Progress */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Progress</span>
+                <span>{mappedSegments.length} / {currentLanguageSegments.length}</span>
+              </div>
+              <Progress value={progressPercentage} className="w-full" />
+            </div>
+
+            {/* Instructions */}
+            {mappingSession === 'active' && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-700">
+                  <strong>How to map:</strong> Click on each segment card (right) when you hear it being recited in the audio.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Right Column: Text Segments (2/3) */}
+      <div className="col-span-8">
+        <Card className="h-full">
+          <CardHeader>
+            <CardTitle>Text Segments - Click When Heard</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[calc(100vh-450px)]">
+              <div className="space-y-3">
+                {currentLanguageSegments.map((segment, index) => {
+                  const status = getSegmentStatus(segment.id);
+                  const mapping = getSegmentMapping(segment.id);
+                  const segmentText = getSegmentText(segment);
+                  
+                  return (
+                    <div
+                      key={segment.id}
+                      onClick={() => handleSegmentClick(segment.id)}
+                      className={`border rounded-lg transition-all cursor-pointer ${
+                        status === 'active' 
+                          ? 'border-blue-500 bg-blue-50 shadow-md' 
+                          : status === 'completed'
+                          ? 'border-green-300 bg-green-50'
+                          : mappingSession === 'active'
+                          ? 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                      }`}
+                    >
+                      <div className="flex items-start px-4 py-3">
+                        {/* Left: Number and status */}
+                        <div className="flex items-center gap-3 mr-4">
+                          <span className="font-medium text-lg text-gray-700 min-w-8">#{index + 1}</span>
+                          <div className="flex-shrink-0">
+                            {status === 'active' ? (
+                              <Badge variant="default" className="text-xs bg-blue-100 text-blue-700">
+                                <Clock className="h-3 w-3 mr-1" />
+                                Recording
+                              </Badge>
+                            ) : status === 'completed' ? (
+                              <Badge variant="default" className="text-xs bg-green-100 text-green-700">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Mapped
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs">
+                                <Circle className="h-3 w-3 mr-1" />
+                                Ready
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Middle: Content */}
+                        <div className="flex-1 min-w-0 mr-4">
+                          <div className="text-sm text-gray-700 mb-1 leading-relaxed">
+                            {segmentText}
+                          </div>
+                          {mapping && status === 'completed' && (
+                            <div className="text-xs text-green-600">
+                              {formatTime(mapping.startTime)} - {formatTime(mapping.endTime)}
+                            </div>
                           )}
                         </div>
                       </div>
-                      
-                      {/* Middle: Content */}
-                      <div className="flex-1 min-w-0 mr-4">
-                        <div className="text-sm text-gray-700 mb-1 leading-relaxed">
-                          {segmentText}
-                        </div>
-                        {mapping && status === 'completed' && (
-                          <div className="text-xs text-green-600">
-                            {formatTime(mapping.startTime)} - {formatTime(mapping.endTime)}
-                          </div>
-                        )}
-                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
