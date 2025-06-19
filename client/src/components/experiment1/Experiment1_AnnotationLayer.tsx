@@ -267,8 +267,8 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
   return (
     <div className="h-full overflow-y-auto">
-      {/* Header - inside scrollable area with sticky positioning */}
-      <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b shadow-sm">
+      {/* Header - now inside scrollable area and sticky */}
+      <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
         <h2 className="text-base font-semibold text-gray-700">Content ({getLanguageLabel(currentLanguage)})</h2>
       </div>
 
