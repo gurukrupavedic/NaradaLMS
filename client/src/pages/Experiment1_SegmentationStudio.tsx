@@ -18,7 +18,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertCircle, ArrowLeft, Download, Upload } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { AlertCircle, ArrowLeft, Download, Upload, Music } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 
@@ -210,6 +211,56 @@ export default function Experiment1_SegmentationStudio() {
     });
   };
 
+  // EXPERIMENT1: Audio file upload
+  const uploadAudioMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('audioFile', file);
+      formData.append('chapterId', chapterId!);
+      
+      const response = await fetch('/api/admin/audio-files', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload audio file');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (newAudioFile) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+      setSelectedAudioFile(newAudioFile);
+      toast({
+        title: "Audio File Uploaded",
+        description: `${newAudioFile.title} has been uploaded successfully`
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Upload Failed",
+        description: error.message || "Failed to upload audio file",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('audio/')) {
+        toast({
+          title: "Invalid File Type",
+          description: "Please select an audio file",
+          variant: "destructive"
+        });
+        return;
+      }
+      uploadAudioMutation.mutate(file);
+    }
+  };
+
   // EXPERIMENT1: Clear all experimental data
   const handleClearExperiment = () => {
     setExperimentalSegments([]);
@@ -309,29 +360,56 @@ export default function Experiment1_SegmentationStudio() {
           </Select>
         </div>
         
-        {audioFiles.length > 0 && (
+        <div className="flex items-center gap-4">
+          {/* Audio file selection */}
+          {audioFiles.length > 0 ? (
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">Audio File:</label>
+              <Select 
+                value={selectedAudioFile?.id.toString() || ''} 
+                onValueChange={(value) => {
+                  const audioFile = audioFiles.find(f => f.id.toString() === value);
+                  setSelectedAudioFile(audioFile || null);
+                }}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {audioFiles.map(file => (
+                    <SelectItem key={file.id} value={file.id.toString()}>
+                      {file.displayName || file.filename}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Music className="h-4 w-4 text-gray-400" />
+              <span className="text-sm text-gray-500">No audio files uploaded</span>
+            </div>
+          )}
+          
+          {/* Audio upload */}
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Audio File:</label>
-            <Select 
-              value={selectedAudioFile?.id.toString() || ''} 
-              onValueChange={(value) => {
-                const audioFile = audioFiles.find(f => f.id.toString() === value);
-                setSelectedAudioFile(audioFile || null);
-              }}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {audioFiles.map(file => (
-                  <SelectItem key={file.id} value={file.id.toString()}>
-                    {file.displayName || file.filename}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <label htmlFor="audio-upload" className="cursor-pointer">
+              <Button variant="outline" size="sm" asChild disabled={uploadAudioMutation.isPending}>
+                <span>
+                  <Upload className="h-4 w-4 mr-2" />
+                  {uploadAudioMutation.isPending ? 'Uploading...' : 'Upload Audio'}
+                </span>
+              </Button>
+            </label>
+            <Input
+              id="audio-upload"
+              type="file"
+              accept="audio/*"
+              onChange={handleAudioUpload}
+              className="hidden"
+            />
           </div>
-        )}
+        </div>
       </div>
 
       {/* EXPERIMENT1: Main interface */}
