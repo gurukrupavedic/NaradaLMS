@@ -1,12 +1,12 @@
 /**
- * EXPERIMENT 1: Annotation Layer + Progressive Mapping Segmentation
+ * EXPERIMENT 1: Musixmatch-Inspired Audio Mapping
  * 
- * This component provides a progressive audio-text mapping workflow.
- * Users play audio sequentially and map segments to text in chronological order.
+ * This component provides a continuous playback workflow where users
+ * click on text segment cards when they hear them being recited.
  * 
  * Status: Experimental - Do not use in production
  * Created: January 2025
- * Purpose: Test intuitive audio-text synchronization workflow
+ * Purpose: Test intuitive click-when-heard mapping workflow
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -15,7 +15,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
-import { Play, Pause, SkipBack, SkipForward, Square, CheckCircle, Circle } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Play, Pause, Square, RotateCcw, CheckCircle, Circle, Clock } from 'lucide-react';
 
 interface TextSegment {
   id: string;
@@ -26,7 +27,6 @@ interface TextSegment {
     en?: { start: number; end: number };
   };
   order: number;
-  mapped?: boolean;
 }
 
 interface AudioMapping {
@@ -64,19 +64,22 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
-  const [segmentStartTime, setSegmentStartTime] = useState<number | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
+  
+  // EXPERIMENT1: Mapping session state
+  const [mappingSession, setMappingSession] = useState<'idle' | 'active' | 'paused'>('idle');
+  const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
+  const [sessionStartTime, setSessionStartTime] = useState<number>(0);
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // EXPERIMENT1: Get current segment being mapped
-  const currentSegment = segments[currentSegmentIndex];
-  const currentMapping = mappings.find(m => m.segmentId === currentSegment?.id);
-  
+  // EXPERIMENT1: Filter segments by current language
+  const currentLanguageSegments = segments
+    .filter(segment => segment.textReferences[currentLanguage])
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
+
   // EXPERIMENT1: Calculate progress
-  const mappedSegments = segments.filter(s => mappings.some(m => m.segmentId === s.id));
-  const progressPercentage = segments.length > 0 ? (mappedSegments.length / segments.length) * 100 : 0;
+  const mappedSegments = currentLanguageSegments.filter(s => mappings.some(m => m.segmentId === s.id));
+  const progressPercentage = currentLanguageSegments.length > 0 ? (mappedSegments.length / currentLanguageSegments.length) * 100 : 0;
 
   // EXPERIMENT1: Audio event handlers
   useEffect(() => {
@@ -85,7 +88,13 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
     const handleDurationChange = () => setDuration(audio.duration);
-    const handleEnded = () => setIsPlaying(false);
+    const handleEnded = () => {
+      setIsPlaying(false);
+      // End active segment if session is active
+      if (mappingSession === 'active' && activeSegmentId) {
+        handleSegmentEnd();
+      }
+    };
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('durationchange', handleDurationChange);
@@ -96,7 +105,7 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
       audio.removeEventListener('durationchange', handleDurationChange);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, []);
+  }, [mappingSession, activeSegmentId]);
 
   // EXPERIMENT1: Audio controls
   const togglePlayPause = () => {
@@ -118,74 +127,139 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
     setCurrentTime(time);
   };
 
-  // EXPERIMENT1: Segment mapping workflow
-  const startMapping = () => {
-    setSegmentStartTime(currentTime);
-    setIsRecording(true);
-  };
-
-  const endMapping = () => {
-    if (segmentStartTime === null) return;
-
-    const mapping: AudioMapping = {
-      segmentId: currentSegment.id,
-      startTime: segmentStartTime,
-      endTime: currentTime
-    };
-
-    onMappingCreate(mapping);
-    setIsRecording(false);
-    setSegmentStartTime(null);
+  // EXPERIMENT1: Mapping session controls
+  const startMappingSession = () => {
+    setMappingSession('active');
+    setActiveSegmentId(null);
+    setSessionStartTime(currentTime);
     
-    // EXPERIMENT1: Auto-advance to next unmapped segment
-    const nextUnmappedIndex = segments.findIndex((s, index) => 
-      index > currentSegmentIndex && !mappings.some(m => m.segmentId === s.id)
-    );
-    if (nextUnmappedIndex !== -1) {
-      setCurrentSegmentIndex(nextUnmappedIndex);
+    // Clear existing mappings for current language
+    currentLanguageSegments.forEach(segment => {
+      if (mappings.some(m => m.segmentId === segment.id)) {
+        onMappingDelete(segment.id);
+      }
+    });
+    
+    // Start playing audio if not already playing
+    const audio = audioRef.current;
+    if (audio && !isPlaying) {
+      audio.play();
+      setIsPlaying(true);
     }
   };
 
-  const cancelMapping = () => {
-    setIsRecording(false);
-    setSegmentStartTime(null);
-  };
-
-  // EXPERIMENT1: Navigation
-  const goToPreviousSegment = () => {
-    if (currentSegmentIndex > 0) {
-      setCurrentSegmentIndex(currentSegmentIndex - 1);
+  const pauseMappingSession = () => {
+    if (mappingSession === 'active') {
+      setMappingSession('paused');
+      const audio = audioRef.current;
+      if (audio && isPlaying) {
+        audio.pause();
+        setIsPlaying(false);
+      }
+    } else if (mappingSession === 'paused') {
+      setMappingSession('active');
+      const audio = audioRef.current;
+      if (audio && !isPlaying) {
+        audio.play();
+        setIsPlaying(true);
+      }
     }
   };
 
-  const goToNextSegment = () => {
-    if (currentSegmentIndex < segments.length - 1) {
-      setCurrentSegmentIndex(currentSegmentIndex + 1);
+  const stopMappingSession = () => {
+    // End active segment if exists
+    if (activeSegmentId) {
+      handleSegmentEnd();
+    }
+    
+    setMappingSession('idle');
+    setActiveSegmentId(null);
+    
+    const audio = audioRef.current;
+    if (audio && isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
     }
   };
 
-  // EXPERIMENT1: Get segment text for display
-  const getSegmentText = (segment: TextSegment) => {
-    const textContent = content[currentLanguage] || '';
-    const range = segment.textReferences[currentLanguage];
-    if (!range) return 'No text for this language';
-    return textContent.slice(range.start, range.end);
+  const resetMappingSession = () => {
+    setMappingSession('idle');
+    setActiveSegmentId(null);
+    
+    // Clear all mappings for current language segments
+    currentLanguageSegments.forEach(segment => {
+      if (mappings.some(m => m.segmentId === segment.id)) {
+        onMappingDelete(segment.id);
+      }
+    });
+    
+    // Reset audio to beginning
+    const audio = audioRef.current;
+    if (audio) {
+      audio.currentTime = 0;
+      audio.pause();
+      setIsPlaying(false);
+      setCurrentTime(0);
+    }
   };
 
-  // EXPERIMENT1: Format time display
+  // EXPERIMENT1: Segment mapping handlers
+  const handleSegmentClick = (segmentId: string) => {
+    if (mappingSession !== 'active') return;
+
+    // End previous segment if exists
+    if (activeSegmentId && activeSegmentId !== segmentId) {
+      handleSegmentEnd();
+    }
+
+    // Start new segment
+    setActiveSegmentId(segmentId);
+    const mapping: AudioMapping = {
+      segmentId,
+      startTime: currentTime,
+      endTime: currentTime // Will be updated when segment ends
+    };
+    onMappingCreate(mapping);
+  };
+
+  const handleSegmentEnd = () => {
+    if (!activeSegmentId) return;
+    
+    // Update the mapping with end time
+    onMappingUpdate(activeSegmentId, { endTime: currentTime });
+    setActiveSegmentId(null);
+  };
+
+  // EXPERIMENT1: Helper functions
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (segments.length === 0) {
+  const getSegmentText = (segment: TextSegment) => {
+    const textRef = segment.textReferences[currentLanguage];
+    if (!textRef || !content[currentLanguage]) return segment.conceptualName;
+    
+    const text = content[currentLanguage];
+    return text.slice(textRef.start, textRef.end);
+  };
+
+  const getSegmentStatus = (segmentId: string) => {
+    if (activeSegmentId === segmentId) return 'active';
+    if (mappings.some(m => m.segmentId === segmentId)) return 'completed';
+    return 'inactive';
+  };
+
+  const getSegmentMapping = (segmentId: string) => {
+    return mappings.find(m => m.segmentId === segmentId);
+  };
+
+  if (!audioUrl) {
     return (
       <Card>
-        <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground">
-            No text segments available. Create segments first using the annotation layer.
-          </p>
+        <CardContent className="p-6 text-center">
+          <p className="text-muted-foreground">No audio file selected. Please upload an audio file to begin mapping.</p>
         </CardContent>
       </Card>
     );
@@ -193,171 +267,151 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
 
   return (
     <div className="space-y-6">
-      {/* EXPERIMENT1: Hidden audio element */}
-      <audio ref={audioRef} src={audioUrl} preload="metadata" />
-
-      {/* EXPERIMENT1: Header with progress */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">Progressive Audio Mapping</h3>
-          <p className="text-sm text-muted-foreground">
-            Map audio segments to text in chronological order
-          </p>
-        </div>
-        <div className="text-right">
-          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
-            Experiment 1
-          </Badge>
-          <div className="mt-2 text-sm text-muted-foreground">
-            {mappedSegments.length} of {segments.length} segments mapped
-          </div>
-        </div>
-      </div>
-
-      {/* EXPERIMENT1: Progress bar */}
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span>Overall Progress</span>
-          <span>{Math.round(progressPercentage)}%</span>
-        </div>
-        <Progress value={progressPercentage} className="h-2" />
-      </div>
-
-      {/* EXPERIMENT1: Audio player controls */}
+      {/* EXPERIMENT1: Audio player */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Audio Player</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Time display */}
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
-          </div>
-
-          {/* Progress slider */}
-          <Slider
-            value={[currentTime]}
-            max={duration}
-            step={0.1}
-            className="w-full"
-            onValueChange={([value]) => seekTo(value)}
-          />
-
-          {/* Control buttons */}
-          <div className="flex items-center justify-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => seekTo(Math.max(0, currentTime - 10))}>
-              <SkipBack className="h-4 w-4" />
-            </Button>
-            <Button onClick={togglePlayPause} size="sm">
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => seekTo(Math.min(duration, currentTime + 10))}>
-              <SkipForward className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Recording indicator */}
-          {isRecording && (
-            <div className="flex items-center justify-center gap-2 text-red-600 bg-red-50 p-2 rounded">
-              <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
-              <span className="text-sm font-medium">
-                Recording segment: {formatTime(currentTime - (segmentStartTime || 0))}
-              </span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* EXPERIMENT1: Current segment mapping */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center justify-between">
-            <span>Current Segment ({currentSegmentIndex + 1} of {segments.length})</span>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={goToPreviousSegment} disabled={currentSegmentIndex === 0}>
-                Previous
-              </Button>
-              <Button variant="outline" size="sm" onClick={goToNextSegment} disabled={currentSegmentIndex === segments.length - 1}>
-                Next
-              </Button>
-            </div>
+          <CardTitle className="flex items-center justify-between">
+            <span>Audio Mapping Session</span>
+            <Badge variant={mappingSession === 'active' ? 'default' : mappingSession === 'paused' ? 'secondary' : 'outline'}>
+              {mappingSession === 'active' ? 'Recording' : mappingSession === 'paused' ? 'Paused' : 'Ready'}
+            </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {currentSegment && (
-            <>
-              {/* Segment info */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="secondary">{currentSegment.conceptualName}</Badge>
-                  {currentMapping ? (
-                    <Badge variant="default" className="bg-green-100 text-green-700">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Mapped
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline">
-                      <Circle className="h-3 w-3 mr-1" />
-                      Not Mapped
-                    </Badge>
-                  )}
-                </div>
-                <div className="bg-white p-3 rounded border text-sm">
-                  {getSegmentText(currentSegment)}
-                </div>
-              </div>
-
-              {/* Mapping controls */}
-              <div className="space-y-3">
-                {currentMapping ? (
-                  <div className="bg-green-50 p-3 rounded border-green-200">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">
-                        Mapped: {formatTime(currentMapping.startTime)} - {formatTime(currentMapping.endTime)}
-                      </span>
-                      <Button variant="outline" size="sm" onClick={() => onMappingDelete(currentSegment.id)}>
-                        Remove Mapping
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    {!isRecording ? (
-                      <Button onClick={startMapping} className="flex-1">
-                        Start Mapping at {formatTime(currentTime)}
-                      </Button>
-                    ) : (
-                      <>
-                        <Button onClick={endMapping} className="flex-1">
-                          End Mapping at {formatTime(currentTime)}
-                        </Button>
-                        <Button variant="outline" onClick={cancelMapping}>
-                          Cancel
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+          {/* Audio element */}
+          <audio ref={audioRef} src={audioUrl} preload="metadata" />
+          
+          {/* Progress bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+            <Slider
+              value={[currentTime]}
+              max={duration}
+              step={0.1}
+              onValueChange={([value]) => seekTo(value)}
+              className="w-full"
+            />
+          </div>
+          
+          {/* Controls */}
+          <div className="flex items-center justify-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={togglePlayPause}
+              disabled={mappingSession === 'idle'}
+            >
+              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </Button>
+            
+            {mappingSession === 'idle' ? (
+              <Button onClick={startMappingSession}>
+                Start Mapping Session
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" onClick={pauseMappingSession}>
+                  {mappingSession === 'paused' ? 'Resume' : 'Pause'}
+                </Button>
+                <Button variant="outline" onClick={stopMappingSession}>
+                  <Square className="h-4 w-4 mr-2" />
+                  Stop
+                </Button>
+                <Button variant="outline" onClick={resetMappingSession}>
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Reset
+                </Button>
+              </>
+            )}
+          </div>
+          
+          {/* Progress */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Mapping Progress</span>
+              <span>{mappedSegments.length} / {currentLanguageSegments.length} segments</span>
+            </div>
+            <Progress value={progressPercentage} className="w-full" />
+          </div>
         </CardContent>
       </Card>
 
-      {/* EXPERIMENT1: Instructions */}
-      <Card className="bg-gray-50">
-        <CardContent className="pt-6">
-          <div className="text-sm text-gray-600">
-            <h4 className="font-medium mb-2">Mapping workflow:</h4>
-            <ol className="list-decimal list-inside space-y-1">
-              <li>Play audio and listen to the content</li>
-              <li>When you hear the text for the current segment, click "Start Mapping"</li>
-              <li>Continue playing until the segment ends, then click "End Mapping"</li>
-              <li>The system will automatically advance to the next unmapped segment</li>
-              <li>Use Previous/Next buttons to navigate between segments manually</li>
-            </ol>
-          </div>
+      {/* EXPERIMENT1: Segment cards */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Text Segments - Click When Heard</CardTitle>
+          {mappingSession === 'active' && (
+            <p className="text-sm text-muted-foreground">
+              Click on each segment card when you hear it being recited in the audio.
+            </p>
+          )}
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-96">
+            <div className="space-y-3">
+              {currentLanguageSegments.map((segment, index) => {
+                const status = getSegmentStatus(segment.id);
+                const mapping = getSegmentMapping(segment.id);
+                const segmentText = getSegmentText(segment);
+                
+                return (
+                  <div
+                    key={segment.id}
+                    onClick={() => handleSegmentClick(segment.id)}
+                    className={`border rounded-lg transition-all cursor-pointer ${
+                      status === 'active' 
+                        ? 'border-blue-500 bg-blue-50 shadow-md' 
+                        : status === 'completed'
+                        ? 'border-green-300 bg-green-50'
+                        : mappingSession === 'active'
+                        ? 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex items-start px-4 py-3">
+                      {/* Left: Number and status */}
+                      <div className="flex items-center gap-3 mr-4">
+                        <span className="font-medium text-lg text-gray-700 min-w-8">#{index + 1}</span>
+                        <div className="flex-shrink-0">
+                          {status === 'active' ? (
+                            <Badge variant="default" className="text-xs bg-blue-100 text-blue-700">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Recording
+                            </Badge>
+                          ) : status === 'completed' ? (
+                            <Badge variant="default" className="text-xs bg-green-100 text-green-700">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Mapped
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs">
+                              <Circle className="h-3 w-3 mr-1" />
+                              Ready
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Middle: Content */}
+                      <div className="flex-1 min-w-0 mr-4">
+                        <div className="text-sm text-gray-700 mb-1 leading-relaxed">
+                          {segmentText}
+                        </div>
+                        {mapping && status === 'completed' && (
+                          <div className="text-xs text-green-600">
+                            {formatTime(mapping.startTime)} - {formatTime(mapping.endTime)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
         </CardContent>
       </Card>
     </div>
