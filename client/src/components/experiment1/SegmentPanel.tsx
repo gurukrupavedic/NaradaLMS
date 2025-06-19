@@ -15,8 +15,8 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { CheckCircle, Circle, Trash2, Play, GripVertical, Edit3 } from 'lucide-react';
+
+import { Trash2, Play, GripVertical, Circle } from 'lucide-react';
 
 interface TextSegment {
   id: string;
@@ -64,7 +64,7 @@ export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
   onPlayMapping,
   onSegmentReorder
 }) => {
-  const [editingSegment, setEditingSegment] = useState<string | null>(null);
+
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [draggedOver, setDraggedOver] = useState<number | null>(null);
 
@@ -172,7 +172,7 @@ export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
             currentLanguageSegments.map((segment, index) => {
               const mapping = getSegmentMapping(segment.id);
               const isSelected = segment.id === currentSegmentId;
-              const isEditing = editingSegment === segment.id;
+
               const isDragging = draggedIndex === index;
               const isDraggedOver = draggedOver === index;
               const segmentText = getSegmentText(segment);
@@ -230,17 +230,7 @@ export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
                             <Play className="h-3 w-3" />
                           </Button>
                         )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingSegment(segment.id);
-                          }}
-                          className="h-6 w-6 p-0"
-                        >
-                          <Edit3 className="h-3 w-3" />
-                        </Button>
+
                         <Button
                           size="sm"
                           variant="ghost"
@@ -255,38 +245,7 @@ export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
                       </div>
                     </div>
 
-                    {/* Segment Name */}
-                    {isEditing ? (
-                      <Input
-                        defaultValue={segment.conceptualName}
-                        placeholder="Segment name"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            const newName = (e.target as HTMLInputElement).value.trim();
-                            if (newName) {
-                              onSegmentUpdate(segment.id, { conceptualName: newName });
-                            }
-                            setEditingSegment(null);
-                          } else if (e.key === 'Escape') {
-                            setEditingSegment(null);
-                          }
-                        }}
-                        onBlur={(e) => {
-                          const newName = e.target.value.trim();
-                          if (newName && newName !== segment.conceptualName) {
-                            onSegmentUpdate(segment.id, { conceptualName: newName });
-                          }
-                          setEditingSegment(null);
-                        }}
-                        autoFocus
-                        className="text-sm font-medium"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    ) : (
-                      <h4 className="font-medium text-gray-900 mb-1">
-                        {segment.conceptualName}
-                      </h4>
-                    )}
+
 
                     {/* Segment Text Preview */}
                     <p className="text-sm text-gray-600 leading-relaxed">
