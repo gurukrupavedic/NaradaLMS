@@ -364,9 +364,10 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
             <CardTitle>Text Segments - Click When Heard</CardTitle>
           </CardHeader>
           <CardContent className="p-0 h-[calc(100vh-450px)] flex flex-col">
-            <ScrollArea className="flex-1 px-6 py-4" type="always">
-              <div className="space-y-3 min-w-[800px]">
-                {currentLanguageSegments.map((segment, index) => {
+            <div className="flex-1 relative overflow-auto">
+              <div className="px-6 py-4">
+                <div className="space-y-3 min-w-[800px]">
+                  {currentLanguageSegments.map((segment, index) => {
                   const mapping = getSegmentMapping(segment.id, mappings);
                   const status = getSegmentStatus(segment.id);
                   const segmentText = getSegmentText(segment, content, currentLanguage);
@@ -440,9 +441,10 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
                       </div>
                     </div>
                   );
-                })}
+                  })}
+                </div>
               </div>
-            </ScrollArea>
+            </div>
           </CardContent>
         </Card>
       </div>
