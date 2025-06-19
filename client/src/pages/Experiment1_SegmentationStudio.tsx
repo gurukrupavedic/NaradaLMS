@@ -304,8 +304,8 @@ function Experiment1_SegmentationStudio() {
               </Panel>
               
               {/* Resize Handle */}
-              <PanelResizeHandle className="w-1 bg-gray-300 hover:bg-blue-400 transition-colors relative group">
-                <div className="absolute inset-y-0 left-1/2 transform -translate-x-1/2 w-1 bg-gray-400 group-hover:bg-blue-500 transition-colors" />
+              <PanelResizeHandle className="w-2 bg-gray-200 hover:bg-gray-300 transition-colors relative group border-l border-r border-gray-300">
+                <div className="absolute inset-y-0 left-1/2 transform -translate-x-1/2 w-0.5 bg-gray-400 group-hover:bg-gray-600 transition-colors" />
               </PanelResizeHandle>
               
               {/* Right Panel: Segment Management */}

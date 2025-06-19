@@ -106,8 +106,8 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
   return (
     <div className="h-full flex flex-col">
       {/* Integrated Header */}
-      <div className="flex-shrink-0 px-6 py-4 bg-muted/30 border-b">
-        <h2 className="text-lg font-semibold">Segments ({getLanguageLabel(currentLanguage)})</h2>
+      <div className="flex-shrink-0 px-6 py-3 bg-gray-50 border-b">
+        <h2 className="text-base font-semibold text-gray-700">Segments ({getLanguageLabel(currentLanguage)})</h2>
       </div>
 
       {/* Content Area */}
