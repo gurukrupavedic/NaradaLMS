@@ -268,17 +268,17 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   return (
     <div className="h-full flex flex-col">
       {/* Integrated Header */}
-      <div className="flex-shrink-0 px-6 py-4 bg-muted/30 border-b">
-        <h2 className="text-lg font-semibold">Content ({getLanguageLabel(currentLanguage)})</h2>
+      <div className="flex-shrink-0 px-6 py-3 bg-gray-50 border-b">
+        <h2 className="text-base font-semibold text-gray-700">Content ({getLanguageLabel(currentLanguage)})</h2>
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="space-y-4">
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="h-full">
           {/* Text Content with Highlighting */}
           <div
             ref={textRef}
-            className="relative p-6 bg-white border rounded-lg min-h-96 cursor-text font-serif text-base leading-relaxed"
+            className="relative p-6 bg-white border rounded-lg h-full cursor-text font-serif text-base leading-relaxed shadow-sm"
             onMouseUp={handleTextSelection}
             onContextMenu={(e) => {
               e.preventDefault();

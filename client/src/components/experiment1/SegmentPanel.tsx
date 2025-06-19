@@ -111,10 +111,10 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-4">
         {/* White Container - matching Audio tab style */}
-        <div className="bg-white rounded-lg border shadow-sm p-6">
-          <div className="space-y-4">
+        <div className="bg-white rounded-lg border shadow-sm p-4 h-full">
+          <div className="space-y-3 h-full">
           {currentLanguageSegments.length === 0 ? (
             <div className="text-center py-12">
               <Circle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -142,22 +142,22 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
                   className={`
-                    relative p-4 border rounded-lg cursor-pointer transition-all
-                    ${isSelected ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-300' : 'bg-white border-gray-200 hover:border-gray-300'}
+                    relative p-3 border rounded-lg cursor-pointer transition-all
+                    ${isSelected ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:bg-white'}
                     ${isDragging ? 'opacity-50' : ''}
                     ${isDraggedOver ? 'border-blue-400 bg-blue-50' : ''}
                   `}
                   onClick={() => onSegmentSelect(segment.id)}
                 >
                   {/* Main Content Layout */}
-                  <div className="flex items-start p-4 gap-3">
+                  <div className="flex items-start gap-3">
                     {/* Left: Drag Handle */}
-                    <div className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+                    <div className="text-gray-400 hover:text-gray-600 flex-shrink-0 mt-0.5">
                       <GripVertical className="h-4 w-4" />
                     </div>
                     
                     {/* Center: Number Badge */}
-                    <Badge variant="secondary" className="text-xs px-2 py-0.5 min-w-6 justify-center flex-shrink-0">
+                    <Badge variant="secondary" className="text-xs px-2 py-1 min-w-6 justify-center flex-shrink-0 rounded-full bg-gray-200 text-gray-700">
                       {segment.order + 1}
                     </Badge>
                     

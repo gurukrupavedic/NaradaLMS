@@ -289,7 +289,7 @@ function Experiment1_SegmentationStudio() {
               </div>
             </div>
 
-            <PanelGroup direction="horizontal" className="h-[calc(100vh-280px)]">
+            <PanelGroup direction="horizontal" className="h-[calc(100vh-260px)]">
               {/* Left Panel: Content Area */}
               <Panel defaultSize={50} minSize={30}>
                 <Experiment1_AnnotationLayer
