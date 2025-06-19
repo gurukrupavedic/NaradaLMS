@@ -363,9 +363,9 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
           <CardHeader>
             <CardTitle>Text Segments - Click When Heard</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[calc(100vh-450px)]">
-              <div className="space-y-3">
+          <CardContent className="h-[calc(100vh-450px)] flex flex-col">
+            <ScrollArea className="flex-1">
+              <div className="space-y-3 p-1">
                 {currentLanguageSegments.map((segment, index) => {
                   const mapping = getSegmentMapping(segment.id, mappings);
                   const status = getSegmentStatus(segment.id);
