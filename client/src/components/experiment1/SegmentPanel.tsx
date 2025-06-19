@@ -128,7 +128,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
 
               const isDragging = draggedIndex === index;
               const isDraggedOver = draggedOver === index;
-              const segmentText = getSegmentText(segment, content, currentLanguage, true);
+              const segmentText = getSegmentText(segment, content, currentLanguage, false);
 
               return (
                 <div
