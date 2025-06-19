@@ -230,9 +230,11 @@ export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
 
 
                     {/* Segment Text Preview */}
-                    <p className="text-sm text-gray-600 leading-relaxed">
-                      {segmentText}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-gray-700 leading-relaxed">
+                        {segmentText}
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
