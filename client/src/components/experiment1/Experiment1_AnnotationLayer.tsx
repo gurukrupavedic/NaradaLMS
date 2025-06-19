@@ -50,18 +50,28 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   // Get current text content
   const currentText = content[currentLanguage] || '';
 
-  // Helper function to calculate character position in original text
-  const getOriginalTextPosition = (container: HTMLElement, range: Range): number => {
-    // Get all text content from the container, ignoring HTML tags
-    const allTextContent = container.textContent || '';
+  // Helper function to calculate character position in original text using proven ChapterEditor approach
+  const getOriginalTextPosition = (range: Range, originalText: string): { start: number, end: number } => {
+    const selectedText = range.toString();
     
-    // Get text content before the selection
-    const tempRange = document.createRange();
-    tempRange.setStart(container, 0);
-    tempRange.setEnd(range.startContainer, range.startOffset);
-    const textBeforeSelection = tempRange.toString();
+    // Get text before selection from the specific node (ChapterEditor pattern)
+    const beforeText = range.startContainer.textContent?.substring(0, range.startOffset) || "";
     
-    return textBeforeSelection.length;
+    // Find position in original text using beforeText + first character pattern
+    const searchPattern = beforeText + selectedText.charAt(0);
+    const startPos = originalText.indexOf(searchPattern);
+    
+    if (startPos >= 0) {
+      // Found exact match - calculate from beforeText length
+      const actualStart = startPos + beforeText.length;
+      return { start: actualStart, end: actualStart + selectedText.length };
+    }
+    
+    // Fallback: direct text search
+    const fallbackStart = originalText.indexOf(selectedText);
+    return fallbackStart >= 0 
+      ? { start: fallbackStart, end: fallbackStart + selectedText.length }
+      : { start: 0, end: selectedText.length };
   };
 
   // Hide floating toolbar when selection changes or user clicks elsewhere
@@ -116,19 +126,25 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
     // Calculate character positions based on the original text, not the DOM
     // This prevents corruption when segments already exist
-    const start = getOriginalTextPosition(textContainer, range);
-    const end = start + selectedText.length;
+    const { start, end } = getOriginalTextPosition(range, currentText);
 
     // Validate the selection matches the original text
     const expectedText = currentText.slice(start, end);
     if (expectedText !== selectedText) {
-      console.warn('Selection mismatch detected, skipping segment creation');
+      console.warn('Position calculation mismatch - falling back to direct search');
+      const directStart = currentText.indexOf(selectedText);
+      if (directStart >= 0) {
+        setSelectedRange({ start: directStart, end: directStart + selectedText.length });
+        setShowFloatingToolbar(true);
+        return;
+      }
+      console.error('Unable to find selected text in original content');
       return;
     }
 
     setSelectedRange({ start, end });
     setShowFloatingToolbar(true);
-  }, [currentText, getOriginalTextPosition]);
+  }, [currentText]);
 
   // Create new segment from selection
   const handleCreateSegment = useCallback((conceptualName: string) => {
