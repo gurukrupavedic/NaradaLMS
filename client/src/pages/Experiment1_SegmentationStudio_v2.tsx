@@ -25,9 +25,9 @@ import { AlertCircle, ArrowLeft, Download, Upload, Music } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 
-// import { Experiment1_AnnotationLayer_v2 } from '@/components/experiment1/Experiment1_AnnotationLayer_v2';
+import { Experiment1_AnnotationLayer_v2 } from '@/components/experiment1/Experiment1_AnnotationLayer_v2';
 import { Experiment1_ProgressiveMapper } from '@/components/experiment1/Experiment1_ProgressiveMapper';
-// import { SegmentPanel_v2 } from '@/components/experiment1/SegmentPanel_v2';
+import { SegmentPanel_v2 } from '@/components/experiment1/SegmentPanel_v2';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 interface TextSegment {
@@ -348,31 +348,15 @@ export function Experiment1_SegmentationStudio_v2() {
             <PanelGroup direction="horizontal" className="h-full">
               {/* Left Panel: Content Area */}
               <Panel defaultSize={50} minSize={30}>
-                <div className="h-full flex flex-col">
-                  {/* Integrated Header */}
-                  <div className="flex-shrink-0 px-6 py-4 bg-muted/30 border-b">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-semibold">Content ({currentLanguage === 'te' ? 'Telugu' : currentLanguage === 'hi' ? 'Hindi' : 'English'})</h2>
-                      <Badge variant="secondary">
-                        {experimentalSegments.length} segments created
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  {/* Content Area */}
-                  <div className="flex-1 overflow-auto p-6">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                      <p className="text-sm text-blue-700">
-                        <strong>Coming soon:</strong> Text annotation functionality will be available in the next update.
-                      </p>
-                    </div>
-                    <div className="p-6 bg-white border rounded-lg min-h-96">
-                      <div className="text-muted-foreground">
-                        {chapter?.content?.[currentLanguage] || 'No content available'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <Experiment1_AnnotationLayer_v2
+                  content={chapter?.content || {}}
+                  currentLanguage={currentLanguage}
+                  segments={experimentalSegments}
+                  selectedSegmentId={currentSegmentId}
+                  onSegmentCreate={handleSegmentCreate}
+                  onSegmentUpdate={handleSegmentUpdate}
+                  onSegmentDelete={handleSegmentDelete}
+                />
               </Panel>
               
               {/* Resize Handle */}
@@ -382,32 +366,18 @@ export function Experiment1_SegmentationStudio_v2() {
               
               {/* Right Panel: Segment Management */}
               <Panel defaultSize={50} minSize={30}>
-                <div className="h-full flex flex-col">
-                  {/* Integrated Header */}
-                  <div className="flex-shrink-0 px-6 py-4 bg-muted/30 border-b">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-semibold">Segments ({currentLanguage === 'te' ? 'Telugu' : currentLanguage === 'hi' ? 'Hindi' : 'English'})</h2>
-                      <Badge variant="secondary">
-                        0 of {experimentalSegments.length} segments mapped
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  {/* Content Area */}
-                  <div className="flex-1 overflow-auto p-6">
-                    <div className="text-center py-12">
-                      <div className="h-12 w-12 text-muted-foreground mx-auto mb-4">
-                        <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="10"></circle>
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-medium text-muted-foreground mb-2">No segments created</h3>
-                      <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                        Segment management functionality will be available in the next update.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <SegmentPanel_v2
+                  segments={experimentalSegments}
+                  mappings={experimentalMappings}
+                  currentLanguage={currentLanguage}
+                  content={chapter?.content || {}}
+                  currentSegmentId={currentSegmentId}
+                  onSegmentSelect={setCurrentSegmentId}
+                  onSegmentDelete={handleSegmentDelete}
+                  onSegmentUpdate={handleSegmentUpdate}
+                  onPlayMapping={handlePlayMapping}
+                  onSegmentReorder={handleSegmentReorder}
+                />
               </Panel>
             </PanelGroup>
           </TabsContent>
