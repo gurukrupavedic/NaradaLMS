@@ -20,7 +20,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Edit3 } from 'lucide-react';
 import { Plus, X } from 'lucide-react';
 import type { TextSegment, Language, ContentMap, TextRange } from '@shared/experiment1-types';
-import { getLanguageLabel } from '@shared/experiment1-utils';
+import { getLanguageLabel, getDisplayText, getSegmentationText } from '@shared/experiment1-utils';
 
 interface AnnotationLayerProps {
   content: ContentMap;
@@ -47,8 +47,9 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   const [editingSegment, setEditingSegment] = useState<string | null>(null);
   const textRef = useRef<HTMLDivElement>(null);
 
-  // Get current text content
-  const currentText = content[currentLanguage] || '';
+  // Get both versions of text content
+  const displayText = getDisplayText(content, currentLanguage);
+  const segmentationText = getSegmentationText(content, currentLanguage);
 
   // Helper function to calculate character position in original text using proven ChapterEditor approach
   const getOriginalTextPosition = (range: Range, originalText: string): { start: number, end: number } => {
@@ -126,13 +127,13 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
     // Calculate character positions based on the original text, not the DOM
     // This prevents corruption when segments already exist
-    const { start, end } = getOriginalTextPosition(range, currentText);
+    const { start, end } = getOriginalTextPosition(range, segmentationText);
 
     // Validate the selection matches the original text
-    const expectedText = currentText.slice(start, end);
+    const expectedText = segmentationText.slice(start, end);
     if (expectedText !== selectedText) {
       console.warn('Position calculation mismatch - falling back to direct search');
-      const directStart = currentText.indexOf(selectedText);
+      const directStart = segmentationText.indexOf(selectedText);
       if (directStart >= 0) {
         setSelectedRange({ start: directStart, end: directStart + selectedText.length });
         setShowFloatingToolbar(true);
@@ -144,7 +145,7 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
     setSelectedRange({ start, end });
     setShowFloatingToolbar(true);
-  }, [currentText]);
+  }, [segmentationText]);
 
   // Create new segment from selection
   const handleCreateSegment = useCallback((conceptualName: string) => {
@@ -169,7 +170,7 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
   // Render highlighted text with segment overlays
   const renderHighlightedText = () => {
-    if (!currentText) return <div className="text-muted-foreground">No content available for {currentLanguage}</div>;
+    if (!displayText) return <div className="text-muted-foreground">No content available for {currentLanguage}</div>;
 
     // Get all segments for current language
     const languageSegments = segments

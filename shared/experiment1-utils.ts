@@ -127,6 +127,13 @@ export const createContentEntry = (displayText: string): { display: string; segm
 };
 
 /**
+ * Helper type guard for content entries
+ */
+const isContentEntryLocal = (content: any): content is { display: string; segmentation: string } => {
+  return typeof content === 'object' && content !== null && 'display' in content && 'segmentation' in content;
+};
+
+/**
  * Get display text (what user sees) with backward compatibility
  * @param content - ContentMap containing language content
  * @param language - Target language
@@ -134,7 +141,7 @@ export const createContentEntry = (displayText: string): { display: string; segm
  */
 export const getDisplayText = (content: ContentMap, language: Language): string => {
   const entry = content[language];
-  if (isContentEntry(entry)) {
+  if (isContentEntryLocal(entry)) {
     return entry.display;
   }
   return entry || ''; // Backward compatibility for string format
@@ -148,7 +155,7 @@ export const getDisplayText = (content: ContentMap, language: Language): string 
  */
 export const getSegmentationText = (content: ContentMap, language: Language): string => {
   const entry = content[language];
-  if (isContentEntry(entry)) {
+  if (isContentEntryLocal(entry)) {
     return entry.segmentation;
   }
   // Auto-normalize old string format
