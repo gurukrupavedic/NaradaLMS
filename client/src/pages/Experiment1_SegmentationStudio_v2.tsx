@@ -64,7 +64,7 @@ interface Chapter {
   };
 }
 
-export function Experiment1_SegmentationStudio_v2() {
+function Experiment1_SegmentationStudio_v2() {
   const { chapterId } = useParams();
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
@@ -78,7 +78,7 @@ export function Experiment1_SegmentationStudio_v2() {
   const [currentSegmentId, setCurrentSegmentId] = useState<string | undefined>();
 
   // Data fetching
-  const { data: chapter, isLoading: chapterLoading } = useQuery({
+  const { data: chapter, isLoading: chapterLoading } = useQuery<Chapter>({
     queryKey: ['/api/chapters', chapterId],
     enabled: !!chapterId,
   });
@@ -409,3 +409,5 @@ export function Experiment1_SegmentationStudio_v2() {
     </div>
   );
 }
+
+export default Experiment1_SegmentationStudio_v2;

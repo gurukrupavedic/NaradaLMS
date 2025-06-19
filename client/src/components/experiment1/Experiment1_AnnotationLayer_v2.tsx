@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Edit3 } from 'lucide-react';
-import { FloatingSelectionToolbar } from './FloatingSelectionToolbar';
+import { Plus, X } from 'lucide-react';
 
 interface TextRange {
   start: number;
@@ -262,7 +262,6 @@ export const Experiment1_AnnotationLayer_v2: React.FC<Experiment1_AnnotationLaye
       case 'te': return 'Telugu';
       case 'hi': return 'Hindi';
       case 'en': return 'English';
-      default: return currentLanguage.toUpperCase();
     }
   };
 
@@ -310,17 +309,44 @@ export const Experiment1_AnnotationLayer_v2: React.FC<Experiment1_AnnotationLaye
             {renderHighlightedText()}
           </div>
 
-          {/* Floating Selection Toolbar */}
+          {/* Simple Floating Toolbar */}
           {showFloatingToolbar && selectedRange && (
-            <FloatingSelectionToolbar
-              selectedText={currentText.slice(selectedRange.start, selectedRange.end)}
-              onCreateSegment={handleCreateSegment}
-              onCancel={() => {
-                setShowFloatingToolbar(false);
-                setSelectedRange(null);
-                window.getSelection()?.removeAllRanges();
+            <div
+              data-floating-toolbar
+              className="fixed z-50 flex items-center gap-1 bg-white border border-gray-300 rounded-lg shadow-lg p-1"
+              style={{
+                top: '100px',
+                left: '50%',
+                transform: 'translateX(-50%)'
               }}
-            />
+            >
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-700"
+                onClick={() => {
+                  const segmentName = `Segment ${segments.length + 1}`;
+                  handleCreateSegment(segmentName);
+                }}
+                title={`Create Segment #${segments.length + 1}`}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                onClick={() => {
+                  setShowFloatingToolbar(false);
+                  setSelectedRange(null);
+                  window.getSelection()?.removeAllRanges();
+                }}
+                title="Cancel selection"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           )}
         </div>
       </div>

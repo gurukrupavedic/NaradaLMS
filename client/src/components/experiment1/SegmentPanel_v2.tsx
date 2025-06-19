@@ -141,7 +141,6 @@ export const SegmentPanel_v2: React.FC<SegmentPanel_v2Props> = ({
       case 'te': return 'Telugu';
       case 'hi': return 'Hindi';
       case 'en': return 'English';
-      default: return currentLanguage.toUpperCase();
     }
   };
 
