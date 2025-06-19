@@ -57,12 +57,10 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
   const audioRef = useRef<HTMLAudioElement>(null);
 
   // EXPERIMENT1: Filter segments by current language
-  const currentLanguageSegments = segments
-    .filter(segment => segment.textReferences[currentLanguage])
-    .sort((a, b) => (a.order || 0) - (b.order || 0));
+  const currentLanguageSegments = filterSegmentsByLanguage(segments, currentLanguage);
 
   // EXPERIMENT1: Calculate progress
-  const mappedSegments = currentLanguageSegments.filter(s => mappings.some(m => m.segmentId === s.id));
+  const mappedSegments = currentLanguageSegments.filter(s => getSegmentMapping(s.id, mappings));
   const progressPercentage = currentLanguageSegments.length > 0 ? (mappedSegments.length / currentLanguageSegments.length) * 100 : 0;
 
   // EXPERIMENT1: Audio event handlers
@@ -244,28 +242,10 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
   // Timestamp editing now handled by TimestampPill component
 
   // EXPERIMENT1: Helper functions
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = (seconds % 60).toFixed(1);
-    return `${mins}:${secs.padStart(4, '0')}`;
-  };
-
-  const getSegmentText = (segment: TextSegment) => {
-    const textRef = segment.textReferences[currentLanguage];
-    if (!textRef || !content[currentLanguage]) return segment.conceptualName;
-    
-    const text = content[currentLanguage];
-    return text.slice(textRef.start, textRef.end);
-  };
-
   const getSegmentStatus = (segmentId: string) => {
     if (activeSegmentId === segmentId) return 'active';
-    if (mappings.some(m => m.segmentId === segmentId)) return 'completed';
+    if (getSegmentMapping(segmentId, mappings)) return 'completed';
     return 'inactive';
-  };
-
-  const getSegmentMapping = (segmentId: string) => {
-    return mappings.find(m => m.segmentId === segmentId);
   };
 
   if (!audioUrl) {
@@ -387,9 +367,9 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
             <ScrollArea className="h-[calc(100vh-450px)]">
               <div className="space-y-3">
                 {currentLanguageSegments.map((segment, index) => {
-                  const mapping = getSegmentMapping(segment.id);
+                  const mapping = getSegmentMapping(segment.id, mappings);
                   const status = getSegmentStatus(segment.id);
-                  const segmentText = getSegmentText(segment);
+                  const segmentText = getSegmentText(segment, content, currentLanguage);
                   
                   return (
                     <div key={segment.id} className="flex items-center gap-4">
