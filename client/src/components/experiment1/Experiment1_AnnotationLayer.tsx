@@ -51,28 +51,32 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   const displayText = getDisplayText(content, currentLanguage);
   const segmentationText = getSegmentationText(content, currentLanguage);
 
-  // Helper function to calculate character position in original text using proven ChapterEditor approach
-  const getOriginalTextPosition = (range: Range, originalText: string): { start: number, end: number } => {
-    const selectedText = range.toString();
+  // Safe text position calculation that works with highlighted content
+  const getTextPosition = (selectedText: string, originalText: string): { start: number, end: number } => {
+    // Find the selected text in the segmentation text (clean version)
+    const trimmedSelection = selectedText.trim();
     
-    // Get text before selection from the specific node (ChapterEditor pattern)
-    const beforeText = range.startContainer.textContent?.substring(0, range.startOffset) || "";
-    
-    // Find position in original text using beforeText + first character pattern
-    const searchPattern = beforeText + selectedText.charAt(0);
-    const startPos = originalText.indexOf(searchPattern);
-    
-    if (startPos >= 0) {
-      // Found exact match - calculate from beforeText length
-      const actualStart = startPos + beforeText.length;
-      return { start: actualStart, end: actualStart + selectedText.length };
+    if (!trimmedSelection) {
+      return { start: 0, end: 0 };
     }
     
-    // Fallback: direct text search
-    const fallbackStart = originalText.indexOf(selectedText);
-    return fallbackStart >= 0 
-      ? { start: fallbackStart, end: fallbackStart + selectedText.length }
-      : { start: 0, end: selectedText.length };
+    // Direct search in the segmentation text
+    const startPos = originalText.indexOf(trimmedSelection);
+    
+    if (startPos >= 0) {
+      return { start: startPos, end: startPos + trimmedSelection.length };
+    }
+    
+    // If direct search fails, try character-by-character matching to handle whitespace differences
+    for (let i = 0; i <= originalText.length - trimmedSelection.length; i++) {
+      const substring = originalText.substring(i, i + trimmedSelection.length);
+      if (substring === trimmedSelection) {
+        return { start: i, end: i + trimmedSelection.length };
+      }
+    }
+    
+    console.warn('Could not find selected text in original content:', trimmedSelection);
+    return { start: 0, end: trimmedSelection.length };
   };
 
   // Hide floating toolbar when selection changes or user clicks elsewhere
@@ -125,21 +129,12 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     const textContainer = textRef.current;
     if (!textContainer) return;
 
-    // Calculate character positions based on the original text, not the DOM
-    // This prevents corruption when segments already exist
-    const { start, end } = getOriginalTextPosition(range, segmentationText);
-
-    // Validate the selection matches the original text
-    const expectedText = segmentationText.slice(start, end);
-    if (expectedText !== selectedText) {
-      console.warn('Position calculation mismatch - falling back to direct search');
-      const directStart = segmentationText.indexOf(selectedText);
-      if (directStart >= 0) {
-        setSelectedRange({ start: directStart, end: directStart + selectedText.length });
-        setShowFloatingToolbar(true);
-        return;
-      }
-      console.error('Unable to find selected text in original content');
+    // Calculate positions using the safe method that works with highlighted content
+    const { start, end } = getTextPosition(selectedText, segmentationText);
+    
+    // Validate that we found a valid position
+    if (start === 0 && end === 0) {
+      console.warn('Could not determine text position for selection');
       return;
     }
 
