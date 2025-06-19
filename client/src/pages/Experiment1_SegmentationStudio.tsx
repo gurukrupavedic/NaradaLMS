@@ -94,7 +94,7 @@ function Experiment1_SegmentationStudio() {
       const formData = new FormData();
       formData.append('audio', file);
       formData.append('chapterId', chapterId!);
-      const response = await fetch('/api/audio-files/upload', {
+      const response = await fetch(`/api/admin/audio-files/${chapterId}/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -102,7 +102,7 @@ function Experiment1_SegmentationStudio() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/audio-files', chapterId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
       toast({ title: "Audio Uploaded", description: "Audio file has been uploaded successfully" });
     },
     onError: () => {
