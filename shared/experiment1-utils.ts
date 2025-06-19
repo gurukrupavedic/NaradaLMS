@@ -123,17 +123,7 @@ export const normalizeLineBreaks = (text: string): string => {
   return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 };
 
-/**
- * Helper to create dual-version content entry
- * @param displayText - Original formatted text for display
- * @returns Object with both display and segmentation versions
- */
-export const createContentEntry = (displayText: string): { display: string; segmentation: string } => {
-  return {
-    display: displayText,
-    segmentation: normalizeTextForSegmentation(displayText)
-  };
-};
+// Removed createContentEntry - no longer needed with normalization approach
 
 /**
  * Helper type guard for content entries
@@ -143,30 +133,26 @@ const isContentEntryLocal = (content: any): content is { display: string; segmen
 };
 
 /**
- * Get display text (what user sees) with backward compatibility
+ * Get text content with normalization and backward compatibility
  * @param content - ContentMap containing language content
  * @param language - Target language
- * @returns Display text for the specified language
+ * @returns Normalized text content for the specified language
  */
 export const getDisplayText = (content: ContentMap, language: Language): string => {
   const entry = content[language];
   if (isContentEntryLocal(entry)) {
-    return entry.display;
+    return normalizeLineBreaks(entry.display);
   }
-  return entry || ''; // Backward compatibility for string format
+  return entry ? normalizeLineBreaks(entry) : '';
 };
 
 /**
- * Get segmentation text (for position calculation) with backward compatibility
+ * Get segmentation text (same as display text with normalization approach)
  * @param content - ContentMap containing language content
  * @param language - Target language
- * @returns Normalized text for segmentation
+ * @returns Normalized text for segmentation (same as display)
  */
 export const getSegmentationText = (content: ContentMap, language: Language): string => {
-  const entry = content[language];
-  if (isContentEntryLocal(entry)) {
-    return entry.segmentation;
-  }
-  // Auto-normalize old string format
-  return entry ? normalizeTextForSegmentation(entry) : '';
+  // With normalization approach, segmentation text is same as display text
+  return getDisplayText(content, language);
 };
