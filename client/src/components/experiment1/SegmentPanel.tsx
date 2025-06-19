@@ -130,75 +130,75 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                   const mapping = getSegmentMapping(segment.id, mappings);
                   const isSelected = segment.id === currentSegmentId;
 
-              const isDragging = draggedIndex === index;
-              const isDraggedOver = draggedOver === index;
-              const segmentText = getSegmentText(segment, content, currentLanguage, false);
+                  const isDragging = draggedIndex === index;
+                  const isDraggedOver = draggedOver === index;
+                  const segmentText = getSegmentText(segment, content, currentLanguage, false);
 
-              return (
-                <div
-                  key={segment.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, index)}
-                  onDragEnd={handleDragEnd}
-                  className={`
-                    relative p-3 border rounded-lg cursor-pointer transition-all
-                    ${isSelected ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:bg-white'}
-                    ${isDragging ? 'opacity-50' : ''}
-                    ${isDraggedOver ? 'border-blue-400 bg-blue-50' : ''}
-                  `}
-                  onClick={() => onSegmentSelect(segment.id)}
-                >
-                  {/* Main Content Layout */}
-                  <div className="flex items-start gap-3">
-                    {/* Left: Drag Handle */}
-                    <div className="text-gray-400 hover:text-gray-600 flex-shrink-0 mt-0.5">
-                      <GripVertical className="h-4 w-4" />
-                    </div>
-                    
-                    {/* Center: Number Badge */}
-                    <Badge variant="secondary" className="text-xs px-2 py-1 min-w-6 justify-center flex-shrink-0 rounded-full bg-gray-200 text-gray-700">
-                      {segment.order + 1}
-                    </Badge>
-                    
-                    {/* Right: Content Area */}
-                    <div className="flex-1 min-w-0">
-                      {/* Text Content */}
-                      <div className="text-sm text-gray-700 leading-relaxed break-words">
-                        {segmentText}
+                  return (
+                    <div
+                      key={segment.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, index)}
+                      onDragEnd={handleDragEnd}
+                      className={`
+                        relative p-3 border rounded-lg cursor-pointer transition-all
+                        ${isSelected ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:bg-white'}
+                        ${isDragging ? 'opacity-50' : ''}
+                        ${isDraggedOver ? 'border-blue-400 bg-blue-50' : ''}
+                      `}
+                      onClick={() => onSegmentSelect(segment.id)}
+                    >
+                      {/* Main Content Layout */}
+                      <div className="flex items-start gap-3">
+                        {/* Left: Drag Handle */}
+                        <div className="text-gray-400 hover:text-gray-600 flex-shrink-0 mt-0.5">
+                          <GripVertical className="h-4 w-4" />
+                        </div>
+                        
+                        {/* Center: Number Badge */}
+                        <Badge variant="secondary" className="text-xs px-2 py-1 min-w-6 justify-center flex-shrink-0 rounded-full bg-gray-200 text-gray-700">
+                          {segment.order + 1}
+                        </Badge>
+                        
+                        {/* Right: Content Area */}
+                        <div className="flex-1 min-w-0">
+                          {/* Text Content */}
+                          <div className="text-sm text-gray-700 leading-relaxed break-words">
+                            {segmentText}
+                          </div>
+                        </div>
+
+                        {/* Far Right: Delete Button */}
+                        <div className="flex-shrink-0">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSegmentDelete(segment.id);
+                            }}
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
+                  );
+                })
+              )}
 
-                    {/* Far Right: Delete Button */}
-                    <div className="flex-shrink-0">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSegmentDelete(segment.id);
-                        }}
-                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
+              {/* Instructions */}
+              {currentLanguageSegments.length > 0 && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <p className="text-sm text-gray-600">
+                    <strong>Tip:</strong> Drag segments to reorder them, click to select, or use the buttons to edit, delete, or play mapped audio.
+                  </p>
                 </div>
-              );
-            })
-          )}
-
-          {/* Instructions */}
-          {currentLanguageSegments.length > 0 && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <p className="text-sm text-gray-600">
-                <strong>Tip:</strong> Drag segments to reorder them, click to select, or use the buttons to edit, delete, or play mapped audio.
-              </p>
-            </div>
-          )}
+              )}
             </div>
           </div>
         </div>
