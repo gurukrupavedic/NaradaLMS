@@ -178,7 +178,7 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
       .sort((a, b) => a.textReferences[currentLanguage]!.start - b.textReferences[currentLanguage]!.start);
 
     if (languageSegments.length === 0) {
-      return <div className="whitespace-pre-wrap leading-relaxed">{currentText}</div>;
+      return <div className="whitespace-pre-wrap leading-relaxed">{displayText}</div>;
     }
 
     const parts: React.ReactNode[] = [];
@@ -191,7 +191,7 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
       if (range.start > lastIndex) {
         parts.push(
           <span key={`text-${index}`} className="whitespace-pre-wrap">
-            {currentText.slice(lastIndex, range.start)}
+            {displayText.slice(lastIndex, range.start)}
           </span>
         );
       }
@@ -208,7 +208,7 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
           }`}
           title={segment.conceptualName}
         >
-          {currentText.slice(range.start, range.end)}
+          {displayText.slice(range.start, range.end)}
           {editingSegment === segment.id && (
             <div className="absolute top-full left-0 z-10 mt-1 p-2 bg-white border rounded shadow-lg min-w-48">
               <Input
@@ -265,10 +265,10 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     });
 
     // Add remaining text
-    if (lastIndex < currentText.length) {
+    if (lastIndex < displayText.length) {
       parts.push(
         <span key="text-end" className="whitespace-pre-wrap">
-          {currentText.slice(lastIndex)}
+          {displayText.slice(lastIndex)}
         </span>
       );
     }

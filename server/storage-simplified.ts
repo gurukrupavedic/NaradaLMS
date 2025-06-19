@@ -1,4 +1,5 @@
 // Simplified in-memory storage without authentication
+import { createContentEntry } from '../shared/experiment1-utils';
 export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<any>;
