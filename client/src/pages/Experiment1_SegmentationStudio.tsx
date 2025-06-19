@@ -273,9 +273,14 @@ function Experiment1_SegmentationStudio() {
                   </SelectContent>
                 </Select>
               </div>
-              <Badge variant="secondary" className="text-xs">
-                {experimentalSegments.filter(s => s.textReferences[currentLanguage]).length} segments created
-              </Badge>
+              <div className="flex gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  {experimentalSegments.filter(s => s.textReferences[currentLanguage]).length} segments created
+                </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {experimentalMappings.length} of {experimentalSegments.filter(s => s.textReferences[currentLanguage]).length} segments mapped
+                </Badge>
+              </div>
             </div>
 
             <PanelGroup direction="horizontal" className="h-full">

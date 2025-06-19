@@ -154,12 +154,7 @@ export const SegmentPanel: React.FC<SegmentPanel_v2Props> = ({
     <div className="h-full flex flex-col">
       {/* Integrated Header */}
       <div className="flex-shrink-0 px-6 py-4 bg-muted/30 border-b">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Segments ({getLanguageLabel()})</h2>
-          <Badge variant="secondary">
-            {mappedCount} of {currentLanguageSegments.length} segments mapped
-          </Badge>
-        </div>
+        <h2 className="text-lg font-semibold">Segments ({getLanguageLabel()})</h2>
       </div>
 
       {/* Content Area */}
