@@ -35,7 +35,7 @@ interface TextSegment {
   order: number;
 }
 
-interface Experiment1_AnnotationLayer_v2Props {
+interface Experiment1_AnnotationLayerProps {
   content: {
     te?: string;
     hi?: string;
@@ -49,7 +49,7 @@ interface Experiment1_AnnotationLayer_v2Props {
   onSegmentDelete: (id: string) => void;
 }
 
-export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayer_v2Props> = ({
+export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerProps> = ({
   content,
   currentLanguage,
   segments,
