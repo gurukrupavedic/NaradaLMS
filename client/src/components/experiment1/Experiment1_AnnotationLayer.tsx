@@ -266,19 +266,20 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
 
   return (
-    <div className="h-full overflow-auto">
-      {/* Header - now inside scrollable area and sticky */}
-      <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
-        <h2 className="text-base font-semibold text-gray-700">Content ({getLanguageLabel(currentLanguage)})</h2>
-      </div>
-
+    <div className="h-full">
       {/* Content Area */}
-      <div className="p-4">
-        <div className="space-y-4">
+      <div className="p-4 h-full">
+        {/* White Container with integrated header */}
+        <div className="bg-white border rounded-lg h-[600px] overflow-auto shadow-sm">
+          {/* Header - now inside content container and sticky */}
+          <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
+            <h2 className="text-base font-semibold text-gray-700">Content ({getLanguageLabel(currentLanguage)})</h2>
+          </div>
+
           {/* Text Content with Highlighting */}
           <div
             ref={textRef}
-            className="relative p-6 bg-white border rounded-lg h-[600px] overflow-auto cursor-text font-serif text-base leading-relaxed shadow-sm"
+            className="relative p-6 cursor-text font-serif text-base leading-relaxed"
             onMouseUp={handleTextSelection}
             onContextMenu={(e) => {
               e.preventDefault();

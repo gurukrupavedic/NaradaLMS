@@ -104,29 +104,31 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
 
 
   return (
-    <div className="h-full overflow-auto">
-      {/* Header - now inside scrollable area and sticky */}
-      <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
-        <h2 className="text-base font-semibold text-gray-700">Segments ({getLanguageLabel(currentLanguage)})</h2>
-      </div>
-
+    <div className="h-full">
       {/* Content Area */}
-      <div className="p-4">
-        {/* White Container - matching Audio tab style */}
-        <div className="bg-white rounded-lg border shadow-sm p-4 h-[600px] overflow-auto">
-          <div className="space-y-3">
-          {currentLanguageSegments.length === 0 ? (
-            <div className="text-center py-12">
-              <Circle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-muted-foreground mb-2">No segments created</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                Select text in the content area to create your first segment. Segments help organize and map content to audio.
-              </p>
-            </div>
-          ) : (
-            currentLanguageSegments.map((segment, index) => {
-              const mapping = getSegmentMapping(segment.id, mappings);
-              const isSelected = segment.id === currentSegmentId;
+      <div className="p-4 h-full">
+        {/* White Container with integrated header */}
+        <div className="bg-white rounded-lg border shadow-sm h-[600px] overflow-auto">
+          {/* Header - now inside content container and sticky */}
+          <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
+            <h2 className="text-base font-semibold text-gray-700">Segments ({getLanguageLabel(currentLanguage)})</h2>
+          </div>
+
+          {/* Segment Content */}
+          <div className="p-4">
+            <div className="space-y-3">
+              {currentLanguageSegments.length === 0 ? (
+                <div className="text-center py-12">
+                  <Circle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-muted-foreground mb-2">No segments created</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                    Select text in the content area to create your first segment. Segments help organize and map content to audio.
+                  </p>
+                </div>
+              ) : (
+                currentLanguageSegments.map((segment, index) => {
+                  const mapping = getSegmentMapping(segment.id, mappings);
+                  const isSelected = segment.id === currentSegmentId;
 
               const isDragging = draggedIndex === index;
               const isDraggedOver = draggedOver === index;
@@ -197,6 +199,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
               </p>
             </div>
           )}
+            </div>
           </div>
         </div>
       </div>
