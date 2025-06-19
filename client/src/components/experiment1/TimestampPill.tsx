@@ -125,14 +125,16 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
         )}
       </div>
 
-      {/* Play button */}
-      <button
-        onClick={handlePlay}
-        className="flex items-center justify-center w-4 h-4 rounded hover:bg-blue-50 text-gray-400 hover:text-blue-600 ml-2 transition-colors"
-        title="Play this segment"
-      >
-        <Play className="h-3 w-3" />
-      </button>
+      {/* Play button - hidden during editing */}
+      {!isEditing && (
+        <button
+          onClick={handlePlay}
+          className="flex items-center justify-center w-4 h-4 rounded hover:bg-blue-50 text-gray-400 hover:text-blue-600 ml-2 transition-colors"
+          title="Play this segment"
+        >
+          <Play className="h-3 w-3" />
+        </button>
+      )}
     </div>
   );
 };
