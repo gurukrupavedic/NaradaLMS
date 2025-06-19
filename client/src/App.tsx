@@ -13,7 +13,7 @@ import ContentManagement from "@/pages/ContentManagement";
 import TrackChapters from "@/pages/TrackChapters";
 import ChapterEditor from "@/pages/ChapterEditor";
 import SegmentationEditor from "@/pages/SegmentationEditor";
-import Experiment1_SegmentationStudio_v2 from "@/pages/Experiment1_SegmentationStudio_v2";
+import { Experiment1_SegmentationStudio_v2 } from "@/pages/Experiment1_SegmentationStudio_v2";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
