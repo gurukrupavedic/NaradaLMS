@@ -147,38 +147,39 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                   `}
                   onClick={() => onSegmentSelect(segment.id)}
                 >
-                  {/* Top Left Area - Drag Handle and Number */}
-                  <div className="absolute top-3 left-2 flex items-center gap-2">
-                    <div className="text-gray-400 hover:text-gray-600">
+                  {/* Main Content Layout */}
+                  <div className="flex items-start p-4 gap-3">
+                    {/* Left: Drag Handle */}
+                    <div className="text-gray-400 hover:text-gray-600 flex-shrink-0">
                       <GripVertical className="h-4 w-4" />
                     </div>
-                    <Badge variant="secondary" className="text-xs px-2 py-0.5 min-w-6 justify-center">
+                    
+                    {/* Center: Number Badge */}
+                    <Badge variant="secondary" className="text-xs px-2 py-0.5 min-w-6 justify-center flex-shrink-0">
                       {segment.order + 1}
                     </Badge>
-                  </div>
-
-                  {/* Content */}
-                  <div className="ml-12 mt-3 flex flex-col min-w-0">
-                    {/* Header */}
-                    <div className="flex items-center justify-end mb-2 flex-shrink-0">
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSegmentDelete(segment.id);
-                          }}
-                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                    
+                    {/* Right: Content Area */}
+                    <div className="flex-1 min-w-0">
+                      {/* Text Content */}
+                      <div className="text-sm text-gray-700 leading-relaxed break-words">
+                        {segmentText}
                       </div>
                     </div>
 
-                    {/* Segment Text Preview */}
-                    <div className="text-sm text-gray-700 leading-relaxed break-words">
-                      {segmentText}
+                    {/* Far Right: Delete Button */}
+                    <div className="flex-shrink-0">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSegmentDelete(segment.id);
+                        }}
+                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
                   </div>
                 </div>
