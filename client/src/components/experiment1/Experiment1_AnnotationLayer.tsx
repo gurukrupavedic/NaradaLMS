@@ -50,6 +50,20 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   // Get current text content
   const currentText = content[currentLanguage] || '';
 
+  // Helper function to calculate character position in original text
+  const getOriginalTextPosition = (container: HTMLElement, range: Range): number => {
+    // Get all text content from the container, ignoring HTML tags
+    const allTextContent = container.textContent || '';
+    
+    // Get text content before the selection
+    const tempRange = document.createRange();
+    tempRange.setStart(container, 0);
+    tempRange.setEnd(range.startContainer, range.startOffset);
+    const textBeforeSelection = tempRange.toString();
+    
+    return textBeforeSelection.length;
+  };
+
   // Hide floating toolbar when selection changes or user clicks elsewhere
   useEffect(() => {
     const handleSelectionChange = () => {
@@ -100,16 +114,21 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     const textContainer = textRef.current;
     if (!textContainer) return;
 
-    // Calculate character positions
-    const preSelectionRange = document.createRange();
-    preSelectionRange.selectNodeContents(textContainer);
-    preSelectionRange.setEnd(range.startContainer, range.startOffset);
-    const start = preSelectionRange.toString().length;
+    // Calculate character positions based on the original text, not the DOM
+    // This prevents corruption when segments already exist
+    const start = getOriginalTextPosition(textContainer, range);
     const end = start + selectedText.length;
+
+    // Validate the selection matches the original text
+    const expectedText = currentText.slice(start, end);
+    if (expectedText !== selectedText) {
+      console.warn('Selection mismatch detected, skipping segment creation');
+      return;
+    }
 
     setSelectedRange({ start, end });
     setShowFloatingToolbar(true);
-  }, []);
+  }, [currentText, getOriginalTextPosition]);
 
   // Create new segment from selection
   const handleCreateSegment = useCallback((conceptualName: string) => {
