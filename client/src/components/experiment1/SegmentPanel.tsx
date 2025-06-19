@@ -153,8 +153,8 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                     >
                       {/* Main Content Layout */}
                       <div className="flex gap-3">
-                        {/* Left: Drag Handle - Full Height */}
-                        <div className="text-gray-400 hover:text-gray-600 flex-shrink-0 flex items-center h-full">
+                        {/* Left: Drag Handle - Content Height */}
+                        <div className="text-gray-400 hover:text-gray-600 flex-shrink-0 flex items-center self-stretch">
                           <GripVertical className="h-full w-4" />
                         </div>
                         
