@@ -212,30 +212,13 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
         </CardContent>
       </Card>
 
-      {/* EXPERIMENT1: Segment creation dialog */}
-      {isSelecting && selectedRange && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="pt-6">
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium">Selected text:</p>
-                <p className="text-sm bg-white p-2 rounded border">
-                  "{(content[currentLanguage] || '').slice(selectedRange.start, selectedRange.end)}"
-                </p>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button onClick={handleCreateSegment} className="flex-1">
-                  Create Segment #{segments.length + 1}
-                </Button>
-                <Button variant="outline" onClick={handleCancelSelection}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Floating toolbar for text selection */}
+      <FloatingSelectionToolbar
+        isVisible={showFloatingToolbar}
+        onCreateSegment={handleCreateSegment}
+        onCancel={handleCancelSelection}
+        nextSegmentNumber={segments.length + 1}
+      />
 
       {/* Instructions */}
       <Card className="bg-gray-50">
@@ -244,7 +227,7 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
             <h4 className="font-medium mb-2">How to use:</h4>
             <ol className="list-decimal list-inside space-y-1">
               <li>Select text by clicking and dragging</li>
-              <li>Click "Create Segment" to save (automatically numbered)</li>
+              <li>Use the floating toolbar (+ icon) to create segments</li>
               <li>Manage all segments using the cards in the right panel</li>
               <li>Click segment cards to highlight text in content</li>
               <li>Drag cards to reorder segments or delete as needed</li>
