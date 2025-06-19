@@ -130,7 +130,7 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     };
   }, []);
 
-  // Handle text selection
+  // Handle text selection with pure text-based approach
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) return;
@@ -138,21 +138,37 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     const selectedText = selection.toString().trim();
     if (!selectedText) return;
 
-    // Get the range relative to the text container
-    const range = selection.getRangeAt(0);
-    const textContainer = textRef.current;
-    if (!textContainer) return;
-
-    // Calculate positions using the safe method that works with highlighted content
-    const { start, end } = getTextPosition(selectedText, segmentationText);
+    // COMPLETELY BYPASS DOM POSITION CALCULATION
+    // Instead, find the selected text directly in the segmentation text
+    const cleanSelectedText = selectedText.replace(/\s+/g, ' ').trim();
     
-    // Validate that we found a valid position
-    if (start === 0 && end === 0) {
-      console.warn('Could not determine text position for selection');
+    // Find all possible matches in the original text
+    const matches = [];
+    let searchStart = 0;
+    
+    while (true) {
+      const index = segmentationText.indexOf(cleanSelectedText, searchStart);
+      if (index === -1) break;
+      
+      matches.push({
+        start: index,
+        end: index + cleanSelectedText.length,
+        text: segmentationText.slice(index, index + cleanSelectedText.length)
+      });
+      
+      searchStart = index + 1;
+    }
+    
+    if (matches.length === 0) {
+      console.warn('Selected text not found in original content:', cleanSelectedText);
       return;
     }
-
-    setSelectedRange({ start, end });
+    
+    // Use the first match (or implement smarter logic if needed)
+    const match = matches[0];
+    console.log('Selected text found at position:', match.start, '-', match.end);
+    
+    setSelectedRange({ start: match.start, end: match.end });
     setShowFloatingToolbar(true);
   }, [segmentationText]);
 
