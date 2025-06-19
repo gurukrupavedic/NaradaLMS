@@ -26,7 +26,7 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
   onTimestampUpdate,
   duration
 }) => {
-  const [editingField, setEditingField] = useState<'start' | 'end' | null>(null);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editValue, setEditValue] = useState<string>('');
 
   const formatTime = (seconds: number) => {
@@ -53,30 +53,23 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
     return mins * 60 + secs;
   };
 
-  const startEditingTimestamp = (field: 'start' | 'end') => {
-    const currentValue = field === 'start' ? startTime : endTime;
-    setEditingField(field);
-    setEditValue(formatTimeForEdit(currentValue));
+  const startEditingTimestamp = () => {
+    setIsEditing(true);
+    setEditValue(formatTimeForEdit(endTime));
   };
 
   const saveTimestampEdit = () => {
-    if (!editingField) return;
-    
     const newTime = parseTimeFromEdit(editValue);
     if (newTime >= 0 && newTime <= duration) {
-      const updates = editingField === 'start' 
-        ? { startTime: newTime }
-        : { endTime: newTime };
-      
-      onTimestampUpdate(segmentId, updates);
+      onTimestampUpdate(segmentId, { endTime: newTime });
     }
     
-    setEditingField(null);
+    setIsEditing(false);
     setEditValue('');
   };
 
   const cancelTimestampEdit = () => {
-    setEditingField(null);
+    setIsEditing(false);
     setEditValue('');
   };
 
@@ -91,7 +84,7 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
   };
 
   return (
-    <div className="flex items-center bg-white border border-gray-300 rounded-full px-2 py-1 text-xs font-mono min-w-[110px] shadow-sm">
+    <div className="flex items-center bg-white border border-gray-300 rounded-full px-2 py-1 text-xs font-mono min-w-[80px] shadow-sm">
       {/* Delete button */}
       <button
         onClick={handleDelete}
@@ -101,10 +94,9 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
         <X className="h-3 w-3" />
       </button>
 
-      {/* Timestamp display */}
-      <div className="flex-1 flex items-center justify-center gap-1 text-gray-700">
-        {/* Start time */}
-        {editingField === 'start' ? (
+      {/* End timestamp display */}
+      <div className="flex-1 flex items-center justify-center text-gray-700">
+        {isEditing ? (
           <div className="flex items-center gap-1">
             <Input
               value={editValue}
@@ -125,38 +117,7 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
           </div>
         ) : (
           <button 
-            onClick={() => startEditingTimestamp('start')}
-            className="hover:bg-gray-100 px-1 rounded transition-colors"
-          >
-            {formatTime(startTime)}
-          </button>
-        )}
-
-        <span className="text-gray-400">-</span>
-
-        {/* End time */}
-        {editingField === 'end' ? (
-          <div className="flex items-center gap-1">
-            <Input
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              className="h-5 w-12 text-xs bg-white border-gray-300 text-gray-700"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') saveTimestampEdit();
-                if (e.key === 'Escape') cancelTimestampEdit();
-              }}
-              autoFocus
-            />
-            <button onClick={saveTimestampEdit} className="text-blue-600 hover:text-blue-700">
-              <Check className="h-3 w-3" />
-            </button>
-            <button onClick={cancelTimestampEdit} className="text-red-600 hover:text-red-700">
-              <Cancel className="h-3 w-3" />
-            </button>
-          </div>
-        ) : (
-          <button 
-            onClick={() => startEditingTimestamp('end')}
+            onClick={startEditingTimestamp}
             className="hover:bg-gray-100 px-1 rounded transition-colors"
           >
             {formatTime(endTime)}
