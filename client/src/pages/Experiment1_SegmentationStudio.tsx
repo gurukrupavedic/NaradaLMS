@@ -241,32 +241,7 @@ function Experiment1_SegmentationStudio() {
             </Badge>
           </div>
 
-          {/* Environment Controls */}
-          <Card className="bg-gray-50 border-gray-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium">Segmentation Environment</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {experimentalSegments.length} segments, {experimentalMappings.length} mappings created
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handleImportFromProduction}>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Import Production
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleExportToProduction}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Export to Production
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleClearExperiment}>
-                    Clear Environment
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
 
           {/* Language and Audio Selection */}
           <div className="flex gap-4">
