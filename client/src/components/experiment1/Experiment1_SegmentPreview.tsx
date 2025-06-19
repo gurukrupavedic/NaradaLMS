@@ -167,11 +167,8 @@ export const Experiment1_SegmentPreview: React.FC<Experiment1_SegmentPreviewProp
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle className="text-base flex items-center justify-between">
-          <span>Segments Overview</span>
-          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
-            Experiment 1
-          </Badge>
+        <CardTitle className="text-base">
+          Segments Overview
         </CardTitle>
         <div className="text-sm text-muted-foreground">
           {mappedCount} of {totalCount} segments mapped
