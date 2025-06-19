@@ -79,12 +79,12 @@ export function Experiment1_SegmentationStudio_v2() {
 
   // Data fetching
   const { data: chapter, isLoading: chapterLoading } = useQuery<Chapter>({
-    queryKey: ['/api/chapters', chapterId],
+    queryKey: [`/api/admin/chapters/${chapterId}/details`],
     enabled: !!chapterId,
   });
 
   const { data: audioFiles = [], isLoading: audioLoading } = useQuery<AudioFile[]>({
-    queryKey: ['/api/audio-files', chapterId],
+    queryKey: [`/api/admin/audio-files/${chapterId}`],
     enabled: !!chapterId,
   });
 
