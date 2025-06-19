@@ -46,6 +46,13 @@ function Experiment1_SegmentationStudio() {
   const [experimentalMappings, setExperimentalMappings] = useState<AudioMapping[]>([]);
   const [currentSegmentId, setCurrentSegmentId] = useState<string | undefined>();
 
+  // Clear experimental data
+  const clearExperimentalData = () => {
+    setExperimentalSegments([]);
+    setExperimentalMappings([]);
+    setCurrentSegmentId(undefined);
+  };
+
   // Data fetching
   const { data: chapter, isLoading: chapterLoading } = useQuery<Chapter>({
     queryKey: [`/api/admin/chapters/${chapterId}/details`],
@@ -271,6 +278,14 @@ function Experiment1_SegmentationStudio() {
                 <Badge variant="secondary" className="text-xs">
                   {experimentalMappings.length} mapped
                 </Badge>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={clearExperimentalData}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-6"
+                >
+                  Clear Data
+                </Button>
               </div>
             </div>
 

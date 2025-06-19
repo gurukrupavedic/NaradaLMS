@@ -51,32 +51,46 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   const displayText = getDisplayText(content, currentLanguage);
   const segmentationText = getSegmentationText(content, currentLanguage);
 
-  // Safe text position calculation that works with highlighted content
+  // Simple and reliable text position calculation
   const getTextPosition = (selectedText: string, originalText: string): { start: number, end: number } => {
-    // Find the selected text in the segmentation text (clean version)
     const trimmedSelection = selectedText.trim();
     
     if (!trimmedSelection) {
       return { start: 0, end: 0 };
     }
     
-    // Direct search in the segmentation text
-    const startPos = originalText.indexOf(trimmedSelection);
-    
-    if (startPos >= 0) {
-      return { start: startPos, end: startPos + trimmedSelection.length };
+    // Try exact match first
+    const exactMatch = originalText.indexOf(trimmedSelection);
+    if (exactMatch >= 0) {
+      return { start: exactMatch, end: exactMatch + trimmedSelection.length };
     }
     
-    // If direct search fails, try character-by-character matching to handle whitespace differences
-    for (let i = 0; i <= originalText.length - trimmedSelection.length; i++) {
-      const substring = originalText.substring(i, i + trimmedSelection.length);
-      if (substring === trimmedSelection) {
-        return { start: i, end: i + trimmedSelection.length };
-      }
+    // For multi-line selections, find the best match by looking for unique phrases
+    const words = trimmedSelection.split(/\s+/).filter(w => w.length > 2);
+    if (words.length === 0) {
+      return { start: 0, end: 0 };
     }
     
-    console.warn('Could not find selected text in original content:', trimmedSelection);
-    return { start: 0, end: trimmedSelection.length };
+    // Find the first significant word
+    const firstWord = words[0];
+    const lastWord = words[words.length - 1];
+    
+    const firstWordIndex = originalText.indexOf(firstWord);
+    if (firstWordIndex < 0) {
+      console.warn('Could not find selection in text');
+      return { start: 0, end: 0 };
+    }
+    
+    // Find the end by looking for the last word after the first word
+    const searchAfter = firstWordIndex + firstWord.length;
+    const lastWordIndex = originalText.indexOf(lastWord, searchAfter);
+    
+    if (lastWordIndex < 0) {
+      // Single word or last word not found, use first word + selection length estimate
+      return { start: firstWordIndex, end: Math.min(firstWordIndex + trimmedSelection.length, originalText.length) };
+    }
+    
+    return { start: firstWordIndex, end: lastWordIndex + lastWord.length };
   };
 
   // Hide floating toolbar when selection changes or user clicks elsewhere
