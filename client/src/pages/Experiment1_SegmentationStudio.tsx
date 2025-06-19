@@ -215,10 +215,9 @@ export default function Experiment1_SegmentationStudio() {
   const uploadAudioMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
-      formData.append('audioFile', file);
-      formData.append('chapterId', chapterId!);
+      formData.append('audio', file);
       
-      const response = await fetch('/api/admin/audio-files', {
+      const response = await fetch(`/api/admin/audio-files/${chapterId}/upload`, {
         method: 'POST',
         body: formData
       });
