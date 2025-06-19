@@ -1,5 +1,5 @@
 // Simplified in-memory storage without authentication
-import { createContentEntry } from '../shared/experiment1-utils';
+import { createContentEntry, normalizeLineBreaks } from '../shared/experiment1-utils';
 export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<any>;
@@ -404,7 +404,26 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`)
   }
 
   async getChapter(id: number): Promise<any | undefined> {
-    return this.chapters.find(chapter => chapter.id === id);
+    const chapter = this.chapters.find(chapter => chapter.id === id);
+    if (!chapter) return undefined;
+    
+    // Normalize line breaks in content for consistent text matching
+    if (chapter.content) {
+      const normalizedContent: any = {};
+      for (const [lang, content] of Object.entries(chapter.content)) {
+        if (typeof content === 'string') {
+          normalizedContent[lang] = normalizeLineBreaks(content);
+        } else if (content && typeof content === 'object') {
+          normalizedContent[lang] = {
+            display: normalizeLineBreaks(content.display || ''),
+            segmentation: normalizeLineBreaks(content.segmentation || '')
+          };
+        }
+      }
+      return { ...chapter, content: normalizedContent };
+    }
+    
+    return chapter;
   }
 
   async createChapter(chapter: any): Promise<any> {

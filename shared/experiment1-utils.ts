@@ -115,6 +115,15 @@ export const normalizeTextForSegmentation = (text: string): string => {
 };
 
 /**
+ * Normalize line breaks for consistent text matching between selection and storage
+ * @param text - Text to normalize
+ * @returns Text with consistent line break characters only
+ */
+export const normalizeLineBreaks = (text: string): string => {
+  return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+};
+
+/**
  * Helper to create dual-version content entry
  * @param displayText - Original formatted text for display
  * @returns Object with both display and segmentation versions

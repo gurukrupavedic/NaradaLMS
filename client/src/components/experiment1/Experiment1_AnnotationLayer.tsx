@@ -20,7 +20,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Edit3 } from 'lucide-react';
 import { Plus, X } from 'lucide-react';
 import type { TextSegment, Language, ContentMap, TextRange } from '@shared/experiment1-types';
-import { getLanguageLabel, getDisplayText, getSegmentationText } from '@shared/experiment1-utils';
+import { getLanguageLabel, getDisplayText, getSegmentationText, normalizeLineBreaks } from '@shared/experiment1-utils';
 
 interface AnnotationLayerProps {
   content: ContentMap;
