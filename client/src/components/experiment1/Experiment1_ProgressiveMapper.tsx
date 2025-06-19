@@ -19,7 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Play, Pause, Square, RotateCcw, CheckCircle, Circle, Clock } from 'lucide-react';
 import { TimestampPill } from './TimestampPill';
 import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/experiment1-types';
-import { getSegmentText, filterSegmentsByLanguage, getSegmentMapping, formatTime } from '@shared/experiment1-utils';
+import { getSegmentText, filterSegmentsByLanguage, getSegmentMapping, formatTime as formatTimeUtil } from '@shared/experiment1-utils';
 
 interface Experiment1_ProgressiveMapperProps {
   audioUrl: string;
@@ -278,8 +278,8 @@ export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapp
             {/* Progress bar */}
             <div className="space-y-2">
               <div className="flex justify-between text-sm text-muted-foreground">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
+                <span>{formatTimeUtil(currentTime)}</span>
+                <span>{formatTimeUtil(duration)}</span>
               </div>
               <Slider
                 value={[currentTime]}
