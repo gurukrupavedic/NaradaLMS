@@ -269,12 +269,7 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
     <div className="h-full flex flex-col">
       {/* Integrated Header */}
       <div className="flex-shrink-0 px-6 py-4 bg-muted/30 border-b">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Content ({getLanguageLabel()})</h2>
-          <Badge variant="secondary">
-            {segments.length} segments created
-          </Badge>
-        </div>
+        <h2 className="text-lg font-semibold">Content ({getLanguageLabel()})</h2>
       </div>
 
       {/* Content Area */}
