@@ -21,7 +21,7 @@ import { TimestampPill } from './TimestampPill';
 import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/experiment1-types';
 import { getSegmentText, filterSegmentsByLanguage, getSegmentMapping, formatTime as formatTimeUtil } from '@shared/experiment1-utils';
 
-interface Experiment1_ProgressiveMapperProps {
+interface ProgressiveMapperProps {
   audioUrl: string;
   segments: TextSegment[];
   currentLanguage: Language;
@@ -32,7 +32,7 @@ interface Experiment1_ProgressiveMapperProps {
   onMappingDelete: (segmentId: string) => void;
 }
 
-export const Experiment1_ProgressiveMapper: React.FC<Experiment1_ProgressiveMapperProps> = ({
+export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   audioUrl,
   segments,
   currentLanguage,

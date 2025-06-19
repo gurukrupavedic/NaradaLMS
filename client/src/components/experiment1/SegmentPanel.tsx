@@ -19,7 +19,7 @@ import { Trash2, Play, GripVertical, Circle } from 'lucide-react';
 import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/experiment1-types';
 import { getSegmentText, filterSegmentsByLanguage, getSegmentMapping, getLanguageLabel, formatTime } from '@shared/experiment1-utils';
 
-interface SegmentPanel_v2Props {
+interface SegmentPanelProps {
   segments: TextSegment[];
   mappings: AudioMapping[];
   currentLanguage: Language;

@@ -20,8 +20,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Edit3 } from 'lucide-react';
 import { Plus, X } from 'lucide-react';
 import type { TextSegment, Language, ContentMap, TextRange } from '@shared/experiment1-types';
+import { getLanguageLabel } from '@shared/experiment1-utils';
 
-interface Experiment1_AnnotationLayerProps {
+interface AnnotationLayerProps {
   content: ContentMap;
   currentLanguage: Language;
   segments: TextSegment[];
@@ -31,7 +32,7 @@ interface Experiment1_AnnotationLayerProps {
   onSegmentDelete: (id: string) => void;
 }
 
-export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerProps> = ({
+export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   content,
   currentLanguage,
   segments,
@@ -239,19 +240,13 @@ export const Experiment1_AnnotationLayer: React.FC<Experiment1_AnnotationLayerPr
     return <div className="leading-relaxed">{parts}</div>;
   };
 
-  const getLanguageLabel = () => {
-    switch (currentLanguage) {
-      case 'te': return 'Telugu';
-      case 'hi': return 'Hindi';
-      case 'en': return 'English';
-    }
-  };
+
 
   return (
     <div className="h-full flex flex-col">
       {/* Integrated Header */}
       <div className="flex-shrink-0 px-6 py-4 bg-muted/30 border-b">
-        <h2 className="text-lg font-semibold">Content ({getLanguageLabel()})</h2>
+        <h2 className="text-lg font-semibold">Content ({getLanguageLabel(currentLanguage)})</h2>
       </div>
 
       {/* Content Area */}
