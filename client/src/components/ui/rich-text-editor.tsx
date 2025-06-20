@@ -201,7 +201,7 @@ export function RichTextEditor({
   return (
     <div className={cn("border rounded-md", className)}>
       {/* Reorganized Toolbar */}
-      <div className="border-b p-2 bg-muted/50">
+      <div className="border-b p-2 bg-white">
         {/* Row 1: Primary Tools */}
         <div className="flex flex-wrap items-center gap-2 mb-2">
           {/* Essential Formatting */}
