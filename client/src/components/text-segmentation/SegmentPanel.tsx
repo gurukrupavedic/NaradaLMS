@@ -171,12 +171,49 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
         <div className="h-[calc(100%-60px)] overflow-y-auto">
           <div className="p-4 space-y-3">
             {currentLanguageSegments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Circle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No segments found for {getLanguageLabel(currentLanguage)}</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Create segments by selecting text in the content area
-                </p>
+              <div className="py-12 px-6">
+                <div className="text-center mb-8">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Circle className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Create Text Segments</h3>
+                  <p className="text-gray-600 text-sm">Follow these steps to get started</p>
+                </div>
+
+                <div className="space-y-4 max-w-sm mx-auto">
+                  {/* Step 1 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
+                      1
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Select text</p>
+                      <p className="text-xs text-gray-600">Highlight words or sentences in the content area</p>
+                    </div>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
+                      2
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Create segment</p>
+                      <p className="text-xs text-gray-600">Segment will appear here automatically</p>
+                    </div>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
+                      3
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Map to audio</p>
+                      <p className="text-xs text-gray-600">Use the Audio & Mapping tab to sync with audio</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               currentLanguageSegments.map((segment, index) => {
