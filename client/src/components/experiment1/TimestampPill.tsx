@@ -88,10 +88,10 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
       {/* Delete button */}
       <button
         onClick={handleDelete}
-        className="flex items-center justify-center w-4 h-4 rounded hover:bg-red-50 text-gray-400 hover:text-red-600 mr-2 transition-colors"
+        className="flex items-center justify-center w-5 h-5 rounded hover:bg-red-50 text-gray-500 hover:text-red-600 mr-2 transition-all hover:scale-105"
         title="Delete mapping"
       >
-        <X className="h-3 w-3" />
+        <X className="h-3.5 w-3.5" />
       </button>
 
       {/* End timestamp display */}
@@ -129,10 +129,10 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
       {!isEditing && (
         <button
           onClick={handlePlay}
-          className="flex items-center justify-center w-4 h-4 rounded hover:bg-blue-50 text-gray-400 hover:text-blue-600 ml-2 transition-colors"
+          className="flex items-center justify-center w-5 h-5 rounded hover:bg-blue-50 text-gray-500 hover:text-blue-600 ml-2 transition-all hover:scale-105"
           title="Play this segment"
         >
-          <Play className="h-3 w-3" />
+          <Play className="h-3.5 w-3.5" />
         </button>
       )}
     </div>
