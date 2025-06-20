@@ -5,7 +5,7 @@
  * Provides play, pause, seek, and cleanup functionality with proper memory management.
  * 
  * Created: January 2025
- * Purpose: Eliminate duplicate audio control logic and improve performance
+ * Purpose: Reusable audio control logic with segment playback support
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -66,59 +66,75 @@ export const useAudioPlayer = (audioUrl: string): UseAudioPlayerReturn => {
 
   const playSegment = useCallback((startTime: number, endTime: number) => {
     if (!audioRef.current) return;
-    
-    // Clear any existing timeout
+
+    // Clear any existing segment timeout
     if (segmentTimeoutRef.current) {
       clearTimeout(segmentTimeoutRef.current);
     }
-    
+
     // Seek to start time and play
     audioRef.current.currentTime = startTime;
     audioRef.current.play();
     setIsPlaying(true);
-    
-    // Calculate duration and set timeout to pause at end
-    const duration = endTime - startTime;
+
+    // Stop at end time
+    const duration = (endTime - startTime) * 1000;
     segmentTimeoutRef.current = setTimeout(() => {
       pause();
-    }, duration * 1000);
+    }, duration);
   }, [pause]);
 
-  // Setup audio event listeners
+  // Audio event handlers
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleLoadStart = () => setIsLoading(true);
-    const handleLoadedData = () => {
-      setIsLoading(false);
-      setDuration(audio.duration || 0);
+    const handleLoadStart = () => {
+      setIsLoading(true);
       setError(null);
     };
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration || 0);
+      setIsLoading(false);
+    };
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
+
+    const handlePlay = () => {
+      setIsPlaying(true);
+    };
+
+    const handlePause = () => {
+      setIsPlaying(false);
+    };
+
     const handleEnded = () => {
       setIsPlaying(false);
       setCurrentTime(0);
     };
+
     const handleError = () => {
-      setIsLoading(false);
       setError('Failed to load audio file');
+      setIsLoading(false);
       setIsPlaying(false);
     };
 
+    // Add event listeners
     audio.addEventListener('loadstart', handleLoadStart);
-    audio.addEventListener('loadeddata', handleLoadedData);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
 
+    // Cleanup function
     return () => {
       audio.removeEventListener('loadstart', handleLoadStart);
-      audio.removeEventListener('loadeddata', handleLoadedData);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
@@ -127,24 +143,15 @@ export const useAudioPlayer = (audioUrl: string): UseAudioPlayerReturn => {
     };
   }, [audioUrl]);
 
-  // Reset state when audio URL changes
-  useEffect(() => {
-    setCurrentTime(0);
-    setDuration(0);
-    setIsPlaying(false);
-    setError(null);
-    
-    // Clear any existing timeout
-    if (segmentTimeoutRef.current) {
-      clearTimeout(segmentTimeoutRef.current);
-    }
-  }, [audioUrl]);
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (segmentTimeoutRef.current) {
         clearTimeout(segmentTimeoutRef.current);
+      }
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
       }
     };
   }, []);
@@ -160,6 +167,6 @@ export const useAudioPlayer = (audioUrl: string): UseAudioPlayerReturn => {
     pause,
     togglePlayPause,
     seekTo,
-    playSegment,
+    playSegment
   };
 };
