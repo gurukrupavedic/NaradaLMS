@@ -8,8 +8,8 @@
  * Purpose: Eliminate duplicate utility functions across text components
  */
 
-import type { TextSegment, AudioMapping, Language, ContentMap } from '../types/text-segmentation';
-import { isContentEntry } from '../types/text-segmentation';
+import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/types/text-segmentation';
+import { isContentEntry } from '@shared/types/text-segmentation';
 
 /**
  * Extracts text content for a segment in the specified language
