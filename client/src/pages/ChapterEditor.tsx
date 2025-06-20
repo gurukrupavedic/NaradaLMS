@@ -41,8 +41,6 @@ import {
   Ruler,
   Type,
   Settings,
-  Scissors,
-  Volume2,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -250,15 +248,6 @@ export default function ChapterEditor() {
   );
 
   // === HELPER FUNCTIONS SECTION ===
-
-  /**
-   * Temporary adapter to bridge audio URL format differences
-   * TODO: Remove when audio URL handling is standardized (Gap 2 resolution)
-   */
-  const getAudioUrl = (audioFile: any | null): string | null => {
-    if (!audioFile) return null;
-    return `/uploads/${audioFile.filename}`;
-  };
 
   // Helper functions for drag operations
   const handleMouseMove = useCallback(
@@ -1407,15 +1396,6 @@ export default function ChapterEditor() {
               <Upload className="w-4 h-4" />
               Media Content
             </TabsTrigger>
-            <TabsTrigger value="text-segmentation" className="flex items-center gap-2">
-              <Scissors className="w-4 h-4" />
-              Text Segmentation
-            </TabsTrigger>
-            <TabsTrigger value="audio-mapping" className="flex items-center gap-2">
-              <Volume2 className="w-4 h-4" />
-              Audio & Mapping
-            </TabsTrigger>
-            {/* DISABLED - Replaced with Text Segmentation + Audio Mapping tabs
             <TabsTrigger
               value="segmentation"
               className="flex items-center gap-2"
@@ -1423,7 +1403,6 @@ export default function ChapterEditor() {
               <Music className="w-4 h-4" />
               Segment & Map
             </TabsTrigger>
-            */}
           </TabsList>
 
           {/* Text Content Tab */}
@@ -1670,38 +1649,6 @@ export default function ChapterEditor() {
                       </CardContent>
                     </Card>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Text Segmentation Tab */}
-          <TabsContent value="text-segmentation" className="space-y-6">
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center text-muted-foreground">
-                  <Scissors className="w-12 h-12 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Text Segmentation</h3>
-                  <p>Select text content to create segments for audio mapping.</p>
-                  <p className="text-sm mt-2">
-                    Audio URL: {getAudioUrl(selectedAudioFile) || 'No audio file selected'}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Audio & Mapping Tab */}
-          <TabsContent value="audio-mapping" className="space-y-6">
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center text-muted-foreground">
-                  <Volume2 className="w-12 h-12 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Audio & Mapping</h3>
-                  <p>Map audio segments to text segments using click-when-heard workflow.</p>
-                  <p className="text-sm mt-2">
-                    Audio URL: {getAudioUrl(selectedAudioFile) || 'No audio file selected'}
-                  </p>
                 </div>
               </CardContent>
             </Card>
