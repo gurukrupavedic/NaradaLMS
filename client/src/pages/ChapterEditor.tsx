@@ -1674,41 +1674,31 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
           </TabsContent>
 
           {/* Text Content Tab */}
-          <TabsContent value="content" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <Select
-                    value={contentLanguage}
-                    onValueChange={(value: "te" | "hi" | "en") =>
-                      setContentLanguage(value)
-                    }
-                  >
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="te">తెలుగు (Telugu)</SelectItem>
-                      <SelectItem value="hi">देवनागरी (Hindi)</SelectItem>
-                      <SelectItem value="en">English/IAST</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    {updateContentMutation.isPending ? (
-                      <>
-                        <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        Auto-saved
-                      </>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
+          <TabsContent value="content" className="h-[calc(100vh-200px)]">
+            {/* Language Selection & Status */}
+            <div className="flex justify-between items-center mb-6 p-4 bg-white border rounded-lg">
+              <LanguageSelector
+                currentLanguage={contentLanguage}
+                availableLanguages={['te', 'hi', 'en']}
+                onLanguageChange={setContentLanguage}
+              />
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                {updateContentMutation.isPending ? (
+                  <>
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    Auto-saved
+                  </>
+                )}
+              </div>
+            </div>
+
+            <Card className="h-[calc(100vh-300px)]">
+              <CardContent className="p-6 h-full">
                 <RichTextEditor
                   value={textContent[contentLanguage] || ''}
                   onChange={(html) =>
