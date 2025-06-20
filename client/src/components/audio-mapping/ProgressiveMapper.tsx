@@ -172,6 +172,8 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
           onPlaySegment={handlePlaySegment}
           onMappingUpdate={onMappingUpdate}
           onMappingDelete={onMappingDelete}
+          onLanguageChange={onLanguageChange}
+          availableLanguages={availableLanguages}
         />
       </div>
     </div>
