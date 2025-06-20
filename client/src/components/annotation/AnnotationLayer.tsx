@@ -189,7 +189,8 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
           start: selectedRange.start,
           end: selectedRange.end
         }
-      }
+      },
+      order: segments.length + 1
     };
 
     onSegmentCreate(newSegment);

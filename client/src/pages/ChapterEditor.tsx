@@ -1396,12 +1396,23 @@ export default function ChapterEditor() {
               <Upload className="w-4 h-4" />
               Media Content
             </TabsTrigger>
+            {/* DISABLED: Original Segment & Map Tab - Preserved for restoration */}
+            {/* 
             <TabsTrigger
               value="segmentation"
               className="flex items-center gap-2"
             >
               <Music className="w-4 h-4" />
               Segment & Map
+            </TabsTrigger>
+            */}
+            <TabsTrigger value="text-segmentation" className="flex items-center gap-2">
+              <Edit2 className="w-4 h-4" />
+              Text Segmentation
+            </TabsTrigger>
+            <TabsTrigger value="audio-mapping" className="flex items-center gap-2">
+              <Music className="w-4 h-4" />
+              Audio & Mapping
             </TabsTrigger>
           </TabsList>
 
@@ -1654,19 +1665,21 @@ export default function ChapterEditor() {
             </Card>
           </TabsContent>
 
-          {/* Segmentation & Mapping Tab */}
-          <TabsContent value="segmentation" className="space-y-6">
-            {/* Two-Panel Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* LEFT PANEL: Audio Operations */}
-              <div className="space-y-6">
-                {/* Consolidated Audio Panel */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Music className="h-5 w-5" />
-                      Media Segmentation
-                    </CardTitle>
+          {/* Text Segmentation Tab */}
+          <TabsContent value="text-segmentation" className="space-y-6">
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium mb-2">Text Segmentation</h3>
+              <p className="text-muted-foreground">Enhanced annotation interface coming soon...</p>
+            </div>
+          </TabsContent>
+
+          {/* Audio & Mapping Tab */}
+          <TabsContent value="audio-mapping" className="space-y-6">
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium mb-2">Audio & Mapping</h3>
+              <p className="text-muted-foreground">Progressive mapping workflow coming soon...</p>
+            </div>
+          </TabsContent>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Audio File Selection Section */}
@@ -2491,6 +2504,42 @@ export default function ChapterEditor() {
               </div>
             </div>
           </TabsContent>
+          */}
+        </Tabs>
+      </div>
+    </div>
+  );
+}
+
+// DISABLED CONTENT BELOW - Original Segment & Map Tab Implementation
+// Preserved for restoration - can be uncommented to restore functionality
+/*
+function DisabledSegmentMapTab() {
+  return (
+    <TabsContent value="segmentation" className="space-y-6">
+      // Original 855 lines of segment & map implementation preserved here
+      // Refer to docs/deprecated-ideas/segment-map-restoration-guide.md for restoration
+    </TabsContent>
+  );
+}
+*/
+
+          {/* New Text Segmentation Tab */}
+          <TabsContent value="text-segmentation" className="space-y-6">
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium mb-2">Text Segmentation</h3>
+              <p className="text-muted-foreground">Component integration in progress...</p>
+            </div>
+          </TabsContent>
+
+          {/* New Audio & Mapping Tab */}
+          <TabsContent value="audio-mapping" className="space-y-6">
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium mb-2">Audio & Mapping</h3>
+              <p className="text-muted-foreground">Component integration in progress...</p>
+            </div>
+          </TabsContent>
+
         </Tabs>
       </div>
     </div>

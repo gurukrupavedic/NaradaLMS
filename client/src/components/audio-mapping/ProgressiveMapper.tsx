@@ -16,7 +16,75 @@ import { Card, CardContent } from '@/components/ui/card';
 import { AudioPlayerPanel } from './AudioPlayerPanel';
 import { SegmentMappingGrid } from './SegmentMappingGrid';
 import { useMappingControls } from './MappingControls';
-import { useAudioPlayer } from '../../../shared/hooks/useAudioPlayer';
+// Using local audio player logic
+import { useRef, useState, useEffect, useCallback } from 'react';
+
+const useAudioPlayer = (audioUrl: string) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !audioUrl) return;
+
+    const handleLoadedMetadata = () => setDuration(audio.duration);
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const handleEnded = () => setIsPlaying(false);
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+
+    audio.src = audioUrl;
+    audio.load();
+
+    return () => {
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+    };
+  }, [audioUrl]);
+
+  const togglePlayPause = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) audio.pause();
+    else audio.play().catch(console.error);
+  }, [isPlaying]);
+
+  const seekTo = useCallback((time: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.currentTime = time;
+    setCurrentTime(time);
+  }, []);
+
+  const playSegment = useCallback((startTime: number, endTime: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.currentTime = startTime;
+    setCurrentTime(startTime);
+    audio.play().catch(console.error);
+    
+    const handleTimeUpdate = () => {
+      if (audio.currentTime >= endTime) {
+        audio.pause();
+        audio.removeEventListener('timeupdate', handleTimeUpdate);
+      }
+    };
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+  }, []);
+
+  return { audioRef, isPlaying, currentTime, duration, togglePlayPause, seekTo, playSegment };
+};
 
 // Local types and utilities
 type Language = 'te' | 'hi' | 'en';
