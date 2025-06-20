@@ -64,10 +64,10 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
   // Mapping control logic
   const {
     handleSegmentClick,
-    startMappingSession,
-    pauseMappingSession,
-    stopMappingSession,
-    resetMappingSession
+    startMappingSession: baseMappingStart,
+    pauseMappingSession: baseMappingPause,
+    stopMappingSession: baseMappingStop,
+    resetMappingSession: baseMappingReset
   } = useMappingControls({
     mappingSession,
     activeSegmentId,
@@ -81,6 +81,38 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
     onActiveSegmentChange: setActiveSegmentId,
     onSessionStartTimeChange: setSessionStartTime
   });
+
+  // Enhanced mapping controls with audio integration
+  const startMappingSession = () => {
+    baseMappingStart();
+    if (!isPlaying) {
+      togglePlayPause();
+    }
+  };
+
+  const pauseMappingSession = () => {
+    baseMappingPause();
+    if (mappingSession === 'active' && isPlaying) {
+      togglePlayPause();
+    } else if (mappingSession === 'paused' && !isPlaying) {
+      togglePlayPause();
+    }
+  };
+
+  const stopMappingSession = () => {
+    baseMappingStop();
+    if (isPlaying) {
+      togglePlayPause();
+    }
+  };
+
+  const resetMappingSession = () => {
+    baseMappingReset();
+    seekTo(0);
+    if (isPlaying) {
+      togglePlayPause();
+    }
+  };
 
   // Play specific segment
   const handlePlaySegment = (mapping: AudioMapping, event: React.MouseEvent) => {

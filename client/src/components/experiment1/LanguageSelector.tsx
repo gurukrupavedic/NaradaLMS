@@ -24,7 +24,7 @@ const getLanguageLabel = (language: Language): string => {
     case 'te': return 'TE';
     case 'hi': return 'HI';
     case 'en': return 'EN-IAST';
-    default: return language.toUpperCase();
+    default: return language;
   }
 };
 
