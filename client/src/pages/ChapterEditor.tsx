@@ -325,7 +325,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Debug logging for tab state
   useEffect(() => {
     console.log('ChapterEditor: Active tab changed to:', activeTab);
-  }, [activeTab]);
+    console.log('ChapterEditor: chapterContent:', chapterContent);
+    console.log('ChapterEditor: localSegments count:', localSegments.length);
+  }, [activeTab, chapterContent, localSegments]);
 
   // === HELPER FUNCTIONS SECTION ===
 
@@ -1514,17 +1516,26 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
           {/* Text Segmentation Tab */}
           <TabsContent value="text-segmentation" className="h-[calc(100vh-200px)]">
-            <AnnotationLayer
-              content={chapterContent}
-              currentLanguage={contentLanguage}
-              segments={localSegments}
-              selectedSegmentId={undefined}
-              onSegmentCreate={handleCreateSegment}
-              onSegmentUpdate={handleUpdateSegment}
-              onSegmentDelete={handleDeleteSegment}
-              onLanguageChange={setContentLanguage}
-              availableLanguages={['te', 'hi', 'en']}
-            />
+            <div>
+              <div className="mb-4 p-4 bg-gray-100 rounded text-sm">
+                <strong>Debug Info:</strong>
+                <br />Tab: {activeTab}
+                <br />Content Keys: {Object.keys(chapterContent).join(', ')}
+                <br />Telugu Preview: {chapterContent.te?.substring(0, 50)}...
+                <br />Segments: {localSegments.length}
+              </div>
+              <AnnotationLayer
+                content={chapterContent}
+                currentLanguage={contentLanguage}
+                segments={localSegments}
+                selectedSegmentId={undefined}
+                onSegmentCreate={handleCreateSegment}
+                onSegmentUpdate={handleUpdateSegment}
+                onSegmentDelete={handleDeleteSegment}
+                onLanguageChange={setContentLanguage}
+                availableLanguages={['te', 'hi', 'en']}
+              />
+            </div>
           </TabsContent>
 
           {/* Audio Mapping Tab */}
