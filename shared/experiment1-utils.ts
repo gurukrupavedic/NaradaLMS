@@ -122,21 +122,7 @@ export const formatTime = (seconds: number, options: {
   return `${formattedMins}:${paddedSecs}`;
 };
 
-/**
- * Conservative normalization function - safe for all scripts
- * @param text - Text to normalize for segmentation
- * @returns Normalized text with consistent line endings and cleaned whitespace
- */
-export const normalizeTextForSegmentation = (text: string): string => {
-  return text
-    // Universal safe normalizations only
-    .replace(/\r\n/g, '\n')      // Windows line endings
-    .replace(/\r/g, '\n')        // Mac line endings  
-    .replace(/\uFEFF/g, '')      // Byte order mark
-    .replace(/[\t ]+$/gm, '')    // Trailing whitespace
-    .replace(/\n{3,}/g, '\n\n')  // Excessive line breaks
-    .normalize('NFC');           // Unicode composition
-};
+
 
 /**
  * Normalize line breaks for consistent text matching between selection and storage
@@ -146,8 +132,6 @@ export const normalizeTextForSegmentation = (text: string): string => {
 export const normalizeLineBreaks = (text: string): string => {
   return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 };
-
-// Removed createContentEntry - no longer needed with normalization approach
 
 /**
  * Helper type guard for content entries

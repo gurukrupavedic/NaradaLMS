@@ -9,7 +9,7 @@
  * Purpose: Test intuitive click-when-heard mapping workflow
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Play, Pause, Square, RotateCcw, CheckCircle, Circle, Clock, Link2Off } from 'lucide-react';
 import { TimestampPill } from './TimestampPill';
 import { ConnectedCirclesIcon } from '@shared/components/experiment1/icons';
+import { useAudioPlayer } from '@shared/hooks/experiment1/useAudioPlayer';
 import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/experiment1-types';
 import { getSegmentText, filterSegmentsByLanguage, getSegmentMapping, formatTime as formatTimeUtil } from '@shared/experiment1-utils';
 
@@ -44,19 +45,21 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
   onMappingDelete
 }) => {
 
-  // EXPERIMENT1: Audio player state
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+  // EXPERIMENT1: Audio player hook
+  const {
+    audioRef,
+    isPlaying,
+    currentTime,
+    duration,
+    togglePlayPause,
+    seekTo,
+    playSegment
+  } = useAudioPlayer(audioUrl);
   
   // EXPERIMENT1: Mapping session state
   const [mappingSession, setMappingSession] = useState<'idle' | 'active' | 'paused'>('idle');
   const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number>(0);
-  
-  // Removed inline editing state - now handled by TimestampPill component
-  
-  const audioRef = useRef<HTMLAudioElement>(null);
 
   // EXPERIMENT1: Filter segments by current language
   const currentLanguageSegments = filterSegmentsByLanguage(segments, currentLanguage);
@@ -65,51 +68,21 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
   const mappedSegments = currentLanguageSegments.filter(s => getSegmentMapping(s.id, mappings));
   const progressPercentage = currentLanguageSegments.length > 0 ? (mappedSegments.length / currentLanguageSegments.length) * 100 : 0;
 
-  // EXPERIMENT1: Audio event handlers
+  // EXPERIMENT1: Handle audio ended for mapping session
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleDurationChange = () => setDuration(audio.duration);
     const handleEnded = () => {
-      setIsPlaying(false);
       // End active segment if session is active
       if (mappingSession === 'active' && activeSegmentId) {
         handleSegmentEnd();
       }
     };
 
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('durationchange', handleDurationChange);
     audio.addEventListener('ended', handleEnded);
-
-    return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('durationchange', handleDurationChange);
-      audio.removeEventListener('ended', handleEnded);
-    };
+    return () => audio.removeEventListener('ended', handleEnded);
   }, [mappingSession, activeSegmentId]);
-
-  // EXPERIMENT1: Audio controls
-  const togglePlayPause = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const seekTo = (time: number) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.currentTime = time;
-    setCurrentTime(time);
-  };
 
   // EXPERIMENT1: Mapping session controls
   const startMappingSession = () => {
