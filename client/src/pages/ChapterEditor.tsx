@@ -45,8 +45,10 @@ import {
 import { useLocation } from "wouter";
 import { LanguageSelector } from "@/components/common/LanguageSelector";
 import { AnnotationLayer } from "@/components/text-segmentation/AnnotationLayer";
+import { SegmentPanel } from "@/components/text-segmentation/SegmentPanel";
 import { ProgressiveMapper } from "@/components/audio-mapping/ProgressiveMapper";
 import { ConnectedCirclesIcon } from "@shared/components/icons";
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 interface ChapterData {
   id: number;
@@ -1516,26 +1518,59 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
           {/* Text Segmentation Tab */}
           <TabsContent value="text-segmentation" className="h-[calc(100vh-200px)]">
-            <div>
-              <div className="mb-4 p-4 bg-gray-100 rounded text-sm">
-                <strong>Debug Info:</strong>
-                <br />Tab: {activeTab}
-                <br />Content Keys: {Object.keys(chapterContent).join(', ')}
-                <br />Telugu Preview: {chapterContent.te?.substring(0, 50)}...
-                <br />Segments: {localSegments.length}
-              </div>
-              <AnnotationLayer
-                content={chapterContent}
+            {/* Language Selection & Stats */}
+            <div className="flex justify-between items-center mb-6 p-4 bg-gray-50 border rounded-lg">
+              <LanguageSelector
                 currentLanguage={contentLanguage}
-                segments={localSegments}
-                selectedSegmentId={undefined}
-                onSegmentCreate={handleCreateSegment}
-                onSegmentUpdate={handleUpdateSegment}
-                onSegmentDelete={handleDeleteSegment}
-                onLanguageChange={setContentLanguage}
                 availableLanguages={['te', 'hi', 'en']}
+                onLanguageChange={setContentLanguage}
               />
+              <div className="flex gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  {localSegments.filter(s => s.textReferences[contentLanguage]).length} segments
+                </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {localSegments.filter(s => s.textReferences[contentLanguage]).length} mapped
+                </Badge>
+              </div>
             </div>
+
+            <PanelGroup direction="horizontal" className="h-[calc(100vh-300px)]">
+              {/* Left Panel: Content Area */}
+              <Panel defaultSize={50} minSize={30}>
+                <AnnotationLayer
+                  content={chapterContent}
+                  currentLanguage={contentLanguage}
+                  segments={localSegments}
+                  selectedSegmentId={undefined}
+                  onSegmentCreate={handleCreateSegment}
+                  onSegmentUpdate={handleUpdateSegment}
+                  onSegmentDelete={handleDeleteSegment}
+                  onLanguageChange={setContentLanguage}
+                  availableLanguages={['te', 'hi', 'en']}
+                />
+              </Panel>
+              
+              {/* Resize Handle */}
+              <PanelResizeHandle className="w-1 bg-transparent relative">
+                <div className="absolute left-0 top-0 w-1 h-[600px] bg-gray-300 hover:bg-gray-400 transition-colors pointer-events-none"></div>
+              </PanelResizeHandle>
+              
+              {/* Right Panel: Segment Management */}
+              <Panel defaultSize={50} minSize={30}>
+                <SegmentPanel
+                  segments={localSegments}
+                  currentLanguage={contentLanguage}
+                  content={chapterContent}
+                  mappings={[]}
+                  selectedSegmentId={undefined}
+                  onSegmentUpdate={handleUpdateSegment}
+                  onSegmentDelete={handleDeleteSegment}
+                  onSegmentSelect={() => {}}
+                  onTogglePlay={() => {}}
+                />
+              </Panel>
+            </PanelGroup>
           </TabsContent>
 
           {/* Audio Mapping Tab */}
