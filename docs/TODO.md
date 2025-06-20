@@ -5,6 +5,7 @@ This directory contains detailed documentation of technical challenges, solution
 ## Current Items
 
 - [Text Segmentation Fix](./text-segmentation-selection-time-normalization.md) - Critical fix for text corruption in segmentation functionality
+- [Migration Gap Analysis](./migration-gap-analysis.md) - Critical gaps from experimental-to-production migration requiring future resolution
 
 ## Guidelines
 
