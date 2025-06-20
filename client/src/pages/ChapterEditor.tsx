@@ -46,6 +46,7 @@ import { useLocation } from "wouter";
 import { LanguageSelector } from "@/components/common/LanguageSelector";
 import { AnnotationLayer } from "@/components/text-segmentation/AnnotationLayer";
 import { ProgressiveMapper } from "@/components/audio-mapping/ProgressiveMapper";
+import { ConnectedCirclesIcon } from "@shared/components/icons";
 
 interface ChapterData {
   id: number;
@@ -1429,22 +1430,19 @@ export default function ChapterEditor() {
                       <AnnotationLayer
                         content={chapter.content || {}}
                         currentLanguage={contentLanguage}
-                        segments={segments?.map(s => ({
-                          ...s,
-                          order: s.order || 0
-                        })) || []}
+                        segments={[]}
                         selectedSegmentId={undefined}
                         onSegmentCreate={(segment) => {
                           console.log('Create segment:', segment);
-                          // TODO: Implement segment creation
+                          // TODO: Implement segment creation API integration
                         }}
                         onSegmentUpdate={(id, updates) => {
                           console.log('Update segment:', id, updates);
-                          // TODO: Implement segment update
+                          // TODO: Implement segment update API integration
                         }}
                         onSegmentDelete={(id) => {
                           console.log('Delete segment:', id);
-                          // TODO: Implement segment deletion
+                          // TODO: Implement segment deletion API integration
                         }}
                       />
                     ) : (
@@ -1477,24 +1475,21 @@ export default function ChapterEditor() {
                     {chapter && audioFiles && audioFiles.length > 0 ? (
                       <ProgressiveMapper
                         audioUrl={audioFiles[0]?.filename ? `/uploads/${audioFiles[0].filename}` : ''}
-                        segments={segments?.map(s => ({
-                          ...s,
-                          order: s.order || 0
-                        })) || []}
+                        segments={[]}
                         currentLanguage={contentLanguage}
                         content={chapter.content || {}}
-                        mappings={[]} // TODO: Load actual mappings
+                        mappings={[]}
                         onMappingCreate={(mapping) => {
                           console.log('Create mapping:', mapping);
-                          // TODO: Implement mapping creation
+                          // TODO: Implement mapping creation API integration
                         }}
                         onMappingUpdate={(segmentId, updates) => {
                           console.log('Update mapping:', segmentId, updates);
-                          // TODO: Implement mapping update
+                          // TODO: Implement mapping update API integration
                         }}
                         onMappingDelete={(segmentId) => {
                           console.log('Delete mapping:', segmentId);
-                          // TODO: Implement mapping deletion
+                          // TODO: Implement mapping deletion API integration
                         }}
                       />
                     ) : (
@@ -1513,64 +1508,6 @@ export default function ChapterEditor() {
 
           {/* Text Content Tab */}
           <TabsContent value="content" className="space-y-6">
-            {/* PHASE 3 CORE COMPONENTS TEST - Remove after validation */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Phase 3 Core Components Test - Migration Complete</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Foundation Components Summary */}
-                <div>
-                  <h4 className="font-medium mb-2">✅ Foundation Components (Phase 2):</h4>
-                  <div className="flex items-center gap-4">
-                    <LanguageSelector 
-                      currentLanguage={contentLanguage}
-                      availableLanguages={['te', 'hi', 'en']}
-                      onLanguageChange={setContentLanguage}
-                    />
-                    <div className="flex items-center gap-1">
-                      <ConnectedCirclesIcon size="sm" className="text-green-500" />
-                      <span className="text-sm">Icons</span>
-                    </div>
-                    <span className="text-sm text-green-600">Utils & Hooks Working</span>
-                  </div>
-                </div>
-
-                {/* Core Components Summary */}
-                <div>
-                  <h4 className="font-medium mb-2">✅ Core Components (Phase 3):</h4>
-                  <div className="text-sm space-y-1">
-                    <div>• AnnotationLayer: Text segmentation with selection and highlighting</div>
-                    <div>• ProgressiveMapper: Audio mapping with Musixmatch-inspired interface</div>
-                    <div>• AudioPlayerPanel: Audio controls and session management</div>
-                    <div>• SegmentMappingGrid: Interactive segment grid with timestamp pills</div>
-                    <div>• useMappingControls: Centralized mapping session logic</div>
-                  </div>
-                </div>
-
-                {/* Migration Status */}
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h4 className="font-medium text-green-800 mb-2">🎉 Migration Status:</h4>
-                  <div className="text-sm text-green-700 space-y-1">
-                    <div>✅ Phase 1: Types & Language Selector</div>
-                    <div>✅ Phase 2: Foundation (Utils, Icons, Hooks)</div>
-                    <div>✅ Phase 3: Core Components (AnnotationLayer, ProgressiveMapper)</div>
-                    <div>🔄 Phase 4: ChapterEditor Integration (Ready to Begin)</div>
-                  </div>
-                </div>
-
-                {/* Next Steps */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-medium text-blue-800 mb-2">📋 Ready for ChapterEditor Integration:</h4>
-                  <div className="text-sm text-blue-700">
-                    All experimental components successfully migrated to production structure.
-                    Ready to replace the "Segment & Map" tab with 4-tab interface:
-                    Text Segmentation | Audio Mapping | Text Content | Media Content
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
