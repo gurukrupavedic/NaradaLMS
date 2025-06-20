@@ -16,6 +16,7 @@ import { useMappingControls } from '@shared/hooks/useMappingControls';
 import { useAudioPlayer } from '@shared/hooks/useAudioPlayer';
 import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/types/text-segmentation';
 import { getSegmentsForLanguage } from '@shared/utils/text-segmentation';
+import { LanguageSelector } from "@/components/common/LanguageSelector";
 
 interface ProgressiveMapperProps {
   audioUrl: string;
@@ -26,6 +27,8 @@ interface ProgressiveMapperProps {
   onMappingCreate: (mapping: AudioMapping) => void;
   onMappingUpdate: (segmentId: string, mapping: Partial<AudioMapping>) => void;
   onMappingDelete: (segmentId: string) => void;
+  onLanguageChange: (language: Language) => void;
+  availableLanguages: Language[];
 }
 
 export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
@@ -36,7 +39,9 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   mappings,
   onMappingCreate,
   onMappingUpdate,
-  onMappingDelete
+  onMappingDelete,
+  onLanguageChange,
+  availableLanguages
 }) => {
   // Audio player hook
   const {
