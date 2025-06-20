@@ -16,9 +16,37 @@ import { Card, CardContent } from '@/components/ui/card';
 import { AudioPlayerPanel } from './AudioPlayerPanel';
 import { SegmentMappingGrid } from './SegmentMappingGrid';
 import { useMappingControls } from './MappingControls';
-import { useAudioPlayer } from '@shared/hooks/useAudioPlayer';
-import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/types';
-import { filterSegmentsByLanguage } from '@shared/utils';
+import { useAudioPlayer } from '../../../shared/hooks/useAudioPlayer';
+
+// Local types and utilities
+type Language = 'te' | 'hi' | 'en';
+
+interface TextSegment {
+  id: string;
+  conceptualName: string;
+  textReferences: {
+    te?: { start: number; end: number };
+    hi?: { start: number; end: number };
+    en?: { start: number; end: number };
+  };
+  order: number;
+}
+
+interface AudioMapping {
+  segmentId: string;
+  startTime: number;
+  endTime: number;
+}
+
+interface ContentMap {
+  te?: string;
+  hi?: string;
+  en?: string;
+}
+
+const filterSegmentsByLanguage = (segments: TextSegment[], language: Language): TextSegment[] => {
+  return segments.filter(segment => segment.textReferences[language]);
+};
 
 interface ProgressiveMapperProps {
   audioUrl: string;

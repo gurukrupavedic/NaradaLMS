@@ -19,8 +19,45 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Edit3 } from 'lucide-react';
 import { Plus, X } from 'lucide-react';
-import type { TextSegment, Language, ContentMap, TextRange } from '@shared/types';
-import { getLanguageLabel, getDisplayText, getSegmentationText, normalizeLineBreaks } from '@shared/utils';
+// Local types and utilities
+type Language = 'te' | 'hi' | 'en';
+
+interface TextSegment {
+  id: string;
+  conceptualName: string;
+  textReferences: {
+    te?: { start: number; end: number };
+    hi?: { start: number; end: number };
+    en?: { start: number; end: number };
+  };
+  order: number;
+}
+
+interface ContentMap {
+  te?: string;
+  hi?: string;
+  en?: string;
+}
+
+interface TextRange {
+  start: number;
+  end: number;
+  text: string;
+}
+
+// Local utility functions
+const getLanguageLabel = (language: Language): string => {
+  const labels = { te: 'Telugu', hi: 'Hindi', en: 'English' };
+  return labels[language];
+};
+
+const getDisplayText = (content: ContentMap, language: Language): string => {
+  return content[language] || '';
+};
+
+const normalizeLineBreaks = (text: string): string => {
+  return text.replace(/\r\n|\r/g, '\n');
+};
 
 interface AnnotationLayerProps {
   content: ContentMap;
