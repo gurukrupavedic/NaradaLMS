@@ -98,45 +98,6 @@
     font-family: 'Inter', sans-serif;
   }
 
-  /* Status icon color isolation - v3 cache-bust */
-  .force-blue-icon {
-    color: rgb(59, 130, 246) !important;
-    fill: rgb(59, 130, 246) !important;
-  }
-  
-  .force-green-icon {
-    color: rgb(22, 163, 74) !important;
-    fill: rgb(22, 163, 74) !important;
-  }
-  
-  .force-gray-icon {
-    color: rgb(107, 114, 128) !important;
-    fill: rgb(107, 114, 128) !important;
-  }
-  
-  .force-blue-icon *, 
-  .force-green-icon *, 
-  .force-gray-icon * {
-    color: inherit !important;
-    fill: inherit !important;
-  }
-  
-  /* Override all possible badge inheritance */
-  [class*="badge"] .force-blue-icon,
-  [class*="Badge"] .force-blue-icon {
-    color: rgb(59, 130, 246) !important;
-  }
-  
-  [class*="badge"] .force-green-icon,
-  [class*="Badge"] .force-green-icon {
-    color: rgb(22, 163, 74) !important;
-  }
-  
-  [class*="badge"] .force-gray-icon,
-  [class*="Badge"] .force-gray-icon {
-    color: rgb(107, 114, 128) !important;
-  }
-
   .text-vedic-brown {
     color: hsl(var(--vedic-brown));
   }

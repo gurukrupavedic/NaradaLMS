@@ -46,51 +46,9 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
   // Connected Circles Icon Component (for mapped state)
   const ConnectedCirclesIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" className={className}>
-      <path d="M320-200q-117 0-198.5-81.5T40-480q0-117 81.5-198.5T320-760q27 0 52.5 5t49.5 14q-17 14-32 30.5T362-676q-10-2-20.5-3t-21.5-1q-83 0-141.5 58.5T120-480q0 83 58.5 141.5T320-280q11 0 21.5-1t20.5-3q13 18 28 34.5t32 30.5q-24 9-49.5 14t-52.5 5Zm320 0q-27 0-52.5-5T538-219q17-14 32-30.5t28-34.5q11 2 21 3t21 1q83 0 141.5-58.5T840-480q0-83-58.5-141.5T640-680q-11 0-21 1t-21 3q-13-18-28-34.5T538-741q24-9 49.5-14t52.5-5q117 0 198.5 81.5T920-480q0 117-81.5 198.5T640-200Zm-160-50q-57-39-88.5-100T360-480q0-69 31.5-130T480-710q57 39 88.5 100T600-480q0 69-31.5 130T480-250Z" fill="#16a34a"/>
+      <path d="M320-200q-117 0-198.5-81.5T40-480q0-117 81.5-198.5T320-760q27 0 52.5 5t49.5 14q-17 14-32 30.5T362-676q-10-2-20.5-3t-21.5-1q-83 0-141.5 58.5T120-480q0 83 58.5 141.5T320-280q11 0 21.5-1t20.5-3q13 18 28 34.5t32 30.5q-24 9-49.5 14t-52.5 5Zm320 0q-27 0-52.5-5T538-219q17-14 32-30.5t28-34.5q11 2 21 3t21 1q83 0 141.5-58.5T840-480q0-83-58.5-141.5T640-680q-11 0-21 1t-21 3q-13-18-28-34.5T538-741q24-9 49.5-14t52.5-5q117 0 198.5 81.5T920-480q0 117-81.5 198.5T640-200Zm-160-50q-57-39-88.5-100T360-480q0-69 31.5-130T480-710q57 39 88.5 100T600-480q0 69-31.5 130T480-250Z" fill="currentColor"/>
     </svg>
   );
-
-  // Status Icon Component with explicit color contracts
-  const StatusIcon: React.FC<{ 
-    type: 'recording' | 'mapped' | 'ready'; 
-    className?: string;
-    animated?: boolean;
-  }> = ({ type, className, animated }) => {
-    const iconConfig = {
-      recording: { 
-        Icon: Clock, 
-        colorClass: 'force-blue-icon',
-        animationClass: animated ? 'animate-strong-pulse' : ''
-      },
-      mapped: { 
-        Icon: ConnectedCirclesIcon, 
-        colorClass: 'force-green-icon',
-        animationClass: ''
-      },
-      ready: { 
-        Icon: Link2Off, 
-        colorClass: 'force-gray-icon',
-        animationClass: ''
-      }
-    };
-
-    const config = iconConfig[type];
-    const IconComponent = config.Icon;
-    const combinedClassName = `${config.colorClass} ${config.animationClass} ${className || ''}`.trim();
-
-    // Debug: Add data attribute to verify component is updating
-    return (
-      <span 
-        className={config.colorClass}
-        data-status-type={type}
-        style={{ 
-          color: type === 'recording' ? '#3b82f6' : type === 'mapped' ? '#16a34a' : '#6b7280'
-        }}
-      >
-        <IconComponent className={`${config.animationClass} ${className || ''}`.trim()} />
-      </span>
-    );
-  };
   // EXPERIMENT1: Audio player state
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -294,7 +252,7 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
   const getSegmentStatus = (segmentId: string) => {
     if (activeSegmentId === segmentId) return 'active';
     if (getSegmentMapping(segmentId, mappings)) return 'completed';
-    return 'ready';
+    return 'inactive';
   };
 
   if (!audioUrl) {
@@ -315,20 +273,24 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Audio Mapping Session</span>
-              <Badge variant={mappingSession === 'active' ? 'default' : mappingSession === 'paused' ? 'secondary' : 'outline'} className="text-xs">
+              <Badge variant={mappingSession === 'active' ? 'default' : mappingSession === 'paused' ? 'secondary' : 'outline'} className={`text-xs ${
+                mappingSession === 'active' ? 'bg-blue-100 text-blue-700' : 
+                mappingSession === 'paused' ? 'bg-gray-100 text-gray-700' : 
+                'border-gray-200'
+              }`}>
                 {mappingSession === 'active' ? (
                   <>
-                    <StatusIcon type="recording" className="h-3 w-3 mr-1" animated />
+                    <Clock className="h-3 w-3 mr-1 animate-strong-pulse" />
                     Recording
                   </>
                 ) : mappingSession === 'paused' ? (
                   <>
-                    <StatusIcon type="recording" className="h-3 w-3 mr-1" />
+                    <Clock className="h-3 w-3 mr-1" />
                     Paused
                   </>
                 ) : (
                   <>
-                    <StatusIcon type="ready" className="h-3 w-3 mr-1" />
+                    <Link2Off className="h-3 w-3 mr-1" />
                     Ready
                   </>
                 )}
@@ -462,7 +424,7 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
                       <div className="flex-1">
                         <div
                           onClick={() => handleSegmentClick(segment.id)}
-                          className={`border rounded-lg transition-colors transition-border-colors transition-shadow duration-200 cursor-pointer ${
+                          className={`border rounded-lg transition-all cursor-pointer ${
                             status === 'active' 
                               ? 'border-blue-500 bg-blue-50 shadow-md' 
                               : mappingSession === 'active'
@@ -478,18 +440,18 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
                               </Badge>
                               <div className="flex-shrink-0">
                                 {status === 'active' ? (
-                                  <Badge variant="default" className="text-xs">
-                                    <StatusIcon type="recording" className="h-3 w-3 mr-1" animated />
+                                  <Badge variant="default" className="text-xs bg-blue-100 text-blue-700">
+                                    <Clock className="h-3 w-3 mr-1 animate-strong-pulse" />
                                     Recording
                                   </Badge>
                                 ) : status === 'completed' ? (
-                                  <Badge variant="default" className="text-xs">
-                                    <StatusIcon type="mapped" className="h-4 w-4 mr-1" />
+                                  <Badge variant="default" className="text-xs bg-green-100 text-green-700">
+                                    <ConnectedCirclesIcon className="h-4 w-4 mr-1" />
                                     Mapped
                                   </Badge>
                                 ) : (
                                   <Badge variant="outline" className="text-xs">
-                                    <StatusIcon type="ready" className="h-3 w-3 mr-1" />
+                                    <Link2Off className="h-3 w-3 mr-1" />
                                     Ready
                                   </Badge>
                                 )}
