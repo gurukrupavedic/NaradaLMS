@@ -268,7 +268,7 @@ export const Experiment1_AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   return (
     <div className="h-full">
       {/* Content Area */}
-      <div className="p-4 h-full">
+      <div className="px-4 pb-4 h-full">
         {/* White Container with integrated header */}
         <div className="bg-white border rounded-lg h-[600px] overflow-auto shadow-sm">
           {/* Header - now inside content container and sticky */}
