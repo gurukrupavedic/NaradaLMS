@@ -91,76 +91,8 @@ export default function ChapterEditor() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-
-  // Text Segmentation State
-  const [textSegments, setTextSegments] = useState<Array<{
-    id: string;
-    conceptualName: string;
-    textReferences: {
-      te?: { start: number; end: number };
-      hi?: { start: number; end: number };
-      en?: { start: number; end: number };
-    };
-    order: number;
-  }>>([]);
-  const [selectedSegmentId, setSelectedSegmentId] = useState<string | undefined>();
-  const [segmentationLanguage, setSegmentationLanguage] = useState<'te' | 'hi' | 'en'>('te');
-
-  // Audio Mapping State
-  const [audioMappings, setAudioMappings] = useState<Array<{
-    segmentId: string;
-    startTime: number;
-    endTime: number;
-  }>>([]);
-  const [mappingSession, setMappingSession] = useState<'idle' | 'active' | 'paused'>('idle');
-  const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
-  const [sessionStartTime, setSessionStartTime] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const segmentBoundaryListenerRef = useRef<(() => void) | null>(null);
-
-  // Text Segmentation Handlers
-  const handleSegmentCreate = useCallback((segment: any) => {
-    const newSegment = {
-      ...segment,
-      id: `seg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      order: textSegments.length + 1
-    };
-    setTextSegments(prev => [...prev, newSegment]);
-  }, [textSegments.length]);
-
-  const handleSegmentUpdate = useCallback((id: string, updates: any) => {
-    setTextSegments(prev => prev.map(seg => 
-      seg.id === id ? { ...seg, ...updates } : seg
-    ));
-  }, []);
-
-  const handleSegmentDelete = useCallback((id: string) => {
-    setTextSegments(prev => prev.filter(seg => seg.id !== id));
-    if (selectedSegmentId === id) {
-      setSelectedSegmentId(undefined);
-    }
-  }, [selectedSegmentId]);
-
-  // Audio Mapping Handlers
-  const handleMappingCreate = useCallback((mapping: any) => {
-    setAudioMappings(prev => {
-      const existing = prev.find(m => m.segmentId === mapping.segmentId);
-      if (existing) {
-        return prev.map(m => m.segmentId === mapping.segmentId ? mapping : m);
-      }
-      return [...prev, mapping];
-    });
-  }, []);
-
-  const handleMappingUpdate = useCallback((segmentId: string, updates: any) => {
-    setAudioMappings(prev => prev.map(mapping => 
-      mapping.segmentId === segmentId ? { ...mapping, ...updates } : mapping
-    ));
-  }, []);
-
-  const handleMappingDelete = useCallback((segmentId: string) => {
-    setAudioMappings(prev => prev.filter(mapping => mapping.segmentId !== segmentId));
-  }, []);
 
   // Safe time formatting function
   const formatTime = (seconds: number): string => {
@@ -1464,23 +1396,12 @@ export default function ChapterEditor() {
               <Upload className="w-4 h-4" />
               Media Content
             </TabsTrigger>
-            {/* DISABLED: Original Segment & Map Tab - Preserved for restoration */}
-            {/* 
             <TabsTrigger
               value="segmentation"
               className="flex items-center gap-2"
             >
               <Music className="w-4 h-4" />
               Segment & Map
-            </TabsTrigger>
-            */}
-            <TabsTrigger value="text-segmentation" className="flex items-center gap-2">
-              <Edit2 className="w-4 h-4" />
-              Text Segmentation
-            </TabsTrigger>
-            <TabsTrigger value="audio-mapping" className="flex items-center gap-2">
-              <Music className="w-4 h-4" />
-              Audio & Mapping
             </TabsTrigger>
           </TabsList>
 
@@ -1733,355 +1654,843 @@ export default function ChapterEditor() {
             </Card>
           </TabsContent>
 
-          {/* Text Segmentation Tab */}
-          <TabsContent value="text-segmentation" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Panel: Language Selection and Controls */}
-              <Card className="lg:col-span-1">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Type className="h-5 w-5" />
-                    Segmentation Controls
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Language</Label>
-                    <Select
-                      value={segmentationLanguage}
-                      onValueChange={(value: 'te' | 'hi' | 'en') => setSegmentationLanguage(value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="te">Telugu</SelectItem>
-                        <SelectItem value="hi">Hindi</SelectItem>
-                        <SelectItem value="en">English</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="pt-4">
-                    <h4 className="font-medium mb-2">Segments ({textSegments.length})</h4>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {textSegments.map((segment) => (
-                        <div
-                          key={segment.id}
-                          className={`p-2 border rounded cursor-pointer transition-colors ${
-                            selectedSegmentId === segment.id 
-                              ? 'bg-blue-50 border-blue-200' 
-                              : 'hover:bg-gray-50'
-                          }`}
-                          onClick={() => setSelectedSegmentId(segment.id)}
-                        >
-                          <div className="text-sm font-medium truncate">
-                            {segment.conceptualName || 'Unnamed Segment'}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            Order: {segment.order}
-                          </div>
-                        </div>
-                      ))}
-                      {textSegments.length === 0 && (
-                        <div className="text-center py-4 text-gray-500">
-                          <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                          <p className="text-sm">No segments created</p>
-                          <p className="text-xs">Select text to create segments</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+          {/* Segmentation & Mapping Tab */}
+          <TabsContent value="segmentation" className="space-y-6">
+            {/* Two-Panel Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* LEFT PANEL: Audio Operations */}
+              <div className="space-y-6">
+                {/* Consolidated Audio Panel */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Music className="h-5 w-5" />
+                      Media Segmentation
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Audio File Selection Section */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">
+                        Select Media
+                      </Label>
+                      <Select
+                        value={selectedAudioFile?.id?.toString() || ""}
+                        onValueChange={(value) => {
+                          const file =
+                            audioFiles && Array.isArray(audioFiles)
+                              ? audioFiles.find(
+                                  (f: any) => f.id.toString() === value,
+                                )
+                              : null;
+                          setSelectedAudioFile(file);
 
-              {/* Right Panel: Text Content and Annotation Interface */}
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Edit2 className="h-5 w-5" />
-                    Text Annotation Interface
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
-                      <strong>Instructions:</strong> Select text content below to create conceptual segments. 
-                      This is a simplified annotation interface. The enhanced version with real-time highlighting 
-                      and advanced selection tools will be integrated next.
+                          // Load the audio file for playback
+                          if (file && file.filename) {
+                            // Clean up existing audio player
+                            if (audioPlayer) {
+                              audioPlayer.pause();
+                              audioPlayer.removeEventListener(
+                                "loadedmetadata",
+                                () => {},
+                              );
+                              audioPlayer.removeEventListener(
+                                "timeupdate",
+                                () => {},
+                              );
+                            }
+
+                            const audio = new Audio(
+                              `/uploads/${file.filename}`,
+                            );
+                            audio.addEventListener("loadedmetadata", () => {
+                              setDuration(audio.duration);
+                              setCurrentTime(0);
+                              setIsPlaying(false);
+                              console.log("Audio loaded successfully");
+                            });
+                            audio.addEventListener("error", (e) => {
+                              console.error("Audio loading error:", e);
+                              toast({
+                                title: "Audio Load Error",
+                                description: "Failed to load audio file",
+                                variant: "destructive",
+                              });
+                            });
+                            setAudioPlayer(audio);
+                          }
+
+                          // Refresh media segments for the selected audio file
+                          if (file?.id) {
+                            queryClient.invalidateQueries({
+                              queryKey: [
+                                `/api/admin/media-segments/${file.id}`,
+                              ],
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose an audio file" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {audioFiles &&
+                            Array.isArray(audioFiles) &&
+                            audioFiles.map((file: any) => (
+                              <SelectItem
+                                key={file.id}
+                                value={file.id.toString()}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Music className="h-4 w-4" />
+                                  {file.displayName || file.filename}
+                                </div>
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    
-                    <div className="border rounded p-4 min-h-96 bg-gray-50">
-                      <div className="text-sm text-gray-500 mb-2">
-                        {segmentationLanguage.toUpperCase()} Content:
-                      </div>
-                      <div className="prose prose-sm max-w-none">
-                        {chapter?.content?.[segmentationLanguage] ? (
-                          <div 
-                            className="whitespace-pre-wrap leading-relaxed"
-                            style={{ userSelect: 'text' }}
-                            onMouseUp={() => {
-                              const selection = window.getSelection();
-                              if (selection && selection.toString().trim()) {
-                                const selectedText = selection.toString().trim();
-                                const segmentName = prompt('Enter segment name:');
-                                if (segmentName) {
-                                  handleSegmentCreate({
-                                    conceptualName: segmentName,
-                                    textReferences: {
-                                      [segmentationLanguage]: {
-                                        start: 0, // Simplified - would calculate actual positions
-                                        end: selectedText.length
+
+                    {/* Audio Segmentation Section */}
+                    {selectedAudioFile && (
+                      <div className="space-y-4 border-t pt-4">
+                        <div className="flex items-center gap-2">
+                          <Settings className="h-4 w-4" />
+                          <Label className="text-sm font-medium">
+                            Media Controls
+                          </Label>
+                        </div>
+                        <audio
+                          ref={audioRef}
+                          src={`/uploads/${selectedAudioFile.hashedFilename || selectedAudioFile.filename}`}
+                          onError={(e) => {
+                            console.error(
+                              "Audio play error:",
+                              e,
+                              "Trying path:",
+                              `/uploads/${selectedAudioFile.hashedFilename || selectedAudioFile.filename}`,
+                            );
+                            toast({
+                              title: "Audio Playback Error",
+                              description:
+                                "Failed to play audio. Please check the file format and path.",
+                              variant: "destructive",
+                            });
+                          }}
+                          onCanPlayThrough={() => {
+                            console.log("Audio loaded successfully");
+                          }}
+                          crossOrigin="anonymous"
+                          preload="metadata"
+                        />
+
+                        {/* Time Display */}
+                        <div className="text-center">
+                          <span className="text-sm font-mono">
+                            {Math.floor(currentTime / 60)}:
+                            {Math.floor(currentTime % 60)
+                              .toString()
+                              .padStart(2, "0")}{" "}
+                            /{Math.floor(duration / 60)}:
+                            {Math.floor(duration % 60)
+                              .toString()
+                              .padStart(2, "0")}
+                          </span>
+                        </div>
+
+                        {/* Timeline */}
+                        <div className="space-y-2">
+                          <div className="relative mb-8">
+                            <input
+                              ref={timelineRef}
+                              type="range"
+                              min="0"
+                              max={duration || 0}
+                              value={currentTime}
+                              onChange={(e) => {
+                                if (audioRef.current) {
+                                  audioRef.current.currentTime = parseFloat(
+                                    e.target.value,
+                                  );
+                                  setCurrentTime(parseFloat(e.target.value));
+                                }
+                              }}
+                              className="w-full"
+                            />
+                            {/* Time Mark Triangles */}
+                            {timeMarks.map((mark, index) => {
+                              const position = (mark / duration) * 100;
+                              const timestamp = `${Math.floor(mark / 60)}:${Math.floor(
+                                mark % 60,
+                              )
+                                .toString()
+                                .padStart(2, "0")}`;
+                              return (
+                                <div
+                                  key={index}
+                                  className="absolute top-full flex flex-col items-center"
+                                  style={{
+                                    left: `${position}%`,
+                                    transform: "translateX(-50%)",
+                                  }}
+                                >
+                                  {/* Triangle pointing up */}
+                                  <div
+                                    className={`w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] cursor-pointer ${
+                                      selectedMark === mark
+                                        ? "border-l-transparent border-r-transparent border-b-red-500 hover:border-b-red-600"
+                                        : "border-l-transparent border-r-transparent border-b-green-500 hover:border-b-green-600"
+                                    } transition-colors ${isDragging && selectedMark === mark ? "cursor-grabbing" : "cursor-grab"}`}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      setSelectedMark(mark);
+                                      setIsDragging(true);
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (!isDragging) {
+                                        setSelectedMark(
+                                          selectedMark === mark ? null : mark,
+                                        );
+                                        if (audioRef.current) {
+                                          audioRef.current.currentTime = mark;
+                                          setCurrentTime(mark);
+                                        }
                                       }
-                                    }
-                                  });
-                                  selection.removeAllRanges();
+                                    }}
+                                    title={`Mark at ${timestamp} - Click to select, drag to move`}
+                                  />
+                                  {/* Editable Timestamp label */}
+                                  {editingTimestamp === mark ? (
+                                    <input
+                                      type="text"
+                                      defaultValue={timestamp}
+                                      className="text-xs mt-1 font-mono w-12 text-center border rounded px-1"
+                                      autoFocus
+                                      onBlur={(e) => {
+                                        updateMarkTimestamp(
+                                          mark,
+                                          e.target.value,
+                                        );
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          updateMarkTimestamp(
+                                            mark,
+                                            e.currentTarget.value,
+                                          );
+                                        } else if (e.key === "Escape") {
+                                          setEditingTimestamp(null);
+                                        }
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  ) : (
+                                    <div
+                                      className={`text-xs mt-1 font-mono cursor-pointer hover:underline ${
+                                        selectedMark === mark
+                                          ? "text-red-600 font-semibold"
+                                          : "text-green-600"
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingTimestamp(mark);
+                                      }}
+                                      title="Click to edit timestamp"
+                                    >
+                                      {timestamp}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Player Controls */}
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            onClick={() => {
+                              if (audioRef.current) {
+                                if (isPlaying) {
+                                  audioRef.current.pause();
+                                  setIsPlaying(false);
+                                } else {
+                                  audioRef.current.play();
+                                  setIsPlaying(true);
                                 }
                               }
                             }}
+                            size="sm"
                           >
-                            {chapter.content[segmentationLanguage]}
+                            {isPlaying ? (
+                              <Pause className="h-4 w-4" />
+                            ) : (
+                              <Play className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              if (audioRef.current) {
+                                audioRef.current.pause();
+                                audioRef.current.currentTime = 0;
+                                setIsPlaying(false);
+                                setCurrentTime(0);
+                              }
+                            }}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <Square className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              if (audioRef.current) {
+                                const newMark = audioRef.current.currentTime;
+                                setTimeMarks((prev) =>
+                                  [...prev, newMark].sort((a, b) => a - b),
+                                );
+                                toast({
+                                  title: "Time Mark Added",
+                                  description: `Mark added at ${Math.floor(newMark / 60)}:${Math.floor(
+                                    newMark % 60,
+                                  )
+                                    .toString()
+                                    .padStart(2, "0")}`,
+                                });
+                              }
+                            }}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <MapPin className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              if (selectedMark !== null) {
+                                setTimeMarks((prev) =>
+                                  prev.filter((mark) => mark !== selectedMark),
+                                );
+                                setSelectedMark(null);
+                                toast({
+                                  title: "Time Mark Cleared",
+                                  description: "Selected mark has been removed",
+                                });
+                              } else {
+                                toast({
+                                  title: "No Mark Selected",
+                                  description:
+                                    "Please select a mark on the timeline first",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setTimeMarks([]);
+                              setSelectedMark(null);
+                              toast({
+                                title: "All Marks Cleared",
+                                description: "All time marks have been removed",
+                              });
+                            }}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        {/* Create Segments Button */}
+                        {timeMarks.length > 0 && (
+                          <div className="mt-4 flex justify-center">
+                            <Button
+                              onClick={handleCreateAudioSegments}
+                              disabled={
+                                createAudioSegmentsMutation.isPending ||
+                                isPublished
+                              }
+                              className="flex items-center gap-2"
+                            >
+                              <Clock className="h-4 w-4" />
+                              {createAudioSegmentsMutation.isPending
+                                ? "Creating..."
+                                : "Create Audio Segments"}
+                            </Button>
                           </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Audio Segments Section */}
+                    {selectedAudioFile && (
+                      <div className="space-y-4 border-t pt-4">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <Label className="text-sm font-medium">
+                            Media Segments (
+                            {Array.isArray(mediaSegments)
+                              ? mediaSegments.length
+                              : 0}
+                            )
+                          </Label>
+                        </div>
+                        {/* Segments List */}
+                        <div className="space-y-2">
+                          <div className="max-h-64 overflow-y-auto space-y-2">
+                            {Array.isArray(mediaSegments) &&
+                            mediaSegments.length > 0 ? (
+                              (mediaSegments as any[]).map((segment, index) => (
+                                <div
+                                  key={segment.id}
+                                  className="p-2 border rounded-lg bg-white dark:bg-gray-800"
+                                >
+                                  {editingSegmentId === segment.id ? (
+                                    // Edit mode
+                                    <div className="space-y-3">
+                                      <div className="font-medium text-sm">
+                                        {segment.segmentName || segment.name}
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            Start Time (MM:SS)
+                                          </Label>
+                                          <Input
+                                            type="text"
+                                            value={
+                                              editingSegmentData?.startTime ||
+                                              ""
+                                            }
+                                            onChange={(e) =>
+                                              setEditingSegmentData((prev) =>
+                                                prev
+                                                  ? {
+                                                      ...prev,
+                                                      startTime: e.target.value,
+                                                    }
+                                                  : null,
+                                              )
+                                            }
+                                            placeholder="0:00"
+                                            className="text-sm h-8"
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Label className="text-xs">
+                                            End Time (MM:SS)
+                                          </Label>
+                                          <Input
+                                            type="text"
+                                            value={
+                                              editingSegmentData?.endTime || ""
+                                            }
+                                            onChange={(e) =>
+                                              setEditingSegmentData((prev) =>
+                                                prev
+                                                  ? {
+                                                      ...prev,
+                                                      endTime: e.target.value,
+                                                    }
+                                                  : null,
+                                              )
+                                            }
+                                            placeholder="0:00"
+                                            className="text-sm h-8"
+                                          />
+                                        </div>
+                                      </div>
+                                      <div className="flex gap-2 justify-end">
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={cancelEditingSegment}
+                                          className="h-7 px-2 text-xs"
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          onClick={saveSegmentEdit}
+                                          disabled={
+                                            updateMediaSegmentMutation.isPending
+                                          }
+                                          className="h-7 px-2 text-xs"
+                                        >
+                                          {updateMediaSegmentMutation.isPending
+                                            ? "Saving..."
+                                            : "Save"}
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    // View mode - compact single row layout
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <div className="font-medium text-sm truncate">
+                                          {segment.segmentName || segment.name}
+                                        </div>
+                                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                          <span className="flex items-center gap-1">
+                                            <Timer className="w-3 h-3" />
+                                            {formatTime(
+                                              segment.startTimestamp ||
+                                                segment.startTime ||
+                                                0,
+                                            )}{" "}
+                                            -{" "}
+                                            {formatTime(
+                                              segment.endTimestamp ||
+                                                segment.endTime ||
+                                                0,
+                                            )}
+                                          </span>
+                                          <span className="text-blue-600 flex items-center gap-1">
+                                            <Ruler className="w-3 h-3" />
+                                            {(() => {
+                                              const start =
+                                                segment.startTimestamp ||
+                                                segment.startTime ||
+                                                0;
+                                              const end =
+                                                segment.endTimestamp ||
+                                                segment.endTime ||
+                                                0;
+                                              const length = Math.max(
+                                                0,
+                                                end - start,
+                                              );
+                                              return Math.round(length) + "s";
+                                            })()}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className="flex gap-1 ml-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => {
+                                            // Ensure audio player is set up
+                                            if (
+                                              !audioPlayer &&
+                                              audioRef.current
+                                            ) {
+                                              setAudioPlayer(audioRef.current);
+                                            }
+
+                                            // Use audioRef.current directly if audioPlayer state is not ready
+                                            const audio =
+                                              audioPlayer || audioRef.current;
+                                            if (audio) {
+                                              // Update playAudioSegment to use the audio element directly
+                                              const startTime =
+                                                segment.startTimestamp ||
+                                                segment.startTime ||
+                                                0;
+                                              const endTime =
+                                                segment.endTimestamp ||
+                                                segment.endTime ||
+                                                0;
+
+                                              if (endTime <= startTime) {
+                                                toast({
+                                                  title: "Invalid Segment",
+                                                  description:
+                                                    "This segment has invalid timestamps",
+                                                  variant: "destructive",
+                                                });
+                                                return;
+                                              }
+
+                                              // Remove any existing boundary listener
+                                              if (
+                                                segmentBoundaryListenerRef.current
+                                              ) {
+                                                audio.removeEventListener(
+                                                  "timeupdate",
+                                                  segmentBoundaryListenerRef.current,
+                                                );
+                                              }
+
+                                              // Create boundary listener
+                                              const boundaryListener = () => {
+                                                if (
+                                                  audio.currentTime >= endTime
+                                                ) {
+                                                  audio.pause();
+                                                  setIsPlaying(false);
+                                                  audio.removeEventListener(
+                                                    "timeupdate",
+                                                    boundaryListener,
+                                                  );
+                                                  segmentBoundaryListenerRef.current =
+                                                    null;
+                                                }
+                                              };
+
+                                              segmentBoundaryListenerRef.current =
+                                                boundaryListener;
+                                              audio.addEventListener(
+                                                "timeupdate",
+                                                boundaryListener,
+                                              );
+
+                                              // Set position and play
+                                              audio.currentTime = startTime;
+                                              setCurrentTime(startTime);
+                                              audio.play();
+                                              setIsPlaying(true);
+
+                                              toast({
+                                                title: "Playing Segment",
+                                                description: `${formatTime(startTime)} - ${formatTime(endTime)} (${Math.round(endTime - startTime)}s)`,
+                                              });
+                                            } else {
+                                              toast({
+                                                title: "Audio Not Ready",
+                                                description:
+                                                  "Please select an audio file first",
+                                                variant: "destructive",
+                                              });
+                                            }
+                                          }}
+                                          className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700"
+                                          title="Play segment"
+                                        >
+                                          <Play className="w-3 h-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() =>
+                                            startEditingSegment(segment)
+                                          }
+                                          disabled={isPublished}
+                                          className="h-7 w-7 p-0 text-gray-600 hover:text-gray-700"
+                                          title="Edit segment"
+                                        >
+                                          <Edit2 className="w-3 h-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() =>
+                                            deleteSegment(segment.id)
+                                          }
+                                          disabled={
+                                            isPublished ||
+                                            deleteMediaSegmentMutation.isPending
+                                          }
+                                          className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                                          title="Delete segment"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-center py-8 text-muted-foreground">
+                                <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                <p className="text-sm">
+                                  No audio segments created yet
+                                </p>
+                                <p className="text-xs">
+                                  Add time marks and create segments
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* RIGHT PANEL: Text Segmentation & Mapping */}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Type className="h-5 w-5" />
+                      Text Segmentation & Mapping
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Language Selection */}
+                    <div className="space-y-2">
+                      <Label>Language</Label>
+                      <Select
+                        value={selectedLanguage}
+                        onValueChange={(value: "te" | "hi" | "en") =>
+                          setSelectedLanguage(value)
+                        }
+                        disabled={isPublished}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="te">Telugu</SelectItem>
+                          <SelectItem value="hi">Hindi</SelectItem>
+                          <SelectItem value="en">English/IAST</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Text Content with Segmentation */}
+                    <div className="space-y-3">
+                      <Label>Text Content (Click and drag to select)</Label>
+                      <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900 max-h-96 overflow-y-auto">
+                        <div
+                          className={`text-sm leading-relaxed ${
+                            selectedLanguage === "te"
+                              ? "font-telugu"
+                              : selectedLanguage === "hi"
+                                ? "font-devanagari"
+                                : "font-mono"
+                          }`}
+                        >
+                          {textContent[selectedLanguage] ? (
+                            isHtmlContent(textContent[selectedLanguage]) ? (
+                              <div
+                                data-segmentable
+                                className="whitespace-pre-wrap cursor-text prose prose-sm max-w-none"
+                                onMouseUp={handleTextSelection}
+                                dangerouslySetInnerHTML={{ __html: textContent[selectedLanguage] }}
+                              />
+                            ) : (
+                              renderTextWithSegments(
+                                textContent[selectedLanguage],
+                                selectedLanguage,
+                              )
+                            )
+                          ) : (
+                            <div className="text-muted-foreground italic">
+                              No content available for this language
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Text Selection Info */}
+                    {textSelection && (
+                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <Label className="text-sm font-medium">
+                          Selected Text
+                        </Label>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          Characters {textSelection.start}-{textSelection.end}
+                        </div>
+                        <div className="text-sm mt-2 p-2 bg-white dark:bg-gray-800 rounded border">
+                          "{textSelection.text}"
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Segment Creation */}
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label>Segment Name</Label>
+                        <input
+                          type="text"
+                          value={segmentName}
+                          onChange={(e) => setSegmentName(e.target.value)}
+                          placeholder="Enter segment name..."
+                          disabled={isPublished}
+                          className="w-full px-3 py-2 border rounded-md text-sm"
+                        />
+                      </div>
+
+                      <Button
+                        onClick={handleCreateTextSegment}
+                        disabled={
+                          !textSelection ||
+                          !segmentName.trim() ||
+                          createTextSegmentMutation.isPending ||
+                          isPublished
+                        }
+                        size="sm"
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Text Segment
+                      </Button>
+                    </div>
+
+                    {/* Segment List */}
+                    <div className="space-y-2">
+                      <Label className="text-sm">
+                        Text Segments ({segments?.length || 0})
+                      </Label>
+                      <div className="max-h-64 overflow-y-auto space-y-2">
+                        {segments && segments.length > 0 ? (
+                          segments.map((segment) => (
+                            <div
+                              key={segment.id}
+                              className="p-3 border rounded-lg bg-white dark:bg-gray-800"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm">
+                                    {segment.conceptualName}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {segment.textReferences[selectedLanguage]
+                                      ? `${selectedLanguage.toUpperCase()}: ${segment.textReferences[selectedLanguage]?.start}-${segment.textReferences[selectedLanguage]?.end}`
+                                      : "No reference for selected language"}
+                                  </div>
+                                  {segment.audioFileId &&
+                                    segment.startTime !== undefined && (
+                                      <div className="text-xs text-green-600 mt-1">
+                                        Audio: {formatTime(segment.startTime)} -{" "}
+                                        {formatTime(segment.endTime || 0)}
+                                      </div>
+                                    )}
+                                </div>
+                                {!isPublished && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      deleteSegmentMutation.mutate(segment.id)
+                                    }
+                                    disabled={deleteSegmentMutation.isPending}
+                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))
                         ) : (
-                          <div className="text-center py-12 text-gray-400">
-                            <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                            <p>No {segmentationLanguage.toUpperCase()} content available</p>
-                            <p className="text-sm">Add content in the Text Content tab first</p>
+                          <div className="text-center py-8 text-muted-foreground">
+                            <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">
+                              No text segments created yet
+                            </p>
+                            <p className="text-xs">
+                              Select text above to create segments
+                            </p>
                           </div>
                         )}
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
-
-          {/* Audio & Mapping Tab */}
-          <TabsContent value="audio-mapping" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left Panel: Audio Player and Session Controls */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Music className="h-5 w-5" />
-                    Progressive Audio Mapping
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Audio File</Label>
-                    <Select
-                      value={audioFiles && audioFiles.length > 0 ? audioFiles[0]?.id?.toString() || "" : ""}
-                      onValueChange={(value) => {
-                        const file = audioFiles?.find((f: any) => f.id.toString() === value);
-                        if (file && audioRef.current) {
-                          audioRef.current.src = `/uploads/${file.filename}`;
-                        }
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select audio file" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {audioFiles?.map((file: any) => (
-                          <SelectItem key={file.id} value={file.id.toString()}>
-                            {file.displayName || file.filename}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {audioFiles && audioFiles.length > 0 && (
-                    <div className="space-y-4">
-                      <audio 
-                        ref={audioRef}
-                        className="w-full"
-                        controls
-                        onTimeUpdate={() => {
-                          // Handle time updates for mapping
-                        }}
-                      />
-                      
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label>Mapping Session</Label>
-                          <Badge variant={mappingSession === 'active' ? 'default' : 'secondary'}>
-                            {mappingSession.toUpperCase()}
-                          </Badge>
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <Button
-                            variant={mappingSession === 'active' ? 'destructive' : 'default'}
-                            size="sm"
-                            onClick={() => {
-                              if (mappingSession === 'active') {
-                                setMappingSession('idle');
-                                setActiveSegmentId(null);
-                              } else {
-                                setMappingSession('active');
-                                setSessionStartTime(audioRef.current?.currentTime || 0);
-                              }
-                            }}
-                          >
-                            {mappingSession === 'active' ? (
-                              <>
-                                <Square className="w-3 h-3 mr-1" />
-                                Stop Session
-                              </>
-                            ) : (
-                              <>
-                                <Play className="w-3 h-3 mr-1" />
-                                Start Session
-                              </>
-                            )}
-                          </Button>
-                          
-                          {mappingSession === 'active' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setMappingSession('paused')}
-                            >
-                              <Pause className="w-3 h-3 mr-1" />
-                              Pause
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="text-sm text-gray-600 bg-green-50 p-3 rounded">
-                        <strong>Instructions:</strong> Start a mapping session, then click on segments 
-                        in the right panel when you hear them in the audio. This creates time-based 
-                        mappings for progressive learning workflows.
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Right Panel: Segment Grid for Mapping */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Type className="h-5 w-5" />
-                    Text Segments ({textSegments.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="text-sm text-gray-500">
-                      Click on segments when heard during audio playback to create time mappings.
-                    </div>
-                    
-                    <div className="grid gap-3 max-h-96 overflow-y-auto">
-                      {textSegments.map((segment) => {
-                        const mapping = audioMappings.find(m => m.segmentId === segment.id);
-                        const isActive = activeSegmentId === segment.id;
-                        
-                        return (
-                          <div
-                            key={segment.id}
-                            className={`p-3 border rounded cursor-pointer transition-all ${
-                              isActive 
-                                ? 'bg-yellow-50 border-yellow-300 ring-2 ring-yellow-200' 
-                                : mapping
-                                ? 'bg-green-50 border-green-300'
-                                : 'hover:bg-gray-50 border-gray-200'
-                            }`}
-                            onClick={() => {
-                              if (mappingSession === 'active' && audioRef.current) {
-                                const currentTime = audioRef.current.currentTime;
-                                
-                                if (isActive) {
-                                  // Complete the mapping
-                                  handleMappingCreate({
-                                    segmentId: segment.id,
-                                    startTime: sessionStartTime,
-                                    endTime: currentTime
-                                  });
-                                  setActiveSegmentId(null);
-                                  setSessionStartTime(currentTime);
-                                } else {
-                                  // Start mapping this segment
-                                  setActiveSegmentId(segment.id);
-                                  setSessionStartTime(currentTime);
-                                }
-                              }
-                            }}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="font-medium text-sm">
-                                  {segment.conceptualName || 'Unnamed Segment'}
-                                </div>
-                                <div className="text-xs text-gray-500 mt-1">
-                                  Order: {segment.order}
-                                </div>
-                              </div>
-                              
-                              <div className="text-xs text-right">
-                                {mapping ? (
-                                  <div className="space-y-1">
-                                    <div className="bg-green-100 text-green-800 px-2 py-1 rounded">
-                                      Mapped
-                                    </div>
-                                    <div className="text-gray-500">
-                                      {mapping.startTime.toFixed(1)}s - {mapping.endTime.toFixed(1)}s
-                                    </div>
-                                  </div>
-                                ) : isActive ? (
-                                  <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                                    Recording...
-                                  </div>
-                                ) : mappingSession === 'active' ? (
-                                  <div className="text-gray-400">
-                                    Click when heard
-                                  </div>
-                                ) : (
-                                  <div className="text-gray-300">
-                                    Start session
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      
-                      {textSegments.length === 0 && (
-                        <div className="text-center py-8 text-gray-400">
-                          <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                          <p>No text segments available</p>
-                          <p className="text-sm">Create segments in the Text Segmentation tab first</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {audioMappings.length > 0 && (
-                      <div className="pt-4 border-t">
-                        <h4 className="font-medium text-sm mb-2">Mapping Progress</h4>
-                        <div className="text-sm text-gray-600">
-                          {audioMappings.length} of {textSegments.length} segments mapped
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                          <div 
-                            className="bg-green-500 h-2 rounded-full transition-all"
-                            style={{ 
-                              width: `${textSegments.length > 0 ? (audioMappings.length / textSegments.length) * 100 : 0}%` 
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
         </Tabs>
       </div>
     </div>
