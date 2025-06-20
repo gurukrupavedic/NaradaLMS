@@ -80,16 +80,28 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
 
   // Link Status Icon Component
   const LinkStatusIcon: React.FC<{ status: 'mapped' | 'unmapped' | 'broken'; className?: string }> = ({ status, className }) => {
-    const baseClasses = "relative z-10";
+    const baseClasses = "relative z-10 pointer-events-none";
     const combinedClasses = className ? `${baseClasses} ${className}` : baseClasses;
     
     if (status === 'mapped') {
-      return <ConnectedCirclesIcon className={`h-4 w-4 text-green-600 ${combinedClasses}`} />;
+      return (
+        <div className="isolate">
+          <ConnectedCirclesIcon className={`h-4 w-4 text-green-600 ${combinedClasses}`} style={{ color: '#16a34a' }} />
+        </div>
+      );
     }
     if (status === 'broken') {
-      return <Link2Off className={`h-3 w-3 text-amber-600 opacity-90 ${combinedClasses}`} />;
+      return (
+        <div className="isolate">
+          <Link2Off className={`h-3 w-3 text-amber-600 opacity-90 ${combinedClasses}`} style={{ color: '#d97706' }} />
+        </div>
+      );
     }
-    return <Link2Off className={`h-3 w-3 text-gray-400 opacity-60 ${combinedClasses}`} />;
+    return (
+      <div className="isolate">
+        <Link2Off className={`h-3 w-3 text-gray-400 opacity-60 ${combinedClasses}`} style={{ color: '#9ca3af' }} />
+      </div>
+    );
   };
 
   // Drag and drop handlers
