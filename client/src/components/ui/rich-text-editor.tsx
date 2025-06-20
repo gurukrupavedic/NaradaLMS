@@ -202,8 +202,8 @@ export function RichTextEditor({
     <div className={cn("border rounded-md overflow-hidden", className)}>
       {/* Reorganized Toolbar */}
       <div className="border-b p-2 bg-white">
-        {/* Row 1: Primary Tools */}
-        <div className="flex flex-wrap items-center gap-2 mb-2">
+        {/* Compact Single Row Toolbar */}
+        <div className="flex flex-wrap items-center gap-2">
           {/* Essential Formatting */}
           <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
             <Button
@@ -238,76 +238,6 @@ export function RichTextEditor({
             </Button>
           </div>
 
-          {/* Font Selector */}
-          <Select
-            value={editor?.getAttributes('textStyle')?.fontFamily || 'default'}
-            onValueChange={setFontFamily}
-            disabled={disabled}
-          >
-            <SelectTrigger className="w-[160px] h-8 text-xs">
-              <SelectValue placeholder="Font" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="default">Default</SelectItem>
-              <SelectItem value="'Noto Sans Telugu', sans-serif">Noto Sans Telugu</SelectItem>
-              <SelectItem value="'Noto Sans Devanagari', sans-serif">Noto Sans Devanagari</SelectItem>
-              <SelectItem value="'Sanskrit 2003', serif">Sanskrit 2003</SelectItem>
-              <SelectItem value="Arial, sans-serif">Arial</SelectItem>
-              <SelectItem value="Times New Roman, serif">Times New Roman</SelectItem>
-              <SelectItem value="Georgia, serif">Georgia</SelectItem>
-              <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
-              <SelectItem value="'Noto Sans', sans-serif">Noto Sans</SelectItem>
-              <SelectItem value="Courier New, monospace">Courier New</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Text Colors */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setColor('#000000')}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Black"
-            >
-              <div className="w-3 h-3 bg-black dark:bg-white rounded-sm"></div>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setColor('#ef4444')}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Red"
-            >
-              <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setColor('#3b82f6')}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Blue"
-            >
-              <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setColor('#22c55e')}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Green"
-            >
-              <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
-            </Button>
-          </div>
-        </div>
-
-        {/* Row 2: Structure Tools */}
-        <div className="flex flex-wrap items-center gap-2">
           {/* Heading Selector */}
           <Select
             value={
@@ -340,6 +270,29 @@ export function RichTextEditor({
               <SelectItem value="h4">Heading 4</SelectItem>
               <SelectItem value="h5">Heading 5</SelectItem>
               <SelectItem value="h6">Heading 6</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Font Selector */}
+          <Select
+            value={editor?.getAttributes('textStyle')?.fontFamily || 'default'}
+            onValueChange={setFontFamily}
+            disabled={disabled}
+          >
+            <SelectTrigger className="w-[140px] h-8 text-xs">
+              <SelectValue placeholder="Font" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default</SelectItem>
+              <SelectItem value="'Noto Sans Telugu', sans-serif">Noto Telugu</SelectItem>
+              <SelectItem value="'Noto Sans Devanagari', sans-serif">Noto Devanagari</SelectItem>
+              <SelectItem value="'Sanskrit 2003', serif">Sanskrit 2003</SelectItem>
+              <SelectItem value="Arial, sans-serif">Arial</SelectItem>
+              <SelectItem value="Times New Roman, serif">Times New Roman</SelectItem>
+              <SelectItem value="Georgia, serif">Georgia</SelectItem>
+              <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
+              <SelectItem value="'Noto Sans', sans-serif">Noto Sans</SelectItem>
+              <SelectItem value="Courier New, monospace">Courier New</SelectItem>
             </SelectContent>
           </Select>
 
@@ -411,6 +364,50 @@ export function RichTextEditor({
             </Button>
           </div>
 
+          {/* Text Colors */}
+          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setColor('#000000')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Black"
+            >
+              <div className="w-3 h-3 bg-black dark:bg-white rounded-sm"></div>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setColor('#ef4444')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Red"
+            >
+              <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setColor('#3b82f6')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Blue"
+            >
+              <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setColor('#22c55e')}
+              disabled={disabled}
+              className="h-7 w-7 p-0"
+              title="Green"
+            >
+              <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
+            </Button>
+          </div>
+
           {/* Content Insertion */}
           <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
             <Button
@@ -444,8 +441,6 @@ export function RichTextEditor({
               <Minus className="h-3.5 w-3.5" />
             </Button>
           </div>
-
-
         </div>
       </div>
 
