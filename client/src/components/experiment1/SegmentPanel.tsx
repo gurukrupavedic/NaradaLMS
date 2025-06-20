@@ -118,23 +118,48 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
           <div className="p-4">
             <div className="space-y-3">
               {currentLanguageSegments.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 px-6">
-                  <div className="relative mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
-                      <Circle className="h-8 w-8 text-blue-500" />
+                <div className="py-12 px-6">
+                  <div className="text-center mb-8">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Circle className="h-6 w-6 text-blue-600" />
                     </div>
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">+</span>
-                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Create Text Segments</h3>
+                    <p className="text-gray-600 text-sm">Follow these steps to get started</p>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-3">Create Your First Segment</h3>
-                  <p className="text-gray-600 text-center max-w-xs leading-relaxed mb-4">
-                    Select any text in the content area to create segments that can be mapped to audio.
-                  </p>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 max-w-xs">
-                    <p className="text-blue-700 text-sm text-center">
-                      <strong>Tip:</strong> Drag to select multiple words or lines of text
-                    </p>
+
+                  <div className="space-y-4 max-w-sm mx-auto">
+                    {/* Step 1 */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
+                        1
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">Select text</p>
+                        <p className="text-xs text-gray-600">Highlight words or sentences in the content area</p>
+                      </div>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
+                        2
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">Create segment</p>
+                        <p className="text-xs text-gray-600">Segment will appear here automatically</p>
+                      </div>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold">
+                        3
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">Map to audio</p>
+                        <p className="text-xs text-gray-600">Use the Audio & Mapping tab to sync with audio</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : (
