@@ -28,6 +28,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Experiment1_AnnotationLayer } from '@/components/experiment1/Experiment1_AnnotationLayer';
 import { Experiment1_ProgressiveMapper } from '@/components/experiment1/Experiment1_ProgressiveMapper';
 import { SegmentPanel } from '@/components/experiment1/SegmentPanel';
+import { ExperimentalDataManager } from '@/components/experiment1/ExperimentalDataManager';
+import { AudioFileManager } from '@/components/experiment1/AudioFileManager';
+import { LanguageSelector } from '@/components/experiment1/LanguageSelector';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import type { TextSegment, AudioMapping, AudioFile, Chapter, Language } from '@shared/experiment1-types';
 
@@ -234,43 +237,13 @@ function Experiment1_SegmentationStudio() {
           </TabsList>
 
           <TabsContent value="annotation" className="flex-1 mt-6">
-            {/* Language Selection */}
+            {/* Language Selection & Stats */}
             <div className="flex justify-between items-center mb-6 p-4 bg-gray-50 border rounded-lg">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Language:</label>
-                <div className="flex border rounded-lg bg-white">
-                  <button
-                    onClick={() => setCurrentLanguage('te')}
-                    className={`px-3 py-1 text-sm font-medium rounded-l-lg transition-colors ${
-                      currentLanguage === 'te' 
-                        ? 'bg-blue-500 text-white' 
-                        : 'bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    TE
-                  </button>
-                  <button
-                    onClick={() => setCurrentLanguage('hi')}
-                    className={`px-3 py-1 text-sm font-medium border-l transition-colors ${
-                      currentLanguage === 'hi' 
-                        ? 'bg-blue-500 text-white' 
-                        : 'bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    HI
-                  </button>
-                  <button
-                    onClick={() => setCurrentLanguage('en')}
-                    className={`px-3 py-1 text-sm font-medium rounded-r-lg border-l transition-colors ${
-                      currentLanguage === 'en' 
-                        ? 'bg-blue-500 text-white' 
-                        : 'bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    EN-IAST
-                  </button>
-                </div>
-              </div>
+              <LanguageSelector
+                currentLanguage={currentLanguage}
+                availableLanguages={['te', 'hi', 'en']}
+                onLanguageChange={setCurrentLanguage}
+              />
               <div className="flex gap-2">
                 <Badge variant="secondary" className="text-xs">
                   {experimentalSegments.filter(s => s.textReferences[currentLanguage]).length} segments
