@@ -88,14 +88,38 @@ export const getLanguageLabel = (language: Language): string => {
 };
 
 /**
- * Formats time in MM:SS format
+ * Formats time with configurable precision and padding
  * @param seconds - Time in seconds
+ * @param options - Formatting options
  * @returns Formatted time string
  */
-export const formatTime = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
+export const formatTime = (seconds: number, options: {
+  showDecimal?: boolean;
+  showHours?: boolean;
+  padMinutes?: boolean;
+} = {}): string => {
+  const { showDecimal = false, showHours = false, padMinutes = true } = options;
+  
+  const totalSeconds = Math.max(0, seconds);
+  const hours = Math.floor(totalSeconds / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  const secsValue = totalSeconds % 60;
+  
+  if (showHours || hours > 0) {
+    const paddedMins = mins.toString().padStart(2, '0');
+    const secsStr = showDecimal 
+      ? secsValue.toFixed(1)
+      : Math.floor(secsValue).toString();
+    const paddedSecs = secsStr.padStart(showDecimal ? 4 : 2, '0');
+    return `${hours}:${paddedMins}:${paddedSecs}`;
+  }
+  
+  const formattedMins = mins.toString();
+  const secsStr = showDecimal 
+    ? secsValue.toFixed(1) 
+    : Math.floor(secsValue).toString();
+  const paddedSecs = secsStr.padStart(showDecimal ? 4 : 2, '0');
+  return `${formattedMins}:${paddedSecs}`;
 };
 
 /**

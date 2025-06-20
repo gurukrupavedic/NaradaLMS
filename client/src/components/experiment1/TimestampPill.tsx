@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Play, X, Check, X as Cancel } from 'lucide-react';
+import { formatTime } from '@shared/experiment1-utils';
 
 interface TimestampPillProps {
   segmentId: string;
@@ -29,18 +30,6 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editValue, setEditValue] = useState<string>('');
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = (seconds % 60).toFixed(1);
-    return `${mins}:${secs.padStart(4, '0')}`;
-  };
-
-  const formatTimeForEdit = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = (seconds % 60).toFixed(1);
-    return `${mins}:${secs.padStart(4, '0')}`;
-  };
-
   const parseTimeFromEdit = (timeString: string): number => {
     const parts = timeString.split(':');
     if (parts.length !== 2) return -1;
@@ -55,7 +44,7 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
 
   const startEditingTimestamp = () => {
     setIsEditing(true);
-    setEditValue(formatTimeForEdit(endTime));
+    setEditValue(formatTime(endTime, { showDecimal: true }));
   };
 
   const saveTimestampEdit = () => {
@@ -120,7 +109,7 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
             onClick={startEditingTimestamp}
             className="hover:bg-gray-100 px-2 py-1 rounded transition-colors font-mono"
           >
-            {formatTime(endTime)}
+            {formatTime(endTime, { showDecimal: true })}
           </button>
         )}
       </div>
