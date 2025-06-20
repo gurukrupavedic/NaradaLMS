@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { AlertCircle, ArrowLeft, Download, Upload, Music } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Music, Upload } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 
@@ -296,41 +296,11 @@ function Experiment1_SegmentationStudio() {
             {/* Audio Controls */}
             <div className="flex justify-between items-center mb-6 p-4 bg-gray-50 border rounded-lg">
               <div className="flex gap-4">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium">Language:</label>
-                  <div className="flex border rounded-lg bg-white">
-                    <button
-                      onClick={() => setCurrentLanguage('te')}
-                      className={`px-3 py-1 text-sm font-medium rounded-l-lg transition-colors ${
-                        currentLanguage === 'te' 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-white text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      TE
-                    </button>
-                    <button
-                      onClick={() => setCurrentLanguage('hi')}
-                      className={`px-3 py-1 text-sm font-medium border-l transition-colors ${
-                        currentLanguage === 'hi' 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-white text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      HI
-                    </button>
-                    <button
-                      onClick={() => setCurrentLanguage('en')}
-                      className={`px-3 py-1 text-sm font-medium rounded-r-lg border-l transition-colors ${
-                        currentLanguage === 'en' 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-white text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      EN-IAST
-                    </button>
-                  </div>
-                </div>
+                <LanguageSelector
+                  currentLanguage={currentLanguage}
+                  availableLanguages={['te', 'hi', 'en']}
+                  onLanguageChange={setCurrentLanguage}
+                />
                 {audioFiles.length > 0 ? (
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-medium">Audio File:</label>
