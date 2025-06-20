@@ -106,7 +106,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
   return (
     <div className="h-full">
       {/* Content Area */}
-      <div className="px-4 pb-4 h-full">
+      <div className="pb-4 h-full">
         {/* White Container with integrated header */}
         <div className="bg-white rounded-lg border shadow-sm h-[600px] overflow-auto">
           {/* Header - now inside content container and sticky */}
