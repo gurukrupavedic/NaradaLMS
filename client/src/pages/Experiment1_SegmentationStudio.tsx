@@ -278,14 +278,6 @@ function Experiment1_SegmentationStudio() {
                 <Badge variant="secondary" className="text-xs">
                   {experimentalMappings.length} mapped
                 </Badge>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={clearExperimentalData}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-6"
-                >
-                  Clear Data
-                </Button>
               </div>
             </div>
 
