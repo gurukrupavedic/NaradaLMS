@@ -118,12 +118,24 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
           <div className="p-4">
             <div className="space-y-3">
               {currentLanguageSegments.length === 0 ? (
-                <div className="text-center py-12">
-                  <Circle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-muted-foreground mb-2">No segments created</h3>
-                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                    Select text in the content area to create your first segment. Segments help organize and map content to audio.
+                <div className="flex flex-col items-center justify-center py-16 px-6">
+                  <div className="relative mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
+                      <Circle className="h-8 w-8 text-blue-500" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">+</span>
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-3">Create Your First Segment</h3>
+                  <p className="text-gray-600 text-center max-w-xs leading-relaxed mb-4">
+                    Select any text in the content area to create segments that can be mapped to audio.
                   </p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 max-w-xs">
+                    <p className="text-blue-700 text-sm text-center">
+                      <strong>Tip:</strong> Drag to select multiple words or lines of text
+                    </p>
+                  </div>
                 </div>
               ) : (
                 currentLanguageSegments.map((segment, index) => {
