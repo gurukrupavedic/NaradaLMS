@@ -74,12 +74,12 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
   // Link Status Icon Component
   const LinkStatusIcon: React.FC<{ status: 'mapped' | 'unmapped' | 'broken' }> = ({ status }) => {
     if (status === 'mapped') {
-      return <Link className="h-3 w-3 text-blue-600" />;
+      return <Link className="h-3 w-3 text-blue-600 opacity-100" />;
     }
     if (status === 'broken') {
-      return <Link2Off className="h-3 w-3 text-red-600" />;
+      return <Link2Off className="h-3 w-3 text-amber-600 opacity-90" />;
     }
-    return <Link className="h-3 w-3 text-gray-400" />;
+    return <Link className="h-3 w-3 text-gray-400 opacity-60" />;
   };
 
   // Drag and drop handlers
