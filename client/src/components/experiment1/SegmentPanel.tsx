@@ -15,7 +15,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Play, Circle } from 'lucide-react';
+import { Trash2, Play, Circle, Link, Link2Off } from 'lucide-react';
 import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/experiment1-types';
 import { getSegmentText, filterSegmentsByLanguage, getSegmentMapping, getLanguageLabel, formatTime } from '@shared/experiment1-utils';
 
@@ -70,6 +70,17 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
   const mappedCount = currentLanguageSegments.filter(segment => 
     getSegmentMapping(segment.id, mappings)
   ).length;
+
+  // Link Status Icon Component
+  const LinkStatusIcon: React.FC<{ status: 'mapped' | 'unmapped' | 'broken' }> = ({ status }) => {
+    if (status === 'mapped') {
+      return <Link className="h-3 w-3 text-green-600" />;
+    }
+    if (status === 'broken') {
+      return <Link2Off className="h-3 w-3 text-red-600" />;
+    }
+    return <Link className="h-3 w-3 text-gray-400" />;
+  };
 
   // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
@@ -181,6 +192,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                 currentLanguageSegments.map((segment, index) => {
                   const mapping = getSegmentMapping(segment.id, mappings);
                   const isSelected = segment.id === currentSegmentId;
+                  const mappingStatus = mapping ? 'mapped' : 'unmapped';
 
                   const isDragging = draggedIndex === index;
                   const isDraggedOver = draggedOver === index;
@@ -218,8 +230,9 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                           </div>
                         </div>
 
-                        {/* Far Right: Delete Button */}
-                        <div className="flex-shrink-0">
+                        {/* Far Right: Status Icon and Delete Button */}
+                        <div className="flex-shrink-0 flex items-center gap-1">
+                          <LinkStatusIcon status={mappingStatus} />
                           <Button
                             size="sm"
                             variant="ghost"
