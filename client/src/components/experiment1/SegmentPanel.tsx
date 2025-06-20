@@ -227,7 +227,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                               e.stopPropagation();
                               onSegmentDelete(segment.id);
                             }}
-                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 cursor-pointer"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
