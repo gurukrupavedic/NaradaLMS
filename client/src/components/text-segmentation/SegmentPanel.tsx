@@ -182,88 +182,54 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
               currentLanguageSegments.map((segment, index) => {
                 const mappingStatus = getMappingStatus(segment);
                 const mapping = mappings.find(m => m.segmentId === segment.id);
-                const isSelected = selectedSegmentId === segment.id;
-                const segmentText = getSegmentText(segment, content, currentLanguage, true, 60);
+                const isSelected = currentSegmentId === segment.id;
+                const isDragging = draggedIndex === index;
+                const isDraggedOver = draggedOver === index;
+                const segmentText = getSegmentText(segment, content, currentLanguage, false);
 
                 return (
                   <div
                     key={segment.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
                     className={`
-                      group relative p-4 border rounded-lg transition-all duration-200 cursor-pointer
-                      ${isSelected 
-                        ? 'border-blue-300 bg-blue-50 shadow-sm' 
-                        : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                      }
+                      relative p-3 border rounded-lg cursor-grab transition-all
+                      ${isSelected ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:bg-white'}
+                      ${isDragging ? 'opacity-50 cursor-grabbing' : ''}
+                      ${isDraggedOver ? 'border-blue-400 bg-blue-50' : ''}
                     `}
                     onClick={() => onSegmentSelect(segment.id)}
-                    draggable
-                    onDragStart={(e) => {
-                      setDraggedIndex(index);
-                      e.dataTransfer.effectAllowed = 'move';
-                    }}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.dataTransfer.dropEffect = 'move';
-                      setDraggedOver(index);
-                    }}
-                    onDragLeave={() => setDraggedOver(null)}
                   >
-                    {/* Drag indicator */}
-                    {draggedOver === index && draggedIndex !== index && (
-                      <div className="absolute -top-1 left-0 right-0 h-0.5 bg-blue-400 rounded-full"></div>
-                    )}
-
-                    <div className="flex items-start justify-between gap-3">
-                      {/* Left: Segment Info */}
+                    {/* Main Content Layout */}
+                    <div className="flex items-start gap-3">
+                      {/* Left: Number Badge */}
+                      <Badge variant="secondary" className="text-xs px-2 py-1 min-w-6 justify-center flex-shrink-0 rounded-full bg-gray-200 text-gray-700">
+                        {segment.order + 1}
+                      </Badge>
+                      
+                      {/* Right: Content Area */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <LinkStatusIcon status={mappingStatus} />
-                          <span className="text-sm font-medium text-gray-900 truncate">
-                            {segment.conceptualName}
-                          </span>
-                        </div>
-                        
-                        <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
+                        {/* Text Content */}
+                        <div className="text-sm text-gray-700 leading-relaxed break-words">
                           {segmentText}
-                        </p>
-
-                        {/* Mapping Info */}
-                        {mapping && mappingStatus === 'mapped' && (
-                          <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                            <Play className="h-3 w-3" />
-                            <span>
-                              {formatDuration(mapping.startTime)} - {formatDuration(mapping.endTime)}
-                            </span>
-                            <span className="text-gray-400">
-                              ({formatDuration(mapping.endTime - mapping.startTime)})
-                            </span>
-                          </div>
-                        )}
+                        </div>
                       </div>
 
-                      {/* Right: Actions */}
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {mapping && mappingStatus === 'mapped' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onTogglePlay(segment);
-                            }}
-                          >
-                            <Play className="h-3 w-3" />
-                          </Button>
-                        )}
+                      {/* Far Right: Status Icon and Delete Button */}
+                      <div className="flex-shrink-0 flex items-center gap-1">
+                        <LinkStatusIcon status={mappingStatus} />
                         <Button
-                          variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          variant="ghost"
                           onClick={(e) => {
                             e.stopPropagation();
                             onSegmentDelete(segment.id);
                           }}
+                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 cursor-pointer"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -272,6 +238,34 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                   </div>
                 );
               })
+            )}
+
+            {/* Bottom Drop Zone - only visible during drag */}
+            {draggedIndex !== null && (
+              <div
+                onDragOver={(e) => handleDragOver(e, currentLanguageSegments.length)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, currentLanguageSegments.length)}
+                className={`
+                  h-12 border-2 border-dashed rounded-lg transition-all
+                  ${draggedOver === currentLanguageSegments.length 
+                    ? 'border-blue-400 bg-blue-50' 
+                    : 'border-gray-300 bg-gray-50'
+                  }
+                  flex items-center justify-center
+                `}
+              >
+                <span className="text-sm text-gray-500">Drop here to move to end</span>
+              </div>
+            )}
+
+            {/* Instructions */}
+            {currentLanguageSegments.length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                <p className="text-sm text-blue-700">
+                  <strong>Tip:</strong> Drag segments to reorder
+                </p>
+              </div>
             )}
           </div>
         </div>

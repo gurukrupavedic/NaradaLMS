@@ -176,19 +176,14 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
   // Render highlighted text with segment overlays
   const renderHighlightedText = () => {
-    console.log('AnnotationLayer renderHighlightedText: normalizedText length:', normalizedText?.length);
-    console.log('AnnotationLayer renderHighlightedText: normalizedText preview:', normalizedText?.substring(0, 100));
-    
     if (!normalizedText) {
-      return <div className="text-muted-foreground">No content available for {currentLanguage} - Debug: content={JSON.stringify(content)}</div>;
+      return <div className="text-muted-foreground">No content available for {currentLanguage}</div>;
     }
 
     // Get all segments for current language
     const languageSegments = segments
       .filter(segment => segment.textReferences[currentLanguage])
       .sort((a, b) => a.textReferences[currentLanguage]!.start - b.textReferences[currentLanguage]!.start);
-
-    console.log('AnnotationLayer renderHighlightedText: languageSegments count:', languageSegments.length);
 
     if (languageSegments.length === 0) {
       return <div className="whitespace-pre-wrap leading-relaxed font-serif">{normalizedText}</div>;

@@ -1560,14 +1560,17 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               <Panel defaultSize={50} minSize={30}>
                 <SegmentPanel
                   segments={localSegments}
+                  mappings={[]}
                   currentLanguage={contentLanguage}
                   content={chapterContent}
-                  mappings={[]}
-                  selectedSegmentId={undefined}
-                  onSegmentUpdate={handleUpdateSegment}
-                  onSegmentDelete={handleDeleteSegment}
+                  currentSegmentId={undefined}
                   onSegmentSelect={() => {}}
-                  onTogglePlay={() => {}}
+                  onSegmentDelete={handleDeleteSegment}
+                  onSegmentUpdate={handleUpdateSegment}
+                  onPlayMapping={() => {}}
+                  onSegmentReorder={(segments) => {
+                    setLocalSegments(segments);
+                  }}
                 />
               </Panel>
             </PanelGroup>
