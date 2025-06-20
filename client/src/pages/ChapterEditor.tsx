@@ -1504,7 +1504,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
             </TabsTrigger>
             <TabsTrigger value="audio-mapping" className="flex items-center gap-2">
               <Music className="w-4 h-4" />
-              Audio Mapping
+              Mapping
             </TabsTrigger>
             <TabsTrigger value="content" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
@@ -1576,8 +1576,70 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
             </PanelGroup>
           </TabsContent>
 
-          {/* Audio Mapping Tab */}
+          {/* Mapping Tab */}
           <TabsContent value="audio-mapping" className="h-[calc(100vh-200px)]">
+            {/* Audio Controls */}
+            <div className="flex justify-between items-center mb-6 p-4 bg-gray-50 border rounded-lg">
+              <div className="flex gap-4">
+                <LanguageSelector
+                  currentLanguage={contentLanguage}
+                  availableLanguages={['te', 'hi', 'en']}
+                  onLanguageChange={setContentLanguage}
+                />
+                {audioFiles && audioFiles.length > 0 ? (
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium">Audio File:</label>
+                    <Select
+                      value={audioFiles[0]?.id.toString() || ''}
+                      onValueChange={(value) => {
+                        // TODO: Handle audio file selection
+                      }}
+                    >
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Select audio file" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {audioFiles.map(file => (
+                          <SelectItem key={file.id} value={file.id.toString()}>
+                            {file.displayName || file.filename}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Music className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-500">No audio files uploaded</span>
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-2">
+                  <label htmlFor="audio-upload-mapping" className="cursor-pointer">
+                    <Button variant="outline" size="sm" asChild className="h-8 w-8 p-0">
+                      <span title="Upload Audio">
+                        <Upload className="h-4 w-4" />
+                      </span>
+                    </Button>
+                  </label>
+                  <Input
+                    id="audio-upload-mapping"
+                    type="file"
+                    accept="audio/*"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) {
+                        uploadAudioFile(e.target.files[0]);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+              <Badge variant="secondary" className="text-xs">
+                0 mapped
+              </Badge>
+            </div>
+
             {audioFiles && audioFiles.length > 0 ? (
               <ProgressiveMapper
                 audioUrl={audioFiles[0]?.filename ? `/uploads/${audioFiles[0].filename}` : ''}
@@ -1597,16 +1659,15 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   console.log('Delete mapping:', segmentId);
                   // TODO: Implement mapping deletion
                 }}
-                onLanguageChange={setContentLanguage}
-                availableLanguages={['te', 'hi', 'en']}
               />
             ) : (
-              <div className="flex items-center justify-center h-[400px] text-center text-muted-foreground">
-                <div>
-                  <p className="text-lg mb-2">No audio files uploaded</p>
-                  <p>Please upload an audio file in the Media Content tab first.</p>
-                </div>
-              </div>
+              <Card className="h-full flex items-center justify-center">
+                <CardContent>
+                  <p className="text-center text-muted-foreground">
+                    No audio file available. Upload an audio file to start mapping.
+                  </p>
+                </CardContent>
+              </Card>
             )}
           </TabsContent>
 
