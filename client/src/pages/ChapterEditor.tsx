@@ -1540,22 +1540,20 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               </div>
             </div>
 
-            <Card className="h-[calc(100vh-300px)]">
-              <CardContent className="p-6 h-full">
-                <RichTextEditor
-                  value={textContent[contentLanguage] || ''}
-                  onChange={(html) =>
-                    setTextContent((prev) => ({
-                      ...prev,
-                      [contentLanguage]: html,
-                    }))
-                  }
-                  disabled={isPublished}
-                  placeholder={`Enter ${contentLanguage === "te" ? "Telugu" : contentLanguage === "hi" ? "Hindi" : "English/IAST"} content...`}
-                  language={contentLanguage}
-                />
-              </CardContent>
-            </Card>
+            <div className="h-[calc(100vh-300px)]">
+              <RichTextEditor
+                value={textContent[contentLanguage] || ''}
+                onChange={(html) =>
+                  setTextContent((prev) => ({
+                    ...prev,
+                    [contentLanguage]: html,
+                  }))
+                }
+                disabled={isPublished}
+                placeholder={`Enter ${contentLanguage === "te" ? "Telugu" : contentLanguage === "hi" ? "Hindi" : "English/IAST"} content...`}
+                language={contentLanguage}
+              />
+            </div>
           </TabsContent>
 
           {/* Media Content Tab */}
