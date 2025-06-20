@@ -205,7 +205,7 @@ export function RichTextEditor({
         {/* Compact Single Row Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Essential Formatting */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
+          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
             <Button
               variant={editor?.isActive('bold') ? 'default' : 'ghost'}
               size="sm"
@@ -297,7 +297,7 @@ export function RichTextEditor({
           </Select>
 
           {/* Lists */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
+          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
             <Button
               variant={editor?.isActive('orderedList') ? 'default' : 'ghost'}
               size="sm"
@@ -321,7 +321,7 @@ export function RichTextEditor({
           </div>
 
           {/* Alignment */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
+          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
             <Button
               variant={editor?.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
               size="sm"
@@ -365,7 +365,7 @@ export function RichTextEditor({
           </div>
 
           {/* Text Colors */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
+          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
             <Button
               variant="ghost"
               size="sm"
@@ -409,7 +409,7 @@ export function RichTextEditor({
           </div>
 
           {/* Content Insertion */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border">
+          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
             <Button
               variant={editor?.isActive('link') ? 'default' : 'ghost'}
               size="sm"
