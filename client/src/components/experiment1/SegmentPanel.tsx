@@ -238,6 +238,25 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                 })
               )}
 
+              {/* Bottom Drop Zone - only visible during drag */}
+              {draggedIndex !== null && (
+                <div
+                  onDragOver={(e) => handleDragOver(e, currentLanguageSegments.length)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, currentLanguageSegments.length)}
+                  className={`
+                    h-12 border-2 border-dashed rounded-lg transition-all
+                    ${draggedOver === currentLanguageSegments.length 
+                      ? 'border-blue-400 bg-blue-50' 
+                      : 'border-gray-300 bg-gray-50'
+                    }
+                    flex items-center justify-center
+                  `}
+                >
+                  <span className="text-sm text-gray-500">Drop here to move to end</span>
+                </div>
+              )}
+
               {/* Instructions */}
               {currentLanguageSegments.length > 0 && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
