@@ -266,6 +266,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Initialize with Shradha Suktam content on mount
   useEffect(() => {
     setChapterContent(SHRADHA_SUKTAM_CONTENT);
+    console.log('ChapterEditor: Setting Shradha Suktam content', SHRADHA_SUKTAM_CONTENT);
   }, []);
 
   // Chapter metadata editing state
@@ -317,6 +318,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   const [contentLanguage, setContentLanguage] = useState<"te" | "hi" | "en">(
     "te",
   );
+
+  // Active tab state for proper tab management
+  const [activeTab, setActiveTab] = useState<string>("text-segmentation");
+  
+  // Debug logging for tab state
+  useEffect(() => {
+    console.log('ChapterEditor: Active tab changed to:', activeTab);
+  }, [activeTab]);
 
   // === HELPER FUNCTIONS SECTION ===
 
@@ -1483,7 +1492,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
       {/* Main Content */}
       <div className="container mx-auto px-6 py-8">
-        <Tabs defaultValue="text-segmentation" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
             <TabsTrigger value="text-segmentation" className="flex items-center gap-2">
               <Type className="w-4 h-4" />
