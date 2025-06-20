@@ -422,12 +422,12 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
                               <div className="flex-shrink-0">
                                 {status === 'active' ? (
                                   <Badge variant="default" className="text-xs bg-blue-100 text-blue-700">
-                                    <Clock className="h-3 w-3 mr-1 animate-pulse" />
+                                    <Clock className="h-3 w-3 mr-1 animate-strong-pulse" />
                                     Recording
                                   </Badge>
                                 ) : status === 'completed' ? (
                                   <Badge variant="default" className="text-xs bg-green-100 text-green-700">
-                                    <ConnectedCirclesIcon className="h-3 w-3 mr-1" />
+                                    <ConnectedCirclesIcon className="h-4 w-4 mr-1" />
                                     Mapped
                                   </Badge>
                                 ) : (

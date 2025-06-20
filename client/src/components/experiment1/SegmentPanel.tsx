@@ -81,7 +81,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
   // Link Status Icon Component
   const LinkStatusIcon: React.FC<{ status: 'mapped' | 'unmapped' | 'broken' }> = ({ status }) => {
     if (status === 'mapped') {
-      return <ConnectedCirclesIcon className="h-3 w-3 text-green-600" />;
+      return <ConnectedCirclesIcon className="h-4 w-4 text-green-600" />;
     }
     if (status === 'broken') {
       return <Link2Off className="h-3 w-3 text-amber-600 opacity-90" />;
