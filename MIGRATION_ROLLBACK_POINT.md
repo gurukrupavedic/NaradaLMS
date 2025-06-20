@@ -1,5 +1,5 @@
-# MIGRATION ROLLBACK POINT
-*Created: January 20, 2025*
+# MIGRATION ROLLBACK POINT - ENHANCED
+*Created: January 20, 2025 | Enhanced with Final Plan*
 
 ## Pre-Migration State Documentation
 
@@ -52,7 +52,15 @@ If migration fails or issues arise:
    - No data loss or backend changes
 
 ### Current File Checksums (for verification)
-*Note: These would be actual file hashes in production environment*
+**Critical Files That Will Be Modified/Moved:**
+- `client/src/pages/ChapterEditor.tsx` - Current 3-tab structure
+- `shared/hooks/experiment1/useAudioPlayer.ts` - Will be moved  
+- `shared/experiment1-utils.ts` - Will be moved
+- `shared/experiment1-types.ts` - Will be moved
+- All `client/src/components/experiment1/` components - Will be copied
+
+**Emergency Rollback Command:**
+If migration fails, restore from git or revert all changes to above files.
 
 ### Known Good State
 - ChapterEditor compilation: ✅ Working
