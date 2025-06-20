@@ -155,16 +155,9 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
       <div className="bg-white border rounded-lg h-[600px] overflow-hidden shadow-sm">
         {/* Header - sticky and integrated */}
         <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-gray-700">
-              Segments ({getLanguageLabel(currentLanguage)})
-            </h2>
-            <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="text-xs">
-                {mappedCount}/{currentLanguageSegments.length} mapped
-              </Badge>
-            </div>
-          </div>
+          <h2 className="text-base font-semibold text-gray-700">
+            Segments ({getLanguageLabel(currentLanguage)})
+          </h2>
         </div>
 
         {/* Segments List with Independent Scrolling */}
