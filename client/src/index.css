@@ -98,6 +98,23 @@
     font-family: 'Inter', sans-serif;
   }
 
+  /* Status icon color isolation */
+  .status-icon-blue {
+    color: #3b82f6 !important;
+  }
+  
+  .status-icon-green {
+    color: #16a34a !important;
+  }
+  
+  .status-icon-gray {
+    color: #6b7280 !important;
+  }
+  
+  .status-icon-blue *, .status-icon-green *, .status-icon-gray * {
+    color: inherit !important;
+  }
+
   .text-vedic-brown {
     color: hsl(var(--vedic-brown));
   }

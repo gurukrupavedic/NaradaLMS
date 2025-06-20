@@ -59,30 +59,27 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
     const iconConfig = {
       recording: { 
         Icon: Clock, 
-        color: '#3b82f6', // blue-600
+        colorClass: 'status-icon-blue',
         animationClass: animated ? 'animate-strong-pulse' : ''
       },
       mapped: { 
         Icon: ConnectedCirclesIcon, 
-        color: '#16a34a', // green-600
+        colorClass: 'status-icon-green',
         animationClass: ''
       },
       ready: { 
         Icon: Link2Off, 
-        color: '#6b7280', // gray-500
+        colorClass: 'status-icon-gray',
         animationClass: ''
       }
     };
 
     const config = iconConfig[type];
     const IconComponent = config.Icon;
-    const combinedClassName = `${className || ''} ${config.animationClass}`.trim();
+    const combinedClassName = `${config.colorClass} ${config.animationClass} ${className || ''}`.trim();
 
     return (
-      <IconComponent 
-        className={combinedClassName}
-        style={{ color: config.color }}
-      />
+      <IconComponent className={combinedClassName} />
     );
   };
   // EXPERIMENT1: Audio player state
