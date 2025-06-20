@@ -397,7 +397,7 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
                             duration={duration}
                           />
                         ) : (
-                          <div className="w-full h-8 rounded-lg bg-gray-100 border border-gray-200 opacity-50"></div>
+                          <div className="w-full h-8 rounded-lg bg-white border border-gray-200 shadow-sm"></div>
                         )}
                       </div>
 

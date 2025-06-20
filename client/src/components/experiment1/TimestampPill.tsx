@@ -84,7 +84,7 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
   };
 
   return (
-    <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium min-w-[85px] shadow-sm">
+    <div className="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium min-w-[85px] shadow-sm hover:border-gray-300 hover:shadow-md transition-all">
       {/* Delete button */}
       <button
         onClick={handleDelete}
@@ -95,7 +95,7 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
       </button>
 
       {/* End timestamp display */}
-      <div className="flex-1 flex items-center justify-center text-gray-600">
+      <div className="flex-1 flex items-center justify-center text-gray-700">
         {isEditing ? (
           <div className="flex items-center gap-1">
             <Input
