@@ -12,10 +12,10 @@
  * Purpose: Test clean segment management with improved UX
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Play, GripVertical, Circle } from 'lucide-react';
+import { Trash2, Play, Circle } from 'lucide-react';
 import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/experiment1-types';
 import { getSegmentText, filterSegmentsByLanguage, getSegmentMapping, getLanguageLabel, formatTime } from '@shared/experiment1-utils';
 
@@ -47,6 +47,21 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [draggedOver, setDraggedOver] = useState<number | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Click outside to clear selection
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+        if (currentSegmentId) {
+          onSegmentSelect(''); // Clear selection
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [currentSegmentId, onSegmentSelect]);
 
   // Filter segments for current language
   const currentLanguageSegments = filterSegmentsByLanguage(segments, currentLanguage);
@@ -104,7 +119,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
 
 
   return (
-    <div className="h-full">
+    <div className="h-full" ref={panelRef}>
       {/* Content Area */}
       <div className="pb-4 h-full">
         {/* White Container with integrated header */}
@@ -181,21 +196,16 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                       onDrop={(e) => handleDrop(e, index)}
                       onDragEnd={handleDragEnd}
                       className={`
-                        relative p-3 border rounded-lg cursor-pointer transition-all
+                        relative p-3 border rounded-lg cursor-grab transition-all
                         ${isSelected ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:bg-white'}
-                        ${isDragging ? 'opacity-50' : ''}
+                        ${isDragging ? 'opacity-50 cursor-grabbing' : ''}
                         ${isDraggedOver ? 'border-blue-400 bg-blue-50' : ''}
                       `}
                       onClick={() => onSegmentSelect(segment.id)}
                     >
                       {/* Main Content Layout */}
                       <div className="flex items-start gap-3">
-                        {/* Left: Drag Handle */}
-                        <div className="text-gray-400 hover:text-gray-600 flex-shrink-0 mt-0.5">
-                          <GripVertical className="h-4 w-4" />
-                        </div>
-                        
-                        {/* Center: Number Badge */}
+                        {/* Left: Number Badge */}
                         <Badge variant="secondary" className="text-xs px-2 py-1 min-w-6 justify-center flex-shrink-0 rounded-full bg-gray-200 text-gray-700">
                           {segment.order + 1}
                         </Badge>
