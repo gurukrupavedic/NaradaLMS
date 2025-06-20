@@ -43,11 +43,7 @@ import {
   Settings,
 } from "lucide-react";
 import { useLocation } from "wouter";
-// TEST IMPORTS - Remove after Phase 3 validation
 import { LanguageSelector } from "@/components/common/LanguageSelector";
-import { ConnectedCirclesIcon } from "@shared/components/icons";
-import { useAudioPlayer } from "@shared/hooks/useAudioPlayer";
-import { formatDuration, getDisplayText } from "@shared/utils/text-segmentation";
 import { AnnotationLayer } from "@/components/text-segmentation/AnnotationLayer";
 import { ProgressiveMapper } from "@/components/audio-mapping/ProgressiveMapper";
 
@@ -1412,6 +1408,108 @@ export default function ChapterEditor() {
               Media Content
             </TabsTrigger>
           </TabsList>
+
+          {/* Text Segmentation Tab */}
+          <TabsContent value="text-segmentation" className="space-y-6">
+            <div className="grid grid-cols-12 gap-6">
+              <div className="col-span-12">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Text Segmentation</CardTitle>
+                      <LanguageSelector 
+                        currentLanguage={contentLanguage}
+                        availableLanguages={['te', 'hi', 'en']}
+                        onLanguageChange={setContentLanguage}
+                      />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {chapter ? (
+                      <AnnotationLayer
+                        content={chapter.content || {}}
+                        currentLanguage={contentLanguage}
+                        segments={segments?.map(s => ({
+                          ...s,
+                          order: s.order || 0
+                        })) || []}
+                        selectedSegmentId={undefined}
+                        onSegmentCreate={(segment) => {
+                          console.log('Create segment:', segment);
+                          // TODO: Implement segment creation
+                        }}
+                        onSegmentUpdate={(id, updates) => {
+                          console.log('Update segment:', id, updates);
+                          // TODO: Implement segment update
+                        }}
+                        onSegmentDelete={(id) => {
+                          console.log('Delete segment:', id);
+                          // TODO: Implement segment deletion
+                        }}
+                      />
+                    ) : (
+                      <div className="text-center text-muted-foreground py-8">
+                        Loading chapter content...
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Audio Mapping Tab */}
+          <TabsContent value="audio-mapping" className="space-y-6">
+            <div className="grid grid-cols-12 gap-6">
+              <div className="col-span-12">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Audio Mapping</CardTitle>
+                      <LanguageSelector 
+                        currentLanguage={contentLanguage}
+                        availableLanguages={['te', 'hi', 'en']}
+                        onLanguageChange={setContentLanguage}
+                      />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {chapter && audioFiles && audioFiles.length > 0 ? (
+                      <ProgressiveMapper
+                        audioUrl={audioFiles[0]?.filename ? `/uploads/${audioFiles[0].filename}` : ''}
+                        segments={segments?.map(s => ({
+                          ...s,
+                          order: s.order || 0
+                        })) || []}
+                        currentLanguage={contentLanguage}
+                        content={chapter.content || {}}
+                        mappings={[]} // TODO: Load actual mappings
+                        onMappingCreate={(mapping) => {
+                          console.log('Create mapping:', mapping);
+                          // TODO: Implement mapping creation
+                        }}
+                        onMappingUpdate={(segmentId, updates) => {
+                          console.log('Update mapping:', segmentId, updates);
+                          // TODO: Implement mapping update
+                        }}
+                        onMappingDelete={(segmentId) => {
+                          console.log('Delete mapping:', segmentId);
+                          // TODO: Implement mapping deletion
+                        }}
+                      />
+                    ) : (
+                      <div className="text-center text-muted-foreground py-8">
+                        {!audioFiles || audioFiles.length === 0 
+                          ? "No audio files uploaded. Please upload an audio file in the Media Content tab first."
+                          : "Loading audio mapping interface..."
+                        }
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
 
           {/* Text Content Tab */}
           <TabsContent value="content" className="space-y-6">
