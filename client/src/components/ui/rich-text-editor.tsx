@@ -199,7 +199,7 @@ export function RichTextEditor({
   };
 
   return (
-    <div className={cn("border rounded-md", className)}>
+    <div className={cn("border rounded-md overflow-hidden", className)}>
       {/* Reorganized Toolbar */}
       <div className="border-b p-2 bg-white">
         {/* Row 1: Primary Tools */}
@@ -453,7 +453,7 @@ export function RichTextEditor({
       <EditorContent 
         editor={editor} 
         className={cn(
-          "min-h-[400px] p-4 text-base leading-relaxed prose prose-sm max-w-none bg-white rounded-md border",
+          "min-h-[400px] p-4 text-base leading-relaxed prose prose-sm max-w-none bg-white",
           "prose-headings:font-semibold prose-headings:mb-3 prose-headings:mt-4",
           "prose-ul:list-disc prose-ol:list-decimal prose-li:ml-4 prose-li:my-1",
           "prose-hr:border-gray-300 prose-hr:my-6 prose-hr:border-t",
