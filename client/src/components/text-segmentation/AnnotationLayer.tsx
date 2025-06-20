@@ -292,14 +292,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
         <div className="bg-white border rounded-lg h-[600px] overflow-auto shadow-sm">
           {/* Header - now inside content container and sticky */}
           <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-gray-700">Content ({getLanguageLabel(currentLanguage)})</h2>
-              <LanguageSelector 
-                currentLanguage={currentLanguage}
-                availableLanguages={availableLanguages}
-                onLanguageChange={onLanguageChange}
-              />
-            </div>
+            <h2 className="text-base font-semibold text-gray-700">Content ({getLanguageLabel(currentLanguage)})</h2>
           </div>
 
           {/* Text Content with Highlighting */}

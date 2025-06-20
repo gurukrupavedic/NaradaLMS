@@ -1530,7 +1530,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   {localSegments.filter(s => s.textReferences[contentLanguage]).length} segments
                 </Badge>
                 <Badge variant="secondary" className="text-xs">
-                  {localSegments.filter(s => s.textReferences[contentLanguage]).length} mapped
+                  0 mapped
                 </Badge>
               </div>
             </div>
