@@ -230,9 +230,9 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
 
               {/* Instructions */}
               {currentLanguageSegments.length > 0 && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <p className="text-sm text-gray-600">
-                    <strong>Tip:</strong> Drag segments to reorder them, click to select, or use the buttons to edit, delete, or play mapped audio.
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-blue-700">
+                    <strong>Tip:</strong> Drag segments to reorder
                   </p>
                 </div>
               )}
