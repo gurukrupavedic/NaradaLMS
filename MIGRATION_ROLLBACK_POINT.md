@@ -1,5 +1,5 @@
-# MIGRATION ROLLBACK POINT - ENHANCED
-*Created: January 20, 2025 | Enhanced with Final Plan*
+# MIGRATION ROLLBACK POINT v3.3 - VISUAL FIDELITY GUARANTEED
+*Created: January 20, 2025 | Final Plan with Visual Exactness Requirements*
 
 ## Pre-Migration State Documentation
 
@@ -51,16 +51,29 @@ If migration fails or issues arise:
    - Production ChapterEditor unchanged
    - No data loss or backend changes
 
-### Current File Checksums (for verification)
+### Current File State (Pre-Migration v3.3)
 **Critical Files That Will Be Modified/Moved:**
-- `client/src/pages/ChapterEditor.tsx` - Current 3-tab structure
-- `shared/hooks/experiment1/useAudioPlayer.ts` - Will be moved  
-- `shared/experiment1-utils.ts` - Will be moved
-- `shared/experiment1-types.ts` - Will be moved
-- All `client/src/components/experiment1/` components - Will be copied
+- `client/src/pages/ChapterEditor.tsx` - Current 3-tab structure (Text Content | Media Content | Segment & Map)
+- `shared/hooks/experiment1/useAudioPlayer.ts` - Will be moved to `shared/hooks/useAudioPlayer.ts`
+- `shared/experiment1-utils.ts` - Will be moved to `shared/utils/text-utils.ts`
+- `shared/experiment1-types.ts` - Will be moved to `shared/types/text-segmentation.ts`
+- `shared/components/experiment1/icons/` - Will be moved to `shared/components/icons/`
+- All 11 components in `client/src/components/experiment1/` - Will be copied to production locations
 
-**Emergency Rollback Command:**
-If migration fails, restore from git or revert all changes to above files.
+**Experimental Interface Status**: ✅ Fully functional at time of rollback point creation
+**Production Interface Status**: ✅ ChapterEditor working with 3 tabs
+**Database Status**: ✅ All APIs functional, no schema changes planned
+
+**Emergency Rollback Protocol:**
+1. Revert all moved/copied files to original locations
+2. Restore ChapterEditor.tsx to 3-tab structure
+3. Verify experimental interface still works
+4. Verify production interface restored to working state
+
+**Visual Reference Screenshots Required:**
+- Text Segmentation tab in experimental interface
+- Audio Mapping tab in experimental interface  
+- Current ChapterEditor 3-tab layout
 
 ### Known Good State
 - ChapterEditor compilation: ✅ Working
@@ -75,17 +88,24 @@ If migration fails, restore from git or revert all changes to above files.
 
 ---
 
-**ROLLBACK TRIGGER CONDITIONS**:
-- Compilation errors that cannot be quickly resolved
+**ROLLBACK TRIGGER CONDITIONS (v3.3)**:
+- Any TypeScript compilation errors persisting >10 minutes
 - Loss of existing ChapterEditor functionality
-- Any data integrity issues
-- User workflow disruption
+- Any visual differences from experimental interface
+- Any placeholder content required
+- Performance degradation
+- Console errors during normal usage
 
 **POST-MIGRATION VERIFICATION REQUIRED**:
-- [ ] ChapterEditor loads without errors
-- [ ] All 4 tabs render properly
-- [ ] Audio file selection works in new tabs
-- [ ] No console errors during normal usage
-- [ ] Original experimental interface still functional (as backup)
+- [ ] ChapterEditor loads with 4 tabs without errors
+- [ ] Text Segmentation tab looks EXACTLY like experimental
+- [ ] Audio Mapping tab looks EXACTLY like experimental  
+- [ ] All interactions feel identical to experimental
+- [ ] Audio file selection works identically in new tabs
+- [ ] No visual regressions from experimental version
+- [ ] Original experimental interface still functional (backup)
 
-*This rollback point ensures we can safely return to current working state if migration encounters unexpected issues.*
+**VISUAL FIDELITY GUARANTEE**:
+Migration only succeeds when tabs are visually and functionally IDENTICAL to experimental counterparts.
+
+*This rollback point ensures perfect restoration if visual exactness cannot be achieved.*
