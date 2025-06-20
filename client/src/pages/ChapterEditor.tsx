@@ -1816,7 +1816,7 @@ export default function ChapterEditor() {
                         {segmentationLanguage.toUpperCase()} Content:
                       </div>
                       <div className="prose prose-sm max-w-none">
-                        {chapterData?.content?.[segmentationLanguage] ? (
+                        {chapter?.content?.[segmentationLanguage] ? (
                           <div 
                             className="whitespace-pre-wrap leading-relaxed"
                             style={{ userSelect: 'text' }}
@@ -1840,7 +1840,7 @@ export default function ChapterEditor() {
                               }
                             }}
                           >
-                            {chapterData.content[segmentationLanguage]}
+                            {chapter.content[segmentationLanguage]}
                           </div>
                         ) : (
                           <div className="text-center py-12 text-gray-400">
@@ -1859,9 +1859,226 @@ export default function ChapterEditor() {
 
           {/* Audio & Mapping Tab */}
           <TabsContent value="audio-mapping" className="space-y-6">
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium mb-2">Audio & Mapping</h3>
-              <p className="text-muted-foreground">Progressive mapping workflow coming soon...</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Panel: Audio Player and Session Controls */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Music className="h-5 w-5" />
+                    Progressive Audio Mapping
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Audio File</Label>
+                    <Select
+                      value={audioFiles && audioFiles.length > 0 ? audioFiles[0]?.id?.toString() || "" : ""}
+                      onValueChange={(value) => {
+                        const file = audioFiles?.find((f: any) => f.id.toString() === value);
+                        if (file && audioRef.current) {
+                          audioRef.current.src = `/uploads/${file.filename}`;
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select audio file" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {audioFiles?.map((file: any) => (
+                          <SelectItem key={file.id} value={file.id.toString()}>
+                            {file.displayName || file.filename}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {audioFiles && audioFiles.length > 0 && (
+                    <div className="space-y-4">
+                      <audio 
+                        ref={audioRef}
+                        className="w-full"
+                        controls
+                        onTimeUpdate={() => {
+                          // Handle time updates for mapping
+                        }}
+                      />
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label>Mapping Session</Label>
+                          <Badge variant={mappingSession === 'active' ? 'default' : 'secondary'}>
+                            {mappingSession.toUpperCase()}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            variant={mappingSession === 'active' ? 'destructive' : 'default'}
+                            size="sm"
+                            onClick={() => {
+                              if (mappingSession === 'active') {
+                                setMappingSession('idle');
+                                setActiveSegmentId(null);
+                              } else {
+                                setMappingSession('active');
+                                setSessionStartTime(audioRef.current?.currentTime || 0);
+                              }
+                            }}
+                          >
+                            {mappingSession === 'active' ? (
+                              <>
+                                <Square className="w-3 h-3 mr-1" />
+                                Stop Session
+                              </>
+                            ) : (
+                              <>
+                                <Play className="w-3 h-3 mr-1" />
+                                Start Session
+                              </>
+                            )}
+                          </Button>
+                          
+                          {mappingSession === 'active' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setMappingSession('paused')}
+                            >
+                              <Pause className="w-3 h-3 mr-1" />
+                              Pause
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="text-sm text-gray-600 bg-green-50 p-3 rounded">
+                        <strong>Instructions:</strong> Start a mapping session, then click on segments 
+                        in the right panel when you hear them in the audio. This creates time-based 
+                        mappings for progressive learning workflows.
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Right Panel: Segment Grid for Mapping */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Type className="h-5 w-5" />
+                    Text Segments ({textSegments.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="text-sm text-gray-500">
+                      Click on segments when heard during audio playback to create time mappings.
+                    </div>
+                    
+                    <div className="grid gap-3 max-h-96 overflow-y-auto">
+                      {textSegments.map((segment) => {
+                        const mapping = audioMappings.find(m => m.segmentId === segment.id);
+                        const isActive = activeSegmentId === segment.id;
+                        
+                        return (
+                          <div
+                            key={segment.id}
+                            className={`p-3 border rounded cursor-pointer transition-all ${
+                              isActive 
+                                ? 'bg-yellow-50 border-yellow-300 ring-2 ring-yellow-200' 
+                                : mapping
+                                ? 'bg-green-50 border-green-300'
+                                : 'hover:bg-gray-50 border-gray-200'
+                            }`}
+                            onClick={() => {
+                              if (mappingSession === 'active' && audioRef.current) {
+                                const currentTime = audioRef.current.currentTime;
+                                
+                                if (isActive) {
+                                  // Complete the mapping
+                                  handleMappingCreate({
+                                    segmentId: segment.id,
+                                    startTime: sessionStartTime,
+                                    endTime: currentTime
+                                  });
+                                  setActiveSegmentId(null);
+                                  setSessionStartTime(currentTime);
+                                } else {
+                                  // Start mapping this segment
+                                  setActiveSegmentId(segment.id);
+                                  setSessionStartTime(currentTime);
+                                }
+                              }
+                            }}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="font-medium text-sm">
+                                  {segment.conceptualName || 'Unnamed Segment'}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  Order: {segment.order}
+                                </div>
+                              </div>
+                              
+                              <div className="text-xs text-right">
+                                {mapping ? (
+                                  <div className="space-y-1">
+                                    <div className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                                      Mapped
+                                    </div>
+                                    <div className="text-gray-500">
+                                      {mapping.startTime.toFixed(1)}s - {mapping.endTime.toFixed(1)}s
+                                    </div>
+                                  </div>
+                                ) : isActive ? (
+                                  <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                                    Recording...
+                                  </div>
+                                ) : mappingSession === 'active' ? (
+                                  <div className="text-gray-400">
+                                    Click when heard
+                                  </div>
+                                ) : (
+                                  <div className="text-gray-300">
+                                    Start session
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      
+                      {textSegments.length === 0 && (
+                        <div className="text-center py-8 text-gray-400">
+                          <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                          <p>No text segments available</p>
+                          <p className="text-sm">Create segments in the Text Segmentation tab first</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {audioMappings.length > 0 && (
+                      <div className="pt-4 border-t">
+                        <h4 className="font-medium text-sm mb-2">Mapping Progress</h4>
+                        <div className="text-sm text-gray-600">
+                          {audioMappings.length} of {textSegments.length} segments mapped
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                          <div 
+                            className="bg-green-500 h-2 rounded-full transition-all"
+                            style={{ 
+                              width: `${textSegments.length > 0 ? (audioMappings.length / textSegments.length) * 100 : 0}%` 
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
