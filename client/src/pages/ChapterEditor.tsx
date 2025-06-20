@@ -1498,14 +1498,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
-            <TabsTrigger value="text-segmentation" className="flex items-center gap-2">
-              <Type className="w-4 h-4" />
-              Text Segmentation
-            </TabsTrigger>
-            <TabsTrigger value="audio-mapping" className="flex items-center gap-2">
-              <Music className="w-4 h-4" />
-              Mapping
-            </TabsTrigger>
             <TabsTrigger value="content" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
               Text Content
@@ -1513,6 +1505,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
             <TabsTrigger value="media" className="flex items-center gap-2">
               <Upload className="w-4 h-4" />
               Media Content
+            </TabsTrigger>
+            <TabsTrigger value="text-segmentation" className="flex items-center gap-2">
+              <Type className="w-4 h-4" />
+              Text Segmentation
+            </TabsTrigger>
+            <TabsTrigger value="audio-mapping" className="flex items-center gap-2">
+              <Music className="w-4 h-4" />
+              Mapping
             </TabsTrigger>
           </TabsList>
 
