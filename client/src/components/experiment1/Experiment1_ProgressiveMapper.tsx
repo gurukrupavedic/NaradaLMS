@@ -294,7 +294,7 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
   const getSegmentStatus = (segmentId: string) => {
     if (activeSegmentId === segmentId) return 'active';
     if (getSegmentMapping(segmentId, mappings)) return 'completed';
-    return 'inactive';
+    return 'ready';
   };
 
   if (!audioUrl) {
