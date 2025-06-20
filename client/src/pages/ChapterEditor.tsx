@@ -263,6 +263,11 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     en?: string;
   }>({});
 
+  // Initialize with Shradha Suktam content on mount
+  useEffect(() => {
+    setChapterContent(SHRADHA_SUKTAM_CONTENT);
+  }, []);
+
   // Chapter metadata editing state
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
   const [editingTitle, setEditingTitle] = useState("");
@@ -644,6 +649,32 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       });
     },
   });
+
+  // CRUD operations for segments (in-memory, like experimental)
+  const handleCreateSegment = useCallback((segment: {
+    id: string;
+    conceptualName: string;
+    textReferences: { [key: string]: { start: number; end: number } };
+    order: number;
+  }) => {
+    console.log('Creating segment locally:', segment);
+    setLocalSegments(prev => [...prev, segment]);
+  }, []);
+
+  const handleUpdateSegment = useCallback((id: string, updates: Partial<{
+    conceptualName: string;
+    textReferences: { [key: string]: { start: number; end: number } };
+  }>) => {
+    console.log('Updating segment locally:', id, updates);
+    setLocalSegments(prev => 
+      prev.map(seg => seg.id === id ? { ...seg, ...updates } : seg)
+    );
+  }, []);
+
+  const handleDeleteSegment = useCallback((id: string) => {
+    console.log('Deleting segment locally:', id);
+    setLocalSegments(prev => prev.filter(seg => seg.id !== id));
+  }, []);
 
   // Content update mutation
   const updateContentMutation = useMutation({
@@ -1473,99 +1504,52 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
           </TabsList>
 
           {/* Text Segmentation Tab */}
-          <TabsContent value="text-segmentation" className="space-y-6">
-            <div className="grid grid-cols-12 gap-6">
-              <div className="col-span-12">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle>Text Segmentation</CardTitle>
-                      <LanguageSelector 
-                        currentLanguage={contentLanguage}
-                        availableLanguages={['te', 'hi', 'en']}
-                        onLanguageChange={setContentLanguage}
-                      />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {chapter ? (
-                      <AnnotationLayer
-                        content={chapter.content || {}}
-                        currentLanguage={contentLanguage}
-                        segments={[]}
-                        selectedSegmentId={undefined}
-                        onSegmentCreate={(segment) => {
-                          console.log('Create segment:', segment);
-                          // TODO: Implement segment creation API integration
-                        }}
-                        onSegmentUpdate={(id, updates) => {
-                          console.log('Update segment:', id, updates);
-                          // TODO: Implement segment update API integration
-                        }}
-                        onSegmentDelete={(id) => {
-                          console.log('Delete segment:', id);
-                          // TODO: Implement segment deletion API integration
-                        }}
-                      />
-                    ) : (
-                      <div className="text-center text-muted-foreground py-8">
-                        Loading chapter content...
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+          <TabsContent value="text-segmentation" className="h-[calc(100vh-200px)]">
+            <AnnotationLayer
+              content={chapterContent}
+              currentLanguage={contentLanguage}
+              segments={localSegments}
+              selectedSegmentId={undefined}
+              onSegmentCreate={handleCreateSegment}
+              onSegmentUpdate={handleUpdateSegment}
+              onSegmentDelete={handleDeleteSegment}
+              onLanguageChange={setContentLanguage}
+              availableLanguages={['te', 'hi', 'en']}
+            />
           </TabsContent>
 
           {/* Audio Mapping Tab */}
-          <TabsContent value="audio-mapping" className="space-y-6">
-            <div className="grid grid-cols-12 gap-6">
-              <div className="col-span-12">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle>Audio Mapping</CardTitle>
-                      <LanguageSelector 
-                        currentLanguage={contentLanguage}
-                        availableLanguages={['te', 'hi', 'en']}
-                        onLanguageChange={setContentLanguage}
-                      />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {chapter && audioFiles && audioFiles.length > 0 ? (
-                      <ProgressiveMapper
-                        audioUrl={audioFiles[0]?.filename ? `/uploads/${audioFiles[0].filename}` : ''}
-                        segments={[]}
-                        currentLanguage={contentLanguage}
-                        content={chapter.content || {}}
-                        mappings={[]}
-                        onMappingCreate={(mapping) => {
-                          console.log('Create mapping:', mapping);
-                          // TODO: Implement mapping creation API integration
-                        }}
-                        onMappingUpdate={(segmentId, updates) => {
-                          console.log('Update mapping:', segmentId, updates);
-                          // TODO: Implement mapping update API integration
-                        }}
-                        onMappingDelete={(segmentId) => {
-                          console.log('Delete mapping:', segmentId);
-                          // TODO: Implement mapping deletion API integration
-                        }}
-                      />
-                    ) : (
-                      <div className="text-center text-muted-foreground py-8">
-                        {!audioFiles || audioFiles.length === 0 
-                          ? "No audio files uploaded. Please upload an audio file in the Media Content tab first."
-                          : "Loading audio mapping interface..."
-                        }
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+          <TabsContent value="audio-mapping" className="h-[calc(100vh-200px)]">
+            {audioFiles && audioFiles.length > 0 ? (
+              <ProgressiveMapper
+                audioUrl={audioFiles[0]?.filename ? `/uploads/${audioFiles[0].filename}` : ''}
+                segments={localSegments}
+                currentLanguage={contentLanguage}
+                content={chapterContent}
+                mappings={[]}
+                onMappingCreate={(mapping) => {
+                  console.log('Create mapping:', mapping);
+                  // TODO: Implement mapping creation
+                }}
+                onMappingUpdate={(segmentId, updates) => {
+                  console.log('Update mapping:', segmentId, updates);
+                  // TODO: Implement mapping update
+                }}
+                onMappingDelete={(segmentId) => {
+                  console.log('Delete mapping:', segmentId);
+                  // TODO: Implement mapping deletion
+                }}
+                onLanguageChange={setContentLanguage}
+                availableLanguages={['te', 'hi', 'en']}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-[400px] text-center text-muted-foreground">
+                <div>
+                  <p className="text-lg mb-2">No audio files uploaded</p>
+                  <p>Please upload an audio file in the Media Content tab first.</p>
+                </div>
               </div>
-            </div>
+            )}
           </TabsContent>
 
           {/* Text Content Tab */}

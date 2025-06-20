@@ -17,6 +17,7 @@ import { Trash2, Edit3 } from 'lucide-react';
 import { Plus, X } from 'lucide-react';
 import type { TextSegment, Language, ContentMap, TextRange } from '@shared/types/text-segmentation';
 import { getDisplayText, normalizeLineBreaks } from '@shared/utils/text-segmentation';
+import { LanguageSelector } from "@/components/common/LanguageSelector";
 
 const getLanguageLabel = (language: Language): string => {
   switch (language) {
@@ -35,6 +36,9 @@ interface AnnotationLayerProps {
   onSegmentCreate: (segment: TextSegment) => void;
   onSegmentUpdate: (id: string, updates: Partial<TextSegment>) => void;
   onSegmentDelete: (id: string) => void;
+  // NEW PROPS FOR LANGUAGE SELECTOR INTEGRATION
+  onLanguageChange: (language: Language) => void;
+  availableLanguages: Language[];
 }
 
 export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
@@ -44,7 +48,9 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   selectedSegmentId,
   onSegmentCreate,
   onSegmentUpdate,
-  onSegmentDelete
+  onSegmentDelete,
+  onLanguageChange,
+  availableLanguages
 }) => {
   // State for text selection and segment creation
   const [selectedRange, setSelectedRange] = useState<TextRange | null>(null);
@@ -276,7 +282,14 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
         <div className="bg-white border rounded-lg h-[600px] overflow-auto shadow-sm">
           {/* Header - now inside content container and sticky */}
           <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
-            <h2 className="text-base font-semibold text-gray-700">Content ({getLanguageLabel(currentLanguage)})</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-gray-700">Content ({getLanguageLabel(currentLanguage)})</h2>
+              <LanguageSelector 
+                currentLanguage={currentLanguage}
+                availableLanguages={availableLanguages}
+                onLanguageChange={onLanguageChange}
+              />
+            </div>
           </div>
 
           {/* Text Content with Highlighting */}
