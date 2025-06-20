@@ -1,22 +1,22 @@
 /**
  * EXPERIMENT 1: Segment Mapping Grid Component
  * 
- * Extracted from ProgressiveMapper to handle segment card layout,
- * timestamp pills, and click-when-heard functionality.
+ * Extracted from ProgressiveMapper to handle segment display,
+ * interaction, and mapping visualization.
  * 
  * Status: Experimental - Do not use in production
  * Created: January 2025
- * Purpose: Separate segment display concerns from audio control
+ * Purpose: Separate segment UI from audio controls
  */
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, Link2Off } from 'lucide-react';
 import { TimestampPill } from './TimestampPill';
-import { ConnectedCirclesIcon } from '@shared/components/experiment1/icons';
+import { ConnectedCirclesIcon } from '@shared/components/experiment1/icons/ConnectedCirclesIcon';
 import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/experiment1-types';
-import { getSegmentText, getSegmentMapping } from '@shared/experiment1-utils';
+import { getSegmentText } from '@shared/experiment1-utils';
 
 interface SegmentMappingGridProps {
   segments: TextSegment[];
@@ -45,10 +45,13 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
   onMappingUpdate,
   onMappingDelete
 }) => {
-  
+  const getSegmentMapping = (segmentId: string): AudioMapping | undefined => {
+    return mappings.find(m => m.segmentId === segmentId);
+  };
+
   const getSegmentStatus = (segmentId: string) => {
     if (activeSegmentId === segmentId) return 'active';
-    if (getSegmentMapping(segmentId, mappings)) return 'completed';
+    if (getSegmentMapping(segmentId)) return 'completed';
     return 'inactive';
   };
 
@@ -62,7 +65,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
           <div className="px-6 py-4">
             <div className="space-y-3 min-w-[800px]">
               {segments.map((segment, index) => {
-                const mapping = getSegmentMapping(segment.id, mappings);
+                const mapping = getSegmentMapping(segment.id);
                 const status = getSegmentStatus(segment.id);
                 const segmentText = getSegmentText(segment, content, currentLanguage);
                 

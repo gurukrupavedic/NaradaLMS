@@ -1,12 +1,12 @@
 /**
  * EXPERIMENT 1: Audio Player Panel Component
  * 
- * Extracted from ProgressiveMapper to handle audio controls, progress bar,
- * and session management in a focused component.
+ * Extracted from ProgressiveMapper to handle audio playback controls,
+ * session management, and progress tracking.
  * 
  * Status: Experimental - Do not use in production
  * Created: January 2025
- * Purpose: Separate audio player concerns from mapping logic
+ * Purpose: Separate audio controls from mapping logic
  */
 
 import React from 'react';

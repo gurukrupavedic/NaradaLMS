@@ -1,18 +1,17 @@
 /**
  * EXPERIMENT 1: Mapping Controls Hook
  * 
- * Extracted from ProgressiveMapper to handle session state management
- * and control flow for the mapping workflow.
+ * Extracted mapping session logic from ProgressiveMapper for better reusability.
  * 
  * Status: Experimental - Do not use in production
  * Created: January 2025
- * Purpose: Separate session control logic from UI rendering
+ * Purpose: Centralize mapping session state management
  */
 
-import { useCallback } from 'react';
+import { useEffect } from 'react';
 import type { TextSegment, AudioMapping } from '@shared/experiment1-types';
 
-interface UseMappingControlsParams {
+interface MappingControlsProps {
   mappingSession: 'idle' | 'active' | 'paused';
   activeSegmentId: string | null;
   currentTime: number;
@@ -38,9 +37,22 @@ export const useMappingControls = ({
   onSessionChange,
   onActiveSegmentChange,
   onSessionStartTimeChange
-}: UseMappingControlsParams) => {
-  
-  const handleSegmentEnd = useCallback(() => {
+}: MappingControlsProps) => {
+
+  const handleSegmentClick = (segmentId: string) => {
+    if (mappingSession !== 'active') return;
+
+    // End previous segment if exists
+    if (activeSegmentId && activeSegmentId !== segmentId) {
+      handleSegmentEnd();
+    }
+
+    // Start new segment
+    onActiveSegmentChange(segmentId);
+    onSessionStartTimeChange(currentTime);
+  };
+
+  const handleSegmentEnd = () => {
     if (!activeSegmentId) return;
 
     const mapping: AudioMapping = {
@@ -51,21 +63,9 @@ export const useMappingControls = ({
 
     onMappingCreate(mapping);
     onActiveSegmentChange(null);
-  }, [activeSegmentId, sessionStartTime, currentTime, onMappingCreate, onActiveSegmentChange]);
+  };
 
-  const handleSegmentClick = useCallback((segmentId: string) => {
-    if (mappingSession !== 'active') return;
-
-    // End previous segment if exists
-    if (activeSegmentId && activeSegmentId !== segmentId) {
-      handleSegmentEnd();
-    }
-
-    // Start new segment
-    onActiveSegmentChange(segmentId);
-  }, [mappingSession, activeSegmentId, handleSegmentEnd, onActiveSegmentChange]);
-
-  const startMappingSession = useCallback(() => {
+  const startMappingSession = () => {
     onSessionChange('active');
     onActiveSegmentChange(null);
     onSessionStartTimeChange(currentTime);
@@ -76,17 +76,17 @@ export const useMappingControls = ({
         onMappingDelete(segment.id);
       }
     });
-  }, [currentTime, segments, mappings, onSessionChange, onActiveSegmentChange, onSessionStartTimeChange, onMappingDelete]);
+  };
 
-  const pauseMappingSession = useCallback(() => {
+  const pauseMappingSession = () => {
     if (mappingSession === 'active') {
       onSessionChange('paused');
     } else if (mappingSession === 'paused') {
       onSessionChange('active');
     }
-  }, [mappingSession, onSessionChange]);
+  };
 
-  const stopMappingSession = useCallback(() => {
+  const stopMappingSession = () => {
     // End active segment if exists
     if (activeSegmentId) {
       handleSegmentEnd();
@@ -94,9 +94,9 @@ export const useMappingControls = ({
     
     onSessionChange('idle');
     onActiveSegmentChange(null);
-  }, [activeSegmentId, handleSegmentEnd, onSessionChange, onActiveSegmentChange]);
+  };
 
-  const resetMappingSession = useCallback(() => {
+  const resetMappingSession = () => {
     onSessionChange('idle');
     onActiveSegmentChange(null);
     
@@ -106,7 +106,7 @@ export const useMappingControls = ({
         onMappingDelete(segment.id);
       }
     });
-  }, [segments, mappings, onSessionChange, onActiveSegmentChange, onMappingDelete]);
+  };
 
   return {
     handleSegmentClick,
