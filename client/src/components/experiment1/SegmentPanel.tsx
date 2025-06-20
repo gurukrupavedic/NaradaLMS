@@ -79,29 +79,14 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
   );
 
   // Link Status Icon Component
-  const LinkStatusIcon: React.FC<{ status: 'mapped' | 'unmapped' | 'broken'; className?: string }> = ({ status, className }) => {
-    const baseClasses = "relative z-10 pointer-events-none";
-    const combinedClasses = className ? `${baseClasses} ${className}` : baseClasses;
-    
+  const LinkStatusIcon: React.FC<{ status: 'mapped' | 'unmapped' | 'broken' }> = ({ status }) => {
     if (status === 'mapped') {
-      return (
-        <div className="isolate">
-          <ConnectedCirclesIcon className={`h-4 w-4 text-green-600 ${combinedClasses}`} style={{ color: '#16a34a' }} />
-        </div>
-      );
+      return <ConnectedCirclesIcon className="h-4 w-4 text-green-600" />;
     }
     if (status === 'broken') {
-      return (
-        <div className="isolate">
-          <Link2Off className={`h-3 w-3 text-amber-600 opacity-90 ${combinedClasses}`} style={{ color: '#d97706' }} />
-        </div>
-      );
+      return <Link2Off className="h-3 w-3 text-amber-600 opacity-90" />;
     }
-    return (
-      <div className="isolate">
-        <Link2Off className={`h-3 w-3 text-gray-400 opacity-60 ${combinedClasses}`} style={{ color: '#9ca3af' }} />
-      </div>
-    );
+    return <Link2Off className="h-3 w-3 text-gray-400 opacity-60" />;
   };
 
   // Drag and drop handlers
@@ -230,7 +215,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                       onDrop={(e) => handleDrop(e, index)}
                       onDragEnd={handleDragEnd}
                       className={`
-                        relative p-3 border rounded-lg cursor-grab transition-all
+                        relative p-3 border rounded-lg cursor-grab transition-colors transition-border-colors transition-shadow duration-200
                         ${isSelected ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:bg-white'}
                         ${isDragging ? 'opacity-50 cursor-grabbing' : ''}
                         ${isDraggedOver ? 'border-blue-400 bg-blue-50' : ''}
