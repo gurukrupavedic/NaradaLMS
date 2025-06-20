@@ -43,6 +43,8 @@ import {
   Settings,
 } from "lucide-react";
 import { useLocation } from "wouter";
+// TEST IMPORT - Remove after Phase 1 validation
+import { LanguageSelector } from "@/components/common/LanguageSelector";
 
 interface ChapterData {
   id: number;
@@ -1407,6 +1409,23 @@ export default function ChapterEditor() {
 
           {/* Text Content Tab */}
           <TabsContent value="content" className="space-y-6">
+            {/* TEST COMPONENT - Remove after Phase 1 validation */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Phase 1 Test - LanguageSelector Component</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <LanguageSelector 
+                  currentLanguage={contentLanguage}
+                  availableLanguages={['te', 'hi', 'en']}
+                  onLanguageChange={(lang) => {
+                    console.log('Test language changed:', lang);
+                    setContentLanguage(lang);
+                  }}
+                />
+              </CardContent>
+            </Card>
+            
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
