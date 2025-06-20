@@ -98,27 +98,21 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
     });
     
     // Start playing audio if not already playing
-    const audio = audioRef.current;
-    if (audio && !isPlaying) {
-      audio.play();
-      setIsPlaying(true);
+    if (!isPlaying) {
+      togglePlayPause();
     }
   };
 
   const pauseMappingSession = () => {
     if (mappingSession === 'active') {
       setMappingSession('paused');
-      const audio = audioRef.current;
-      if (audio && isPlaying) {
-        audio.pause();
-        setIsPlaying(false);
+      if (isPlaying) {
+        togglePlayPause();
       }
     } else if (mappingSession === 'paused') {
       setMappingSession('active');
-      const audio = audioRef.current;
-      if (audio && !isPlaying) {
-        audio.play();
-        setIsPlaying(true);
+      if (!isPlaying) {
+        togglePlayPause();
       }
     }
   };
@@ -132,10 +126,8 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
     setMappingSession('idle');
     setActiveSegmentId(null);
     
-    const audio = audioRef.current;
-    if (audio && isPlaying) {
-      audio.pause();
-      setIsPlaying(false);
+    if (isPlaying) {
+      togglePlayPause();
     }
   };
 
@@ -150,13 +142,10 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
       }
     });
     
-    // Reset audio to beginning
-    const audio = audioRef.current;
-    if (audio) {
-      audio.currentTime = 0;
-      audio.pause();
-      setIsPlaying(false);
-      setCurrentTime(0);
+    // Reset audio to beginning using hook functions
+    seekTo(0);
+    if (isPlaying) {
+      togglePlayPause();
     }
   };
 
@@ -190,28 +179,7 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
   // EXPERIMENT1: Play specific segment
   const handlePlaySegment = (mapping: AudioMapping, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent segment click when clicking play button
-    
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    // Set audio to start time
-    audio.currentTime = mapping.startTime;
-    setCurrentTime(mapping.startTime);
-    
-    // Play audio
-    audio.play();
-    setIsPlaying(true);
-
-    // Set up end time listener
-    const checkEndTime = () => {
-      if (audio.currentTime >= mapping.endTime) {
-        audio.pause();
-        setIsPlaying(false);
-        audio.removeEventListener('timeupdate', checkEndTime);
-      }
-    };
-    
-    audio.addEventListener('timeupdate', checkEndTime);
+    playSegment(mapping.startTime, mapping.endTime);
   };
 
   // Timestamp editing now handled by TimestampPill component
