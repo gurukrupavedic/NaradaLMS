@@ -303,11 +303,10 @@ function Experiment1_SegmentationStudio() {
                 />
               </Panel>
               
-              {/* Resize Handle - Aligned with content containers */}
-              <PanelResizeHandle className="w-1 bg-gray-300 hover:bg-gray-400 transition-colors relative">
-                <div className="absolute inset-0 flex items-start pt-4">
-                  <div className="w-full h-[600px] bg-gray-300 hover:bg-gray-400 transition-colors"></div>
-                </div>
+              {/* Resize Handle - Made transparent, with custom visual */}
+              <PanelResizeHandle className="w-1 bg-transparent relative">
+                {/* Custom visual handle aligned with content */}
+                <div className="absolute left-0 top-4 w-1 h-[600px] bg-gray-300 hover:bg-gray-400 transition-colors pointer-events-none"></div>
               </PanelResizeHandle>
               
               {/* Right Panel: Segment Management */}
