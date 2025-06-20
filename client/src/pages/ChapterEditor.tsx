@@ -91,8 +91,76 @@ export default function ChapterEditor() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+
+  // Text Segmentation State
+  const [textSegments, setTextSegments] = useState<Array<{
+    id: string;
+    conceptualName: string;
+    textReferences: {
+      te?: { start: number; end: number };
+      hi?: { start: number; end: number };
+      en?: { start: number; end: number };
+    };
+    order: number;
+  }>>([]);
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | undefined>();
+  const [segmentationLanguage, setSegmentationLanguage] = useState<'te' | 'hi' | 'en'>('te');
+
+  // Audio Mapping State
+  const [audioMappings, setAudioMappings] = useState<Array<{
+    segmentId: string;
+    startTime: number;
+    endTime: number;
+  }>>([]);
+  const [mappingSession, setMappingSession] = useState<'idle' | 'active' | 'paused'>('idle');
+  const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
+  const [sessionStartTime, setSessionStartTime] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const segmentBoundaryListenerRef = useRef<(() => void) | null>(null);
+
+  // Text Segmentation Handlers
+  const handleSegmentCreate = useCallback((segment: any) => {
+    const newSegment = {
+      ...segment,
+      id: `seg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      order: textSegments.length + 1
+    };
+    setTextSegments(prev => [...prev, newSegment]);
+  }, [textSegments.length]);
+
+  const handleSegmentUpdate = useCallback((id: string, updates: any) => {
+    setTextSegments(prev => prev.map(seg => 
+      seg.id === id ? { ...seg, ...updates } : seg
+    ));
+  }, []);
+
+  const handleSegmentDelete = useCallback((id: string) => {
+    setTextSegments(prev => prev.filter(seg => seg.id !== id));
+    if (selectedSegmentId === id) {
+      setSelectedSegmentId(undefined);
+    }
+  }, [selectedSegmentId]);
+
+  // Audio Mapping Handlers
+  const handleMappingCreate = useCallback((mapping: any) => {
+    setAudioMappings(prev => {
+      const existing = prev.find(m => m.segmentId === mapping.segmentId);
+      if (existing) {
+        return prev.map(m => m.segmentId === mapping.segmentId ? mapping : m);
+      }
+      return [...prev, mapping];
+    });
+  }, []);
+
+  const handleMappingUpdate = useCallback((segmentId: string, updates: any) => {
+    setAudioMappings(prev => prev.map(mapping => 
+      mapping.segmentId === segmentId ? { ...mapping, ...updates } : mapping
+    ));
+  }, []);
+
+  const handleMappingDelete = useCallback((segmentId: string) => {
+    setAudioMappings(prev => prev.filter(mapping => mapping.segmentId !== segmentId));
+  }, []);
 
   // Safe time formatting function
   const formatTime = (seconds: number): string => {
@@ -1667,9 +1735,125 @@ export default function ChapterEditor() {
 
           {/* Text Segmentation Tab */}
           <TabsContent value="text-segmentation" className="space-y-6">
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium mb-2">Text Segmentation</h3>
-              <p className="text-muted-foreground">Enhanced annotation interface coming soon...</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Panel: Language Selection and Controls */}
+              <Card className="lg:col-span-1">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Type className="h-5 w-5" />
+                    Segmentation Controls
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Language</Label>
+                    <Select
+                      value={segmentationLanguage}
+                      onValueChange={(value: 'te' | 'hi' | 'en') => setSegmentationLanguage(value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="te">Telugu</SelectItem>
+                        <SelectItem value="hi">Hindi</SelectItem>
+                        <SelectItem value="en">English</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="pt-4">
+                    <h4 className="font-medium mb-2">Segments ({textSegments.length})</h4>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {textSegments.map((segment) => (
+                        <div
+                          key={segment.id}
+                          className={`p-2 border rounded cursor-pointer transition-colors ${
+                            selectedSegmentId === segment.id 
+                              ? 'bg-blue-50 border-blue-200' 
+                              : 'hover:bg-gray-50'
+                          }`}
+                          onClick={() => setSelectedSegmentId(segment.id)}
+                        >
+                          <div className="text-sm font-medium truncate">
+                            {segment.conceptualName || 'Unnamed Segment'}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Order: {segment.order}
+                          </div>
+                        </div>
+                      ))}
+                      {textSegments.length === 0 && (
+                        <div className="text-center py-4 text-gray-500">
+                          <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">No segments created</p>
+                          <p className="text-xs">Select text to create segments</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Right Panel: Text Content and Annotation Interface */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Edit2 className="h-5 w-5" />
+                    Text Annotation Interface
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
+                      <strong>Instructions:</strong> Select text content below to create conceptual segments. 
+                      This is a simplified annotation interface. The enhanced version with real-time highlighting 
+                      and advanced selection tools will be integrated next.
+                    </div>
+                    
+                    <div className="border rounded p-4 min-h-96 bg-gray-50">
+                      <div className="text-sm text-gray-500 mb-2">
+                        {segmentationLanguage.toUpperCase()} Content:
+                      </div>
+                      <div className="prose prose-sm max-w-none">
+                        {chapterData?.content?.[segmentationLanguage] ? (
+                          <div 
+                            className="whitespace-pre-wrap leading-relaxed"
+                            style={{ userSelect: 'text' }}
+                            onMouseUp={() => {
+                              const selection = window.getSelection();
+                              if (selection && selection.toString().trim()) {
+                                const selectedText = selection.toString().trim();
+                                const segmentName = prompt('Enter segment name:');
+                                if (segmentName) {
+                                  handleSegmentCreate({
+                                    conceptualName: segmentName,
+                                    textReferences: {
+                                      [segmentationLanguage]: {
+                                        start: 0, // Simplified - would calculate actual positions
+                                        end: selectedText.length
+                                      }
+                                    }
+                                  });
+                                  selection.removeAllRanges();
+                                }
+                              }
+                            }}
+                          >
+                            {chapterData.content[segmentationLanguage]}
+                          </div>
+                        ) : (
+                          <div className="text-center py-12 text-gray-400">
+                            <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                            <p>No {segmentationLanguage.toUpperCase()} content available</p>
+                            <p className="text-sm">Add content in the Text Content tab first</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 

@@ -11,13 +11,10 @@
  * Purpose: Intuitive click-when-heard mapping workflow
  */
 
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { AudioPlayerPanel } from './AudioPlayerPanel';
-import { SegmentMappingGrid } from './SegmentMappingGrid';
-import { useMappingControls } from './MappingControls';
-// Using local audio player logic
-import { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Play, Pause, Square } from 'lucide-react';
 
 const useAudioPlayer = (audioUrl: string) => {
   const audioRef = useRef<HTMLAudioElement>(null);
