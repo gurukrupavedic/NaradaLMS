@@ -273,8 +273,27 @@ export const Experiment1_ProgressiveMapper: React.FC<ProgressiveMapperProps> = (
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Audio Mapping Session</span>
-              <Badge variant={mappingSession === 'active' ? 'default' : mappingSession === 'paused' ? 'secondary' : 'outline'}>
-                {mappingSession === 'active' ? 'Recording' : mappingSession === 'paused' ? 'Paused' : 'Ready'}
+              <Badge variant={mappingSession === 'active' ? 'default' : mappingSession === 'paused' ? 'secondary' : 'outline'} className={`text-xs ${
+                mappingSession === 'active' ? 'bg-blue-100 text-blue-700' : 
+                mappingSession === 'paused' ? 'bg-gray-100 text-gray-700' : 
+                'border-gray-200'
+              }`}>
+                {mappingSession === 'active' ? (
+                  <>
+                    <Clock className="h-3 w-3 mr-1 animate-strong-pulse" />
+                    Recording
+                  </>
+                ) : mappingSession === 'paused' ? (
+                  <>
+                    <Clock className="h-3 w-3 mr-1" />
+                    Paused
+                  </>
+                ) : (
+                  <>
+                    <Link2Off className="h-3 w-3 mr-1" />
+                    Ready
+                  </>
+                )}
               </Badge>
             </CardTitle>
           </CardHeader>
