@@ -446,14 +446,14 @@ export function RichTextEditor({
 
       {/* Editor Content */}
       <div 
-        className="min-h-[200px] bg-white cursor-text"
+        className="min-h-[400px] bg-white cursor-text"
         onClick={() => editor?.commands.focus()}
       >
         <EditorContent 
           editor={editor} 
           className={cn(
             "text-base leading-normal w-full",
-            "[&_.ProseMirror]:min-h-[200px] [&_.ProseMirror]:outline-none [&_.ProseMirror]:cursor-text",
+            "[&_.ProseMirror]:min-h-[368px] [&_.ProseMirror]:outline-none [&_.ProseMirror]:cursor-text",
             "[&_.ProseMirror]:p-4 [&_.ProseMirror]:w-full [&_.ProseMirror]:box-border",
             "[&_.ProseMirror]:max-w-none",
             "[&_.ProseMirror>*:first-child]:mt-0 [&_.ProseMirror>*:last-child]:mb-0",
