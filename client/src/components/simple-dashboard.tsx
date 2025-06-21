@@ -143,24 +143,7 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
           })}
         </div>
 
-        {/* Quick Stats or Additional Info */}
-        <div className="mt-12 bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Platform Overview</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-blue-600">Learning</div>
-              <div className="text-sm text-gray-600">Access curated learning tracks</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-green-600">Management</div>
-              <div className="text-sm text-gray-600">Create and organize content</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-purple-600">Innovation</div>
-              <div className="text-sm text-gray-600">Explore new features</div>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   );
