@@ -446,22 +446,21 @@ export function RichTextEditor({
 
       {/* Editor Content */}
       <div 
-        className="min-h-[400px] bg-white cursor-text"
+        className="min-h-[200px] bg-white cursor-text"
         onClick={() => editor?.commands.focus()}
       >
         <EditorContent 
           editor={editor} 
           className={cn(
-            "p-4 text-base leading-relaxed prose prose-sm max-w-none",
-            "prose-headings:font-semibold prose-headings:mb-2 prose-headings:mt-2 prose-headings:first:mt-0",
-            "prose-ul:list-disc prose-ol:list-decimal prose-li:ml-4 prose-li:my-0.5",
-            "prose-hr:border-gray-300 prose-hr:my-4 prose-hr:border-t",
+            "text-base leading-normal prose prose-sm max-w-none",
+            "prose-headings:font-semibold prose-headings:mb-1 prose-headings:mt-1 prose-headings:first:mt-0",
+            "prose-ul:list-disc prose-ol:list-decimal prose-li:ml-4 prose-li:my-0",
+            "prose-hr:border-gray-300 prose-hr:my-2 prose-hr:border-t",
             "prose-a:text-blue-600 prose-a:underline prose-a:no-underline hover:prose-a:underline",
-            "prose-img:max-w-full prose-img:h-auto prose-img:rounded-md prose-img:my-2",
-            "prose-p:mb-2 prose-p:first:mt-0 prose-p:last:mb-0 prose-strong:font-semibold prose-em:italic",
-            "[&_.ProseMirror]:min-h-[368px] [&_.ProseMirror]:outline-none [&_.ProseMirror]:cursor-text",
-            "[&_.ProseMirror]:p-0 [&_.ProseMirror]:w-full",
-            "[&_.ProseMirror]:pt-0 [&_.ProseMirror]:pb-0",
+            "prose-img:max-w-full prose-img:h-auto prose-img:rounded-md prose-img:my-1",
+            "prose-p:mb-1 prose-p:mt-0 prose-p:first:mt-0 prose-p:last:mb-0 prose-strong:font-semibold prose-em:italic",
+            "[&_.ProseMirror]:min-h-[200px] [&_.ProseMirror]:outline-none [&_.ProseMirror]:cursor-text",
+            "[&_.ProseMirror]:p-4 [&_.ProseMirror]:w-full [&_.ProseMirror]:box-border",
             "[&_.ProseMirror>*:first-child]:mt-0 [&_.ProseMirror>*:last-child]:mb-0",
             "[&_.ProseMirror-focused]:outline-none",
             getFontClass(),
