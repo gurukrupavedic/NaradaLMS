@@ -386,6 +386,7 @@ export class DatabaseStorage implements IStorage {
     
     try {
       const [chapter] = await db.select().from(chapters).where(eq(chapters.id, id));
+      console.log('Storage: Raw chapter from DB:', JSON.stringify(chapter, null, 2));
       return chapter;
     } catch (error) {
       return memStorage.getChapter(id);

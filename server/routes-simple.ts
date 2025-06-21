@@ -85,6 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!chapter) {
         return res.status(404).json({ message: "Chapter not found" });
       }
+      console.log('API: Chapter details response:', JSON.stringify(chapter, null, 2));
       res.json(chapter);
     } catch (error) {
       console.error("Error fetching chapter:", error);
