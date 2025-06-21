@@ -1566,7 +1566,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       [contentLanguage]: html,
                     }))
                   }
-                  disabled={isPublished}
                   placeholder={`Enter ${contentLanguage === "te" ? "Telugu" : contentLanguage === "hi" ? "Hindi" : "English/IAST"} content...`}
                   language={contentLanguage}
                 />
