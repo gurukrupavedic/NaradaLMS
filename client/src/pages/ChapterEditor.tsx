@@ -1766,7 +1766,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
           {/* Text Segmentation Tab */}
           <TabsContent value="text-segmentation" className="h-[calc(100vh-200px)]">
             {/* Language Selection & Stats */}
-            <div className="flex justify-between items-center mb-6 p-4 bg-white border rounded-lg">
+            <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
               <LanguageSelector
                 currentLanguage={contentLanguage}
                 availableLanguages={['te', 'hi', 'en']}
@@ -1826,7 +1826,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
           {/* Mapping Tab */}
           <TabsContent value="audio-mapping" className="h-[calc(100vh-200px)]">
             {/* Audio Controls */}
-            <div className="flex justify-between items-center mb-6 p-4 bg-white border rounded-lg">
+            <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
               <div className="flex gap-4">
                 <LanguageSelector
                   currentLanguage={contentLanguage}
