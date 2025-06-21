@@ -136,6 +136,7 @@ export function RichTextEditor({
     editable: !disabled,
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
+      console.log('Editor onChange - HTML content:', html);
       onChange(html);
     },
   });
