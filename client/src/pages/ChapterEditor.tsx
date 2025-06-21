@@ -1534,41 +1534,53 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
           {/* Text Content Tab */}
           <TabsContent value="content" className="h-[calc(100vh-200px)]">
-            {/* Language Selection & Status */}
-            <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
-              <LanguageSelector
-                currentLanguage={contentLanguage}
-                availableLanguages={['te', 'hi', 'en']}
-                onLanguageChange={setContentLanguage}
-              />
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                {updateContentMutation.isPending ? (
-                  <>
-                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    Auto-saved
-                  </>
-                )}
+            <div className="relative h-full">
+              {/* Language Selection & Status */}
+              <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
+                <LanguageSelector
+                  currentLanguage={contentLanguage}
+                  availableLanguages={['te', 'hi', 'en']}
+                  onLanguageChange={setContentLanguage}
+                />
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {updateContentMutation.isPending ? (
+                    <>
+                      <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      Auto-saved
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div className="h-[calc(100vh-300px)]">
-              <RichTextEditor
-                value={textContent[contentLanguage] || ''}
-                onChange={(html) =>
-                  setTextContent((prev) => ({
-                    ...prev,
-                    [contentLanguage]: html,
-                  }))
-                }
-                disabled={isPublished}
-                placeholder={`Enter ${contentLanguage === "te" ? "Telugu" : contentLanguage === "hi" ? "Hindi" : "English/IAST"} content...`}
-                language={contentLanguage}
-              />
+              <div className="h-[calc(100vh-300px)]">
+                <RichTextEditor
+                  value={textContent[contentLanguage] || ''}
+                  onChange={(html) =>
+                    setTextContent((prev) => ({
+                      ...prev,
+                      [contentLanguage]: html,
+                    }))
+                  }
+                  disabled={isPublished}
+                  placeholder={`Enter ${contentLanguage === "te" ? "Telugu" : contentLanguage === "hi" ? "Hindi" : "English/IAST"} content...`}
+                  language={contentLanguage}
+                />
+              </div>
+
+              {/* Blocking Overlay for Published Chapters */}
+              {isPublished && (
+                <div 
+                  className="absolute inset-0 bg-transparent z-10 cursor-not-allowed"
+                  onClick={(e) => e.preventDefault()}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onKeyDown={(e) => e.preventDefault()}
+                />
+              )}
             </div>
           </TabsContent>
 
@@ -1784,157 +1796,181 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
           {/* Text Segmentation Tab */}
           <TabsContent value="text-segmentation" className="h-[calc(100vh-200px)]">
-            {/* Language Selection & Stats */}
-            <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
-              <LanguageSelector
-                currentLanguage={contentLanguage}
-                availableLanguages={['te', 'hi', 'en']}
-                onLanguageChange={setContentLanguage}
-              />
-              <div className="flex gap-2">
-                <Badge variant="secondary" className="text-xs">
-                  {localSegments.filter(s => s.textReferences[contentLanguage]).length} segments
-                </Badge>
-                <Badge variant="secondary" className="text-xs">
-                  0 mapped
-                </Badge>
-              </div>
-            </div>
-
-            <PanelGroup direction="horizontal" className="h-[calc(100vh-300px)]">
-              {/* Left Panel: Content Area */}
-              <Panel defaultSize={50} minSize={30}>
-                <AnnotationLayer
-                  content={chapterContent}
-                  currentLanguage={contentLanguage}
-                  segments={localSegments}
-                  selectedSegmentId={undefined}
-                  onSegmentCreate={handleCreateSegment}
-                  onSegmentUpdate={handleUpdateSegment}
-                  onSegmentDelete={handleDeleteSegment}
-                  onLanguageChange={setContentLanguage}
-                  availableLanguages={['te', 'hi', 'en']}
-                />
-              </Panel>
-              
-              {/* Resize Handle */}
-              <PanelResizeHandle className="w-1 bg-transparent relative">
-                <div className="absolute left-0 top-0 w-1 h-[600px] bg-gray-300 hover:bg-gray-400 transition-colors pointer-events-none"></div>
-              </PanelResizeHandle>
-              
-              {/* Right Panel: Segment Management */}
-              <Panel defaultSize={50} minSize={30}>
-                <SegmentPanel
-                  segments={localSegments}
-                  mappings={[]}
-                  currentLanguage={contentLanguage}
-                  content={chapterContent}
-                  currentSegmentId={undefined}
-                  onSegmentSelect={() => {}}
-                  onSegmentDelete={handleDeleteSegment}
-                  onSegmentUpdate={handleUpdateSegment}
-                  onPlayMapping={() => {}}
-                  onSegmentReorder={(segments) => {
-                    setLocalSegments(segments);
-                  }}
-                />
-              </Panel>
-            </PanelGroup>
-          </TabsContent>
-
-          {/* Mapping Tab */}
-          <TabsContent value="audio-mapping" className="h-[calc(100vh-200px)]">
-            {/* Audio Controls */}
-            <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
-              <div className="flex gap-4">
+            <div className="relative h-full">
+              {/* Language Selection & Stats */}
+              <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
                 <LanguageSelector
                   currentLanguage={contentLanguage}
                   availableLanguages={['te', 'hi', 'en']}
                   onLanguageChange={setContentLanguage}
                 />
-                {audioFiles && audioFiles.length > 0 ? (
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium">Audio File:</label>
-                    <Select
-                      value={audioFiles[0]?.id.toString() || ''}
-                      onValueChange={(value) => {
-                        // TODO: Handle audio file selection
-                      }}
-                    >
-                      <SelectTrigger className="w-48">
-                        <SelectValue placeholder="Select audio file" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {audioFiles.map(file => (
-                          <SelectItem key={file.id} value={file.id.toString()}>
-                            {file.displayName || file.filename}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Music className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-500">No audio files uploaded</span>
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-2">
-                  <label htmlFor="audio-upload-mapping" className="cursor-pointer">
-                    <Button variant="outline" size="sm" asChild className="h-8 w-8 p-0">
-                      <span title="Upload Audio">
-                        <Upload className="h-4 w-4" />
-                      </span>
-                    </Button>
-                  </label>
-                  <Input
-                    id="audio-upload-mapping"
-                    type="file"
-                    accept="audio/*"
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) {
-                        audioUploadMutation.mutate(e.target.files[0]);
-                      }
-                    }}
-                    className="hidden"
-                  />
+                <div className="flex gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {localSegments.filter(s => s.textReferences[contentLanguage]).length} segments
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    0 mapped
+                  </Badge>
                 </div>
               </div>
-              <Badge variant="secondary" className="text-xs">
-                0 mapped
-              </Badge>
-            </div>
 
-            {audioFiles && audioFiles.length > 0 ? (
-              <ProgressiveMapper
-                audioUrl={audioFiles[0]?.filename ? `/uploads/${audioFiles[0].filename}` : ''}
-                segments={localSegments}
-                currentLanguage={contentLanguage}
-                content={chapterContent}
-                mappings={[]}
-                onMappingCreate={(mapping) => {
-                  console.log('Create mapping:', mapping);
-                  // TODO: Implement mapping creation
-                }}
-                onMappingUpdate={(segmentId, updates) => {
-                  console.log('Update mapping:', segmentId, updates);
-                  // TODO: Implement mapping update
-                }}
-                onMappingDelete={(segmentId) => {
-                  console.log('Delete mapping:', segmentId);
-                  // TODO: Implement mapping deletion
-                }}
-              />
-            ) : (
-              <Card className="h-full flex items-center justify-center">
-                <CardContent>
-                  <p className="text-center text-muted-foreground">
-                    No audio file available. Upload an audio file to start mapping.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+              <PanelGroup direction="horizontal" className="h-[calc(100vh-300px)]">
+                {/* Left Panel: Content Area */}
+                <Panel defaultSize={50} minSize={30}>
+                  <AnnotationLayer
+                    content={chapterContent}
+                    currentLanguage={contentLanguage}
+                    segments={localSegments}
+                    selectedSegmentId={undefined}
+                    onSegmentCreate={handleCreateSegment}
+                    onSegmentUpdate={handleUpdateSegment}
+                    onSegmentDelete={handleDeleteSegment}
+                    onLanguageChange={setContentLanguage}
+                    availableLanguages={['te', 'hi', 'en']}
+                  />
+                </Panel>
+                
+                {/* Resize Handle */}
+                <PanelResizeHandle className="w-1 bg-transparent relative">
+                  <div className="absolute left-0 top-0 w-1 h-[600px] bg-gray-300 hover:bg-gray-400 transition-colors pointer-events-none"></div>
+                </PanelResizeHandle>
+                
+                {/* Right Panel: Segment Management */}
+                <Panel defaultSize={50} minSize={30}>
+                  <SegmentPanel
+                    segments={localSegments}
+                    mappings={[]}
+                    currentLanguage={contentLanguage}
+                    content={chapterContent}
+                    currentSegmentId={undefined}
+                    onSegmentSelect={() => {}}
+                    onSegmentDelete={handleDeleteSegment}
+                    onSegmentUpdate={handleUpdateSegment}
+                    onPlayMapping={() => {}}
+                    onSegmentReorder={(segments) => {
+                      setLocalSegments(segments);
+                    }}
+                  />
+                </Panel>
+              </PanelGroup>
+
+              {/* Blocking Overlay for Published Chapters */}
+              {isPublished && (
+                <div 
+                  className="absolute inset-0 bg-transparent z-10 cursor-not-allowed"
+                  onClick={(e) => e.preventDefault()}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onKeyDown={(e) => e.preventDefault()}
+                />
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Mapping Tab */}
+          <TabsContent value="audio-mapping" className="h-[calc(100vh-200px)]">
+            <div className="relative h-full">
+              {/* Audio Controls */}
+              <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
+                <div className="flex gap-4">
+                  <LanguageSelector
+                    currentLanguage={contentLanguage}
+                    availableLanguages={['te', 'hi', 'en']}
+                    onLanguageChange={setContentLanguage}
+                  />
+                  {audioFiles && audioFiles.length > 0 ? (
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium">Audio File:</label>
+                      <Select
+                        value={audioFiles[0]?.id.toString() || ''}
+                        onValueChange={(value) => {
+                          // TODO: Handle audio file selection
+                        }}
+                      >
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="Select audio file" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {audioFiles.map(file => (
+                            <SelectItem key={file.id} value={file.id.toString()}>
+                              {file.displayName || file.filename}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Music className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-500">No audio files uploaded</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="audio-upload-mapping" className="cursor-pointer">
+                      <Button variant="outline" size="sm" asChild className="h-8 w-8 p-0">
+                        <span title="Upload Audio">
+                          <Upload className="h-4 w-4" />
+                        </span>
+                      </Button>
+                    </label>
+                    <Input
+                      id="audio-upload-mapping"
+                      type="file"
+                      accept="audio/*"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          audioUploadMutation.mutate(e.target.files[0]);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+                <Badge variant="secondary" className="text-xs">
+                  0 mapped
+                </Badge>
+              </div>
+
+              {audioFiles && audioFiles.length > 0 ? (
+                <ProgressiveMapper
+                  audioUrl={audioFiles[0]?.filename ? `/uploads/${audioFiles[0].filename}` : ''}
+                  segments={localSegments}
+                  currentLanguage={contentLanguage}
+                  content={chapterContent}
+                  mappings={[]}
+                  onMappingCreate={(mapping) => {
+                    console.log('Create mapping:', mapping);
+                    // TODO: Implement mapping creation
+                  }}
+                  onMappingUpdate={(segmentId, updates) => {
+                    console.log('Update mapping:', segmentId, updates);
+                    // TODO: Implement mapping update
+                  }}
+                  onMappingDelete={(segmentId) => {
+                    console.log('Delete mapping:', segmentId);
+                    // TODO: Implement mapping deletion
+                  }}
+                />
+              ) : (
+                <Card className="h-full flex items-center justify-center">
+                  <CardContent>
+                    <p className="text-center text-muted-foreground">
+                      No audio file available. Upload an audio file to start mapping.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Blocking Overlay for Published Chapters */}
+              {isPublished && (
+                <div 
+                  className="absolute inset-0 bg-transparent z-10 cursor-not-allowed"
+                  onClick={(e) => e.preventDefault()}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onKeyDown={(e) => e.preventDefault()}
+                />
+              )}
+            </div>
           </TabsContent>
 
           {/* Segmentation & Mapping Tab */}
