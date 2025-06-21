@@ -1468,38 +1468,38 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       {/* Main Content */}
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-gray-50 border-b border-gray-200 p-0 h-auto rounded-none">
+          <TabsList className="bg-transparent p-1 gap-2 h-auto">
             <TabsTrigger 
               value="content" 
-              className="flex items-center gap-2 px-6 py-3 border-b-2 border-transparent rounded-none bg-transparent font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 data-[state=active]:bg-white transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
               <FileText className="w-4 h-4" />
               Text Content
             </TabsTrigger>
             <TabsTrigger 
               value="media" 
-              className="flex items-center gap-2 px-6 py-3 border-b-2 border-transparent rounded-none bg-transparent font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 data-[state=active]:bg-white transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
               <Upload className="w-4 h-4" />
               Media Content
             </TabsTrigger>
             <TabsTrigger 
               value="text-segmentation" 
-              className="flex items-center gap-2 px-6 py-3 border-b-2 border-transparent rounded-none bg-transparent font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 data-[state=active]:bg-white transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
               <Type className="w-4 h-4" />
               Text Segmentation
             </TabsTrigger>
             <TabsTrigger 
               value="audio-mapping" 
-              className="flex items-center gap-2 px-6 py-3 border-b-2 border-transparent rounded-none bg-transparent font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 data-[state=active]:bg-white transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
               <Music className="w-4 h-4" />
               Mapping
             </TabsTrigger>
             <TabsTrigger 
               value="preview" 
-              className="flex items-center gap-2 px-6 py-3 border-b-2 border-transparent rounded-none bg-transparent font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 data-[state=active]:bg-white transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
               <Eye className="w-4 h-4" />
               Preview
