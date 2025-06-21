@@ -36,14 +36,9 @@ function Router() {
           <Route path="/" component={() => <SimpleDashboard user={user as any} />} />
           <Route path="/dashboard" component={() => <SimpleDashboard user={user as any} />} />
           {/* Content Management Routes */}
-          <Route path="/manage" component={() => <ContentManagement />} />
-          <Route path="/manage/tracks/:trackId" component={() => <TrackChapters />} />
+          <Route path="/manage" component={() => <ManageTrackList />} />
+          <Route path="/manage/tracks/:trackId" component={() => <ManageChapterList />} />
           <Route path="/manage/tracks/:trackId/chapters/:chapterId" component={() => <ChapterEditor />} />
-          
-          {/* Legacy redirects for old content-management URLs */}
-          <Route path="/content-management" component={() => <ContentManagement />} />
-          <Route path="/content-management/tracks/:trackId" component={() => <TrackChapters />} />
-          <Route path="/content-management/tracks/:trackId/chapters/:chapterId" component={() => <ChapterEditor />} />
 
           {/* EXPERIMENT1: Experimental segmentation studio routes */}
           <Route path="/experiment1" component={() => <Experiment1_SegmentationStudio />} />
