@@ -1474,7 +1474,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
               <FileText className="w-4 h-4" />
-              Text Content
+              Text
             </TabsTrigger>
             <div className="flex items-center px-2 text-gray-400">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -1486,7 +1486,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
               <Upload className="w-4 h-4" />
-              Media Content
+              Audio
             </TabsTrigger>
             <div className="flex items-center px-2 text-gray-400">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -1498,7 +1498,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
               <Type className="w-4 h-4" />
-              Text Segmentation
+              Segmentation
             </TabsTrigger>
             <div className="flex items-center px-2 text-gray-400">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
