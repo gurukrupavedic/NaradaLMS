@@ -1468,24 +1468,39 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       {/* Main Content */}
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="content" className="flex items-center gap-2">
+          <TabsList className="bg-slate-100 p-1 rounded-lg border shadow-sm">
+            <TabsTrigger 
+              value="content" 
+              className="flex items-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-slate-900 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-900 data-[state=inactive]:hover:bg-white/50"
+            >
               <FileText className="w-4 h-4" />
               Text Content
             </TabsTrigger>
-            <TabsTrigger value="media" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="media" 
+              className="flex items-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-slate-900 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-900 data-[state=inactive]:hover:bg-white/50"
+            >
               <Upload className="w-4 h-4" />
               Media Content
             </TabsTrigger>
-            <TabsTrigger value="text-segmentation" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="text-segmentation" 
+              className="flex items-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-slate-900 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-900 data-[state=inactive]:hover:bg-white/50"
+            >
               <Type className="w-4 h-4" />
               Text Segmentation
             </TabsTrigger>
-            <TabsTrigger value="audio-mapping" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="audio-mapping" 
+              className="flex items-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-slate-900 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-900 data-[state=inactive]:hover:bg-white/50"
+            >
               <Music className="w-4 h-4" />
               Mapping
             </TabsTrigger>
-            <TabsTrigger value="preview" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="preview" 
+              className="flex items-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-slate-900 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-900 data-[state=inactive]:hover:bg-white/50"
+            >
               <Eye className="w-4 h-4" />
               Preview
             </TabsTrigger>
