@@ -1468,38 +1468,38 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       {/* Main Content */}
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-slate-100 p-1 rounded-lg border shadow-sm">
+          <TabsList className="bg-gray-50 border-b border-gray-200 p-0 h-auto rounded-none">
             <TabsTrigger 
               value="content" 
-              className="flex items-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-slate-900 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-900 data-[state=inactive]:hover:bg-white/50"
+              className="flex items-center gap-2 px-6 py-3 border-b-2 border-transparent rounded-none bg-transparent font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 data-[state=active]:bg-white transition-all"
             >
               <FileText className="w-4 h-4" />
               Text Content
             </TabsTrigger>
             <TabsTrigger 
               value="media" 
-              className="flex items-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-slate-900 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-900 data-[state=inactive]:hover:bg-white/50"
+              className="flex items-center gap-2 px-6 py-3 border-b-2 border-transparent rounded-none bg-transparent font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 data-[state=active]:bg-white transition-all"
             >
               <Upload className="w-4 h-4" />
               Media Content
             </TabsTrigger>
             <TabsTrigger 
               value="text-segmentation" 
-              className="flex items-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-slate-900 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-900 data-[state=inactive]:hover:bg-white/50"
+              className="flex items-center gap-2 px-6 py-3 border-b-2 border-transparent rounded-none bg-transparent font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 data-[state=active]:bg-white transition-all"
             >
               <Type className="w-4 h-4" />
               Text Segmentation
             </TabsTrigger>
             <TabsTrigger 
               value="audio-mapping" 
-              className="flex items-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-slate-900 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-900 data-[state=inactive]:hover:bg-white/50"
+              className="flex items-center gap-2 px-6 py-3 border-b-2 border-transparent rounded-none bg-transparent font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 data-[state=active]:bg-white transition-all"
             >
               <Music className="w-4 h-4" />
               Mapping
             </TabsTrigger>
             <TabsTrigger 
               value="preview" 
-              className="flex items-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-slate-900 data-[state=inactive]:text-slate-600 data-[state=inactive]:hover:text-slate-900 data-[state=inactive]:hover:bg-white/50"
+              className="flex items-center gap-2 px-6 py-3 border-b-2 border-transparent rounded-none bg-transparent font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 data-[state=active]:bg-white transition-all"
             >
               <Eye className="w-4 h-4" />
               Preview
