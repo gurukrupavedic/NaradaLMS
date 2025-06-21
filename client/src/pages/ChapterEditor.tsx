@@ -258,18 +258,12 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     order: number;
   }>>([]);
 
-  // Content state to override chapter content with Shradha Suktam
+  // Content state for chapter content
   const [chapterContent, setChapterContent] = useState<{
     te?: string;
     hi?: string;
     en?: string;
   }>({});
-
-  // Initialize with Shradha Suktam content on mount
-  useEffect(() => {
-    setChapterContent(SHRADHA_SUKTAM_CONTENT);
-    console.log('ChapterEditor: Setting Shradha Suktam content', SHRADHA_SUKTAM_CONTENT);
-  }, []);
 
   // Chapter metadata editing state
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
