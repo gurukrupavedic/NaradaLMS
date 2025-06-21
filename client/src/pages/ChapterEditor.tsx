@@ -1352,13 +1352,13 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 size="sm"
                 onClick={() => {
                   // Get the track ID from the chapter data
-                  if (chapter?.trackId) {
+                  if (trackId) {
                     // Invalidate chapters query to refresh data
                     queryClient.invalidateQueries({
-                      queryKey: [`/api/admin/chapters/${chapter.trackId}`],
+                      queryKey: [`/api/admin/chapters/${trackId}`],
                     });
-                    // Navigate to content management track page
-    setLocation(`/manage/tracks/${chapter.trackId}`);
+                    // Navigate to management track page
+                    setLocation(`/manage/tracks/${trackId}`);
                   } else {
                     // Fallback to management dashboard if no track ID
                     setLocation("/manage");
