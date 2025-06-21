@@ -16,7 +16,7 @@ import { TimestampPill } from './TimestampPill';
 import { ConnectedCirclesIcon } from '@shared/components/icons';
 import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/types/text-segmentation';
 import { getSegmentText } from '@shared/utils/text-segmentation';
-import { LanguageSelector } from "@/components/common/LanguageSelector";
+
 
 interface SegmentMappingGridProps {
   segments: TextSegment[];
@@ -30,8 +30,7 @@ interface SegmentMappingGridProps {
   onPlaySegment: (mapping: AudioMapping, event: React.MouseEvent) => void;
   onMappingUpdate: (segmentId: string, mapping: Partial<AudioMapping>) => void;
   onMappingDelete: (segmentId: string) => void;
-  onLanguageChange?: (language: Language) => void;
-  availableLanguages?: Language[];
+
 }
 
 export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
@@ -45,9 +44,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
   onSegmentClick,
   onPlaySegment,
   onMappingUpdate,
-  onMappingDelete,
-  onLanguageChange,
-  availableLanguages
+  onMappingDelete
 }) => {
   const getSegmentMapping = (segmentId: string): AudioMapping | undefined => {
     return mappings.find(m => m.segmentId === segmentId);
@@ -62,16 +59,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
   return (
     <Card className="h-full">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Text Segments - Click When Heard</CardTitle>
-          {onLanguageChange && availableLanguages && (
-            <LanguageSelector 
-              currentLanguage={currentLanguage}
-              availableLanguages={availableLanguages}
-              onLanguageChange={onLanguageChange}
-            />
-          )}
-        </div>
+        <CardTitle>Text Segments - Click When Heard</CardTitle>
       </CardHeader>
       <CardContent className="p-0 h-[calc(100vh-450px)] flex flex-col">
         <div className="flex-1 relative overflow-auto">
