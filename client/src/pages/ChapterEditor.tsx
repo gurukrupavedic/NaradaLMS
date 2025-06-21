@@ -719,30 +719,23 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }
   }, [chapter]);
 
-  // Auto-save functionality with debounce (temporarily disabled for debugging)
+  // Auto-save functionality with debounce
   useEffect(() => {
-    console.log('Auto-save check:', {
-      hasChapterContent: !!chapter?.content,
-      isPublished,
-      textContent,
-      chapterContent: chapter?.content
-    });
-    
-    // Temporarily disable auto-save to prevent content corruption
-    // if (!chapter?.content || isPublished) return;
+    if (!chapter?.content || isPublished) return;
 
-    // const hasChanges =
-    //   textContent.te !== (chapter.content.te || "") ||
-    //   textContent.hi !== (chapter.content.hi || "") ||
-    //   textContent.en !== (chapter.content.en || "");
+    const hasChanges =
+      textContent.te !== (chapter.content.te || "") ||
+      textContent.hi !== (chapter.content.hi || "") ||
+      textContent.en !== (chapter.content.en || "");
 
-    // if (!hasChanges) return;
+    if (!hasChanges) return;
 
-    // const timeoutId = setTimeout(() => {
-    //   updateContentMutation.mutate(textContent);
-    // }, 2000); // Auto-save after 2 seconds of no typing
+    const timeoutId = setTimeout(() => {
+      console.log('Auto-save triggering with content:', textContent);
+      updateContentMutation.mutate(textContent);
+    }, 2000); // Auto-save after 2 seconds of no typing
 
-    // return () => clearTimeout(timeoutId);
+    return () => clearTimeout(timeoutId);
   }, [textContent, chapter?.content, isPublished, updateContentMutation]);
 
   // Add global mouse event listeners for dragging
