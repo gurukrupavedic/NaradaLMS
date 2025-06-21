@@ -445,20 +445,28 @@ export function RichTextEditor({
       </div>
 
       {/* Editor Content */}
-      <EditorContent 
-        editor={editor} 
-        className={cn(
-          "min-h-[400px] p-4 text-base leading-relaxed prose prose-sm max-w-none bg-white",
-          "prose-headings:font-semibold prose-headings:mb-3 prose-headings:mt-4",
-          "prose-ul:list-disc prose-ol:list-decimal prose-li:ml-4 prose-li:my-1",
-          "prose-hr:border-gray-300 prose-hr:my-6 prose-hr:border-t",
-          "prose-a:text-blue-600 prose-a:underline prose-a:no-underline hover:prose-a:underline",
-          "prose-img:max-w-full prose-img:h-auto prose-img:rounded-md prose-img:my-4",
-          "prose-p:mb-3 prose-strong:font-semibold prose-em:italic",
-          getFontClass(),
-          disabled && "opacity-50 cursor-not-allowed"
-        )}
-      />
+      <div 
+        className="min-h-[400px] bg-white cursor-text"
+        onClick={() => editor?.commands.focus()}
+      >
+        <EditorContent 
+          editor={editor} 
+          className={cn(
+            "min-h-[400px] p-4 text-base leading-relaxed prose prose-sm max-w-none",
+            "prose-headings:font-semibold prose-headings:mb-3 prose-headings:mt-4",
+            "prose-ul:list-disc prose-ol:list-decimal prose-li:ml-4 prose-li:my-1",
+            "prose-hr:border-gray-300 prose-hr:my-6 prose-hr:border-t",
+            "prose-a:text-blue-600 prose-a:underline prose-a:no-underline hover:prose-a:underline",
+            "prose-img:max-w-full prose-img:h-auto prose-img:rounded-md prose-img:my-4",
+            "prose-p:mb-3 prose-strong:font-semibold prose-em:italic",
+            "[&_.ProseMirror]:min-h-[368px] [&_.ProseMirror]:outline-none [&_.ProseMirror]:cursor-text",
+            "[&_.ProseMirror]:p-0 [&_.ProseMirror]:w-full",
+            "[&_.ProseMirror-focused]:outline-none",
+            getFontClass(),
+            disabled && "opacity-50 cursor-not-allowed"
+          )}
+        />
+      </div>
     </div>
   );
 }
