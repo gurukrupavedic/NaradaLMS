@@ -143,9 +143,17 @@ export function RichTextEditor({
   // Update editor content when value changes externally
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
+      console.log('Editor content mismatch detected:');
+      console.log('External value:', value);
+      console.log('Editor HTML:', editor.getHTML());
+      console.log('Editor focused:', editor.isFocused);
+      
       // Only update if the editor is not focused (user is not typing)
       if (!editor.isFocused) {
+        console.log('Updating editor content with external value');
         editor.commands.setContent(value, false);
+      } else {
+        console.log('Skipping update - editor is focused');
       }
     }
   }, [value, editor]);

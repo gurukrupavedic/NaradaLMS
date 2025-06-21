@@ -424,6 +424,8 @@ export class DatabaseStorage implements IStorage {
     if (!this.initialized) return memStorage.updateChapter(id, chapterUpdate);
     
     try {
+      console.log('Updating chapter:', id, 'with data:', JSON.stringify(chapterUpdate, null, 2));
+      
       // If updating content, merge with existing content to preserve other languages
       if (chapterUpdate.content) {
         const [existingChapter] = await db.select().from(chapters).where(eq(chapters.id, id));
@@ -432,10 +434,15 @@ export class DatabaseStorage implements IStorage {
             ? JSON.parse(existingChapter.content) 
             : existingChapter.content;
           
+          console.log('Existing content:', JSON.stringify(existingContent, null, 2));
+          console.log('New content to merge:', JSON.stringify(chapterUpdate.content, null, 2));
+          
           chapterUpdate.content = {
             ...existingContent,
             ...chapterUpdate.content
           };
+          
+          console.log('Final merged content:', JSON.stringify(chapterUpdate.content, null, 2));
         }
       }
       
@@ -444,8 +451,11 @@ export class DatabaseStorage implements IStorage {
         .set({ ...chapterUpdate, updatedAt: new Date() })
         .where(eq(chapters.id, id))
         .returning();
+      
+      console.log('Updated chapter result:', JSON.stringify(chapter, null, 2));
       return chapter;
     } catch (error) {
+      console.error('Error updating chapter:', error);
       return memStorage.updateChapter(id, chapterUpdate);
     }
   }
