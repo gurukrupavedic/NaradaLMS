@@ -1466,8 +1466,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-6 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <div className="container mx-auto px-6 py-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="bg-transparent p-1 h-auto flex items-center">
             <TabsTrigger 
               value="content" 
