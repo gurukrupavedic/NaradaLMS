@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/Landing";
-import RoleTabs from "@/components/role-tabs";
+import SimpleDashboard from "@/components/simple-dashboard";
 import NotFound from "@/pages/not-found";
 import TrackView from "@/pages/TrackView";
 import ChapterView from "@/pages/ChapterView";
@@ -33,8 +33,8 @@ function Router() {
         <Route path="/" component={Landing} />
       ) : (
         <>
-          <Route path="/" component={() => <RoleTabs user={user as any} />} />
-          <Route path="/dashboard" component={() => <RoleTabs user={user as any} />} />
+          <Route path="/" component={() => <SimpleDashboard user={user as any} />} />
+          <Route path="/dashboard" component={() => <SimpleDashboard user={user as any} />} />
           <Route path="/content-management" component={() => <ContentManagement />} />
           <Route path="/content-management/tracks/:trackId" component={() => <TrackChapters />} />
           <Route path="/content-management/tracks/:trackId/chapters/:chapterId" component={() => <ChapterEditor />} />
