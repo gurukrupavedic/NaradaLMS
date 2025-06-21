@@ -424,6 +424,21 @@ export class DatabaseStorage implements IStorage {
     if (!this.initialized) return memStorage.updateChapter(id, chapterUpdate);
     
     try {
+      // If updating content, merge with existing content to preserve other languages
+      if (chapterUpdate.content) {
+        const [existingChapter] = await db.select().from(chapters).where(eq(chapters.id, id));
+        if (existingChapter && existingChapter.content) {
+          const existingContent = typeof existingChapter.content === 'string' 
+            ? JSON.parse(existingChapter.content) 
+            : existingChapter.content;
+          
+          chapterUpdate.content = {
+            ...existingContent,
+            ...chapterUpdate.content
+          };
+        }
+      }
+      
       const [chapter] = await db
         .update(chapters)
         .set({ ...chapterUpdate, updatedAt: new Date() })
