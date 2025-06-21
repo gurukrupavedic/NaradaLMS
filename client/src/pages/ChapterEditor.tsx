@@ -1896,8 +1896,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   console.log('Delete mapping:', segmentId);
                   // TODO: Implement mapping deletion
                 }}
-                onLanguageChange={setContentLanguage}
-                availableLanguages={['te', 'hi', 'en']}
               />
             ) : (
               <Card className="h-full flex items-center justify-center">
@@ -1912,6 +1910,20 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
           {/* Segmentation & Mapping Tab */}
           <TabsContent value="segmentation" className="space-y-6">
+            {/* Language Selection & Stats */}
+            <div className="flex justify-between items-center p-4 bg-gray-50 border rounded-lg">
+              <LanguageSelector
+                currentLanguage={contentLanguage}
+                availableLanguages={['te', 'hi', 'en']}
+                onLanguageChange={setContentLanguage}
+              />
+              <div className="flex gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  {localSegments.filter(s => s.textReferences[contentLanguage]).length} segments
+                </Badge>
+              </div>
+            </div>
+
             {/* Two-Panel Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* LEFT PANEL: Audio Operations */}
