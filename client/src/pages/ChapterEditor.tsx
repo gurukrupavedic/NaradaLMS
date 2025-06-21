@@ -2827,17 +2827,29 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
           {/* Preview Tab */}
           <TabsContent value="preview" className="space-y-6">
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Eye className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">
-                  Preview Mode
-                </h3>
-                <p className="text-muted-foreground">
-                  Preview functionality will be implemented here.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="relative h-full">
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Eye className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-medium mb-2">
+                    Preview Mode
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Preview functionality will be implemented here.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Blocking Overlay for Published Chapters */}
+              {isPublished && (
+                <div 
+                  className="absolute inset-0 bg-transparent z-10 cursor-not-allowed"
+                  onClick={(e) => e.preventDefault()}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onKeyDown={(e) => e.preventDefault()}
+                />
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
