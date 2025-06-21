@@ -1529,7 +1529,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
           {/* Text Content Tab */}
           <TabsContent value="content" className="h-[calc(100vh-200px)]">
             {/* Language Selection & Status */}
-            <div className="flex justify-between items-center mb-6 p-4 bg-white border rounded-lg">
+            <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
               <LanguageSelector
                 currentLanguage={contentLanguage}
                 availableLanguages={['te', 'hi', 'en']}
