@@ -35,20 +35,20 @@ Click chapter → /manage/tracks/1/chapters/2 (content editing)
 ### Refined URL Structure
 ```
 Management Flow:
-/manage/track → ManageTrackList.tsx (reorder, delete, add)
-/manage/track/1 → ManageChapterList.tsx (chapter CRUD)
-/manage/track/1/chapter/2 → EditChapter.tsx (content editing)
+/manage/tracks → ManageTrackList.tsx (reorder, delete, add)
+/manage/tracks/1 → ManageChapterList.tsx (chapter CRUD)
+/manage/tracks/1/chapters/2 → EditChapter.tsx (content editing)
 
 Learning Flow (Future):
-/learn/track → LearnTrackList.tsx (progress, recommendations)
-/learn/track/1 → LearnChapterList.tsx (progress, study flow)
-/learn/track/1/chapter/2 → LearnChapter.tsx (reading/study interface)
+/learn/tracks → LearnTrackList.tsx (progress, recommendations)
+/learn/tracks/1 → LearnChapterList.tsx (progress, study flow)
+/learn/tracks/1/chapters/2 → LearnChapter.tsx (reading/study interface)
 ```
 
 ### Architectural Rationale
 
 #### Explicit Context Separation
-- `/manage/track` vs `/learn/track` - crystal clear context
+- `/manage/tracks` vs `/learn/tracks` - crystal clear context
 - No ambiguity about which flow user is in
 - Supports completely different feature sets
 
@@ -101,8 +101,8 @@ Multiple locations with hardcoded paths:
 - `setLocation("/manage/tracks/${trackId}")` - in ContentManagement
 - `setLocation("/manage/tracks/${trackId}/chapters/${chapterId}")` - in TrackChapters
 
-**Impact**: All navigation calls must be updated simultaneously
-**Risk Level**: LOW - but requires comprehensive search/replace
+**Impact**: Navigation calls need minimal updates (mostly adding /tracks prefix)
+**Risk Level**: VERY LOW - current URLs mostly match target structure
 
 ### Historical Migration Failure Analysis
 
@@ -119,8 +119,9 @@ Previous migration attempt failed because:
 #### Phase 1: URL Pattern Updates (No File Renames)
 ```
 Current → Target (URLs only)
-/manage/tracks/:trackId → /manage/track/:trackId
-/manage/tracks/:trackId/chapters/:chapterId → /manage/track/:trackId/chapter/:chapterId
+/manage → /manage/tracks (add explicit tracks path)
+/manage/tracks/:trackId → /manage/tracks/:trackId (keep current)
+/manage/tracks/:trackId/chapters/:chapterId → /manage/tracks/:trackId/chapters/:chapterId (keep current)
 ```
 
 #### Implementation Steps
@@ -226,13 +227,18 @@ Learning Features:
 ### URL Structure Benefits
 ```
 Clear Context Separation:
-/manage/track/* - Admin/creator mindset: "What needs work?"
-/learn/track/* - Student mindset: "What should I study next?"
+/manage/tracks/* - Admin/creator mindset: "What needs work?"
+/learn/tracks/* - Student mindset: "What should I study next?"
 
 Consistent Patterns:
 Both flows use identical URL patterns, different functionality
 Easy to reason about and maintain
 Supports role-based access control
+
+Natural Language Feel:
+"Browsing tracks" feels more natural than "browsing track"
+Follows standard REST API conventions
+Consistent with existing working URLs
 ```
 
 ## Implementation Timeline (Future)
