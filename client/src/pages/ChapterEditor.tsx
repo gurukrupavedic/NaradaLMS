@@ -710,6 +710,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Initialize text content when chapter loads
   useEffect(() => {
     if (chapter?.content) {
+      console.log('Chapter content loaded:', JSON.stringify(chapter.content, null, 2));
       setTextContent({
         te: chapter.content.te || "",
         hi: chapter.content.hi || "",
