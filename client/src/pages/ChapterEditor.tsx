@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useParams } from "wouter";
+import { useParams, useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -93,7 +93,9 @@ interface TextSegment {
 }
 
 export default function ChapterEditor() {
-  const { chapterId } = useParams<{ chapterId: string }>();
+  const [, params] = useRoute("/manage/tracks/:trackId/chapters/:chapterId");
+  const chapterId = params?.chapterId || "";
+  const trackId = params?.trackId || "";
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
