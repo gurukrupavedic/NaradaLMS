@@ -1356,10 +1356,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       queryKey: [`/api/admin/chapters/${chapter.trackId}`],
                     });
                     // Navigate to content management track page
-                    setLocation(`/content-management/tracks/${chapter.trackId}`);
+    setLocation(`/manage/tracks/${chapter.trackId}`);
                   } else {
-                    // Fallback to content management dashboard if no track ID
-                    setLocation("/content-management");
+                    // Fallback to management dashboard if no track ID
+                    setLocation("/manage");
                   }
                 }}
                 className="text-muted-foreground hover:text-foreground"

@@ -123,7 +123,7 @@ export default function ContentManagement() {
   };
 
   const handleTrackClick = (trackId: number) => {
-    setLocation(`/content-management/tracks/${trackId}`);
+    setLocation(`/manage/tracks/${trackId}`);
   };
 
   const handleEditTrack = (track: Track) => {

@@ -24,7 +24,7 @@ const FEATURES: FeatureCard[] = [
     title: "Manage Content", 
     description: "Create and edit learning content",
     icon: Edit,
-    route: "/content-management",
+    route: "/manage",
     color: "green"
   },
   {
