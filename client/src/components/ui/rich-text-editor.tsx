@@ -259,7 +259,7 @@ export function RichTextEditor({
             }}
             disabled={disabled}
           >
-            <SelectTrigger className="w-[90px] h-8 text-xs">
+            <SelectTrigger className="w-[92px] h-8 text-xs">
               <SelectValue placeholder="Style" />
             </SelectTrigger>
             <SelectContent>
