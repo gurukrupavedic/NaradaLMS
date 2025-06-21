@@ -9,8 +9,8 @@ import SimpleDashboard from "@/components/simple-dashboard";
 import NotFound from "@/pages/not-found";
 import TrackView from "@/pages/TrackView";
 import ChapterView from "@/pages/ChapterView";
-import ContentManagement from "@/pages/ContentManagement";
-import TrackChapters from "@/pages/TrackChapters";
+import ManageTrackList from "@/pages/ManageTrackList";
+import ManageChapterList from "@/pages/ManageChapterList";
 import ChapterEditor from "@/pages/ChapterEditor";
 
 import Experiment1_SegmentationStudio from "@/pages/Experiment1_SegmentationStudio";

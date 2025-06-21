@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
-import { useLocation } from "wouter";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,98 +17,93 @@ interface Track {
   title: string;
   description: string;
   order: number;
-  chapterCount: number;
-  lastModified: string;
+  status: string;
+  totalChapters: number;
 }
 
-export default function ContentManagement() {
-  const [location, setLocation] = useLocation();
+export default function ManageTrackList() {
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   
   const [createTrackModalOpen, setCreateTrackModalOpen] = useState(false);
-  const [editTrackModalOpen, setEditTrackModalOpen] = useState(false);
-  const [editingTrack, setEditingTrack] = useState<Track | null>(null);
   const [newTrack, setNewTrack] = useState({ title: "", description: "" });
-  const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean, track: Track | null}>({
-    show: false,
-    track: null
-  });
+  
+  const [editingTrack, setEditingTrack] = useState<Track | null>(null);
+  const [deleteTrackId, setDeleteTrackId] = useState<number | null>(null);
 
   // Fetch tracks
-  const { data: tracks = [], isLoading } = useQuery<Track[]>({
+  const { data: tracks = [], isLoading } = useQuery({
     queryKey: ["/api/admin/tracks"],
   });
 
-  // Memoized sorted tracks for performance
-  const sortedTracks = useMemo(() => 
-    tracks.sort((a, b) => a.order - b.order), [tracks]
-  );
-
   // Create track mutation
   const createTrackMutation = useMutation({
-    mutationFn: async (trackData: { title: string; description: string }) => {
-      const response = await apiRequest("POST", "/api/admin/tracks", trackData);
-      return response.json();
-    },
+    mutationFn: (trackData: { title: string; description: string }) =>
+      apiRequest("/api/admin/tracks", "POST", trackData),
     onSuccess: () => {
-      toast({ title: "Track created successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
       setCreateTrackModalOpen(false);
       setNewTrack({ title: "", description: "" });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      toast({ title: "Track created successfully" });
     },
-    onError: (error: any) => {
-      toast({ title: "Failed to create track", description: error.message, variant: "destructive" });
+    onError: () => {
+      toast({ title: "Failed to create track", variant: "destructive" });
     },
   });
 
-  // Edit track mutation
+  // Update track mutation
   const editTrackMutation = useMutation({
-    mutationFn: async (trackData: { id: number; title: string; description: string }) => {
-      const response = await apiRequest("PUT", `/api/admin/tracks/${trackData.id}`, {
-        title: trackData.title,
-        description: trackData.description
-      });
-      return response.json();
-    },
+    mutationFn: (track: Track) =>
+      apiRequest(`/api/admin/tracks/${track.id}`, "PUT", track),
     onSuccess: () => {
-      toast({ title: "Track updated successfully" });
-      setEditTrackModalOpen(false);
-      setEditingTrack(null);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      setEditingTrack(null);
+      toast({ title: "Track updated successfully" });
     },
-    onError: (error: any) => {
-      toast({ title: "Failed to update track", description: error.message, variant: "destructive" });
+    onError: () => {
+      toast({ title: "Failed to update track", variant: "destructive" });
     },
   });
 
   // Delete track mutation
   const deleteTrackMutation = useMutation({
-    mutationFn: async (trackId: number) => {
-      await apiRequest("DELETE", `/api/admin/tracks/${trackId}`);
-    },
+    mutationFn: (trackId: number) => apiRequest(`/api/admin/tracks/${trackId}`, "DELETE"),
     onSuccess: () => {
-      toast({ title: "Track deleted successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      setDeleteTrackId(null);
+      toast({ title: "Track deleted successfully" });
     },
-    onError: (error: any) => {
-      toast({ title: "Failed to delete track", description: error.message, variant: "destructive" });
+    onError: () => {
+      toast({ title: "Failed to delete track", variant: "destructive" });
     },
   });
 
   // Move track mutation
   const moveTrackMutation = useMutation({
-    mutationFn: async ({ trackId, direction }: { trackId: number; direction: 'up' | 'down' }) => {
-      const response = await apiRequest("POST", `/api/admin/tracks/${trackId}/move`, { direction });
-      return response.json();
-    },
+    mutationFn: ({ trackId, direction }: { trackId: number; direction: 'up' | 'down' }) =>
+      apiRequest(`/api/admin/tracks/${trackId}/move`, "PUT", { direction }),
     onSuccess: () => {
-      toast({ title: "Track order updated successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      toast({ title: "Track order updated" });
     },
-    onError: (error: any) => {
-      toast({ title: "Failed to update track order", description: error.message, variant: "destructive" });
+    onError: () => {
+      toast({ title: "Failed to update track order", variant: "destructive" });
     },
   });
+
+  const sortedTracks = tracks.sort((a: Track, b: Track) => a.order - b.order);
+
+  const handleTrackClick = (trackId: number) => {
+    setLocation(`/manage/tracks/${trackId}`);
+  };
+
+  const handleEditTrack = (track: Track) => {
+    setEditingTrack({ ...track });
+  };
+
+  const handleDeleteTrack = (trackId: number) => {
+    setDeleteTrackId(trackId);
+  };
 
   const handleCreateTrack = () => {
     if (!newTrack.title.trim()) {
@@ -122,27 +117,7 @@ export default function ContentManagement() {
     createTrackMutation.mutate(newTrack);
   };
 
-  const handleTrackClick = (trackId: number) => {
-    setLocation(`/manage/tracks/${trackId}`);
-  };
-
-  const handleEditTrack = (track: Track) => {
-    setEditingTrack(track);
-    setEditTrackModalOpen(true);
-  };
-
-  const handleDeleteTrack = (track: Track) => {
-    setDeleteConfirm({ show: true, track });
-  };
-
-  const confirmDeleteTrack = () => {
-    if (deleteConfirm.track) {
-      deleteTrackMutation.mutate(deleteConfirm.track.id);
-      setDeleteConfirm({ show: false, track: null });
-    }
-  };
-
-  const handleUpdateTrack = () => {
+  const handleSaveEditTrack = () => {
     if (!editingTrack?.title?.trim()) {
       toast({ title: "Please enter a track title", variant: "destructive" });
       return;
@@ -153,8 +128,6 @@ export default function ContentManagement() {
     }
     editTrackMutation.mutate(editingTrack);
   };
-
-
 
   const handleMoveTrack = (trackId: number, direction: 'up' | 'down') => {
     moveTrackMutation.mutate({ trackId, direction });
@@ -270,7 +243,7 @@ export default function ContentManagement() {
         )}
 
         {/* Edit Track Modal */}
-        {editTrackModalOpen && editingTrack && (
+        {editingTrack && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <Card className="w-full max-w-md mx-4">
               <CardHeader>
@@ -297,17 +270,14 @@ export default function ContentManagement() {
                 </div>
                 <div className="flex gap-2 pt-4">
                   <Button 
-                    onClick={handleUpdateTrack} 
-                    disabled={editTrackMutation.isPending || !editingTrack.title?.trim() || !editingTrack.description?.trim()}
+                    onClick={handleSaveEditTrack}
+                    disabled={editTrackMutation.isPending || !editingTrack.title.trim() || !editingTrack.description.trim()}
                   >
-                    Update Track
+                    Save Changes
                   </Button>
                   <Button 
                     variant="outline" 
-                    onClick={() => {
-                      setEditTrackModalOpen(false);
-                      setEditingTrack(null);
-                    }}
+                    onClick={() => setEditingTrack(null)}
                   >
                     Cancel
                   </Button>
@@ -318,15 +288,15 @@ export default function ContentManagement() {
         )}
 
         {/* Delete Confirmation Modal */}
-        <ConfirmationModal
-          isOpen={deleteConfirm.show}
-          onClose={() => setDeleteConfirm({ show: false, track: null })}
-          onConfirm={confirmDeleteTrack}
-          title="Delete Track"
-          message={`Are you sure you want to delete "${deleteConfirm.track?.title}"? This will also delete all its chapters and cannot be undone.`}
-          confirmLabel="Delete Track"
-          isLoading={deleteTrackMutation.isPending}
-        />
+        {deleteTrackId && (
+          <ConfirmationModal
+            title="Delete Track"
+            message="Are you sure you want to delete this track? This action cannot be undone and will also delete all chapters within this track."
+            onConfirm={() => deleteTrackMutation.mutate(deleteTrackId)}
+            onCancel={() => setDeleteTrackId(null)}
+            isLoading={deleteTrackMutation.isPending}
+          />
+        )}
       </div>
     </div>
   );
