@@ -24,7 +24,7 @@ interface Chapter {
 
 export default function TrackChapters() {
   const [location, setLocation] = useLocation();
-  const [match, params] = useRoute("/content-management/track/:trackId");
+  const [match, params] = useRoute("/content-management/tracks/:trackId");
   const { toast } = useToast();
   
   const [createChapterModalOpen, setCreateChapterModalOpen] = useState(false);
@@ -131,7 +131,7 @@ export default function TrackChapters() {
     // Invalidate chapter details query to ensure fresh data loads
     queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${chapterId}/details`] });
     // Navigate to chapter editor
-    setLocation(`/chapter-editor/${chapterId}`);
+    setLocation(`/content-management/tracks/${trackId}/chapters/${chapterId}`);
   };
 
   const handleDeleteChapter = (chapter: Chapter) => {

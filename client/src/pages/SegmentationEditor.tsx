@@ -25,7 +25,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 export default function SegmentationEditor() {
-  const [, params] = useRoute("/admin/chapters/:chapterId/segmentation");
+  const [, params] = useRoute("/content-management/tracks/:trackId/chapters/:chapterId/segmentation");
+  const trackId = parseInt(params?.trackId || "0");
   const chapterId = parseInt(params?.chapterId || "0");
   const { toast } = useToast();
   const queryClient = useQueryClient();

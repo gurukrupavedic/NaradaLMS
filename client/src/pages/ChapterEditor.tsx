@@ -1356,7 +1356,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       queryKey: [`/api/admin/chapters/${chapter.trackId}`],
                     });
                     // Navigate to content management track page
-                    setLocation(`/content-management/track/${chapter.trackId}`);
+                    setLocation(`/content-management/tracks/${chapter.trackId}`);
                   } else {
                     // Fallback to content management dashboard if no track ID
                     setLocation("/content-management");
