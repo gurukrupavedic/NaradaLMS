@@ -165,7 +165,7 @@ export default function TrackChapters() {
           <div className="space-y-4 mb-6">
             <Button 
               variant="ghost" 
-              onClick={() => setLocation("/content-management")}
+              onClick={() => setLocation("/manage")}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Tracks
