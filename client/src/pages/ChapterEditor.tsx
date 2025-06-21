@@ -1474,7 +1474,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
               <FileText className="w-4 h-4" />
-              Text
+              Chapter Text
             </TabsTrigger>
             <div className="flex items-center px-2 text-gray-400">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -1485,8 +1485,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               value="media" 
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
-              <Upload className="w-4 h-4" />
-              Audio
+              <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
+                <path d="M400-120q-66 0-113-47t-47-113q0-66 47-113t113-47q23 0 42.5 5.5T480-418v-422h240v160H560v400q0 66-47 113t-113 47Z"/>
+              </svg>
+              Chapter Audio
             </TabsTrigger>
             <div className="flex items-center px-2 text-gray-400">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
