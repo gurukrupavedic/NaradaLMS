@@ -1340,8 +1340,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
       {/* Header */}
       <div className="border-b bg-background">
-        <div className="container mx-auto px-6 py-6">
-          <div className="space-y-4">
+        <div className="container mx-auto px-6 py-4">
+          <div className="space-y-3">
             <Button
               variant="ghost"
               onClick={() => {
@@ -1426,8 +1426,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 </div>
               ) : (
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <h1 className="text-3xl font-bold">{chapter?.title}</h1>
+                  <div className="flex items-center gap-3 mb-0">
+                    <h1 className="text-2xl font-bold">{chapter?.title}</h1>
                     {chapter?.status !== "published" && (
                       <Button 
                         variant="ghost" 
@@ -1453,7 +1453,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     </span>
                   </div>
                   {chapter?.description && (
-                    <p className="text-muted-foreground">{chapter.description}</p>
+                    <p className="text-muted-foreground text-sm">{chapter.description}</p>
                   )}
                 </div>
               )}
