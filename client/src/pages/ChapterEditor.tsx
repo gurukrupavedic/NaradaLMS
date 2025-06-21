@@ -316,7 +316,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   );
 
   // Active tab state for proper tab management
-  const [activeTab, setActiveTab] = useState<string>("text-segmentation");
+  const [activeTab, setActiveTab] = useState<string>("content");
   
   // Debug logging for tab state
   useEffect(() => {
