@@ -1339,151 +1339,128 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       <audio ref={audioRef} preload="metadata" />
 
       {/* Header */}
-      <div className="border-b bg-background">
-        <div className="container mx-auto px-6 py-4">
-          <div className="space-y-3">
-            <Button
-              variant="ghost"
-              onClick={() => {
-                // Get the track ID from the chapter data
-                if (chapter?.trackId) {
-                  // Invalidate chapters query to refresh data
-                  queryClient.invalidateQueries({
-                    queryKey: [`/api/admin/chapters/${chapter.trackId}`],
-                  });
-                  // Navigate to content management track page
-                  setLocation(`/content-management/track/${chapter.trackId}`);
-                } else {
-                  // Fallback to content management dashboard if no track ID
-                  setLocation("/content-management");
-                }
-              }}
-            >
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              Back to Chapters
-            </Button>
-            
-            <div className="flex items-center justify-between">
+      <div className="border-b bg-white shadow-sm">
+        <div className="container mx-auto px-6 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  // Get the track ID from the chapter data
+                  if (chapter?.trackId) {
+                    // Invalidate chapters query to refresh data
+                    queryClient.invalidateQueries({
+                      queryKey: [`/api/admin/chapters/${chapter.trackId}`],
+                    });
+                    // Navigate to content management track page
+                    setLocation(`/content-management/track/${chapter.trackId}`);
+                  } else {
+                    // Fallback to content management dashboard if no track ID
+                    setLocation("/content-management");
+                  }
+                }}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Back
+              </Button>
+              
+              <div className="h-5 w-px bg-border"></div>
               {isEditingMetadata ? (
-                <div className="flex-1 space-y-4">
-                  <div>
-                    <Label htmlFor="editing-title" className="text-sm font-medium">Chapter Title</Label>
-                    <Input
-                      id="editing-title"
-                      value={editingTitle}
-                      onChange={(e) => setEditingTitle(e.target.value)}
-                      placeholder="Enter chapter title"
-                      className="text-2xl font-bold h-12 mt-1"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSaveMetadata();
-                        } else if (e.key === "Escape") {
-                          handleCancelMetadataEdit();
-                        }
-                      }}
-                      autoFocus
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="editing-description" className="text-sm font-medium">Description (Optional)</Label>
-                    <Textarea
-                      id="editing-description"
-                      value={editingDescription}
-                      onChange={(e) => setEditingDescription(e.target.value)}
-                      placeholder="Enter chapter description"
-                      rows={2}
-                      className="mt-1"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && e.ctrlKey) {
-                          e.preventDefault();
-                          handleSaveMetadata();
-                        } else if (e.key === "Escape") {
-                          handleCancelMetadataEdit();
-                        }
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      onClick={handleSaveMetadata}
-                      disabled={updateChapterMetadataMutation.isPending || !editingTitle.trim()}
-                      size="sm"
-                    >
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={handleCancelMetadataEdit}
-                      disabled={updateChapterMetadataMutation.isPending}
-                      size="sm"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Cancel
-                    </Button>
-                  </div>
+                <div className="flex-1 flex items-center gap-3">
+                  <Input
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    placeholder="Enter chapter title"
+                    className="text-lg font-semibold h-8 flex-1"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSaveMetadata();
+                      } else if (e.key === "Escape") {
+                        handleCancelMetadataEdit();
+                      }
+                    }}
+                    autoFocus
+                  />
+                  <Button 
+                    onClick={handleSaveMetadata}
+                    disabled={updateChapterMetadataMutation.isPending || !editingTitle.trim()}
+                    size="sm"
+                    className="h-8"
+                  >
+                    <Save className="w-3 h-3 mr-1" />
+                    Save
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCancelMetadataEdit}
+                    disabled={updateChapterMetadataMutation.isPending}
+                    size="sm"
+                    className="h-8"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
                 </div>
               ) : (
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-0">
-                    <h1 className="text-2xl font-bold">{chapter?.title}</h1>
-                    {chapter?.status !== "published" && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={handleEditMetadata}
-                        className="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity"
-                        title="Edit chapter title and description"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full ${
-                        chapter?.status === "published"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-                      }`}
+                <div className="flex items-center gap-3">
+                  <h1 className="text-xl font-semibold text-foreground">{chapter?.title}</h1>
+                  {chapter?.status !== "published" && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={handleEditMetadata}
+                      className="h-6 w-6 p-0 opacity-50 hover:opacity-100 transition-opacity"
+                      title="Edit chapter title"
                     >
-                      {chapter?.status
-                        ? chapter.status.charAt(0).toUpperCase() +
-                          chapter.status.slice(1)
-                        : "Draft"}
-                    </span>
-                  </div>
+                      <Edit2 className="w-3 h-3" />
+                    </Button>
+                  )}
+                  <span
+                    className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                      chapter?.status === "published"
+                        ? "bg-green-100 text-green-700 border border-green-200"
+                        : "bg-amber-100 text-amber-700 border border-amber-200"
+                    }`}
+                  >
+                    {chapter?.status === "published" ? "Published" : "Draft"}
+                  </span>
                   {chapter?.description && (
-                    <p className="text-muted-foreground text-sm">{chapter.description}</p>
+                    <span className="text-muted-foreground text-sm">•</span>
+                  )}
+                  {chapter?.description && (
+                    <span className="text-muted-foreground text-sm">{chapter.description}</span>
                   )}
                 </div>
               )}
-              
-              {!isEditingMetadata && (
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  {/* EXPERIMENT1: Link to experimental segmentation studio */}
-                  <Button
-                    variant="outline"
-                    onClick={() => setLocation(`/experiment1/segmentation-studio/${chapter?.id}`)}
-                    className="bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100"
-                  >
-                    🧪 Try Experiment1 Studio
-                  </Button>
-                  <Button
-                    variant={
-                      chapter?.status === "published" ? "destructive" : "default"
-                    }
-                    onClick={() => {
-                      const newStatus =
-                        chapter?.status === "published" ? "draft" : "published";
-                      toggleStatusMutation.mutate(newStatus);
-                    }}
-                    disabled={toggleStatusMutation.isPending}
-                  >
-                    {chapter?.status === "published" ? "Unpublish" : "Publish"}
-                  </Button>
-                </div>
-              )}
             </div>
+            
+            {!isEditingMetadata && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocation(`/experiment1/segmentation-studio/${chapter?.id}`)}
+                  className="bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100 h-8 text-xs"
+                >
+                  <span className="mr-1">🧪</span>
+                  Experiment
+                </Button>
+                <Button
+                  size="sm"
+                  variant={chapter?.status === "published" ? "destructive" : "default"}
+                  onClick={() => {
+                    const newStatus = chapter?.status === "published" ? "draft" : "published";
+                    toggleStatusMutation.mutate(newStatus);
+                  }}
+                  disabled={toggleStatusMutation.isPending}
+                  className="h-8"
+                >
+                  {chapter?.status === "published" ? "Unpublish" : "Publish"}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
