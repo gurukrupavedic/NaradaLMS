@@ -1468,84 +1468,43 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       {/* Main Content */}
       <div className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="flex items-center bg-white border border-gray-200 rounded-lg p-2 shadow-sm">
-            {/* Step 1: Text Content */}
+          <TabsList className="bg-transparent p-1 gap-2 h-auto">
             <TabsTrigger 
               value="content" 
-              className="flex items-center gap-2 px-4 py-2 rounded-md font-medium relative data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:bg-gray-50 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
-              <div className="flex items-center gap-2 relative z-10">
-                <div className="w-6 h-6 rounded-full bg-current text-white flex items-center justify-center text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600">
-                  1
-                </div>
-                <span className="hidden sm:inline">Text Content</span>
-              </div>
+              <FileText className="w-4 h-4" />
+              Text Content
             </TabsTrigger>
-            
-            {/* Connector */}
-            <div className="w-8 h-px bg-gray-300 mx-1"></div>
-            
-            {/* Step 2: Media Content */}
             <TabsTrigger 
               value="media" 
-              className="flex items-center gap-2 px-4 py-2 rounded-md font-medium relative data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:bg-gray-50 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
-              <div className="flex items-center gap-2 relative z-10">
-                <div className="w-6 h-6 rounded-full bg-current text-white flex items-center justify-center text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600">
-                  2
-                </div>
-                <span className="hidden sm:inline">Media</span>
-              </div>
+              <Upload className="w-4 h-4" />
+              Media Content
             </TabsTrigger>
-            
-            {/* Connector */}
-            <div className="w-8 h-px bg-gray-300 mx-1"></div>
-            
-            {/* Step 3: Text Segmentation */}
             <TabsTrigger 
               value="text-segmentation" 
-              className="flex items-center gap-2 px-4 py-2 rounded-md font-medium relative data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:bg-gray-50 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
-              <div className="flex items-center gap-2 relative z-10">
-                <div className="w-6 h-6 rounded-full bg-current text-white flex items-center justify-center text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600">
-                  3
-                </div>
-                <span className="hidden sm:inline">Segmentation</span>
-              </div>
+              <Type className="w-4 h-4" />
+              Text Segmentation
             </TabsTrigger>
-            
-            {/* Connector */}
-            <div className="w-8 h-px bg-gray-300 mx-1"></div>
-            
-            {/* Step 4: Audio Mapping */}
             <TabsTrigger 
               value="audio-mapping" 
-              className="flex items-center gap-2 px-4 py-2 rounded-md font-medium relative data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:bg-gray-50 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
-              <div className="flex items-center gap-2 relative z-10">
-                <div className="w-6 h-6 rounded-full bg-current text-white flex items-center justify-center text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600">
-                  4
-                </div>
-                <span className="hidden sm:inline">Mapping</span>
-              </div>
+              <Music className="w-4 h-4" />
+              Mapping
             </TabsTrigger>
-            
-            {/* Connector */}
-            <div className="w-8 h-px bg-gray-300 mx-1"></div>
-            
-            {/* Step 5: Preview */}
             <TabsTrigger 
               value="preview" 
-              className="flex items-center gap-2 px-4 py-2 rounded-md font-medium relative data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:bg-gray-50 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
-              <div className="flex items-center gap-2 relative z-10">
-                <div className="w-6 h-6 rounded-full bg-current text-white flex items-center justify-center text-xs font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600">
-                  5
-                </div>
-                <span className="hidden sm:inline">Preview</span>
-              </div>
+              <Eye className="w-4 h-4" />
+              Preview
             </TabsTrigger>
-          </div>
+          </TabsList>
 
           {/* Text Content Tab */}
           <TabsContent value="content" className="h-[calc(100vh-200px)]">
