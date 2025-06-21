@@ -1514,6 +1514,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               <Music className="w-4 h-4" />
               Mapping
             </TabsTrigger>
+            <TabsTrigger value="preview" className="flex items-center gap-2">
+              <Eye className="w-4 h-4" />
+              Preview
+            </TabsTrigger>
           </TabsList>
 
           {/* Text Content Tab */}
@@ -2758,6 +2762,21 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 </Card>
               </div>
             </div>
+          </TabsContent>
+
+          {/* Preview Tab */}
+          <TabsContent value="preview" className="space-y-6">
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Eye className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-medium mb-2">
+                  Preview Mode
+                </h3>
+                <p className="text-muted-foreground">
+                  Preview functionality will be implemented here.
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
