@@ -387,6 +387,17 @@ export class DatabaseStorage implements IStorage {
     try {
       const [chapter] = await db.select().from(chapters).where(eq(chapters.id, id));
       console.log('Storage: Raw chapter from DB:', JSON.stringify(chapter, null, 2));
+      
+      // Ensure content is properly parsed if it's a string
+      if (chapter && chapter.content && typeof chapter.content === 'string') {
+        try {
+          chapter.content = JSON.parse(chapter.content);
+          console.log('Storage: Parsed content:', JSON.stringify(chapter.content, null, 2));
+        } catch (parseError) {
+          console.error('Storage: Failed to parse content JSON:', parseError);
+        }
+      }
+      
       return chapter;
     } catch (error) {
       return memStorage.getChapter(id);
