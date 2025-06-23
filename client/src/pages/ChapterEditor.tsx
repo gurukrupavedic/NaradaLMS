@@ -2077,30 +2077,54 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   </div>
                 </div>
                 <Badge variant="secondary" className="text-xs">
-                  0 mapped
+                  {mappings.length} mapped
                 </Badge>
               </div>
 
-              {audioFiles && audioFiles.length > 0 ? (
-                <ProgressiveMapper
-                  audioUrl={selectedAudioFile?.filename ? `/uploads/${selectedAudioFile.filename}` : ''}
-                  segments={segments}
-                  currentLanguage={contentLanguage}
-                  content={chapterContent}
-                  mappings={[]}
-                  onMappingCreate={(mapping) => {
-                    console.log('Create mapping:', mapping);
-                    // TODO: Implement mapping creation
-                  }}
-                  onMappingUpdate={(segmentId, updates) => {
-                    console.log('Update mapping:', segmentId, updates);
-                    // TODO: Implement mapping update
-                  }}
-                  onMappingDelete={(segmentId) => {
-                    console.log('Delete mapping:', segmentId);
-                    // TODO: Implement mapping deletion
-                  }}
-                />
+              {selectedAudioFile && segments.length > 0 ? (
+                <div className="h-full">
+                  {isMappingLoading && (
+                    <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                        <p className="text-sm text-muted-foreground">Processing mapping...</p>
+                      </div>
+                    </div>
+                  )}
+                  <ProgressiveMapper
+                    audioUrl={`/uploads/${selectedAudioFile.filename}`}
+                    segments={segments.map(s => ({ ...s, id: s.id.toString() }))} // Convert for compatibility
+                    currentLanguage={contentLanguage}
+                    content={chapterContent}
+                    mappings={mappings.map(convertDatabaseMapping)} // Real backend data
+                    onMappingCreate={(mapping) => {
+                      // Convert UI format to database format and create
+                      createMappingMutation.mutate({
+                        segmentId: parseInt(mapping.segmentId),
+                        audioFileId: selectedAudioFile.id,
+                        startTime: mapping.startTime,
+                        endTime: mapping.endTime
+                      });
+                    }}
+                    onMappingUpdate={(segmentId, updates) => {
+                      // Update mapping timestamps
+                      updateMappingMutation.mutate({
+                        segmentId: parseInt(segmentId),
+                        updates: {
+                          startTime: updates.startTime,
+                          endTime: updates.endTime
+                        }
+                      });
+                    }}
+                    onMappingDelete={(segmentId) => {
+                      // Delete mapping
+                      deleteMappingMutation.mutate({
+                        audioFileId: selectedAudioFile.id,
+                        segmentId: parseInt(segmentId)
+                      });
+                    }}
+                  />
+                </div>
               ) : (
                 <Card className="h-full flex items-center justify-center">
                   <CardContent>
