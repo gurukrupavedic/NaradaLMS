@@ -64,7 +64,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
   const currentScriptSegments = getSegmentsForScript(segments, currentScript);
 
   // Count mapped segments
-  const mappedCount = currentLanguageSegments.filter(segment => 
+  const mappedCount = currentScriptSegments.filter(segment => 
     mappings.some(mapping => mapping.segmentId === segment.id)
   ).length;
 
@@ -122,7 +122,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
     
     if (draggedIndex === null) return;
     
-    const newSegments = [...currentLanguageSegments];
+    const newSegments = [...currentScriptSegments];
     const draggedSegment = newSegments[draggedIndex];
     
     // Remove from old position

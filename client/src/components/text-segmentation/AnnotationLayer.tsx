@@ -173,7 +173,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   // Render highlighted text with segment overlays
   const renderHighlightedText = () => {
     if (!normalizedText) {
-      return <div className="text-muted-foreground">No content available for {currentLanguage}</div>;
+      return <div className="text-muted-foreground">No content available for {currentScript}</div>;
     }
 
     // Get all segments for current script
