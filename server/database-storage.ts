@@ -39,6 +39,7 @@ export interface IStorage {
   getSegmentsByChapter(chapterId: number): Promise<any[]>;
   createTextSegment(segment: any): Promise<any>;
   updateTextSegment(id: number, segment: any): Promise<any>;
+  updateSegmentOrder(chapterId: number, segmentOrders: { id: number; order: number }[]): Promise<void>;
   deleteTextSegment(id: number): Promise<void>;
 
   // Media segment operations
@@ -577,6 +578,22 @@ export class DatabaseStorage implements IStorage {
       return segment;
     } catch (error) {
       return memStorage.updateTextSegment(id, segmentUpdate);
+    }
+  }
+
+  async updateSegmentOrder(chapterId: number, segmentOrders: { id: number; order: number }[]): Promise<void> {
+    await this.ensureInitialized();
+    if (!this.initialized) return;
+    
+    try {
+      for (const { id, order } of segmentOrders) {
+        await db
+          .update(textSegments)
+          .set({ order })
+          .where(eq(textSegments.id, id));
+      }
+    } catch (error) {
+      console.error('Error updating segment order:', error);
     }
   }
 

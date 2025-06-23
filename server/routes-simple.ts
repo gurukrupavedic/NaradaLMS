@@ -401,6 +401,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/admin/segments/:chapterId/reorder', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const { segmentOrders } = req.body;
+      
+      await storage.updateSegmentOrder(chapterId, segmentOrders);
+      res.json({ message: "Segments reordered successfully" });
+    } catch (error) {
+      console.error("Error reordering segments:", error);
+      res.status(500).json({ message: "Failed to reorder segments" });
+    }
+  });
+
   // Media segment routes
   app.get('/api/admin/media-segments/:audioFileId', async (req, res) => {
     try {
