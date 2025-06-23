@@ -121,6 +121,35 @@ export const normalizeLineBreaks = (text: string): string => {
 };
 
 /**
+ * Converts HTML content to plain text suitable for segmentation
+ * @param htmlContent - HTML string content
+ * @returns Clean plain text with preserved spacing and line breaks
+ */
+export const htmlToPlainText = (htmlContent: string): string => {
+  if (!htmlContent) return '';
+  
+  return htmlContent
+    .replace(/<h[1-6][^>]*>/gi, '')
+    .replace(/<\/h[1-6]>/gi, '\n\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<p[^>]*>/gi, '')
+    .replace(/<strong[^>]*>|<\/strong>/gi, '')
+    .replace(/<u[^>]*>|<\/u>/gi, '')
+    .replace(/<span[^>]*>|<\/span>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .trim()
+    .replace(/\n\s*\n\s*\n/g, '\n\n')
+    .replace(/[ \t]+/g, ' ');
+};
+
+/**
  * Helper type guard for content entries
  */
 const isContentEntryLocal = (content: any): content is { display: string; segmentation: string } => {
@@ -147,7 +176,7 @@ export const getDisplayText = (content: ContentMap, language: Language): string 
   
   // Handle legacy string format
   if (typeof entry === 'string') {
-    return normalizeLineBreaks(entry);
+    return normalizeLineBreaks(htmlToPlainText(entry));
   }
   
   return '';

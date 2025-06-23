@@ -721,6 +721,17 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }
   }, [chapter]);
 
+  // Initialize chapterContent for segmentation display
+  useEffect(() => {
+    if (chapter?.content) {
+      setChapterContent({
+        te: chapter.content.te || "",
+        hi: chapter.content.hi || "",
+        en: chapter.content.en || "",
+      });
+    }
+  }, [chapter?.content]);
+
   // Auto-save functionality with debounce
   useEffect(() => {
     if (!chapter?.content || isPublished) return;
