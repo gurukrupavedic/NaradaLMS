@@ -30,6 +30,7 @@ export const getSegmentText = (
   maxLength: number = 50
 ): string => {
   const range = segment.textReferences[language];
+  // Import getDisplayText from text-segmentation utils
   const { getDisplayText } = require('./utils/text-segmentation');
   const text = getDisplayText(content, language);
   
@@ -142,3 +143,8 @@ const isContentEntryLocal = (content: any): content is { display: string; segmen
 };
 
 // getDisplayText and getSegmentationText functions removed - using single implementation from shared/utils/text-segmentation.ts
+
+/**
+ * Re-export getDisplayText for backward compatibility with experimental components
+ */
+export { getDisplayText } from './utils/text-segmentation';
