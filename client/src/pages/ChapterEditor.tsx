@@ -2838,7 +2838,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     <div className="space-y-2">
                       <Label>Language</Label>
                       <Select
-                        value={selectedLanguage}
+                        value={selectedScript}
                         onValueChange={(value: "te" | "hi" | "en") =>
                           setSelectedLanguage(value)
                         }
@@ -2861,25 +2861,25 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900 max-h-96 overflow-y-auto">
                         <div
                           className={`text-sm leading-relaxed ${
-                            selectedLanguage === "te"
+                            selectedScript === "te"
                               ? "font-telugu"
-                              : selectedLanguage === "hi"
+                              : selectedScript === "hi"
                                 ? "font-devanagari"
                                 : "font-mono"
                           }`}
                         >
-                          {textContent[selectedLanguage] ? (
-                            isHtmlContent(textContent[selectedLanguage]) ? (
+                          {textContent[selectedScript] ? (
+                            isHtmlContent(textContent[selectedScript]) ? (
                               <div
                                 data-segmentable
                                 className="whitespace-pre-wrap cursor-text prose prose-sm max-w-none"
                                 onMouseUp={handleTextSelection}
-                                dangerouslySetInnerHTML={{ __html: textContent[selectedLanguage] }}
+                                dangerouslySetInnerHTML={{ __html: textContent[selectedScript] }}
                               />
                             ) : (
                               renderTextWithSegments(
-                                textContent[selectedLanguage],
-                                selectedLanguage,
+                                textContent[selectedScript],
+                                selectedScript,
                               )
                             )
                           ) : (
@@ -2954,8 +2954,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                                     {segment.conceptualName}
                                   </div>
                                   <div className="text-xs text-muted-foreground mt-1">
-                                    {segment.textReferences[selectedLanguage]
-                                      ? `${selectedLanguage.toUpperCase()}: ${segment.textReferences[selectedLanguage]?.start}-${segment.textReferences[selectedLanguage]?.end}`
+                                    {segment.textReferences[selectedScript]
+                                      ? `${selectedScript.toUpperCase()}: ${segment.textReferences[selectedScript]?.start}-${segment.textReferences[selectedScript]?.end}`
                                       : "No reference for selected language"}
                                   </div>
                                   {segment.audioFileId &&
