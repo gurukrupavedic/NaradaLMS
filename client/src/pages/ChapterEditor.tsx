@@ -270,7 +270,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   const [editingDescription, setEditingDescription] = useState("");
 
   // Audio and segmentation state
-  const [selectedAudioFileId, setSelectedAudioFileId] = useState<number | null>(null);
+  const [selectedAudioFile, setSelectedAudioFile] = useState<any | null>(null);
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -543,20 +543,13 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     enabled: !!chapterId,
   });
 
-  // Initialize selected audio file when audio files load
-  useEffect(() => {
-    if (audioFiles && audioFiles.length > 0 && !selectedAudioFileId) {
-      setSelectedAudioFileId(audioFiles[0].id);
-    }
-  }, [audioFiles, selectedAudioFileId]);
-
-  // Derive selected audio file object
-  const selectedAudioFile = useMemo(() => {
-    return audioFiles?.find(file => file.id === selectedAudioFileId) || null;
-  }, [audioFiles, selectedAudioFileId]);
 
 
-
+  // Fetch media segments for selected audio file
+  const selectedAudioFileId =
+    typeof selectedAudioFile === "object"
+      ? selectedAudioFile?.id
+      : selectedAudioFile;
   const { data: mediaSegments = [] } = useQuery({
     queryKey: [`/api/admin/media-segments/${selectedAudioFileId}`],
     enabled: !!selectedAudioFileId,
@@ -836,7 +829,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Create audio segments from marks mutation
   const createAudioSegmentsMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedAudioFileId || timeMarks.length === 0) {
+      if (!selectedAudioFile || timeMarks.length === 0) {
         throw new Error("No audio file selected or no time marks");
       }
 
@@ -849,7 +842,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
         const endTime = i === sortedMarks.length ? duration : sortedMarks[i];
 
         segments.push({
-          audioFileId: selectedAudioFileId,
+          audioFileId:
+            typeof selectedAudioFile === "object"
+              ? selectedAudioFile.id
+              : selectedAudioFile,
           startTime,
           endTime,
           name: `Segment ${i + 1}`,
@@ -894,8 +890,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       queryClient.invalidateQueries({
         queryKey: [`/api/admin/audio-files/${chapterId}`],
       });
-      if (selectedAudioFileId === deletedFileId) {
-        setSelectedAudioFileId(null);
+      if (selectedAudioFile === deletedFileId) {
+        setSelectedAudioFile(null);
         setAudioPlayer(null);
         setIsPlaying(false);
       }
@@ -1007,7 +1003,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Audio file selection and setup
   const handleAudioFileSelect = (fileId: number) => {
-    setSelectedAudioFileId(fileId);
+    setSelectedAudioFile(fileId);
     setTimeMarks([]);
     setSelectedMark(null);
     setCurrentTime(0);
@@ -1042,7 +1038,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [selectedAudioFileId]);
+  }, [selectedAudioFile]);
 
   const validateFileType = (file: File) => {
     const allowedTypes = ["audio/", "video/"];
@@ -1935,9 +1931,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     <div className="flex items-center gap-2">
                       <label className="text-sm font-medium">Audio File:</label>
                       <Select
-                        value={selectedAudioFileId?.toString() || ''}
+                        value={audioFiles[0]?.id.toString() || ''}
                         onValueChange={(value) => {
-                          setSelectedAudioFileId(parseInt(value));
+                          // TODO: Handle audio file selection
                         }}
                       >
                         <SelectTrigger className="w-48">
@@ -1985,9 +1981,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 </Badge>
               </div>
 
-              {selectedAudioFile ? (
+              {audioFiles && audioFiles.length > 0 ? (
                 <ProgressiveMapper
-                  audioUrl={selectedAudioFile.filename ? `/uploads/${selectedAudioFile.filename}` : ''}
+                  audioUrl={audioFiles[0]?.filename ? `/uploads/${audioFiles[0].filename}` : ''}
                   segments={segments}
                   currentLanguage={contentLanguage}
                   content={chapterContent}
@@ -2070,7 +2066,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                                   (f: any) => f.id.toString() === value,
                                 )
                               : null;
-                          setSelectedAudioFileId(fileId);
+                          setSelectedAudioFile(file);
 
                           // Load the audio file for playback
                           if (file && file.filename) {
