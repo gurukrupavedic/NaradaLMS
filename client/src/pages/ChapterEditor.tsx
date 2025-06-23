@@ -2087,7 +2087,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
                       <div className="text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                        <p className="text-sm text-muted-foreground">Processing mapping...</p>
+                        <p className="text-sm text-muted-foreground">Loading mappings for audio file...</p>
                       </div>
                     </div>
                   )}
