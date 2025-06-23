@@ -156,7 +156,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
         {/* Header - sticky and integrated */}
         <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
           <h2 className="text-base font-semibold text-gray-700">
-            Segments ({getScriptLabel(currentScript)})
+            Segments ({currentScript === 'te' ? 'TE' : currentScript === 'hi' ? 'DEV' : 'IAST'})
           </h2>
         </div>
 
@@ -273,12 +273,12 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
             {/* Bottom Drop Zone - only visible during drag */}
             {draggedIndex !== null && (
               <div
-                onDragOver={(e) => handleDragOver(e, currentLanguageSegments.length)}
+                onDragOver={(e) => handleDragOver(e, currentScriptSegments.length)}
                 onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, currentLanguageSegments.length)}
+                onDrop={(e) => handleDrop(e, currentScriptSegments.length)}
                 className={`
                   h-12 border-2 border-dashed rounded-lg transition-all
-                  ${draggedOver === currentLanguageSegments.length 
+                  ${draggedOver === currentScriptSegments.length 
                     ? 'border-blue-400 bg-blue-50' 
                     : 'border-gray-300 bg-gray-50'
                   }
@@ -290,7 +290,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
             )}
 
             {/* Instructions */}
-            {currentLanguageSegments.length > 0 && (
+            {currentScriptSegments.length > 0 && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
                 <p className="text-sm text-blue-700">
                   <strong>Tip:</strong> Drag segments to reorder

@@ -158,7 +158,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
     const newSegment = {
       textReferences: {
-        [currentLanguage]: selectedRange
+        [currentScript]: selectedRange
       }
     };
 
@@ -168,7 +168,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
     // Clear selection
     window.getSelection()?.removeAllRanges();
-  }, [selectedRange, currentLanguage, segments.length, onSegmentCreate]);
+  }, [selectedRange, currentScript, segments.length, onSegmentCreate]);
 
   // Render highlighted text with segment overlays
   const renderHighlightedText = () => {
@@ -241,7 +241,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
         <div className="bg-white border rounded-lg h-[600px] overflow-auto shadow-sm">
           {/* Header - now inside content container and sticky */}
           <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
-            <h2 className="text-base font-semibold text-gray-700">Content ({getLanguageLabel(currentLanguage)})</h2>
+            <h2 className="text-base font-semibold text-gray-700">Content ({currentScript === 'te' ? 'Telugu' : currentScript === 'hi' ? 'Hindi' : 'English'})</h2>
           </div>
 
           {/* Text Content with Highlighting */}
