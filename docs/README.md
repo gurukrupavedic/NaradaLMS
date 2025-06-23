@@ -10,6 +10,7 @@ docs/
 ├── implementation/       # Implementation guides and TODOs  
 ├── troubleshooting/      # Bug fixes and technical issue resolution
 ├── features/            # Feature specifications and implementation plans
+├── rollback/           # Rollback points and restoration guides
 ├── deprecated-ideas/    # Historical documentation of deprecated approaches
 ├── planning/           # Future planning documents (reserved)
 └── README.md           # This file
@@ -50,6 +51,20 @@ docs/
 ### **Migration Gap Analysis**
 **Status:** Documentation  
 **Summary:** Analysis of critical gaps from experimental-to-production migration and future resolution plan.
+
+## **Rollback Documentation**
+
+### **Visual Integration Rollback Point**
+**Status:** Production-ready  
+**Summary:** Backend mapping integration with timestamp pill display - complete restoration guide.
+
+### **Progressive Mapping Rollback Point**
+**Status:** Production-ready  
+**Summary:** Complete progressive mapping backend integration with full rollback procedures.
+
+### **System Rollback Points**
+**Status:** Safety checkpoints  
+**Summary:** 8 comprehensive rollback points for admin path cleanup, migration, and feature implementations.
 
 ## **Current System Status**
 

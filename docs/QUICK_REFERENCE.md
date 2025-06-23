@@ -25,6 +25,12 @@ Use when planning or implementing new features.
 
 - **Link Status Error Detection:** Broken mapping detection system
 
+### **🔄 Rollback & Safety**
+Use when system issues occur or emergency restoration needed.
+
+- **Rollback Points:** 8 comprehensive restoration guides for all major changes
+- **Emergency Procedures:** Step-by-step system recovery instructions
+
 ### **📚 Historical Reference**
 Use when researching past approaches or considering alternatives.
 
@@ -49,5 +55,7 @@ Use when researching past approaches or considering alternatives.
 **Experiencing text segmentation issues?** → `troubleshooting/text-segmentation-selection-time-normalization.md`
 
 **Researching past implementations?** → `deprecated-ideas/`
+
+**System broken or unstable?** → `rollback/` (find appropriate rollback point)
 
 **Making architectural decisions?** → `architecture/` (create new ADR)

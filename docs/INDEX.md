@@ -17,6 +17,17 @@
 ### **Feature Documentation**
 - `features/link-status-error-detection.md` - Broken mapping detection
 
+### **Rollback & Safety**
+- `rollback/README.md` - Rollback documentation overview
+- `rollback/VISUAL_INTEGRATION_ROLLBACK_POINT.md` - Latest production rollback
+- `rollback/PROGRESSIVE_MAPPING_ROLLBACK_POINT.md` - Progressive mapping rollback
+- `rollback/ADMIN_PATH_CLEANUP_ROLLBACK_POINT.md` - API path restructuring rollback
+- `rollback/MIGRATION_ROLLBACK_POINT.md` - Experimental to production migration rollback
+- `rollback/TEXT_SEGMENT_CRUD_ROLLBACK_POINT.md` - Text segment operations rollback
+- `rollback/AUDIO_DROPDOWN_ROLLBACK_POINT.md` - Audio UI changes rollback
+- `rollback/RIGHT_CLICK_EDITING_ROLLBACK_POINT.md` - Context menu rollback
+- `rollback/SEGMENTATION_ROLLBACK_POINT.md` - Segmentation workflow rollback
+
 ### **Historical Reference**
 - `deprecated-ideas/README.md` - Overview of deprecated approaches
 - `deprecated-ideas/segment-map-tab-analysis.md` - Original segment map implementation
@@ -29,6 +40,7 @@
 
 ### **Critical (Immediate Action Required)**
 - `troubleshooting/text-segmentation-selection-time-normalization.md` - Text corruption
+- `rollback/` - Emergency restoration procedures available
 
 ### **High Priority (Next Sprint)**
 - `implementation/TODO-Authentication-Integration.md` - User authentication
@@ -58,6 +70,9 @@
 ### **Issues & Fixes**
 - `troubleshooting/text-segmentation-selection-time-normalization.md` - Critical text bug
 - `troubleshooting/migration-gap-analysis.md` - Migration cleanup
+
+### **Safety & Recovery**
+- `rollback/` - Complete system rollback points and restoration guides
 
 ### **Historical Archive**
 - `deprecated-ideas/` - Past approaches and restoration guides
