@@ -1007,7 +1007,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Audio file selection and setup
   const handleAudioFileSelect = (fileId: number) => {
-    setSelectedAudioFile(fileId);
+    setSelectedAudioFileId(fileId);
     setTimeMarks([]);
     setSelectedMark(null);
     setCurrentTime(0);
@@ -2070,7 +2070,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                                   (f: any) => f.id.toString() === value,
                                 )
                               : null;
-                          setSelectedAudioFile(file);
+                          setSelectedAudioFileId(fileId);
 
                           // Load the audio file for playback
                           if (file && file.filename) {
