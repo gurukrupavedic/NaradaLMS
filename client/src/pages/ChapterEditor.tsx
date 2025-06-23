@@ -250,7 +250,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Segments query for database integration
   const { data: segments = [], refetch: refetchSegments, isLoading: segmentsLoading } = useQuery({
-    queryKey: [`/api/admin/segments/${chapterId}`],
+    queryKey: [`/api/segments/${chapterId}`],
     enabled: !!chapterId
   });
 
@@ -511,12 +511,12 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       toast({ title: "Chapter updated successfully" });
       setIsEditingMetadata(false);
       queryClient.invalidateQueries({
-        queryKey: [`/api/admin/chapters/${chapterId}/details`],
+        queryKey: [`/api/chapters/${chapterId}/details`],
       });
       // Also invalidate the chapters list to update the display
       if (chapter?.trackId) {
         queryClient.invalidateQueries({
-          queryKey: [`/api/admin/chapters/${chapter.trackId}`],
+          queryKey: [`/api/chapters/${chapter.trackId}`],
         });
       }
     },
