@@ -49,7 +49,7 @@ import { SegmentPanel } from "@/components/text-segmentation/SegmentPanel";
 import { ProgressiveMapper } from "@/components/audio-mapping/ProgressiveMapper";
 import { ConnectedCirclesIcon } from "@shared/components/icons";
 import { progressiveMappingApi } from "@/services/progressiveMappingApi";
-import type { AudioMappingDatabase, convertDatabaseMapping, convertToDatabase } from "@shared/types/text-segmentation";
+import { AudioMappingDatabase, convertDatabaseMapping, convertToDatabase } from "@shared/types/text-segmentation";
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 interface ChapterData {
