@@ -43,7 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/tracks', async (req, res) => {
+  app.get('/api/tracks', async (req, res) => {
     try {
       const tracks = await storage.getAllTracks();
       res.json(tracks);
@@ -53,7 +53,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/tracks/:id', async (req, res) => {
+  app.get('/api/tracks/:id', async (req, res) => {
     try {
       const track = await storage.getTrack(parseInt(req.params.id));
       if (!track) {
@@ -67,7 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Chapter routes
-  app.get('/api/admin/chapters/:trackId', async (req, res) => {
+  app.get('/api/chapters/:trackId', async (req, res) => {
     try {
       const trackId = parseInt(req.params.trackId);
       const chapters = await storage.getChaptersByTrack(trackId);
@@ -78,7 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/chapters/:chapterId/details', async (req, res) => {
+  app.get('/api/chapters/:chapterId/details', async (req, res) => {
     try {
       const chapterId = parseInt(req.params.chapterId);
       const chapter = await storage.getChapter(chapterId);
@@ -93,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/tracks', async (req, res) => {
+  app.post('/api/tracks', async (req, res) => {
     try {
       const track = await storage.createTrack({
         ...req.body,
@@ -106,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/tracks/:id', async (req, res) => {
+  app.put('/api/tracks/:id', async (req, res) => {
     try {
       const trackId = parseInt(req.params.id);
       const track = await storage.updateTrack(trackId, req.body);
@@ -117,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/tracks/:id', async (req, res) => {
+  app.delete('/api/tracks/:id', async (req, res) => {
     try {
       const trackId = parseInt(req.params.id);
       await storage.deleteTrack(trackId);
@@ -128,7 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/tracks/:id/move', async (req, res) => {
+  app.post('/api/tracks/:id/move', async (req, res) => {
     try {
       const trackId = parseInt(req.params.id);
       const { direction } = req.body;
@@ -170,7 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/chapters', async (req, res) => {
+  app.post('/api/chapters', async (req, res) => {
     try {
       const chapter = await storage.createChapter({
         ...req.body,
@@ -183,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/chapters/:chapterId', async (req, res) => {
+  app.patch('/api/chapters/:chapterId', async (req, res) => {
     try {
       const chapterId = parseInt(req.params.chapterId);
       const chapter = await storage.updateChapter(chapterId, req.body);
@@ -195,7 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Chapter status toggle (publish/unpublish)
-  app.patch('/api/admin/chapters/:chapterId/status', async (req, res) => {
+  app.patch('/api/chapters/:chapterId/status', async (req, res) => {
     try {
       const chapterId = parseInt(req.params.chapterId);
       const { status } = req.body;
@@ -213,7 +213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Chapter ordering
-  app.post('/api/admin/chapters/:id/move', async (req, res) => {
+  app.post('/api/chapters/:id/move', async (req, res) => {
     try {
       const chapterId = parseInt(req.params.id);
       const { direction } = req.body;
@@ -254,7 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/chapters/:id', async (req, res) => {
+  app.delete('/api/chapters/:id', async (req, res) => {
     try {
       const chapterId = parseInt(req.params.id);
       await storage.deleteChapter(chapterId);
