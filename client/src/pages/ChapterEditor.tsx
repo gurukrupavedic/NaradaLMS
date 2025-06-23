@@ -2007,7 +2007,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 />
                 <div className="flex gap-2">
                   <Badge variant="secondary" className="text-xs">
-                    {segments.length} segments
+                    {segments.filter(s => s.script === contentScript).length} segments
                   </Badge>
                   <Badge variant="secondary" className="text-xs">
                     0 mapped
@@ -2215,7 +2215,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               />
               <div className="flex gap-2">
                 <Badge variant="secondary" className="text-xs">
-                  {segments.length} segments
+                  {segments.filter(s => s.script === contentScript).length} segments
                 </Badge>
               </div>
             </div>
