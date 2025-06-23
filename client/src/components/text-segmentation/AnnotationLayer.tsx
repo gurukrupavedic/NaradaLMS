@@ -10,10 +10,8 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2 } from 'lucide-react';
 import { Plus, X } from 'lucide-react';
 import type { TextSegment, Language, ContentMap, TextRange } from '@shared/types/text-segmentation';
 import { getDisplayText, normalizeLineBreaks } from '@shared/utils/text-segmentation';
@@ -55,7 +53,6 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   // State for text selection and segment creation
   const [selectedRange, setSelectedRange] = useState<TextRange | null>(null);
   const [showFloatingToolbar, setShowFloatingToolbar] = useState<boolean>(false);
-  const [editingSegment, setEditingSegment] = useState<string | null>(null);
   const textRef = useRef<HTMLDivElement>(null);
 
   // Get normalized text content (same for both display and segmentation)
@@ -217,55 +214,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
           title={segment.conceptualName}
         >
           {normalizedText.slice(range.start, range.end)}
-          {editingSegment === segment.id && (
-            <div className="absolute top-full left-0 z-10 mt-1 p-2 bg-white border rounded shadow-lg min-w-48">
-              <Input
-                defaultValue={segment.conceptualName}
-                placeholder="Segment name"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    const newName = (e.target as HTMLInputElement).value.trim();
-                    if (newName) {
-                      onSegmentUpdate(segment.id, { conceptualName: newName });
-                    }
-                    setEditingSegment(null);
-                  } else if (e.key === 'Escape') {
-                    setEditingSegment(null);
-                  }
-                }}
-                onBlur={(e) => {
-                  const newName = e.target.value.trim();
-                  if (newName && newName !== segment.conceptualName) {
-                    onSegmentUpdate(segment.id, { conceptualName: newName });
-                  }
-                  setEditingSegment(null);
-                }}
-                autoFocus
-                className="text-sm"
-              />
-              <div className="flex gap-1 mt-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setEditingSegment(null)}
-                  className="text-xs"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => {
-                    onSegmentDelete(segment.id);
-                    setEditingSegment(null);
-                  }}
-                  className="text-xs"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          )}
+
         </span>
       );
 
@@ -300,18 +249,6 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
             ref={textRef}
             className="relative p-6 cursor-text font-serif text-base leading-relaxed"
             onMouseUp={handleTextSelection}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              const target = e.target as HTMLElement;
-              const segmentElement = target.closest('[title]');
-              if (segmentElement) {
-                const segmentTitle = segmentElement.getAttribute('title');
-                const segment = segments.find(s => s.conceptualName === segmentTitle);
-                if (segment) {
-                  setEditingSegment(segment.id);
-                }
-              }
-            }}
           >
             {renderHighlightedText()}
           </div>
