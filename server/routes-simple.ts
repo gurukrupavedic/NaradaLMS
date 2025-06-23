@@ -266,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Audio file routes
-  app.get('/api/admin/audio-files/:chapterId', async (req, res) => {
+  app.get('/api/audio-files/:chapterId', async (req, res) => {
     try {
       const chapterId = parseInt(req.params.chapterId);
       const audioFiles = await storage.getAudioFilesByChapter(chapterId);
@@ -277,7 +277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/audio-files/:chapterId/upload', upload.single('audio'), async (req, res) => {
+  app.post('/api/audio-files/:chapterId/upload', upload.single('audio'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No audio file provided" });
@@ -310,7 +310,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/audio-files/:audioFileId', async (req, res) => {
+  app.patch('/api/audio-files/:audioFileId', async (req, res) => {
     try {
       const audioFileId = parseInt(req.params.audioFileId);
       const audioFile = await storage.updateAudioFile(audioFileId, req.body);
@@ -321,7 +321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/audio-files/:audioFileId', async (req, res) => {
+  app.delete('/api/audio-files/:audioFileId', async (req, res) => {
     try {
       const audioFileId = parseInt(req.params.audioFileId);
       await storage.deleteAudioFile(audioFileId);
@@ -333,7 +333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Text segment routes
-  app.get('/api/admin/segments/:chapterId', async (req, res) => {
+  app.get('/api/segments/:chapterId', async (req, res) => {
     try {
       const chapterId = parseInt(req.params.chapterId);
       const segments = await storage.getSegmentsByChapter(chapterId);
@@ -362,7 +362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/segments', async (req, res) => {
+  app.post('/api/segments', async (req, res) => {
     try {
       const { chapterId, textReferences } = req.body;
       const segment = await storage.createTextSegment({
@@ -378,7 +378,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/segments/:segmentId', async (req, res) => {
+  app.patch('/api/segments/:segmentId', async (req, res) => {
     try {
       const segmentId = parseInt(req.params.segmentId);
       const segment = await storage.updateTextSegment(segmentId, req.body);
@@ -389,7 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/segments/:segmentId', async (req, res) => {
+  app.delete('/api/segments/:segmentId', async (req, res) => {
     try {
       const segmentId = parseInt(req.params.segmentId);
       await storage.deleteTextSegment(segmentId);
@@ -400,7 +400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/segments/:chapterId/reorder', async (req, res) => {
+  app.patch('/api/segments/:chapterId/reorder', async (req, res) => {
     try {
       const chapterId = parseInt(req.params.chapterId);
       const { segmentOrders } = req.body;
@@ -414,7 +414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Media segment routes
-  app.get('/api/admin/media-segments/:audioFileId', async (req, res) => {
+  app.get('/api/media-segments/:audioFileId', async (req, res) => {
     try {
       const audioFileId = parseInt(req.params.audioFileId);
       const mediaSegments = await storage.getMediaSegmentsByAudioFile(audioFileId);
