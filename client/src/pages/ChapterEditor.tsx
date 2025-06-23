@@ -36,6 +36,7 @@ import {
   Save,
   Edit2,
   Link2,
+  Link2Off,
   Clock,
   Timer,
   Ruler,

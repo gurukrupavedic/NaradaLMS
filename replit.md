@@ -105,6 +105,7 @@ Changelog:
 - June 23, 2025. ROLLBACK POINT: Before segment creation fix - Application working except segment creation fails with "Cannot convert undefined or null to object" error in createSegmentMutation
 - June 23, 2025. FIXED: AnnotationLayer data contract mismatch - Updated handleCreateSegment to accept both new format (script/startPosition/endPosition) and legacy format (textReferences) for backward compatibility
 - June 23, 2025. COMPLETED: Segment creation fix - Updated all UI display logic to use new script-specific format instead of textReferences. Segment creation now fully functional.
+- June 23, 2025. COMPLETED: Segmentation tab improvements - Added script-specific segment counts, chapter-wide mapping counts, and link status icons for segment cards. Fixed Link2Off import error.
 
 ## User Preferences
 
