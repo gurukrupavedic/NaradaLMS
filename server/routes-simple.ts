@@ -559,6 +559,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get mapping count for specific audio file
+  app.get('/api/mappings/audio/:audioFileId/count', async (req, res) => {
+    try {
+      const audioFileId = parseInt(req.params.audioFileId);
+      const mappings = await storage.getMappingsByAudioFile(audioFileId);
+      res.json({ count: mappings.length });
+    } catch (error) {
+      console.error("Error fetching audio mappings count:", error);
+      res.status(500).json({ message: "Failed to fetch audio mappings count" });
+    }
+  });
+
   app.get('/api/mappings/segment/:segmentId', async (req, res) => {
     try {
       const segmentId = parseInt(req.params.segmentId);

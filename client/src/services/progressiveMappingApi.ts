@@ -13,7 +13,7 @@ import type { AudioMappingDatabase } from '@shared/types/text-segmentation';
 
 export const progressiveMappingApi = {
   /**
-   * Get all mappings for a specific chapter
+   * Get all mappings for a specific chapter (legacy - for learning interface)
    */
   async getMappingsByChapter(chapterId: number): Promise<AudioMappingDatabase[]> {
     const response = await fetch(`/api/mappings/chapter/${chapterId}`, {
@@ -48,7 +48,7 @@ export const progressiveMappingApi = {
   },
 
   /**
-   * Get mappings by audio file (existing endpoint)
+   * Get mappings by audio file (primary method for content management)
    */
   async getMappingsByAudioFile(audioFileId: number): Promise<AudioMappingDatabase[]> {
     const response = await fetch(`/api/mappings/audio/${audioFileId}`, {
@@ -56,6 +56,19 @@ export const progressiveMappingApi = {
     });
     if (!response.ok) {
       throw new Error(`Failed to fetch audio mappings: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  /**
+   * Get mapping count for specific audio file
+   */
+  async getMappingCountByAudioFile(audioFileId: number): Promise<{ count: number }> {
+    const response = await fetch(`/api/mappings/audio/${audioFileId}/count`, {
+      credentials: 'include'
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch audio mappings count: ${response.statusText}`);
     }
     return response.json();
   },

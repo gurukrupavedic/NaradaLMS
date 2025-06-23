@@ -548,17 +548,17 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     enabled: !!chapterId,
   });
 
-  // Fetch mappings for the chapter
-  const { data: chapterMappings = [], refetch: refetchMappings } = useQuery<AudioMappingDatabase[]>({
-    queryKey: [`/api/mappings/chapter/${chapterId}`],
-    enabled: !!chapterId,
-    queryFn: () => progressiveMappingApi.getMappingsByChapter(parseInt(chapterId!))
+  // Fetch mappings for the selected audio file
+  const { data: audioFileMappings = [], refetch: refetchMappings } = useQuery<AudioMappingDatabase[]>({
+    queryKey: [`/api/mappings/audio/${selectedAudioFile?.id}`],
+    enabled: !!selectedAudioFile?.id,
+    queryFn: () => progressiveMappingApi.getMappingsByAudioFile(selectedAudioFile!.id)
   });
 
   // Update mappings state when data changes
   useEffect(() => {
-    setMappings(chapterMappings);
-  }, [chapterMappings]);
+    setMappings(audioFileMappings);
+  }, [audioFileMappings]);
 
 
 

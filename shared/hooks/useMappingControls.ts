@@ -17,11 +17,13 @@ interface MappingControlsProps {
   sessionStartTime: number;
   segments: TextSegment[];
   mappings: AudioMapping[];
+  selectedAudioFileId?: number;
   onMappingCreate: (mapping: AudioMapping) => void;
   onMappingDelete: (segmentId: string) => void;
   onSessionChange: (session: 'idle' | 'active' | 'paused') => void;
   onActiveSegmentChange: (segmentId: string | null) => void;
   onSessionStartTimeChange: (time: number) => void;
+  onSessionStartRequest?: (existingCount: number) => void;
 }
 
 export const useMappingControls = ({
@@ -31,11 +33,13 @@ export const useMappingControls = ({
   sessionStartTime,
   segments,
   mappings,
+  selectedAudioFileId,
   onMappingCreate,
   onMappingDelete,
   onSessionChange,
   onActiveSegmentChange,
-  onSessionStartTimeChange
+  onSessionStartTimeChange,
+  onSessionStartRequest
 }: MappingControlsProps) => {
 
   const handleSegmentClick = (segmentId: string) => {
@@ -65,11 +69,36 @@ export const useMappingControls = ({
   };
 
   const startMappingSession = () => {
+    if (!selectedAudioFileId) {
+      console.warn('Cannot start mapping session without selected audio file');
+      return;
+    }
+
+    // Count existing mappings for current audio file
+    const existingMappingsForAudioFile = segments.filter(segment =>
+      mappings.some(m => m.segmentId === segment.id && 
+        // Check if mapping belongs to current audio file (assuming mapping has audioFileId)
+        // For now, we'll count all mappings and let the parent handle the warning
+        true
+      )
+    ).length;
+
+    if (existingMappingsForAudioFile > 0 && onSessionStartRequest) {
+      // Request confirmation from parent component
+      onSessionStartRequest(existingMappingsForAudioFile);
+      return;
+    }
+
+    // Proceed with session start
+    proceedWithSessionStart();
+  };
+
+  const proceedWithSessionStart = () => {
     onSessionChange('active');
     onActiveSegmentChange(null);
     onSessionStartTimeChange(currentTime);
     
-    // Clear existing mappings for current language
+    // Clear existing mappings for current audio file only
     segments.forEach(segment => {
       if (mappings.some(m => m.segmentId === segment.id)) {
         onMappingDelete(segment.id);
@@ -99,7 +128,7 @@ export const useMappingControls = ({
     onSessionChange('idle');
     onActiveSegmentChange(null);
     
-    // Clear all mappings for current language segments
+    // Clear all mappings for current audio file only
     segments.forEach(segment => {
       if (mappings.some(m => m.segmentId === segment.id)) {
         onMappingDelete(segment.id);
@@ -111,6 +140,7 @@ export const useMappingControls = ({
     handleSegmentClick,
     handleSegmentEnd,
     startMappingSession,
+    proceedWithSessionStart,
     pauseMappingSession,
     stopMappingSession,
     resetMappingSession
