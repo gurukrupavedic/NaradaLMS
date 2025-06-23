@@ -102,6 +102,7 @@ The Vedic Learning Management System is a comprehensive full-stack application d
 
 Changelog:
 - June 23, 2025. Initial setup
+- June 23, 2025. ROLLBACK POINT: Before segment creation fix - Application working except segment creation fails with "Cannot convert undefined or null to object" error in createSegmentMutation
 
 ## User Preferences
 
