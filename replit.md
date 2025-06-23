@@ -107,6 +107,7 @@ Changelog:
 - June 23, 2025. COMPLETED: Segment creation fix - Updated all UI display logic to use new script-specific format instead of textReferences. Segment creation now fully functional.
 - June 23, 2025. COMPLETED: Segmentation tab improvements - Added script-specific segment counts, chapter-wide mapping counts, and link status icons for segment cards. Fixed Link2Off import error.
 - June 23, 2025. ROLLBACK POINT: Infinite render loop issue - Application experiencing maximum update depth exceeded error in ChapterEditor.tsx. LinkStatusIcon implementation complete but causing stability issues.
+- June 23, 2025. FIXED: Infinite render loop resolved - Fixed useEffect dependency causing continuous re-renders. Implemented shared LinkStatusIcon component and mapping utilities for consistent status visualization across all tabs.
 
 ## User Preferences
 

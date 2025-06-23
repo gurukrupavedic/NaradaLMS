@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Play, Circle, Link, Link2Off } from 'lucide-react';
 import { ConnectedCirclesIcon } from '@shared/components/icons';
+import { LinkStatusIcon } from '@shared/components/LinkStatusIcon';
+import { getMappingStatus } from '@shared/utils/mapping-status';
 import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
 import { getSegmentText, getSegmentsForScript, formatDuration } from '@shared/utils/text-segmentation';
 
@@ -78,27 +80,18 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
     }
   };
 
-  // Link Status Icon Component
-  const LinkStatusIcon: React.FC<{ status: 'mapped' | 'unmapped' | 'broken' }> = ({ status }) => {
-    if (status === 'mapped') {
-      return <ConnectedCirclesIcon className="h-4 w-4 text-green-600" />;
-    }
-    if (status === 'broken') {
-      return <Link2Off className="h-3 w-3 text-amber-600 opacity-90" />;
-    }
-    return <Link2Off className="h-3 w-3 text-gray-400 opacity-60" />;
-  };
-
-  // Get mapping status for a segment
-  const getMappingStatus = (segment: TextSegment): 'mapped' | 'unmapped' | 'broken' => {
-    const mapping = mappings.find(m => m.segmentId === segment.id);
-    if (!mapping) return 'unmapped';
+  // Get mapping status for a segment - simplified to mapped/unmapped only
+  const getSegmentMappingStatus = (segment: TextSegment): 'mapped' | 'unmapped' => {
+    // Convert segment ID to number for compatibility
+    const segmentId = typeof segment.id === 'string' ? parseInt(segment.id) : segment.id;
     
-    // Check if mapping has valid timestamps
-    if (mapping.startTime >= 0 && mapping.endTime > mapping.startTime) {
-      return 'mapped';
-    }
-    return 'broken';
+    // Convert mappings to compatible format
+    const dbMappings = mappings.map(m => ({
+      segmentId: typeof m.segmentId === 'string' ? parseInt(m.segmentId) : m.segmentId,
+      ...m
+    }));
+    
+    return getMappingStatus(segmentId, dbMappings);
   };
 
   // Drag and drop handlers
@@ -210,7 +203,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
               </div>
             ) : (
               currentScriptSegments.map((segment, index) => {
-                const mappingStatus = getMappingStatus(segment);
+                const mappingStatus = getSegmentMappingStatus(segment);
                 const mapping = mappings.find(m => m.segmentId === segment.id);
                 const isSelected = currentSegmentId === segment.id;
                 const isDragging = draggedIndex === index;
@@ -251,7 +244,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
 
                       {/* Far Right: Status Icon and Delete Button */}
                       <div className="flex-shrink-0 flex items-center gap-1">
-                        <LinkStatusIcon status={mappingStatus} />
+                        <LinkStatusIcon status={mappingStatus} size="md" />
                         <Button
                           size="sm"
                           variant="ghost"

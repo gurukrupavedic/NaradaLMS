@@ -49,6 +49,8 @@ import { AnnotationLayer } from "@/components/text-segmentation/AnnotationLayer"
 import { SegmentPanel } from "@/components/text-segmentation/SegmentPanel";
 import { ProgressiveMapper } from "@/components/audio-mapping/ProgressiveMapper";
 import { ConnectedCirclesIcon } from "@shared/components/icons";
+import { LinkStatusIcon } from "@shared/components/LinkStatusIcon";
+import { getMappingStatus } from "@shared/utils/mapping-status";
 import { progressiveMappingApi } from "@/services/progressiveMappingApi";
 import { AudioMappingDatabase, convertDatabaseMapping, convertToDatabase } from "@shared/types/text-segmentation";
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -328,7 +330,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     console.log('ChapterEditor: Active tab changed to:', activeTab);
     console.log('ChapterEditor: chapterContent:', chapterContent);
     console.log('ChapterEditor: segments count:', segments.length);
-  }, [activeTab, chapterContent, segments]);
+  }, [activeTab, segments.length]);
 
   // === HELPER FUNCTIONS SECTION ===
 
@@ -3031,11 +3033,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                                     </div>
                                   </div>
                                   <div className="flex-shrink-0">
-                                    {allChapterMappings.some(mapping => mapping.segmentId === segment.id) ? (
-                                      <ConnectedCirclesIcon className="h-4 w-4 text-green-600" />
-                                    ) : (
-                                      <Link2Off className="h-4 w-4 text-gray-400" />
-                                    )}
+                                    <LinkStatusIcon 
+                                      status={getMappingStatus(segment.id, allChapterMappings)}
+                                      size="md"
+                                    />
                                   </div>
                                 </div>
                                 {!isPublished && (
