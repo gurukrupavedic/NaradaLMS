@@ -751,9 +751,39 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }
   });
 
-  const handleCreateSegment = useCallback((segment: { textReferences: any }) => {
-    // Convert legacy format to new format with validation
-    if (!segment.textReferences || typeof segment.textReferences !== 'object') {
+  const handleCreateSegment = useCallback((segment: any) => {
+    // Handle both new format (from AnnotationLayer) and legacy format
+    let segmentData: { chapterId: number; script: string; startPosition: number; endPosition: number; };
+    
+    if (segment.script && segment.startPosition !== undefined && segment.endPosition !== undefined) {
+      // New format from AnnotationLayer: { script, startPosition, endPosition }
+      segmentData = {
+        chapterId: parseInt(chapterId!),
+        script: segment.script,
+        startPosition: segment.startPosition,
+        endPosition: segment.endPosition
+      };
+    } else if (segment.textReferences && typeof segment.textReferences === 'object') {
+      // Legacy format: { textReferences: { [script]: { start, end } } }
+      const firstScript = Object.keys(segment.textReferences)[0];
+      const range = segment.textReferences[firstScript];
+      
+      if (!firstScript || !range || range.start === undefined || range.end === undefined) {
+        toast({
+          title: "Invalid text selection",
+          description: "Please select valid text before creating a segment",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      segmentData = {
+        chapterId: parseInt(chapterId!),
+        script: firstScript,
+        startPosition: range.start,
+        endPosition: range.end
+      };
+    } else {
       toast({
         title: "Invalid segment data",
         description: "Unable to process segment information",
@@ -762,24 +792,18 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       return;
     }
     
-    const firstScript = Object.keys(segment.textReferences)[0];
-    const range = segment.textReferences[firstScript];
-    
-    if (!firstScript || !range || range.start === undefined || range.end === undefined) {
+    // Validate the final data before API call
+    if (!segmentData.chapterId || !segmentData.script || 
+        segmentData.startPosition === undefined || segmentData.endPosition === undefined) {
       toast({
-        title: "Invalid text selection",
-        description: "Please select valid text before creating a segment",
+        title: "Missing segment data",
+        description: "Required segment information is missing",
         variant: "destructive"
       });
       return;
     }
     
-    createSegmentMutation.mutate({
-      chapterId: parseInt(chapterId!),
-      script: firstScript,
-      startPosition: range.start,
-      endPosition: range.end
-    });
+    createSegmentMutation.mutate(segmentData);
   }, [createSegmentMutation, chapterId]);
 
   const handleUpdateSegment = useCallback((id: number, updates: any) => {

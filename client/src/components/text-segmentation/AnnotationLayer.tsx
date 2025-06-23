@@ -31,7 +31,7 @@ interface AnnotationLayerProps {
   currentScript: Script;
   segments: TextSegment[];
   selectedSegmentId?: number;
-  onSegmentCreate: (segment: { textReferences: any }) => void;
+  onSegmentCreate: (segment: { script: string; startPosition: number; endPosition: number; }) => void;
   onSegmentUpdate: (id: string, updates: Partial<TextSegment>) => void;
   onSegmentDelete: (id: string) => void;
   onSegmentSelect?: (segmentId: number | undefined) => void;
