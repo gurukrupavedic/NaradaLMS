@@ -40,7 +40,7 @@ export const MappingWarningDialog: React.FC<MappingWarningDialogProps> = ({
           <AlertDialogDescription>
             This audio file already has {existingMappingsCount} completed mapping{existingMappingsCount !== 1 ? 's' : ''}.
             <br /><br />
-            Starting a new mapping session will clear all existing mappings for "{audioFileName}" and allow you to create fresh mappings from scratch.
+            Starting a new mapping session will clear all existing mappings for <strong>{audioFileName}</strong> and allow you to create fresh mappings from scratch.
             <br /><br />
             This action cannot be undone.
           </AlertDialogDescription>
