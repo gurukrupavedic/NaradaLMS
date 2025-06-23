@@ -480,14 +480,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Chapter status toggle mutation
   const toggleStatusMutation = useMutation({
     mutationFn: async (newStatus: "draft" | "published") => {
-      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}/status`, {
+      await apiRequest("PATCH", `/api/chapters/${chapterId}/status`, {
         status: newStatus,
       });
     },
     onSuccess: () => {
       toast({ title: "Chapter status updated successfully" });
       queryClient.invalidateQueries({
-        queryKey: [`/api/admin/chapters/${chapterId}/details`],
+        queryKey: [`/api/chapters/${chapterId}/details`],
       });
     },
     onError: (error: any) => {
@@ -533,13 +533,13 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Fetch chapter details
   const { data: chapter, isLoading: chapterLoading } = useQuery<ChapterData>({
-    queryKey: [`/api/admin/chapters/${chapterId}/details`],
+    queryKey: [`/api/chapters/${chapterId}/details`],
     enabled: !!chapterId,
   });
 
   // Fetch audio files
   const { data: audioFiles, refetch: refetchAudioFiles } = useQuery<any[]>({
-    queryKey: [`/api/admin/audio-files/${chapterId}`],
+    queryKey: [`/api/audio-files/${chapterId}`],
     enabled: !!chapterId,
   });
 
@@ -566,7 +566,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       formData.append("audio", file);
 
       const response = await fetch(
-        `/api/admin/audio-files/${chapterId}/upload`,
+        `/api/audio-files/${chapterId}/upload`,
         {
           method: "POST",
           body: formData,
@@ -738,14 +738,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Content update mutation
   const updateContentMutation = useMutation({
     mutationFn: async (content: any) => {
-      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}`, {
+      await apiRequest("PATCH", `/api/chapters/${chapterId}`, {
         content,
       });
     },
     onSuccess: () => {
       toast({ title: "Content saved" });
       queryClient.invalidateQueries({
-        queryKey: [`/api/admin/chapters/${chapterId}/details`],
+        queryKey: [`/api/chapters/${chapterId}/details`],
       });
     },
     onError: (error: any) => {
