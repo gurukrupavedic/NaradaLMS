@@ -191,6 +191,15 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
           onMappingDelete={onMappingDelete}
         />
       </div>
+
+      {/* Warning Dialog */}
+      <MappingWarningDialog
+        isOpen={showWarningDialog}
+        onConfirm={proceedWithMappingSession}
+        onCancel={() => setShowWarningDialog(false)}
+        existingMappingsCount={pendingMappingCount}
+        audioFileName={selectedAudioFile?.filename || 'Unknown'}
+      />
     </div>
   );
 };
