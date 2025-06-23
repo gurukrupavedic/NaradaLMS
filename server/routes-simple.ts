@@ -382,42 +382,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/segments', async (req, res) => {
     try {
-      const { chapterId, script, startPosition, endPosition, textReferences, conceptualName } = req.body;
+      const { chapterId, script, startPosition, endPosition } = req.body;
       
-      // Support both new and legacy formats
-      if (script && startPosition !== undefined && endPosition !== undefined) {
-        // New format: script-specific
-        const segment = await storage.createTextSegment({
-          chapterId,
-          script,
-          startPosition,
-          endPosition,
-          createdBy: "system"
+      // Validate required fields
+      if (!chapterId || !script || startPosition === undefined || endPosition === undefined) {
+        return res.status(400).json({ 
+          message: "Missing required fields: chapterId, script, startPosition, endPosition",
+          received: { chapterId, script, startPosition, endPosition }
         });
-        res.json(segment);
-      } else if (textReferences) {
-        // Legacy format: convert from textReferences
-        const firstScript = Object.keys(textReferences)[0];
-        const range = textReferences[firstScript];
-        
-        if (firstScript && range) {
-          const segment = await storage.createTextSegment({
-            chapterId,
-            script: firstScript,
-            startPosition: range.start,
-            endPosition: range.end,
-            createdBy: "system"
-          });
-          res.json(segment);
-        } else {
-          res.status(400).json({ message: "Invalid textReferences format" });
-        }
-      } else {
-        res.status(400).json({ message: "Missing required fields: script, startPosition, endPosition" });
       }
+      
+      // Validate field types
+      if (typeof chapterId !== 'number' || typeof script !== 'string' || 
+          typeof startPosition !== 'number' || typeof endPosition !== 'number') {
+        return res.status(400).json({ 
+          message: "Invalid field types. Expected: chapterId (number), script (string), startPosition (number), endPosition (number)" 
+        });
+      }
+      
+      // Validate position values
+      if (startPosition < 0 || endPosition < 0 || startPosition >= endPosition) {
+        return res.status(400).json({ 
+          message: "Invalid position values. startPosition must be >= 0 and < endPosition" 
+        });
+      }
+      
+      // Create segment using standardized format
+      const segment = await storage.createTextSegment({
+        chapterId,
+        script,
+        startPosition,
+        endPosition,
+        createdBy: "system"
+      });
+      
+      res.json(segment);
     } catch (error) {
       console.error("Error creating segment:", error);
-      res.status(500).json({ message: "Failed to create segment" });
+      res.status(500).json({ 
+        message: "Failed to create segment",
+        error: error.message 
+      });
     }
   });
 

@@ -559,6 +559,12 @@ export class DatabaseStorage implements IStorage {
     if (!this.initialized) return memStorage.createTextSegment(segment);
     
     try {
+      // Validate required fields
+      if (!segment.chapterId || !segment.script || 
+          segment.startPosition === undefined || segment.endPosition === undefined) {
+        throw new Error("Missing required fields: chapterId, script, startPosition, endPosition");
+      }
+      
       // Get next order value for this chapter and script
       const maxOrderResult = await db
         .select({ maxOrder: max(textSegments.order) })

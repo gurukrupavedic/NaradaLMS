@@ -669,23 +669,21 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     },
   });
 
-  // CRUD mutations for segments - updated to new format
+  // Standardized segment creation mutation - new format only
   const createSegmentMutation = useMutation({
-    mutationFn: async (segment: { textReferences: any }) => {
-      // Convert legacy textReferences format to new script-specific format
-      const firstScript = Object.keys(segment.textReferences)[0];
-      const range = segment.textReferences[firstScript];
-      
-      if (!firstScript || !range) {
-        throw new Error("Invalid segment format");
+    mutationFn: async (segmentData: { 
+      chapterId: number; 
+      script: string; 
+      startPosition: number; 
+      endPosition: number; 
+    }) => {
+      // Validate required fields before API call
+      if (!segmentData.chapterId || !segmentData.script || 
+          segmentData.startPosition === undefined || segmentData.endPosition === undefined) {
+        throw new Error("Missing required segment data");
       }
       
-      return apiRequest("POST", `/api/segments`, {
-        chapterId: parseInt(chapterId!),
-        script: firstScript,
-        startPosition: range.start,
-        endPosition: range.end
-      });
+      return apiRequest("POST", `/api/segments`, segmentData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`] });
@@ -694,13 +692,13 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     onError: (error: any) => {
       toast({
         title: "Failed to create segment",
-        description: error.message || "Unknown error",
+        description: error.message || "Unable to create segment. Please check your selection and try again.",
         variant: "destructive"
       });
     }
   });
 
-  // Text segment mutation (alias for compatibility)
+  // Direct alias for compatibility
   const createTextSegmentMutation = createSegmentMutation;
 
   const updateSegmentMutation = useMutation({
@@ -754,8 +752,35 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   });
 
   const handleCreateSegment = useCallback((segment: { textReferences: any }) => {
-    createSegmentMutation.mutate(segment);
-  }, [createSegmentMutation]);
+    // Convert legacy format to new format with validation
+    if (!segment.textReferences || typeof segment.textReferences !== 'object') {
+      toast({
+        title: "Invalid segment data",
+        description: "Unable to process segment information",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const firstScript = Object.keys(segment.textReferences)[0];
+    const range = segment.textReferences[firstScript];
+    
+    if (!firstScript || !range || range.start === undefined || range.end === undefined) {
+      toast({
+        title: "Invalid text selection",
+        description: "Please select valid text before creating a segment",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    createSegmentMutation.mutate({
+      chapterId: parseInt(chapterId!),
+      script: firstScript,
+      startPosition: range.start,
+      endPosition: range.end
+    });
+  }, [createSegmentMutation, chapterId]);
 
   const handleUpdateSegment = useCallback((id: number, updates: any) => {
     updateSegmentMutation.mutate({ id, updates });
@@ -1291,6 +1316,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Note: createTextSegmentMutation is already defined above as alias to createSegmentMutation
 
   const handleCreateTextSegment = () => {
+    // Validate inputs before processing
     if (!textSelection || !segmentName.trim()) {
       toast({
         title: "Please select text and provide a segment name",
@@ -1298,14 +1324,31 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       });
       return;
     }
+    
+    if (!contentScript) {
+      toast({
+        title: "Script not selected",
+        description: "Please ensure a script is selected before creating segments",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!chapterId) {
+      toast({
+        title: "Chapter not loaded",
+        description: "Please wait for chapter to load completely",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    // Use direct new format
     createTextSegmentMutation.mutate({
-      textReferences: {
-        [contentScript]: {
-          start: textSelection.start,
-          end: textSelection.end,
-        },
-      },
+      chapterId: parseInt(chapterId),
+      script: contentScript,
+      startPosition: textSelection.start,
+      endPosition: textSelection.end,
     });
   };
 
