@@ -654,10 +654,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // CRUD mutations for segments
   const createSegmentMutation = useMutation({
-    mutationFn: async (segment: { conceptualName: string; textReferences: any }) => {
+    mutationFn: async (segment: { textReferences: any }) => {
       return apiRequest("POST", `/api/admin/segments`, {
         chapterId: parseInt(chapterId!),
-        conceptualName: segment.conceptualName,
         textReferences: segment.textReferences
       });
     },
@@ -724,7 +723,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }
   });
 
-  const handleCreateSegment = useCallback((segment: { conceptualName: string; textReferences: any }) => {
+  const handleCreateSegment = useCallback((segment: { textReferences: any }) => {
     createSegmentMutation.mutate(segment);
   }, [createSegmentMutation]);
 

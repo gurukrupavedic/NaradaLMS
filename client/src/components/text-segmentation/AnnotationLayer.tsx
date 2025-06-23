@@ -31,7 +31,7 @@ interface AnnotationLayerProps {
   currentLanguage: Language;
   segments: TextSegment[];
   selectedSegmentId?: number;
-  onSegmentCreate: (segment: TextSegment) => void;
+  onSegmentCreate: (segment: { textReferences: any }) => void;
   onSegmentUpdate: (id: string, updates: Partial<TextSegment>) => void;
   onSegmentDelete: (id: string) => void;
   onSegmentSelect?: (segmentId: number | undefined) => void;
@@ -153,16 +153,13 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   }, [normalizedText]);
 
   // Create new segment from selection
-  const handleCreateSegment = useCallback((conceptualName: string) => {
+  const handleCreateSegment = useCallback(() => {
     if (!selectedRange) return;
 
-    const newSegment: TextSegment = {
-      id: `segment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      conceptualName,
+    const newSegment = {
       textReferences: {
         [currentLanguage]: selectedRange
-      },
-      order: segments.length
+      }
     };
 
     onSegmentCreate(newSegment);
@@ -213,7 +210,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
               ? 'bg-blue-200 text-blue-900 ring-2 ring-blue-400' 
               : 'bg-yellow-100 text-yellow-900 hover:bg-yellow-200'
           }`}
-          title={segment.conceptualName}
+          title={`Segment ${segment.order + 1}: ${normalizedText.slice(range.start, Math.min(range.end, range.start + 50))}${range.end - range.start > 50 ? '...' : ''}`}
           onClick={() => onSegmentSelect?.(isSelected ? undefined : segment.id)}
         >
           {normalizedText.slice(range.start, range.end)}

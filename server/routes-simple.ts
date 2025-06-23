@@ -364,10 +364,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/segments', async (req, res) => {
     try {
-      const { chapterId, conceptualName, textReferences } = req.body;
+      const { chapterId, textReferences } = req.body;
       const segment = await storage.createTextSegment({
         chapterId,
-        conceptualName,
         textReferences: textReferences || {},
         createdBy: "system"
       });

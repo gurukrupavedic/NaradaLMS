@@ -90,7 +90,7 @@ export const audioFiles = pgTable("audio_files", {
 export const textSegments = pgTable("text_segments", {
   id: serial("id").primaryKey(),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
-  conceptualName: text("conceptual_name").notNull(), // Human-readable segment identifier per Q3
+  conceptualName: text("conceptual_name"), // Optional legacy field, text content serves as identifier
   textReferences: jsonb("text_references").$type<{
     te?: { start: number; end: number }; // Character offsets for Telugu
     hi?: { start: number; end: number }; // Character offsets for Devanagari  

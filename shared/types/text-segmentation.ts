@@ -10,7 +10,7 @@
 
 export interface TextSegment {
   id: number;
-  conceptualName: string;
+  conceptualName?: string; // Optional legacy field, text content serves as identifier
   textReferences: {
     te?: { start: number; end: number };
     hi?: { start: number; end: number };
