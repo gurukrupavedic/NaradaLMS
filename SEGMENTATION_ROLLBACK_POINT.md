@@ -5,14 +5,18 @@
 
 ## Current State Before Changes
 
-### Issue Identified
+### Critical Issues Identified
 - `chapterContent` state is declared but never initialized with data
 - Segmentation tab shows "No content available" message
 - AnnotationLayer receives empty content object `{}`
+- **DUPLICATE FUNCTIONS**: Three versions of `getDisplayText()` exist causing conflicts
+- **DEAD CODE**: `shared/utils/text-utils.ts` contains duplicate utilities
 
 ### Files That Will Be Modified
 1. `client/src/pages/ChapterEditor.tsx` - Fix chapterContent initialization
 2. `shared/utils/text-segmentation.ts` - Add HTML-to-text converter and update getDisplayText
+3. `shared/utils/text-utils.ts` - DELETE entirely (duplicate functions)
+4. `client/src/components/text-segmentation/AnnotationLayer.tsx` - Clean unused imports
 
 ### Current Working State
 - Chapter Text tab: Works correctly with rich text editor
