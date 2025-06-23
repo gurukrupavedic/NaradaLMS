@@ -270,7 +270,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   const [editingDescription, setEditingDescription] = useState("");
 
   // Audio and segmentation state
-  const [selectedAudioFile, setSelectedAudioFile] = useState<any | null>(null);
+  const [selectedAudioFileId, setSelectedAudioFileId] = useState<number | null>(null);
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -542,6 +542,18 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     queryKey: [`/api/admin/audio-files/${chapterId}`],
     enabled: !!chapterId,
   });
+
+  // Initialize selected audio file when audio files load
+  useEffect(() => {
+    if (audioFiles && audioFiles.length > 0 && !selectedAudioFileId) {
+      setSelectedAudioFileId(audioFiles[0].id);
+    }
+  }, [audioFiles, selectedAudioFileId]);
+
+  // Derive selected audio file object
+  const selectedAudioFile = useMemo(() => {
+    return audioFiles?.find(file => file.id === selectedAudioFileId) || null;
+  }, [audioFiles, selectedAudioFileId]);
 
 
 
@@ -1931,9 +1943,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     <div className="flex items-center gap-2">
                       <label className="text-sm font-medium">Audio File:</label>
                       <Select
-                        value={audioFiles[0]?.id.toString() || ''}
+                        value={selectedAudioFileId?.toString() || ''}
                         onValueChange={(value) => {
-                          // TODO: Handle audio file selection
+                          setSelectedAudioFileId(parseInt(value));
                         }}
                       >
                         <SelectTrigger className="w-48">
