@@ -75,12 +75,10 @@ export const useMappingControls = ({
     }
 
     // Count existing mappings for current audio file
+    // Since mappings array now only contains mappings for current audio file,
+    // we just need to count segments that have any mapping
     const existingMappingsForAudioFile = segments.filter(segment =>
-      mappings.some(m => m.segmentId === segment.id && 
-        // Check if mapping belongs to current audio file (assuming mapping has audioFileId)
-        // For now, we'll count all mappings and let the parent handle the warning
-        true
-      )
+      mappings.some(m => m.segmentId === segment.id)
     ).length;
 
     if (existingMappingsForAudioFile > 0 && onSessionStartRequest) {
