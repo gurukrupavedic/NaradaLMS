@@ -63,10 +63,10 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   // Debug logging
   useEffect(() => {
     console.log('AnnotationLayer: content received:', content);
-    console.log('AnnotationLayer: currentLanguage:', currentLanguage);
+    console.log('AnnotationLayer: currentScript:', currentScript);
     console.log('AnnotationLayer: normalizedText:', normalizedText?.substring(0, 100) + '...');
     console.log('AnnotationLayer: segments:', segments);
-  }, [content, currentLanguage, normalizedText, segments]);
+  }, [content, currentScript, normalizedText, segments]);
 
   // Simplified text position calculation with normalization
   const getTextPosition = (selectedText: string): { start: number, end: number } => {

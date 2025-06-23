@@ -2840,7 +2840,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       <Select
                         value={selectedScript}
                         onValueChange={(value: "te" | "hi" | "en") =>
-                          setSelectedLanguage(value)
+                          setSelectedScript(value)
                         }
                         disabled={isPublished}
                       >
