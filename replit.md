@@ -109,7 +109,7 @@ Changelog:
 - June 23, 2025. ROLLBACK POINT: Infinite render loop issue - Application experiencing maximum update depth exceeded error in ChapterEditor.tsx. LinkStatusIcon implementation complete but causing stability issues.
 - June 23, 2025. FIXED: Infinite render loop resolved - Fixed useEffect dependency causing continuous re-renders. Implemented shared LinkStatusIcon component and mapping utilities for consistent status visualization across all tabs.
 - June 23, 2025. ROLLBACK POINT: Segmentation tab icons fix - Application stable except segmentation tab shows all segments as unmapped due to duplicate API route returning wrong data format. Created comprehensive rollback documentation before implementing surgical route fix.
-- June 23, 2025. FIXED: Segmentation tab mapping icons - Removed duplicate API route (lines 611-620) that was overriding correct data format. Segmentation tab now displays proper mapped/unmapped status using AudioMappingDatabase format with segmentId field.
+- June 23, 2025. FIXED: Segmentation tab mapping icons - Removed duplicate API route and fixed SegmentPanel props to receive allChapterMappings data instead of empty array. Icons now display correct mapped/unmapped status for text segments.
 
 ## User Preferences
 

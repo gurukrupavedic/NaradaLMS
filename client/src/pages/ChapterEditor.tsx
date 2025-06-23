@@ -2054,7 +2054,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 <Panel defaultSize={50} minSize={30}>
                   <SegmentPanel
                     segments={segments}
-                    mappings={[]}
+                    mappings={allChapterMappings}
                     currentScript={contentScript}
                     content={chapterContent}
                     currentSegmentId={selectedSegmentId}
