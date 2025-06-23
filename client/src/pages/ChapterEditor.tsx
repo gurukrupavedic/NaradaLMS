@@ -1931,9 +1931,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     <div className="flex items-center gap-2">
                       <label className="text-sm font-medium">Audio File:</label>
                       <Select
-                        value={audioFiles[0]?.id.toString() || ''}
+                        value={selectedAudioFile?.id?.toString() || ''}
                         onValueChange={(value) => {
-                          // TODO: Handle audio file selection
+                          const file = audioFiles.find(f => f.id.toString() === value);
+                          setSelectedAudioFile(file || null);
                         }}
                       >
                         <SelectTrigger className="w-48">
@@ -1983,7 +1984,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
               {audioFiles && audioFiles.length > 0 ? (
                 <ProgressiveMapper
-                  audioUrl={audioFiles[0]?.filename ? `/uploads/${audioFiles[0].filename}` : ''}
+                  audioUrl={selectedAudioFile?.filename ? `/uploads/${selectedAudioFile.filename}` : ''}
                   segments={segments}
                   currentLanguage={contentLanguage}
                   content={chapterContent}
