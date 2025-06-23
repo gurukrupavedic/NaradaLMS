@@ -325,7 +325,7 @@ const FloatingSelectionToolbar: React.FC<{
   return (
     <div
       data-floating-toolbar
-      className="fixed z-50 flex items-center gap-1 bg-white border border-gray-300 rounded-lg shadow-lg p-1"
+      className="fixed z-50 flex items-center gap-1 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-lg p-1 dark:bg-gray-900/80 dark:border-gray-700/50"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
