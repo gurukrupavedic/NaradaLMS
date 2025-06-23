@@ -608,16 +608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Chapter-wide mapping routes (for mapping counts)
-  app.get('/api/mappings/chapter/:chapterId', async (req, res) => {
-    try {
-      const chapterId = parseInt(req.params.chapterId);
-      const mappings = await storage.getSegmentMappingsByChapter(chapterId);
-      res.json(mappings);
-    } catch (error) {
-      console.error('Error fetching mappings by chapter:', error);
-      res.status(500).json({ error: 'Failed to fetch chapter mappings' });
-    }
-  });
+
 
   // Get mapping count for specific audio file
   app.get('/api/mappings/audio/:audioFileId/count', async (req, res) => {
