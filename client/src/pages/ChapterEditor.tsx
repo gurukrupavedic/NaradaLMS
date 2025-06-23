@@ -83,12 +83,12 @@ interface ChapterData {
 interface TextSegment {
   id: number;
   chapterId: number;
-  conceptualName: string;
-  textReferences: {
-    te?: { start: number; end: number };
-    hi?: { start: number; end: number };
-    en?: { start: number; end: number };
-  };
+  script: string;
+  startPosition: number;
+  endPosition: number;
+  order: number;
+  createdBy: string;
+  createdAt: string;
   startTime?: number;
   endTime?: number;
   audioFileId?: number;
@@ -250,6 +250,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     en: "",
   });
 
+  // Content editor script state (moved here to be available for queries)
+  const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
+
   // Segments query for database integration - script-specific
   const { data: segments = [], refetch: refetchSegments, isLoading: segmentsLoading } = useQuery({
     queryKey: [`/api/segments/${chapterId}/${contentScript}`],
@@ -314,10 +317,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   } | null>(null);
   const [segmentName, setSegmentName] = useState("");
 
-  // Content editor script state
-  const [contentScript, setContentScript] = useState<"te" | "hi" | "en">(
-    "te",
-  );
+  // Script state already declared above before segments query
 
   // Active tab state for proper tab management
   const [activeTab, setActiveTab] = useState<string>("content");
