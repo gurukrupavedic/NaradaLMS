@@ -2,6 +2,7 @@ import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./database-storage";
+import { FILE_UPLOAD } from "../shared/constants";
 // Removed schema validation for simplified implementation
 import multer from "multer";
 import path from "path";
@@ -17,7 +18,7 @@ if (!fs.existsSync(uploadsDir)) {
 const upload = multer({
   dest: uploadsDir,
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB limit
+    fileSize: FILE_UPLOAD.MAX_SIZE_BYTES,
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('audio/')) {
@@ -28,6 +29,11 @@ const upload = multer({
   },
 });
 
+/**
+ * Register API routes for the Vedic LMS application
+ * @param app - Express application instance
+ * @returns HTTP server instance
+ */
 export async function registerRoutes(app: Express): Promise<Server> {
   // Static file serving for uploaded audio files
   app.use('/uploads', express.static(uploadsDir));
@@ -43,16 +49,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/tracks', async (req, res) => {
-    try {
-      const tracks = await storage.getAllTracks();
-      res.json(tracks);
-    } catch (error) {
-      console.error("Error fetching tracks:", error);
-      res.status(500).json({ message: "Failed to fetch tracks" });
-    }
-  });
-
+  /**
+   * GET /api/tracks/:id
+   * Get specific track by ID
+   * @param id - Track identifier in URL params
+   * @returns Track object or 404 if not found
+   */
   app.get('/api/tracks/:id', async (req, res) => {
     try {
       const track = await storage.getTrack(parseInt(req.params.id));

@@ -9,30 +9,143 @@ const memStorage = new MemStorage();
 
 export interface IStorage {
   // User operations (required for Replit Auth)
+  /**
+   * Retrieve user by ID
+   * @param id - User identifier
+   * @returns Promise resolving to user object or null
+   */
   getUser(id: string): Promise<any>;
+  
+  /**
+   * Create or update user record
+   * @param user - User data object
+   * @returns Promise resolving to updated user
+   */
   upsertUser(user: any): Promise<any>;
+  
+  /**
+   * Get all users in the system
+   * @returns Promise resolving to array of user objects
+   */
   getAllUsers(): Promise<any[]>;
+  
+  /**
+   * Update user role assignments
+   * @param userId - User identifier
+   * @param roles - Array of role strings
+   * @returns Promise resolving to updated user
+   */
   updateUserRoles(userId: string, roles: string[]): Promise<any>;
+  
+  /**
+   * Update user status (active, inactive, etc.)
+   * @param userId - User identifier  
+   * @param status - New status string
+   * @returns Promise resolving to updated user
+   */
   updateUserStatus(userId: string, status: string): Promise<any>;
   
   // Track operations
+  /**
+   * Retrieve all tracks ordered by sequence
+   * @returns Promise resolving to array of track objects
+   */
   getAllTracks(): Promise<any[]>;
+  
+  /**
+   * Get specific track by ID
+   * @param id - Track identifier
+   * @returns Promise resolving to track or undefined if not found
+   */
   getTrack(id: number): Promise<any | undefined>;
+  
+  /**
+   * Create new learning track
+   * @param track - Track data object
+   * @returns Promise resolving to created track
+   */
   createTrack(track: any): Promise<any>;
+  
+  /**
+   * Update existing track
+   * @param id - Track identifier
+   * @param track - Updated track data
+   * @returns Promise resolving to updated track
+   */
   updateTrack(id: number, track: any): Promise<any>;
+  
+  /**
+   * Delete track and associated content
+   * @param id - Track identifier
+   * @returns Promise resolving when deletion complete
+   */
   deleteTrack(id: number): Promise<void>;
 
   // Chapter operations
+  /**
+   * Get all chapters for a specific track
+   * @param trackId - Track identifier
+   * @returns Promise resolving to array of chapter objects
+   */
   getChaptersByTrack(trackId: number): Promise<any[]>;
+  
+  /**
+   * Get specific chapter by ID
+   * @param id - Chapter identifier
+   * @returns Promise resolving to chapter or undefined if not found
+   */
   getChapter(id: number): Promise<any | undefined>;
+  
+  /**
+   * Create new chapter in a track
+   * @param chapter - Chapter data object
+   * @returns Promise resolving to created chapter
+   */
   createChapter(chapter: any): Promise<any>;
+  
+  /**
+   * Update existing chapter content
+   * @param id - Chapter identifier
+   * @param chapter - Updated chapter data
+   * @returns Promise resolving to updated chapter
+   */
   updateChapter(id: number, chapter: any): Promise<any>;
+  
+  /**
+   * Delete chapter and associated content
+   * @param id - Chapter identifier
+   * @returns Promise resolving when deletion complete
+   */
   deleteChapter(id: number): Promise<void>;
 
   // Audio file operations
+  /**
+   * Get all audio files for a specific chapter
+   * @param chapterId - Chapter identifier
+   * @returns Promise resolving to array of audio file objects
+   */
   getAudioFilesByChapter(chapterId: number): Promise<any[]>;
+  
+  /**
+   * Create new audio file record
+   * @param audioFile - Audio file data object
+   * @returns Promise resolving to created audio file
+   */
   createAudioFile(audioFile: any): Promise<any>;
+  
+  /**
+   * Update audio file metadata
+   * @param id - Audio file identifier
+   * @param audioFile - Updated audio file data
+   * @returns Promise resolving to updated audio file
+   */
   updateAudioFile(id: number, audioFile: any): Promise<any>;
+  
+  /**
+   * Delete audio file and associated mappings
+   * @param id - Audio file identifier
+   * @returns Promise resolving when deletion complete
+   */
   deleteAudioFile(id: number): Promise<void>;
 
   // Text segment operations
