@@ -559,17 +559,26 @@ export class DatabaseStorage implements IStorage {
     if (!this.initialized) return memStorage.createTextSegment(segment);
     
     try {
-      // Get next order value for this chapter
+      // Get next order value for this chapter and script
       const maxOrderResult = await db
         .select({ maxOrder: max(textSegments.order) })
         .from(textSegments)
-        .where(eq(textSegments.chapterId, segment.chapterId));
+        .where(
+          and(
+            eq(textSegments.chapterId, segment.chapterId),
+            eq(textSegments.script, segment.script)
+          )
+        );
       
       const nextOrder = (maxOrderResult[0]?.maxOrder ?? -1) + 1;
       
       const [newSegment] = await db.insert(textSegments).values({
-        ...segment,
-        order: nextOrder,
+        chapterId: segment.chapterId,
+        script: segment.script,
+        startPosition: segment.startPosition,
+        endPosition: segment.endPosition,
+        order: segment.order || nextOrder,
+        createdBy: segment.createdBy || "system",
         createdAt: new Date()
       }).returning();
       return newSegment;

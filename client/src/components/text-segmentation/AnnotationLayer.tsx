@@ -189,7 +189,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     let lastIndex = 0;
 
     scriptSegments.forEach((segment, index) => {
-      const range = segment.textReferences[currentScript]!;
+      const range = { start: segment.startPosition, end: segment.endPosition };
       
       // Add text before this segment
       if (range.start > lastIndex) {

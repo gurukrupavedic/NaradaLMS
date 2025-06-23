@@ -61,7 +61,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
   }, [currentSegmentId, onSegmentSelect]);
 
   // Filter segments for current script
-  const currentScriptSegments = getSegmentsForScript(segments, currentScript);
+  const currentScriptSegments = segments; // Already script-specific from API
 
   // Count mapped segments
   const mappedCount = currentScriptSegments.filter(segment => 

@@ -250,10 +250,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     en: "",
   });
 
-  // Segments query for database integration
+  // Segments query for database integration - script-specific
   const { data: segments = [], refetch: refetchSegments, isLoading: segmentsLoading } = useQuery({
-    queryKey: [`/api/segments/${chapterId}`],
-    enabled: !!chapterId
+    queryKey: [`/api/segments/${chapterId}/${contentScript}`],
+    enabled: !!chapterId && !!contentScript
   });
 
   // Segment selection state
@@ -1311,13 +1311,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
     createTextSegmentMutation.mutate({
       chapterId: parseInt(chapterId!),
-      conceptualName: segmentName.trim(),
-      textReferences: {
-        [selectedScript]: {
-          start: textSelection.start,
-          end: textSelection.end,
-        },
-      },
+      script: selectedScript,
+      startPosition: textSelection.start,
+      endPosition: textSelection.end,
     });
   };
 
