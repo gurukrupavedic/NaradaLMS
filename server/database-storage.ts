@@ -649,8 +649,11 @@ export class DatabaseStorage implements IStorage {
         ...mapping,
         createdAt: new Date()
       }).returning();
+      console.log("Audio mapping created successfully:", newMapping);
       return newMapping;
     } catch (error) {
+      console.error("Database mapping creation failed:", error);
+      console.error("Mapping data:", mapping);
       return memStorage.createAudioMapping(mapping);
     }
   }

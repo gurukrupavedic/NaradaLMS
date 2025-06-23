@@ -2103,7 +2103,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                         segmentId: parseInt(mapping.segmentId),
                         audioFileId: selectedAudioFile.id,
                         startTime: mapping.startTime,
-                        endTime: mapping.endTime
+                        endTime: mapping.endTime,
+                        createdBy: "system"
                       });
                     }}
                     onMappingUpdate={(segmentId, updates) => {
