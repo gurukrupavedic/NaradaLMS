@@ -206,7 +206,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
       parts.push(
         <span
           key={segment.id}
-          className={`relative rounded px-1 py-0.5 cursor-pointer transition-colors ${
+          className={`relative rounded px-1 py-0.5 cursor-default select-none transition-colors ${
             isSelected 
               ? 'bg-blue-200 text-blue-900 ring-2 ring-blue-400' 
               : 'bg-yellow-100 text-yellow-900 hover:bg-yellow-200'
