@@ -274,7 +274,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 // Custom floating toolbar component with proper positioning near text selection
 const FloatingSelectionToolbar: React.FC<{
   segments: TextSegment[];
-  onCreateSegment: (segmentName: string) => void;
+  onCreateSegment: () => void;
   onCancel: () => void;
 }> = ({ segments, onCreateSegment, onCancel }) => {
   const [position, setPosition] = useState({ top: 0, left: 0 });
