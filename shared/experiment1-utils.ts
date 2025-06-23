@@ -30,8 +30,6 @@ export const getSegmentText = (
   maxLength: number = 50
 ): string => {
   const range = segment.textReferences[language];
-  // Import getDisplayText from text-segmentation utils
-  const { getDisplayText } = require('./utils/text-segmentation');
   const text = getDisplayText(content, language);
   
   if (!range || !text) {
@@ -142,9 +140,27 @@ const isContentEntryLocal = (content: any): content is { display: string; segmen
   return typeof content === 'object' && content !== null && 'display' in content && 'segmentation' in content;
 };
 
-// getDisplayText and getSegmentationText functions removed - using single implementation from shared/utils/text-segmentation.ts
+/**
+ * Get text content with normalization and backward compatibility
+ * @param content - ContentMap containing language content
+ * @param language - Target language
+ * @returns Normalized text content for the specified language
+ */
+export const getDisplayText = (content: ContentMap, language: Language): string => {
+  const entry = content[language];
+  if (isContentEntryLocal(entry)) {
+    return normalizeLineBreaks(entry.display);
+  }
+  return entry ? normalizeLineBreaks(entry) : '';
+};
 
 /**
- * Re-export getDisplayText for backward compatibility with experimental components
+ * Get segmentation text (same as display text with normalization approach)
+ * @param content - ContentMap containing language content
+ * @param language - Target language
+ * @returns Normalized text for segmentation (same as display)
  */
-export { getDisplayText } from './utils/text-segmentation';
+export const getSegmentationText = (content: ContentMap, language: Language): string => {
+  // With normalization approach, segmentation text is same as display text
+  return getDisplayText(content, language);
+};

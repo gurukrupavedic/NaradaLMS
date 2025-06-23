@@ -59,7 +59,29 @@ export const filterSegmentsByLanguage = (
   });
 };
 
-// getDisplayText function removed - using single implementation from shared/utils/text-segmentation.ts
+/**
+ * Extracts display text from content map for a specific language
+ * @param content - The content map containing text for all languages
+ * @param language - The target language
+ * @returns The text content for the specified language or empty string
+ */
+export const getDisplayText = (content: ContentMap, language: Language): string => {
+  const languageContent = content[language];
+  
+  if (!languageContent) {
+    return '';
+  }
+  
+  if (typeof languageContent === 'string') {
+    return languageContent;
+  }
+  
+  if (isContentEntry(languageContent)) {
+    return languageContent.content || '';
+  }
+  
+  return '';
+};
 
 /**
  * Finds all audio mappings for a specific text segment
