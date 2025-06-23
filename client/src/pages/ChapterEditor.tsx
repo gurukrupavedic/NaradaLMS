@@ -502,7 +502,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Update chapter metadata mutation
   const updateChapterMetadataMutation = useMutation({
     mutationFn: async ({ title, description }: { title: string; description: string }) => {
-      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}`, {
+      await apiRequest("PATCH", `/api/chapters/${chapterId}`, {
         title,
         description,
       });
@@ -551,7 +551,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       ? selectedAudioFile?.id
       : selectedAudioFile;
   const { data: mediaSegments = [] } = useQuery({
-    queryKey: [`/api/admin/media-segments/${selectedAudioFileId}`],
+    queryKey: [`/api/media-segments/${selectedAudioFileId}`],
     enabled: !!selectedAudioFileId,
   });
 
@@ -583,7 +583,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     onSuccess: () => {
       toast({ title: "Audio file uploaded successfully" });
       queryClient.invalidateQueries({
-        queryKey: [`/api/admin/audio-files/${chapterId}`],
+        queryKey: [`/api/audio-files/${chapterId}`],
       });
     },
     onError: (error: any) => {
@@ -617,7 +617,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       setEditingSegmentData(null);
       if (selectedAudioFile?.id) {
         queryClient.invalidateQueries({
-          queryKey: [`/api/admin/media-segments/${selectedAudioFile.id}`],
+          queryKey: [`/api/media-segments/${selectedAudioFile.id}`],
         });
       }
     },
@@ -639,7 +639,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       toast({ title: "Segment deleted successfully" });
       if (selectedAudioFile?.id) {
         queryClient.invalidateQueries({
-          queryKey: [`/api/admin/media-segments/${selectedAudioFile.id}`],
+          queryKey: [`/api/media-segments/${selectedAudioFile.id}`],
         });
       }
     },
@@ -661,7 +661,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}`] });
       toast({ title: "Segment created successfully" });
     },
     onError: (error: any) => {
@@ -678,7 +678,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       return apiRequest("PATCH", `/api/segments/${id}`, updates);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}`] });
       toast({ title: "Segment updated successfully" });
     },
     onError: (error: any) => {
@@ -695,7 +695,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       return apiRequest("DELETE", `/api/segments/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}`] });
       toast({ title: "Segment deleted successfully" });
     },
     onError: (error: any) => {
@@ -719,7 +719,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}`] });
     }
   });
 
@@ -861,7 +861,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [`/api/admin/media-segments/${selectedAudioFileId}`],
+        queryKey: [`/api/media-segments/${selectedAudioFileId}`],
       });
       setTimeMarks([]);
       setSelectedMark(null);
@@ -882,13 +882,13 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Delete audio file mutation
   const deleteAudioMutation = useMutation({
     mutationFn: async (fileId: number) => {
-      await apiRequest("DELETE", `/api/admin/audio-files/${fileId}`);
+      await apiRequest("DELETE", `/api/audio-files/${fileId}`);
       return fileId;
     },
     onSuccess: (deletedFileId) => {
       toast({ title: "Audio file deleted successfully" });
       queryClient.invalidateQueries({
-        queryKey: [`/api/admin/audio-files/${chapterId}`],
+        queryKey: [`/api/audio-files/${chapterId}`],
       });
       if (selectedAudioFile === deletedFileId) {
         setSelectedAudioFile(null);
@@ -914,14 +914,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       fileId: number;
       newName: string;
     }) => {
-      await apiRequest("PATCH", `/api/admin/audio-files/${fileId}`, {
+      await apiRequest("PATCH", `/api/audio-files/${fileId}`, {
         displayName: newName,
       });
     },
     onSuccess: () => {
       toast({ title: "Filename updated successfully" });
       queryClient.invalidateQueries({
-        queryKey: [`/api/admin/audio-files/${chapterId}`],
+        queryKey: [`/api/audio-files/${chapterId}`],
       });
       setEditingFileId(null);
       setEditingFileName("");
@@ -1182,12 +1182,12 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       conceptualName: string;
       textReferences: Record<string, { start: number; end: number }>;
     }) => {
-      return await apiRequest("POST", "/api/admin/segments", segmentData);
+      return await apiRequest("POST", "/api/segments", segmentData);
     },
     onSuccess: () => {
       toast({ title: "Text segment created successfully" });
       queryClient.invalidateQueries({
-        queryKey: [`/api/admin/segments/${chapterId}`],
+        queryKey: [`/api/segments/${chapterId}`],
       });
       setTextSelection(null);
       setSegmentName("");
@@ -1231,12 +1231,12 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       startTime: number;
       endTime: number;
     }) => {
-      return await apiRequest("POST", "/api/admin/mappings", mappingData);
+      return await apiRequest("POST", "/api/mappings", mappingData);
     },
     onSuccess: () => {
       toast({ title: "Audio mapping created successfully" });
       queryClient.invalidateQueries({
-        queryKey: [`/api/admin/segments/${chapterId}`],
+        queryKey: [`/api/segments/${chapterId}`],
       });
     },
     onError: (error: any) => {
@@ -1251,7 +1251,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Create media segment mutation
   const createMediaSegmentMutation = useMutation({
     mutationFn: async (segment: any) => {
-      const response = await fetch("/api/admin/media-segments", {
+      const response = await fetch("/api/media-segments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(segment),
@@ -1261,7 +1261,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["/api/admin/media-segments"],
+        queryKey: ["/api/media-segments"],
       });
       toast({ title: "Media segment created successfully" });
       setMediaSegmentName("");
@@ -1399,7 +1399,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   if (trackId) {
                     // Invalidate chapters query to refresh data
                     queryClient.invalidateQueries({
-                      queryKey: [`/api/admin/chapters/${trackId}`],
+                      queryKey: [`/api/chapters/${trackId}`],
                     });
                     // Navigate to management track page
                     setLocation(`/manage/tracks/${trackId}`);
@@ -2108,7 +2108,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                           if (file?.id) {
                             queryClient.invalidateQueries({
                               queryKey: [
-                                `/api/admin/media-segments/${file.id}`,
+                                `/api/media-segments/${file.id}`,
                               ],
                             });
                           }

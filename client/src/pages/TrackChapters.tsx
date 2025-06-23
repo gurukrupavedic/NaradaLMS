@@ -38,14 +38,14 @@ export default function TrackChapters() {
 
   // Fetch track info
   const { data: tracks } = useQuery<any[]>({
-    queryKey: ["/api/admin/tracks"],
+    queryKey: ["/api/tracks"],
   });
   
   const track = tracks?.find(t => t.id.toString() === trackId);
 
   // Fetch chapters for this track
   const { data: chapters = [], isLoading } = useQuery<Chapter[]>({
-    queryKey: [`/api/admin/chapters/${trackId}`],
+    queryKey: [`/api/chapters/${trackId}`],
     enabled: !!trackId,
   });
 
@@ -57,14 +57,14 @@ export default function TrackChapters() {
   // Create chapter mutation
   const createChapterMutation = useMutation({
     mutationFn: async (chapterData: { title: string; description: string; trackId: number }) => {
-      const response = await apiRequest("POST", "/api/admin/chapters", chapterData);
+      const response = await apiRequest("POST", "/api/chapters", chapterData);
       return response.json();
     },
     onSuccess: () => {
       toast({ title: "Chapter created successfully" });
       setCreateChapterModalOpen(false);
       setNewChapter({ title: "", description: "" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${trackId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chapters/${trackId}`] });
     },
     onError: (error: any) => {
       toast({ title: "Failed to create chapter", description: error.message, variant: "destructive" });
@@ -74,11 +74,11 @@ export default function TrackChapters() {
   // Delete chapter mutation
   const deleteChapterMutation = useMutation({
     mutationFn: async (chapterId: number) => {
-      await apiRequest("DELETE", `/api/admin/chapters/${chapterId}`);
+      await apiRequest("DELETE", `/api/chapters/${chapterId}`);
     },
     onSuccess: () => {
       toast({ title: "Chapter deleted successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${trackId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chapters/${trackId}`] });
     },
     onError: (error: any) => {
       toast({ title: "Failed to delete chapter", description: error.message, variant: "destructive" });
@@ -88,11 +88,11 @@ export default function TrackChapters() {
   // Toggle chapter status mutation
   const toggleStatusMutation = useMutation({
     mutationFn: async ({ chapterId, status }: { chapterId: number; status: 'draft' | 'published' }) => {
-      await apiRequest("PATCH", `/api/admin/chapters/${chapterId}/status`, { status });
+      await apiRequest("PATCH", `/api/chapters/${chapterId}/status`, { status });
     },
     onSuccess: () => {
       toast({ title: "Chapter status updated successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${trackId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chapters/${trackId}`] });
     },
     onError: (error: any) => {
       toast({ title: "Failed to update chapter status", description: error.message, variant: "destructive" });
@@ -102,12 +102,12 @@ export default function TrackChapters() {
   // Move chapter mutation
   const moveChapterMutation = useMutation({
     mutationFn: async ({ chapterId, direction }: { chapterId: number; direction: 'up' | 'down' }) => {
-      const response = await apiRequest("POST", `/api/admin/chapters/${chapterId}/move`, { direction });
+      const response = await apiRequest("POST", `/api/chapters/${chapterId}/move`, { direction });
       return response.json();
     },
     onSuccess: () => {
       toast({ title: "Chapter order updated successfully" });
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${trackId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chapters/${trackId}`] });
     },
     onError: (error: any) => {
       toast({ title: "Failed to update chapter order", description: error.message, variant: "destructive" });
@@ -129,7 +129,7 @@ export default function TrackChapters() {
 
   const handleEditChapter = (chapterId: number) => {
     // Invalidate chapter details query to ensure fresh data loads
-    queryClient.invalidateQueries({ queryKey: [`/api/admin/chapters/${chapterId}/details`] });
+    queryClient.invalidateQueries({ queryKey: [`/api/chapters/${chapterId}/details`] });
     // Navigate to chapter editor
     setLocation(`/manage/tracks/${trackId}/chapters/${chapterId}`);
   };

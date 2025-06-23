@@ -58,12 +58,12 @@ function Experiment1_SegmentationStudio() {
 
   // Data fetching
   const { data: chapter, isLoading: chapterLoading } = useQuery<Chapter>({
-    queryKey: [`/api/admin/chapters/${chapterId}/details`],
+    queryKey: [`/api/chapters/${chapterId}/details`],
     enabled: !!chapterId,
   });
 
   const { data: audioFiles = [], isLoading: audioLoading } = useQuery<AudioFile[]>({
-    queryKey: [`/api/admin/audio-files/${chapterId}`],
+    queryKey: [`/api/audio-files/${chapterId}`],
     enabled: !!chapterId,
   });
 
@@ -73,7 +73,7 @@ function Experiment1_SegmentationStudio() {
       const formData = new FormData();
       formData.append('audio', file);
       formData.append('chapterId', chapterId!);
-      const response = await fetch(`/api/admin/audio-files/${chapterId}/upload`, {
+      const response = await fetch(`/api/audio-files/${chapterId}/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -81,7 +81,7 @@ function Experiment1_SegmentationStudio() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/admin/audio-files/${chapterId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/audio-files/${chapterId}`] });
       toast({ title: "Audio Uploaded", description: "Audio file has been uploaded successfully" });
     },
     onError: () => {

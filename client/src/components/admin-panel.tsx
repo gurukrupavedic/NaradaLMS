@@ -58,7 +58,7 @@ export default function AdminPanel({ user }: AdminPanelProps) {
 
   // Queries
   const { data: users = [], isLoading } = useQuery<User[]>({
-    queryKey: ['/api/admin/users'],
+    queryKey: ['/api/users'],
   });
 
   // Forms
@@ -77,10 +77,10 @@ export default function AdminPanel({ user }: AdminPanelProps) {
     mutationFn: async (data: z.infer<typeof inviteUserSchema>) => {
       // This would typically send an invitation email
       // For now, we'll create the user directly with pending status
-      await apiRequest('POST', '/api/admin/invite-user', data);
+      await apiRequest('POST', '/api/invite-user', data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       setShowInviteUser(false);
       inviteForm.reset();
       toast({
@@ -110,10 +110,10 @@ export default function AdminPanel({ user }: AdminPanelProps) {
 
   const updateUserRolesMutation = useMutation({
     mutationFn: async ({ userId, roles }: { userId: string; roles: string[] }) => {
-      await apiRequest('PUT', `/api/admin/users/${userId}/roles`, { roles });
+      await apiRequest('PUT', `/api/users/${userId}/roles`, { roles });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       toast({
         title: "Success",
         description: "User roles updated successfully",
@@ -130,10 +130,10 @@ export default function AdminPanel({ user }: AdminPanelProps) {
 
   const updateUserStatusMutation = useMutation({
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
-      await apiRequest('PUT', `/api/admin/users/${userId}/status`, { status });
+      await apiRequest('PUT', `/api/users/${userId}/status`, { status });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       toast({
         title: "Success",
         description: "User status updated successfully",

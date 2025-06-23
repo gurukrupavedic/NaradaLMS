@@ -36,7 +36,7 @@ export default function ContentManagement() {
 
   // Fetch tracks
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
-    queryKey: ["/api/admin/tracks"],
+    queryKey: ["/api/tracks"],
   });
 
   // Memoized sorted tracks for performance
@@ -47,14 +47,14 @@ export default function ContentManagement() {
   // Create track mutation
   const createTrackMutation = useMutation({
     mutationFn: async (trackData: { title: string; description: string }) => {
-      const response = await apiRequest("POST", "/api/admin/tracks", trackData);
+      const response = await apiRequest("POST", "/api/tracks", trackData);
       return response.json();
     },
     onSuccess: () => {
       toast({ title: "Track created successfully" });
       setCreateTrackModalOpen(false);
       setNewTrack({ title: "", description: "" });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
     },
     onError: (error: any) => {
       toast({ title: "Failed to create track", description: error.message, variant: "destructive" });
@@ -64,7 +64,7 @@ export default function ContentManagement() {
   // Edit track mutation
   const editTrackMutation = useMutation({
     mutationFn: async (trackData: { id: number; title: string; description: string }) => {
-      const response = await apiRequest("PUT", `/api/admin/tracks/${trackData.id}`, {
+      const response = await apiRequest("PUT", `/api/tracks/${trackData.id}`, {
         title: trackData.title,
         description: trackData.description
       });
@@ -74,7 +74,7 @@ export default function ContentManagement() {
       toast({ title: "Track updated successfully" });
       setEditTrackModalOpen(false);
       setEditingTrack(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
     },
     onError: (error: any) => {
       toast({ title: "Failed to update track", description: error.message, variant: "destructive" });
@@ -84,11 +84,11 @@ export default function ContentManagement() {
   // Delete track mutation
   const deleteTrackMutation = useMutation({
     mutationFn: async (trackId: number) => {
-      await apiRequest("DELETE", `/api/admin/tracks/${trackId}`);
+      await apiRequest("DELETE", `/api/tracks/${trackId}`);
     },
     onSuccess: () => {
       toast({ title: "Track deleted successfully" });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
     },
     onError: (error: any) => {
       toast({ title: "Failed to delete track", description: error.message, variant: "destructive" });
@@ -98,12 +98,12 @@ export default function ContentManagement() {
   // Move track mutation
   const moveTrackMutation = useMutation({
     mutationFn: async ({ trackId, direction }: { trackId: number; direction: 'up' | 'down' }) => {
-      const response = await apiRequest("POST", `/api/admin/tracks/${trackId}/move`, { direction });
+      const response = await apiRequest("POST", `/api/tracks/${trackId}/move`, { direction });
       return response.json();
     },
     onSuccess: () => {
       toast({ title: "Track order updated successfully" });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tracks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
     },
     onError: (error: any) => {
       toast({ title: "Failed to update track order", description: error.message, variant: "destructive" });
