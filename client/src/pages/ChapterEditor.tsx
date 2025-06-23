@@ -48,6 +48,8 @@ import { AnnotationLayer } from "@/components/text-segmentation/AnnotationLayer"
 import { SegmentPanel } from "@/components/text-segmentation/SegmentPanel";
 import { ProgressiveMapper } from "@/components/audio-mapping/ProgressiveMapper";
 import { ConnectedCirclesIcon } from "@shared/components/icons";
+import { progressiveMappingApi } from "@/services/progressiveMappingApi";
+import type { AudioMappingDatabase, convertDatabaseMapping, convertToDatabase } from "@shared/types/text-segmentation";
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 interface ChapterData {
@@ -256,6 +258,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Segment selection state
   const [selectedSegmentId, setSelectedSegmentId] = useState<number | undefined>(undefined);
+
+  // Mapping state for progressive mapping
+  const [mappings, setMappings] = useState<AudioMappingDatabase[]>([]);
 
   // Content state for chapter content
   const [chapterContent, setChapterContent] = useState<{
@@ -542,6 +547,18 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     queryKey: [`/api/audio-files/${chapterId}`],
     enabled: !!chapterId,
   });
+
+  // Fetch mappings for the chapter
+  const { data: chapterMappings = [], refetch: refetchMappings } = useQuery<AudioMappingDatabase[]>({
+    queryKey: [`/api/mappings/chapter/${chapterId}`],
+    enabled: !!chapterId,
+    queryFn: () => progressiveMappingApi.getMappingsByChapter(parseInt(chapterId!))
+  });
+
+  // Update mappings state when data changes
+  useEffect(() => {
+    setMappings(chapterMappings);
+  }, [chapterMappings]);
 
 
 
@@ -934,6 +951,88 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       });
     },
   });
+
+  // === MAPPING OPERATIONS SECTION ===
+
+  // Mapping validation utility
+  const validateMapping = (mapping: Partial<AudioMappingDatabase>) => {
+    if (!mapping.segmentId || !mapping.audioFileId) {
+      throw new Error("Missing required mapping data");
+    }
+    if (mapping.startTime !== undefined && mapping.endTime !== undefined) {
+      if (mapping.startTime < 0 || mapping.endTime <= mapping.startTime) {
+        throw new Error("Invalid timestamp range");
+      }
+    }
+  };
+
+  // Create mapping mutation
+  const createMappingMutation = useMutation({
+    mutationFn: async (mappingData: Omit<AudioMappingDatabase, 'id' | 'createdBy' | 'createdAt'>) => {
+      validateMapping(mappingData);
+      return progressiveMappingApi.createMapping(mappingData);
+    },
+    onSuccess: () => {
+      refetchMappings();
+      toast({ title: "Mapping created successfully" });
+    },
+    onError: (error: any) => {
+      console.error('Mapping creation failed:', error);
+      toast({
+        title: "Failed to create mapping",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Update mapping mutation
+  const updateMappingMutation = useMutation({
+    mutationFn: async ({ segmentId, updates }: { segmentId: number; updates: { startTime?: number; endTime?: number } }) => {
+      if (updates.startTime !== undefined && updates.endTime !== undefined) {
+        if (updates.startTime < 0 || updates.endTime <= updates.startTime) {
+          throw new Error("Invalid timestamp range");
+        }
+      }
+      return progressiveMappingApi.updateMapping(segmentId, updates);
+    },
+    onSuccess: () => {
+      refetchMappings();
+      toast({ title: "Mapping updated successfully" });
+    },
+    onError: (error: any) => {
+      console.error('Mapping update failed:', error);
+      toast({
+        title: "Failed to update mapping",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete mapping mutation
+  const deleteMappingMutation = useMutation({
+    mutationFn: async ({ audioFileId, segmentId }: { audioFileId: number; segmentId: number }) => {
+      return progressiveMappingApi.deleteMapping(audioFileId, segmentId);
+    },
+    onSuccess: () => {
+      refetchMappings();
+      toast({ title: "Mapping deleted successfully" });
+    },
+    onError: (error: any) => {
+      console.error('Mapping deletion failed:', error);
+      toast({
+        title: "Failed to delete mapping",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Loading state for mapping operations
+  const isMappingLoading = createMappingMutation.isPending || 
+                          updateMappingMutation.isPending || 
+                          deleteMappingMutation.isPending;
 
   // Audio control functions
   const handlePlayPause = async () => {

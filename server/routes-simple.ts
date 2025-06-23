@@ -525,6 +525,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Audio mapping routes
+  
+  // Get all mappings for a chapter
+  app.get('/api/mappings/chapter/:chapterId', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      
+      // Get all segments for the chapter first
+      const segments = await storage.getSegmentsByChapter(chapterId);
+      const allMappings = [];
+      
+      // Fetch mappings for each segment
+      for (const segment of segments) {
+        const mappings = await storage.getMappingsBySegment(segment.id);
+        allMappings.push(...mappings);
+      }
+      
+      res.json(allMappings);
+    } catch (error) {
+      console.error("Error fetching chapter mappings:", error);
+      res.status(500).json({ message: "Failed to fetch chapter mappings" });
+    }
+  });
+
   app.get('/api/mappings/audio/:audioFileId', async (req, res) => {
     try {
       const audioFileId = parseInt(req.params.audioFileId);
@@ -554,6 +577,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating audio mapping:", error);
       res.status(500).json({ message: "Failed to create audio mapping" });
+    }
+  });
+
+  // Update mapping timestamps
+  app.patch('/api/mappings/:segmentId', async (req, res) => {
+    try {
+      const segmentId = parseInt(req.params.segmentId);
+      const { startTime, endTime } = req.body;
+      
+      // Get existing mapping to preserve audioFileId
+      const existingMappings = await storage.getMappingsBySegment(segmentId);
+      if (existingMappings.length === 0) {
+        return res.status(404).json({ message: "Mapping not found" });
+      }
+      
+      const existingMapping = existingMappings[0];
+      
+      // Delete old mapping and create new one with updated timestamps
+      await storage.deleteAudioMapping(existingMapping.audioFileId, segmentId);
+      const updatedMapping = await storage.createAudioMapping({
+        audioFileId: existingMapping.audioFileId,
+        segmentId,
+        startTime: startTime ?? existingMapping.startTime,
+        endTime: endTime ?? existingMapping.endTime,
+        createdBy: existingMapping.createdBy
+      });
+      
+      res.json(updatedMapping);
+    } catch (error) {
+      console.error("Error updating mapping:", error);
+      res.status(500).json({ message: "Failed to update mapping" });
     }
   });
 

@@ -25,6 +25,31 @@ export interface AudioMapping {
   endTime: number;
 }
 
+// Database-compatible interface for backend operations
+export interface AudioMappingDatabase {
+  id?: number;
+  segmentId: number;        // Database format (integer)
+  audioFileId: number;
+  startTime: number;
+  endTime: number;
+  createdBy?: string;
+  createdAt?: string;
+}
+
+// Conversion utilities for type compatibility
+export const convertDatabaseMapping = (db: AudioMappingDatabase): AudioMapping => ({
+  segmentId: db.segmentId.toString(),
+  startTime: db.startTime,
+  endTime: db.endTime
+});
+
+export const convertToDatabase = (mapping: AudioMapping, audioFileId: number): Omit<AudioMappingDatabase, 'id' | 'createdBy' | 'createdAt'> => ({
+  segmentId: parseInt(mapping.segmentId),
+  audioFileId,
+  startTime: mapping.startTime,
+  endTime: mapping.endTime
+});
+
 export interface AudioFile {
   id: number;
   filename: string;
