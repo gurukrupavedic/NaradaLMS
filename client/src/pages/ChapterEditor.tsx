@@ -1235,7 +1235,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     if (!selectedText) return;
 
     // Calculate character positions within the full text (extract plain text from HTML for position calculation)
-    const fullTextContent = textContent[selectedLanguage] || "";
+    const fullTextContent = textContent[selectedScript] || "";
     const fullText = isHtmlContent(fullTextContent) 
       ? extractPlainText(fullTextContent) 
       : fullTextContent;
@@ -1313,7 +1313,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       chapterId: parseInt(chapterId!),
       conceptualName: segmentName.trim(),
       textReferences: {
-        [selectedLanguage]: {
+        [selectedScript]: {
           start: textSelection.start,
           end: textSelection.end,
         },
@@ -1706,7 +1706,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
               <div className="h-[calc(100vh-300px)]">
                 <RichTextEditor
-                  value={textContent[contentLanguage] || ''}
+                  value={textContent[contentScript] || ''}
                   onChange={(html) =>
                     setTextContent((prev) => ({
                       ...prev,

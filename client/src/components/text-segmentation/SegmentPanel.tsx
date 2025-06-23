@@ -163,7 +163,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
         {/* Segments List with Independent Scrolling */}
         <div className="h-[calc(100%-60px)] overflow-y-auto">
           <div className="p-4 space-y-3">
-            {currentLanguageSegments.length === 0 ? (
+            {currentScriptSegments.length === 0 ? (
               <div className="py-12 px-6">
                 <div className="text-center mb-8">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -209,13 +209,13 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                 </div>
               </div>
             ) : (
-              currentLanguageSegments.map((segment, index) => {
+              currentScriptSegments.map((segment, index) => {
                 const mappingStatus = getMappingStatus(segment);
                 const mapping = mappings.find(m => m.segmentId === segment.id);
                 const isSelected = currentSegmentId === segment.id;
                 const isDragging = draggedIndex === index;
                 const isDraggedOver = draggedOver === index;
-                const segmentText = getSegmentText(segment, content, currentLanguage, false);
+                const segmentText = getSegmentText(segment, content, currentScript, false);
 
                 return (
                   <div

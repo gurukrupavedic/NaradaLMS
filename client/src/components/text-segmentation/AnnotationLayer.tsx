@@ -42,7 +42,7 @@ interface AnnotationLayerProps {
 
 export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   content,
-  currentLanguage,
+  currentScript,
   segments,
   selectedSegmentId,
   onSegmentCreate,
@@ -58,7 +58,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   const textRef = useRef<HTMLDivElement>(null);
 
   // Get normalized text content (same for both display and segmentation)
-  const normalizedText = getDisplayText(content, currentLanguage);
+  const normalizedText = getDisplayText(content, currentScript);
   
   // Debug logging
   useEffect(() => {
