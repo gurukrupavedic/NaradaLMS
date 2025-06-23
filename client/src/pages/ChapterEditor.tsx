@@ -253,9 +253,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Content editor script state (moved here to be available for queries)
   const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
 
-  // Segments query for database integration - script-specific
+  // Segments query for database integration - script-specific  
   const { data: segments = [], refetch: refetchSegments, isLoading: segmentsLoading } = useQuery({
-    queryKey: [`/api/segments/${chapterId}/${contentScript}`],
+    queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`],
     enabled: !!chapterId && !!contentScript
   });
 
@@ -678,7 +678,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}/${contentScript}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`] });
       toast({ title: "Segment created successfully" });
     },
     onError: (error: any) => {
@@ -695,7 +695,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       return apiRequest("PATCH", `/api/segments/${id}`, updates);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}/${contentScript}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`] });
       toast({ title: "Segment updated successfully" });
     },
     onError: (error: any) => {
@@ -712,7 +712,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       return apiRequest("DELETE", `/api/segments/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}/${contentScript}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`] });
       toast({ title: "Segment deleted successfully" });
     },
     onError: (error: any) => {
@@ -736,7 +736,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}/${contentScript}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`] });
     }
   });
 
@@ -1948,7 +1948,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 />
                 <div className="flex gap-2">
                   <Badge variant="secondary" className="text-xs">
-                    {segments.filter(s => s.textReferences[contentScript]).length} segments
+                    {segments.length} segments
                   </Badge>
                   <Badge variant="secondary" className="text-xs">
                     0 mapped
@@ -2156,7 +2156,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               />
               <div className="flex gap-2">
                 <Badge variant="secondary" className="text-xs">
-                  {segments.filter(s => s.textReferences[contentScript]).length} segments
+                  {segments.length} segments
                 </Badge>
               </div>
             </div>
