@@ -1945,14 +1945,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
             <div className="relative h-full">
               {/* Language Selection & Stats */}
               <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
-                <LanguageSelector
-                  currentLanguage={contentLanguage}
-                  availableLanguages={['te', 'hi', 'en']}
-                  onLanguageChange={setContentLanguage}
+                <ScriptSelector
+                  currentScript={contentScript}
+                  availableScripts={['te', 'hi', 'en']}
+                  onScriptChange={setContentScript}
                 />
                 <div className="flex gap-2">
                   <Badge variant="secondary" className="text-xs">
-                    {segments.filter(s => s.textReferences[contentLanguage]).length} segments
+                    {segments.filter(s => s.textReferences[contentScript]).length} segments
                   </Badge>
                   <Badge variant="secondary" className="text-xs">
                     0 mapped
@@ -1965,15 +1965,15 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 <Panel defaultSize={50} minSize={30}>
                   <AnnotationLayer
                     content={chapterContent}
-                    currentLanguage={contentLanguage}
+                    currentScript={contentScript}
                     segments={segments}
                     selectedSegmentId={selectedSegmentId}
                     onSegmentCreate={handleCreateSegment}
                     onSegmentUpdate={handleUpdateSegment}
                     onSegmentDelete={handleDeleteSegment}
                     onSegmentSelect={setSelectedSegmentId}
-                    onLanguageChange={setContentLanguage}
-                    availableLanguages={['te', 'hi', 'en']}
+                    onScriptChange={setContentScript}
+                    availableScripts={['te', 'hi', 'en']}
                   />
                 </Panel>
                 
@@ -1987,7 +1987,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   <SegmentPanel
                     segments={segments}
                     mappings={[]}
-                    currentLanguage={contentLanguage}
+                    currentScript={contentScript}
                     content={chapterContent}
                     currentSegmentId={selectedSegmentId}
                     onSegmentSelect={(segmentId) => {
@@ -2021,10 +2021,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               {/* Audio Controls */}
               <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
                 <div className="flex gap-4">
-                  <LanguageSelector
-                    currentLanguage={contentLanguage}
-                    availableLanguages={['te', 'hi', 'en']}
-                    onLanguageChange={setContentLanguage}
+                  <ScriptSelector
+                    currentScript={contentScript}
+                    availableScripts={['te', 'hi', 'en']}
+                    onScriptChange={setContentScript}
                   />
                   {audioFiles && audioFiles.length > 0 ? (
                     <div className="flex items-center gap-2">
