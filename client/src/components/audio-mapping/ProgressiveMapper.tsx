@@ -198,7 +198,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
         onConfirm={proceedWithMappingSession}
         onCancel={() => setShowWarningDialog(false)}
         existingMappingsCount={pendingMappingCount}
-        audioFileName={selectedAudioFile?.filename || 'Unknown'}
+        audioFileName={selectedAudioFile?.displayName || selectedAudioFile?.filename || 'Unknown'}
       />
     </div>
   );

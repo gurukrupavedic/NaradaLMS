@@ -36,11 +36,13 @@ export const MappingWarningDialog: React.FC<MappingWarningDialogProps> = ({
     <AlertDialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Clear Existing Mappings?</AlertDialogTitle>
+          <AlertDialogTitle>Start New Mapping Session?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will clear {existingMappingsCount} existing mapping{existingMappingsCount !== 1 ? 's' : ''} for "{audioFileName}".
+            This audio file already has {existingMappingsCount} completed mapping{existingMappingsCount !== 1 ? 's' : ''}.
             <br /><br />
-            You can continue to remap all segments, or cancel to keep your current mappings.
+            Starting a new mapping session will clear all existing mappings for "{audioFileName}" and allow you to create fresh mappings from scratch.
+            <br /><br />
+            This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
