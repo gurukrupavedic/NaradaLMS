@@ -3018,22 +3018,24 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                               className="p-3 border rounded-lg bg-white dark:bg-gray-800"
                             >
                               <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="font-medium text-sm">
-                                    {segment.conceptualName}
+                                <div className="flex items-start gap-3">
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm">
+                                      Segment {segment.id}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      {segment.script === selectedScript
+                                        ? `${segment.script.toUpperCase()}: ${segment.startPosition}-${segment.endPosition}`
+                                        : `Script: ${segment.script} (${segment.startPosition}-${segment.endPosition})`}
+                                    </div>
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    {segment.script === selectedScript
-                                      ? `${segment.script.toUpperCase()}: ${segment.startPosition}-${segment.endPosition}`
-                                      : `Script: ${segment.script} (${segment.startPosition}-${segment.endPosition})`}
-                                  </div>
-                                  {segment.audioFileId &&
-                                    segment.startTime !== undefined && (
-                                      <div className="text-xs text-green-600 mt-1">
-                                        Audio: {formatTime(segment.startTime)} -{" "}
-                                        {formatTime(segment.endTime || 0)}
-                                      </div>
+                                  <div className="flex-shrink-0">
+                                    {allChapterMappings.some(mapping => mapping.segmentId === segment.id) ? (
+                                      <ConnectedCirclesIcon className="h-4 w-4 text-green-600" />
+                                    ) : (
+                                      <Link2Off className="h-4 w-4 text-gray-400" />
                                     )}
+                                  </div>
                                 </div>
                                 {!isPublished && (
                                   <Button
