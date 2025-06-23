@@ -63,7 +63,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   const [pendingMappingCount, setPendingMappingCount] = useState(0);
 
   // Filter segments by current script
-  const currentScriptSegments = getSegmentsForScript(segments, currentScript);
+  const currentScriptSegments = segments; // Already script-specific from API
 
   // Calculate progress (audio file specific)
   const mappedSegments = currentScriptSegments.filter(s => mappings.some(m => m.segmentId === s.id));

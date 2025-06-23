@@ -178,8 +178,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
     // Get all segments for current script
     const scriptSegments = segments
-      .filter(segment => segment.textReferences[currentScript])
-      .sort((a, b) => a.textReferences[currentScript]!.start - b.textReferences[currentScript]!.start);
+      .sort((a, b) => a.startPosition - b.startPosition);
 
     if (scriptSegments.length === 0) {
       return <div className="whitespace-pre-wrap leading-relaxed font-serif">{normalizedText}</div>;
