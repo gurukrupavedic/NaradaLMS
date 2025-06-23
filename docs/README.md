@@ -75,6 +75,12 @@ docs/
 3. **API Changes:** Document in `api/` (when created)
 4. **Deployment:** Document in `deployment/` (when needed)
 
+## **Quick Navigation**
+
+- **📋 [Complete Index](./INDEX.md)** - All documents organized by type, priority, and component
+- **🚀 [Quick Reference](./QUICK_REFERENCE.md)** - When to use which document
+- **📝 [Development TODOs](./TODO.md)** - Current action items
+
 ---
 
 **Last Updated:** December 23, 2024  
