@@ -1220,24 +1220,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     });
   };
 
-  const deleteSegmentMutation = useMutation({
-    mutationFn: async (segmentId: number) => {
-      return await apiRequest("DELETE", `/api/admin/segments/${segmentId}`);
-    },
-    onSuccess: () => {
-      toast({ title: "Segment deleted successfully" });
-      queryClient.invalidateQueries({
-        queryKey: [`/api/admin/segments/${chapterId}`],
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to delete segment",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+
 
   const createAudioMappingMutation = useMutation({
     mutationFn: async (mappingData: {

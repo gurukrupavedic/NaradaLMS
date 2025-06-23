@@ -544,7 +544,7 @@ export class DatabaseStorage implements IStorage {
     if (!this.initialized) return memStorage.getSegmentsByChapter(chapterId);
     
     try {
-      return await db.select().from(textSegments).where(eq(textSegments.chapterId, chapterId));
+      return await db.select().from(textSegments).where(eq(textSegments.chapterId, chapterId)).orderBy(textSegments.order);
     } catch (error) {
       return memStorage.getSegmentsByChapter(chapterId);
     }
