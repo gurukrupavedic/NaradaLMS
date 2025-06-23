@@ -606,7 +606,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       startTime: number;
       endTime: number;
     }) => {
-      await apiRequest("PATCH", `/api/admin/media-segments/${id}`, {
+      await apiRequest("PATCH", `/api/media-segments/${id}`, {
         startTimestamp: startTime,
         endTimestamp: endTime,
       });
@@ -633,7 +633,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Delete media segment mutation
   const deleteMediaSegmentMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/admin/media-segments/${id}`);
+      await apiRequest("DELETE", `/api/media-segments/${id}`);
     },
     onSuccess: () => {
       toast({ title: "Segment deleted successfully" });
@@ -655,7 +655,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // CRUD mutations for segments
   const createSegmentMutation = useMutation({
     mutationFn: async (segment: { textReferences: any }) => {
-      return apiRequest("POST", `/api/admin/segments`, {
+      return apiRequest("POST", `/api/segments`, {
         chapterId: parseInt(chapterId!),
         textReferences: segment.textReferences
       });
@@ -675,7 +675,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   const updateSegmentMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: any }) => {
-      return apiRequest("PATCH", `/api/admin/segments/${id}`, updates);
+      return apiRequest("PATCH", `/api/segments/${id}`, updates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
@@ -692,7 +692,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   const deleteSegmentMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest("DELETE", `/api/admin/segments/${id}`);
+      return apiRequest("DELETE", `/api/segments/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
@@ -714,7 +714,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
         order: index
       }));
       
-      return apiRequest("PATCH", `/api/admin/segments/${chapterId}/reorder`, {
+      return apiRequest("PATCH", `/api/segments/${chapterId}/reorder`, {
         segmentOrders
       });
     },
@@ -854,7 +854,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
       const response = await apiRequest(
         "POST",
-        "/api/admin/media-segments/bulk",
+        "/api/media-segments/bulk",
         { segments },
       );
       return response;
