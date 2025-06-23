@@ -3009,9 +3009,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                                     {segment.conceptualName}
                                   </div>
                                   <div className="text-xs text-muted-foreground mt-1">
-                                    {segment.textReferences[selectedScript]
-                                      ? `${selectedScript.toUpperCase()}: ${segment.textReferences[selectedScript]?.start}-${segment.textReferences[selectedScript]?.end}`
-                                      : "No reference for selected language"}
+                                    {segment.script === selectedScript
+                                      ? `${segment.script.toUpperCase()}: ${segment.startPosition}-${segment.endPosition}`
+                                      : `Script: ${segment.script} (${segment.startPosition}-${segment.endPosition})`}
                                   </div>
                                   {segment.audioFileId &&
                                     segment.startTime !== undefined && (
