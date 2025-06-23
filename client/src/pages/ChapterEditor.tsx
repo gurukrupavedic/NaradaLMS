@@ -2094,7 +2094,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   <ProgressiveMapper
                     audioUrl={`/uploads/${selectedAudioFile.filename}`}
                     segments={segments.map(s => ({ ...s, id: s.id.toString() }))} // Convert for compatibility
-                    currentLanguage={contentLanguage}
+                    currentScript={contentScript}
                     content={chapterContent}
                     mappings={mappings.map(convertDatabaseMapping)} // Real backend data
                     selectedAudioFile={selectedAudioFile}
@@ -2153,14 +2153,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
           <TabsContent value="segmentation" className="space-y-6">
             {/* Language Selection & Stats */}
             <div className="flex justify-between items-center p-4 bg-gray-50 border rounded-lg">
-              <LanguageSelector
-                currentLanguage={contentLanguage}
-                availableLanguages={['te', 'hi', 'en']}
-                onLanguageChange={setContentLanguage}
+              <ScriptSelector
+                currentScript={contentScript}
+                availableScripts={['te', 'hi', 'en']}
+                onScriptChange={setContentScript}
               />
               <div className="flex gap-2">
                 <Badge variant="secondary" className="text-xs">
-                  {segments.filter(s => s.textReferences[contentLanguage]).length} segments
+                  {segments.filter(s => s.textReferences[contentScript]).length} segments
                 </Badge>
               </div>
             </div>
