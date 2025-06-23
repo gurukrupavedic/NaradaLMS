@@ -1650,15 +1650,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
             {!isEditingMetadata && (
               <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setLocation(`/experiment1/segmentation-studio/${chapter?.id}`)}
-                  className="bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100 h-8 text-xs"
-                >
-                  <span className="mr-1">🧪</span>
-                  Experiment
-                </Button>
-                <Button
                   size="sm"
                   variant={chapter?.status === "published" ? "destructive" : "default"}
                   onClick={() => {
