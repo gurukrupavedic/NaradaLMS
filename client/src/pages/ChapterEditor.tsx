@@ -1288,30 +1288,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }
   };
 
-  const createTextSegmentMutation = useMutation({
-    mutationFn: async (segmentData: {
-      chapterId: number;
-      conceptualName: string;
-      textReferences: Record<string, { start: number; end: number }>;
-    }) => {
-      return await apiRequest("POST", "/api/segments", segmentData);
-    },
-    onSuccess: () => {
-      toast({ title: "Text segment created successfully" });
-      queryClient.invalidateQueries({
-        queryKey: [`/api/segments/${chapterId}`],
-      });
-      setTextSelection(null);
-      setSegmentName("");
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to create text segment",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  // Note: createTextSegmentMutation is already defined above as alias to createSegmentMutation
 
   const handleCreateTextSegment = () => {
     if (!textSelection || !segmentName.trim()) {
@@ -1323,10 +1300,12 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }
 
     createTextSegmentMutation.mutate({
-      chapterId: parseInt(chapterId!),
-      script: selectedScript,
-      startPosition: textSelection.start,
-      endPosition: textSelection.end,
+      textReferences: {
+        [contentScript]: {
+          start: textSelection.start,
+          end: textSelection.end,
+        },
+      },
     });
   };
 
@@ -2934,7 +2913,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                         disabled={
                           !textSelection ||
                           !segmentName.trim() ||
-                          createTextSegmentMutation.isPending ||
+                          createSegmentMutation.isPending ||
                           isPublished
                         }
                         size="sm"
