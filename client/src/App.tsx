@@ -13,7 +13,7 @@ import ContentManagement from "@/pages/ContentManagement";
 import TrackChapters from "@/pages/TrackChapters";
 import ChapterEditor from "@/pages/ChapterEditor";
 
-import Experiment1_SegmentationStudio from "@/pages/Experiment1_SegmentationStudio";
+
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -45,9 +45,7 @@ function Router() {
           <Route path="/content-management/tracks/:trackId" component={() => <TrackChapters />} />
           <Route path="/content-management/tracks/:trackId/chapters/:chapterId" component={() => <ChapterEditor />} />
 
-          {/* EXPERIMENT1: Experimental segmentation studio routes */}
-          <Route path="/experiment1" component={() => <Experiment1_SegmentationStudio />} />
-          <Route path="/experiment1/segmentation-studio/:chapterId" component={Experiment1_SegmentationStudio} />
+
           <Route path="/tracks/:trackId" component={TrackView} />
           <Route path="/chapters/:id" component={ChapterView} />
         </>

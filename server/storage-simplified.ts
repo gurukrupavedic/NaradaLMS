@@ -1,5 +1,6 @@
 // Simplified in-memory storage without authentication
-import { normalizeLineBreaks } from '../shared/experiment1-utils';
+// Simple line break normalization utility
+const normalizeLineBreaks = (text: string): string => text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<any>;

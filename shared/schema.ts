@@ -86,16 +86,13 @@ export const audioFiles = pgTable("audio_files", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Text segments - Reference-based approach for interactive highlighting
+// Text segments - Script-specific approach for clean architecture
 export const textSegments = pgTable("text_segments", {
   id: serial("id").primaryKey(),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
-  conceptualName: text("conceptual_name"), // Optional legacy field, text content serves as identifier
-  textReferences: jsonb("text_references").$type<{
-    te?: { start: number; end: number }; // Character offsets for Telugu
-    hi?: { start: number; end: number }; // Character offsets for Devanagari  
-    en?: { start: number; end: number }; // Character offsets for English/IAST
-  }>().default({}).notNull(), // Reference points like PDF highlighting per Q3
+  script: varchar("script", { length: 2 }).notNull(), // 'te', 'hi', 'en'
+  startPosition: integer("start_position").notNull(),
+  endPosition: integer("end_position").notNull(),
   order: integer("order").notNull().default(0),
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),

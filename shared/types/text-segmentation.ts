@@ -10,13 +10,13 @@
 
 export interface TextSegment {
   id: number;
-  conceptualName?: string; // Optional legacy field, text content serves as identifier
-  textReferences: {
-    te?: { start: number; end: number };
-    hi?: { start: number; end: number };
-    en?: { start: number; end: number };
-  };
+  chapterId: number;
+  script: Script; // Explicit script identity
+  startPosition: number; // Single position reference
+  endPosition: number; // Single position reference
   order: number;
+  createdBy: string;
+  createdAt: string;
 }
 
 export interface AudioMapping {
