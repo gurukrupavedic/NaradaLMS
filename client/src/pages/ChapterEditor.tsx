@@ -557,11 +557,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
 
 
-  // Fetch media segments for selected audio file
-  const selectedAudioFileId =
-    typeof selectedAudioFile === "object"
-      ? selectedAudioFile?.id
-      : selectedAudioFile;
   const { data: mediaSegments = [] } = useQuery({
     queryKey: [`/api/admin/media-segments/${selectedAudioFileId}`],
     enabled: !!selectedAudioFileId,
@@ -841,7 +836,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Create audio segments from marks mutation
   const createAudioSegmentsMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedAudioFile || timeMarks.length === 0) {
+      if (!selectedAudioFileId || timeMarks.length === 0) {
         throw new Error("No audio file selected or no time marks");
       }
 
@@ -854,10 +849,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
         const endTime = i === sortedMarks.length ? duration : sortedMarks[i];
 
         segments.push({
-          audioFileId:
-            typeof selectedAudioFile === "object"
-              ? selectedAudioFile.id
-              : selectedAudioFile,
+          audioFileId: selectedAudioFileId,
           startTime,
           endTime,
           name: `Segment ${i + 1}`,
@@ -902,8 +894,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       queryClient.invalidateQueries({
         queryKey: [`/api/admin/audio-files/${chapterId}`],
       });
-      if (selectedAudioFile === deletedFileId) {
-        setSelectedAudioFile(null);
+      if (selectedAudioFileId === deletedFileId) {
+        setSelectedAudioFileId(null);
         setAudioPlayer(null);
         setIsPlaying(false);
       }
@@ -1050,7 +1042,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [selectedAudioFile]);
+  }, [selectedAudioFileId]);
 
   const validateFileType = (file: File) => {
     const allowedTypes = ["audio/", "video/"];
@@ -1993,9 +1985,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 </Badge>
               </div>
 
-              {audioFiles && audioFiles.length > 0 ? (
+              {selectedAudioFile ? (
                 <ProgressiveMapper
-                  audioUrl={audioFiles[0]?.filename ? `/uploads/${audioFiles[0].filename}` : ''}
+                  audioUrl={selectedAudioFile.filename ? `/uploads/${selectedAudioFile.filename}` : ''}
                   segments={segments}
                   currentLanguage={contentLanguage}
                   content={chapterContent}
