@@ -176,20 +176,20 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
       return <div className="text-muted-foreground">No content available for {currentLanguage}</div>;
     }
 
-    // Get all segments for current language
-    const languageSegments = segments
-      .filter(segment => segment.textReferences[currentLanguage])
-      .sort((a, b) => a.textReferences[currentLanguage]!.start - b.textReferences[currentLanguage]!.start);
+    // Get all segments for current script
+    const scriptSegments = segments
+      .filter(segment => segment.textReferences[currentScript])
+      .sort((a, b) => a.textReferences[currentScript]!.start - b.textReferences[currentScript]!.start);
 
-    if (languageSegments.length === 0) {
+    if (scriptSegments.length === 0) {
       return <div className="whitespace-pre-wrap leading-relaxed font-serif">{normalizedText}</div>;
     }
 
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
 
-    languageSegments.forEach((segment, index) => {
-      const range = segment.textReferences[currentLanguage]!;
+    scriptSegments.forEach((segment, index) => {
+      const range = segment.textReferences[currentScript]!;
       
       // Add text before this segment
       if (range.start > lastIndex) {

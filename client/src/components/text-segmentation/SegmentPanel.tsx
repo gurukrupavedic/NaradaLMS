@@ -60,8 +60,8 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [currentSegmentId, onSegmentSelect]);
 
-  // Filter segments for current language
-  const currentLanguageSegments = getSegmentsForLanguage(segments, currentLanguage);
+  // Filter segments for current script
+  const currentScriptSegments = getSegmentsForScript(segments, currentScript);
 
   // Count mapped segments
   const mappedCount = currentLanguageSegments.filter(segment => 
@@ -156,7 +156,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
         {/* Header - sticky and integrated */}
         <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
           <h2 className="text-base font-semibold text-gray-700">
-            Segments ({getLanguageLabel(currentLanguage)})
+            Segments ({getScriptLabel(currentScript)})
           </h2>
         </div>
 

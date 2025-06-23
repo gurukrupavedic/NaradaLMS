@@ -304,7 +304,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   const [endTime, setEndTime] = useState(0);
 
   // Text segmentation state
-  const [selectedLanguage, setSelectedLanguage] = useState<"te" | "hi" | "en">(
+  const [selectedScript, setSelectedScript] = useState<"te" | "hi" | "en">(
     "te",
   );
   const [textSelection, setTextSelection] = useState<{
@@ -314,8 +314,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   } | null>(null);
   const [segmentName, setSegmentName] = useState("");
 
-  // Content editor language state
-  const [contentLanguage, setContentLanguage] = useState<"te" | "hi" | "en">(
+  // Content editor script state
+  const [contentScript, setContentScript] = useState<"te" | "hi" | "en">(
     "te",
   );
 
@@ -1682,12 +1682,12 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
           {/* Text Content Tab */}
           <TabsContent value="content" className="h-[calc(100vh-200px)]">
             <div className="relative h-full">
-              {/* Language Selection & Status */}
+              {/* Script Selection & Status */}
               <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
-                <LanguageSelector
-                  currentLanguage={contentLanguage}
-                  availableLanguages={['te', 'hi', 'en']}
-                  onLanguageChange={setContentLanguage}
+                <ScriptSelector
+                  currentScript={contentScript}
+                  availableScripts={['te', 'hi', 'en']}
+                  onScriptChange={setContentScript}
                 />
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   {updateContentMutation.isPending ? (
@@ -1710,11 +1710,11 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   onChange={(html) =>
                     setTextContent((prev) => ({
                       ...prev,
-                      [contentLanguage]: html,
+                      [contentScript]: html,
                     }))
                   }
-                  placeholder={`Enter ${contentLanguage === "te" ? "Telugu" : contentLanguage === "hi" ? "Hindi" : "English/IAST"} content...`}
-                  language={contentLanguage}
+                  placeholder={`Enter ${contentScript === "te" ? "Telugu" : contentScript === "hi" ? "Devanagari" : "IAST"} content...`}
+                  language={contentScript}
                 />
               </div>
 
