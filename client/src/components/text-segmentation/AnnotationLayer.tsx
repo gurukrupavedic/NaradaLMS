@@ -325,7 +325,7 @@ const FloatingSelectionToolbar: React.FC<{
   return (
     <div
       data-floating-toolbar
-      className="fixed z-50 flex items-center gap-1 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-lg p-1 dark:bg-gray-900/80 dark:border-gray-700/50"
+      className="fixed z-50 flex items-center gap-1 bg-gray-900/95 backdrop-blur-md border border-gray-700/80 rounded-lg shadow-xl p-1.5 dark:bg-gray-800/95 dark:border-gray-600/80"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
@@ -335,7 +335,7 @@ const FloatingSelectionToolbar: React.FC<{
       <Button
         size="sm"
         variant="ghost"
-        className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-700"
+        className="h-8 w-8 p-0 text-white hover:bg-green-500/20 hover:text-green-300 transition-colors"
         onClick={() => {
           const segmentName = `Segment ${segments.length + 1}`;
           onCreateSegment(segmentName);
@@ -348,7 +348,7 @@ const FloatingSelectionToolbar: React.FC<{
       <Button
         size="sm"
         variant="ghost"
-        className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+        className="h-8 w-8 p-0 text-white hover:bg-red-500/20 hover:text-red-300 transition-colors"
         onClick={onCancel}
         title="Cancel selection"
       >
