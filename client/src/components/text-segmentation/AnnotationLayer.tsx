@@ -13,22 +13,22 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, X } from 'lucide-react';
-import type { TextSegment, Language, ContentMap, TextRange } from '@shared/types/text-segmentation';
+import type { TextSegment, Script, ContentMap, TextRange } from '@shared/types/text-segmentation';
 import { getDisplayText, normalizeLineBreaks } from '@shared/utils/text-segmentation';
-import { LanguageSelector } from "@/components/common/LanguageSelector";
+import { ScriptSelector } from "@/components/common/ScriptSelector";
 
-const getLanguageLabel = (language: Language): string => {
-  switch (language) {
+const getScriptLabel = (script: Script): string => {
+  switch (script) {
     case 'te': return 'Telugu';
-    case 'hi': return 'Hindi';
-    case 'en': return 'English/IAST';
-    default: return language;
+    case 'hi': return 'Devanagari';
+    case 'en': return 'IAST';
+    default: return script;
   }
 };
 
 interface AnnotationLayerProps {
   content: ContentMap;
-  currentLanguage: Language;
+  currentScript: Script;
   segments: TextSegment[];
   selectedSegmentId?: number;
   onSegmentCreate: (segment: { textReferences: any }) => void;
@@ -36,8 +36,8 @@ interface AnnotationLayerProps {
   onSegmentDelete: (id: string) => void;
   onSegmentSelect?: (segmentId: number | undefined) => void;
   // NEW PROPS FOR LANGUAGE SELECTOR INTEGRATION
-  onLanguageChange: (language: Language) => void;
-  availableLanguages: Language[];
+  onScriptChange: (script: Script) => void;
+  availableScripts: Script[];
 }
 
 export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({

@@ -13,13 +13,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Play, Circle, Link, Link2Off } from 'lucide-react';
 import { ConnectedCirclesIcon } from '@shared/components/icons';
-import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/types/text-segmentation';
-import { getSegmentText, getSegmentsForLanguage, formatDuration } from '@shared/utils/text-segmentation';
+import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
+import { getSegmentText, getSegmentsForScript, formatDuration } from '@shared/utils/text-segmentation';
 
 interface SegmentPanelProps {
   segments: TextSegment[];
   mappings: AudioMapping[];
-  currentLanguage: Language;
+  currentScript: Script;
   content: ContentMap;
   currentSegmentId?: number;
   onSegmentSelect: (segmentId: number | undefined) => void;
@@ -32,7 +32,7 @@ interface SegmentPanelProps {
 export const SegmentPanel: React.FC<SegmentPanelProps> = ({
   segments,
   mappings,
-  currentLanguage,
+  currentScript,
   content,
   currentSegmentId,
   onSegmentSelect,
