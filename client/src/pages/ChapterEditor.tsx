@@ -2010,7 +2010,11 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     {segments.filter(s => s.script === contentScript).length} segments
                   </Badge>
                   <Badge variant="secondary" className="text-xs">
-                    0 mapped
+                    {segments
+                      .filter(s => s.script === contentScript)
+                      .filter(segment => 
+                        allChapterMappings.some(mapping => mapping.segmentId === segment.id)
+                      ).length} mapped
                   </Badge>
                 </div>
               </div>
@@ -2132,7 +2136,11 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   </div>
                 </div>
                 <Badge variant="secondary" className="text-xs">
-                  {mappings.length} mapped
+                  {segments
+                    .filter(s => s.script === contentScript)
+                    .filter(segment => 
+                      allChapterMappings.some(mapping => mapping.segmentId === segment.id)
+                    ).length} mapped
                 </Badge>
               </div>
 
