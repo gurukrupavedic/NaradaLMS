@@ -68,7 +68,7 @@ export interface Chapter {
   };
 }
 
-export type Language = 'te' | 'hi' | 'en';
+export type Script = 'te' | 'hi' | 'en';
 
 // New content entry structure
 export interface ContentEntry {

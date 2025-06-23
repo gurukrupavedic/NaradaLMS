@@ -7,14 +7,14 @@
  * Purpose: Centralized utilities for text processing and segment management
  */
 
-import type { TextSegment, AudioMapping, Language, ContentMap } from '../types/text-segmentation';
+import type { TextSegment, AudioMapping, Script, ContentMap } from '../types/text-segmentation';
 import { isContentEntry } from '../types/text-segmentation';
 
 /**
- * Extracts text content for a segment in the specified language
+ * Extracts text content for a segment in the specified script
  * @param segment - The text segment to extract content from
- * @param content - The content map containing text for all languages
- * @param language - The target language to extract
+ * @param content - The content map containing text for all scripts
+ * @param script - The target script to extract
  * @param truncate - Whether to truncate long text (default: false)
  * @param maxLength - Maximum length before truncation (default: 50)
  * @returns The extracted text content or segment name as fallback
@@ -22,12 +22,12 @@ import { isContentEntry } from '../types/text-segmentation';
 export const getSegmentText = (
   segment: TextSegment,
   content: ContentMap,
-  language: Language,
+  script: Script,
   truncate: boolean = false,
   maxLength: number = 50
 ): string => {
-  const range = segment.textReferences[language];
-  const text = getDisplayText(content, language);
+  const range = segment.textReferences[script];
+  const text = getDisplayText(content, script);
   
   if (!range || !text) {
     return segment.conceptualName;
@@ -43,16 +43,16 @@ export const getSegmentText = (
 };
 
 /**
- * Filters segments that have text references for the specified language
+ * Filters segments that have text references for the specified script
  * @param segments - Array of text segments to filter
- * @param language - Target language to filter by
- * @returns Array of segments that have references in the specified language
+ * @param script - Target script to filter by
+ * @returns Array of segments that have references in the specified script
  */
-export const getSegmentsForLanguage = (
+export const getSegmentsForScript = (
   segments: TextSegment[],
-  language: Language
+  script: Script
 ): TextSegment[] => {
-  return segments.filter(segment => segment.textReferences[language]);
+  return segments.filter(segment => segment.textReferences[script]);
 };
 
 /**
@@ -65,10 +65,10 @@ export const getSegmentsForLanguage = (
 export const getSegmentsAtPosition = (
   segments: TextSegment[],
   position: number,
-  language: Language
+  script: Script
 ): TextSegment[] => {
   return segments.filter(segment => {
-    const range = segment.textReferences[language];
+    const range = segment.textReferences[script];
     return range && position >= range.start && position <= range.end;
   });
 };
@@ -162,7 +162,7 @@ const isContentEntryLocal = (content: any): content is { display: string; segmen
  * @param language - Target language
  * @returns Normalized text content for the specified language
  */
-export const getDisplayText = (content: ContentMap, language: Language): string => {
+export const getDisplayText = (content: ContentMap, script: Script): string => {
   const entry = content[language];
   
   if (!entry) {
@@ -188,7 +188,7 @@ export const getDisplayText = (content: ContentMap, language: Language): string 
  * @param language - Target language
  * @returns Normalized segmentation text content for the specified language
  */
-export const getSegmentationText = (content: ContentMap, language: Language): string => {
+export const getSegmentationText = (content: ContentMap, script: Script): string => {
   const entry = content[language];
   
   if (!entry) {

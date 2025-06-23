@@ -10,7 +10,7 @@
  * Purpose: Eliminate duplicate utility functions across experiment components
  */
 
-import type { TextSegment, AudioMapping, Language, ContentMap } from './experiment1-types';
+import type { TextSegment, AudioMapping, Script, ContentMap } from './experiment1-types';
 import { isContentEntry } from './experiment1-types';
 
 /**
