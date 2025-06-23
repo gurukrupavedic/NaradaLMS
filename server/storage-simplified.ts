@@ -491,8 +491,12 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`)
   }
 
   // Text segment operations
-  async getSegmentsByChapter(chapterId: number): Promise<any[]> {
-    return this.segments.filter(segment => segment.chapterId === chapterId);
+  async getSegmentsByChapter(chapterId: number, script?: string): Promise<any[]> {
+    let filtered = this.segments.filter(segment => segment.chapterId === chapterId);
+    if (script) {
+      filtered = filtered.filter(segment => segment.script === script);
+    }
+    return filtered;
   }
 
   async createTextSegment(segment: any): Promise<any> {

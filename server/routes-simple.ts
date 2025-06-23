@@ -333,10 +333,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Text segment routes
-  app.get('/api/segments/:chapterId', async (req, res) => {
+  app.get('/api/segments/:chapterId/:script', async (req, res) => {
     try {
       const chapterId = parseInt(req.params.chapterId);
-      const segments = await storage.getSegmentsByChapter(chapterId);
+      const script = req.params.script;
+      
+      if (!['te', 'hi', 'en'].includes(script)) {
+        return res.status(400).json({ message: "Invalid script" });
+      }
+      
+      const segments = await storage.getSegmentsByChapter(chapterId, script);
       
       // Enrich segments with audio mapping data
       const enrichedSegments = await Promise.all(
@@ -362,16 +368,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Legacy route for backward compatibility (temporary)
+  app.get('/api/segments/:chapterId', async (req, res) => {
+    try {
+      const chapterId = parseInt(req.params.chapterId);
+      const segments = await storage.getSegmentsByChapter(chapterId);
+      res.json(segments);
+    } catch (error) {
+      console.error("Error fetching segments:", error);
+      res.status(500).json({ message: "Failed to fetch segments" });
+    }
+  });
+
   app.post('/api/segments', async (req, res) => {
     try {
-      const { chapterId, textReferences } = req.body;
-      const segment = await storage.createTextSegment({
-        chapterId,
-        textReferences: textReferences || {},
-        createdBy: "system"
-      });
+      const { chapterId, script, startPosition, endPosition, textReferences, conceptualName } = req.body;
       
-      res.json(segment);
+      // Support both new and legacy formats
+      if (script && startPosition !== undefined && endPosition !== undefined) {
+        // New format: script-specific
+        const segment = await storage.createTextSegment({
+          chapterId,
+          script,
+          startPosition,
+          endPosition,
+          createdBy: "system"
+        });
+        res.json(segment);
+      } else if (textReferences) {
+        // Legacy format: convert from textReferences
+        const firstScript = Object.keys(textReferences)[0];
+        const range = textReferences[firstScript];
+        
+        if (firstScript && range) {
+          const segment = await storage.createTextSegment({
+            chapterId,
+            script: firstScript,
+            startPosition: range.start,
+            endPosition: range.end,
+            createdBy: "system"
+          });
+          res.json(segment);
+        } else {
+          res.status(400).json({ message: "Invalid textReferences format" });
+        }
+      } else {
+        res.status(400).json({ message: "Missing required fields: script, startPosition, endPosition" });
+      }
     } catch (error) {
       console.error("Error creating segment:", error);
       res.status(500).json({ message: "Failed to create segment" });

@@ -26,14 +26,13 @@ export const getSegmentText = (
   truncate: boolean = false,
   maxLength: number = 50
 ): string => {
-  const range = segment.textReferences[script];
   const text = getDisplayText(content, script);
   
-  if (!range || !text) {
-    return segment.conceptualName;
+  if (!text) {
+    return `Segment ${segment.order}`;
   }
   
-  const segmentText = text.slice(range.start, range.end);
+  const segmentText = text.slice(segment.startPosition, segment.endPosition);
   
   if (truncate && segmentText.length > maxLength) {
     return segmentText.slice(0, maxLength) + '...';
@@ -43,16 +42,14 @@ export const getSegmentText = (
 };
 
 /**
- * Filters segments that have text references for the specified script
- * @param segments - Array of text segments to filter
- * @param script - Target script to filter by
- * @returns Array of segments that have references in the specified script
+ * Legacy function - no longer needed since segments are script-specific
+ * @deprecated Use segments directly from API as they are already script-filtered
  */
 export const getSegmentsForScript = (
   segments: TextSegment[],
   script: Script
 ): TextSegment[] => {
-  return segments.filter(segment => segment.textReferences[script]);
+  return segments.filter(segment => segment.script === script);
 };
 
 /**

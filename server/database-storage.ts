@@ -539,14 +539,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Text segment operations
-  async getSegmentsByChapter(chapterId: number): Promise<any[]> {
+  async getSegmentsByChapter(chapterId: number, script?: string): Promise<any[]> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.getSegmentsByChapter(chapterId);
+    if (!this.initialized) return memStorage.getSegmentsByChapter(chapterId, script);
     
     try {
-      return await db.select().from(textSegments).where(eq(textSegments.chapterId, chapterId)).orderBy(textSegments.order);
+      const whereConditions = script 
+        ? and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script))
+        : eq(textSegments.chapterId, chapterId);
+        
+      return await db.select().from(textSegments).where(whereConditions).orderBy(textSegments.order);
     } catch (error) {
-      return memStorage.getSegmentsByChapter(chapterId);
+      return memStorage.getSegmentsByChapter(chapterId, script);
     }
   }
 
