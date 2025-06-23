@@ -1,6 +1,6 @@
 # Vedic Learning Management System - Documentation
 
-This directory contains architectural decisions, implementation guides, and technical documentation for the Vedic LMS.
+This directory contains architectural decisions, implementation guides, troubleshooting docs, and technical documentation for the Vedic LMS.
 
 ## **Directory Structure**
 
@@ -8,21 +8,48 @@ This directory contains architectural decisions, implementation guides, and tech
 docs/
 ├── architecture/          # Architectural Decision Records (ADRs)
 ├── implementation/       # Implementation guides and TODOs  
-├── api/                 # API documentation (future)
-└── deployment/          # Deployment guides (future)
+├── troubleshooting/      # Bug fixes and technical issue resolution
+├── features/            # Feature specifications and implementation plans
+├── deprecated-ideas/    # Historical documentation of deprecated approaches
+├── planning/           # Future planning documents (reserved)
+└── README.md           # This file
 ```
 
-## **Architecture Decisions**
+## **Architecture Decisions (ADRs)**
 
 ### **ADR-001: Authentication Integration Strategy**
 **Status:** Accepted  
 **Summary:** Defines how to integrate user authentication and role-based access control without breaking existing progressive mapping functionality. Recommends frontend-explicit user attribution approach.
+
+### **ADR-002: Code Cleanup Roadmap**
+**Status:** Planning Document  
+**Summary:** Comprehensive analysis of code cleanup tasks for ChapterEditor architecture simplification and component separation.
+
+### **ADR-003: URL Structure and File Naming**
+**Status:** Planning Document  
+**Summary:** Architectural plan for cleaner URL structure and file naming conventions for future code cleanup phases.
 
 ## **Implementation Guides**
 
 ### **Authentication Integration TODO**
 **Status:** Future Implementation  
 **Summary:** Detailed implementation plan for adding user authentication and role-based permissions to the system. Includes migration strategy for current hardcoded "system" user values.
+
+## **Feature Documentation**
+
+### **Link Status Error Detection**
+**Status:** Implementation Plan  
+**Summary:** Comprehensive error detection for segment-to-audio mappings to identify broken links and display indicators in the UI.
+
+## **Troubleshooting & Issues**
+
+### **Text Segmentation Selection-Time Normalization**
+**Status:** Critical TODO  
+**Summary:** Fix for text corruption in segmentation functionality due to position calculation mismatches between browser selection and stored content.
+
+### **Migration Gap Analysis**
+**Status:** Documentation  
+**Summary:** Analysis of critical gaps from experimental-to-production migration and future resolution plan.
 
 ## **Current System Status**
 

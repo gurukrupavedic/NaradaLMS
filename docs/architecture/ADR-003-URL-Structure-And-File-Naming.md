@@ -1,5 +1,8 @@
-# URL Structure & File Naming Architectural Plan
-*Created: January 21, 2025*
+# ADR-003: URL Structure and File Naming Strategy
+
+**Date:** January 21, 2025  
+**Status:** Planning Document  
+**Type:** Architecture Decision Record
 
 ## Executive Summary
 

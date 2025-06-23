@@ -1,5 +1,8 @@
-# Code Cleanup Roadmap - Comprehensive Analysis
-*Created: January 21, 2025*
+# ADR-002: Code Cleanup Roadmap
+
+**Date:** January 21, 2025  
+**Status:** Planning Document  
+**Type:** Architecture Decision Record
 
 ## Overview
 
