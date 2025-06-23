@@ -9,6 +9,7 @@
 
 import type { TextSegment, AudioMapping, Language, ContentMap } from '../types/text-segmentation';
 import { isContentEntry } from '../types/text-segmentation';
+import { extractPlainText } from '../../client/src/lib/html-utils';
 
 /**
  * Extracts text content for a segment in the specified language
@@ -142,12 +143,12 @@ export const getDisplayText = (content: ContentMap, language: Language): string 
   
   // Handle new structured format
   if (isContentEntryLocal(entry)) {
-    return normalizeLineBreaks(entry.display);
+    return normalizeLineBreaks(extractPlainText(entry.display));
   }
   
-  // Handle legacy string format
+  // Handle legacy string format - convert HTML to plain text
   if (typeof entry === 'string') {
-    return normalizeLineBreaks(entry);
+    return normalizeLineBreaks(extractPlainText(entry));
   }
   
   return '';
