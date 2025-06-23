@@ -2097,6 +2097,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     currentLanguage={contentLanguage}
                     content={chapterContent}
                     mappings={mappings.map(convertDatabaseMapping)} // Real backend data
+                    selectedAudioFile={selectedAudioFile}
                     onMappingCreate={(mapping) => {
                       // Convert UI format to database format and create
                       createMappingMutation.mutate({

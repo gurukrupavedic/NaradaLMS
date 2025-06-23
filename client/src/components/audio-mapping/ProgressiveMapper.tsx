@@ -12,6 +12,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AudioPlayerPanel } from './AudioPlayerPanel';
 import { SegmentMappingGrid } from './SegmentMappingGrid';
+import { MappingWarningDialog } from '@/components/ui/mapping-warning-dialog';
 import { useMappingControls } from '@shared/hooks/useMappingControls';
 import { useAudioPlayer } from '@shared/hooks/useAudioPlayer';
 import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/types/text-segmentation';
@@ -24,6 +25,7 @@ interface ProgressiveMapperProps {
   currentLanguage: Language;
   content: ContentMap;
   mappings: AudioMapping[];
+  selectedAudioFile?: { id: number; filename: string; displayName?: string };
   onMappingCreate: (mapping: AudioMapping) => void;
   onMappingUpdate: (segmentId: string, mapping: Partial<AudioMapping>) => void;
   onMappingDelete: (segmentId: string) => void;
@@ -35,6 +37,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   currentLanguage,
   content,
   mappings,
+  selectedAudioFile,
   onMappingCreate,
   onMappingUpdate,
   onMappingDelete
@@ -54,18 +57,29 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   const [mappingSession, setMappingSession] = useState<'idle' | 'active' | 'paused'>('idle');
   const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number>(0);
+  
+  // Warning dialog state
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [pendingMappingCount, setPendingMappingCount] = useState(0);
 
   // Filter segments by current language
   const currentLanguageSegments = getSegmentsForLanguage(segments, currentLanguage);
 
-  // Calculate progress
+  // Calculate progress (audio file specific)
   const mappedSegments = currentLanguageSegments.filter(s => mappings.some(m => m.segmentId === s.id));
   const progressPercentage = currentLanguageSegments.length > 0 ? (mappedSegments.length / currentLanguageSegments.length) * 100 : 0;
+
+  // Handle session start request with warning
+  const handleSessionStartRequest = (existingCount: number) => {
+    setPendingMappingCount(existingCount);
+    setShowWarningDialog(true);
+  };
 
   // Mapping control logic
   const {
     handleSegmentClick,
     startMappingSession: baseMappingStart,
+    proceedWithSessionStart,
     pauseMappingSession: baseMappingPause,
     stopMappingSession: baseMappingStop,
     resetMappingSession: baseMappingReset
@@ -76,19 +90,26 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     sessionStartTime,
     segments: currentLanguageSegments,
     mappings,
+    selectedAudioFileId: selectedAudioFile?.id,
     onMappingCreate,
     onMappingDelete,
     onSessionChange: setMappingSession,
     onActiveSegmentChange: setActiveSegmentId,
-    onSessionStartTimeChange: setSessionStartTime
+    onSessionStartTimeChange: setSessionStartTime,
+    onSessionStartRequest: handleSessionStartRequest
   });
 
   // Enhanced mapping controls with audio integration
   const startMappingSession = () => {
     baseMappingStart();
+  };
+
+  const proceedWithMappingSession = () => {
+    proceedWithSessionStart();
     if (!isPlaying) {
       togglePlayPause();
     }
+    setShowWarningDialog(false);
   };
 
   const pauseMappingSession = () => {

@@ -124,7 +124,7 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
         {/* Progress */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>Progress</span>
+            <span>Audio File Progress</span>
             <span>{mappedCount} / {totalCount}</span>
           </div>
           <Progress value={progressPercentage} className="w-full" />
