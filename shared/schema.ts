@@ -96,6 +96,7 @@ export const textSegments = pgTable("text_segments", {
     hi?: { start: number; end: number }; // Character offsets for Devanagari  
     en?: { start: number; end: number }; // Character offsets for English/IAST
   }>().default({}).notNull(), // Reference points like PDF highlighting per Q3
+  order: integer("order").notNull().default(0),
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -273,7 +274,7 @@ export const selectChapterSchema = createSelectSchema(chapters);
 export const insertAudioFileSchema = createInsertSchema(audioFiles).omit({ id: true, createdAt: true });
 export const selectAudioFileSchema = createSelectSchema(audioFiles);
 
-export const insertTextSegmentSchema = createInsertSchema(textSegments).omit({ id: true, createdAt: true });
+export const insertTextSegmentSchema = createInsertSchema(textSegments).omit({ id: true, createdAt: true, order: true });
 export const selectTextSegmentSchema = createSelectSchema(textSegments);
 
 export const insertMediaSegmentSchema = createInsertSchema(mediaSegments).omit({ id: true, createdAt: true });

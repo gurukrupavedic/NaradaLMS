@@ -248,17 +248,11 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     en: "",
   });
 
-  // Local segment state for in-memory management (like experimental)
-  const [localSegments, setLocalSegments] = useState<Array<{
-    id: string;
-    conceptualName: string;
-    textReferences: {
-      te?: { start: number; end: number };
-      hi?: { start: number; end: number };
-      en?: { start: number; end: number };
-    };
-    order: number;
-  }>>([]);
+  // Segments query for database integration
+  const { data: segments = [], refetch: refetchSegments, isLoading: segmentsLoading } = useQuery({
+    queryKey: [`/api/admin/segments/${chapterId}`],
+    enabled: !!chapterId
+  });
 
   // Content state for chapter content
   const [chapterContent, setChapterContent] = useState<{
@@ -324,8 +318,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   useEffect(() => {
     console.log('ChapterEditor: Active tab changed to:', activeTab);
     console.log('ChapterEditor: chapterContent:', chapterContent);
-    console.log('ChapterEditor: localSegments count:', localSegments.length);
-  }, [activeTab, chapterContent, localSegments]);
+    console.log('ChapterEditor: segments count:', segments.length);
+  }, [activeTab, chapterContent, segments]);
 
   // === HELPER FUNCTIONS SECTION ===
 
@@ -546,11 +540,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     enabled: !!chapterId,
   });
 
-  // Fetch segments
-  const { data: segments } = useQuery<TextSegment[]>({
-    queryKey: [`/api/admin/segments/${chapterId}`],
-    enabled: !!chapterId,
-  });
+
 
   // Fetch media segments for selected audio file
   const selectedAudioFileId =
@@ -659,31 +649,89 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     },
   });
 
-  // CRUD operations for segments (in-memory, like experimental)
-  const handleCreateSegment = useCallback((segment: {
-    id: string;
-    conceptualName: string;
-    textReferences: { [key: string]: { start: number; end: number } };
-    order: number;
-  }) => {
-    console.log('Creating segment locally:', segment);
-    setLocalSegments(prev => [...prev, segment]);
-  }, []);
+  // CRUD mutations for segments
+  const createSegmentMutation = useMutation({
+    mutationFn: async (segment: { conceptualName: string; textReferences: any }) => {
+      return apiRequest("POST", `/api/admin/segments`, {
+        chapterId: parseInt(chapterId!),
+        conceptualName: segment.conceptualName,
+        textReferences: segment.textReferences
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+      toast({ title: "Segment created successfully" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to create segment",
+        description: error.message || "Unknown error",
+        variant: "destructive"
+      });
+    }
+  });
 
-  const handleUpdateSegment = useCallback((id: string, updates: Partial<{
-    conceptualName: string;
-    textReferences: { [key: string]: { start: number; end: number } };
-  }>) => {
-    console.log('Updating segment locally:', id, updates);
-    setLocalSegments(prev => 
-      prev.map(seg => seg.id === id ? { ...seg, ...updates } : seg)
-    );
-  }, []);
+  const updateSegmentMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: any }) => {
+      return apiRequest("PATCH", `/api/admin/segments/${id}`, updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+      toast({ title: "Segment updated successfully" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update segment", 
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
 
-  const handleDeleteSegment = useCallback((id: string) => {
-    console.log('Deleting segment locally:', id);
-    setLocalSegments(prev => prev.filter(seg => seg.id !== id));
-  }, []);
+  const deleteSegmentMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/admin/segments/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+      toast({ title: "Segment deleted successfully" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to delete segment",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const reorderSegmentsMutation = useMutation({
+    mutationFn: async (segments: any[]) => {
+      const segmentOrders = segments.map((segment, index) => ({
+        id: segment.id,
+        order: index
+      }));
+      
+      return apiRequest("PATCH", `/api/admin/segments/${chapterId}/reorder`, {
+        segmentOrders
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/segments/${chapterId}`] });
+    }
+  });
+
+  const handleCreateSegment = useCallback((segment: { conceptualName: string; textReferences: any }) => {
+    createSegmentMutation.mutate(segment);
+  }, [createSegmentMutation]);
+
+  const handleUpdateSegment = useCallback((id: number, updates: any) => {
+    updateSegmentMutation.mutate({ id, updates });
+  }, [updateSegmentMutation]);
+
+  const handleDeleteSegment = useCallback((id: number) => {
+    deleteSegmentMutation.mutate(id);
+  }, [deleteSegmentMutation]);
 
   // Content update mutation
   const updateContentMutation = useMutation({
@@ -1820,7 +1868,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 />
                 <div className="flex gap-2">
                   <Badge variant="secondary" className="text-xs">
-                    {localSegments.filter(s => s.textReferences[contentLanguage]).length} segments
+                    {segments.filter(s => s.textReferences[contentLanguage]).length} segments
                   </Badge>
                   <Badge variant="secondary" className="text-xs">
                     0 mapped
@@ -1834,7 +1882,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   <AnnotationLayer
                     content={chapterContent}
                     currentLanguage={contentLanguage}
-                    segments={localSegments}
+                    segments={segments}
                     selectedSegmentId={undefined}
                     onSegmentCreate={handleCreateSegment}
                     onSegmentUpdate={handleUpdateSegment}
@@ -1852,7 +1900,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 {/* Right Panel: Segment Management */}
                 <Panel defaultSize={50} minSize={30}>
                   <SegmentPanel
-                    segments={localSegments}
+                    segments={segments}
                     mappings={[]}
                     currentLanguage={contentLanguage}
                     content={chapterContent}
@@ -1862,7 +1910,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     onSegmentUpdate={handleUpdateSegment}
                     onPlayMapping={() => {}}
                     onSegmentReorder={(segments) => {
-                      setLocalSegments(segments);
+                      reorderSegmentsMutation.mutate(segments);
                     }}
                   />
                 </Panel>
@@ -1948,7 +1996,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               {audioFiles && audioFiles.length > 0 ? (
                 <ProgressiveMapper
                   audioUrl={audioFiles[0]?.filename ? `/uploads/${audioFiles[0].filename}` : ''}
-                  segments={localSegments}
+                  segments={segments}
                   currentLanguage={contentLanguage}
                   content={chapterContent}
                   mappings={[]}
@@ -1998,7 +2046,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               />
               <div className="flex gap-2">
                 <Badge variant="secondary" className="text-xs">
-                  {localSegments.filter(s => s.textReferences[contentLanguage]).length} segments
+                  {segments.filter(s => s.textReferences[contentLanguage]).length} segments
                 </Badge>
               </div>
             </div>

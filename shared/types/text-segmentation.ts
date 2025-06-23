@@ -9,7 +9,7 @@
  */
 
 export interface TextSegment {
-  id: string;
+  id: number;
   conceptualName: string;
   textReferences: {
     te?: { start: number; end: number };
