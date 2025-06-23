@@ -43,7 +43,7 @@ import {
   Settings,
 } from "lucide-react";
 import { useLocation } from "wouter";
-import { LanguageSelector } from "@/components/common/LanguageSelector";
+import { ScriptSelector } from "@/components/common/ScriptSelector";
 import { AnnotationLayer } from "@/components/text-segmentation/AnnotationLayer";
 import { SegmentPanel } from "@/components/text-segmentation/SegmentPanel";
 import { ProgressiveMapper } from "@/components/audio-mapping/ProgressiveMapper";

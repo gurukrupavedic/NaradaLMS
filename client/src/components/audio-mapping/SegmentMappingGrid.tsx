@@ -68,7 +68,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
               {segments.map((segment, index) => {
                 const mapping = getSegmentMapping(segment.id);
                 const status = getSegmentStatus(segment.id);
-                const segmentText = getSegmentText(segment, content, currentLanguage);
+                const segmentText = getSegmentText(segment, content, currentScript);
                 
                 return (
                   <div key={segment.id} className="flex items-center gap-4 min-w-fit">
