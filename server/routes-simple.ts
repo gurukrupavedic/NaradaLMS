@@ -426,7 +426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Media segments bulk creation endpoint
-  app.post('/api/admin/media-segments/bulk', async (req, res) => {
+  app.post('/api/media-segments/bulk', async (req, res) => {
     try {
       const { segments } = req.body;
       
@@ -453,7 +453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/media-segments', async (req, res) => {
+  app.post('/api/media-segments', async (req, res) => {
     try {
       const mediaSegment = await storage.createMediaSegment({
         ...req.body,
@@ -466,7 +466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/media-segments/:id', async (req, res) => {
+  app.patch('/api/media-segments/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const mediaSegment = await storage.updateMediaSegment(id, req.body);
@@ -477,7 +477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/media-segments/:id', async (req, res) => {
+  app.delete('/api/media-segments/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteMediaSegment(id);
@@ -489,7 +489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Segment mapping routes
-  app.get('/api/admin/segment-mappings/:chapterId', async (req, res) => {
+  app.get('/api/segment-mappings/:chapterId', async (req, res) => {
     try {
       const chapterId = parseInt(req.params.chapterId);
       const mappings = await storage.getSegmentMappingsByChapter(chapterId);
@@ -500,7 +500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/segment-mappings', async (req, res) => {
+  app.post('/api/segment-mappings', async (req, res) => {
     try {
       const mapping = await storage.createSegmentMapping({
         ...req.body,
@@ -513,7 +513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/segment-mappings/:id', async (req, res) => {
+  app.delete('/api/segment-mappings/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteSegmentMapping(id);
@@ -525,7 +525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Audio mapping routes
-  app.get('/api/admin/mappings/audio/:audioFileId', async (req, res) => {
+  app.get('/api/mappings/audio/:audioFileId', async (req, res) => {
     try {
       const audioFileId = parseInt(req.params.audioFileId);
       const mappings = await storage.getMappingsByAudioFile(audioFileId);
@@ -536,7 +536,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/mappings/segment/:segmentId', async (req, res) => {
+  app.get('/api/mappings/segment/:segmentId', async (req, res) => {
     try {
       const segmentId = parseInt(req.params.segmentId);
       const mappings = await storage.getMappingsBySegment(segmentId);
@@ -547,7 +547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/mappings', async (req, res) => {
+  app.post('/api/mappings', async (req, res) => {
     try {
       const mapping = await storage.createAudioMapping(req.body);
       res.json(mapping);
@@ -557,7 +557,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/mappings/:audioFileId/:segmentId', async (req, res) => {
+  app.delete('/api/mappings/:audioFileId/:segmentId', async (req, res) => {
     try {
       const audioFileId = parseInt(req.params.audioFileId);
       const segmentId = parseInt(req.params.segmentId);
