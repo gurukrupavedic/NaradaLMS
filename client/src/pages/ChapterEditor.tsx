@@ -669,12 +669,22 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     },
   });
 
-  // CRUD mutations for segments
+  // CRUD mutations for segments - updated to new format
   const createSegmentMutation = useMutation({
     mutationFn: async (segment: { textReferences: any }) => {
+      // Convert legacy textReferences format to new script-specific format
+      const firstScript = Object.keys(segment.textReferences)[0];
+      const range = segment.textReferences[firstScript];
+      
+      if (!firstScript || !range) {
+        throw new Error("Invalid segment format");
+      }
+      
       return apiRequest("POST", `/api/segments`, {
         chapterId: parseInt(chapterId!),
-        textReferences: segment.textReferences
+        script: firstScript,
+        startPosition: range.start,
+        endPosition: range.end
       });
     },
     onSuccess: () => {
@@ -689,6 +699,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       });
     }
   });
+
+  // Text segment mutation (alias for compatibility)
+  const createTextSegmentMutation = createSegmentMutation;
 
   const updateSegmentMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: any }) => {
