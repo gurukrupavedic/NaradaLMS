@@ -30,10 +30,11 @@ interface AnnotationLayerProps {
   content: ContentMap;
   currentLanguage: Language;
   segments: TextSegment[];
-  selectedSegmentId?: string;
+  selectedSegmentId?: number;
   onSegmentCreate: (segment: TextSegment) => void;
   onSegmentUpdate: (id: string, updates: Partial<TextSegment>) => void;
   onSegmentDelete: (id: string) => void;
+  onSegmentSelect?: (segmentId: number | undefined) => void;
   // NEW PROPS FOR LANGUAGE SELECTOR INTEGRATION
   onLanguageChange: (language: Language) => void;
   availableLanguages: Language[];
@@ -47,6 +48,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   onSegmentCreate,
   onSegmentUpdate,
   onSegmentDelete,
+  onSegmentSelect,
   onLanguageChange,
   availableLanguages
 }) => {
@@ -206,12 +208,13 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
       parts.push(
         <span
           key={segment.id}
-          className={`relative rounded px-1 py-0.5 cursor-default select-none transition-colors ${
+          className={`relative rounded px-1 py-0.5 cursor-pointer select-none transition-colors ${
             isSelected 
               ? 'bg-blue-200 text-blue-900 ring-2 ring-blue-400' 
               : 'bg-yellow-100 text-yellow-900 hover:bg-yellow-200'
           }`}
           title={segment.conceptualName}
+          onClick={() => onSegmentSelect?.(isSelected ? undefined : segment.id)}
         >
           {normalizedText.slice(range.start, range.end)}
 

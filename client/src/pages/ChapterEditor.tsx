@@ -254,6 +254,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     enabled: !!chapterId
   });
 
+  // Segment selection state
+  const [selectedSegmentId, setSelectedSegmentId] = useState<number | undefined>(undefined);
+
   // Content state for chapter content
   const [chapterContent, setChapterContent] = useState<{
     te?: string;
@@ -1866,10 +1869,11 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     content={chapterContent}
                     currentLanguage={contentLanguage}
                     segments={segments}
-                    selectedSegmentId={undefined}
+                    selectedSegmentId={selectedSegmentId}
                     onSegmentCreate={handleCreateSegment}
                     onSegmentUpdate={handleUpdateSegment}
                     onSegmentDelete={handleDeleteSegment}
+                    onSegmentSelect={setSelectedSegmentId}
                     onLanguageChange={setContentLanguage}
                     availableLanguages={['te', 'hi', 'en']}
                   />
@@ -1887,8 +1891,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     mappings={[]}
                     currentLanguage={contentLanguage}
                     content={chapterContent}
-                    currentSegmentId={undefined}
-                    onSegmentSelect={() => {}}
+                    currentSegmentId={selectedSegmentId}
+                    onSegmentSelect={(segmentId) => {
+                      setSelectedSegmentId(segmentId);
+                    }}
                     onSegmentDelete={handleDeleteSegment}
                     onSegmentUpdate={handleUpdateSegment}
                     onPlayMapping={() => {}}

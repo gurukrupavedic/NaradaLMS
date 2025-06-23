@@ -21,8 +21,8 @@ interface SegmentPanelProps {
   mappings: AudioMapping[];
   currentLanguage: Language;
   content: ContentMap;
-  currentSegmentId?: string;
-  onSegmentSelect: (segmentId: string) => void;
+  currentSegmentId?: number;
+  onSegmentSelect: (segmentId: number | undefined) => void;
   onSegmentDelete: (segmentId: string) => void;
   onSegmentUpdate: (id: string, updates: Partial<TextSegment>) => void;
   onPlayMapping: (mapping: AudioMapping) => void;
@@ -51,7 +51,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
     const handleClickOutside = (event: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
         if (currentSegmentId) {
-          onSegmentSelect(''); // Clear selection
+          onSegmentSelect(undefined); // Clear selection
         }
       }
     };
