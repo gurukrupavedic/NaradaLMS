@@ -111,6 +111,7 @@ Changelog:
 - June 23, 2025. ROLLBACK POINT: Segmentation tab icons fix - Application stable except segmentation tab shows all segments as unmapped due to duplicate API route returning wrong data format. Created comprehensive rollback documentation before implementing surgical route fix.
 - June 23, 2025. COMPLETED: Segmentation tab mapping icons - Removed duplicate API route and fixed SegmentPanel props to receive allChapterMappings data instead of empty array. Icons now display correct mapped/unmapped status with green connected circles for mapped segments and gray disconnected icons for unmapped segments.
 - June 23, 2025. COMPLETED: UI cleanup - Removed experimental segmentation studio button from chapter header, keeping only essential publish/unpublish functionality.
+- June 23, 2025. ROLLBACK POINT: Phase 1 cleanup preparation - Application fully functional with segmentation tab mapping icons working correctly. Created comprehensive rollback documentation before Phase 1 zero-risk cleanup (file removal, constants extraction, documentation).
 
 ## User Preferences
 
