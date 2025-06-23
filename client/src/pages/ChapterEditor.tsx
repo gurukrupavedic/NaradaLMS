@@ -1014,6 +1014,12 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     },
   });
 
+  // All mappings for the chapter (for counting mapped segments)
+  const { data: allChapterMappings = [] } = useQuery({
+    queryKey: [`/api/mappings/chapter/${chapterId}`],
+    enabled: !!chapterId
+  });
+
   // === MAPPING OPERATIONS SECTION ===
 
   // Mapping validation utility
