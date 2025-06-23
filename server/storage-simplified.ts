@@ -501,8 +501,13 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`)
 
   async createTextSegment(segment: any): Promise<any> {
     const newSegment = {
-      ...segment,
       id: this.nextId++,
+      chapterId: segment.chapterId,
+      script: segment.script,
+      startPosition: segment.startPosition,
+      endPosition: segment.endPosition,
+      order: segment.order || this.segments.filter(s => s.chapterId === segment.chapterId && s.script === segment.script).length,
+      createdBy: segment.createdBy || "system",
       createdAt: new Date()
     };
     this.segments.push(newSegment);

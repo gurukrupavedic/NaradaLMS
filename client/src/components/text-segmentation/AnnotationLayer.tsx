@@ -157,9 +157,9 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     if (!selectedRange) return;
 
     const newSegment = {
-      textReferences: {
-        [currentScript]: selectedRange
-      }
+      script: currentScript,
+      startPosition: selectedRange.start,
+      endPosition: selectedRange.end
     };
 
     onSegmentCreate(newSegment);

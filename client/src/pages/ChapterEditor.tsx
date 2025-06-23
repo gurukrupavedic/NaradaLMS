@@ -678,7 +678,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}/${contentScript}`] });
       toast({ title: "Segment created successfully" });
     },
     onError: (error: any) => {
@@ -695,7 +695,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       return apiRequest("PATCH", `/api/segments/${id}`, updates);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}/${contentScript}`] });
       toast({ title: "Segment updated successfully" });
     },
     onError: (error: any) => {
@@ -712,7 +712,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       return apiRequest("DELETE", `/api/segments/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}/${contentScript}`] });
       toast({ title: "Segment deleted successfully" });
     },
     onError: (error: any) => {
@@ -736,7 +736,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}/${contentScript}`] });
     }
   });
 
@@ -1383,7 +1383,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }
 
     const segmentsForLang = segments.filter(
-      (seg) => seg.textReferences[language],
+      (seg) => seg.script === language,
     );
     if (segmentsForLang.length === 0) {
       return (
