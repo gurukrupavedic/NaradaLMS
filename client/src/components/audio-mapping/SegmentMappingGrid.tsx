@@ -14,13 +14,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, Link2Off } from 'lucide-react';
 import { TimestampPill } from './TimestampPill';
 import { ConnectedCirclesIcon } from '@shared/components/icons';
-import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/types/text-segmentation';
+import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
 import { getSegmentText } from '@shared/utils/text-segmentation';
 
 
 interface SegmentMappingGridProps {
   segments: TextSegment[];
-  currentLanguage: Language;
+  currentScript: Script;
   content: ContentMap;
   mappings: AudioMapping[];
   mappingSession: 'idle' | 'active' | 'paused';
@@ -35,7 +35,7 @@ interface SegmentMappingGridProps {
 
 export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
   segments,
-  currentLanguage,
+  currentScript,
   content,
   mappings,
   mappingSession,

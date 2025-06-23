@@ -15,14 +15,14 @@ import { SegmentMappingGrid } from './SegmentMappingGrid';
 import { MappingWarningDialog } from '@/components/ui/mapping-warning-dialog';
 import { useMappingControls } from '@shared/hooks/useMappingControls';
 import { useAudioPlayer } from '@shared/hooks/useAudioPlayer';
-import type { TextSegment, AudioMapping, Language, ContentMap } from '@shared/types/text-segmentation';
-import { getSegmentsForLanguage } from '@shared/utils/text-segmentation';
+import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
+import { getSegmentsForScript } from '@shared/utils/text-segmentation';
 
 
 interface ProgressiveMapperProps {
   audioUrl: string;
   segments: TextSegment[];
-  currentLanguage: Language;
+  currentScript: Script;
   content: ContentMap;
   mappings: AudioMapping[];
   selectedAudioFile?: { id: number; filename: string; displayName?: string };
@@ -34,7 +34,7 @@ interface ProgressiveMapperProps {
 export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   audioUrl,
   segments,
-  currentLanguage,
+  currentScript,
   content,
   mappings,
   selectedAudioFile,
@@ -62,12 +62,12 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [pendingMappingCount, setPendingMappingCount] = useState(0);
 
-  // Filter segments by current language
-  const currentLanguageSegments = getSegmentsForLanguage(segments, currentLanguage);
+  // Filter segments by current script
+  const currentScriptSegments = getSegmentsForScript(segments, currentScript);
 
   // Calculate progress (audio file specific)
-  const mappedSegments = currentLanguageSegments.filter(s => mappings.some(m => m.segmentId === s.id));
-  const progressPercentage = currentLanguageSegments.length > 0 ? (mappedSegments.length / currentLanguageSegments.length) * 100 : 0;
+  const mappedSegments = currentScriptSegments.filter(s => mappings.some(m => m.segmentId === s.id));
+  const progressPercentage = currentScriptSegments.length > 0 ? (mappedSegments.length / currentScriptSegments.length) * 100 : 0;
 
   // Handle session start request with warning
   const handleSessionStartRequest = (existingCount: number) => {
@@ -88,7 +88,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     activeSegmentId,
     currentTime,
     sessionStartTime,
-    segments: currentLanguageSegments,
+    segments: currentScriptSegments,
     mappings,
     selectedAudioFileId: selectedAudioFile?.id,
     onMappingCreate,
@@ -165,7 +165,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
           mappingSession={mappingSession}
           progressPercentage={progressPercentage}
           mappedCount={mappedSegments.length}
-          totalCount={currentLanguageSegments.length}
+          totalCount={currentScriptSegments.length}
           togglePlayPause={togglePlayPause}
           seekTo={seekTo}
           startMappingSession={startMappingSession}
@@ -178,8 +178,8 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
       {/* Right Column: Segment Mapping Grid */}
       <div className="col-span-8">
         <SegmentMappingGrid
-          segments={currentLanguageSegments}
-          currentLanguage={currentLanguage}
+          segments={currentScriptSegments}
+          currentScript={currentScript}
           content={content}
           mappings={mappings}
           mappingSession={mappingSession}

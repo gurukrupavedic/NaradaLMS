@@ -163,7 +163,7 @@ const isContentEntryLocal = (content: any): content is { display: string; segmen
  * @returns Normalized text content for the specified language
  */
 export const getDisplayText = (content: ContentMap, script: Script): string => {
-  const entry = content[language];
+  const entry = content[script];
   
   if (!entry) {
     return '';
@@ -189,7 +189,7 @@ export const getDisplayText = (content: ContentMap, script: Script): string => {
  * @returns Normalized segmentation text content for the specified language
  */
 export const getSegmentationText = (content: ContentMap, script: Script): string => {
-  const entry = content[language];
+  const entry = content[script];
   
   if (!entry) {
     return '';
