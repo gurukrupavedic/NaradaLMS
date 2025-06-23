@@ -2,7 +2,7 @@ import { db } from "./db";
 import { 
   tracks, chapters, audioFiles, textSegments, mediaSegments, segmentMappings, audioMappings, users
 } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, max } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { MemStorage } from "./storage-simplified";
 const memStorage = new MemStorage();
@@ -555,8 +555,17 @@ export class DatabaseStorage implements IStorage {
     if (!this.initialized) return memStorage.createTextSegment(segment);
     
     try {
+      // Get next order value for this chapter
+      const maxOrderResult = await db
+        .select({ maxOrder: max(textSegments.order) })
+        .from(textSegments)
+        .where(eq(textSegments.chapterId, segment.chapterId));
+      
+      const nextOrder = (maxOrderResult[0]?.maxOrder ?? -1) + 1;
+      
       const [newSegment] = await db.insert(textSegments).values({
         ...segment,
+        order: nextOrder,
         createdAt: new Date()
       }).returning();
       return newSegment;
