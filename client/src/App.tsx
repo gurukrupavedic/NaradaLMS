@@ -23,6 +23,7 @@ const DaisyUI5Showcase = lazy(() => import("@/pages/DaisyUI5Showcase").then(modu
 const ColorfulDemo = lazy(() => import("@/components/demos/ColorfulDemo").then(module => ({ default: module.ColorfulDemo })));
 const ExperimentsShowcase = lazy(() => import("@/pages/ExperimentsShowcase").then(module => ({ default: module.ExperimentsShowcase })));
 const DesignSystemShowcase = lazy(() => import("@/components/design-system/DesignSystemShowcase").then(module => ({ default: module.DesignSystemShowcase })));
+const DesignSystemExperiment = lazy(() => import("@/pages/DesignSystemExperiment").then(module => ({ default: module.DesignSystemExperiment })));
 
 
 
@@ -64,6 +65,7 @@ function Router() {
             <Route path="/tracks/:trackId" component={TrackView} />
             <Route path="/chapters/:id" component={ChapterView} />
             <Route path="/experiments" component={ExperimentsShowcase} />
+            <Route path="/experiments/design-system" component={DesignSystemExperiment} />
             <Route path="/design-system-showcase" component={DesignSystemShowcase} />
             <Route path="/experiments/daisyui-5" component={DaisyUI5Showcase} />
 
