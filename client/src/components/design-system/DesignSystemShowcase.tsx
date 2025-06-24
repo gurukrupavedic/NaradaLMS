@@ -82,6 +82,10 @@ export function DesignSystemShowcase() {
   const [basicSliderSize, setBasicSliderSize] = useState("md");
   const [progressSliderVariant, setProgressSliderVariant] = useState("green");
   
+  // Slider props state management
+  const [sliderProps, setSliderProps] = useState({ showValue: true, disabled: false });
+  const [progressSliderProps, setProgressSliderProps] = useState({ showPercentage: true });
+  
   // Additional states for remaining components
   const [dialogVariant, setDialogVariant] = useState("blue");
   const [dialogSize, setDialogSize] = useState("md");
@@ -485,8 +489,9 @@ export function DesignSystemShowcase() {
               description="Track student completion"
               componentName="ProgressSlider"
               variant={progressSliderVariant}
-              props={{ showPercentage: true }}
+              props={progressSliderProps}
               onVariantChange={setProgressSliderVariant}
+              onPropsChange={setProgressSliderProps}
               allSizes={[]}
             >
               <div className="space-y-4">
@@ -495,12 +500,14 @@ export function DesignSystemShowcase() {
                   total={100}
                   label="Chapter Progress"
                   variant={progressSliderVariant as any}
+                  showPercentage={progressSliderProps.showPercentage}
                 />
                 <ProgressSlider
                   progress={45}
                   total={100}
                   label="Overall Track"
                   variant="emerald"
+                  showPercentage={progressSliderProps.showPercentage}
                 />
                 <Slider
                   min={0}
