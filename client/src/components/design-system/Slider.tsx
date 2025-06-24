@@ -15,8 +15,9 @@ export interface SliderProps {
   min?: number;
   max?: number;
   step?: number;
-  value: number;
-  onChange: (value: number) => void;
+  value: number | number[];
+  onChange?: (value: number) => void;
+  onValueChange?: (value: number[]) => void;
   disabled?: boolean;
   variant?: "blue" | "green" | "purple" | "orange" | "pink" | "indigo" | "teal" | "cyan" | "yellow" | "lime" | "rose" | "emerald";
   size?: "sm" | "md" | "lg";
@@ -165,7 +166,7 @@ export function Slider({
       const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
       const newValue = min + (percentage / 100) * (max - min);
       const steppedValue = Math.round(newValue / step) * step;
-      onChange?.(Math.max(min, Math.min(max, steppedValue)));
+      handleValueChange(Math.max(min, Math.min(max, steppedValue)));
     };
 
     updateValue(e.clientX);
@@ -191,7 +192,7 @@ export function Slider({
           )}
           {showValue && (
             <span className={`text-gray-600 ${sizeStyle.label}`}>
-              {formatValue(value)}
+              {formatValue(currentValue)}
             </span>
           )}
         </div>
