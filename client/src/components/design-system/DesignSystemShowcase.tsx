@@ -821,7 +821,7 @@ export function DesignSystemShowcase() {
                   <CardDescription>Sanskrit Fundamentals</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant="outline">
+                  <Button className="w-full" variant="outline-blue">
                     Continue Learning
                   </Button>
                 </CardContent>
@@ -834,7 +834,7 @@ export function DesignSystemShowcase() {
                   <CardDescription>Chapter Recordings</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant="outline">
+                  <Button className="w-full" variant="outline-green">
                     Play Audio
                   </Button>
                 </CardContent>
@@ -847,7 +847,7 @@ export function DesignSystemShowcase() {
                   <CardDescription>Preferences</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant="outline">
+                  <Button className="w-full" variant="outline-purple">
                     Configure
                   </Button>
                 </CardContent>
