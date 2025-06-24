@@ -593,15 +593,15 @@ export function DesignSystemShowcase() {
             <h3 className="text-xl font-medium mb-4">Size Guide</h3>
             <div className="flex items-center gap-6">
               <div className="text-center">
-                <Avatar name="SM" size="sm" />
+                <Avatar name="Small User" size="sm" educational="student" />
                 <p className="text-xs mt-1 text-gray-500">Small (headers)</p>
               </div>
               <div className="text-center">
-                <Avatar name="DF" size="default" />
+                <Avatar name="Default User" size="default" educational="instructor" />
                 <p className="text-xs mt-1 text-gray-500">Default (lists)</p>
               </div>
               <div className="text-center">
-                <Avatar name="LG" size="lg" />
+                <Avatar name="Large User" size="lg" educational="admin" />
                 <p className="text-xs mt-1 text-gray-500">Large (profiles)</p>
               </div>
             </div>
