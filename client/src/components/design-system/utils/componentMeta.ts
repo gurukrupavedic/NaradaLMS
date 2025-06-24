@@ -15,7 +15,7 @@ export const colorVariants = [
 
 export const sizeOptions = {
   small: ["sm", "md", "lg"],
-  full: ["sm", "md", "lg", "xl"]
+  full: ["sm", "md", "lg"]
 };
 
 export interface ComponentConfig {

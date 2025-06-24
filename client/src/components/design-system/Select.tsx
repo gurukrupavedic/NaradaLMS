@@ -21,9 +21,14 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const selectTriggerVariants = cva(
-  "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 transition-all duration-200",
+  "flex w-full items-center justify-between rounded-md border border-input bg-background placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 transition-all duration-200",
   {
     variants: {
+      size: {
+        sm: "h-8 px-2 py-1 text-xs",
+        md: "h-10 px-3 py-2 text-sm",
+        lg: "h-12 px-4 py-3 text-base"
+      },
       variant: {
         default: "focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]",
         blue: "focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.15)]",
@@ -41,7 +46,8 @@ const selectTriggerVariants = cva(
       }
     },
     defaultVariants: {
-      variant: "default"
+      variant: "default",
+      size: "md"
     }
   }
 );
@@ -86,14 +92,14 @@ export interface SelectContentProps
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   SelectTriggerProps
->(({ className, variant, educational, children, ...props }, ref) => {
+>(({ className, variant, size, educational, children, ...props }, ref) => {
   // Use educational variant if provided
   const finalVariant = educational ? educationalVariants[educational] : variant;
   
   return (
     <SelectPrimitive.Trigger
       ref={ref}
-      className={cn(selectTriggerVariants({ variant: finalVariant }), className)}
+      className={cn(selectTriggerVariants({ variant: finalVariant, size }), className)}
       {...props}
     >
       {children}
