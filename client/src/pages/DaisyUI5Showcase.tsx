@@ -45,7 +45,7 @@ export function DaisyUI5Showcase() {
 
         {/* Version Comparison Info */}
         <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h2 class="text-xl font-semibold text-blue-900 mb-3">Version 5.0 Improvements</h2>
+          <h2 className="text-xl font-semibold text-blue-900 mb-3">Latest Version Improvements</h2>
           <div className="grid md:grid-cols-2 gap-6 text-sm">
             <div>
               <h3 className="font-medium text-blue-800 mb-2">Visual Enhancements:</h3>
