@@ -23,7 +23,8 @@ import { Textarea } from "./Textarea";
 import { Switch } from "./Switch";
 import { Tooltip, SimpleTooltip } from "./Tooltip";
 import { Loading } from "./Loading";
-import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, HelpCircle, Settings, Upload } from "lucide-react";
+import { RichTextEditor } from "./RichTextEditor";
+import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, HelpCircle, Settings, Upload, Type } from "lucide-react";
 
 export function DesignSystemShowcase() {
   const [selectedVariant, setSelectedVariant] = useState<string>("blue");
@@ -884,6 +885,66 @@ export function DesignSystemShowcase() {
                     <span className="text-sm">Analyzing audio...</span>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Rich Text Editor Component */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Rich Text Editor - Content Creation</h3>
+            <div className="space-y-6">
+              <div>
+                <h4 className="font-medium mb-3">Chapter Content Editor</h4>
+                <RichTextEditor
+                  educational="chapter"
+                  placeholder="Write your chapter content with rich formatting..."
+                  size="lg"
+                  showCharCount
+                  content="<h2>Introduction to Vedic Chanting</h2><p>Vedic chanting is a sacred practice that has been preserved for thousands of years. The proper pronunciation and rhythm are essential for maintaining the spiritual potency of these ancient mantras.</p><blockquote><p><strong>ॐ गं गणपतये नमः</strong></p></blockquote><p>This fundamental mantra invokes Lord Ganesha, the remover of obstacles, before beginning any sacred practice.</p>"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-medium mb-3">Sanskrit Content</h4>
+                  <RichTextEditor
+                    educational="sanskrit"
+                    placeholder="Enter Sanskrit text with proper formatting..."
+                    size="default"
+                    content="<p><strong>श्लोक:</strong></p><p style='text-align: center'>गुरुर्ब्रह्मा गुरुर्विष्णुः गुरुर्देवो महेश्वरः।<br>गुरुः साक्षात् परब्रह्म तस्मै श्रीगुरवे नमः॥</p>"
+                  />
+                </div>
+                
+                <div>
+                  <h4 className="font-medium mb-3">Translation & Commentary</h4>
+                  <RichTextEditor
+                    educational="translation"
+                    placeholder="Add translations and explanations..."
+                    size="default"
+                    content="<p><em>Translation:</em></p><p>The Guru is Brahma, the Guru is Vishnu, the Guru is the great Lord Shiva. The Guru is indeed the Supreme Brahman; salutations to that revered Guru.</p><hr><p><strong>Commentary:</strong> This verse establishes the supreme importance of the spiritual teacher in Vedic tradition.</p>"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-3">Student Instructions</h4>
+                <RichTextEditor
+                  educational="instructions"
+                  placeholder="Provide clear learning instructions..."
+                  size="sm"
+                  content="<h3>Practice Guidelines</h3><ol><li>Listen to the audio pronunciation carefully</li><li>Practice each syllable slowly before increasing speed</li><li>Focus on maintaining proper breath control</li><li>Repeat each verse 108 times for maximum benefit</li></ol><p><strong>Note:</strong> Remember that consistency in practice is more important than perfection.</p>"
+                />
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-3">Lesson Notes</h4>
+                <RichTextEditor
+                  educational="notes"
+                  placeholder="Take detailed notes during the lesson..."
+                  size="default"
+                  showCharCount
+                  maxLength={1000}
+                />
               </div>
             </div>
           </div>

@@ -28,6 +28,7 @@ export * from './Textarea';
 export * from './Switch';
 export * from './Tooltip';
 export * from './Loading';
+export * from './RichTextEditor';
 
 // Showcase component
 export { DesignSystemShowcase } from './DesignSystemShowcase';
@@ -47,3 +48,4 @@ export type { TextareaProps } from './Textarea';
 export type { SwitchProps } from './Switch';
 export type { TooltipContentProps } from './Tooltip';
 export type { SpinnerProps, SkeletonProps } from './Loading';
+export type { RichTextEditorProps } from './RichTextEditor';
