@@ -252,12 +252,14 @@ export function DesignSystemShowcase() {
                 <Button 
                   variant={selectedVariant as any} 
                   onClick={() => setShowDialog(true)}
+                  className="w-full"
                 >
-                  Open User Dialog
+                  Open User Invitation
                 </Button>
                 <Button 
                   variant="rose" 
                   onClick={() => setShowConfirmDialog(true)}
+                  className="w-full"
                 >
                   Delete Confirmation
                 </Button>
