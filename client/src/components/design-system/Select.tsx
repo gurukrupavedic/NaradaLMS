@@ -146,7 +146,7 @@ const SelectContent = React.forwardRef<
   SelectContentProps
 >(({ className, children, position = "popper", variant, educational, ...props }, ref) => {
   // Use educational variant if provided
-  const finalVariant = educational ? educationalVariants[educational] : variant || "blue";
+  const finalVariant = educational ? educationalVariants[educational] : variant || "default";
   
   return (
     <SelectContext.Provider value={{ variant: finalVariant }}>
@@ -194,6 +194,7 @@ SelectLabel.displayName = SelectPrimitive.Label.displayName;
 
 // Color mapping for hover states
 const hoverColorMap: Record<string, { bg: string; text: string; check: string }> = {
+  default: { bg: "hover:bg-blue-50 focus:bg-blue-50", text: "hover:text-blue-700 focus:text-blue-700", check: "text-blue-600" },
   blue: { bg: "hover:bg-blue-50 focus:bg-blue-50", text: "hover:text-blue-700 focus:text-blue-700", check: "text-blue-600" },
   green: { bg: "hover:bg-green-50 focus:bg-green-50", text: "hover:text-green-700 focus:text-green-700", check: "text-green-600" },
   purple: { bg: "hover:bg-purple-50 focus:bg-purple-50", text: "hover:text-purple-700 focus:text-purple-700", check: "text-purple-600" },
@@ -212,7 +213,7 @@ const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(({ className, children, ...props }, ref) => {
-  const { variant = "blue" } = React.useContext(SelectContext);
+  const { variant = "default" } = React.useContext(SelectContext);
   const colors = hoverColorMap[variant] || hoverColorMap.blue;
   
   return (
