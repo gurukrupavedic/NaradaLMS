@@ -816,7 +816,7 @@ export function DesignSystemShowcase() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card variant={cardVariant as any} glow="subtle" interactive>
                 <CardHeader className="text-center">
-                  <BookOpen className="h-8 w-8 mx-auto mb-2" style={{ color: `var(--${cardVariant}-600)` }} />
+                  <BookOpen className={`h-8 w-8 mx-auto mb-2 text-${cardVariant}-600`} />
                   <CardTitle className="text-base">Learning Track</CardTitle>
                   <CardDescription>Sanskrit Fundamentals</CardDescription>
                 </CardHeader>
@@ -829,7 +829,7 @@ export function DesignSystemShowcase() {
 
               <Card variant={cardVariant as any} glow="subtle" interactive>
                 <CardHeader className="text-center">
-                  <Music className="h-8 w-8 mx-auto mb-2" style={{ color: `var(--${cardVariant}-600)` }} />
+                  <Music className={`h-8 w-8 mx-auto mb-2 text-${cardVariant}-600`} />
                   <CardTitle className="text-base">Audio Content</CardTitle>
                   <CardDescription>Chapter Recordings</CardDescription>
                 </CardHeader>
@@ -842,7 +842,7 @@ export function DesignSystemShowcase() {
 
               <Card variant={cardVariant as any} glow="subtle" interactive>
                 <CardHeader className="text-center">
-                  <Settings className="h-8 w-8 mx-auto mb-2" style={{ color: `var(--${cardVariant}-600)` }} />
+                  <Settings className={`h-8 w-8 mx-auto mb-2 text-${cardVariant}-600`} />
                   <CardTitle className="text-base">Settings</CardTitle>
                   <CardDescription>Preferences</CardDescription>
                 </CardHeader>
