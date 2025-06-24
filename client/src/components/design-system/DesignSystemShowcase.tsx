@@ -367,29 +367,30 @@ export function DesignSystemShowcase() {
 
             <Card className="p-6">
               <CardHeader className="p-0 mb-4">
-                <CardTitle>Interactive Sliders</CardTitle>
-                <CardDescription>Volume, difficulty, and custom controls</CardDescription>
+                <CardTitle>Learning Progress</CardTitle>
+                <CardDescription>Track student completion</CardDescription>
               </CardHeader>
               <CardContent className="p-0 space-y-4">
+                <ProgressSlider
+                  progress={75}
+                  total={100}
+                  label="Chapter Progress"
+                  variant="green"
+                />
+                <ProgressSlider
+                  progress={45}
+                  total={100}
+                  label="Overall Track"
+                  variant="emerald"
+                />
                 <Slider
                   min={0}
                   max={100}
                   value={sliderValue}
                   onChange={setSliderValue}
                   variant={selectedVariant as any}
-                  label="Volume Control"
+                  label="Custom Slider"
                   showValue
-                  formatValue={(val) => `${val}%`}
-                />
-                <Slider
-                  min={1}
-                  max={5}
-                  value={3}
-                  onChange={() => {}}
-                  variant="purple"
-                  label="Difficulty Level"
-                  showValue
-                  formatValue={(val) => `Level ${val}`}
                 />
               </CardContent>
             </Card>
@@ -436,70 +437,6 @@ export function DesignSystemShowcase() {
                 size="md"
               />
             </div>
-          </div>
-        </div>
-
-        {/* Progress Components Showcase */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Progress Components</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="p-6">
-              <CardHeader className="p-0 mb-4">
-                <CardTitle>Learning Progress</CardTitle>
-                <CardDescription>Track student completion with clean progress bars</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0 space-y-4">
-                <ProgressSlider
-                  progress={75}
-                  total={100}
-                  label="Chapter Progress"
-                  variant="green"
-                />
-                <ProgressSlider
-                  progress={45}
-                  total={100}
-                  label="Overall Track"
-                  variant="emerald"
-                />
-                <ProgressSlider
-                  progress={90}
-                  total={100}
-                  label="Assessment Score"
-                  variant="blue"
-                />
-              </CardContent>
-            </Card>
-
-            <Card className="p-6">
-              <CardHeader className="p-0 mb-4">
-                <CardTitle>Traditional Progress</CardTitle>
-                <CardDescription>Linear and circular progress indicators</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0 space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Content Upload</span>
-                    <span>65%</span>
-                  </div>
-                  <Progress value={65} variant="orange" />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Audio Processing</span>
-                    <span>80%</span>
-                  </div>
-                  <Progress value={80} variant="purple" />
-                </div>
-                <div className="flex items-center gap-4">
-                  <CircularProgress value={75} variant="teal" size="lg" showPercentage />
-                  <div>
-                    <p className="text-sm font-medium">Course Completion</p>
-                    <p className="text-xs text-gray-500">3 of 4 chapters done</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
 
