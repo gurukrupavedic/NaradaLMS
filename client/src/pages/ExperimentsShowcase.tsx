@@ -118,17 +118,19 @@ export function ExperimentsShowcase() {
           </p>
         </div>
 
-        {/* Test Static Files */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-semibold text-blue-900 mb-2">Static File Test</h3>
-          <p className="text-blue-800 text-sm mb-3">Click to test if static files are working:</p>
-          <a 
-            href="/experiments/test.html" 
-            target="_blank"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
-          >
-            Test Static Files
-          </a>
+
+
+        {/* Debug Info */}
+        <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-900 mb-2">Debug Info</h3>
+          <p className="text-gray-700 text-sm">
+            If experiments aren't working, try opening these direct URLs:
+          </p>
+          <ul className="text-sm text-gray-600 mt-2 space-y-1">
+            <li>• http://localhost:5000/experiments/01-dashboard-comparison.html</li>
+            <li>• http://localhost:5000/experiments/02-chapter-editor-comparison.html</li>
+            <li>• http://localhost:5000/experiments/03-forms-comparison.html</li>
+          </ul>
         </div>
 
         {/* Quick Actions */}
