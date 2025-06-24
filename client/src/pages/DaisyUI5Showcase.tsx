@@ -15,6 +15,12 @@ export function DaisyUI5Showcase() {
       highlight: "Interactive theme switcher"
     },
     {
+      title: "Night + Business Pairing",
+      description: "Perfect light/dark mode combination - Night theme as dark mode with Business theme as complementary light mode",
+      link: "/experiments/03-night-business-pairing.html",
+      highlight: "Perfect theme pair"
+    },
+    {
       title: "Vedic Dashboard",
       description: "Complete dashboard redesign with autumn theme and Vedic aesthetic enhancements",
       link: "/experiments/02-vedic-dashboard.html",

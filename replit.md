@@ -129,7 +129,9 @@ Changelog:
 - June 24, 2025. DAISYUI EXPERIMENTS REMOVED: User feedback indicated pastel theme not suitable for Vedic LMS aesthetic. Completely removed all DaisyUI experiments, static files, routes, and dependencies. Experiments tile reset to generic placeholder. Zero impact on main application functionality.
 - June 24, 2025. DAISYUI 5.0 EXPERIMENTS CREATED: Created new isolated experiments with DaisyUI 5.0 to explore improved aesthetics and better theme options. Added theme comparison tool and Vedic-inspired dashboard with autumn theme. All experiments isolated under Experiments tile with zero impact on main application.
 - June 24, 2025. DAISYUI EXPERIMENTS FIXED: Corrected version issues - DaisyUI 5.0 doesn't exist, updated to 4.12.24 (latest actual version). Fixed CDN loading, HTML syntax errors, and added proper Tailwind configuration. Added pastel theme to comparison tool per user request. Experiments now display properly styled components.
+- June 24, 2025. NIGHT + BUSINESS THEME PAIRING: Created perfect light/dark mode combination for user's Vedic LMS. Night theme as dark mode with Business theme as complementary light mode. Added interactive pairing demo showing consistent professional aesthetics, matching contrast ratios, and smooth transitions. User confirmed Night theme preference for dark mode.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Theme preferences: Night theme for dark mode, Business theme for light mode (professional aesthetic pairing).
