@@ -144,6 +144,7 @@ Changelog:
 - June 24, 2025. FLUORESCENT GLOW COLORS: Updated glow effects with fluorescent cousins of main colors for brighter, more energetic appearance. Blue→Deep Sky Blue (#00bfff), Green→Spring Green (#00ff7f), Purple→Electric Purple (#9d4edd), Orange→Electric Orange (#ff6b35), Pink→Hot Pink (#ff1493), Indigo→Royal Blue (#4169e1). Creates vibrant fluorescent aura while maintaining professional aesthetic.
 - June 24, 2025. PERFECT DASHBOARD FLUORESCENT MATCH: Applied exact Tailwind fluorescent colors from SimpleDashboard (blue-100, green-100, purple-100, etc.) with higher opacity (60%→20%) for perfect recreation of dashboard's subtle, classy glow effects. Now matches the refined fluorescent aesthetic of the dashboard tiles.
 - June 24, 2025. DASHBOARD LIGHT MODE PRECISION: Simplified light mode glow to single shadow layer (0 4px 14px, 80% opacity) matching exact SimpleDashboard behavior. Dark mode maintains multi-layer diffusion for optimal contrast. Light mode now perfectly recreates dashboard tile subtlety.
+- June 24, 2025. ENHANCED FLUORESCENT INTENSITY: Increased light mode glow intensity with stronger border (30% opacity), larger glow area (20px), full opacity fluorescent layer (100%), and outer halo (60% opacity at 25px) for more vibrant, luminous appearance while maintaining professional aesthetic.
 
 ## User Preferences
 
