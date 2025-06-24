@@ -290,8 +290,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Parse audio metadata
       let duration = 0;
       try {
-        const metadata = await parseFile(req.file.path);
-        duration = metadata.format.duration || 0;
+        const audioMetadata = await parseFile(req.file.path);
+        duration = audioMetadata.format.duration || 0;
       } catch (error) {
         console.warn("Could not parse audio metadata:", error);
       }

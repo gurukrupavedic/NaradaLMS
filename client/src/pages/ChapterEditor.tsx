@@ -1,43 +1,30 @@
+// React & Core
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+// Internal Libraries
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { extractPlainText, isHtmlContent, plainTextToHtml } from "@/lib/html-utils";
+
+// UI Components
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { extractPlainText, isHtmlContent, plainTextToHtml } from "@/lib/html-utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Business Components
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+
+// Icons
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  FileText,
-  Upload,
-  Music,
-  Eye,
-  ChevronLeft,
-  Play,
-  Pause,
-  Square,
-  MapPin,
-  X,
-  Trash2,
-  Plus,
-  ArrowRight,
-  Save,
-  Edit2,
-  Link2,
-  Link2Off,
-  Clock,
+  FileText, Upload, Music, Eye, ChevronLeft, Play, Pause, Square,
+  MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2, Link2Off, Clock,
   Timer,
   Ruler,
   Type,
@@ -257,7 +244,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
 
   // Segments query for database integration - script-specific  
-  const { data: segments = [], refetch: refetchSegments, isLoading: segmentsLoading } = useQuery({
+  const { data: textSegments = [], refetch: refetchSegments, isLoading: segmentsLoading } = useQuery({
     queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`],
     enabled: !!chapterId && !!contentScript
   });
@@ -915,7 +902,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
         throw new Error("No audio file selected or no time marks");
       }
 
-      const segments = [];
+      const scriptSegments = [];
       const sortedMarks = [...timeMarks].sort((a, b) => a - b);
 
       // Create segments from start to each mark, and between marks
@@ -2044,7 +2031,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 {/* Right Panel: Segment Management */}
                 <Panel defaultSize={50} minSize={30}>
                   <SegmentPanel
-                    segments={segments}
+                    segments={textSegments}
                     mappings={allChapterMappings}
                     currentScript={contentScript}
                     content={chapterContent}
@@ -2156,7 +2143,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   )}
                   <ProgressiveMapper
                     audioUrl={`/uploads/${selectedAudioFile.filename}`}
-                    segments={segments.map(s => ({ ...s, id: s.id.toString() }))} // Convert for compatibility
+                    segments={textSegments.map(s => ({ ...s, id: s.id.toString() }))} // Convert for compatibility
                     currentScript={contentScript}
                     content={chapterContent}
                     mappings={mappings.map(convertDatabaseMapping)} // Real backend data
