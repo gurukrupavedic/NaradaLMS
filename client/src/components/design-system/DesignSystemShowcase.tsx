@@ -24,10 +24,17 @@ import { Switch } from "./Switch";
 import { Tooltip, SimpleTooltip } from "./Tooltip";
 import { Loading } from "./Loading";
 import { RichTextEditor } from "./RichTextEditor";
+import { Dialog, ConfirmDialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from "./Dialog";
+import { Checkbox, CheckboxGroup } from "./Checkbox";
+import { Radio, RadioGroup, CommonRadioOptions } from "./Radio";
 import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, HelpCircle, Settings, Upload, Type } from "lucide-react";
 
 export function DesignSystemShowcase() {
   const [selectedVariant, setSelectedVariant] = useState<string>("blue");
+  const [showDialog, setShowDialog] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [checkboxValue, setCheckboxValue] = useState<string[]>([]);
+  const [radioValue, setRadioValue] = useState<string>("student");
   
   const colorVariants = [
     "blue", "green", "purple", "orange", "pink", "indigo", 
@@ -1072,6 +1079,50 @@ export function DesignSystemShowcase() {
           </div>
         </div>
       </div>
+
+      {/* Demo Dialogs */}
+      <Dialog
+        isOpen={showDialog}
+        onClose={() => setShowDialog(false)}
+        title="User Invitation"
+        description="Invite a new user to join your learning track"
+        variant={selectedVariant as any}
+      >
+        <div className="space-y-4">
+          <Input 
+            placeholder="Enter email address" 
+            variant={selectedVariant as any}
+          />
+          <RadioGroup
+            name="invite-role"
+            label="Assign Role"
+            options={CommonRadioOptions.userRoles}
+            value="student"
+            onChange={() => {}}
+            variant={selectedVariant as any}
+            size="sm"
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowDialog(false)}>
+            Cancel
+          </Button>
+          <Button variant={selectedVariant as any} onClick={() => setShowDialog(false)}>
+            Send Invitation
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      <ConfirmDialog
+        isOpen={showConfirmDialog}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={() => console.log("Deleted!")}
+        title="Delete Chapter"
+        description="Are you sure you want to delete this chapter? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        destructive={true}
+      />
     </div>
   );
 }

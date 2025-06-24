@@ -85,16 +85,25 @@ import { Button } from "@/components/design-system/Button";
 - `preview`: Purple - Preview content
 - `audio`: Orange - Audio controls
 
-## Future Components
+## New LMS Components (Week 1 Release)
+
+### Dialog System
+- **Dialog**: Modal overlays for user interactions
+- **ConfirmDialog**: Pre-built confirmation dialogs
+- Perfect for: User invitations, delete confirmations, content publishing
+
+### Form Controls
+- **Checkbox/CheckboxGroup**: Multi-selection controls
+- **Radio/RadioGroup**: Single-choice selections
+- Perfect for: User permissions, content selection, role assignments
+
+## Future Components (Week 2+)
 
 Planned components for complete LMS coverage:
-- Tabs (navigation)
-- Progress indicators (learning progress)
-- Avatar (user profiles)
-- Badge (achievements, status)
-- Alert (notifications)
 - Table (data display)
-- Navigation (breadcrumbs, menus)
+- Slider (audio timeline controls)
+- Breadcrumb (navigation)
+- Pagination (content lists)
 
 ## Design Tokens
 

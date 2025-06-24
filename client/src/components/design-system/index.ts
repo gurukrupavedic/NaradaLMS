@@ -23,12 +23,17 @@ export * from './Select';
 export * from './Avatar';
 export * from './TextSegment';
 
+// Form components
+export * from './Checkbox';
+export * from './Radio';
+
 // Specialized components
 export * from './Textarea';
 export * from './Switch';
 export * from './Tooltip';
 export * from './Loading';
 export * from './RichTextEditor';
+export * from './Dialog';
 
 // Showcase component
 export { DesignSystemShowcase } from './DesignSystemShowcase';
