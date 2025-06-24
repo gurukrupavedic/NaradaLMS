@@ -118,6 +118,19 @@ export function ExperimentsShowcase() {
           </p>
         </div>
 
+        {/* Test Static Files */}
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="font-semibold text-blue-900 mb-2">Static File Test</h3>
+          <p className="text-blue-800 text-sm mb-3">Click to test if static files are working:</p>
+          <a 
+            href="/experiments/test.html" 
+            target="_blank"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+          >
+            Test Static Files
+          </a>
+        </div>
+
         {/* Quick Actions */}
         <div className="mt-8 text-center">
           <div className="space-x-4">
@@ -126,13 +139,13 @@ export function ExperimentsShowcase() {
               target="_blank"
               className="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
-              🎨 Quick Preview - Dashboard
+              Dashboard Example
             </a>
             <a 
               href="/" 
               className="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              ← Return to Main App
+              Return to Main App
             </a>
           </div>
         </div>

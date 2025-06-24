@@ -111,8 +111,16 @@ function globalErrorHandler(err: any, req: Request, res: Response, next: NextFun
  * @returns HTTP server instance
  */
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Serve experiment files (isolated, safe to delete)
-  app.use('/experiments', express.static(path.join(process.cwd(), 'experiments/daisyui-examples')));
+  // Serve experiment files FIRST with explicit options (isolated, safe to delete)
+  const experimentsPath = path.join(process.cwd(), 'experiments/daisyui-examples');
+  console.log('Serving experiments from:', experimentsPath);
+  app.use('/experiments', express.static(experimentsPath, {
+    setHeaders: (res, path) => {
+      if (path.endsWith('.html')) {
+        res.setHeader('Content-Type', 'text/html');
+      }
+    }
+  }));
   
   // Static file serving for uploaded audio files
   app.use('/uploads', express.static(uploadsDir));
