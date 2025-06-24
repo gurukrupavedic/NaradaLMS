@@ -45,6 +45,12 @@ export function DaisyUI5Showcase() {
       highlight: "True light theme"
     },
     {
+      title: "Bootstrap 5 Inspired",
+      description: "Professional design based on Bootstrap 5 color system with subtle, accessible colors (#0d6efd, #6c757d, #198754)",
+      link: "/experiments/08-bootstrap5-inspired.html",
+      highlight: "Bootstrap 5 design"
+    },
+    {
       title: "Vedic Dashboard",
       description: "Complete dashboard redesign with autumn theme and Vedic aesthetic enhancements",
       link: "/experiments/02-vedic-dashboard.html",

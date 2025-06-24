@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap 5 Inspired - Vedic LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.24/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Bootstrap 5 Color System */
+            --bs-primary: #0d6efd;      /* Bootstrap 5 primary blue */
+            --bs-secondary: #6c757d;    /* Bootstrap 5 secondary gray */
+            --bs-success: #198754;      /* Bootstrap 5 success green */
+            --bs-info: #0dcaf0;         /* Bootstrap 5 info cyan */
+            --bs-warning: #ffc107;      /* Bootstrap 5 warning yellow */
+            --bs-danger: #dc3545;       /* Bootstrap 5 danger red */
+            --bs-light: #f8f9fa;        /* Bootstrap 5 light gray */
+            --bs-dark: #212529;         /* Bootstrap 5 dark */
+            --bs-body-color: #212529;   /* Bootstrap 5 body text */
+            --bs-body-bg: #ffffff;      /* Bootstrap 5 body background */
+            --bs-border-color: #dee2e6; /* Bootstrap 5 border */
+        }
+        
+        .telugu { font-family: 'Noto Sans Telugu', sans-serif; }
+        .devanagari { font-family: 'Noto Sans Devanagari', sans-serif; }
+        body { 
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            line-height: 1.5;
+        }
+        
+        /* Bootstrap 5 Button System */
+        .btn-bs-primary {
+            background-color: var(--bs-primary);
+            border-color: var(--bs-primary);
+            color: white;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            border: 1px solid transparent;
+            font-weight: 400;
+            transition: all 0.15s ease-in-out;
+        }
+        .btn-bs-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+            color: white;
+        }
+        
+        .btn-bs-secondary {
+            background-color: var(--bs-secondary);
+            border-color: var(--bs-secondary);
+            color: white;
+        }
+        .btn-bs-secondary:hover {
+            background-color: #5c636a;
+            border-color: #565e64;
+            color: white;
+        }
+        
+        .btn-bs-success {
+            background-color: var(--bs-success);
+            border-color: var(--bs-success);
+            color: white;
+        }
+        .btn-bs-success:hover {
+            background-color: #157347;
+            border-color: #146c43;
+            color: white;
+        }
+        
+        .btn-bs-info {
+            background-color: var(--bs-info);
+            border-color: var(--bs-info);
+            color: #000;
+        }
+        .btn-bs-info:hover {
+            background-color: #31d2f2;
+            border-color: #25cff2;
+            color: #000;
+        }
+        
+        .btn-bs-warning {
+            background-color: var(--bs-warning);
+            border-color: var(--bs-warning);
+            color: #000;
+        }
+        .btn-bs-warning:hover {
+            background-color: #ffcd39;
+            border-color: #ffc720;
+            color: #000;
+        }
+        
+        .btn-bs-danger {
+            background-color: var(--bs-danger);
+            border-color: var(--bs-danger);
+            color: white;
+        }
+        .btn-bs-danger:hover {
+            background-color: #bb2d3b;
+            border-color: #b02a37;
+            color: white;
+        }
+        
+        /* Bootstrap 5 Outline Buttons */
+        .btn-bs-outline-primary {
+            color: var(--bs-primary);
+            border-color: var(--bs-primary);
+            background-color: transparent;
+        }
+        .btn-bs-outline-primary:hover {
+            background-color: var(--bs-primary);
+            border-color: var(--bs-primary);
+            color: white;
+        }
+        
+        .btn-bs-outline-secondary {
+            color: var(--bs-secondary);
+            border-color: var(--bs-secondary);
+            background-color: transparent;
+        }
+        .btn-bs-outline-secondary:hover {
+            background-color: var(--bs-secondary);
+            border-color: var(--bs-secondary);
+            color: white;
+        }
+        
+        /* Bootstrap 5 Cards */
+        .card-bs {
+            background-color: white;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.375rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        /* Bootstrap 5 Badges */
+        .badge-bs-primary {
+            background-color: var(--bs-primary);
+            color: white;
+            padding: 0.35em 0.65em;
+            font-size: 0.75em;
+            border-radius: 0.375rem;
+        }
+        
+        .badge-bs-secondary {
+            background-color: var(--bs-secondary);
+            color: white;
+        }
+        
+        .badge-bs-success {
+            background-color: var(--bs-success);
+            color: white;
+        }
+        
+        .badge-bs-warning {
+            background-color: var(--bs-warning);
+            color: #000;
+        }
+        
+        /* Bootstrap 5 Progress */
+        .progress-bs {
+            height: 1rem;
+            background-color: #e9ecef;
+            border-radius: 0.375rem;
+            overflow: hidden;
+        }
+        
+        .progress-bar-bs {
+            height: 100%;
+            transition: width 0.6s ease;
+        }
+        
+        .progress-bar-bs-primary {
+            background-color: var(--bs-primary);
+        }
+        
+        .progress-bar-bs-success {
+            background-color: var(--bs-success);
+        }
+        
+        .progress-bar-bs-info {
+            background-color: var(--bs-info);
+        }
+        
+        /* Bootstrap 5 Typography */
+        .text-bs-primary { color: var(--bs-primary); }
+        .text-bs-secondary { color: var(--bs-secondary); }
+        .text-bs-success { color: var(--bs-success); }
+        .text-bs-muted { color: #6c757d; }
+        
+        /* Bootstrap 5 Backgrounds */
+        .bg-bs-light { background-color: var(--bs-light); }
+        .bg-bs-primary { background-color: var(--bs-primary); }
+        .bg-bs-secondary { background-color: var(--bs-secondary); }
+        
+        /* Bootstrap 5 Borders */
+        .border-bs { border: 1px solid var(--bs-border-color); }
+        .border-bs-primary { border-color: var(--bs-primary); }
+        .border-bs-secondary { border-color: var(--bs-secondary); }
+        .border-bs-success { border-color: var(--bs-success); }
+    </style>
+</head>
+<body>
+    <!-- Bootstrap 5 Style Header -->
+    <nav class="bg-bs-light border-bottom py-3 mb-4" style="border-bottom: 1px solid var(--bs-border-color);">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-bs-dark mb-0">🕉️ Vedic Learning Management System</h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="badge-bs-primary">Bootstrap 5 Design</span>
+                    <button class="btn-bs-outline-secondary text-sm px-3 py-1">Settings</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4">
+        <!-- Hero Section -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded p-8 mb-5">
+            <div class="text-center max-w-md mx-auto">
+                <h1 class="text-4xl font-bold text-bs-dark mb-4">॥ ॐ गं गणपतये नमः ॥</h1>
+                <p class="devanagari text-lg text-bs-secondary mb-4">
+                    स्वाध्यायान्मा प्रमदः । स्वाध्यायान्मा प्रमदः ।
+                </p>
+                <p class="text-sm text-bs-muted mb-4">Professional design inspired by Bootstrap 5</p>
+                <div class="flex gap-3 justify-center flex-wrap">
+                    <button class="btn-bs-primary">Begin Learning</button>
+                    <button class="btn-bs-outline-primary">Browse Content</button>
+                    <button class="btn-bs-secondary">Audio Library</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap 5 Color System -->
+        <section class="mb-5">
+            <h2 class="text-2xl font-semibold mb-4 text-bs-dark">Bootstrap 5 Color System</h2>
+            <p class="text-bs-muted mb-4">Professional, accessible colors with proper contrast ratios</p>
+            
+            <div class="grid md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <!-- Primary -->
+                <div class="card-bs p-4">
+                    <div class="w-full h-16 rounded mb-3" style="background-color: var(--bs-primary);"></div>
+                    <h6 class="font-semibold text-bs-primary">Primary</h6>
+                    <small class="text-bs-muted">#0d6efd</small>
+                    <button class="btn-bs-primary w-full text-sm mt-2">Sample</button>
+                </div>
+
+                <!-- Secondary -->
+                <div class="card-bs p-4">
+                    <div class="w-full h-16 rounded mb-3" style="background-color: var(--bs-secondary);"></div>
+                    <h6 class="font-semibold text-bs-secondary">Secondary</h6>
+                    <small class="text-bs-muted">#6c757d</small>
+                    <button class="btn-bs-secondary w-full text-sm mt-2">Sample</button>
+                </div>
+
+                <!-- Success -->
+                <div class="card-bs p-4">
+                    <div class="w-full h-16 rounded mb-3" style="background-color: var(--bs-success);"></div>
+                    <h6 class="font-semibold text-bs-success">Success</h6>
+                    <small class="text-bs-muted">#198754</small>
+                    <button class="btn-bs-success w-full text-sm mt-2">Sample</button>
+                </div>
+
+                <!-- Info -->
+                <div class="card-bs p-4">
+                    <div class="w-full h-16 rounded mb-3" style="background-color: var(--bs-info);"></div>
+                    <h6 class="font-semibold" style="color: var(--bs-info);">Info</h6>
+                    <small class="text-bs-muted">#0dcaf0</small>
+                    <button class="btn-bs-info w-full text-sm mt-2">Sample</button>
+                </div>
+
+                <!-- Warning -->
+                <div class="card-bs p-4">
+                    <div class="w-full h-16 rounded mb-3" style="background-color: var(--bs-warning);"></div>
+                    <h6 class="font-semibold" style="color: var(--bs-warning);">Warning</h6>
+                    <small class="text-bs-muted">#ffc107</small>
+                    <button class="btn-bs-warning w-full text-sm mt-2">Sample</button>
+                </div>
+
+                <!-- Danger -->
+                <div class="card-bs p-4">
+                    <div class="w-full h-16 rounded mb-3" style="background-color: var(--bs-danger);"></div>
+                    <h6 class="font-semibold" style="color: var(--bs-danger);">Danger</h6>
+                    <small class="text-bs-muted">#dc3545</small>
+                    <button class="btn-bs-danger w-full text-sm mt-2">Sample</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Button Variations -->
+        <section class="mb-5">
+            <h2 class="text-2xl font-semibold mb-4 text-bs-dark">Button System</h2>
+            
+            <div class="space-y-4">
+                <!-- Solid Buttons -->
+                <div>
+                    <h5 class="font-semibold mb-3 text-bs-secondary">Solid Buttons</h5>
+                    <div class="flex flex-wrap gap-3">
+                        <button class="btn-bs-primary">Primary Action</button>
+                        <button class="btn-bs-secondary">Secondary</button>
+                        <button class="btn-bs-success">Success</button>
+                        <button class="btn-bs-info">Information</button>
+                        <button class="btn-bs-warning">Warning</button>
+                        <button class="btn-bs-danger">Danger</button>
+                    </div>
+                </div>
+
+                <!-- Outline Buttons -->
+                <div>
+                    <h5 class="font-semibold mb-3 text-bs-secondary">Outline Buttons</h5>
+                    <div class="flex flex-wrap gap-3">
+                        <button class="btn-bs-outline-primary px-3 py-2 rounded border">Primary</button>
+                        <button class="btn-bs-outline-secondary px-3 py-2 rounded border">Secondary</button>
+                        <button class="px-3 py-2 rounded border border-bs text-bs-muted hover:bg-gray-50">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Vedic Dashboard -->
+        <section class="mb-5">
+            <h2 class="text-2xl font-semibold mb-4 text-bs-dark">Vedic LMS Dashboard</h2>
+            
+            <div class="grid md:grid-cols-3 gap-4">
+                <!-- Track Management -->
+                <div class="card-bs p-4">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded flex items-center justify-center mr-3" style="background-color: rgba(13, 110, 253, 0.1);">
+                            <span class="text-lg text-bs-primary">📚</span>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold text-bs-dark mb-1">Track Management</h5>
+                            <small class="text-bs-muted">Organize learning paths</small>
+                        </div>
+                    </div>
+                    <div class="bg-bs-light rounded p-3 mb-3 text-center">
+                        <div class="text-2xl font-bold text-bs-primary">3</div>
+                        <small class="text-bs-muted">Active Tracks</small>
+                    </div>
+                    <div class="text-right">
+                        <button class="btn-bs-primary text-sm">Manage Tracks</button>
+                    </div>
+                </div>
+
+                <!-- Content Creation -->
+                <div class="card-bs p-4">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded flex items-center justify-center mr-3" style="background-color: rgba(108, 117, 125, 0.1);">
+                            <span class="text-lg text-bs-secondary">✏️</span>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold text-bs-dark mb-1">Content Creation</h5>
+                            <small class="text-bs-muted">Create chapters</small>
+                        </div>
+                    </div>
+                    <div class="bg-bs-light rounded p-3 mb-3 text-center">
+                        <div class="text-2xl font-bold text-bs-secondary">28</div>
+                        <small class="text-bs-muted">Total Chapters</small>
+                    </div>
+                    <div class="text-right">
+                        <button class="btn-bs-secondary text-sm">Create Content</button>
+                    </div>
+                </div>
+
+                <!-- Audio Mapping -->
+                <div class="card-bs p-4">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded flex items-center justify-center mr-3" style="background-color: rgba(25, 135, 84, 0.1);">
+                            <span class="text-lg text-bs-success">🎵</span>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold text-bs-dark mb-1">Audio Mapping</h5>
+                            <small class="text-bs-muted">Sync content</small>
+                        </div>
+                    </div>
+                    <div class="bg-bs-light rounded p-3 mb-3 text-center">
+                        <div class="text-2xl font-bold text-bs-success">89%</div>
+                        <small class="text-bs-muted">Complete</small>
+                    </div>
+                    <div class="text-right">
+                        <button class="btn-bs-success text-sm">Map Audio</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sacred Content -->
+        <section class="mb-5">
+            <h2 class="text-2xl font-semibold mb-4 text-bs-dark">Sacred Texts</h2>
+            
+            <div class="space-y-4">
+                <!-- Sanskrit Content -->
+                <div class="card-bs border-bs-primary border-l-4 p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="badge-bs-primary">Sanskrit - Śraddhā Sūktam</span>
+                        <div class="flex gap-2">
+                            <button class="btn-bs-primary text-xs px-2 py-1">Edit</button>
+                            <button class="btn-bs-secondary text-xs px-2 py-1">Audio</button>
+                        </div>
+                    </div>
+                    <div class="devanagari text-lg leading-relaxed mb-3 text-bs-dark">
+                        श्रद्धाया॒ऽग्निः समि॑ध्यते । श्रद्धया॑ विन्दते ह॒विः ।<br>
+                        श्रद्धा॒म्भग॑स्य मू॒र्धनि॑ । वच॒सा-ऽऽवे॑दयामसि ।
+                    </div>
+                    <div class="text-sm text-bs-muted italic mb-3">
+                        "Through faith, the fire is kindled. Through faith, the offering is obtained."
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex gap-2">
+                            <span class="badge-bs-success">Mapped</span>
+                            <span class="badge-bs-secondary">Audio Available</span>
+                        </div>
+                        <button class="btn-bs-primary text-sm">Study</button>
+                    </div>
+                </div>
+
+                <!-- Telugu Content -->
+                <div class="card-bs border-bs-secondary border-l-4 p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="badge-bs-secondary">Telugu - శ్రద్ధా సూక్తం</span>
+                        <div class="flex gap-2">
+                            <button class="btn-bs-primary text-xs px-2 py-1">Edit</button>
+                            <button class="btn-bs-secondary text-xs px-2 py-1">Audio</button>
+                        </div>
+                    </div>
+                    <div class="telugu text-lg leading-relaxed mb-3 text-bs-dark">
+                        శ్రద్ధాయాఽగ్నిః సమిధ్యతే । శ్రద్ధయా విందతే హవిః ।<br>
+                        శ్రద్ధాం భగస్య మూర్ధని । వచసాఽఽవేదయామసి ।
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div class="flex gap-2">
+                            <span class="badge-bs-warning">Pending</span>
+                            <span class="badge-bs-secondary">Audio Ready</span>
+                        </div>
+                        <button class="btn-bs-secondary text-sm">Continue</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress Section -->
+        <section class="mb-5">
+            <h2 class="text-2xl font-semibold mb-4 text-bs-dark">Learning Progress</h2>
+            
+            <div class="card-bs p-4">
+                <h5 class="font-semibold text-bs-dark mb-4">Current Studies</h5>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-medium text-bs-dark">Vaidika Nithya Karma</span>
+                            <span class="text-sm text-bs-muted">92%</span>
+                        </div>
+                        <div class="progress-bs">
+                            <div class="progress-bar-bs progress-bar-bs-primary" style="width: 92%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-medium text-bs-dark">Śrī Rudram</span>
+                            <span class="text-sm text-bs-muted">65%</span>
+                        </div>
+                        <div class="progress-bs">
+                            <div class="progress-bar-bs progress-bar-bs-info" style="width: 65%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-medium text-bs-dark">Puruṣa Sūktam</span>
+                            <span class="text-sm text-bs-muted">23%</span>
+                        </div>
+                        <div class="progress-bs">
+                            <div class="progress-bar-bs progress-bar-bs-success" style="width: 23%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center py-4 border-top" style="border-top: 1px solid var(--bs-border-color);">
+            <p class="text-bs-muted mb-2">॥ सर्वे भवन्तु सुखिनः सर्वे सन्तु निरामयाः ॥</p>
+            <small class="text-bs-muted">Vedic LMS - Bootstrap 5 Inspired Design</small>
+        </footer>
+    </div>
+</body>
+</html>
