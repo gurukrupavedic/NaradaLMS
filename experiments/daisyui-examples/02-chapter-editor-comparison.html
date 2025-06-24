@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="pastel">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter Editor - Current vs DaisyUI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.0/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .telugu { font-family: 'Noto Sans Telugu', sans-serif; }
+        .devanagari { font-family: 'Noto Sans Devanagari', sans-serif; }
+    </style>
+</head>
+<body class="bg-base-100">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-8 text-center">Chapter Editor Interface Comparison</h1>
+        
+        <!-- Header Navigation -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Chapter Header</h2>
+            
+            <!-- DaisyUI Version -->
+            <div class="card bg-base-100 shadow-lg">
+                <div class="card-body">
+                    <!-- Breadcrumb -->
+                    <div class="breadcrumbs text-sm mb-4">
+                        <ul>
+                            <li><a href="#" class="link link-hover">← Tracks</a></li>
+                            <li><a href="#" class="link link-hover">Vaidika Nithya Karma</a></li>
+                            <li>Chapter Editor</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Chapter Title and Actions -->
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="avatar placeholder">
+                                <div class="bg-primary text-primary-content rounded-full w-8 h-8">
+                                    <span class="text-xs">🕉️</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h1 class="text-xl font-semibold">Śraddhā sūktaṁ</h1>
+                                <p class="text-sm opacity-70">Chapter 2 of 12</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-2">
+                            <div class="badge badge-success">🔥 Published</div>
+                            <button class="btn btn-outline btn-sm">Unpublish</button>
+                            <button class="btn btn-primary btn-sm">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab Navigation -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Tab Navigation</h2>
+            
+            <div class="tabs tabs-bordered bg-base-100 p-4 rounded-lg shadow">
+                <a class="tab tab-active">📖 Content</a>
+                <a class="tab">🎵 Audio Mapping</a>
+                <a class="tab">✂️ Segmentation</a>
+            </div>
+        </section>
+
+        <!-- Content Editor Tab -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Content Editor</h2>
+            
+            <div class="grid lg:grid-cols-3 gap-6">
+                <!-- Telugu Editor -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="card-title text-lg">Telugu Content</h3>
+                            <div class="badge badge-primary">te</div>
+                        </div>
+                        
+                        <div class="form-control">
+                            <textarea 
+                                class="textarea textarea-bordered h-40 telugu text-lg" 
+                                placeholder="Enter Telugu content..."
+                            >శ్రద్ధాయాఽగ్నిః సమిధ్యతే । శ్రద్ధయా విందతే హవిః ।
+శ్రద్ధాం భగస్య మూర్ధని । వచసాఽఽవేదయామసి ।
+ప్రియగ్గ్ శ్రద్ధే దదతః । ప్రియగ్గ్ శ్రద్ధే దిదాసతః ।
+ప్రియం భోజేషు యజ్వసు ॥ 1</textarea>
+                        </div>
+                        
+                        <div class="card-actions justify-end mt-4">
+                            <button class="btn btn-outline btn-sm">Preview</button>
+                            <button class="btn btn-primary btn-sm">Save</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hindi Editor -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="card-title text-lg">Hindi Content</h3>
+                            <div class="badge badge-secondary">hi</div>
+                        </div>
+                        
+                        <div class="form-control">
+                            <textarea 
+                                class="textarea textarea-bordered h-40 devanagari text-lg" 
+                                placeholder="Enter Hindi content..."
+                            >श्रद्धाया॒ऽग्निः समि॑ध्यते । श्रद्धया॑ विन्दते ह॒विः ।
+श्रद्धा॒म्भग॑स्य मू॒र्धनि॑ । वच॒सा-ऽऽवे॑दयामसि ।
+प्रि॒यग्ग् श्र॑द्धे॒ दद॑तः । प्रि॒यग्ग् श्र॑द्धे॒ दिदा॑सतः ।
+प्रि॒यम्भो॒जेषु॒ यज्व॑सु ॥ 1</textarea>
+                        </div>
+                        
+                        <div class="card-actions justify-end mt-4">
+                            <button class="btn btn-outline btn-sm">Preview</button>
+                            <button class="btn btn-secondary btn-sm">Save</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- English Editor -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="card-title text-lg">English Content</h3>
+                            <div class="badge badge-accent">en</div>
+                        </div>
+                        
+                        <div class="form-control">
+                            <textarea 
+                                class="textarea textarea-bordered h-40" 
+                                placeholder="Enter English/IAST content..."
+                            >śraddhāyā'gniḥ samidhyate | śraddhayā vindate haviḥ |
+śraddhāmbhagasya mūrdhani | vacasā''vedayāmasi |
+priyagg śraddhe dadataḥ | priyagg śraddhe didāsataḥ |
+priyambhojeṣu yajvasu || 1</textarea>
+                        </div>
+                        
+                        <div class="card-actions justify-end mt-4">
+                            <button class="btn btn-outline btn-sm">Preview</button>
+                            <button class="btn btn-accent btn-sm">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Audio Mapping Interface -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Audio Mapping Interface</h2>
+            
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <!-- Audio Player -->
+                    <div class="bg-base-200 rounded-lg p-6 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-semibold">🎵 shraddha_suktam.mp3</h3>
+                            <div class="badge badge-info">2:45 duration</div>
+                        </div>
+                        
+                        <!-- Audio Controls -->
+                        <div class="flex items-center gap-4 mb-4">
+                            <button class="btn btn-circle btn-primary">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M8 5v10l8-5-8-5z"/>
+                                </svg>
+                            </button>
+                            <button class="btn btn-circle btn-outline">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M6 4h2v12H6V4zm6 0h2v12h-2V4z"/>
+                                </svg>
+                            </button>
+                            <div class="flex-1">
+                                <progress class="progress progress-primary w-full" value="23" max="165"></progress>
+                            </div>
+                            <span class="text-sm font-mono">0:23 / 2:45</span>
+                        </div>
+                        
+                        <!-- Current Segment Display -->
+                        <div class="alert alert-info">
+                            <svg class="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <h3 class="font-bold">Currently Playing:</h3>
+                                <div class="text-xs devanagari">"श्रद्धाया॒ऽग्निः समि॑ध्यते"</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mapping Actions -->
+                    <div class="flex flex-wrap gap-2">
+                        <button class="btn btn-success">🔗 Map to Current Segment</button>
+                        <button class="btn btn-outline">⏭️ Skip Segment</button>
+                        <button class="btn btn-warning">🔄 Reset Position</button>
+                        <button class="btn btn-error">🗑️ Clear Mapping</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Text Segmentation -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Text Segmentation</h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Segment Creation -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title">Create New Segment</h3>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Script</span>
+                            </label>
+                            <select class="select select-bordered">
+                                <option>Telugu</option>
+                                <option selected>Hindi</option>
+                                <option>English</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Selected Text</span>
+                            </label>
+                            <textarea class="textarea textarea-bordered devanagari" placeholder="Text will appear here when selected...">श्रद्धाया॒ऽग्निः समि॑ध्यते</textarea>
+                        </div>
+                        
+                        <div class="card-actions justify-end">
+                            <button class="btn btn-outline">Cancel</button>
+                            <button class="btn btn-primary">Create Segment</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Segment List -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="card-title">Text Segments</h3>
+                            <div class="badge badge-ghost">5 total</div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <!-- Mapped Segment -->
+                            <div class="card bg-success/10 border-l-4 border-l-success">
+                                <div class="card-body p-4">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-medium">Segment 1</span>
+                                            <div class="badge badge-success badge-sm">🔗 Mapped</div>
+                                        </div>
+                                        <div class="dropdown dropdown-end">
+                                            <label tabindex="0" class="btn btn-ghost btn-xs">⋯</label>
+                                            <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-32">
+                                                <li><a>Edit</a></li>
+                                                <li><a>Delete</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <p class="mt-2 devanagari">श्रद्धाया॒ऽग्निः समि॑ध्यते</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Unmapped Segment -->
+                            <div class="card bg-base-200 border-l-4 border-l-gray-300">
+                                <div class="card-body p-4">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-medium">Segment 2</span>
+                                            <div class="badge badge-ghost badge-sm">⭕ Unmapped</div>
+                                        </div>
+                                        <div class="dropdown dropdown-end">
+                                            <label tabindex="0" class="btn btn-ghost btn-xs">⋯</label>
+                                            <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-32">
+                                                <li><a>Edit</a></li>
+                                                <li><a>Delete</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <p class="mt-2 devanagari">श्रद्धया॑ विन्दते ह॒विः</p>
+                                </div>
+                            </div>
+                            
+                            <!-- More segments... -->
+                            <div class="card bg-base-200 border-l-4 border-l-gray-300">
+                                <div class="card-body p-4">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm font-medium">Segment 3</span>
+                                            <div class="badge badge-ghost badge-sm">⭕ Unmapped</div>
+                                        </div>
+                                        <div class="dropdown dropdown-end">
+                                            <label tabindex="0" class="btn btn-ghost btn-xs">⋯</label>
+                                            <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-32">
+                                                <li><a>Edit</a></li>
+                                                <li><a>Delete</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <p class="mt-2 devanagari">श्रद्धा॒म्भग॑स्य मू॒र्धनि॑</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress Indicators -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Progress & Status</h2>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Content Progress -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title text-lg">Content Progress</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Telugu</span>
+                                    <span>100%</span>
+                                </div>
+                                <progress class="progress progress-primary w-full" value="100" max="100"></progress>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Hindi</span>
+                                    <span>100%</span>
+                                </div>
+                                <progress class="progress progress-secondary w-full" value="100" max="100"></progress>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>English</span>
+                                    <span>85%</span>
+                                </div>
+                                <progress class="progress progress-accent w-full" value="85" max="100"></progress>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audio Mapping Progress -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title text-lg">Audio Mapping</h3>
+                        <div class="text-center">
+                            <div class="radial-progress text-primary" style="--value:60;">60%</div>
+                            <p class="mt-2 text-sm">3 of 5 segments mapped</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chapter Stats -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title text-lg">Chapter Stats</h3>
+                        <div class="stats stats-vertical shadow-sm">
+                            <div class="stat">
+                                <div class="stat-title">Audio Files</div>
+                                <div class="stat-value text-primary">1</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">Text Segments</div>
+                                <div class="stat-value text-secondary">5</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">Mappings</div>
+                                <div class="stat-value text-accent">3</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Summary -->
+        <section class="bg-base-200 rounded-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Chapter Editor with DaisyUI Benefits</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold mb-2">Enhanced User Experience:</h3>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li>Consistent visual hierarchy across all tabs</li>
+                        <li>Better contrast for multi-script content editing</li>
+                        <li>Intuitive status indicators and progress tracking</li>
+                        <li>Responsive design for all screen sizes</li>
+                        <li>Accessible color combinations</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-2">Developer Benefits:</h3>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li>Semantic class names (btn, card, badge)</li>
+                        <li>Consistent spacing and sizing</li>
+                        <li>Built-in responsive utilities</li>
+                        <li>Easy theme customization</li>
+                        <li>Reduced custom CSS requirements</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

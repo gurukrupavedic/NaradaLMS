@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="pastel">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forms Comparison - Current vs DaisyUI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.0/dist/full.min.css" rel="stylesheet" type="text/css" />
+</head>
+<body class="bg-base-100">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-8 text-center">Forms & Input Components Comparison</h1>
+        
+        <!-- Track Creation Form -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-semibold mb-6">Track Creation Form</h2>
+            
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Current Style (Simulated) -->
+                <div>
+                    <h3 class="text-lg font-medium mb-4 text-gray-600">Current shadcn/ui Style</h3>
+                    <div class="border rounded-lg p-6 bg-white shadow-sm">
+                        <form class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Track Title</label>
+                                <input 
+                                    type="text" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                    placeholder="Enter track title"
+                                    value="Vaidika Nithya Karma"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <textarea 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24" 
+                                    placeholder="Enter description"
+                                >Daily rituals and practices for spiritual development</textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option>Select category</option>
+                                    <option selected>Vedic Rituals</option>
+                                    <option>Mantras</option>
+                                    <option>Philosophy</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" checked />
+                                    <span class="ml-2 text-sm text-gray-700">Publish immediately</span>
+                                </label>
+                            </div>
+                            
+                            <div class="flex justify-end space-x-3 pt-4">
+                                <button type="button" class="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                    Create Track
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- DaisyUI Style -->
+                <div>
+                    <h3 class="text-lg font-medium mb-4 text-secondary">DaisyUI Pastel Style</h3>
+                    <div class="card bg-base-100 shadow-xl">
+                        <div class="card-body">
+                            <h2 class="card-title">🕉️ Create New Track</h2>
+                            <form class="space-y-4">
+                                <div class="form-control w-full">
+                                    <label class="label">
+                                        <span class="label-text">Track Title</span>
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Enter track title" 
+                                        class="input input-bordered w-full" 
+                                        value="Vaidika Nithya Karma"
+                                    />
+                                </div>
+                                
+                                <div class="form-control">
+                                    <label class="label">
+                                        <span class="label-text">Description</span>
+                                    </label>
+                                    <textarea 
+                                        class="textarea textarea-bordered h-24" 
+                                        placeholder="Enter description"
+                                    >Daily rituals and practices for spiritual development</textarea>
+                                </div>
+                                
+                                <div class="form-control w-full">
+                                    <label class="label">
+                                        <span class="label-text">Category</span>
+                                    </label>
+                                    <select class="select select-bordered">
+                                        <option disabled>Select category</option>
+                                        <option selected>Vedic Rituals</option>
+                                        <option>Mantras</option>
+                                        <option>Philosophy</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-control">
+                                    <label class="label cursor-pointer">
+                                        <span class="label-text">Publish immediately</span>
+                                        <input type="checkbox" checked="checked" class="checkbox checkbox-primary" />
+                                    </label>
+                                </div>
+                                
+                                <div class="card-actions justify-end pt-4">
+                                    <button type="button" class="btn btn-outline">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Create Track</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chapter Form -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-semibold mb-6">Chapter Creation Form</h2>
+            
+            <div class="card bg-base-100 shadow-xl max-w-2xl mx-auto">
+                <div class="card-body">
+                    <h2 class="card-title">📖 Add New Chapter</h2>
+                    
+                    <form class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Chapter Title</span>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    placeholder="Enter chapter title" 
+                                    class="input input-bordered" 
+                                />
+                            </div>
+                            
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Chapter Order</span>
+                                </label>
+                                <input 
+                                    type="number" 
+                                    placeholder="Order position" 
+                                    class="input input-bordered" 
+                                    value="3"
+                                />
+                            </div>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Track Selection</span>
+                            </label>
+                            <select class="select select-bordered w-full">
+                                <option disabled selected>Choose a track</option>
+                                <option>Vaidika Nithya Karma</option>
+                                <option>Śrī Rudram</option>
+                                <option>Puruṣa Sūktam</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Primary Script Language</span>
+                            </label>
+                            <div class="flex flex-wrap gap-2">
+                                <input type="radio" name="script" class="radio radio-primary" checked />
+                                <label class="label-text mr-4">Telugu</label>
+                                
+                                <input type="radio" name="script" class="radio radio-secondary" />
+                                <label class="label-text mr-4">Hindi</label>
+                                
+                                <input type="radio" name="script" class="radio radio-accent" />
+                                <label class="label-text">English</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Initial Content (Optional)</span>
+                            </label>
+                            <textarea 
+                                class="textarea textarea-bordered h-32" 
+                                placeholder="Add initial content or leave blank to add later"
+                            ></textarea>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label cursor-pointer">
+                                <span class="label-text">Save as draft</span>
+                                <input type="checkbox" checked="checked" class="toggle toggle-primary" />
+                            </label>
+                        </div>
+                        
+                        <div class="card-actions justify-between">
+                            <button type="button" class="btn btn-outline">Cancel</button>
+                            <div class="space-x-2">
+                                <button type="button" class="btn btn-secondary">Save as Draft</button>
+                                <button type="submit" class="btn btn-primary">Create & Publish</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Advanced Form Components -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-semibold mb-6">Advanced Form Components</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- File Upload -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title">Audio File Upload</h3>
+                        
+                        <div class="form-control w-full">
+                            <label class="label">
+                                <span class="label-text">Choose audio file</span>
+                                <span class="label-text-alt">MP3, WAV, M4A</span>
+                            </label>
+                            <input type="file" class="file-input file-input-bordered file-input-primary w-full" />
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">File Description</span>
+                            </label>
+                            <input type="text" placeholder="e.g., Sanskrit recitation by Pandit..." class="input input-bordered" />
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>Supported formats: MP3, WAV, M4A (max 50MB)</span>
+                        </div>
+                        
+                        <div class="card-actions justify-end">
+                            <button class="btn btn-primary">Upload Audio</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Form -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title">Chapter Settings</h3>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Difficulty Level</span>
+                            </label>
+                            <div class="rating">
+                                <input type="radio" name="difficulty" class="mask mask-star-2 bg-orange-400" />
+                                <input type="radio" name="difficulty" class="mask mask-star-2 bg-orange-400" checked />
+                                <input type="radio" name="difficulty" class="mask mask-star-2 bg-orange-400" />
+                                <input type="radio" name="difficulty" class="mask mask-star-2 bg-orange-400" />
+                                <input type="radio" name="difficulty" class="mask mask-star-2 bg-orange-400" />
+                            </div>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Estimated Duration (minutes)</span>
+                            </label>
+                            <input type="range" min="5" max="60" value="25" class="range range-primary" />
+                            <div class="w-full flex justify-between text-xs px-2">
+                                <span>5</span>
+                                <span>15</span>
+                                <span>30</span>
+                                <span>45</span>
+                                <span>60</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Chapter Tags</span>
+                            </label>
+                            <div class="flex flex-wrap gap-2 mb-2">
+                                <div class="badge badge-primary">Mantra</div>
+                                <div class="badge badge-secondary">Daily Practice</div>
+                                <div class="badge badge-accent">Beginner</div>
+                            </div>
+                            <input type="text" placeholder="Add new tag..." class="input input-bordered input-sm" />
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label cursor-pointer">
+                                <span class="label-text">Enable comments</span>
+                                <input type="checkbox" class="toggle toggle-success" checked />
+                            </label>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label cursor-pointer">
+                                <span class="label-text">Require completion for next chapter</span>
+                                <input type="checkbox" class="toggle toggle-warning" />
+                            </label>
+                        </div>
+                        
+                        <div class="card-actions justify-end">
+                            <button class="btn btn-outline">Reset</button>
+                            <button class="btn btn-primary">Save Settings</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Form States & Validation -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-semibold mb-6">Form States & Validation</h2>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Success State -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title text-success">✓ Success State</h3>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Chapter Title</span>
+                            </label>
+                            <input type="text" value="Śraddhā Sūktam" class="input input-bordered input-success" />
+                            <label class="label">
+                                <span class="label-text-alt text-success">Title saved successfully!</span>
+                            </label>
+                        </div>
+                        
+                        <div class="alert alert-success">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Chapter created successfully!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error State -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title text-error">✗ Error State</h3>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Chapter Title</span>
+                            </label>
+                            <input type="text" value="" class="input input-bordered input-error" />
+                            <label class="label">
+                                <span class="label-text-alt text-error">Title is required</span>
+                            </label>
+                        </div>
+                        
+                        <div class="alert alert-error">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Please fix the errors above</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title">⏳ Loading State</h3>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Chapter Title</span>
+                            </label>
+                            <input type="text" value="Processing..." class="input input-bordered" disabled />
+                            <label class="label">
+                                <span class="label-text-alt">
+                                    <span class="loading loading-spinner loading-xs"></span>
+                                    Saving changes...
+                                </span>
+                            </label>
+                        </div>
+                        
+                        <div class="alert">
+                            <span class="loading loading-spinner"></span>
+                            <span>Uploading audio file... 45%</span>
+                        </div>
+                        
+                        <progress class="progress progress-primary w-full" value="45" max="100"></progress>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Summary -->
+        <section class="bg-base-200 rounded-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">DaisyUI Forms Benefits</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold mb-2">User Experience:</h3>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li>Consistent visual feedback across all form elements</li>
+                        <li>Clear success, error, and loading states</li>
+                        <li>Better accessibility with proper labels and ARIA</li>
+                        <li>Intuitive file upload and range controls</li>
+                        <li>Cultural theming with Vedic color accents</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-2">Development Benefits:</h3>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li>Semantic classes: form-control, input, textarea</li>
+                        <li>Built-in validation styling</li>
+                        <li>Consistent spacing and sizing</li>
+                        <li>Easy theme customization</li>
+                        <li>Reduced custom CSS for form styling</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
