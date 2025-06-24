@@ -1173,7 +1173,7 @@ export function DesignSystemShowcase() {
                     <div className="flex-1">
                       <TextSegment
                         variant="blue"
-                        content="Mapped to audio with green background tint"
+                        content="Mapped status shown via green link icon"
                         segmentNumber={4}
                         isMapped={true}
                         size="sm"

@@ -2,15 +2,15 @@
  * LMS Text Segment Component - Vedic LMS Design System
  * 
  * Clean, visual-first text segment cards for ChapterEditor with minimal UI clutter.
- * Follows modern design principles: actionable hover icons, pure visual states.
+ * Follows modern design principles: icon-based status, clean color hierarchy.
  * 
  * Features:
- * - Visual-only status indicators (no text labels)
+ * - Icon-only mapping status (green Link2/gray Link2Off)
+ * - Universal blue selection state (works with any variant color)
  * - Clean interactive states: static, dragging, selected
- * - Subtle mapping state background tint
- * - Functional hover icons (mapping toggle, delete)
+ * - Hover-revealed delete action, persistent mapping icon
  * - Content-only display with numbered pills
- * - 24-color variant system integration
+ * - 24-color variant system with no color conflicts
  * 
  * @author Vedic LMS Design System
  * @since 2025-06-24
@@ -41,11 +41,7 @@ const textSegmentVariants = cva(
         emerald: "border-l-4 border-l-emerald-500 border-gray-200 hover:border-l-emerald-600 hover:bg-emerald-50/30 hover:shadow-md",
         gray: "border-l-4 border-l-gray-400 border-gray-200 hover:border-l-gray-500 hover:bg-gray-50 hover:shadow-md"
       },
-      mappingState: {
-        // Visual indicators for mapping status
-        mapped: "bg-green-50/20 border-l-green-500",
-        unmapped: "border-l-gray-400"
-      },
+
       state: {
         static: "",
         dragging: "shadow-lg scale-[0.98] opacity-75 rotate-1 cursor-grabbing z-10",
@@ -141,11 +137,9 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
       }
     };
 
-    // Build dynamic className for mapping state visual feedback
-    const mappingStateClass = isMapped ? "bg-green-50/20" : "";
+    // Clean className without mapping background tints
     const combinedClassName = cn(
       textSegmentVariants({ variant, state: finalState, size }),
-      mappingStateClass,
       className
     );
 
@@ -175,10 +169,10 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
 
 
 
-        {/* Action Icons (visible on hover) */}
+        {/* Action Icons - Always visible for mapping status, hover for delete */}
         {showActions && (
-          <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {/* Mapping Status Icon */}
+          <div className="absolute top-2 right-2 flex gap-1 transition-opacity">
+            {/* Mapping Status Icon - Always visible */}
             <button
               onClick={handleMappingClick}
               className={cn(
@@ -192,10 +186,10 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
               {isMapped ? <Link2 className="h-3 w-3" /> : <Link2Off className="h-3 w-3" />}
             </button>
 
-            {/* Delete Icon */}
+            {/* Delete Icon - Hover only */}
             <button
               onClick={handleDeleteClick}
-              className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+              className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
               title="Delete segment"
             >
               <Trash2 className="h-3 w-3" />
