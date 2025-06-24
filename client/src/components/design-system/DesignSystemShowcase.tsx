@@ -817,7 +817,7 @@ export function DesignSystemShowcase() {
               <Card variant={cardVariant as any} glow="subtle" interactive>
                 <CardHeader className="text-center">
                   <BookOpen className={`h-8 w-8 mx-auto mb-2 text-${cardVariant}-600`} />
-                  <CardTitle className="text-base">Learning Track</CardTitle>
+                  <CardTitle className={`text-base text-${cardVariant}-700 font-semibold`}>Learning Track</CardTitle>
                   <CardDescription>Sanskrit Fundamentals</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -830,7 +830,7 @@ export function DesignSystemShowcase() {
               <Card variant={cardVariant as any} glow="subtle" interactive>
                 <CardHeader className="text-center">
                   <Music className={`h-8 w-8 mx-auto mb-2 text-${cardVariant}-600`} />
-                  <CardTitle className="text-base">Audio Content</CardTitle>
+                  <CardTitle className={`text-base text-${cardVariant}-700 font-semibold`}>Audio Content</CardTitle>
                   <CardDescription>Chapter Recordings</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -843,7 +843,7 @@ export function DesignSystemShowcase() {
               <Card variant={cardVariant as any} glow="subtle" interactive>
                 <CardHeader className="text-center">
                   <Settings className={`h-8 w-8 mx-auto mb-2 text-${cardVariant}-600`} />
-                  <CardTitle className="text-base">Settings</CardTitle>
+                  <CardTitle className={`text-base text-${cardVariant}-700 font-semibold`}>Settings</CardTitle>
                   <CardDescription>Preferences</CardDescription>
                 </CardHeader>
                 <CardContent>
