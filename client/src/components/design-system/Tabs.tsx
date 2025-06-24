@@ -39,9 +39,9 @@ const tabsListVariants = cva(
         emerald: "bg-emerald-50 border border-emerald-200"
       },
       size: {
-        sm: "h-8 p-0.5",
-        md: "h-12 p-1",
-        lg: "h-16 p-1.5"
+        sm: "h-9 p-0.5 rounded-md",
+        md: "h-12 p-1 rounded-lg", 
+        lg: "h-14 p-1.5 rounded-xl"
       }
     },
     defaultVariants: {
@@ -71,9 +71,9 @@ const tabsTriggerVariants = cva(
         emerald: "text-emerald-700 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-[0_2px_8px_rgba(16,185,129,0.25)] hover:bg-emerald-100 hover:text-emerald-800"
       },
       size: {
-        sm: "px-2 py-1 text-xs",
-        md: "px-4 py-2.5 text-sm", 
-        lg: "px-6 py-3 text-base"
+        sm: "px-2.5 py-1.5 text-xs rounded-md min-w-[60px]",
+        md: "px-4 py-2.5 text-sm rounded-md min-w-[80px]", 
+        lg: "px-6 py-3.5 text-base rounded-lg min-w-[100px] font-semibold"
       }
     },
     defaultVariants: {
@@ -143,7 +143,7 @@ const TabsTrigger = React.forwardRef<
   return (
     <TabsPrimitive.Trigger
       ref={ref}
-      className={cn(tabsTriggerVariants({ variant: finalVariant }), className)}
+      className={cn(tabsTriggerVariants({ variant: finalVariant, size }), className)}
       {...props}
     >
       {icon && <span className="shrink-0">{icon}</span>}
