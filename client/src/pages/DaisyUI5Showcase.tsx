@@ -39,6 +39,12 @@ export function DaisyUI5Showcase() {
       highlight: "Gentle colors"
     },
     {
+      title: "True Bootflat Light",
+      description: "Pure white background light theme with Bootflat-inspired button colors - clean and readable for Vedic content",
+      link: "/experiments/07-true-bootflat-light.html",
+      highlight: "True light theme"
+    },
+    {
       title: "Vedic Dashboard",
       description: "Complete dashboard redesign with autumn theme and Vedic aesthetic enhancements",
       link: "/experiments/02-vedic-dashboard.html",

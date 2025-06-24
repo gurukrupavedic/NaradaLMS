@@ -16,14 +16,16 @@
                             "primary": "#74b9ff",      // Light blue (softer than original)
                             "secondary": "#81ecec",    // Light turquoise (softer)
                             "accent": "#fdcb6e",       // Light orange (softer)
-                            "neutral": "#636e72",      // Light gray
+                            "neutral": "#495057",      // Dark gray for text
+                            "neutral-content": "#ffffff", // White text on neutral
                             "base-100": "#ffffff",     // White background
                             "base-200": "#f8f9fa",     // Very light gray
                             "base-300": "#e9ecef",     // Light gray
+                            "base-content": "#212529", // Dark text on light background
                             "info": "#74b9ff",         // Light blue
-                            "success": "#00b894",      // Light green
-                            "warning": "#fdcb6e",      // Light orange
-                            "error": "#fd79a8",        // Light pink (softer than red)
+                            "success": "#28a745",      // Light green
+                            "warning": "#ffc107",      // Light orange
+                            "error": "#dc3545",        // Light red
                         }
                     }
                 ]
@@ -36,7 +38,19 @@
     <style>
         .telugu { font-family: 'Noto Sans Telugu', sans-serif; }
         .devanagari { font-family: 'Noto Sans Devanagari', sans-serif; }
-        body { font-family: 'Inter', sans-serif; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #ffffff !important;
+            color: #212529 !important;
+        }
+        .card {
+            background-color: #ffffff !important;
+            color: #212529 !important;
+        }
+        .navbar {
+            background-color: #f8f9fa !important;
+            color: #212529 !important;
+        }
     </style>
 </head>
 <body class="bg-base-100">
