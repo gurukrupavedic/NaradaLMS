@@ -51,6 +51,12 @@ export function DaisyUI5Showcase() {
       highlight: "Bootstrap 5 design"
     },
     {
+      title: "Bootstrap 5 Full Integration",
+      description: "Complete Bootstrap 5 implementation with native components, dark/light themes, and professional design system",
+      link: "/experiments/bootstrap5-integration/bootstrap5-vedic-prototype.html",
+      highlight: "Full Bootstrap 5"
+    },
+    {
       title: "Vedic Dashboard",
       description: "Complete dashboard redesign with autumn theme and Vedic aesthetic enhancements",
       link: "/experiments/02-vedic-dashboard.html",
