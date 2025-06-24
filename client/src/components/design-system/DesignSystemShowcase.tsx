@@ -211,6 +211,233 @@ export function DesignSystemShowcase() {
           </div>
         </div>
 
+        {/* NEW: Complete 24-Color System */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Complete 24-Color System</h2>
+          <p className="text-gray-600">12 primary colors + 12 fluorescent glow variants</p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {allColorVariants.map((color) => (
+              <div key={color.value} className="bg-white rounded-lg p-4 border text-center">
+                <div className="space-y-2">
+                  <div 
+                    className="w-full h-12 rounded-lg border"
+                    style={{ backgroundColor: color.primary }}
+                  ></div>
+                  <div 
+                    className="w-full h-4 rounded border"
+                    style={{ backgroundColor: color.fluorescent }}
+                  ></div>
+                  <div>
+                    <p className="text-sm font-medium">{color.name}</p>
+                    <p className="text-xs text-gray-500">Primary + Glow</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* NEW: Dialog System */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Dialog System</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="p-6">
+              <CardHeader className="p-0 mb-4">
+                <CardTitle>User Interactions</CardTitle>
+                <CardDescription>Modal dialogs for LMS workflows</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0 space-y-3">
+                <Button 
+                  variant={selectedVariant as any} 
+                  onClick={() => setShowDialog(true)}
+                >
+                  Open User Dialog
+                </Button>
+                <Button 
+                  variant="rose" 
+                  onClick={() => setShowConfirmDialog(true)}
+                >
+                  Delete Confirmation
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="p-6">
+              <CardHeader className="p-0 mb-4">
+                <CardTitle>Form Controls</CardTitle>
+                <CardDescription>Checkbox and radio selections</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="space-y-4">
+                  <CheckboxGroup
+                    label="Content Selection"
+                    options={[
+                      { id: "ch1", label: "Chapter 1" },
+                      { id: "ch2", label: "Chapter 2" }
+                    ]}
+                    value={checkboxValue}
+                    onChange={setCheckboxValue}
+                    variant={selectedVariant as any}
+                    size="sm"
+                  />
+                  <RadioGroup
+                    name="role"
+                    label="User Role"
+                    options={CommonRadioOptions.userRoles.slice(0, 2)}
+                    value={radioValue}
+                    onChange={setRadioValue}
+                    variant={selectedVariant as any}
+                    size="sm"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* NEW: Data Management */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Data Management</h2>
+          
+          <div>
+            <h3 className="text-xl font-medium mb-4">User Management Table</h3>
+            <Table
+              columns={[
+                { key: "name", header: "Name", sortable: true },
+                { key: "email", header: "Email", sortable: true },
+                { 
+                  key: "role", 
+                  header: "Role",
+                  render: (value: string) => (
+                    <Badge variant={value === "admin" ? "purple" : value === "teacher" ? "emerald" : "blue"}>
+                      {value}
+                    </Badge>
+                  )
+                },
+                { 
+                  key: "status", 
+                  header: "Status",
+                  render: (value: string) => (
+                    <Badge variant={value === "active" ? "green" : "yellow"}>
+                      {value}
+                    </Badge>
+                  )
+                }
+              ]}
+              data={[
+                { id: "1", name: "John Doe", email: "john@example.com", role: "student", status: "active" },
+                { id: "2", name: "Jane Smith", email: "jane@example.com", role: "teacher", status: "active" },
+                { id: "3", name: "Admin User", email: "admin@example.com", role: "admin", status: "active" }
+              ]}
+              selectable
+              selectedRows={selectedTableRows}
+              onRowSelect={setSelectedTableRows}
+              variant={selectedVariant as any}
+              size="md"
+            />
+          </div>
+        </div>
+
+        {/* NEW: Audio & Progress Controls */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Audio & Progress Controls</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="p-6">
+              <CardHeader className="p-0 mb-4">
+                <CardTitle>Audio Timeline</CardTitle>
+                <CardDescription>Perfect for audio-text synchronization</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <AudioSlider
+                  currentTime={audioCurrentTime}
+                  duration={120}
+                  onSeek={setAudioCurrentTime}
+                  isPlaying={isAudioPlaying}
+                  onTogglePlay={() => setIsAudioPlaying(!isAudioPlaying)}
+                  variant="orange"
+                  showVolume={true}
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="p-6">
+              <CardHeader className="p-0 mb-4">
+                <CardTitle>Learning Progress</CardTitle>
+                <CardDescription>Track student completion</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0 space-y-4">
+                <ProgressSlider
+                  progress={75}
+                  total={100}
+                  label="Chapter Progress"
+                  variant="green"
+                />
+                <ProgressSlider
+                  progress={45}
+                  total={100}
+                  label="Overall Track"
+                  variant="emerald"
+                />
+                <Slider
+                  min={0}
+                  max={100}
+                  value={sliderValue}
+                  onChange={setSliderValue}
+                  variant={selectedVariant as any}
+                  label="Custom Slider"
+                  showValue
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* NEW: Navigation System */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Navigation System</h2>
+          
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium mb-3">Content Management Navigation</h3>
+              <Breadcrumb
+                items={LMSBreadcrumbs.chapterManagement("1", "Vedic Fundamentals", "1", "Introduction to Sanskrit")}
+                variant={selectedVariant as any}
+                size="md"
+              />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">Student Learning Path</h3>
+              <Breadcrumb
+                items={[
+                  { label: "My Learning", href: "/dashboard" },
+                  { label: "Advanced Sanskrit" },
+                  { label: "Chapter 3: Compound Words" }
+                ]}
+                variant="green"
+                size="md"
+                maxItems={4}
+              />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">Administration</h3>
+              <Breadcrumb
+                items={[
+                  { label: "Admin", href: "/admin" },
+                  { label: "User Management", href: "/admin/users" },
+                  { label: "Teacher Permissions" }
+                ]}
+                variant="purple"
+                size="md"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Input Components Showcase */}
         <div className="space-y-8">
           <h2 className="text-3xl font-semibold text-gray-900">Input Components</h2>
