@@ -649,28 +649,54 @@ export function DesignSystemShowcase() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <ComponentCard
               title="Status Badges"
-              description="Labels and status indicators"
+              description="Labels and status indicators with multiple styles"
               componentName="Badge"
               variant={badgeVariant}
               size={badgeSize}
-              props={{}}
+              props={{ style: "classic" }}
               onVariantChange={setBadgeVariant}
               onSizeChange={setBadgeSize}
             >
-              <div className="space-y-3">
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant={badgeVariant as any} size={badgeSize as any}>
-                    Active
-                  </Badge>
-                  <Badge variant="green" size={badgeSize as any}>
-                    Published
-                  </Badge>
-                  <Badge variant="yellow" size={badgeSize as any}>
-                    Draft
-                  </Badge>
-                  <Badge variant="rose" size={badgeSize as any}>
-                    Archived
-                  </Badge>
+              <div className="space-y-4">
+                {/* Classic Style */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Classic Style</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant={badgeVariant as any} style="classic" size={badgeSize as any}>
+                      Interactive
+                    </Badge>
+                    <Badge variant="green" style="classic" size={badgeSize as any}>Published</Badge>
+                    <Badge variant="orange" style="classic" size={badgeSize as any}>Draft</Badge>
+                    <Badge variant="purple" style="classic" size={badgeSize as any}>Review</Badge>
+                  </div>
+                </div>
+
+                {/* Modern Style with Gradients */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Modern Gradient Style</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant={badgeVariant as any} style="modern" size={badgeSize as any}>
+                      Premium
+                    </Badge>
+                    <Badge variant="green" style="modern" size={badgeSize as any}>Success</Badge>
+                    <Badge variant="purple" style="modern" size={badgeSize as any}>Featured</Badge>
+                    <Badge variant="cyan" style="modern" size={badgeSize as any}>New</Badge>
+                  </div>
+                </div>
+
+                {/* Sharp Style with Accent Borders */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Sharp Accent Style</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant={badgeVariant as any} style="sharp" size={badgeSize as any} dotColor="#3b82f6">
+                      Status
+                    </Badge>
+                    <Badge variant="emerald" style="sharp" size={badgeSize as any} icon={<div className="w-2 h-2 bg-green-400 rounded-full" />}>
+                      Active
+                    </Badge>
+                    <Badge variant="rose" style="sharp" size={badgeSize as any}>Priority</Badge>
+                    <Badge variant="yellow" style="sharp" size={badgeSize as any}>Warning</Badge>
+                  </div>
                 </div>
               </div>
             </ComponentCard>

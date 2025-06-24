@@ -19,53 +19,175 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-all duration-200 focus:outline-none focus:shadow-[0_0_0_2px_currentColor]",
+  "inline-flex items-center font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
         default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
         secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
+        outline: "text-foreground border",
         
-        // Solid color variants
-        blue: "border-transparent bg-blue-600 text-white hover:bg-blue-700 shadow-[0_2px_4px_rgba(59,130,246,0.2)]",
-        green: "border-transparent bg-green-600 text-white hover:bg-green-700 shadow-[0_2px_4px_rgba(34,197,94,0.2)]",
-        purple: "border-transparent bg-purple-600 text-white hover:bg-purple-700 shadow-[0_2px_4px_rgba(147,51,234,0.2)]",
-        orange: "border-transparent bg-orange-600 text-white hover:bg-orange-700 shadow-[0_2px_4px_rgba(249,115,22,0.2)]",
-        pink: "border-transparent bg-pink-600 text-white hover:bg-pink-700 shadow-[0_2px_4px_rgba(236,72,153,0.2)]",
-        indigo: "border-transparent bg-indigo-600 text-white hover:bg-indigo-700 shadow-[0_2px_4px_rgba(99,102,241,0.2)]",
-        teal: "border-transparent bg-teal-600 text-white hover:bg-teal-700 shadow-[0_2px_4px_rgba(20,184,166,0.2)]",
-        cyan: "border-transparent bg-cyan-600 text-white hover:bg-cyan-700 shadow-[0_2px_4px_rgba(8,145,178,0.2)]",
-        yellow: "border-transparent bg-yellow-600 text-white hover:bg-yellow-700 shadow-[0_2px_4px_rgba(202,138,4,0.2)]",
-        lime: "border-transparent bg-lime-600 text-white hover:bg-lime-700 shadow-[0_2px_4px_rgba(101,163,13,0.2)]",
-        rose: "border-transparent bg-rose-600 text-white hover:bg-rose-700 shadow-[0_2px_4px_rgba(244,63,94,0.2)]",
-        emerald: "border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-[0_2px_4px_rgba(16,185,129,0.2)]",
+        // Solid Style - Rich backgrounds with white text
+        blue: "border-transparent bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md",
+        green: "border-transparent bg-green-600 text-white hover:bg-green-700 shadow-sm hover:shadow-md",
+        purple: "border-transparent bg-purple-600 text-white hover:bg-purple-700 shadow-sm hover:shadow-md",
+        orange: "border-transparent bg-orange-600 text-white hover:bg-orange-700 shadow-sm hover:shadow-md",
+        pink: "border-transparent bg-pink-600 text-white hover:bg-pink-700 shadow-sm hover:shadow-md",
+        indigo: "border-transparent bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm hover:shadow-md",
+        teal: "border-transparent bg-teal-600 text-white hover:bg-teal-700 shadow-sm hover:shadow-md",
+        cyan: "border-transparent bg-cyan-600 text-white hover:bg-cyan-700 shadow-sm hover:shadow-md",
+        yellow: "border-transparent bg-yellow-600 text-white hover:bg-yellow-700 shadow-sm hover:shadow-md",
+        lime: "border-transparent bg-lime-600 text-white hover:bg-lime-700 shadow-sm hover:shadow-md",
+        rose: "border-transparent bg-rose-600 text-white hover:bg-rose-700 shadow-sm hover:shadow-md",
+        emerald: "border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm hover:shadow-md"
+      },
+      style: {
+        // Style 1: Classic rounded with subtle shadow
+        classic: "rounded-full px-2.5 py-0.5 text-xs border-transparent",
         
-        // Light color variants
-        "light-blue": "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100",
-        "light-green": "border-green-200 bg-green-50 text-green-700 hover:bg-green-100",
-        "light-purple": "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100",
-        "light-orange": "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100",
-        "light-pink": "border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100",
-        "light-indigo": "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100",
-        "light-teal": "border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-100",
-        "light-cyan": "border-cyan-200 bg-cyan-50 text-cyan-700 hover:bg-cyan-100",
-        "light-yellow": "border-yellow-200 bg-yellow-50 text-yellow-700 hover:bg-yellow-100",
-        "light-lime": "border-lime-200 bg-lime-50 text-lime-700 hover:bg-lime-100",
-        "light-rose": "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100",
-        "light-emerald": "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+        // Style 2: Modern pill with gradient and glow
+        modern: "rounded-full px-3 py-1 text-xs bg-gradient-to-r shadow-lg hover:shadow-xl hover:scale-105 border-transparent",
+        
+        // Style 3: Sharp rectangular with border accent
+        sharp: "rounded-md px-2 py-1 text-xs border-l-4 bg-opacity-10 border-current"
       },
       size: {
         sm: "text-xs px-2 py-0.5",
-        default: "text-xs px-2.5 py-0.5",
+        md: "text-xs px-2.5 py-0.5", 
         lg: "text-sm px-3 py-1"
       }
     },
+    compoundVariants: [
+      // Modern style gets gradient backgrounds and enhanced effects
+      {
+        style: "modern",
+        variant: "blue",
+        class: "from-blue-500 to-blue-700 shadow-blue-500/25 hover:shadow-blue-500/40"
+      },
+      {
+        style: "modern", 
+        variant: "green",
+        class: "from-green-500 to-green-700 shadow-green-500/25 hover:shadow-green-500/40"
+      },
+      {
+        style: "modern",
+        variant: "purple", 
+        class: "from-purple-500 to-purple-700 shadow-purple-500/25 hover:shadow-purple-500/40"
+      },
+      {
+        style: "modern",
+        variant: "orange",
+        class: "from-orange-500 to-orange-700 shadow-orange-500/25 hover:shadow-orange-500/40"
+      },
+      {
+        style: "modern",
+        variant: "pink",
+        class: "from-pink-500 to-pink-700 shadow-pink-500/25 hover:shadow-pink-500/40"
+      },
+      {
+        style: "modern",
+        variant: "indigo", 
+        class: "from-indigo-500 to-indigo-700 shadow-indigo-500/25 hover:shadow-indigo-500/40"
+      },
+      {
+        style: "modern",
+        variant: "teal",
+        class: "from-teal-500 to-teal-700 shadow-teal-500/25 hover:shadow-teal-500/40"
+      },
+      {
+        style: "modern",
+        variant: "cyan",
+        class: "from-cyan-500 to-cyan-700 shadow-cyan-500/25 hover:shadow-cyan-500/40"
+      },
+      {
+        style: "modern",
+        variant: "yellow",
+        class: "from-yellow-500 to-yellow-700 shadow-yellow-500/25 hover:shadow-yellow-500/40"
+      },
+      {
+        style: "modern",
+        variant: "lime",
+        class: "from-lime-500 to-lime-700 shadow-lime-500/25 hover:shadow-lime-500/40"
+      },
+      {
+        style: "modern",
+        variant: "rose",
+        class: "from-rose-500 to-rose-700 shadow-rose-500/25 hover:shadow-rose-500/40"
+      },
+      {
+        style: "modern",
+        variant: "emerald",
+        class: "from-emerald-500 to-emerald-700 shadow-emerald-500/25 hover:shadow-emerald-500/40"
+      },
+      
+      // Sharp style gets subtle backgrounds with accent borders
+      {
+        style: "sharp",
+        variant: "blue",
+        class: "bg-blue-100 text-blue-800 border-blue-600"
+      },
+      {
+        style: "sharp",
+        variant: "green", 
+        class: "bg-green-100 text-green-800 border-green-600"
+      },
+      {
+        style: "sharp",
+        variant: "purple",
+        class: "bg-purple-100 text-purple-800 border-purple-600"
+      },
+      {
+        style: "sharp",
+        variant: "orange",
+        class: "bg-orange-100 text-orange-800 border-orange-600"
+      },
+      {
+        style: "sharp",
+        variant: "pink",
+        class: "bg-pink-100 text-pink-800 border-pink-600"
+      },
+      {
+        style: "sharp",
+        variant: "indigo",
+        class: "bg-indigo-100 text-indigo-800 border-indigo-600"
+      },
+      {
+        style: "sharp",
+        variant: "teal",
+        class: "bg-teal-100 text-teal-800 border-teal-600"
+      },
+      {
+        style: "sharp",
+        variant: "cyan",
+        class: "bg-cyan-100 text-cyan-800 border-cyan-600"
+      },
+      {
+        style: "sharp",
+        variant: "yellow",
+        class: "bg-yellow-100 text-yellow-800 border-yellow-600"
+      },
+      {
+        style: "sharp",
+        variant: "lime",
+        class: "bg-lime-100 text-lime-800 border-lime-600"
+      },
+      {
+        style: "sharp",
+        variant: "rose",
+        class: "bg-rose-100 text-rose-800 border-rose-600"
+      },
+      {
+        style: "sharp",
+        variant: "emerald",
+        class: "bg-emerald-100 text-emerald-800 border-emerald-600"
+      }
+    ],
     defaultVariants: {
       variant: "default",
-      size: "default"
-    }
+      style: "classic",
+      size: "md"
+    },
   }
 );
 
@@ -106,22 +228,29 @@ export interface BadgeProps
   educational?: keyof typeof educationalVariants;
   icon?: React.ReactNode;
   pulse?: boolean;
+  dotColor?: string;
 }
 
-function Badge({ className, variant, size, educational, icon, pulse, children, ...props }: BadgeProps) {
+function Badge({ className, variant, style, size, educational, icon, pulse, dotColor, children, ...props }: BadgeProps) {
   // Use educational variant if provided
   const finalVariant = educational ? educationalVariants[educational] : variant;
   
   return (
     <div 
       className={cn(
-        badgeVariants({ variant: finalVariant, size }), 
+        badgeVariants({ variant: finalVariant, style, size }), 
         pulse && "animate-pulse",
         className
       )} 
       {...props}
     >
-      {icon && <span className="mr-1 shrink-0">{icon}</span>}
+      {dotColor && (
+        <span 
+          className="w-1.5 h-1.5 rounded-full mr-1.5 flex-shrink-0"
+          style={{ backgroundColor: dotColor }}
+        />
+      )}
+      {icon && <span className="mr-1 flex-shrink-0">{icon}</span>}
       {children}
     </div>
   );
