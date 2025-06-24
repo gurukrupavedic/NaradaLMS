@@ -235,6 +235,19 @@
     .icon-blue { background: rgba(59, 130, 246, 0.1); }
     .icon-green { background: rgba(16, 185, 129, 0.1); }
     .icon-purple { background: rgba(139, 92, 246, 0.1); }
+    
+    /* Toggle Switch Styles */
+    .toggle-input:checked + .toggle-switch .toggle-bg {
+      background-color: var(--blue);
+    }
+    
+    .toggle-input:checked + .toggle-switch .toggle-circle {
+      transform: translateX(24px);
+    }
+    
+    .toggle-switch:hover .toggle-bg {
+      opacity: 0.8;
+    }
   </style>
 </head>
 <body>
@@ -446,11 +459,11 @@
         <!-- Toggle Switch -->
         <div>
           <label class="block text-caption mb-2" style="color: var(--text-primary);">Enable Feature</label>
-          <label class="flex items-center">
-            <input type="checkbox" class="sr-only">
-            <div class="relative">
-              <div class="w-10 h-6 bg-gray-300 rounded-full shadow-inner"></div>
-              <div class="absolute w-4 h-4 bg-white rounded-full shadow -left-1 -top-1 transition"></div>
+          <label class="flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only toggle-input">
+            <div class="relative toggle-switch">
+              <div class="w-12 h-6 bg-gray-300 rounded-full shadow-inner transition-colors toggle-bg"></div>
+              <div class="absolute w-5 h-5 bg-white rounded-full shadow top-0.5 left-0.5 transition-transform toggle-circle"></div>
             </div>
             <span class="ml-3 text-sm" style="color: var(--text-secondary);">Advanced mode</span>
           </label>
