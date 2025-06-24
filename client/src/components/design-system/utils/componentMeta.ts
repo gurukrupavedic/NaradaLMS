@@ -76,6 +76,15 @@ export const componentConfigs: Record<string, ComponentConfig> = {
   },
 
   // Form Components
+  Select: {
+    name: "Select",
+    variants: colorVariants,
+    sizes: sizeOptions.selectOnly,
+    commonProps: ["disabled", "required"],
+    description: "Dropdown selection menus (xl not supported)",
+    category: "form"
+  },
+
   Checkbox: {
     name: "Checkbox",
     variants: colorVariants,
