@@ -110,15 +110,6 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
     
     if (!isVisible) return null;
     
-    // Parse children to separate title and description
-    const childrenArray = React.Children.toArray(children);
-    const titleElement = childrenArray.find((child) => 
-      React.isValidElement(child) && child.type === AlertTitle
-    );
-    const otherChildren = childrenArray.filter((child) => 
-      !(React.isValidElement(child) && child.type === AlertTitle)
-    );
-
     return (
       <div
         ref={ref}
@@ -126,31 +117,16 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         className={cn(alertVariants({ variant: finalVariant }), className)}
         {...props}
       >
-        <div className={cn(dismissible && "pr-8")}>
-          {/* Icon and Title Row */}
-          <div className="flex items-center gap-3">
-            {icon && (
-              <div className="flex-shrink-0">
-                {icon}
-              </div>
-            )}
-            {titleElement && (
-              <div className="flex-1">
-                {React.cloneElement(titleElement as React.ReactElement, {
-                  className: cn("mb-0", (titleElement as React.ReactElement).props.className)
-                })}
-              </div>
-            )}
-          </div>
-          
-          {/* Description and Other Content */}
-          {otherChildren.length > 0 && (
-            <div className={cn("mt-1", icon && "ml-7")}>
-              {otherChildren}
+        <div className={cn("flex gap-3", dismissible && "pr-8")}>
+          {icon && (
+            <div className="flex-shrink-0">
+              {icon}
             </div>
           )}
+          <div className="flex-1 space-y-1">
+            {children}
+          </div>
         </div>
-        
         {dismissible && (
           <button
             onClick={handleDismiss}
@@ -172,7 +148,7 @@ const AlertTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h5
     ref={ref}
-    className={cn("font-medium leading-none tracking-tight", className)}
+    className={cn("font-medium leading-none tracking-tight -mt-0.5", className)}
     {...props}
   />
 ));
