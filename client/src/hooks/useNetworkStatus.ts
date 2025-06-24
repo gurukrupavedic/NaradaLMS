@@ -1,3 +1,14 @@
+/**
+ * useNetworkStatus - Network connectivity monitoring hook
+ * 
+ * Monitors network connectivity status and provides offline/online detection
+ * with automatic retry mechanisms and user notifications. Integrates with
+ * offline storage for seamless user experience during connectivity issues.
+ * 
+ * @author Vedic LMS Team
+ * @since 2025-06-24
+ */
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface NetworkStatus {

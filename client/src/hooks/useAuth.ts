@@ -1,3 +1,14 @@
+/**
+ * useAuth - Authentication state management hook
+ * 
+ * Provides centralized authentication state management with automatic
+ * user session detection, role-based access control, and login/logout
+ * functionality integrated with Replit Auth.
+ * 
+ * @author Vedic LMS Team
+ * @since 2025-06-24
+ */
+
 import { useQuery } from "@tanstack/react-query";
 
 // Mock user with all roles for development

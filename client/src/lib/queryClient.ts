@@ -1,5 +1,6 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { createApiError, type ApiError } from "@/types/api-errors";
+import { performanceMonitor } from "@shared/monitoring/PerformanceMonitor";
 
 async function throwIfResNotOk(res: Response): Promise<void> {
   if (!res.ok) {

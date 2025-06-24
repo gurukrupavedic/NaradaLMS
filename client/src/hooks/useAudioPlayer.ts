@@ -1,3 +1,14 @@
+/**
+ * useAudioPlayer - Advanced audio playback control hook
+ * 
+ * Provides comprehensive audio playback functionality including play/pause controls,
+ * seeking, time tracking, and audio-text synchronization. Optimized for Vedic
+ * content with support for precise timestamp mapping and multiple audio sources.
+ * 
+ * @author Vedic LMS Team
+ * @since 2025-06-24
+ */
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";

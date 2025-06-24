@@ -1,3 +1,14 @@
+/**
+ * useTextSegmentation - Interactive text segmentation workflow hook
+ * 
+ * Provides functionality for creating text segments through user selection,
+ * handling text highlighting, segment boundary detection, and validation.
+ * Supports multi-script content with intelligent script boundary detection.
+ * 
+ * @author Vedic LMS Team
+ * @since 2025-06-24
+ */
+
 import React, { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 
