@@ -115,7 +115,7 @@ export function DaisyUI5Showcase() {
                 <div className="text-4xl mb-4">🎨</div>
                 <CardTitle>Modern & Vibrant</CardTitle>
                 <CardDescription>
-                  Contemporary aesthetics with 6 vibrant color variants and fluorescent glow effects
+                  Contemporary aesthetics with 12 vibrant color variants and fluorescent glow effects
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -150,11 +150,11 @@ export function DaisyUI5Showcase() {
               <div className="text-sm text-blue-700 font-medium">Components</div>
             </div>
             <div className="text-center p-6 bg-green-50 rounded-lg border border-green-200">
-              <div className="text-3xl font-bold text-green-600 mb-2">6</div>
+              <div className="text-3xl font-bold text-green-600 mb-2">12</div>
               <div className="text-sm text-green-700 font-medium">Color Variants</div>
             </div>
             <div className="text-center p-6 bg-purple-50 rounded-lg border border-purple-200">
-              <div className="text-3xl font-bold text-purple-600 mb-2">12</div>
+              <div className="text-3xl font-bold text-purple-600 mb-2">15</div>
               <div className="text-sm text-purple-700 font-medium">Categories</div>
             </div>
             <div className="text-center p-6 bg-orange-50 rounded-lg border border-orange-200">

@@ -30,6 +30,12 @@
       --orange: #f59e0b;
       --pink: #ec4899;
       --indigo: #6366f1;
+      --teal: #14b8a6;
+      --cyan: #06b6d4;
+      --amber: #f59e0b;
+      --lime: #84cc16;
+      --rose: #f43f5e;
+      --violet: #8b5cf6;
       
       /* Fluorescent Cousins */
       --blue-fluorescent: #00bfff;
@@ -38,6 +44,12 @@
       --orange-fluorescent: #ff6b35;
       --pink-fluorescent: #ff1493;
       --indigo-fluorescent: #4169e1;
+      --teal-fluorescent: #00e6cc;
+      --cyan-fluorescent: #00e4ff;
+      --amber-fluorescent: #ffb700;
+      --lime-fluorescent: #9aff00;
+      --rose-fluorescent: #ff0040;
+      --violet-fluorescent: #c77dff;
     }
     
     /* Typography Scale */
@@ -163,6 +175,90 @@
         0 8px 25px rgba(99, 102, 241, 0.4),
         0 0 30px rgba(65, 105, 225, 0.3),
         0 0 50px rgba(65, 105, 225, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .btn-primary-teal {
+      background: var(--teal);
+      color: white;
+    }
+    
+    .btn-primary-teal:hover {
+      background: #0f766e;
+      box-shadow: 
+        0 8px 25px rgba(20, 184, 166, 0.4),
+        0 0 30px rgba(0, 230, 204, 0.3),
+        0 0 50px rgba(0, 230, 204, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .btn-primary-cyan {
+      background: var(--cyan);
+      color: white;
+    }
+    
+    .btn-primary-cyan:hover {
+      background: #0891b2;
+      box-shadow: 
+        0 8px 25px rgba(6, 182, 212, 0.4),
+        0 0 30px rgba(0, 228, 255, 0.3),
+        0 0 50px rgba(0, 228, 255, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .btn-primary-amber {
+      background: var(--amber);
+      color: white;
+    }
+    
+    .btn-primary-amber:hover {
+      background: #d97706;
+      box-shadow: 
+        0 8px 25px rgba(245, 158, 11, 0.4),
+        0 0 30px rgba(255, 183, 0, 0.3),
+        0 0 50px rgba(255, 183, 0, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .btn-primary-lime {
+      background: var(--lime);
+      color: white;
+    }
+    
+    .btn-primary-lime:hover {
+      background: #65a30d;
+      box-shadow: 
+        0 8px 25px rgba(132, 204, 22, 0.4),
+        0 0 30px rgba(154, 255, 0, 0.3),
+        0 0 50px rgba(154, 255, 0, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .btn-primary-rose {
+      background: var(--rose);
+      color: white;
+    }
+    
+    .btn-primary-rose:hover {
+      background: #e11d48;
+      box-shadow: 
+        0 8px 25px rgba(244, 63, 94, 0.4),
+        0 0 30px rgba(255, 0, 64, 0.3),
+        0 0 50px rgba(255, 0, 64, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .btn-primary-violet {
+      background: var(--violet);
+      color: white;
+    }
+    
+    .btn-primary-violet:hover {
+      background: #7c3aed;
+      box-shadow: 
+        0 8px 25px rgba(139, 92, 246, 0.4),
+        0 0 30px rgba(199, 125, 255, 0.3),
+        0 0 50px rgba(199, 125, 255, 0.15);
       transform: translateY(-2px);
     }
     
@@ -362,14 +458,22 @@
     <!-- Button Showcase -->
     <div class="mb-16">
       <h3 class="text-heading-2 mb-8" style="color: var(--text-primary);">Interactive Buttons</h3>
-      <p class="text-body-base mb-6" style="color: var(--text-secondary);">Hover to see enhanced fluorescent glow effects with multi-layer diffusion</p>
-      <div class="grid grid-cols-6 gap-4">
+      <p class="text-body-base mb-6" style="color: var(--text-secondary);">Hover to see enhanced fluorescent glow effects with multi-layer diffusion - Now with 12 vibrant colors</p>
+      <div class="grid grid-cols-6 gap-4 mb-4">
         <button class="btn-modern btn-primary-blue">Blue</button>
         <button class="btn-modern btn-primary-green">Green</button>
         <button class="btn-modern btn-primary-purple">Purple</button>
         <button class="btn-modern btn-primary-orange">Orange</button>
         <button class="btn-modern btn-primary-pink">Pink</button>
         <button class="btn-modern btn-primary-indigo">Indigo</button>
+      </div>
+      <div class="grid grid-cols-6 gap-4">
+        <button class="btn-modern btn-primary-teal">Teal</button>
+        <button class="btn-modern btn-primary-cyan">Cyan</button>
+        <button class="btn-modern btn-primary-amber">Amber</button>
+        <button class="btn-modern btn-primary-lime">Lime</button>
+        <button class="btn-modern btn-primary-rose">Rose</button>
+        <button class="btn-modern btn-primary-violet">Violet</button>
       </div>
     </div>
 
