@@ -8,15 +8,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Serve experiment files FIRST (before Vite)
-const experimentsPath = path.join(process.cwd(), 'experiments/daisyui-examples');
-app.use('/experiments', express.static(experimentsPath, {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.html')) {
-      res.setHeader('Content-Type', 'text/html');
-    }
-  }
-}));
+
 
 // Serve static files from public directory (for audio files)
 app.use(express.static('public'));

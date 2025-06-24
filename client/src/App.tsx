@@ -19,7 +19,7 @@ const ChapterView = lazy(() => import("@/pages/ChapterView").then(module => ({ d
 const ContentManagement = lazy(() => import("@/pages/ContentManagement").then(module => ({ default: module.ContentManagement })));
 const TrackChapters = lazy(() => import("@/pages/TrackChapters").then(module => ({ default: module.TrackChapters })));
 const ChapterEditor = lazy(() => import("@/pages/ChapterEditor").then(module => ({ default: module.ChapterEditor })));
-const ExperimentsShowcase = lazy(() => import("@/pages/ExperimentsShowcase").then(module => ({ default: module.ExperimentsShowcase })));
+
 
 
 
@@ -59,7 +59,7 @@ function Router() {
 
             <Route path="/tracks/:trackId" component={TrackView} />
             <Route path="/chapters/:id" component={ChapterView} />
-            <Route path="/experiments/daisyui-showcase" component={ExperimentsShowcase} />
+
 
           </>
         )}
