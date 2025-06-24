@@ -3,7 +3,8 @@
  * Provides runtime theme switching and color management
  */
 
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
+import type { ReactNode } from 'react';
 
 export type ColorfulTheme = 'light' | 'dark';
 export type ColorVariant = 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'indigo';

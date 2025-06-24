@@ -8,7 +8,9 @@ import { ColorfulThemeProvider, useColorfulTheme } from '@/hooks/useColorfulThem
 import { FeatureCard } from '@/components/ui/colorful-card';
 import { ColorfulButton } from '@/components/ui/colorful-button';
 import { ColorfulProgress, CircularProgress } from '@/components/ui/colorful-progress';
-import { Book, Users, Settings, Award, FileText, Music } from 'lucide-react';
+import { ThemeSwitcher, ThemeToggleButton } from '@/components/navigation/ThemeSwitcher';
+import { ColorfulNavbar } from '@/components/navigation/ColorfulNavbar';
+import { Book, Users, Settings, Award, FileText, Music, ArrowLeft } from 'lucide-react';
 
 function ColorfulDemoContent() {
   const { theme, toggleTheme } = useColorfulTheme();
@@ -53,8 +55,9 @@ function ColorfulDemoContent() {
   ];
   
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background">
+      <ColorfulNavbar />
+      <div className="max-w-6xl mx-auto p-6 space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold text-foreground">
@@ -64,13 +67,17 @@ function ColorfulDemoContent() {
             Experience the vibrant, elegant, and professional UI components with fluorescent glow effects
           </p>
           
-          <div className="flex justify-center gap-4">
-            <ColorfulButton variant="blue" onClick={toggleTheme}>
-              Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
-            </ColorfulButton>
-            <ColorfulButton variant="purple" type="secondary">
-              View Documentation
-            </ColorfulButton>
+          <div className="flex justify-center items-center gap-6">
+            <ThemeSwitcher size="lg" showLabels />
+            <div className="flex gap-3">
+              <ColorfulButton variant="blue" onClick={() => window.history.back()}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to App
+              </ColorfulButton>
+              <ColorfulButton variant="purple" type="secondary">
+                View Documentation
+              </ColorfulButton>
+            </div>
           </div>
         </div>
         
@@ -135,10 +142,17 @@ function ColorfulDemoContent() {
         
         {/* Theme Information */}
         <div className="bg-muted rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-3">Current Theme: {theme}</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">Current Theme: {theme}</h3>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">Quick Toggle:</span>
+              <ThemeToggleButton />
+            </div>
+          </div>
           <p className="text-muted-foreground">
             The modern colorful design system automatically adapts to light and dark modes, 
             providing optimal contrast and beautiful fluorescent glow effects in both themes.
+            Notice how the glow effects become more pronounced in dark mode for better visibility.
           </p>
         </div>
         
