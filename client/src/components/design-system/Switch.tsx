@@ -20,7 +20,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const switchVariants = cva(
-  "peer inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_rgba(59,130,246,0.3)] disabled:cursor-not-allowed disabled:opacity-50",
+  "peer inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_rgba(59,130,246,0.3)] disabled:cursor-not-allowed disabled:opacity-50 p-0.5",
   {
     variants: {
       variant: {
@@ -39,7 +39,7 @@ const switchVariants = cva(
         emerald: "data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-gray-200 focus-visible:shadow-[0_0_0_2px_rgba(16,185,129,0.3)]"
       },
       size: {
-        sm: "h-4 w-7",
+        sm: "h-5 w-9",
         default: "h-6 w-11", 
         lg: "h-8 w-14"
       }
@@ -56,9 +56,9 @@ const switchThumbVariants = cva(
   {
     variants: {
       size: {
-        sm: "h-3 w-3 data-[state=checked]:translate-x-3",
+        sm: "h-4 w-4 data-[state=checked]:translate-x-4",
         default: "h-5 w-5 data-[state=checked]:translate-x-5",
-        lg: "h-7 w-7 data-[state=checked]:translate-x-7"
+        lg: "h-6 w-6 data-[state=checked]:translate-x-6"
       }
     },
     defaultVariants: {
