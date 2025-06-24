@@ -316,8 +316,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   useEffect(() => {
     console.log('ChapterEditor: Active tab changed to:', activeTab);
     console.log('ChapterEditor: chapterContent:', chapterContent);
-    console.log('ChapterEditor: segments count:', segments.length);
-  }, [activeTab, segments.length]);
+    console.log('ChapterEditor: segments count:', textSegments.length);
+  }, [activeTab, textSegments.length]);
 
   // === HELPER FUNCTIONS SECTION ===
 
@@ -727,7 +727,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   const reorderSegmentsMutation = useMutation({
     mutationFn: async (segments: any[]) => {
-      const segmentOrders = segments.map((segment, index) => ({
+      const segmentOrders = textSegments.map((segment, index) => ({
         id: segment.id,
         order: index
       }));
@@ -910,7 +910,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
         const startTime = i === 0 ? 0 : sortedMarks[i - 1];
         const endTime = i === sortedMarks.length ? duration : sortedMarks[i];
 
-        segments.push({
+        scriptSegments.push({
           audioFileId:
             typeof selectedAudioFile === "object"
               ? selectedAudioFile.id
@@ -1425,7 +1425,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     text: string,
     language: "te" | "hi" | "en",
   ) => {
-    if (!segments || segments.length === 0) {
+    if (!textSegments || textSegments.length === 0) {
       return (
         <div
           data-segmentable
@@ -1437,7 +1437,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       );
     }
 
-    const segmentsForLang = segments.filter(
+    const segmentsForLang = textSegments.filter(
       (seg) => seg.script === language,
     );
     if (segmentsForLang.length === 0) {
@@ -1994,7 +1994,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 />
                 <div className="flex gap-2">
                   <Badge variant="secondary" className="text-xs">
-                    {segments.filter(s => s.script === contentScript).length} segments
+                    {textSegments.filter(s => s.script === contentScript).length} segments
                   </Badge>
                   <Badge variant="secondary" className="text-xs">
                     {segments
@@ -2131,7 +2131,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 </Badge>
               </div>
 
-              {selectedAudioFile && segments.length > 0 ? (
+              {selectedAudioFile && textSegments.length > 0 ? (
                 <div className="h-full">
                   {isMappingLoading && (
                     <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
@@ -2210,7 +2210,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               />
               <div className="flex gap-2">
                 <Badge variant="secondary" className="text-xs">
-                  {segments.filter(s => s.script === contentScript).length} segments
+                  {textSegments.filter(s => s.script === contentScript).length} segments
                 </Badge>
               </div>
             </div>
@@ -2992,7 +2992,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                         Text Segments ({segments?.length || 0})
                       </Label>
                       <div className="max-h-64 overflow-y-auto space-y-2">
-                        {segments && segments.length > 0 ? (
+                        {textSegments && textSegments.length > 0 ? (
                           segments.map((segment) => (
                             <div
                               key={segment.id}
