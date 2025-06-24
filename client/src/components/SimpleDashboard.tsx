@@ -124,6 +124,39 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
           })}
         </div>
 
+        {/* DaisyUI Experiments Section */}
+        <div className="mt-8">
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-purple-900 mb-2">🎨 Design Experiments</h3>
+            <p className="text-sm text-purple-700 mb-4">
+              Explore DaisyUI pastel theme examples showing how the interface could look with enhanced styling and better theming capabilities.
+            </p>
+            <div className="flex gap-3">
+              <a 
+                href="/experiments/01-dashboard-comparison.html" 
+                target="_blank"
+                className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm"
+              >
+                Dashboard Example
+              </a>
+              <a 
+                href="/experiments/02-chapter-editor-comparison.html" 
+                target="_blank"
+                className="inline-flex items-center px-4 py-2 border border-purple-300 text-purple-700 rounded-md hover:bg-purple-50 text-sm"
+              >
+                Chapter Editor
+              </a>
+              <a 
+                href="/experiments/03-forms-comparison.html" 
+                target="_blank"
+                className="inline-flex items-center px-4 py-2 border border-purple-300 text-purple-700 rounded-md hover:bg-purple-50 text-sm"
+              >
+                Forms
+              </a>
+            </div>
+          </div>
+        </div>
+
 
       </div>
     </div>
