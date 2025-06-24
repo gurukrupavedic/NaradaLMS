@@ -165,7 +165,7 @@ export function Slider({
       const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
       const newValue = min + (percentage / 100) * (max - min);
       const steppedValue = Math.round(newValue / step) * step;
-      onChange(Math.max(min, Math.min(max, steppedValue)));
+      onChange?.(Math.max(min, Math.min(max, steppedValue)));
     };
 
     updateValue(e.clientX);
