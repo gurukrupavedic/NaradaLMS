@@ -1137,4 +1137,3 @@ export function DesignSystemShowcase() {
     </div>
   );
 }
-                  </SelectTrigger>
