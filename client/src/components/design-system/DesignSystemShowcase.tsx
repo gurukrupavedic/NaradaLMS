@@ -816,38 +816,38 @@ export function DesignSystemShowcase() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card variant={cardVariant as any} glow="subtle" interactive>
                 <CardHeader className="text-center">
-                  <BookOpen className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                  <BookOpen className="h-8 w-8 mx-auto mb-2" style={{ color: `var(--${cardVariant}-600)` }} />
                   <CardTitle className="text-base">Learning Track</CardTitle>
                   <CardDescription>Sanskrit Fundamentals</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant="outline-blue">
+                  <Button className="w-full" variant={`outline-${cardVariant}` as any}>
                     Continue Learning
                   </Button>
                 </CardContent>
               </Card>
 
-              <Card variant="green" glow="subtle" interactive>
+              <Card variant={cardVariant as any} glow="subtle" interactive>
                 <CardHeader className="text-center">
-                  <Music className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                  <Music className="h-8 w-8 mx-auto mb-2" style={{ color: `var(--${cardVariant}-600)` }} />
                   <CardTitle className="text-base">Audio Content</CardTitle>
                   <CardDescription>Chapter Recordings</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant="outline-green">
+                  <Button className="w-full" variant={`outline-${cardVariant}` as any}>
                     Play Audio
                   </Button>
                 </CardContent>
               </Card>
 
-              <Card variant="purple" glow="subtle" interactive>
+              <Card variant={cardVariant as any} glow="subtle" interactive>
                 <CardHeader className="text-center">
-                  <Settings className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                  <Settings className="h-8 w-8 mx-auto mb-2" style={{ color: `var(--${cardVariant}-600)` }} />
                   <CardTitle className="text-base">Settings</CardTitle>
                   <CardDescription>Preferences</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant="outline-purple">
+                  <Button className="w-full" variant={`outline-${cardVariant}` as any}>
                     Configure
                   </Button>
                 </CardContent>
