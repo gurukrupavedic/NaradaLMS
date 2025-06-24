@@ -8,6 +8,144 @@
   <style>
     /* Modern Colorful Design System - Complete Component Library */
     
+    /* TYPOGRAPHY SYSTEM */
+    
+    /* Base Typography Scale */
+    :root {
+      /* Font Families */
+      --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+      
+      /* Font Weights */
+      --font-weight-light: 300;
+      --font-weight-normal: 400;
+      --font-weight-medium: 500;
+      --font-weight-semibold: 600;
+      --font-weight-bold: 700;
+      --font-weight-extrabold: 800;
+      
+      /* Font Sizes - Harmonious Scale */
+      --text-xs: 0.75rem;    /* 12px */
+      --text-sm: 0.875rem;   /* 14px */
+      --text-base: 1rem;     /* 16px */
+      --text-lg: 1.125rem;   /* 18px */
+      --text-xl: 1.25rem;    /* 20px */
+      --text-2xl: 1.5rem;    /* 24px */
+      --text-3xl: 1.875rem;  /* 30px */
+      --text-4xl: 2.25rem;   /* 36px */
+      --text-5xl: 3rem;      /* 48px */
+      
+      /* Line Heights */
+      --leading-tight: 1.25;
+      --leading-snug: 1.375;
+      --leading-normal: 1.5;
+      --leading-relaxed: 1.625;
+      --leading-loose: 2;
+      
+      /* Letter Spacing */
+      --tracking-tight: -0.025em;
+      --tracking-normal: 0em;
+      --tracking-wide: 0.025em;
+      --tracking-wider: 0.05em;
+    }
+    
+    /* Light Theme Typography Colors */
+    :root {
+      --text-primary: #0f172a;        /* Darkest slate for headings */
+      --text-secondary: #1e293b;      /* Dark slate for body text */
+      --text-tertiary: #475569;       /* Medium slate for captions */
+      --text-quaternary: #64748b;     /* Light slate for muted text */
+      --text-accent: #0ea5e9;         /* Sky blue for links/accents */
+      --text-success: #059669;        /* Emerald for success states */
+      --text-warning: #d97706;        /* Amber for warnings */
+      --text-error: #dc2626;          /* Red for errors */
+    }
+    
+    /* Dark Theme Typography Colors */
+    [data-theme="dark"] {
+      --text-primary: #f8fafc;        /* Near white for headings */
+      --text-secondary: #e2e8f0;      /* Light gray for body text */
+      --text-tertiary: #cbd5e1;       /* Medium gray for captions */
+      --text-quaternary: #94a3b8;     /* Darker gray for muted text */
+      --text-accent: #38bdf8;         /* Light sky blue for links/accents */
+      --text-success: #10b981;        /* Light emerald for success states */
+      --text-warning: #f59e0b;        /* Light amber for warnings */
+      --text-error: #ef4444;          /* Light red for errors */
+    }
+    
+    /* Typography Utility Classes */
+    .text-display {
+      font-family: var(--font-display);
+      font-weight: var(--font-weight-bold);
+      line-height: var(--leading-tight);
+      letter-spacing: var(--tracking-tight);
+      color: var(--text-primary);
+    }
+    
+    .text-heading {
+      font-family: var(--font-display);
+      font-weight: var(--font-weight-semibold);
+      line-height: var(--leading-snug);
+      letter-spacing: var(--tracking-tight);
+      color: var(--text-primary);
+    }
+    
+    .text-body {
+      font-family: var(--font-body);
+      font-weight: var(--font-weight-normal);
+      line-height: var(--leading-normal);
+      letter-spacing: var(--tracking-normal);
+      color: var(--text-secondary);
+    }
+    
+    .text-body-strong {
+      font-family: var(--font-body);
+      font-weight: var(--font-weight-medium);
+      line-height: var(--leading-normal);
+      letter-spacing: var(--tracking-normal);
+      color: var(--text-secondary);
+    }
+    
+    .text-caption {
+      font-family: var(--font-body);
+      font-weight: var(--font-weight-normal);
+      line-height: var(--leading-snug);
+      letter-spacing: var(--tracking-normal);
+      color: var(--text-tertiary);
+    }
+    
+    .text-label {
+      font-family: var(--font-body);
+      font-weight: var(--font-weight-medium);
+      line-height: var(--leading-snug);
+      letter-spacing: var(--tracking-wide);
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      font-size: var(--text-xs);
+    }
+    
+    .text-muted {
+      color: var(--text-quaternary);
+    }
+    
+    .text-accent {
+      color: var(--text-accent);
+    }
+    
+    /* Typography Scales */
+    .text-display-1 { font-size: var(--text-5xl); }
+    .text-display-2 { font-size: var(--text-4xl); }
+    .text-heading-1 { font-size: var(--text-3xl); }
+    .text-heading-2 { font-size: var(--text-2xl); }
+    .text-heading-3 { font-size: var(--text-xl); }
+    .text-heading-4 { font-size: var(--text-lg); }
+    .text-body-lg { font-size: var(--text-lg); }
+    .text-body-base { font-size: var(--text-base); }
+    .text-body-sm { font-size: var(--text-sm); }
+    .text-caption-base { font-size: var(--text-sm); }
+    .text-caption-sm { font-size: var(--text-xs); }
+    
     /* Design Tokens */
     :root {
       --blue-modern: #3b82f6;
@@ -809,16 +947,6 @@
       margin: 16px 0;
     }
 
-    /* Additional text color overrides */
-    .text-center p {
-      color: #000000 !important;
-      font-weight: 500 !important;
-    }
-
-    [data-theme="dark"] .text-center p {
-      color: #e5e7eb !important;
-    }
-
     .variation-item {
       text-align: center;
       padding: 16px;
@@ -830,15 +958,6 @@
     [data-theme="dark"] .variation-item {
       background: #334155;
       border-color: #475569;
-    }
-
-    /* Force text colors to override any inherited styles */
-    .component-section p {
-      color: #000000 !important;
-    }
-
-    [data-theme="dark"] .component-section p {
-      color: #e5e7eb !important;
     }
 
     /* Stats and Metrics */
@@ -881,7 +1000,7 @@
         <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
           <span class="text-white font-bold text-sm">VL</span>
         </div>
-        <h1 class="text-xl font-bold">Complete Component Showcase</h1>
+        <h1 class="text-display text-display-1">Complete Component Showcase</h1>
       </div>
       
       <div class="flex items-center gap-4">
@@ -899,10 +1018,10 @@
       <div class="mb-6">
         <span class="component-category">Design System v1.0</span>
       </div>
-      <h1 class="text-5xl font-bold mb-6 text-gray-900 dark:text-white">
+      <h1 class="text-display text-display-1 mb-6">
         Modern Colorful Design System
       </h1>
-      <p class="text-xl text-gray-900 dark:text-gray-200 max-w-4xl mx-auto mb-8 leading-relaxed">
+      <p class="text-body-strong text-body-lg max-w-4xl mx-auto mb-8">
         Complete component library with 55+ components, 6 color variants, fluorescent glow effects, 
         and full dark mode support for the Vedic Learning Management System.
       </p>
@@ -941,8 +1060,8 @@
     <div class="component-section mb-12">
       <div class="section-header">
         <span class="component-category">Foundation</span>
-        <h2 class="text-3xl font-bold mt-2 text-gray-900 dark:text-white">Design Principles</h2>
-        <p class="text-black dark:text-gray-200 mt-2 font-medium" style="color: #000000 !important;">Core principles that guide our design decisions</p>
+        <h2 class="text-heading text-heading-1 mt-2">Design Principles</h2>
+        <p class="text-body text-body-base mt-2">Core principles that guide our design decisions</p>
       </div>
       
       <div class="grid md:grid-cols-3 gap-6">
@@ -950,24 +1069,24 @@
           <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
             <span class="text-white text-2xl">🎨</span>
           </div>
-          <h3 class="text-lg font-semibold mb-2">Modern & Vibrant</h3>
-          <p class="text-black dark:text-gray-200 text-sm font-medium" style="color: #000000 !important; font-weight: 600 !important;">Contemporary aesthetics with vibrant colors that engage users while maintaining professionalism</p>
+          <h3 class="text-heading text-heading-4 mb-2">Modern & Vibrant</h3>
+          <p class="text-body text-body-sm">Contemporary aesthetics with vibrant colors that engage users while maintaining professionalism</p>
         </div>
         
         <div class="text-center p-6">
           <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center">
             <span class="text-white text-2xl">✨</span>
           </div>
-          <h3 class="text-lg font-semibold mb-2">Elegant Interactions</h3>
-          <p class="text-black dark:text-gray-200 text-sm font-medium" style="color: #000000 !important; font-weight: 600 !important;">Subtle fluorescent glow effects and smooth transitions that provide delightful user feedback</p>
+          <h3 class="text-heading text-heading-4 mb-2">Elegant Interactions</h3>
+          <p class="text-body text-body-sm">Subtle fluorescent glow effects and smooth transitions that provide delightful user feedback</p>
         </div>
         
         <div class="text-center p-6">
           <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
             <span class="text-white text-2xl">♿</span>
           </div>
-          <h3 class="text-lg font-semibold mb-2">Accessibility First</h3>
-          <p class="text-black dark:text-gray-200 text-sm font-medium" style="color: #000000 !important; font-weight: 600 !important;">WCAG 2.1 compliant with proper contrast ratios and keyboard navigation support</p>
+          <h3 class="text-heading text-heading-4 mb-2">Accessibility First</h3>
+          <p class="text-body text-body-sm">WCAG 2.1 compliant with proper contrast ratios and keyboard navigation support</p>
         </div>
       </div>
     </div>
