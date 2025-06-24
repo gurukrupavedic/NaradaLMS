@@ -354,11 +354,12 @@ export function DesignSystemShowcase() {
                     <Button variant={buttonVariant as any} size={buttonSize as any}>
                       Primary
                     </Button>
-                    <Button variant={buttonVariant as any} size={buttonSize as any} loading={true}>
-                      Loading
-                    </Button>
-                    <Button variant={buttonVariant as any} size={buttonSize as any} icon={<Edit className="h-4 w-4" />}>
+                    <Button variant={buttonVariant as any} size={buttonSize as any}>
+                      <Edit className="h-4 w-4 mr-2" />
                       With Icon
+                    </Button>
+                    <Button variant="rose" size={buttonSize as any}>
+                      Delete
                     </Button>
                   </div>
                 </div>
@@ -370,11 +371,12 @@ export function DesignSystemShowcase() {
                     <Button variant={`outline-${buttonVariant}` as any} size={buttonSize as any}>
                       Secondary
                     </Button>
-                    <Button variant="outline-gray" size={buttonSize as any}>
-                      Cancel
-                    </Button>
-                    <Button variant={`outline-${buttonVariant}` as any} size={buttonSize as any} icon={<Save className="h-4 w-4" />}>
+                    <Button variant="outline" size={buttonSize as any}>
+                      <Save className="h-4 w-4 mr-2" />
                       Save Draft
+                    </Button>
+                    <Button variant="outline" size={buttonSize as any}>
+                      Cancel
                     </Button>
                   </div>
                 </div>
@@ -383,14 +385,16 @@ export function DesignSystemShowcase() {
                 <div className="space-y-2">
                   <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Ghost Buttons</h4>
                   <div className="flex gap-2 flex-wrap">
-                    <Button variant={`ghost-${buttonVariant}` as any} size={buttonSize as any}>
+                    <Button variant="ghost" size={buttonSize as any}>
                       Minimal
                     </Button>
-                    <Button variant="ghost-gray" size={buttonSize as any}>
-                      Close
-                    </Button>
-                    <Button variant={`ghost-${buttonVariant}` as any} size={buttonSize as any} icon={<Settings className="h-4 w-4" />}>
+                    <Button variant="ghost" size={buttonSize as any}>
+                      <Settings className="h-4 w-4 mr-2" />
                       Settings
+                    </Button>
+                    <Button variant="ghost" size={buttonSize as any}>
+                      <X className="h-4 w-4 mr-2" />
+                      Close
                     </Button>
                   </div>
                 </div>
@@ -399,11 +403,9 @@ export function DesignSystemShowcase() {
                 <div className="space-y-2">
                   <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">All Sizes</h4>
                   <div className="flex gap-2 items-center flex-wrap">
-                    <Button variant={buttonVariant as any} size="xs">XS</Button>
                     <Button variant={buttonVariant as any} size="sm">SM</Button>
-                    <Button variant={buttonVariant as any} size="md">MD</Button>
+                    <Button variant={buttonVariant as any} size="default">Default</Button>
                     <Button variant={buttonVariant as any} size="lg">LG</Button>
-                    <Button variant={buttonVariant as any} size="xl">XL</Button>
                   </div>
                 </div>
               </div>
