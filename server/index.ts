@@ -11,7 +11,7 @@ app.use(express.urlencoded({ extended: false }));
 
 
 // Serve experiment files FIRST (before Vite) - isolated, safe to delete
-const experimentsPath = path.join(process.cwd(), 'experiments/daisyui-5-examples');
+const experimentsPath = path.join(process.cwd(), 'experiments');
 app.use('/experiments', express.static(experimentsPath, {
   setHeaders: (res, path) => {
     if (path.endsWith('.html')) {
