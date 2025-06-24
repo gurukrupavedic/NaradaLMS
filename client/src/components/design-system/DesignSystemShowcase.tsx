@@ -899,21 +899,134 @@ export function DesignSystemShowcase() {
 
             <ComponentCard
               title="Help Tooltips"
-              description="Contextual information tooltips"
+              description="Contextual information and guidance tooltips"
               componentName="Tooltip"
               variant={tooltipVariant}
-              size={tooltipSize}
-              props={{}}
+              props={{ side: "top", delayDuration: 400 }}
+              allSizes={[]}
               onVariantChange={setTooltipVariant}
-              onSizeChange={setTooltipSize}
             >
-              <div className="space-y-4">
-                <Tooltip content="This is a helpful tooltip" variant={tooltipVariant as any}>
-                  <Button variant="outline">Hover for tooltip</Button>
-                </Tooltip>
-                <SimpleTooltip text="Quick info" variant="green">
-                  <Badge variant="green">Info Badge</Badge>
-                </SimpleTooltip>
+              <div className="space-y-8">
+                {/* Educational Context Demos */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium text-gray-700">LMS Context Examples</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <SimpleTooltip
+                      content="Upload audio files to sync with text segments for enhanced learning"
+                      educational="audio"
+                      side="top"
+                    >
+                      <Button variant="orange" size="sm" className="w-full">
+                        🎵 Audio Upload
+                      </Button>
+                    </SimpleTooltip>
+                    
+                    <SimpleTooltip
+                      content="This feature is in beta - help us improve by providing feedback"
+                      educational="beta"
+                      side="top"
+                    >
+                      <Button variant="orange" size="sm" className="w-full">
+                        ⚡ Auto-Sync (Beta)
+                      </Button>
+                    </SimpleTooltip>
+                    
+                    <SimpleTooltip
+                      content="Press Ctrl+S to quickly save your chapter edits"
+                      educational="shortcut"
+                      side="bottom"
+                    >
+                      <Button variant="indigo" size="sm" className="w-full">
+                        💾 Save Chapter
+                      </Button>
+                    </SimpleTooltip>
+                    
+                    <SimpleTooltip
+                      content="Caution: Publishing makes content visible to all students immediately"
+                      educational="warning"
+                      side="bottom"
+                    >
+                      <Button variant="yellow" size="sm" className="w-full text-gray-900">
+                        ⚠️ Publish Content
+                      </Button>
+                    </SimpleTooltip>
+                  </div>
+                </div>
+
+                {/* Interactive Variant Demo */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium text-gray-700">Interactive Color Variants</h4>
+                  <div className="flex flex-wrap gap-3">
+                    <SimpleTooltip
+                      content={`This tooltip changes color based on inspector selection (currently ${tooltipVariant})`}
+                      variant={tooltipVariant as any}
+                      side="top"
+                    >
+                      <Badge variant={tooltipVariant as any}>
+                        Hover Me
+                      </Badge>
+                    </SimpleTooltip>
+                    
+                    <SimpleTooltip
+                      content="Green variant for success states and positive actions"
+                      variant="green"
+                      side="top"
+                    >
+                      <Badge variant="green">Success</Badge>
+                    </SimpleTooltip>
+                    
+                    <SimpleTooltip
+                      content="Rose variant for delete actions and destructive operations"
+                      variant="rose"
+                      side="top"
+                    >
+                      <Badge variant="rose">Delete</Badge>
+                    </SimpleTooltip>
+                  </div>
+                </div>
+
+                {/* Positioning Demo */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium text-gray-700">Positioning Options</h4>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="flex justify-center">
+                      <SimpleTooltip
+                        content="Tooltip positioned above the element"
+                        variant="purple"
+                        side="top"
+                      >
+                        <Button variant="outline" size="sm">Top</Button>
+                      </SimpleTooltip>
+                    </div>
+                    <div className="flex justify-center">
+                      <SimpleTooltip
+                        content="Tooltip positioned to the right"
+                        variant="teal"
+                        side="right"
+                      >
+                        <Button variant="outline" size="sm">Right</Button>
+                      </SimpleTooltip>
+                    </div>
+                    <div className="flex justify-center">
+                      <SimpleTooltip
+                        content="Tooltip positioned below the element"
+                        variant="pink"
+                        side="bottom"
+                      >
+                        <Button variant="outline" size="sm">Bottom</Button>
+                      </SimpleTooltip>
+                    </div>
+                    <div className="flex justify-center">
+                      <SimpleTooltip
+                        content="Tooltip positioned to the left"
+                        variant="cyan"
+                        side="left"
+                      >
+                        <Button variant="outline" size="sm">Left</Button>
+                      </SimpleTooltip>
+                    </div>
+                  </div>
+                </div>
               </div>
             </ComponentCard>
 

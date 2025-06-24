@@ -45,24 +45,30 @@ const tooltipContentVariants = cva(
   }
 );
 
-// Educational semantic variants
+// Educational semantic variants for LMS contexts
 const educationalVariants = {
   // Help and guidance
-  help: "blue",
-  info: "cyan",
-  tip: "teal",
-  warning: "yellow",
+  help: "blue" as const,           // General help information
+  info: "cyan" as const,           // Informational content
+  tip: "teal" as const,            // Helpful tips and suggestions
+  warning: "yellow" as const,      // Caution and warning messages
   
   // Feature explanations
-  feature: "purple",
-  shortcut: "indigo",
-  beta: "orange",
+  feature: "purple" as const,      // New feature introductions
+  shortcut: "indigo" as const,     // Keyboard shortcuts and quick actions
+  beta: "orange" as const,         // Beta features and experimental functionality
   
   // Content contexts
-  audio: "orange",
-  video: "pink",
-  text: "green",
-  assessment: "rose"
+  audio: "orange" as const,        // Audio-related tooltips
+  video: "pink" as const,          // Video content explanations
+  text: "green" as const,          // Text editing and content tooltips
+  assessment: "rose" as const,     // Assessment and grading tooltips
+  
+  // User actions
+  save: "green" as const,          // Save actions and confirmations
+  delete: "rose" as const,         // Delete and destructive actions
+  edit: "purple" as const,         // Editing functionality
+  publish: "emerald" as const      // Publishing and making content live
 } as const;
 
 const TooltipProvider = TooltipPrimitive.Provider;
@@ -97,20 +103,25 @@ TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 export interface SimpleTooltipProps {
   content: React.ReactNode;
   children: React.ReactNode;
-  variant?: keyof typeof educationalVariants | "default";
+  variant?: "default" | "blue" | "green" | "purple" | "orange" | "pink" | "indigo" | "teal" | "cyan" | "yellow" | "lime" | "rose" | "emerald";
   educational?: keyof typeof educationalVariants;
   side?: "top" | "right" | "bottom" | "left";
   delayDuration?: number;
+  className?: string;
 }
 
 const SimpleTooltip: React.FC<SimpleTooltipProps> = ({
   content,
   children,
-  variant,
+  variant = "default",
   educational,
   side = "top",
-  delayDuration = 400
+  delayDuration = 400,
+  className
 }) => {
+  // Use educational variant if provided, otherwise use explicit variant
+  const finalVariant = educational ? educationalVariants[educational] : variant;
+  
   return (
     <TooltipProvider delayDuration={delayDuration}>
       <TooltipRoot>
@@ -119,8 +130,8 @@ const SimpleTooltip: React.FC<SimpleTooltipProps> = ({
         </TooltipTrigger>
         <TooltipContent
           side={side}
-          variant={variant as any}
-          educational={educational}
+          variant={finalVariant as any}
+          className={className}
         >
           {content}
         </TooltipContent>
