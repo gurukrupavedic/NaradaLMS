@@ -902,21 +902,23 @@ export function DesignSystemShowcase() {
               description="Contextual information and guidance tooltips"
               componentName="Tooltip"
               variant={tooltipVariant}
-              props={{ side: "top", delayDuration: 400 }}
-              allSizes={[]}
+              size={tooltipSize}
+              props={{ delayDuration: 400, educational: "help" }}
+              allSizes={getComponentConfig("Tooltip")?.sizes || ["top", "right", "bottom", "left"]}
               onVariantChange={setTooltipVariant}
+              onSizeChange={setTooltipSize}
             >
               <div className="space-y-6">
                 {/* Interactive Tooltip with Inspector */}
                 <div className="text-center space-y-3">
                   <SimpleTooltip
-                    content={`Dynamic tooltip adapting to ${tooltipVariant} variant from inspector`}
+                    content={`Dynamic tooltip: ${tooltipVariant} variant, ${tooltipSize} position`}
                     variant={tooltipVariant as any}
-                    side="top"
+                    side={tooltipSize as any}
                   >
                     <div className="inline-block p-4 bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl border border-gray-200/60 hover:shadow-lg transition-all duration-200 cursor-help">
                       <div className="text-sm font-medium text-gray-700">Interactive Element</div>
-                      <div className="text-xs text-gray-500 mt-1">Hover to see {tooltipVariant} tooltip</div>
+                      <div className="text-xs text-gray-500 mt-1">Hover: {tooltipVariant} color, {tooltipSize} position</div>
                     </div>
                   </SimpleTooltip>
                 </div>
