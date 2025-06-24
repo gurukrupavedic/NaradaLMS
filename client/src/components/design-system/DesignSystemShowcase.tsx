@@ -742,9 +742,10 @@ export function DesignSystemShowcase() {
               componentName="Slider"
               variant={basicSliderVariant}
               size={basicSliderSize}
-              props={{ showValue: true, disabled: false }}
+              props={sliderProps}
               onVariantChange={setBasicSliderVariant}
               onSizeChange={setBasicSliderSize}
+              onPropsChange={setSliderProps}
             >
               <div className="space-y-6">
                 <Slider
@@ -755,7 +756,8 @@ export function DesignSystemShowcase() {
                   variant={basicSliderVariant as any}
                   size={basicSliderSize as any}
                   label="Volume Control"
-                  showValue
+                  showValue={sliderProps.showValue}
+                  disabled={sliderProps.disabled}
                 />
                 <Slider
                   min={1}
@@ -765,7 +767,8 @@ export function DesignSystemShowcase() {
                   variant="purple"
                   size={basicSliderSize as any}
                   label="Difficulty Level"
-                  showValue
+                  showValue={sliderProps.showValue}
+                  disabled={sliderProps.disabled}
                   formatValue={(val) => `Level ${val}`}
                 />
               </div>
