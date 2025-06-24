@@ -409,56 +409,7 @@ export function DesignSystemShowcase() {
           </div>
         </div>
 
-        {/* ENHANCED: Data Management with Inspector */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Data Management</h2>
-          
-          <ComponentCard
-            title="User Management Table"
-            description="Data tables with sorting, selection, and inspector"
-            componentName="Table"
-            variant={tableVariant}
-            size={tableSize}
-            props={{ selectable: true, sortable: true, striped: true }}
-            onVariantChange={setTableVariant}
-            onSizeChange={setTableSize}
-          >
-            <Table
-              columns={[
-                { key: "name", header: "Name", sortable: true },
-                { key: "email", header: "Email", sortable: true },
-                { 
-                  key: "role", 
-                  header: "Role",
-                  render: (value: string) => (
-                    <Badge variant={value === "admin" ? "purple" : value === "teacher" ? "emerald" : "blue"}>
-                      {value}
-                    </Badge>
-                  )
-                },
-                { 
-                  key: "status", 
-                  header: "Status",
-                  render: (value: string) => (
-                    <Badge variant={value === "active" ? "green" : "yellow"}>
-                      {value}
-                    </Badge>
-                  )
-                }
-              ]}
-              data={[
-                { id: "1", name: "John Doe", email: "john@example.com", role: "student", status: "active" },
-                { id: "2", name: "Jane Smith", email: "jane@example.com", role: "teacher", status: "active" },
-                { id: "3", name: "Admin User", email: "admin@example.com", role: "admin", status: "active" }
-              ]}
-              selectable
-              selectedRows={selectedTableRows}
-              onRowSelect={setSelectedTableRows}
-              variant={tableVariant as any}
-              size={tableSize as any}
-            />
-          </ComponentCard>
-        </div>
+        {/* Data Management section removed - Table component will be redesigned with clear requirements */}
 
         {/* ENHANCED: Audio & Progress Controls with Inspector */}
         <div className="space-y-8">
