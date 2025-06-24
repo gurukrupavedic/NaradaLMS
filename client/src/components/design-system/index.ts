@@ -40,6 +40,10 @@ export * from './Table';
 export * from './Slider';
 export * from './Breadcrumb';
 
+// Inspector utilities
+export * from './ComponentInspector';
+export * from './utils/componentMeta';
+
 // Showcase component
 export { DesignSystemShowcase } from './DesignSystemShowcase';
 

@@ -30,6 +30,8 @@ import { Radio, RadioGroup, CommonRadioOptions } from "./Radio";
 import { Table, DataTable, LMSTableColumns } from "./Table";
 import { Slider, AudioSlider, ProgressSlider } from "./Slider";
 import { Breadcrumb, LMSBreadcrumbs } from "./Breadcrumb";
+import { ComponentCard, ComponentInspector } from "./ComponentInspector";
+import { colorVariants, componentConfigs } from "./utils/componentMeta";
 import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, HelpCircle, Settings, Upload, Type } from "lucide-react";
 
 export function DesignSystemShowcase() {
@@ -43,10 +45,14 @@ export function DesignSystemShowcase() {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [selectedTableRows, setSelectedTableRows] = useState<string[]>([]);
   
-  const colorVariants = [
-    "blue", "green", "purple", "orange", "pink", "indigo", 
-    "teal", "cyan", "yellow", "lime", "rose", "emerald"
-  ];
+  // Enhanced state for component variants
+  const [buttonVariant, setButtonVariant] = useState("blue");
+  const [buttonSize, setButtonSize] = useState("md");
+  const [tableVariant, setTableVariant] = useState("blue");
+  const [tableSize, setTableSize] = useState("md");
+  const [sliderVariant, setSliderVariant] = useState("orange");
+  const [breadcrumbVariant, setBreadcrumbVariant] = useState("blue");
+  const [breadcrumbSize, setBreadcrumbSize] = useState("md");
 
   // Complete 24-color system (12 primary + 12 fluorescent)
   const allColorVariants = [
@@ -238,73 +244,98 @@ export function DesignSystemShowcase() {
           </div>
         </div>
 
-        {/* NEW: Dialog System */}
+        {/* ENHANCED: Interactive Button Showcase */}
         <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Dialog System</h2>
+          <h2 className="text-3xl font-semibold text-gray-900">Interactive Components</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="p-6">
-              <CardHeader className="p-0 mb-4">
-                <CardTitle>User Interactions</CardTitle>
-                <CardDescription>Modal dialogs for LMS workflows</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0 space-y-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ComponentCard
+              title="Action Buttons"
+              description="Primary UI buttons with inspector"
+              componentName="Button"
+              variant={buttonVariant}
+              size={buttonSize}
+              props={{ destructive: false }}
+              onVariantChange={setButtonVariant}
+              onSizeChange={setButtonSize}
+            >
+              <div className="space-y-3">
                 <Button 
-                  variant={selectedVariant as any} 
-                  onClick={() => setShowDialog(true)}
+                  variant={buttonVariant as any}
+                  size={buttonSize as any}
                   className="w-full"
                 >
-                  Open User Invitation
+                  Primary Action
                 </Button>
                 <Button 
-                  variant="rose" 
+                  variant={buttonVariant as any}
+                  size={buttonSize as any}
+                  className="w-full"
+                  loading
+                >
+                  Loading State
+                </Button>
+                <Button 
+                  variant="rose"
+                  size={buttonSize as any}
+                  className="w-full"
                   onClick={() => setShowConfirmDialog(true)}
-                  className="w-full"
                 >
-                  Delete Confirmation
+                  Delete Action
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </ComponentCard>
 
-            <Card className="p-6">
-              <CardHeader className="p-0 mb-4">
-                <CardTitle>Form Controls</CardTitle>
-                <CardDescription>Checkbox and radio selections</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="space-y-4">
-                  <CheckboxGroup
-                    label="Content Selection"
-                    options={[
-                      { id: "ch1", label: "Chapter 1" },
-                      { id: "ch2", label: "Chapter 2" }
-                    ]}
-                    value={checkboxValue}
-                    onChange={setCheckboxValue}
-                    variant={selectedVariant as any}
-                    size="sm"
-                  />
-                  <RadioGroup
-                    name="role"
-                    label="User Role"
-                    options={CommonRadioOptions.userRoles.slice(0, 2)}
-                    value={radioValue}
-                    onChange={setRadioValue}
-                    variant={selectedVariant as any}
-                    size="sm"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <ComponentCard
+              title="Form Controls"
+              description="Checkbox and radio selections with inspector"
+              componentName="CheckboxGroup"
+              variant={selectedVariant}
+              size="sm"
+              props={{}}
+              onVariantChange={setSelectedVariant}
+              allSizes={["sm", "md", "lg"]}
+            >
+              <div className="space-y-4">
+                <CheckboxGroup
+                  label="Content Selection"
+                  options={[
+                    { id: "ch1", label: "Chapter 1" },
+                    { id: "ch2", label: "Chapter 2" }
+                  ]}
+                  value={checkboxValue}
+                  onChange={setCheckboxValue}
+                  variant={selectedVariant as any}
+                  size="sm"
+                />
+                <RadioGroup
+                  name="role"
+                  label="User Role"
+                  options={CommonRadioOptions.userRoles.slice(0, 2)}
+                  value={radioValue}
+                  onChange={setRadioValue}
+                  variant={selectedVariant as any}
+                  size="sm"
+                />
+              </div>
+            </ComponentCard>
           </div>
         </div>
 
-        {/* NEW: Data Management */}
+        {/* ENHANCED: Data Management with Inspector */}
         <div className="space-y-8">
           <h2 className="text-3xl font-semibold text-gray-900">Data Management</h2>
           
-          <div>
-            <h3 className="text-xl font-medium mb-4">User Management Table</h3>
+          <ComponentCard
+            title="User Management Table"
+            description="Data tables with sorting, selection, and inspector"
+            componentName="Table"
+            variant={tableVariant}
+            size={tableSize}
+            props={{ selectable: true, sortable: true, striped: true }}
+            onVariantChange={setTableVariant}
+            onSizeChange={setTableSize}
+          >
             <Table
               columns={[
                 { key: "name", header: "Name", sortable: true },
@@ -336,41 +367,47 @@ export function DesignSystemShowcase() {
               selectable
               selectedRows={selectedTableRows}
               onRowSelect={setSelectedTableRows}
-              variant={selectedVariant as any}
-              size="md"
+              variant={tableVariant as any}
+              size={tableSize as any}
             />
-          </div>
+          </ComponentCard>
         </div>
 
-        {/* NEW: Audio & Progress Controls */}
+        {/* ENHANCED: Audio & Progress Controls with Inspector */}
         <div className="space-y-8">
           <h2 className="text-3xl font-semibold text-gray-900">Audio & Progress Controls</h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="p-6">
-              <CardHeader className="p-0 mb-4">
-                <CardTitle>Audio Timeline</CardTitle>
-                <CardDescription>Perfect for audio-text synchronization</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <AudioSlider
-                  currentTime={audioCurrentTime}
-                  duration={120}
-                  onSeek={setAudioCurrentTime}
-                  isPlaying={isAudioPlaying}
-                  onTogglePlay={() => setIsAudioPlaying(!isAudioPlaying)}
-                  variant="orange"
-                  showVolume={true}
-                />
-              </CardContent>
-            </Card>
+            <ComponentCard
+              title="Audio Timeline"
+              description="Perfect for audio-text synchronization"
+              componentName="AudioSlider"
+              variant={sliderVariant}
+              props={{ showVolume: true }}
+              onVariantChange={setSliderVariant}
+              allSizes={[]}
+            >
+              <AudioSlider
+                currentTime={audioCurrentTime}
+                duration={120}
+                onSeek={setAudioCurrentTime}
+                isPlaying={isAudioPlaying}
+                onTogglePlay={() => setIsAudioPlaying(!isAudioPlaying)}
+                variant={sliderVariant as any}
+                showVolume={true}
+              />
+            </ComponentCard>
 
-            <Card className="p-6">
-              <CardHeader className="p-0 mb-4">
-                <CardTitle>Learning Progress</CardTitle>
-                <CardDescription>Track student completion</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0 space-y-4">
+            <ComponentCard
+              title="Learning Progress"
+              description="Track student completion"
+              componentName="ProgressSlider"
+              variant="green"
+              props={{ showPercentage: true }}
+              allVariants={colorVariants}
+              allSizes={[]}
+            >
+              <div className="space-y-4">
                 <ProgressSlider
                   progress={75}
                   total={100}
@@ -392,52 +429,63 @@ export function DesignSystemShowcase() {
                   label="Custom Slider"
                   showValue
                 />
-              </CardContent>
-            </Card>
+              </div>
+            </ComponentCard>
           </div>
         </div>
 
-        {/* NEW: Navigation System */}
+        {/* ENHANCED: Navigation System with Inspector */}
         <div className="space-y-8">
           <h2 className="text-3xl font-semibold text-gray-900">Navigation System</h2>
           
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium mb-3">Content Management Navigation</h3>
-              <Breadcrumb
-                items={LMSBreadcrumbs.chapterManagement("1", "Vedic Fundamentals", "1", "Introduction to Sanskrit")}
-                variant={selectedVariant as any}
-                size="md"
-              />
-            </div>
+          <ComponentCard
+            title="Content Navigation"
+            description="Hierarchical breadcrumb navigation"
+            componentName="Breadcrumb"
+            variant={breadcrumbVariant}
+            size={breadcrumbSize}
+            props={{ showHome: true, maxItems: 4 }}
+            onVariantChange={setBreadcrumbVariant}
+            onSizeChange={setBreadcrumbSize}
+          >
+            <div className="space-y-6">
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Content Management</h4>
+                <Breadcrumb
+                  items={LMSBreadcrumbs.chapterManagement("1", "Vedic Fundamentals", "1", "Introduction to Sanskrit")}
+                  variant={breadcrumbVariant as any}
+                  size={breadcrumbSize as any}
+                />
+              </div>
 
-            <div>
-              <h3 className="text-lg font-medium mb-3">Student Learning Path</h3>
-              <Breadcrumb
-                items={[
-                  { label: "My Learning", href: "/dashboard" },
-                  { label: "Advanced Sanskrit" },
-                  { label: "Chapter 3: Compound Words" }
-                ]}
-                variant="green"
-                size="md"
-                maxItems={4}
-              />
-            </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Student Learning Path</h4>
+                <Breadcrumb
+                  items={[
+                    { label: "My Learning", href: "/dashboard" },
+                    { label: "Advanced Sanskrit" },
+                    { label: "Chapter 3: Compound Words" }
+                  ]}
+                  variant={breadcrumbVariant as any}
+                  size={breadcrumbSize as any}
+                  maxItems={4}
+                />
+              </div>
 
-            <div>
-              <h3 className="text-lg font-medium mb-3">Administration</h3>
-              <Breadcrumb
-                items={[
-                  { label: "Admin", href: "/admin" },
-                  { label: "User Management", href: "/admin/users" },
-                  { label: "Teacher Permissions" }
-                ]}
-                variant="purple"
-                size="md"
-              />
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Administration</h4>
+                <Breadcrumb
+                  items={[
+                    { label: "Admin", href: "/admin" },
+                    { label: "User Management", href: "/admin/users" },
+                    { label: "Teacher Permissions" }
+                  ]}
+                  variant={breadcrumbVariant as any}
+                  size={breadcrumbSize as any}
+                />
+              </div>
             </div>
-          </div>
+          </ComponentCard>
         </div>
 
         {/* Input Components Showcase */}
