@@ -64,6 +64,7 @@ function Router() {
             <Route path="/tracks/:trackId" component={TrackView} />
             <Route path="/chapters/:id" component={ChapterView} />
             <Route path="/experiments" component={ExperimentsShowcase} />
+            <Route path="/design-system-showcase" component={DesignSystemShowcase} />
             <Route path="/experiments/daisyui-5" component={DaisyUI5Showcase} />
 
 
