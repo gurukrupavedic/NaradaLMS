@@ -4,7 +4,7 @@
  */
 
 // Core UI Components
-export { Button, buttonVariants } from "./button";
+export { Button, buttonVariants, type ButtonProps } from "./button";
 export { Input } from "./input";
 export { Label } from "./label";
 export { Textarea } from "./textarea";
@@ -21,10 +21,10 @@ export { Checkbox } from "./checkbox";
 export { RadioGroup, RadioGroupItem } from "./radio-group";
 
 // Feedback Components
-export { Badge, BadgeProps } from "./badge";
+export { Badge, type BadgeProps } from "./badge";
 export { Progress } from "./progress";
 export { Skeleton } from "./skeleton";
-export { toast, useToast } from "./toast";
+export { useToast } from "@/hooks/use-toast";
 export { Toaster } from "./toaster";
 
 // Navigation Components
@@ -49,7 +49,7 @@ export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, Comma
 export { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./accordion";
 export { Slider } from "./slider";
 export { Switch } from "./switch";
-export { Toggle, ToggleProps } from "./toggle";
+export { Toggle } from "./toggle";
 
 // Custom Components
 export { LoadingSpinner, LoadingButton, LoadingCard, LoadingSkeleton } from "./loading";
