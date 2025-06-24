@@ -501,45 +501,26 @@ export function DesignSystemShowcase() {
               onVariantChange={setSliderVariant}
               onSizeChange={setSliderSize}
             >
-              <div className="space-y-4">
-                <AudioControls
-                  variant={sliderVariant as any}
-                  size={sliderSize as any}
-                  title="Chapter 1: Vedic Foundations"
-                  isPlaying={isAudioPlaying}
-                  currentTime={audioCurrentTime}
-                  duration={120}
-                  volume={75}
-                  playbackRate={1}
-                  bufferedProgress={85}
-                  onPlay={() => setIsAudioPlaying(true)}
-                  onPause={() => setIsAudioPlaying(false)}
-                  onStop={() => {
-                    setIsAudioPlaying(false);
-                    setAudioCurrentTime(0);
-                  }}
-                  onSeek={(time) => setAudioCurrentTime(time)}
-                  onSkipBackward={() => setAudioCurrentTime(Math.max(0, audioCurrentTime - 10))}
-                  onSkipForward={() => setAudioCurrentTime(Math.min(120, audioCurrentTime + 10))}
-                />
-                
-                <AudioControls
-                  variant="green"
-                  size={sliderSize as any}
-                  title="Short Audio Clip"
-                  currentTime={25}
-                  duration={45}
-                  volume={60}
-                  playbackRate={1.5}
-                  bufferedProgress={30}
-                  showSkipButtons={false}
-                  showPlaybackRate={false}
-                  onPlay={() => {}}
-                  onPause={() => {}}
-                  onStop={() => {}}
-                  onSeek={() => {}}
-                />
-              </div>
+              <AudioControls
+                variant={sliderVariant as any}
+                size={sliderSize as any}
+                title="Chapter 1: Vedic Foundations"
+                isPlaying={isAudioPlaying}
+                currentTime={audioCurrentTime}
+                duration={120}
+                volume={75}
+                playbackRate={1}
+                bufferedProgress={85}
+                onPlay={() => setIsAudioPlaying(true)}
+                onPause={() => setIsAudioPlaying(false)}
+                onStop={() => {
+                  setIsAudioPlaying(false);
+                  setAudioCurrentTime(0);
+                }}
+                onSeek={(time) => setAudioCurrentTime(time)}
+                onSkipBackward={() => setAudioCurrentTime(Math.max(0, audioCurrentTime - 10))}
+                onSkipForward={() => setAudioCurrentTime(Math.min(120, audioCurrentTime + 10))}
+              />
             </ComponentCard>
 
             <ComponentCard
