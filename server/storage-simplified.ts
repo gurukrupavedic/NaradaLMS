@@ -1,4 +1,6 @@
 // Simplified in-memory storage without authentication
+import { DEFAULT_TRACK_HOURS, DEFAULT_INSTRUCTOR_HOURS, DEFAULT_STUDENT_HOURS, INITIAL_ID_COUNTER, PROFICIENCY_DECIMAL_PLACES, PROGRESS_PERCENTAGE_MULTIPLIER } from "@shared/constants";
+
 // Simple line break normalization utility
 const normalizeLineBreaks = (text: string): string => text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 export interface IStorage {
@@ -70,7 +72,7 @@ export class MemStorage implements IStorage {
       description: "Essential daily Vedic practices and rituals for spiritual development",
       order: 1,
       status: "published",
-      estimatedHours: 120,
+      estimatedHours: DEFAULT_TRACK_HOURS,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: "system"
@@ -81,7 +83,7 @@ export class MemStorage implements IStorage {
       description: "Sacred hymns and verses for devotional practice and spiritual elevation",
       order: 2,
       status: "published",
-      estimatedHours: 100,
+      estimatedHours: DEFAULT_INSTRUCTOR_HOURS,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: "system"
@@ -92,7 +94,7 @@ export class MemStorage implements IStorage {
       description: "Advanced worship practices including Rudra prayers and ceremonial procedures",
       order: 3,
       status: "published",
-      estimatedHours: 80,
+      estimatedHours: DEFAULT_STUDENT_HOURS,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: "system"
@@ -316,7 +318,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`)
       createdAt: new Date()
     }
   ];
-  private nextId = 100;
+  private nextId = INITIAL_ID_COUNTER;
 
   // User operations (required for Replit Auth)
   async getUser(id: string): Promise<any> {
@@ -624,8 +626,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`)
     return {
       totalChapters,
       completedChapters,
-      averageProficiency: Math.round(averageProficiency * 100) / 100,
-      progressPercentage: totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0
+      averageProficiency: Math.round(averageProficiency * PROFICIENCY_DECIMAL_PLACES) / PROFICIENCY_DECIMAL_PLACES,
+      progressPercentage: totalChapters > 0 ? Math.round((completedChapters / totalChapters) * PROGRESS_PERCENTAGE_MULTIPLIER) : 0
     };
   }
 }

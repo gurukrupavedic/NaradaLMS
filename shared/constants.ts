@@ -24,3 +24,9 @@ export const INITIAL_ID_COUNTER = 100;
 // Performance & Calculation
 export const PROFICIENCY_DECIMAL_PLACES = 100; // For Math.round(x * 100) / 100
 export const PROGRESS_PERCENTAGE_MULTIPLIER = 100;
+
+// File Upload Configuration
+export const FILE_UPLOAD = {
+  maxSize: 100 * 1024 * 1024, // 100MB
+  allowedTypes: ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/m4a']
+};
