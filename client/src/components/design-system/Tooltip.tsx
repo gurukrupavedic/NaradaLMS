@@ -20,23 +20,23 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const tooltipContentVariants = cva(
-  "z-50 overflow-hidden rounded-lg px-3 py-2 text-sm font-medium shadow-lg border backdrop-blur-sm animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+  "z-50 overflow-hidden rounded-md px-2.5 py-1.5 text-xs font-normal shadow-sm border backdrop-blur-sm animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1",
   {
     variants: {
       variant: {
-        default: "bg-gray-900/95 text-white border-gray-700/50 shadow-[0_8px_30px_rgba(0,0,0,0.3)]",
-        blue: "bg-blue-600/95 text-white border-blue-500/50 shadow-[0_8px_30px_rgba(59,130,246,0.3)]",
-        green: "bg-green-600/95 text-white border-green-500/50 shadow-[0_8px_30px_rgba(34,197,94,0.3)]",
-        purple: "bg-purple-600/95 text-white border-purple-500/50 shadow-[0_8px_30px_rgba(147,51,234,0.3)]",
-        orange: "bg-orange-600/95 text-white border-orange-500/50 shadow-[0_8px_30px_rgba(251,146,60,0.3)]",
-        pink: "bg-pink-600/95 text-white border-pink-500/50 shadow-[0_8px_30px_rgba(236,72,153,0.3)]",
-        indigo: "bg-indigo-600/95 text-white border-indigo-500/50 shadow-[0_8px_30px_rgba(99,102,241,0.3)]",
-        teal: "bg-teal-600/95 text-white border-teal-500/50 shadow-[0_8px_30px_rgba(20,184,166,0.3)]",
-        cyan: "bg-cyan-600/95 text-white border-cyan-500/50 shadow-[0_8px_30px_rgba(8,145,178,0.3)]",
-        yellow: "bg-yellow-600/95 text-gray-900 border-yellow-500/50 shadow-[0_8px_30px_rgba(234,179,8,0.3)]",
-        lime: "bg-lime-600/95 text-white border-lime-500/50 shadow-[0_8px_30px_rgba(132,204,22,0.3)]",
-        rose: "bg-rose-600/95 text-white border-rose-500/50 shadow-[0_8px_30px_rgba(244,63,94,0.3)]",
-        emerald: "bg-emerald-600/95 text-white border-emerald-500/50 shadow-[0_8px_30px_rgba(16,185,129,0.3)]"
+        default: "bg-gray-800/90 text-gray-100 border-gray-600/40 shadow-[0_4px_16px_rgba(0,0,0,0.15)]",
+        blue: "bg-blue-50/95 text-blue-800 border-blue-200/60 shadow-[0_4px_16px_rgba(59,130,246,0.08)]",
+        green: "bg-green-50/95 text-green-800 border-green-200/60 shadow-[0_4px_16px_rgba(34,197,94,0.08)]",
+        purple: "bg-purple-50/95 text-purple-800 border-purple-200/60 shadow-[0_4px_16px_rgba(147,51,234,0.08)]",
+        orange: "bg-orange-50/95 text-orange-800 border-orange-200/60 shadow-[0_4px_16px_rgba(251,146,60,0.08)]",
+        pink: "bg-pink-50/95 text-pink-800 border-pink-200/60 shadow-[0_4px_16px_rgba(236,72,153,0.08)]",
+        indigo: "bg-indigo-50/95 text-indigo-800 border-indigo-200/60 shadow-[0_4px_16px_rgba(99,102,241,0.08)]",
+        teal: "bg-teal-50/95 text-teal-800 border-teal-200/60 shadow-[0_4px_16px_rgba(20,184,166,0.08)]",
+        cyan: "bg-cyan-50/95 text-cyan-800 border-cyan-200/60 shadow-[0_4px_16px_rgba(8,145,178,0.08)]",
+        yellow: "bg-yellow-50/95 text-yellow-800 border-yellow-200/60 shadow-[0_4px_16px_rgba(234,179,8,0.08)]",
+        lime: "bg-lime-50/95 text-lime-800 border-lime-200/60 shadow-[0_4px_16px_rgba(132,204,22,0.08)]",
+        rose: "bg-rose-50/95 text-rose-800 border-rose-200/60 shadow-[0_4px_16px_rgba(244,63,94,0.08)]",
+        emerald: "bg-emerald-50/95 text-emerald-800 border-emerald-200/60 shadow-[0_4px_16px_rgba(16,185,129,0.08)]"
       }
     },
     defaultVariants: {
