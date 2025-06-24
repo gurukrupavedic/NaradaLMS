@@ -17,6 +17,10 @@ export * from './Button';
 export * from './Input';
 export * from './Tabs';
 export * from './Progress';
+export * from './Badge';
+export * from './Alert';
+export * from './Select';
+export * from './Avatar';
 
 // Showcase component
 export { DesignSystemShowcase } from './DesignSystemShowcase';
@@ -27,3 +31,7 @@ export type { ButtonProps } from './Button';
 export type { InputProps } from './Input';
 export type { TabsListProps, TabsTriggerProps } from './Tabs';
 export type { ProgressProps, CircularProgressProps } from './Progress';
+export type { BadgeProps } from './Badge';
+export type { AlertProps } from './Alert';
+export type { SelectTriggerProps } from './Select';
+export type { AvatarProps } from './Avatar';

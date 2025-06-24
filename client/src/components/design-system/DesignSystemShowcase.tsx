@@ -14,7 +14,11 @@ import { Button } from "./Button";
 import { Input } from "./Input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./Tabs";
 import { Progress, CircularProgress } from "./Progress";
-import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers } from "lucide-react";
+import { Badge } from "./Badge";
+import { Alert, AlertTitle, AlertDescription } from "./Alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./Select";
+import { Avatar } from "./Avatar";
+import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield } from "lucide-react";
 
 export function DesignSystemShowcase() {
   const [selectedVariant, setSelectedVariant] = useState<string>("blue");
@@ -338,6 +342,256 @@ export function DesignSystemShowcase() {
               <Progress value={60} size="default" educational="lesson" label="Default" showPercentage />
               <Progress value={60} size="lg" educational="lesson" label="Large" showPercentage />
               <Progress value={60} size="xl" educational="lesson" label="Extra Large" showPercentage />
+            </div>
+          </div>
+        </div>
+
+        {/* Badge Components Showcase */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Badge Components</h2>
+          
+          {/* Status Badges */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Content Status Badges</h3>
+            <div className="flex flex-wrap gap-3">
+              <Badge educational="published" icon={<CheckCircle className="h-3 w-3" />}>Published</Badge>
+              <Badge educational="draft" icon={<Edit className="h-3 w-3" />}>Draft</Badge>
+              <Badge educational="archived">Archived</Badge>
+              <Badge educational="featured" icon={<Star className="h-3 w-3" />}>Featured</Badge>
+            </div>
+          </div>
+
+          {/* Learning Progress Badges */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Learning Progress Badges</h3>
+            <div className="flex flex-wrap gap-3">
+              <Badge educational="completed" icon={<CheckCircle className="h-3 w-3" />}>Completed</Badge>
+              <Badge educational="in-progress" pulse>In Progress</Badge>
+              <Badge educational="locked">Locked</Badge>
+              <Badge educational="mastered" icon={<Crown className="h-3 w-3" />}>Mastered</Badge>
+            </div>
+          </div>
+
+          {/* Role Badges */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">User Role Badges</h3>
+            <div className="flex flex-wrap gap-3">
+              <Badge educational="admin" icon={<Shield className="h-3 w-3" />}>Admin</Badge>
+              <Badge educational="instructor">Instructor</Badge>
+              <Badge educational="student">Student</Badge>
+            </div>
+          </div>
+
+          {/* Color Variants */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Color Variants (Solid & Light)</h3>
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {colorVariants.slice(0, 6).map((variant) => (
+                  <Badge key={variant} variant={variant as any}>
+                    {variant.charAt(0).toUpperCase() + variant.slice(1)}
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {colorVariants.slice(0, 6).map((variant) => (
+                  <Badge key={variant} variant={`light-${variant}` as any}>
+                    Light {variant.charAt(0).toUpperCase() + variant.slice(1)}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Alert Components Showcase */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Alert Components</h2>
+          
+          {/* System Alerts */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">System Status Alerts</h3>
+            <div className="space-y-4">
+              <Alert variant="success" icon={<CheckCircle className="h-4 w-4" />} dismissible>
+                <AlertTitle>Success</AlertTitle>
+                <AlertDescription>
+                  Chapter content has been successfully saved and published.
+                </AlertDescription>
+              </Alert>
+              
+              <Alert variant="warning" icon={<AlertCircle className="h-4 w-4" />} dismissible>
+                <AlertTitle>Warning</AlertTitle>
+                <AlertDescription>
+                  Some audio segments are not yet mapped to text content.
+                </AlertDescription>
+              </Alert>
+              
+              <Alert variant="error" icon={<XCircle className="h-4 w-4" />} dismissible>
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  Failed to upload audio file. Please check file format and try again.
+                </AlertDescription>
+              </Alert>
+              
+              <Alert variant="info" icon={<Info className="h-4 w-4" />} dismissible>
+                <AlertTitle>Information</AlertTitle>
+                <AlertDescription>
+                  New segmentation features are now available in the editor.
+                </AlertDescription>
+              </Alert>
+            </div>
+          </div>
+
+          {/* Educational Alerts */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Educational Context Alerts</h3>
+            <div className="space-y-4">
+              <Alert educational="lesson-complete" icon={<CheckCircle className="h-4 w-4" />}>
+                <AlertTitle>Lesson Complete</AlertTitle>
+                <AlertDescription>
+                  You have successfully completed "Introduction to Vedic Mantras".
+                </AlertDescription>
+              </Alert>
+              
+              <Alert educational="audio-ready" icon={<Headphones className="h-4 w-4" />}>
+                <AlertTitle>Audio Content Ready</AlertTitle>
+                <AlertDescription>
+                  Audio files have been processed and are ready for mapping.
+                </AlertDescription>
+              </Alert>
+            </div>
+          </div>
+        </div>
+
+        {/* Select Components Showcase */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Select Components</h2>
+          
+          {/* Educational Selects */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Educational Context Selects</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Content Language</label>
+                <Select>
+                  <SelectTrigger educational="language">
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="te">Telugu</SelectItem>
+                    <SelectItem value="hi">Hindi</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="sa">Sanskrit</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">User Role</label>
+                <Select>
+                  <SelectTrigger educational="role">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Administrator</SelectItem>
+                    <SelectItem value="instructor">Instructor</SelectItem>
+                    <SelectItem value="student">Student</SelectItem>
+                    <SelectItem value="guest">Guest</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Learning Track</label>
+                <Select>
+                  <SelectTrigger educational="track">
+                    <SelectValue placeholder="Select track" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="basics">Vedic Basics</SelectItem>
+                    <SelectItem value="mantras">Sacred Mantras</SelectItem>
+                    <SelectItem value="advanced">Advanced Studies</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Content Status</label>
+                <Select>
+                  <SelectTrigger educational="status">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="review">Under Review</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Avatar Components Showcase */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Avatar Components</h2>
+          
+          {/* Role-based Avatars */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Educational Role Avatars</h3>
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="text-center space-y-2">
+                <Avatar educational="admin" name="Admin User" showStatus status="online" size="lg" />
+                <p className="text-sm text-gray-600">Admin</p>
+              </div>
+              <div className="text-center space-y-2">
+                <Avatar educational="instructor" name="Dr. Sharma" showStatus status="online" size="lg" />
+                <p className="text-sm text-gray-600">Instructor</p>
+              </div>
+              <div className="text-center space-y-2">
+                <Avatar educational="student" name="Priya Patel" showStatus status="away" size="lg" />
+                <p className="text-sm text-gray-600">Student</p>
+              </div>
+              <div className="text-center space-y-2">
+                <Avatar educational="guest" name="Guest User" showStatus status="offline" size="lg" />
+                <p className="text-sm text-gray-600">Guest</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Size Variants */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Avatar Size Variants</h3>
+            <div className="flex items-end gap-4">
+              <Avatar name="Small" size="sm" />
+              <Avatar name="Default" size="default" />
+              <Avatar name="Large" size="lg" />
+              <Avatar name="Extra Large" size="xl" />
+              <Avatar name="2X Large" size="2xl" />
+            </div>
+          </div>
+
+          {/* Status Indicators */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Status Indicators</h3>
+            <div className="flex gap-6">
+              <div className="text-center space-y-2">
+                <Avatar name="Online User" showStatus status="online" />
+                <p className="text-xs text-gray-600">Online</p>
+              </div>
+              <div className="text-center space-y-2">
+                <Avatar name="Away User" showStatus status="away" />
+                <p className="text-xs text-gray-600">Away</p>
+              </div>
+              <div className="text-center space-y-2">
+                <Avatar name="Busy User" showStatus status="busy" />
+                <p className="text-xs text-gray-600">Busy</p>
+              </div>
+              <div className="text-center space-y-2">
+                <Avatar name="Offline User" showStatus status="offline" />
+                <p className="text-xs text-gray-600">Offline</p>
+              </div>
             </div>
           </div>
         </div>
