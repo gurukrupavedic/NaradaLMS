@@ -20,7 +20,7 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-1/2 [&>svg]:-translate-y-1/2 [&>svg]:text-foreground",
+  "relative w-full rounded-lg border p-4",
   {
     variants: {
       variant: {
@@ -117,9 +117,15 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         className={cn(alertVariants({ variant: finalVariant }), className)}
         {...props}
       >
-        {icon}
-        <div className={cn(dismissible && "pr-8")}>
-          {children}
+        <div className={cn("flex gap-3", dismissible && "pr-8")}>
+          {icon && (
+            <div className="flex-shrink-0 mt-0.5">
+              {icon}
+            </div>
+          )}
+          <div className="flex-1">
+            {children}
+          </div>
         </div>
         {dismissible && (
           <button
