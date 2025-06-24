@@ -38,23 +38,23 @@ const avatarVariants = cva(
 );
 
 const avatarFallbackVariants = cva(
-  "flex h-full w-full items-center justify-center rounded-full text-white font-medium",
+  "flex h-full w-full items-center justify-center rounded-full text-white font-semibold border-2 border-white shadow-sm",
   {
     variants: {
       variant: {
-        default: "bg-muted",
-        blue: "bg-gradient-to-br from-blue-500 to-blue-600",
-        green: "bg-gradient-to-br from-green-500 to-green-600",
-        purple: "bg-gradient-to-br from-purple-500 to-purple-600",
-        orange: "bg-gradient-to-br from-orange-500 to-orange-600",
-        pink: "bg-gradient-to-br from-pink-500 to-pink-600",
-        indigo: "bg-gradient-to-br from-indigo-500 to-indigo-600",
-        teal: "bg-gradient-to-br from-teal-500 to-teal-600",
-        cyan: "bg-gradient-to-br from-cyan-500 to-cyan-600",
-        yellow: "bg-gradient-to-br from-yellow-500 to-yellow-600",
-        lime: "bg-gradient-to-br from-lime-500 to-lime-600",
-        rose: "bg-gradient-to-br from-rose-500 to-rose-600",
-        emerald: "bg-gradient-to-br from-emerald-500 to-emerald-600"
+        default: "bg-gray-500",
+        blue: "bg-blue-600",
+        green: "bg-green-600",
+        purple: "bg-purple-600",
+        orange: "bg-orange-600",
+        pink: "bg-pink-600",
+        indigo: "bg-indigo-600",
+        teal: "bg-teal-600",
+        cyan: "bg-cyan-600",
+        yellow: "bg-yellow-600",
+        lime: "bg-lime-600",
+        rose: "bg-rose-600",
+        emerald: "bg-emerald-600"
       },
       size: {
         sm: "text-xs",
@@ -65,7 +65,7 @@ const avatarFallbackVariants = cva(
       }
     },
     defaultVariants: {
-      variant: "default",
+      variant: "blue",
       size: "default"
     }
   }
