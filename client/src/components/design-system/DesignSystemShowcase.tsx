@@ -62,11 +62,12 @@ export function DesignSystemShowcase() {
   const [badgeVariant, setBadgeVariant] = useState("blue");
   const [badgeSize, setBadgeSize] = useState("md");
   const [progressVariant, setProgressVariant] = useState("blue");
+  const [radioVariant, setRadioVariant] = useState("blue");
+  const [radioSize, setRadioSize] = useState("md");
+  const [priorityValue, setPriorityValue] = useState("medium");
   const [progressSize, setProgressSize] = useState("md");
   const [checkboxVariant, setCheckboxVariant] = useState("blue");
   const [checkboxSize, setCheckboxSize] = useState("md");
-  const [radioVariant, setRadioVariant] = useState("blue");
-  const [radioSize, setRadioSize] = useState("md");
   const [switchVariant, setSwitchVariant] = useState("blue");
   const [switchSize, setSwitchSize] = useState("md");
   const [textareaVariant, setTextareaVariant] = useState("blue");
@@ -922,23 +923,38 @@ export function DesignSystemShowcase() {
               componentName="Radio"
               variant={radioVariant}
               size={radioSize}
-              props={{ disabled: false }}
+              props={{ disabled: false, direction: "vertical" }}
+              allSizes={getComponentConfig("Radio")?.sizes || ["sm", "md", "lg"]}
               onVariantChange={setRadioVariant}
               onSizeChange={setRadioSize}
             >
-              <RadioGroup
-                name="priority"
-                label="Priority Level"
-                options={[
-                  { value: "low", label: "Low" },
-                  { value: "medium", label: "Medium" },
-                  { value: "high", label: "High" }
-                ]}
-                value="medium"
-                onChange={() => {}}
-                variant={radioVariant as any}
-                size={radioSize as any}
-              />
+              <div className="space-y-6">
+                <RadioGroup
+                  name="priority"
+                  label="Priority Level"
+                  description="Select task priority for chapter editing"
+                  options={[
+                    { value: "low", label: "Low Priority", description: "Non-urgent content updates" },
+                    { value: "medium", label: "Medium Priority", description: "Standard content review" },
+                    { value: "high", label: "High Priority", description: "Critical content fixes" }
+                  ]}
+                  value={priorityValue}
+                  onChange={setPriorityValue}
+                  variant={radioVariant as any}
+                  size={radioSize as any}
+                />
+                
+                <RadioGroup
+                  name="difficulty"
+                  label="Content Difficulty"
+                  options={CommonRadioOptions.difficultyLevels}
+                  value={radioValue}
+                  onChange={setRadioValue}
+                  variant={radioVariant as any}
+                  size={radioSize as any}
+                  direction="horizontal"
+                />
+              </div>
             </ComponentCard>
           </div>
         </div>

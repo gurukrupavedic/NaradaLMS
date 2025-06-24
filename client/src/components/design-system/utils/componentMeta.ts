@@ -121,6 +121,15 @@ export const componentConfigs: Record<string, ComponentConfig> = {
     category: "form"
   },
 
+  Radio: {
+    name: "Radio",
+    variants: colorVariants,
+    sizes: sizeOptions.small,
+    commonProps: ["disabled", "direction"],
+    description: "Single choice radio button groups",
+    category: "form"
+  },
+
   // Data Components
   Table: {
     name: "Table",
