@@ -192,8 +192,8 @@ export function DaisyUI5Showcase() {
         <div className="mt-8 bg-gray-50 border border-gray-200 rounded-lg p-6">
           <h3 className="font-semibold text-gray-900 mb-3">Direct Access URLs</h3>
           <ul className="text-sm text-gray-600 space-y-2">
-            <li>• Theme Comparison: <code className="bg-gray-200 px-2 py-1 rounded text-xs">http://localhost:5000/experiments/01-theme-comparison.html</code></li>
-            <li>• Vedic Dashboard: <code className="bg-gray-200 px-2 py-1 rounded text-xs">http://localhost:5000/experiments/02-vedic-dashboard.html</code></li>
+            <li>• Theme Comparison: <code className="bg-gray-200 px-2 py-1 rounded text-xs">http://localhost:5000/experiments/daisyui-5-examples/01-theme-comparison.html</code></li>
+            <li>• Bootstrap 5 Full: <code className="bg-gray-200 px-2 py-1 rounded text-xs">http://localhost:5000/experiments/bootstrap5-integration/bootstrap5-vedic-prototype.html</code></li>
           </ul>
         </div>
 
