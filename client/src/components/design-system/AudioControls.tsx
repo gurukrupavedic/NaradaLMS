@@ -179,27 +179,16 @@ const AudioControls = React.forwardRef<HTMLDivElement, AudioControlsProps>(
         
         {/* Main Timeline */}
         <div className="space-y-2">
-          <div className="relative">
-            {/* Buffered Progress */}
-            <div className="absolute inset-0 bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-gray-300 h-full rounded-full transition-all duration-300"
-                style={{ width: `${(bufferedProgress / duration) * 100}%` }}
-              />
-            </div>
-            
-            {/* Interactive Timeline */}
-            <Slider
-              value={[currentTime]}
-              max={duration}
-              step={0.1}
-              variant={variant}
-              size={size === "sm" ? "sm" : size === "lg" ? "lg" : "md"}
-              onValueChange={(value) => onSeek?.(value[0])}
-              className="relative z-10"
-              disabled={loading}
-            />
-          </div>
+          {/* Interactive Timeline with Built-in Buffer Display */}
+          <Slider
+            value={[currentTime]}
+            max={duration}
+            step={0.1}
+            variant={variant}
+            size={size === "sm" ? "sm" : size === "lg" ? "lg" : "md"}
+            onValueChange={(value) => onSeek?.(value[0])}
+            disabled={loading}
+          />
           
           {/* Time Display */}
           <div className="flex justify-between text-xs text-gray-500">
