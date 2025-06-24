@@ -40,7 +40,7 @@ interface SimpleDashboardProps {
   user: User;
 }
 
-export function SimpleDashboard({ user }: SimpleDashboardProps) {
+export default function SimpleDashboard({ user }: SimpleDashboardProps) {
   const [, setLocation] = useLocation();
 
   const handleFeatureClick = (route: string) => {

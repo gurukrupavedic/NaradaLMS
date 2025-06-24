@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 
-export default function Landing() {
+export function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
       <div className="flex items-center justify-center min-h-screen">

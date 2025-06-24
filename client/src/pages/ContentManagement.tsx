@@ -21,7 +21,7 @@ interface Track {
   lastModified: string;
 }
 
-export default function ContentManagement() {
+export function ContentManagement() {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
   

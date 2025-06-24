@@ -12,7 +12,7 @@ interface DashboardProps {
   onChapterSelect: (chapterId: number) => void;
 }
 
-export default function Dashboard({ onTrackSelect, onChapterSelect }: DashboardProps) {
+export function Dashboard({ onTrackSelect, onChapterSelect }: DashboardProps) {
   const { data: tracks, isLoading } = useQuery<TrackWithChapters[]>({
     queryKey: ['/api/tracks'],
   });

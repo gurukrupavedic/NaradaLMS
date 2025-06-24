@@ -23,7 +23,7 @@ interface Chapter {
   status: 'draft' | 'published';
 }
 
-export default function TrackChapters() {
+export function TrackChapters() {
   const [location, setLocation] = useLocation();
   const [match, params] = useRoute("/manage/tracks/:trackId");
   const { toast } = useToast();

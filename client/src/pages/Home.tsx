@@ -16,7 +16,7 @@ import { InstructorPanel } from "@/components/InstructorPanel";
 import Administration from "@/components/Administration";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
-export default function Home() {
+export function Home() {
   const { user, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("my-learning");
   

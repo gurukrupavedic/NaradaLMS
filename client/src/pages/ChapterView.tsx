@@ -55,7 +55,7 @@ interface Chapter {
 
 type Language = 'te' | 'hi' | 'en';
 
-export default function ChapterView() {
+export function ChapterView() {
   const [, params] = useRoute("/chapter/:id");
   const [, setLocation] = useLocation();
   const [currentLanguage, setCurrentLanguage] = useState<Language>('te');

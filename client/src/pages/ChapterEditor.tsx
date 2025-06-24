@@ -103,7 +103,7 @@ interface TextSegment {
   audioFileId?: number;
 }
 
-export default function ChapterEditor() {
+export function ChapterEditor() {
   const [, params] = useRoute("/manage/tracks/:trackId/chapters/:chapterId");
   const chapterId = params?.chapterId || "";
   const trackId = params?.trackId || "";
