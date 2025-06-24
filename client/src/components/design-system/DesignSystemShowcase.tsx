@@ -534,6 +534,10 @@ export function DesignSystemShowcase() {
                   bufferedProgress={30}
                   showSkipButtons={false}
                   showPlaybackRate={false}
+                  onPlay={() => {}}
+                  onPause={() => {}}
+                  onStop={() => {}}
+                  onSeek={() => {}}
                 />
               </div>
             </ComponentCard>
