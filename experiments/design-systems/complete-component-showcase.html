@@ -2075,14 +2075,12 @@ import { ColorfulButton } from '@/components/ui/colorful-button';
       icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
     }
 
-    // Set initial theme based on system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      const button = document.querySelector('button[onclick="toggleTheme()"]');
-      if (button) {
-        const icon = button.querySelector('.icon');
-        icon.textContent = '☀️';
-      }
+    // Force light theme by default for showcase
+    document.documentElement.setAttribute('data-theme', 'light');
+    const button = document.querySelector('button[onclick="toggleTheme()"]');
+    if (button) {
+      const icon = button.querySelector('.icon');
+      icon.textContent = '🌙';
     }
   </script>
 </body>
