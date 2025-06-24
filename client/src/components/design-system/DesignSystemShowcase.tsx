@@ -1027,6 +1027,7 @@ export function DesignSystemShowcase() {
               variant={selectVariant}
               size={selectSize}
               props={{ disabled: false, required: false }}
+              allSizes={getComponentConfig("Select")?.sizes || ["sm", "md", "lg"]}
               onVariantChange={setSelectVariant}
               onSizeChange={setSelectSize}
             >

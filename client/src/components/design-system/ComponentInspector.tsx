@@ -107,7 +107,7 @@ export function ComponentInspector({
   size = "md",
   props = {},
   allVariants = colorVariants,
-  allSizes = sizeOptions,
+  allSizes = defaultSizeOptions,
   onVariantChange,
   onSizeChange,
   className = ""
@@ -248,7 +248,7 @@ export function ComponentCard({
   size = "md",
   props = {},
   allVariants = colorVariants,
-  allSizes = sizeOptions,
+  allSizes = defaultSizeOptions,
   onVariantChange,
   onSizeChange,
   showInspector = true,
