@@ -81,9 +81,9 @@ export function DaisyUI5Showcase() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Design System Experiments</h1>
+          <h1 className="text-3xl font-bold mb-2">Modern Colorful Design System</h1>
           <p className="text-gray-600">
-            Exploring UI frameworks and design systems for Vedic LMS - DaisyUI, Bootstrap 5, and shadcn/ui comparisons
+            Complete design system specifications and reference implementations for Vedic LMS
           </p>
         </div>
 
