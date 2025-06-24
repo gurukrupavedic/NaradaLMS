@@ -10,7 +10,7 @@
         tailwind.config = {
             plugins: [require('daisyui')],
             daisyui: {
-                themes: ["light", "emerald", "forest", "luxury", "autumn", "business", "pastel", "cmyk", "dark", "night"]
+                themes: ["light", "emerald", "forest", "luxury", "autumn", "business", "pastel", "cmyk", "dark", "night", "corporate", "wireframe"]
             }
         }
     </script>
@@ -28,6 +28,20 @@
         <p class="text-center mb-8 text-base-content/70">
             Explore different themes to find the best aesthetic for Vedic LMS
         </p>
+
+        <!-- Bootstrap-Style Themes -->
+        <div class="alert alert-info mb-4">
+            <div>
+                <h3 class="font-bold">Bootstrap-Style Themes:</h3>
+                <p class="text-sm">DaisyUI themes that mimic Bootstrap's classic styling:</p>
+                <div class="flex gap-2 mt-2 flex-wrap">
+                    <button class="btn btn-xs btn-primary" onclick="setTheme('corporate')">Corporate (Bootstrap-like)</button>
+                    <button class="btn btn-xs btn-outline" onclick="setTheme('wireframe')">Wireframe (Bootstrap Clean)</button>
+                    <button class="btn btn-xs btn-outline" onclick="setTheme('light')">Light (Bootstrap Default)</button>
+                </div>
+                <p class="text-xs mt-2 opacity-70">Corporate theme closely resembles Bootstrap's default styling with blue primary colors</p>
+            </div>
+        </div>
 
         <!-- Theme Pairing Recommendations -->
         <div class="alert alert-success mb-6">
@@ -58,6 +72,10 @@
                 <button class="btn join-item" onclick="setTheme('cmyk')">CMYK</button>
                 <button class="btn join-item" onclick="setTheme('dark')">Dark</button>
                 <button class="btn join-item" onclick="setTheme('night')">Night</button>
+            </div>
+            <div class="join">
+                <button class="btn join-item" onclick="setTheme('corporate')">Corporate</button>
+                <button class="btn join-item" onclick="setTheme('wireframe')">Wireframe</button>
             </div>
         </div>
 

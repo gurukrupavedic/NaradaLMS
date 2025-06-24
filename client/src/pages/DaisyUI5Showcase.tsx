@@ -10,7 +10,7 @@ export function DaisyUI5Showcase() {
   const experiments = [
     {
       title: "Theme Comparison",
-      description: "Interactive comparison of 10 DaisyUI themes including light/dark variants (emerald, forest, luxury, autumn, pastel, cmyk, dark, night) with proper configuration",
+      description: "Interactive comparison of 12 DaisyUI themes including Bootstrap-style variants (corporate, wireframe), light/dark modes, and professional themes",
       link: "/experiments/01-theme-comparison.html",
       highlight: "Interactive theme switcher"
     },
