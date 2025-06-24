@@ -203,7 +203,12 @@ const hoverColorMap: Record<string, { bg: string; text: string; check: string }>
   indigo: { bg: "hover:bg-indigo-50 focus:bg-indigo-50", text: "hover:text-indigo-700 focus:text-indigo-700", check: "text-indigo-600" },
   teal: { bg: "hover:bg-teal-50 focus:bg-teal-50", text: "hover:text-teal-700 focus:text-teal-700", check: "text-teal-600" },
   cyan: { bg: "hover:bg-cyan-50 focus:bg-cyan-50", text: "hover:text-cyan-700 focus:text-cyan-700", check: "text-cyan-600" },
+  pink: { bg: "hover:bg-pink-50 focus:bg-pink-50", text: "hover:text-pink-700 focus:text-pink-700", check: "text-pink-600" },
+  indigo: { bg: "hover:bg-indigo-50 focus:bg-indigo-50", text: "hover:text-indigo-700 focus:text-indigo-700", check: "text-indigo-600" },
+  teal: { bg: "hover:bg-teal-50 focus:bg-teal-50", text: "hover:text-teal-700 focus:text-teal-700", check: "text-teal-600" },
+  cyan: { bg: "hover:bg-cyan-50 focus:bg-cyan-50", text: "hover:text-cyan-700 focus:text-cyan-700", check: "text-cyan-600" },
   yellow: { bg: "hover:bg-yellow-50 focus:bg-yellow-50", text: "hover:text-yellow-700 focus:text-yellow-700", check: "text-yellow-600" },
+  lime: { bg: "hover:bg-lime-50 focus:bg-lime-50", text: "hover:text-lime-700 focus:text-lime-700", check: "text-lime-600" },
   lime: { bg: "hover:bg-lime-50 focus:bg-lime-50", text: "hover:text-lime-700 focus:text-lime-700", check: "text-lime-600" },
   rose: { bg: "hover:bg-rose-50 focus:bg-rose-50", text: "hover:text-rose-700 focus:text-rose-700", check: "text-rose-600" },
   emerald: { bg: "hover:bg-emerald-50 focus:bg-emerald-50", text: "hover:text-emerald-700 focus:text-emerald-700", check: "text-emerald-600" }
@@ -214,7 +219,7 @@ const SelectItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(({ className, children, ...props }, ref) => {
   const { variant = "default" } = React.useContext(SelectContext);
-  const colors = hoverColorMap[variant] || hoverColorMap.blue;
+  const colors = hoverColorMap[variant] || hoverColorMap.default;
   
   return (
     <SelectPrimitive.Item

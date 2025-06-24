@@ -1037,7 +1037,7 @@ export function DesignSystemShowcase() {
                     <SelectTrigger variant={selectVariant as any} size={selectSize as any}>
                       <SelectValue placeholder="Select language" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent variant={selectVariant as any}>
                       <SelectItem value="te">Telugu</SelectItem>
                       <SelectItem value="hi">Hindi</SelectItem>
                       <SelectItem value="en">English</SelectItem>
@@ -1052,7 +1052,7 @@ export function DesignSystemShowcase() {
                     <SelectTrigger variant={selectVariant as any} size={selectSize as any}>
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent variant={selectVariant as any}>
                       <SelectItem value="admin">Administrator</SelectItem>
                       <SelectItem value="instructor">Instructor</SelectItem>
                       <SelectItem value="student">Student</SelectItem>
