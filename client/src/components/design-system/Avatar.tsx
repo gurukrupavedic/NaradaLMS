@@ -150,64 +150,64 @@ function getVariantFromName(name: string): keyof typeof educationalVariants {
 const Avatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Root>,
   AvatarProps
->(({ className, size, src, alt, fallback, name, variant, educational, status, showStatus, ...props }, ref) => {
+>(({ className, size = "default", src, alt, fallback, name, variant, educational, status, showStatus, ...props }, ref) => {
   // Determine final variant
-  const finalVariant = educational || variant || (name ? getVariantFromName(name) : "default");
+  const finalVariant = educational || variant || (name ? getVariantFromName(name) : "blue");
   
   // Generate fallback text
   const fallbackText = fallback || (name ? getInitials(name) : "?");
   
-  // If no src provided, use direct fallback without Radix Image
-  if (!src) {
-    return (
-      <div className="relative inline-block">
-        <div
-          ref={ref}
-          className={cn(
-            avatarVariants({ size }),
-            avatarFallbackVariants({ 
-              variant: finalVariant === "default" ? "blue" : finalVariant, 
-              size 
-            }),
-            className
-          )}
-          {...props}
-        >
-          {fallbackText}
-        </div>
-        
-        {showStatus && status && (
-          <div className={cn(statusVariants({ size, status }))} />
-        )}
-      </div>
-    );
-  }
-
-  // Use Radix only when src is provided
+  // Simple approach - always use direct div for now
   return (
     <div className="relative inline-block">
-      <AvatarPrimitive.Root
-        ref={ref}
-        className={cn(avatarVariants({ size }), className)}
-        {...props}
+      <div
+        className={cn(
+          // Base avatar styles
+          "flex items-center justify-center rounded-full font-semibold text-white",
+          // Size variants
+          size === "sm" && "h-8 w-8 text-xs",
+          size === "default" && "h-10 w-10 text-sm", 
+          size === "lg" && "h-12 w-12 text-base",
+          size === "xl" && "h-16 w-16 text-lg",
+          size === "2xl" && "h-20 w-20 text-xl",
+          // Color variants
+          finalVariant === "blue" && "bg-blue-600",
+          finalVariant === "green" && "bg-green-600",
+          finalVariant === "purple" && "bg-purple-600",
+          finalVariant === "orange" && "bg-orange-600",
+          finalVariant === "pink" && "bg-pink-600",
+          finalVariant === "indigo" && "bg-indigo-600",
+          finalVariant === "teal" && "bg-teal-600",
+          finalVariant === "cyan" && "bg-cyan-600",
+          finalVariant === "yellow" && "bg-yellow-600",
+          finalVariant === "lime" && "bg-lime-600",
+          finalVariant === "rose" && "bg-rose-600",
+          finalVariant === "emerald" && "bg-emerald-600",
+          finalVariant === "admin" && "bg-purple-600",
+          finalVariant === "instructor" && "bg-indigo-600",
+          finalVariant === "student" && "bg-blue-600",
+          finalVariant === "guest" && "bg-cyan-600",
+          className
+        )}
       >
-        <AvatarPrimitive.Image
-          src={src}
-          alt={alt || name}
-          className="aspect-square h-full w-full object-cover"
-        />
-        <AvatarPrimitive.Fallback
-          className={cn(avatarFallbackVariants({ 
-            variant: finalVariant === "default" ? "blue" : finalVariant, 
-            size 
-          }))}
-        >
-          {fallbackText}
-        </AvatarPrimitive.Fallback>
-      </AvatarPrimitive.Root>
+        {fallbackText}
+      </div>
       
       {showStatus && status && (
-        <div className={cn(statusVariants({ size, status }))} />
+        <div 
+          className={cn(
+            "absolute rounded-full border-2 border-white",
+            size === "sm" && "h-2 w-2 bottom-0 right-0",
+            size === "default" && "h-3 w-3 bottom-0 right-0",
+            size === "lg" && "h-3.5 w-3.5 bottom-0 right-0",
+            size === "xl" && "h-4 w-4 bottom-0.5 right-0.5",
+            size === "2xl" && "h-5 w-5 bottom-1 right-1",
+            status === "online" && "bg-green-500",
+            status === "away" && "bg-yellow-500",
+            status === "busy" && "bg-red-500",
+            status === "offline" && "bg-gray-400"
+          )}
+        />
       )}
     </div>
   );
