@@ -18,6 +18,7 @@ import { Badge } from "./Badge";
 import { Alert, AlertTitle, AlertDescription } from "./Alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./Select";
 import { Avatar } from "./Avatar";
+import { TextSegment } from "./TextSegment";
 import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield } from "lucide-react";
 
 export function DesignSystemShowcase() {
@@ -603,6 +604,108 @@ export function DesignSystemShowcase() {
               <div className="text-center">
                 <Avatar name="Large User" size="lg" educational="admin" />
                 <p className="text-xs mt-1 text-gray-500">Large (profiles)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Text Segment Components Showcase */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Text Segment Components</h2>
+          <p className="text-gray-600">Visual text segment cards with colored left borders - perfect for showing segmented content in ChapterEditor.</p>
+          
+          {/* Mapping Status Segments */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Audio Mapping Status</h3>
+            <div className="grid grid-cols-1 gap-4">
+              <TextSegment
+                status="mapped"
+                title="Segment 1"
+                content="ॐ गं गणपतये नमः। शुक्लाम्बरधरं विष्णुं शशिवर्णं चतुर्भुजम्। प्रसन्नवदनं ध्यायेत् सर्वविघ्नोपशान्तये॥"
+                duration="0:12"
+              />
+              <TextSegment
+                status="unmapped"
+                title="Segment 2"
+                content="मूकं करोति वाचालं पङ्गुं लङ्घयते गिरिम्। यत्कृपा तमहं वन्दे परमानन्दमाधवम्॥"
+              />
+              <TextSegment
+                status="selected"
+                title="Segment 3"
+                content="सत्यं ज्ञानमनन्तं ब्रह्म। विज्ञानं आनन्दं ब्रह्म। सत्यं ब्रह्म। ज्ञानं ब्रह्म। आनन्दं ब्रह्म॥"
+                isSelected={true}
+              />
+            </div>
+          </div>
+
+          {/* Content Type Segments */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Content Type Segments</h3>
+            <div className="grid grid-cols-1 gap-4">
+              <TextSegment
+                status="sanskrit"
+                title="Sanskrit Verse"
+                content="अहं ब्रह्मास्मि - I am Brahman. This fundamental Upanishadic declaration represents the ultimate realization of non-dual consciousness."
+              />
+              <TextSegment
+                status="translation"
+                title="English Translation"
+                content="That which is the finest essence - this whole world has that as its Self. That is Reality. That is the Self. That thou art, O Śvetaketu."
+              />
+              <TextSegment
+                status="commentary"
+                title="Scholarly Commentary"
+                content="Adi Shankaracharya explains this mahavakya as pointing to the fundamental identity between the individual self (jiva) and the universal Self (Brahman)."
+              />
+            </div>
+          </div>
+
+          {/* Educational Context Segments */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Educational Context</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <TextSegment
+                status="lesson"
+                title="Lesson Content"
+                content="Introduction to Vedic chanting: Understanding the importance of proper pronunciation and rhythm in Sanskrit mantras."
+                size="sm"
+              />
+              <TextSegment
+                status="practice"
+                title="Practice Exercise"
+                content="Repeat this mantra 108 times while focusing on the breath and maintaining proper intonation."
+                size="sm"
+              />
+              <TextSegment
+                status="assessment"
+                title="Assessment Question"
+                content="Explain the significance of 'Om' in Vedic tradition and demonstrate correct pronunciation with appropriate pauses."
+                size="sm"
+              />
+            </div>
+          </div>
+
+          {/* Interactive Demo */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Interactive Segment Selection</h3>
+            <div className="bg-gray-50 rounded-lg p-6">
+              <p className="text-sm text-gray-600 mb-4">Click segments to see selection behavior (like in ChapterEditor):</p>
+              <div className="grid grid-cols-1 gap-3">
+                {[
+                  { id: 1, content: "गुरुर्ब्रह्मा गुरुर्विष्णुः गुरुर्देवो महेश्वरः।", status: "mapped" },
+                  { id: 2, content: "गुरुः साक्षात् परब्रह्म तस्मै श्रीगुरवे नमः॥", status: "unmapped" },
+                  { id: 3, content: "अज्ञानतिमिरान्धस्य ज्ञानाञ्जनशलाकया।", status: "unmapped" }
+                ].map((segment, index) => (
+                  <TextSegment
+                    key={segment.id}
+                    status={segment.status as any}
+                    title={`Segment ${segment.id}`}
+                    content={segment.content}
+                    segmentNumber={segment.id}
+                    duration={segment.status === "mapped" ? "0:08" : undefined}
+                    size="sm"
+                  />
+                ))}
               </div>
             </div>
           </div>

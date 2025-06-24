@@ -21,6 +21,7 @@ export * from './Badge';
 export * from './Alert';
 export * from './Select';
 export * from './Avatar';
+export * from './TextSegment';
 
 // Showcase component
 export { DesignSystemShowcase } from './DesignSystemShowcase';
@@ -35,3 +36,4 @@ export type { BadgeProps } from './Badge';
 export type { AlertProps } from './Alert';
 export type { SelectTriggerProps } from './Select';
 export type { AvatarProps } from './Avatar';
+export type { TextSegmentProps } from './TextSegment';
