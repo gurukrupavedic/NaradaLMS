@@ -19,11 +19,11 @@ const getOidcConfig = memoize(
       process.env.REPL_ID!
     );
   },
-  { maxAge: 3600 * 1000 }
+  { maxAge: SESSION_MAX_AGE_MS }
 );
 
 export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const sessionTtl = SESSION_TTL_MS;
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,

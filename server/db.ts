@@ -20,9 +20,9 @@ if (!process.env.DATABASE_URL) {
 // Create connection pool with better error handling
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  max: 20,
+  max: DB_MAX_CONNECTIONS,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
+  connectionTimeoutMillis: DB_CONNECTION_TIMEOUT_MS,
 });
 
 // Handle pool errors
