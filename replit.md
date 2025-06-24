@@ -147,6 +147,7 @@ Changelog:
 - June 24, 2025. ENHANCED FLUORESCENT INTENSITY: Increased light mode glow intensity with stronger border (30% opacity), larger glow area (20px), full opacity fluorescent layer (100%), and outer halo (60% opacity at 25px) for more vibrant, luminous appearance while maintaining professional aesthetic.
 - June 24, 2025. DESIGN SYSTEM COMPLETION: Created comprehensive Modern Colorful Design System documentation with complete UI specifications, migration plan, cleaned up experimental files, and reorganized experiments page to feature the finalized design system as the official standard for Vedic LMS.
 - June 24, 2025. SEPARATE THEME PAGES: Created dedicated light-theme-showcase.html and dark-theme-showcase.html to eliminate theme switching complexity. Light theme features clean white background with subtle fluorescent glows, dark theme has enhanced multi-layer glow effects optimized for dark environments. Both pages showcase complete typography system, interactive buttons, form elements, and design principles with proper color contrast and accessibility.
+- June 24, 2025. EXPERIMENTS PAGE CLEANUP: Reorganized DaisyUI experiments page with prominent theme showcase cards, design system features, component library stats, and moved legacy experiments to secondary section. Clear navigation to both light and dark theme showcases with proper descriptions and visual indicators.
 
 ## User Preferences
 

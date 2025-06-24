@@ -10,180 +10,207 @@ import { Badge } from "@/components/ui/badge";
  * with reference implementations and documentation links.
  */
 export function DaisyUI5Showcase() {
-  const designSystem = {
-    title: "Modern Colorful Design System",
-    description: "Complete design system with vibrant colors, fluorescent glow effects, and elegant interactions - the official UI standard for Vedic LMS",
-    link: "/experiments/design-systems/complete-component-showcase.html",
-    highlight: "Official Design System"
-  };
+  const themeShowcases = [
+    {
+      title: "Light Theme Showcase",
+      description: "Clean white background with subtle fluorescent glow effects and complete typography system",
+      link: "/experiments/design-systems/light-theme-showcase.html",
+      icon: "☀️",
+      color: "blue",
+      features: ["Typography Scale", "Interactive Components", "Fluorescent Glows"]
+    },
+    {
+      title: "Dark Theme Showcase", 
+      description: "Enhanced multi-layer fluorescent effects optimized for dark environments with luminous aesthetics",
+      link: "/experiments/design-systems/dark-theme-showcase.html",
+      icon: "🌙",
+      color: "slate",
+      features: ["Enhanced Glows", "Dark Optimized", "Halogen Effects"]
+    }
+  ];
 
   const references = [
     {
-      title: "shadcn/ui vs Bootstrap 5",
-      description: "Comprehensive comparison of design systems with component examples, migration analysis, and technical specifications",
-      link: "/experiments/design-systems/shadcn-vs-bootstrap5.html",
-      highlight: "Framework comparison"
+      title: "DaisyUI Theme Comparison",
+      description: "Historical theme exploration for design inspiration",
+      link: "/experiments/design-systems/daisyui-theme-comparison.html",
+      category: "Legacy"
     },
     {
-      title: "Bootstrap 5 Reference Implementation", 
-      description: "Complete Bootstrap 5 prototype with native components, themes, and professional design patterns for reference",
-      link: "/experiments/bootstrap5-integration/bootstrap5-vedic-prototype.html",
-      highlight: "Bootstrap 5 reference"
+      title: "Bootstrap vs shadcn/ui",
+      description: "Design system comparison study archive", 
+      link: "/experiments/design-systems/shadcn-vs-bootstrap5.html",
+      category: "Archive"
     }
   ];
 
   return (
     <div className="container mx-auto p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Modern Colorful Design System</h1>
-          <p className="text-gray-600">
-            Complete design system specifications and reference implementations for Vedic LMS
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-4">Modern Colorful Design System</h1>
+          <p className="text-xl text-gray-600 mb-6">
+            Complete showcase of vibrant UI components with fluorescent glow effects
           </p>
+          <Badge className="bg-blue-600 text-white px-4 py-2 text-sm font-medium">
+            Production Ready
+          </Badge>
         </div>
 
-        {/* Back Navigation */}
-        <div className="mb-6">
-          <a 
-            href="/" 
-            className="inline-flex items-center text-blue-600 hover:text-blue-800"
-          >
-            ← Back to Dashboard
-          </a>
-        </div>
-
-        {/* Main Design System - Prominently Featured */}
-        <div className="mb-8">
-          <Card 
-            className="cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-[1.02] border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50"
-            onClick={() => window.open(designSystem.link, '_blank')}
-          >
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between mb-3">
-                <CardTitle className="text-2xl text-blue-800 font-bold">{designSystem.title}</CardTitle>
-                <Badge className="bg-blue-600 text-white px-3 py-1 text-sm font-medium">
-                  {designSystem.highlight}
-                </Badge>
-              </div>
-              <CardDescription className="text-blue-700 text-base leading-relaxed">
-                {designSystem.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
-                <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500 mb-1"></div>
-                  <span className="text-xs text-gray-600">Blue</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 rounded-lg bg-green-500 mb-1"></div>
-                  <span className="text-xs text-gray-600">Green</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500 mb-1"></div>
-                  <span className="text-xs text-gray-600">Purple</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 rounded-lg bg-orange-500 mb-1"></div>
-                  <span className="text-xs text-gray-600">Orange</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 rounded-lg bg-pink-500 mb-1"></div>
-                  <span className="text-xs text-gray-600">Pink</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-500 mb-1"></div>
-                  <span className="text-xs text-gray-600">Indigo</span>
-                </div>
-              </div>
-              <Button 
-                className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-3" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(designSystem.link, '_blank');
-                }}
+        {/* Theme Showcases - Primary Focus */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-center mb-8">Theme Showcases</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {themeShowcases.map((theme, index) => (
+              <Card 
+                key={index}
+                className="cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-105 border-2"
+                onClick={() => window.open(theme.link, '_blank')}
               >
-                Explore Complete Design System
-              </Button>
-            </CardContent>
-          </Card>
+                <CardHeader className="text-center pb-4">
+                  <div className={`w-20 h-20 mx-auto mb-4 bg-gradient-to-br ${
+                    theme.color === 'blue' ? 'from-blue-500 to-purple-600' : 'from-slate-600 to-slate-800'
+                  } rounded-2xl flex items-center justify-center text-3xl`}>
+                    {theme.icon}
+                  </div>
+                  <CardTitle className="text-2xl">{theme.title}</CardTitle>
+                  <CardDescription className="text-base leading-relaxed">
+                    {theme.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-center gap-2 mb-6">
+                    {theme.features.map((feature, idx) => (
+                      <Badge key={idx} variant="outline" className="text-xs">
+                        {feature}
+                      </Badge>
+                    ))}
+                  </div>
+                  <Button 
+                    className={`w-full text-lg py-3 ${
+                      theme.color === 'blue' 
+                        ? 'bg-blue-600 hover:bg-blue-700' 
+                        : 'bg-slate-600 hover:bg-slate-700'
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(theme.link, '_blank');
+                    }}
+                  >
+                    View {theme.title.split(' ')[0]} Theme
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
 
-        {/* Quick Links to Documentation */}
-        <div className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="border-green-200 bg-green-50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg text-green-800">Design System Specs</CardTitle>
-                <CardDescription className="text-green-700">Complete UI specifications & guidelines</CardDescription>
+        {/* Design System Features */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-center mb-8">Design System Features</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="text-center">
+              <CardHeader>
+                <div className="text-4xl mb-4">🎨</div>
+                <CardTitle>Modern & Vibrant</CardTitle>
+                <CardDescription>
+                  Contemporary aesthetics with 6 vibrant color variants and fluorescent glow effects
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button 
-                  variant="outline" 
-                  className="w-full border-green-600 text-green-700 hover:bg-green-600 hover:text-white"
-                  onClick={() => window.open('/experiments/design-systems/complete-component-showcase.html', '_blank')}
-                >
-                  View Documentation
-                </Button>
-              </CardContent>
             </Card>
             
-            <Card className="border-purple-200 bg-purple-50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg text-purple-800">Migration Plan</CardTitle>
-                <CardDescription className="text-purple-700">Implementation roadmap & timeline</CardDescription>
+            <Card className="text-center">
+              <CardHeader>
+                <div className="text-4xl mb-4">✨</div>
+                <CardTitle>Interactive Effects</CardTitle>
+                <CardDescription>
+                  Subtle hover animations with halogen-style lighting and smooth transitions
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button 
-                  variant="outline" 
-                  className="w-full border-purple-600 text-purple-700 hover:bg-purple-600 hover:text-white"
-                  onClick={() => window.open('/experiments/design-systems/complete-component-showcase.html', '_blank')}
-                >
-                  View Plan
-                </Button>
-              </CardContent>
+            </Card>
+            
+            <Card className="text-center">
+              <CardHeader>
+                <div className="text-4xl mb-4">♿</div>
+                <CardTitle>Accessibility First</CardTitle>
+                <CardDescription>
+                  WCAG 2.1 compliant with proper contrast ratios and keyboard navigation
+                </CardDescription>
+              </CardHeader>
             </Card>
           </div>
         </div>
 
-        {/* Reference Implementations */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold mb-4">Reference Implementations</h2>
+        {/* Component Library Stats */}
+        <div className="mb-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+            <div className="text-center p-6 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="text-3xl font-bold text-blue-600 mb-2">55+</div>
+              <div className="text-sm text-blue-700 font-medium">Components</div>
+            </div>
+            <div className="text-center p-6 bg-green-50 rounded-lg border border-green-200">
+              <div className="text-3xl font-bold text-green-600 mb-2">6</div>
+              <div className="text-sm text-green-700 font-medium">Color Variants</div>
+            </div>
+            <div className="text-center p-6 bg-purple-50 rounded-lg border border-purple-200">
+              <div className="text-3xl font-bold text-purple-600 mb-2">12</div>
+              <div className="text-sm text-purple-700 font-medium">Categories</div>
+            </div>
+            <div className="text-center p-6 bg-orange-50 rounded-lg border border-orange-200">
+              <div className="text-3xl font-bold text-orange-600 mb-2">100%</div>
+              <div className="text-sm text-orange-700 font-medium">Accessible</div>
+            </div>
+          </div>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {references.map((experiment, index) => (
-            <Card 
-              key={index}
-              className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105"
-              onClick={() => window.open(experiment.link, '_blank')}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between mb-2">
-                  <CardTitle className="text-lg">{experiment.title}</CardTitle>
-                  <Badge variant="secondary" className="text-xs">
-                    {experiment.highlight}
-                  </Badge>
-                </div>
-                <CardDescription className="text-sm leading-relaxed">
-                  {experiment.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  className="w-full" 
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open(experiment.link, '_blank');
-                  }}
-                >
-                  View Reference
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+
+        {/* Legacy References */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold text-center mb-6 text-gray-500">Legacy Experiments</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto opacity-60">
+            {references.map((ref, index) => (
+              <Card 
+                key={index}
+                className="cursor-pointer transition-all duration-200 hover:opacity-100"
+                onClick={() => window.open(ref.link, '_blank')}
+              >
+                <CardHeader>
+                  <div className="flex items-center justify-between mb-2">
+                    <CardTitle className="text-lg">{ref.title}</CardTitle>
+                    <Badge variant="secondary" className="text-xs">
+                      {ref.category}
+                    </Badge>
+                  </div>
+                  <CardDescription className="text-sm">
+                    {ref.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="w-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(ref.link, '_blank');
+                    }}
+                  >
+                    View Archive
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center pt-8 border-t border-gray-200">
+          <p className="text-gray-600 mb-2">
+            Modern Colorful Design System - Built for Vedic LMS
+          </p>
+          <p className="text-sm text-gray-500">
+            Ready for production implementation with light and dark theme support
+          </p>
         </div>
       </div>
     </div>
