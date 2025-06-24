@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="bootflat-light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootflat Light Inspired - Vedic LMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.24/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script>
+        tailwind.config = {
+            plugins: [require('daisyui')],
+            daisyui: {
+                themes: [
+                    {
+                        "bootflat-light": {
+                            "primary": "#74b9ff",      // Light blue (softer than original)
+                            "secondary": "#81ecec",    // Light turquoise (softer)
+                            "accent": "#fdcb6e",       // Light orange (softer)
+                            "neutral": "#636e72",      // Light gray
+                            "base-100": "#ffffff",     // White background
+                            "base-200": "#f8f9fa",     // Very light gray
+                            "base-300": "#e9ecef",     // Light gray
+                            "info": "#74b9ff",         // Light blue
+                            "success": "#00b894",      // Light green
+                            "warning": "#fdcb6e",      // Light orange
+                            "error": "#fd79a8",        // Light pink (softer than red)
+                        }
+                    }
+                ]
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .telugu { font-family: 'Noto Sans Telugu', sans-serif; }
+        .devanagari { font-family: 'Noto Sans Devanagari', sans-serif; }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-base-100">
+    <!-- Header -->
+    <div class="navbar bg-base-200 shadow-sm">
+        <div class="navbar-start">
+            <h1 class="text-xl font-semibold text-neutral">🕉️ Vedic LMS - Light Bootflat Inspired</h1>
+        </div>
+        <div class="navbar-end">
+            <div class="flex items-center gap-3">
+                <div class="badge badge-primary">Light Theme</div>
+                <button class="btn btn-sm btn-ghost">Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto p-6">
+        <!-- Hero Section -->
+        <div class="hero bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg mb-8">
+            <div class="hero-content text-center">
+                <div class="max-w-md">
+                    <h1 class="text-4xl font-bold text-neutral">॥ ॐ गं गणपतये नमः ॥</h1>
+                    <p class="py-6 devanagari text-lg text-neutral">
+                        स्वाध्यायान्मा प्रमदः । स्वाध्यायान्मा प्रमदः ।
+                    </p>
+                    <p class="text-sm text-neutral/70 mb-4">Soft, elegant colors inspired by Bootflat design</p>
+                    <div class="flex gap-3 justify-center">
+                        <button class="btn btn-primary">Begin Learning</button>
+                        <button class="btn btn-secondary">Browse Tracks</button>
+                        <button class="btn btn-accent">Audio Library</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Light Color Palette -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-semibold mb-6 text-neutral">Light Bootflat Color Palette</h2>
+            <p class="text-neutral/70 mb-6">Softer, more subtle colors inspired by Bootflat design principles</p>
+            
+            <div class="grid md:grid-cols-4 gap-6">
+                <!-- Light Blue Primary -->
+                <div class="card bg-base-100 shadow-lg border border-primary/20">
+                    <div class="card-body">
+                        <div class="w-full h-16 bg-primary rounded mb-4"></div>
+                        <h3 class="card-title text-primary">Light Blue</h3>
+                        <p class="text-sm text-neutral">#74b9ff</p>
+                        <p class="text-xs text-neutral/70">Primary actions</p>
+                        <button class="btn btn-primary btn-sm mt-3">Sample Button</button>
+                    </div>
+                </div>
+
+                <!-- Light Turquoise Secondary -->
+                <div class="card bg-base-100 shadow-lg border border-secondary/20">
+                    <div class="card-body">
+                        <div class="w-full h-16 bg-secondary rounded mb-4"></div>
+                        <h3 class="card-title text-secondary">Light Turquoise</h3>
+                        <p class="text-sm text-neutral">#81ecec</p>
+                        <p class="text-xs text-neutral/70">Secondary actions</p>
+                        <button class="btn btn-secondary btn-sm mt-3">Sample Button</button>
+                    </div>
+                </div>
+
+                <!-- Light Orange Accent -->
+                <div class="card bg-base-100 shadow-lg border border-accent/20">
+                    <div class="card-body">
+                        <div class="w-full h-16 bg-accent rounded mb-4"></div>
+                        <h3 class="card-title text-accent">Light Orange</h3>
+                        <p class="text-sm text-neutral">#fdcb6e</p>
+                        <p class="text-xs text-neutral/70">Highlights</p>
+                        <button class="btn btn-accent btn-sm mt-3">Sample Button</button>
+                    </div>
+                </div>
+
+                <!-- Light Green Success -->
+                <div class="card bg-base-100 shadow-lg border border-success/20">
+                    <div class="card-body">
+                        <div class="w-full h-16 bg-success rounded mb-4"></div>
+                        <h3 class="card-title text-success">Light Green</h3>
+                        <p class="text-sm text-neutral">#00b894</p>
+                        <p class="text-xs text-neutral/70">Success states</p>
+                        <button class="btn btn-success btn-sm mt-3">Sample Button</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Button Variations -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-semibold mb-6 text-neutral">Gentle Button Styles</h2>
+            
+            <div class="space-y-8">
+                <!-- Solid Buttons -->
+                <div>
+                    <h3 class="text-lg font-medium mb-4 text-neutral">Solid Buttons (Soft Colors)</h3>
+                    <div class="flex flex-wrap gap-4">
+                        <button class="btn btn-primary">Track Management</button>
+                        <button class="btn btn-secondary">Chapter Browser</button>
+                        <button class="btn btn-accent">Audio Library</button>
+                        <button class="btn btn-success">Save Progress</button>
+                        <button class="btn btn-warning">Review</button>
+                        <button class="btn btn-error">Remove</button>
+                    </div>
+                </div>
+
+                <!-- Outline Buttons -->
+                <div>
+                    <h3 class="text-lg font-medium mb-4 text-neutral">Outline Buttons (Even Softer)</h3>
+                    <div class="flex flex-wrap gap-4">
+                        <button class="btn btn-outline btn-primary">Browse Tracks</button>
+                        <button class="btn btn-outline btn-secondary">View Chapters</button>
+                        <button class="btn btn-outline btn-accent">Add Audio</button>
+                        <button class="btn btn-outline btn-success">Complete</button>
+                        <button class="btn btn-outline btn-warning">Pending</button>
+                        <button class="btn btn-outline btn-error">Delete</button>
+                    </div>
+                </div>
+
+                <!-- Ghost Buttons -->
+                <div>
+                    <h3 class="text-lg font-medium mb-4 text-neutral">Ghost Buttons (Minimal)</h3>
+                    <div class="flex flex-wrap gap-4">
+                        <button class="btn btn-ghost btn-primary">Edit</button>
+                        <button class="btn btn-ghost btn-secondary">View</button>
+                        <button class="btn btn-ghost btn-accent">Settings</button>
+                        <button class="btn btn-ghost btn-success">Approve</button>
+                        <button class="btn btn-ghost btn-warning">Review</button>
+                        <button class="btn btn-ghost btn-error">Remove</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Vedic Dashboard with Light Colors -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-semibold mb-6 text-neutral">Vedic LMS Dashboard</h2>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Track Management -->
+                <div class="card bg-base-100 shadow-lg">
+                    <div class="card-body">
+                        <div class="flex items-center mb-4">
+                            <div class="avatar placeholder mr-4">
+                                <div class="bg-primary/20 text-primary rounded-lg w-12 h-12">
+                                    <span class="text-lg">📚</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h2 class="card-title text-neutral">Track Management</h2>
+                                <p class="text-sm text-neutral/70">Organize learning paths</p>
+                            </div>
+                        </div>
+                        <div class="stats bg-base-200 shadow-sm mb-4">
+                            <div class="stat">
+                                <div class="stat-value text-primary text-2xl">3</div>
+                                <div class="stat-title text-neutral/70">Active Tracks</div>
+                            </div>
+                        </div>
+                        <div class="card-actions justify-end">
+                            <button class="btn btn-primary btn-sm">Manage</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Creation -->
+                <div class="card bg-base-100 shadow-lg">
+                    <div class="card-body">
+                        <div class="flex items-center mb-4">
+                            <div class="avatar placeholder mr-4">
+                                <div class="bg-secondary/20 text-secondary rounded-lg w-12 h-12">
+                                    <span class="text-lg">✏️</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h2 class="card-title text-neutral">Content Creation</h2>
+                                <p class="text-sm text-neutral/70">Create chapters</p>
+                            </div>
+                        </div>
+                        <div class="stats bg-base-200 shadow-sm mb-4">
+                            <div class="stat">
+                                <div class="stat-value text-secondary text-2xl">28</div>
+                                <div class="stat-title text-neutral/70">Total Chapters</div>
+                            </div>
+                        </div>
+                        <div class="card-actions justify-end">
+                            <button class="btn btn-secondary btn-sm">Create</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audio Mapping -->
+                <div class="card bg-base-100 shadow-lg">
+                    <div class="card-body">
+                        <div class="flex items-center mb-4">
+                            <div class="avatar placeholder mr-4">
+                                <div class="bg-accent/20 text-accent rounded-lg w-12 h-12">
+                                    <span class="text-lg">🎵</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h2 class="card-title text-neutral">Audio Mapping</h2>
+                                <p class="text-sm text-neutral/70">Sync content</p>
+                            </div>
+                        </div>
+                        <div class="stats bg-base-200 shadow-sm mb-4">
+                            <div class="stat">
+                                <div class="stat-value text-accent text-2xl">89%</div>
+                                <div class="stat-title text-neutral/70">Complete</div>
+                            </div>
+                        </div>
+                        <div class="card-actions justify-end">
+                            <button class="btn btn-accent btn-sm">Map</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sacred Content -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-semibold mb-6 text-neutral">Sacred Texts</h2>
+            
+            <div class="grid gap-6">
+                <!-- Sanskrit Content -->
+                <div class="card bg-base-100 shadow-lg border-l-4 border-l-primary/30">
+                    <div class="card-body">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="badge badge-primary/80">Sanskrit - Śraddhā Sūktam</div>
+                            <div class="flex gap-2">
+                                <button class="btn btn-primary btn-xs">Edit</button>
+                                <button class="btn btn-secondary btn-xs">Audio</button>
+                            </div>
+                        </div>
+                        <div class="devanagari text-lg leading-relaxed mb-4 text-neutral">
+                            श्रद्धाया॒ऽग्निः समि॑ध्यते । श्रद्धया॑ विन्दते ह॒विः ।<br>
+                            श्रद्धा॒म्भग॑स्य मू॒र्धनि॑ । वच॒सा-ऽऽवे॑दयामसि ।
+                        </div>
+                        <div class="text-sm text-neutral/70 italic mb-4">
+                            "Through faith, the fire is kindled. Through faith, the offering is obtained."
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div class="flex gap-2">
+                                <div class="badge badge-success/70">Mapped</div>
+                                <div class="badge badge-accent/70">Audio Available</div>
+                            </div>
+                            <button class="btn btn-primary btn-sm">Study</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Telugu Content -->
+                <div class="card bg-base-100 shadow-lg border-l-4 border-l-secondary/30">
+                    <div class="card-body">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="badge badge-secondary/80">Telugu - శ్రద్ధా సూక్తం</div>
+                            <div class="flex gap-2">
+                                <button class="btn btn-primary btn-xs">Edit</button>
+                                <button class="btn btn-accent btn-xs">Audio</button>
+                            </div>
+                        </div>
+                        <div class="telugu text-lg leading-relaxed mb-4 text-neutral">
+                            శ్రద్ధాయాఽగ్నిః సమిధ్యతే । శ్రద్ధయా విందతే హవిః ।<br>
+                            శ్రద్ధాం భగస్య మూర్ధని । వచసాఽఽవేదయామసి ।
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div class="flex gap-2">
+                                <div class="badge badge-warning/70">Pending</div>
+                                <div class="badge badge-accent/70">Audio Ready</div>
+                            </div>
+                            <button class="btn btn-secondary btn-sm">Continue</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress with Soft Colors -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-6 text-neutral">Learning Progress</h2>
+            
+            <div class="card bg-base-100 shadow-lg">
+                <div class="card-body">
+                    <h3 class="card-title text-neutral mb-6">Current Studies</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-medium text-neutral">Vaidika Nithya Karma</span>
+                                <span class="text-sm font-medium text-neutral/70">92%</span>
+                            </div>
+                            <progress class="progress progress-primary w-full" value="92" max="100"></progress>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-medium text-neutral">Śrī Rudram</span>
+                                <span class="text-sm font-medium text-neutral/70">65%</span>
+                            </div>
+                            <progress class="progress progress-secondary w-full" value="65" max="100"></progress>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="font-medium text-neutral">Puruṣa Sūktam</span>
+                                <span class="text-sm font-medium text-neutral/70">23%</span>
+                            </div>
+                            <progress class="progress progress-accent w-full" value="23" max="100"></progress>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center text-sm text-neutral/70 border-t pt-6">
+            <p>॥ सर्वे भवन्तु सुखिनः सर्वे सन्तु निरामयाः ॥</p>
+            <p class="mt-2">Vedic LMS - Light Bootflat Inspired Design</p>
+        </footer>
+    </div>
+</body>
+</html>

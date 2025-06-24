@@ -33,6 +33,12 @@ export function DaisyUI5Showcase() {
       highlight: "Official Bootflat colors"
     },
     {
+      title: "Bootflat Light Inspired",
+      description: "Soft, elegant light theme inspired by Bootflat with gentle colors (#74b9ff, #81ecec, #fdcb6e) perfect for extended reading",
+      link: "/experiments/06-bootflat-light-inspired.html",
+      highlight: "Gentle colors"
+    },
+    {
       title: "Vedic Dashboard",
       description: "Complete dashboard redesign with autumn theme and Vedic aesthetic enhancements",
       link: "/experiments/02-vedic-dashboard.html",
