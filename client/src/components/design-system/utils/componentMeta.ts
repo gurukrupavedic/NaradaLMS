@@ -199,9 +199,9 @@ export const componentConfigs: Record<string, ComponentConfig> = {
   Tooltip: {
     name: "Tooltip",
     variants: colorVariants,
-    sizes: sizeOptions.small,
-    commonProps: [],
-    description: "Contextual help and information tooltips",
+    sizes: ["top", "right", "bottom", "left"],
+    commonProps: ["delayDuration", "educational"],
+    description: "Contextual help and guidance tooltips",
     category: "specialized"
   },
   
