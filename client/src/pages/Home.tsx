@@ -1,14 +1,11 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
+  Button, 
+  Tabs, TabsContent, TabsList, TabsTrigger,
+  Avatar, AvatarFallback, AvatarImage,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
+} from "@/components/ui";
 import { BookOpen, Presentation, Edit, UsersIcon, ChevronDown, Languages } from "lucide-react";
 import { Dashboard } from "@/components/Dashboard";
 import { InstructorPanel } from "@/components/InstructorPanel";
