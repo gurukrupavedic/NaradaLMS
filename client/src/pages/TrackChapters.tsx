@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, FileText } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ChapterCard, ConfirmationModal } from "@/components/content-management";
+import { LoadingSkeleton, LoadingSpinner } from "@/components/ui/loading";
 
 interface Chapter {
   id: number;
@@ -44,7 +45,7 @@ export default function TrackChapters() {
   const track = tracks?.find(t => t.id.toString() === trackId);
 
   // Fetch chapters for this track
-  const { data: chapters = [], isLoading } = useQuery<Chapter[]>({
+  const { data: chapters = [], isLoading: chaptersLoading } = useQuery<Chapter[]>({
     queryKey: [`/api/chapters/${trackId}`],
     enabled: !!trackId,
   });

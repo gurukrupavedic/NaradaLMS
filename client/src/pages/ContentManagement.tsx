@@ -57,7 +57,27 @@ export default function ContentManagement() {
       queryClient.invalidateQueries({ queryKey: ["/api/tracks"] });
     },
     onError: (error: any) => {
-      toast({ title: "Failed to create track", description: error.message, variant: "destructive" });
+      let userMessage = "Failed to create track.";
+      
+      if (error.isClientError) {
+        if (error.status === 400) {
+          userMessage = "Invalid track data. Please check your inputs.";
+        } else if (error.status === 409) {
+          userMessage = "A track with this title already exists.";
+        } else if (error.status === 422) {
+          userMessage = "Please provide a valid title and description.";
+        }
+      } else if (error.isServerError || error.isNetworkError) {
+        userMessage = error.isNetworkError 
+          ? "Network connection lost. Please check your connection and try again."
+          : "Server temporarily unavailable. Please try again in a few moments.";
+      }
+
+      toast({ 
+        title: "Failed to create track", 
+        description: userMessage, 
+        variant: "destructive" 
+      });
     },
   });
 

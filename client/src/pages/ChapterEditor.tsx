@@ -244,7 +244,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
 
   // Segments query for database integration - script-specific  
-  const { data: textSegments = [], refetch: refetchSegments, isLoading: segmentsLoading } = useQuery({
+  const { data: textSegments = [], refetch: refetchSegments, isLoading: segmentsLoading, error: segmentsError } = useQuery({
     queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`],
     enabled: !!chapterId && !!contentScript
   });
@@ -680,9 +680,32 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       toast({ title: "Segment created successfully" });
     },
     onError: (error: any) => {
+      let userMessage = "Unable to create segment. Please try again.";
+      let actionMessage = "";
+      let showRetry = false;
+
+      if (error.isClientError) {
+        if (error.status === 400) {
+          userMessage = "Invalid text selection. Please select a different text range.";
+          actionMessage = "Try selecting text without overlapping existing segments.";
+        } else if (error.status === 409) {
+          userMessage = "This text range overlaps with an existing segment.";
+          actionMessage = "Please select a different text range or remove the conflicting segment.";
+        } else if (error.status === 422) {
+          userMessage = "Selected text is too short or contains invalid characters.";
+          actionMessage = "Please select at least 10 characters of valid text.";
+        }
+      } else if (error.isServerError || error.isNetworkError) {
+        userMessage = error.isNetworkError 
+          ? "Network connection lost. Your work is saved locally." 
+          : "Server temporarily unavailable. Your work is saved locally.";
+        actionMessage = "Please try again in a few moments.";
+        showRetry = true;
+      }
+
       toast({
         title: "Failed to create segment",
-        description: error.message || "Unable to create segment. Please check your selection and try again.",
+        description: `${userMessage} ${actionMessage}`,
         variant: "destructive"
       });
     }

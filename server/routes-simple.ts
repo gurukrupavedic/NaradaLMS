@@ -115,13 +115,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static(uploadsDir));
 
   // Track routes
-  app.get('/api/tracks', async (req, res) => {
+  app.get('/api/tracks', async (req, res, next) => {
     try {
       const tracks = await storage.getAllTracks();
       res.json(tracks);
     } catch (error) {
-      console.error("Error fetching tracks:", error);
-      res.status(500).json({ message: "Failed to fetch tracks" });
+      next(error);
     }
   });
 
@@ -131,28 +130,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * @param id - Track identifier in URL params
    * @returns Track object or 404 if not found
    */
-  app.get('/api/tracks/:id', async (req, res) => {
+  app.get('/api/tracks/:id', async (req, res, next) => {
     try {
       const track = await storage.getTrack(parseInt(req.params.id));
       if (!track) {
-        return res.status(404).json({ message: "Track not found" });
+        return res.status(404).json(createErrorResponse("Track not found", "TRACK_NOT_FOUND"));
       }
       res.json(track);
     } catch (error) {
-      console.error("Error fetching track:", error);
-      res.status(500).json({ message: "Failed to fetch track" });
+      next(error);
     }
   });
 
   // Chapter routes
-  app.get('/api/chapters/:trackId', async (req, res) => {
+  app.get('/api/chapters/:trackId', async (req, res, next) => {
     try {
       const trackId = parseInt(req.params.trackId);
       const chapters = await storage.getChaptersByTrack(trackId);
       res.json(chapters);
     } catch (error) {
-      console.error("Error fetching chapters:", error);
-      res.status(500).json({ message: "Failed to fetch chapters" });
+      next(error);
     }
   });
 
@@ -355,10 +352,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/audio-files/:chapterId/upload', upload.single('audio'), async (req, res) => {
+  app.post('/api/audio-files/:chapterId/upload', upload.single('audio'), async (req, res, next) => {
     try {
       if (!req.file) {
-        return res.status(400).json({ message: "No audio file provided" });
+        return res.status(400).json(createErrorResponse("No audio file provided", "NO_FILE_PROVIDED"));
       }
 
       const chapterId = parseInt(req.params.chapterId);
@@ -383,8 +380,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(audioFile);
     } catch (error) {
-      console.error("Error uploading audio file:", error);
-      res.status(500).json({ message: "Failed to upload audio file" });
+      next(error);
     }
   });
 
@@ -765,5 +761,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  // Add global error handling middleware at the end
+  app.use(globalErrorHandler);
+
   return httpServer;
 }
