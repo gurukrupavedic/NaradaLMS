@@ -1,78 +1,34 @@
 import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 /**
- * DaisyUI5Showcase - DaisyUI latest version experiments showcase
+ * DaisyUI5Showcase - Modern Colorful Design System showcase
  * 
- * Isolated experiments with DaisyUI 4.12.24 to evaluate aesthetics
- * and theme options for Vedic LMS. Complete isolation from main app.
+ * Features the official Modern Colorful Design System for Vedic LMS
+ * with reference implementations and documentation links.
  */
 export function DaisyUI5Showcase() {
-  const experiments = [
-    {
-      title: "Theme Comparison",
-      description: "Interactive comparison of 12 DaisyUI themes including Bootstrap-style variants (corporate, wireframe), light/dark modes, and professional themes",
-      link: "/experiments/01-theme-comparison.html",
-      highlight: "Interactive theme switcher"
-    },
-    {
-      title: "Night + Business Pairing",
-      description: "Perfect light/dark mode combination - Night theme as dark mode with Business theme as complementary light mode",
-      link: "/experiments/03-night-business-pairing.html",
-      highlight: "Perfect theme pair"
-    },
-    {
-      title: "FlatUI / Bootflat Colors",
-      description: "Custom DaisyUI themes with vibrant FlatUI and Bootflat color schemes - beautiful flat design button palettes",
-      link: "/experiments/04-flatui-bootflat-style.html",
-      highlight: "Flat design colors"
-    },
-    {
-      title: "Bootflat Focused Design",
-      description: "Pure Bootflat color scheme with official turquoise (#1abc9c), blue (#3498db), and orange (#f39c12) from bootflat.github.io",
-      link: "/experiments/05-bootflat-focused.html",
-      highlight: "Official Bootflat colors"
-    },
-    {
-      title: "Bootflat Light Inspired",
-      description: "Soft, elegant light theme inspired by Bootflat with gentle colors (#74b9ff, #81ecec, #fdcb6e) perfect for extended reading",
-      link: "/experiments/06-bootflat-light-inspired.html",
-      highlight: "Gentle colors"
-    },
-    {
-      title: "True Bootflat Light",
-      description: "Pure white background light theme with Bootflat-inspired button colors - clean and readable for Vedic content",
-      link: "/experiments/07-true-bootflat-light.html",
-      highlight: "True light theme"
-    },
-    {
-      title: "Bootstrap 5 Inspired",
-      description: "Professional design based on Bootstrap 5 color system with subtle, accessible colors (#0d6efd, #6c757d, #198754)",
-      link: "/experiments/08-bootstrap5-inspired.html",
-      highlight: "Bootstrap 5 design"
-    },
-    {
-      title: "Bootstrap 5 Full Integration",
-      description: "Complete Bootstrap 5 implementation with native components, dark/light themes, and professional design system",
-      link: "/experiments/bootstrap5-integration/bootstrap5-vedic-prototype.html",
-      highlight: "Full Bootstrap 5"
-    },
+  const designSystem = {
+    title: "Modern Colorful Design System",
+    description: "Complete design system with vibrant colors, fluorescent glow effects, and elegant interactions - the official UI standard for Vedic LMS",
+    link: "/experiments/design-systems/modern-colorful-theme.html",
+    highlight: "Official Design System"
+  };
+
+  const references = [
     {
       title: "shadcn/ui vs Bootstrap 5",
-      description: "Side-by-side comparison of design systems: shadcn/ui (current) vs Bootstrap 5 with migration analysis",
+      description: "Comprehensive comparison of design systems with component examples, migration analysis, and technical specifications",
       link: "/experiments/design-systems/shadcn-vs-bootstrap5.html",
-      highlight: "Design system comparison"
+      highlight: "Framework comparison"
     },
     {
-      title: "Modern Colorful Theme",
-      description: "Sleek, elegant design with vibrant colors inspired by your dashboard tiles - blue, green, purple, orange, pink, indigo with subtle hover effects",
-      link: "/experiments/design-systems/modern-colorful-theme.html",
-      highlight: "Colorful & elegant"
-    },
-    {
-      title: "Vedic Dashboard",
-      description: "Complete dashboard redesign with autumn theme and Vedic aesthetic enhancements",
-      link: "/experiments/02-vedic-dashboard.html",
-      highlight: "Vedic-inspired design"
+      title: "Bootstrap 5 Reference Implementation", 
+      description: "Complete Bootstrap 5 prototype with native components, themes, and professional design patterns for reference",
+      link: "/experiments/bootstrap5-integration/bootstrap5-vedic-prototype.html",
+      highlight: "Bootstrap 5 reference"
     }
   ];
 
@@ -97,41 +53,142 @@ export function DaisyUI5Showcase() {
           </a>
         </div>
 
-        {/* Version Comparison Info */}
-        <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-blue-900 mb-3">DaisyUI 4.12.24 Features</h2>
-          <div className="grid md:grid-cols-2 gap-6 text-sm">
-            <div>
-              <h3 className="font-medium text-blue-800 mb-2">Visual Enhancements:</h3>
-              <ul className="text-blue-700 space-y-1">
-                <li>• Refreshed color palettes with better harmony</li>
-                <li>• Improved typography and spacing</li>
-                <li>• Enhanced component aesthetics</li>
-                <li>• Better shadow and border styling</li>
-                <li>• More polished theme implementations</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-medium text-blue-800 mb-2">New Features:</h3>
-              <ul className="text-blue-700 space-y-1">
-                <li>• Better theme customization options</li>
-                <li>• Improved component consistency</li>
-                <li>• Enhanced accessibility features</li>
-                <li>• Better font integration support</li>
-                <li>• More semantic color meanings</li>
-              </ul>
-            </div>
+        {/* Main Design System - Prominently Featured */}
+        <div className="mb-8">
+          <Card 
+            className="cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-[1.02] border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50"
+            onClick={() => window.open(designSystem.link, '_blank')}
+          >
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between mb-3">
+                <CardTitle className="text-2xl text-blue-800 font-bold">{designSystem.title}</CardTitle>
+                <Badge className="bg-blue-600 text-white px-3 py-1 text-sm font-medium">
+                  {designSystem.highlight}
+                </Badge>
+              </div>
+              <CardDescription className="text-blue-700 text-base leading-relaxed">
+                {designSystem.description}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500 mb-1"></div>
+                  <span className="text-xs text-gray-600">Blue</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 rounded-lg bg-green-500 mb-1"></div>
+                  <span className="text-xs text-gray-600">Green</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500 mb-1"></div>
+                  <span className="text-xs text-gray-600">Purple</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 rounded-lg bg-orange-500 mb-1"></div>
+                  <span className="text-xs text-gray-600">Orange</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 rounded-lg bg-pink-500 mb-1"></div>
+                  <span className="text-xs text-gray-600">Pink</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500 mb-1"></div>
+                  <span className="text-xs text-gray-600">Indigo</span>
+                </div>
+              </div>
+              <Button 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-3" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(designSystem.link, '_blank');
+                }}
+              >
+                Explore Complete Design System
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Links to Documentation */}
+        <div className="mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="border-green-200 bg-green-50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-green-800">Design System Specs</CardTitle>
+                <CardDescription className="text-green-700">Complete UI specifications & guidelines</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  variant="outline" 
+                  className="w-full border-green-600 text-green-700 hover:bg-green-600 hover:text-white"
+                  onClick={() => window.open('/docs/modern-colorful-design-system.md', '_blank')}
+                >
+                  View Documentation
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-purple-200 bg-purple-50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-purple-800">Migration Plan</CardTitle>
+                <CardDescription className="text-purple-700">Implementation roadmap & timeline</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  variant="outline" 
+                  className="w-full border-purple-600 text-purple-700 hover:bg-purple-600 hover:text-white"
+                  onClick={() => window.open('/docs/design-system-migration-plan.md', '_blank')}
+                >
+                  View Plan
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
-        {/* Experiments Grid */}
-        <div className="grid gap-8">
-          {experiments.map((experiment, index) => (
-            <div key={index} className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <span className="inline-block px-3 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full mb-2">
-                    DaisyUI 4.12.24
+        {/* Reference Implementations */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold mb-4">Reference Implementations</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {references.map((experiment, index) => (
+            <Card 
+              key={index}
+              className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105"
+              onClick={() => window.open(experiment.link, '_blank')}
+            >
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <CardTitle className="text-lg">{experiment.title}</CardTitle>
+                  <Badge variant="secondary" className="text-xs">
+                    {experiment.highlight}
+                  </Badge>
+                </div>
+                <CardDescription className="text-sm leading-relaxed">
+                  {experiment.description}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(experiment.link, '_blank');
+                  }}
+                >
+                  View Reference
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
                   </span>
                   {experiment.highlight && (
                     <span className="inline-block px-3 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full mb-2 ml-2">
