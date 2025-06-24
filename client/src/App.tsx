@@ -58,6 +58,7 @@ function Router() {
 
             <Route path="/tracks/:trackId" component={TrackView} />
             <Route path="/chapters/:id" component={ChapterView} />
+            <Route path="/experiments/daisyui" component={DaisyUIExperiments} />
           </>
         )}
         <Route component={NotFound} />
