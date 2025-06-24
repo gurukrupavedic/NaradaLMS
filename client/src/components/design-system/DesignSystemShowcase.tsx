@@ -1,8 +1,8 @@
 /**
- * Design System Showcase - Live Component Testing
+ * Design System Showcase - Optimized & Organized
  * 
- * Interactive showcase for testing design system components in isolation
- * before integrating into the main LMS application.
+ * Compact, organized showcase for testing design system components.
+ * Features grouped components, universal color picker, and reduced redundancy.
  * 
  * @author Vedic LMS Design System
  * @since 2025-06-24
@@ -24,96 +24,588 @@ import { Switch } from "./Switch";
 import { Tooltip, SimpleTooltip } from "./Tooltip";
 import { Loading } from "./Loading";
 import { RichTextEditor } from "./RichTextEditor";
-import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, HelpCircle, Settings, Upload, Type } from "lucide-react";
+import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, Copy } from "lucide-react";
 
 export function DesignSystemShowcase() {
   const [selectedVariant, setSelectedVariant] = useState<string>("blue");
+  const [activeGroup, setActiveGroup] = useState<string>("foundation");
   
   const colorVariants = [
     "blue", "green", "purple", "orange", "pink", "indigo", 
     "teal", "cyan", "yellow", "lime", "rose", "emerald"
   ];
 
-  // Color mapping for swatches (using actual hex values)
   const colorMap: Record<string, string> = {
-    blue: "#3b82f6",
-    green: "#22c55e", 
-    purple: "#a855f7",
-    orange: "#f97316",
-    pink: "#ec4899",
-    indigo: "#6366f1",
-    teal: "#14b8a6",
-    cyan: "#06b6d4",
-    yellow: "#eab308",
-    lime: "#84cc16",
-    rose: "#f43f5e",
-    emerald: "#10b981"
+    blue: "#3b82f6", green: "#22c55e", purple: "#a855f7", orange: "#f97316",
+    pink: "#ec4899", indigo: "#6366f1", teal: "#14b8a6", cyan: "#06b6d4",
+    yellow: "#eab308", lime: "#84cc16", rose: "#f43f5e", emerald: "#10b981"
   };
 
-  const educationalVariants = [
-    "lesson", "progress", "content", "feature", "audio", "text", "assessment", "track"
+  const componentGroups = [
+    { id: "foundation", name: "Foundation", icon: Layers, count: 5 },
+    { id: "display", name: "Data Display", icon: CheckCircle, count: 4 },
+    { id: "navigation", name: "Navigation", icon: Search, count: 3 },
+    { id: "content", name: "Content", icon: Edit, count: 3 }
   ];
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto space-y-12">
-        
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Vedic LMS Design System
-          </h1>
-          <p className="text-lg text-gray-600">
-            Modern colorful components for educational experiences
-          </p>
-        </div>
+  const educationalVariants = ["lesson", "progress", "admin", "student"];
 
-        {/* Color Variant Selector */}
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h2 className="text-2xl font-semibold mb-4">Color Variants</h2>
-          <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Sticky Header with Universal Controls */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Vedic LMS Design System</h1>
+              <p className="text-sm text-gray-600">15 components • 12 colors • Production ready</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-700">Active Color:</span>
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-6 h-6 rounded-full border-2 border-gray-300" 
+                  style={{ backgroundColor: colorMap[selectedVariant] }}
+                ></div>
+                <span className="text-sm font-medium capitalize">{selectedVariant}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Compact Color Picker */}
+          <div className="flex flex-wrap gap-2">
             {colorVariants.map((variant) => (
               <button
                 key={variant}
                 onClick={() => setSelectedVariant(variant)}
-                className={`p-3 rounded-lg border-2 transition-all capitalize ${
+                className={`w-8 h-8 rounded-full border-2 transition-all ${
                   selectedVariant === variant 
-                    ? 'border-gray-800 ring-2 ring-gray-300' 
-                    : 'border-gray-200 hover:border-gray-400'
+                    ? 'border-gray-800 ring-2 ring-gray-300 scale-110' 
+                    : 'border-gray-200 hover:border-gray-400 hover:scale-105'
                 }`}
-              >
-                <div 
-                  className="w-full h-8 rounded mb-2" 
-                  style={{ backgroundColor: colorMap[variant] }}
-                ></div>
-                <div className="text-xs font-medium">{variant}</div>
-              </button>
+                style={{ backgroundColor: colorMap[variant] }}
+                title={variant}
+              />
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Card Components Showcase */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Card Components</h2>
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Component Group Navigation */}
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-2">
+            {componentGroups.map((group) => {
+              const IconComponent = group.icon;
+              return (
+                <button
+                  key={group.id}
+                  onClick={() => setActiveGroup(group.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                    activeGroup === group.id
+                      ? 'bg-blue-50 border-blue-200 text-blue-700'
+                      : 'bg-white border-gray-200 hover:border-gray-300 text-gray-600'
+                  }`}
+                >
+                  <IconComponent className="w-4 h-4" />
+                  <span className="font-medium">{group.name}</span>
+                  <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">{group.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Foundation Group */}
+        {activeGroup === "foundation" && (
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold text-gray-900">Foundation Components</h2>
+              <span className="text-sm text-gray-500">Core building blocks</span>
+            </div>
           
-          {/* Feature Cards (like SimpleDashboard) */}
-          <div>
-            <h3 className="text-xl font-medium mb-4">Feature Cards</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card variant={selectedVariant as any} interactive glow="subtle">
-                <CardHeader className="text-center">
-                  <div className="mx-auto mb-4">
-                    <BookOpen 
-                      className="h-12 w-12" 
-                      style={{ color: colorMap[selectedVariant] }}
-                    />
+            {/* Cards */}
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Layers className="w-5 h-5" />
+                Card Family
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Card variant={selectedVariant} educational="lesson">
+                  <CardHeader>
+                    <CardTitle>Chapter 1: Introduction</CardTitle>
+                    <CardDescription>Begin your Vedic learning journey</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-3">
+                      <BookOpen className="w-5 h-5 text-gray-500" />
+                      <span className="text-sm">5 lessons • 45 min</span>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card variant={selectedVariant} educational="progress">
+                  <CardHeader>
+                    <CardTitle>Learning Progress</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Progress value={75} variant={selectedVariant} educational="progress" />
+                    <p className="text-sm text-gray-600 mt-2">3 of 4 chapters completed</p>
+                  </CardContent>
+                </Card>
+                
+                <Card variant={selectedVariant} educational="admin">
+                  <CardHeader>
+                    <CardTitle>User Management</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">125 active students</span>
+                      <Badge variant={selectedVariant} educational="admin">Active</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Play className="w-5 h-5" />
+                Button Family
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {["lesson", "progress", "admin", "student"].map((context) => (
+                  <div key={context} className="space-y-3">
+                    <p className="text-sm font-medium capitalize text-gray-700">{context}</p>
+                    <div className="space-y-2">
+                      <Button variant={selectedVariant} educational={context} size="sm">
+                        {context === "lesson" && <BookOpen className="w-4 h-4 mr-2" />}
+                        {context === "progress" && <CheckCircle className="w-4 h-4 mr-2" />}
+                        {context === "admin" && <Shield className="w-4 h-4 mr-2" />}
+                        {context === "student" && <User className="w-4 h-4 mr-2" />}
+                        {context === "lesson" ? "Start Lesson" : 
+                         context === "progress" ? "Continue" :
+                         context === "admin" ? "Manage" : "Study"}
+                      </Button>
+                      <Button variant={selectedVariant} educational={context} size="sm" outline>
+                        Secondary
+                      </Button>
+                    </div>
                   </div>
-                  <CardTitle className="text-lg">Learning</CardTitle>
-                  <CardDescription>
-                    Browse and study learning tracks
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+                ))}
+              </div>
+            </div>
+
+            {/* Inputs */}
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Edit className="w-5 h-5" />
+                Input Family
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Student Name</label>
+                    <Input variant={selectedVariant} educational="student" placeholder="Enter full name" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Course Search</label>
+                    <Input variant={selectedVariant} educational="lesson" placeholder="Search courses..." icon={Search} />
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Admin Email</label>
+                    <Input variant={selectedVariant} educational="admin" placeholder="admin@vedic-lms.com" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Progress Notes</label>
+                    <Input variant={selectedVariant} educational="progress" placeholder="Add learning notes..." />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Badges & Avatars */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Star className="w-5 h-5" />
+                  Badge Family
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant={selectedVariant} educational="lesson">New Lesson</Badge>
+                    <Badge variant={selectedVariant} educational="progress">75% Complete</Badge>
+                    <Badge variant={selectedVariant} educational="admin">Admin</Badge>
+                    <Badge variant={selectedVariant} educational="student">Student</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant={selectedVariant} educational="lesson" outline>Draft</Badge>
+                    <Badge variant={selectedVariant} educational="progress" outline>In Progress</Badge>
+                    <Badge variant={selectedVariant} educational="admin" outline>Pending</Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Avatar Family
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar name="Dr. Raghuram" educational="admin" showStatus status="online" />
+                    <Avatar name="Priya Sharma" educational="student" showStatus status="away" />
+                    <Avatar name="Sanskrit Class" educational="lesson" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Avatar name="Admin" educational="admin" size="sm" />
+                    <Avatar name="Student" educational="student" size="sm" />
+                    <Avatar name="Instructor" educational="progress" size="sm" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Data Display Group */}
+        {activeGroup === "display" && (
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold text-gray-900">Data Display Components</h2>
+              <span className="text-sm text-gray-500">Progress, feedback & status</span>
+            </div>
+
+            {/* Progress Family */}
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5" />
+                Progress Family
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Chapter Progress</label>
+                    <Progress value={75} variant={selectedVariant} educational="lesson" />
+                    <p className="text-xs text-gray-500 mt-1">3 of 4 sections completed</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Course Completion</label>
+                    <Progress value={45} variant={selectedVariant} educational="progress" />
+                    <p className="text-xs text-gray-500 mt-1">9 of 20 chapters completed</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Student Performance</label>
+                    <div className="flex items-center gap-4">
+                      <CircularProgress value={85} variant={selectedVariant} educational="student" />
+                      <div>
+                        <p className="text-sm font-medium">Excellent Progress</p>
+                        <p className="text-xs text-gray-500">85% average score</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Alert Family */}
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                Alert Family
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Alert variant="info" educational="lesson">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>New Lesson Available</AlertTitle>
+                  <AlertDescription>Chapter 3: Advanced Mantras is now ready for study.</AlertDescription>
+                </Alert>
+                
+                <Alert variant="success" educational="progress">
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertTitle>Chapter Completed!</AlertTitle>
+                  <AlertDescription>You've successfully finished the introductory chapter.</AlertDescription>
+                </Alert>
+                
+                <Alert variant="warning" educational="admin">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>System Maintenance</AlertTitle>
+                  <AlertDescription>Scheduled maintenance tonight from 2-4 AM IST.</AlertDescription>
+                </Alert>
+                
+                <Alert variant="error" educational="student">
+                  <XCircle className="h-4 w-4" />
+                  <AlertTitle>Assignment Overdue</AlertTitle>
+                  <AlertDescription>Please submit your Sanskrit practice assignment.</AlertDescription>
+                </Alert>
+              </div>
+            </div>
+
+            {/* Loading & Tooltip Family */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <h3 className="text-lg font-semibold mb-4">Loading States</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Loading variant={selectedVariant} size="sm" />
+                    <span className="text-sm">Loading lessons...</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Loading variant={selectedVariant} size="md" />
+                    <span className="text-sm">Processing audio...</span>
+                  </div>
+                  <div className="space-y-2">
+                    <Loading.Skeleton className="h-4 w-full" />
+                    <Loading.Skeleton className="h-4 w-3/4" />
+                    <Loading.Skeleton className="h-4 w-1/2" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <h3 className="text-lg font-semibold mb-4">Tooltip Family</h3>
+                <div className="space-y-4">
+                  <div className="flex gap-4">
+                    <Tooltip content="Start your learning journey">
+                      <Button variant={selectedVariant} educational="lesson" size="sm">
+                        <BookOpen className="w-4 h-4" />
+                      </Button>
+                    </Tooltip>
+                    <SimpleTooltip content="View progress details">
+                      <Button variant={selectedVariant} educational="progress" size="sm">
+                        <CheckCircle className="w-4 h-4" />
+                      </Button>
+                    </SimpleTooltip>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation Group */}
+        {activeGroup === "navigation" && (
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold text-gray-900">Navigation Components</h2>
+              <span className="text-sm text-gray-500">User interaction & control</span>
+            </div>
+
+            {/* Tabs Family */}
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4">Tabs Family</h3>
+              <Tabs defaultValue="lessons" variant={selectedVariant} educational="lesson">
+                <TabsList>
+                  <TabsTrigger value="lessons">Lessons</TabsTrigger>
+                  <TabsTrigger value="progress">Progress</TabsTrigger>
+                  <TabsTrigger value="assignments">Assignments</TabsTrigger>
+                </TabsList>
+                <TabsContent value="lessons" className="mt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card variant={selectedVariant} educational="lesson">
+                      <CardHeader>
+                        <CardTitle className="text-base">Lesson 1</CardTitle>
+                        <CardDescription>Introduction to Vedic Chanting</CardDescription>
+                      </CardHeader>
+                    </Card>
+                    <Card variant={selectedVariant} educational="lesson">
+                      <CardHeader>
+                        <CardTitle className="text-base">Lesson 2</CardTitle>
+                        <CardDescription>Basic Sanskrit Pronunciation</CardDescription>
+                      </CardHeader>
+                    </Card>
+                    <Card variant={selectedVariant} educational="lesson">
+                      <CardHeader>
+                        <CardTitle className="text-base">Lesson 3</CardTitle>
+                        <CardDescription>Simple Mantras Practice</CardDescription>
+                      </CardHeader>
+                    </Card>
+                  </div>
+                </TabsContent>
+                <TabsContent value="progress" className="mt-4">
+                  <div className="space-y-4">
+                    <Progress value={60} variant={selectedVariant} educational="progress" />
+                    <p className="text-sm text-gray-600">Overall course progress: 60%</p>
+                  </div>
+                </TabsContent>
+                <TabsContent value="assignments" className="mt-4">
+                  <p className="text-sm text-gray-600">No pending assignments</p>
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            {/* Select Family */}
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4">Select Family</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">User Role</label>
+                  <Select>
+                    <SelectTrigger variant={selectedVariant} educational="admin">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent educational="admin">
+                      <SelectItem value="admin">Administrator</SelectItem>
+                      <SelectItem value="instructor">Instructor</SelectItem>
+                      <SelectItem value="student">Student</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Learning Track</label>
+                  <Select>
+                    <SelectTrigger variant={selectedVariant} educational="lesson">
+                      <SelectValue placeholder="Select track" />
+                    </SelectTrigger>
+                    <SelectContent educational="lesson">
+                      <SelectItem value="basics">Vedic Basics</SelectItem>
+                      <SelectItem value="mantras">Sacred Mantras</SelectItem>
+                      <SelectItem value="advanced">Advanced Studies</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Content Status</label>
+                  <Select>
+                    <SelectTrigger variant={selectedVariant} educational="progress">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent educational="progress">
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="review">Under Review</SelectItem>
+                      <SelectItem value="published">Published</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Switch Family */}
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4">Switch Family</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Audio Autoplay</span>
+                    <Switch variant={selectedVariant} educational="lesson" />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Progress Notifications</span>
+                    <Switch variant={selectedVariant} educational="progress" />
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Admin Dashboard</span>
+                    <Switch variant={selectedVariant} educational="admin" />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Student Mode</span>
+                    <Switch variant={selectedVariant} educational="student" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Content Group */}
+        {activeGroup === "content" && (
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold text-gray-900">Content Components</h2>
+              <span className="text-sm text-gray-500">Text creation & editing</span>
+            </div>
+
+            {/* Text Areas */}
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4">Textarea Family</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Lesson Content</label>
+                  <Textarea 
+                    variant={selectedVariant} 
+                    educational="lesson"
+                    placeholder="Enter lesson content in Sanskrit, Hindi, or English..."
+                    rows={4}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Student Notes</label>
+                  <Textarea 
+                    variant={selectedVariant} 
+                    educational="student"
+                    placeholder="Add your learning notes and observations..."
+                    rows={4}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Rich Text Editor */}
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4">Rich Text Editor</h3>
+              <RichTextEditor 
+                variant={selectedVariant}
+                educational="lesson"
+                placeholder="Create rich educational content with formatting, links, and media..."
+              />
+            </div>
+
+            {/* Text Segments */}
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4">Text Segment Family</h3>
+              <div className="space-y-4">
+                <TextSegment 
+                  variant={selectedVariant}
+                  educational="lesson"
+                  content="ॐ गं गणपतये नमः"
+                  script="devanagari"
+                  isActive={true}
+                />
+                <TextSegment 
+                  variant={selectedVariant}
+                  educational="lesson"
+                  content="Om gaṃ gaṇapataye namaḥ"
+                  script="iast"
+                  isActive={false}
+                />
+                <TextSegment 
+                  variant={selectedVariant}
+                  educational="lesson"
+                  content="Salutations to Lord Ganesha, the remover of obstacles"
+                  script="english"
+                  isActive={false}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Component Integration Guide */}
+        <div className="bg-blue-50 rounded-lg p-6 border border-blue-200 mt-12">
+          <h3 className="text-lg font-semibold text-blue-900 mb-3 flex items-center gap-2">
+            <Copy className="w-5 h-5" />
+            Integration Ready
+          </h3>
+          <div className="text-sm text-blue-800 space-y-2">
+            <p>• All components follow consistent naming: Button, ButtonIcon, ButtonGroup</p>
+            <p>• Universal color prop: variant="{selectedVariant}" applies to all components</p>
+            <p>• Educational context: educational="lesson|progress|admin|student"</p>
+            <p>• Copy component code directly from examples above</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
                   <Button className="w-full" variant={`outline-${selectedVariant}` as any}>
                     Get Started
                   </Button>
