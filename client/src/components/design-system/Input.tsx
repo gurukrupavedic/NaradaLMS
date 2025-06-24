@@ -19,23 +19,23 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const inputVariants = cva(
-  "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+  "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200",
   {
     variants: {
       variant: {
-        default: "focus-visible:ring-ring",
-        blue: "focus-visible:ring-blue-500 focus-visible:border-blue-500",
-        green: "focus-visible:ring-green-500 focus-visible:border-green-500",
-        purple: "focus-visible:ring-purple-500 focus-visible:border-purple-500",
-        orange: "focus-visible:ring-orange-500 focus-visible:border-orange-500",
-        pink: "focus-visible:ring-pink-500 focus-visible:border-pink-500",
-        indigo: "focus-visible:ring-indigo-500 focus-visible:border-indigo-500",
-        teal: "focus-visible:ring-teal-500 focus-visible:border-teal-500",
-        cyan: "focus-visible:ring-cyan-500 focus-visible:border-cyan-500",
-        yellow: "focus-visible:ring-yellow-500 focus-visible:border-yellow-500",
-        lime: "focus-visible:ring-lime-500 focus-visible:border-lime-500",
-        rose: "focus-visible:ring-rose-500 focus-visible:border-rose-500",
-        emerald: "focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
+        default: "focus-visible:border-blue-500 focus-visible:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]",
+        blue: "focus-visible:border-blue-500 focus-visible:shadow-[0_0_0_3px_rgba(59,130,246,0.15)]",
+        green: "focus-visible:border-green-500 focus-visible:shadow-[0_0_0_3px_rgba(34,197,94,0.15)]",
+        purple: "focus-visible:border-purple-500 focus-visible:shadow-[0_0_0_3px_rgba(147,51,234,0.15)]",
+        orange: "focus-visible:border-orange-500 focus-visible:shadow-[0_0_0_3px_rgba(249,115,22,0.15)]",
+        pink: "focus-visible:border-pink-500 focus-visible:shadow-[0_0_0_3px_rgba(236,72,153,0.15)]",
+        indigo: "focus-visible:border-indigo-500 focus-visible:shadow-[0_0_0_3px_rgba(99,102,241,0.15)]",
+        teal: "focus-visible:border-teal-500 focus-visible:shadow-[0_0_0_3px_rgba(20,184,166,0.15)]",
+        cyan: "focus-visible:border-cyan-500 focus-visible:shadow-[0_0_0_3px_rgba(8,145,178,0.15)]",
+        yellow: "focus-visible:border-yellow-500 focus-visible:shadow-[0_0_0_3px_rgba(202,138,4,0.15)]",
+        lime: "focus-visible:border-lime-500 focus-visible:shadow-[0_0_0_3px_rgba(101,163,13,0.15)]",
+        rose: "focus-visible:border-rose-500 focus-visible:shadow-[0_0_0_3px_rgba(244,63,94,0.15)]",
+        emerald: "focus-visible:border-emerald-500 focus-visible:shadow-[0_0_0_3px_rgba(16,185,129,0.15)]"
       },
       size: {
         default: "h-10 px-3 py-2",

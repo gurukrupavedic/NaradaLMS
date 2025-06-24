@@ -21,23 +21,23 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const selectTriggerVariants = cva(
-  "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+  "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 transition-all duration-200",
   {
     variants: {
       variant: {
-        default: "focus:ring-ring",
-        blue: "focus:ring-blue-500 focus:border-blue-500",
-        green: "focus:ring-green-500 focus:border-green-500",
-        purple: "focus:ring-purple-500 focus:border-purple-500",
-        orange: "focus:ring-orange-500 focus:border-orange-500",
-        pink: "focus:ring-pink-500 focus:border-pink-500",
-        indigo: "focus:ring-indigo-500 focus:border-indigo-500",
-        teal: "focus:ring-teal-500 focus:border-teal-500",
-        cyan: "focus:ring-cyan-500 focus:border-cyan-500",
-        yellow: "focus:ring-yellow-500 focus:border-yellow-500",
-        lime: "focus:ring-lime-500 focus:border-lime-500",
-        rose: "focus:ring-rose-500 focus:border-rose-500",
-        emerald: "focus:ring-emerald-500 focus:border-emerald-500"
+        default: "focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]",
+        blue: "focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.15)]",
+        green: "focus:border-green-500 focus:shadow-[0_0_0_3px_rgba(34,197,94,0.15)]",
+        purple: "focus:border-purple-500 focus:shadow-[0_0_0_3px_rgba(147,51,234,0.15)]",
+        orange: "focus:border-orange-500 focus:shadow-[0_0_0_3px_rgba(249,115,22,0.15)]",
+        pink: "focus:border-pink-500 focus:shadow-[0_0_0_3px_rgba(236,72,153,0.15)]",
+        indigo: "focus:border-indigo-500 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)]",
+        teal: "focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(20,184,166,0.15)]",
+        cyan: "focus:border-cyan-500 focus:shadow-[0_0_0_3px_rgba(8,145,178,0.15)]",
+        yellow: "focus:border-yellow-500 focus:shadow-[0_0_0_3px_rgba(202,138,4,0.15)]",
+        lime: "focus:border-lime-500 focus:shadow-[0_0_0_3px_rgba(101,163,13,0.15)]",
+        rose: "focus:border-rose-500 focus:shadow-[0_0_0_3px_rgba(244,63,94,0.15)]",
+        emerald: "focus:border-emerald-500 focus:shadow-[0_0_0_3px_rgba(16,185,129,0.15)]"
       }
     },
     defaultVariants: {
