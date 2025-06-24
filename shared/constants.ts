@@ -30,3 +30,11 @@ export const FILE_UPLOAD = {
   maxSize: 100 * 1024 * 1024, // 100MB
   allowedTypes: ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/m4a']
 };
+
+// UI Constants
+export const SCRIPTS = ['te', 'hi', 'en'] as const;
+export const SCRIPT_LABELS = {
+  te: 'Telugu',
+  hi: 'Hindi',
+  en: 'English'
+} as const;
