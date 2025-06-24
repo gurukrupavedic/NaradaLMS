@@ -980,6 +980,7 @@ export function DesignSystemShowcase() {
               variant={dialogVariant}
               size={dialogSize}
               props={{ showCloseButton: true, destructive: false }}
+              allSizes={getComponentConfig("Dialog")?.sizes || ["sm", "md", "lg", "xl"]}
               onVariantChange={setDialogVariant}
               onSizeChange={setDialogSize}
             >

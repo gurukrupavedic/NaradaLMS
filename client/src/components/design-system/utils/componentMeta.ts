@@ -221,6 +221,15 @@ export const componentConfigs: Record<string, ComponentConfig> = {
     commonProps: ["showStatus", "name"],
     description: "User profile avatars with status indicators",
     category: "core"
+  },
+
+  Dialog: {
+    name: "Dialog",
+    variants: colorVariants,
+    sizes: sizeOptions.full,
+    commonProps: ["showCloseButton", "destructive"],
+    description: "Modal dialogs for forms and confirmations",
+    category: "specialized"
   }
 };
 
