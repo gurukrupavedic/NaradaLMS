@@ -1,16 +1,16 @@
 /**
  * LMS Text Segment Component - Vedic LMS Design System
  * 
- * Specialized text segment cards for ChapterEditor with proper interactive states,
- * numbering pills, action icons, and content-only display (no artificial titles).
+ * Clean, visual-first text segment cards for ChapterEditor with minimal UI clutter.
+ * Follows modern design principles: actionable hover icons, pure visual states.
  * 
  * Features:
- * - Content-only display (no titles/names)
- * - Interactive states: static, dragging, selected
- * - Numbering pill for segment order
- * - Delete and mapping status icons
- * - 24-color variant system with inspector integration
- * - Proper LMS-specific design patterns
+ * - Visual-only status indicators (no text labels)
+ * - Clean interactive states: static, dragging, selected
+ * - Subtle mapping state background tint
+ * - Functional hover icons (mapping toggle, delete)
+ * - Content-only display with numbered pills
+ * - 24-color variant system integration
  * 
  * @author Vedic LMS Design System
  * @since 2025-06-24
@@ -26,7 +26,7 @@ const textSegmentVariants = cva(
   {
     variants: {
       variant: {
-        // 24-color system variants
+        // 24-color system variants with enhanced visual feedback
         blue: "border-l-4 border-l-blue-500 border-gray-200 hover:border-l-blue-600 hover:bg-blue-50/30 hover:shadow-md",
         green: "border-l-4 border-l-green-500 border-gray-200 hover:border-l-green-600 hover:bg-green-50/30 hover:shadow-md",
         purple: "border-l-4 border-l-purple-500 border-gray-200 hover:border-l-purple-600 hover:bg-purple-50/30 hover:shadow-md",
@@ -40,6 +40,11 @@ const textSegmentVariants = cva(
         rose: "border-l-4 border-l-rose-500 border-gray-200 hover:border-l-rose-600 hover:bg-rose-50/30 hover:shadow-md",
         emerald: "border-l-4 border-l-emerald-500 border-gray-200 hover:border-l-emerald-600 hover:bg-emerald-50/30 hover:shadow-md",
         gray: "border-l-4 border-l-gray-400 border-gray-200 hover:border-l-gray-500 hover:bg-gray-50 hover:shadow-md"
+      },
+      mappingState: {
+        // Visual indicators for mapping status
+        mapped: "bg-green-50/20 border-l-green-500",
+        unmapped: "border-l-gray-400"
       },
       state: {
         static: "",
@@ -136,6 +141,14 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
       }
     };
 
+    // Build dynamic className for mapping state visual feedback
+    const mappingStateClass = isMapped ? "bg-green-50/20" : "";
+    const combinedClassName = cn(
+      textSegmentVariants({ variant, state: finalState, size }),
+      mappingStateClass,
+      className
+    );
+
     const handleDeleteClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       onDelete?.();
@@ -149,7 +162,7 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
     return (
       <div
         ref={ref}
-        className={cn(textSegmentVariants({ variant, state: finalState, size }), className)}
+        className={combinedClassName}
         onClick={handleClick}
         {...props}
       >
@@ -200,23 +213,7 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
           {truncatedContent}
         </div>
 
-        {/* Status Footer (optional visual indicator) */}
-        {(isSelected || isMapped) && (
-          <div className="mt-3 flex items-center gap-2 text-xs">
-            {isSelected && (
-              <div className="flex items-center gap-1 text-blue-600">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span>Selected</span>
-              </div>
-            )}
-            {isMapped && (
-              <div className="flex items-center gap-1 text-green-600">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Mapped</span>
-              </div>
-            )}
-          </div>
-        )}
+
       </div>
     );
   }

@@ -1161,9 +1161,21 @@ export function DesignSystemShowcase() {
                     <div className="flex-1">
                       <TextSegment
                         variant="green"
-                        content="Modern gradient selection with subtle glow effect"
+                        content="Clean selection with gradient background"
                         segmentNumber={2}
                         isSelected={true}
+                        size="sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-600 w-16 font-medium">Mapped:</span>
+                    <div className="flex-1">
+                      <TextSegment
+                        variant="blue"
+                        content="Mapped to audio with green background tint"
+                        segmentNumber={4}
+                        isMapped={true}
                         size="sm"
                       />
                     </div>
