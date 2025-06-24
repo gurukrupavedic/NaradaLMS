@@ -28,29 +28,29 @@ const badgeVariants = cva(
         destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground border",
         
-        // Solid Style - Rich backgrounds with white text
-        blue: "border-transparent bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md",
-        green: "border-transparent bg-green-600 text-white hover:bg-green-700 shadow-sm hover:shadow-md",
-        purple: "border-transparent bg-purple-600 text-white hover:bg-purple-700 shadow-sm hover:shadow-md",
-        orange: "border-transparent bg-orange-600 text-white hover:bg-orange-700 shadow-sm hover:shadow-md",
-        pink: "border-transparent bg-pink-600 text-white hover:bg-pink-700 shadow-sm hover:shadow-md",
-        indigo: "border-transparent bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm hover:shadow-md",
-        teal: "border-transparent bg-teal-600 text-white hover:bg-teal-700 shadow-sm hover:shadow-md",
-        cyan: "border-transparent bg-cyan-600 text-white hover:bg-cyan-700 shadow-sm hover:shadow-md",
-        yellow: "border-transparent bg-yellow-600 text-white hover:bg-yellow-700 shadow-sm hover:shadow-md",
-        lime: "border-transparent bg-lime-600 text-white hover:bg-lime-700 shadow-sm hover:shadow-md",
-        rose: "border-transparent bg-rose-600 text-white hover:bg-rose-700 shadow-sm hover:shadow-md",
-        emerald: "border-transparent bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm hover:shadow-md"
+        // Refined Style - Subtle backgrounds with rich text
+        blue: "border-transparent bg-blue-100/70 text-blue-700 hover:bg-blue-200/80 hover:text-blue-800",
+        green: "border-transparent bg-green-100/70 text-green-700 hover:bg-green-200/80 hover:text-green-800",
+        purple: "border-transparent bg-purple-100/70 text-purple-700 hover:bg-purple-200/80 hover:text-purple-800",
+        orange: "border-transparent bg-orange-100/70 text-orange-700 hover:bg-orange-200/80 hover:text-orange-800",
+        pink: "border-transparent bg-pink-100/70 text-pink-700 hover:bg-pink-200/80 hover:text-pink-800",
+        indigo: "border-transparent bg-indigo-100/70 text-indigo-700 hover:bg-indigo-200/80 hover:text-indigo-800",
+        teal: "border-transparent bg-teal-100/70 text-teal-700 hover:bg-teal-200/80 hover:text-teal-800",
+        cyan: "border-transparent bg-cyan-100/70 text-cyan-700 hover:bg-cyan-200/80 hover:text-cyan-800",
+        yellow: "border-transparent bg-yellow-100/70 text-yellow-700 hover:bg-yellow-200/80 hover:text-yellow-800",
+        lime: "border-transparent bg-lime-100/70 text-lime-700 hover:bg-lime-200/80 hover:text-lime-800",
+        rose: "border-transparent bg-rose-100/70 text-rose-700 hover:bg-rose-200/80 hover:text-rose-800",
+        emerald: "border-transparent bg-emerald-100/70 text-emerald-700 hover:bg-emerald-200/80 hover:text-emerald-800"
       },
       style: {
         // Style 1: Classic rounded with subtle shadow
         classic: "rounded-full px-2.5 py-0.5 text-xs border-transparent",
         
-        // Style 2: Modern pill with gradient and glow
-        modern: "rounded-full px-3 py-1 text-xs bg-gradient-to-r shadow-lg hover:shadow-xl hover:scale-105 border-transparent",
+        // Style 2: Modern pill with subtle gradient 
+        modern: "rounded-full px-3 py-1 text-xs bg-gradient-to-r shadow-sm hover:shadow-md hover:scale-[1.02] border-transparent",
         
-        // Style 3: Sharp rectangular with border accent
-        sharp: "rounded-md px-2 py-1 text-xs border-l-4 bg-opacity-10 border-current"
+        // Style 3: Sharp rectangular with subtle border accent
+        sharp: "rounded-md px-2 py-1 text-xs border-l-2 bg-opacity-60"
       },
       size: {
         sm: "text-xs px-2 py-0.5",
@@ -59,66 +59,66 @@ const badgeVariants = cva(
       }
     },
     compoundVariants: [
-      // Modern style gets gradient backgrounds and enhanced effects
+      // Modern style gets subtle gradient backgrounds 
       {
         style: "modern",
         variant: "blue",
-        class: "from-blue-500 to-blue-700 shadow-blue-500/25 hover:shadow-blue-500/40"
+        class: "from-blue-400/80 to-blue-500/80 text-white shadow-blue-500/15 hover:shadow-blue-500/25"
       },
       {
         style: "modern", 
         variant: "green",
-        class: "from-green-500 to-green-700 shadow-green-500/25 hover:shadow-green-500/40"
+        class: "from-green-400/80 to-green-500/80 text-white shadow-green-500/15 hover:shadow-green-500/25"
       },
       {
         style: "modern",
         variant: "purple", 
-        class: "from-purple-500 to-purple-700 shadow-purple-500/25 hover:shadow-purple-500/40"
+        class: "from-purple-400/80 to-purple-500/80 text-white shadow-purple-500/15 hover:shadow-purple-500/25"
       },
       {
         style: "modern",
         variant: "orange",
-        class: "from-orange-500 to-orange-700 shadow-orange-500/25 hover:shadow-orange-500/40"
+        class: "from-orange-400/80 to-orange-500/80 text-white shadow-orange-500/15 hover:shadow-orange-500/25"
       },
       {
         style: "modern",
         variant: "pink",
-        class: "from-pink-500 to-pink-700 shadow-pink-500/25 hover:shadow-pink-500/40"
+        class: "from-pink-400/80 to-pink-500/80 text-white shadow-pink-500/15 hover:shadow-pink-500/25"
       },
       {
         style: "modern",
         variant: "indigo", 
-        class: "from-indigo-500 to-indigo-700 shadow-indigo-500/25 hover:shadow-indigo-500/40"
+        class: "from-indigo-400/80 to-indigo-500/80 text-white shadow-indigo-500/15 hover:shadow-indigo-500/25"
       },
       {
         style: "modern",
         variant: "teal",
-        class: "from-teal-500 to-teal-700 shadow-teal-500/25 hover:shadow-teal-500/40"
+        class: "from-teal-400/80 to-teal-500/80 text-white shadow-teal-500/15 hover:shadow-teal-500/25"
       },
       {
         style: "modern",
         variant: "cyan",
-        class: "from-cyan-500 to-cyan-700 shadow-cyan-500/25 hover:shadow-cyan-500/40"
+        class: "from-cyan-400/80 to-cyan-500/80 text-white shadow-cyan-500/15 hover:shadow-cyan-500/25"
       },
       {
         style: "modern",
         variant: "yellow",
-        class: "from-yellow-500 to-yellow-700 shadow-yellow-500/25 hover:shadow-yellow-500/40"
+        class: "from-yellow-400/80 to-yellow-500/80 text-white shadow-yellow-500/15 hover:shadow-yellow-500/25"
       },
       {
         style: "modern",
         variant: "lime",
-        class: "from-lime-500 to-lime-700 shadow-lime-500/25 hover:shadow-lime-500/40"
+        class: "from-lime-400/80 to-lime-500/80 text-white shadow-lime-500/15 hover:shadow-lime-500/25"
       },
       {
         style: "modern",
         variant: "rose",
-        class: "from-rose-500 to-rose-700 shadow-rose-500/25 hover:shadow-rose-500/40"
+        class: "from-rose-400/80 to-rose-500/80 text-white shadow-rose-500/15 hover:shadow-rose-500/25"
       },
       {
         style: "modern",
         variant: "emerald",
-        class: "from-emerald-500 to-emerald-700 shadow-emerald-500/25 hover:shadow-emerald-500/40"
+        class: "from-emerald-400/80 to-emerald-500/80 text-white shadow-emerald-500/15 hover:shadow-emerald-500/25"
       },
       
       // Sharp style gets subtle backgrounds with accent borders
