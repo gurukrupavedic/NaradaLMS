@@ -23,6 +23,7 @@ export interface ComponentInspectorProps {
   onVariantChange?: (variant: string) => void;
   onSizeChange?: (size: string) => void;
   onIconChange?: (icon: string) => void;
+  onPropsChange?: (props: Record<string, any>) => void;
   className?: string;
 }
 
@@ -37,6 +38,7 @@ export interface ComponentCardProps {
   allSizes?: string[];
   onVariantChange?: (variant: string) => void;
   onSizeChange?: (size: string) => void;
+  onPropsChange?: (props: Record<string, any>) => void;
   showInspector?: boolean;
   children: React.ReactNode;
   className?: string;
@@ -48,6 +50,33 @@ const colorVariants = [
 ];
 
 const defaultSizeOptions = ["sm", "md", "lg"];
+
+// Define toggleable props for each component
+function getToggleableProps(componentName: string): string[] {
+  const propMap: Record<string, string[]> = {
+    Button: ["disabled", "loading"],
+    Input: ["disabled"],
+    Textarea: ["disabled"],
+    Select: ["disabled"],
+    Checkbox: ["disabled"],
+    Radio: ["disabled"],
+    Switch: ["disabled"],
+    Badge: ["interactive"],
+    Progress: ["striped"],
+    Table: ["striped", "hoverable"],
+    Breadcrumb: ["showHome"],
+    Tabs: [],
+    Alert: [],
+    Card: ["interactive"],
+    Tooltip: [],
+    Slider: ["showValue", "disabled"],
+    AudioSlider: ["showVolume"],
+    ProgressSlider: ["showPercentage"],
+    TextSegment: ["isMapped", "showActions"]
+  };
+  
+  return propMap[componentName] || [];
+}
 
 // Color mapping for visual indicators
 const colorMap: Record<string, string> = {
@@ -112,6 +141,7 @@ export function ComponentInspector({
   onVariantChange,
   onSizeChange,
   onIconChange,
+  onPropsChange,
   className = ""
 }: ComponentInspectorProps) {
   
@@ -223,15 +253,35 @@ export function ComponentInspector({
       )}
 
       {/* Props Display */}
-      {showProps && notableProps.length > 0 && (
+      {showProps && (
         <div className="space-y-2 pt-2 border-t border-gray-200">
           <p className="text-xs font-medium text-gray-600">Active Properties:</p>
           <div className="flex flex-wrap gap-1">
-            {notableProps.map(([key, value]) => (
-              <Badge key={key} variant="green" size="sm">
-                {key}
-              </Badge>
-            ))}
+            {getToggleableProps(componentName).map((propName) => {
+              const isActive = props[propName] === true;
+              return (
+                <button
+                  key={propName}
+                  onClick={() => {
+                    if (onPropsChange) {
+                      onPropsChange({
+                        ...props,
+                        [propName]: !isActive
+                      });
+                    }
+                  }}
+                  className={`
+                    px-2 py-1 text-xs font-medium rounded transition-all duration-150
+                    ${isActive 
+                      ? 'bg-green-600 text-white shadow-sm' 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border'
+                    }
+                  `}
+                >
+                  {propName}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -256,6 +306,7 @@ export function ComponentCard({
   allSizes = defaultSizeOptions,
   onVariantChange,
   onSizeChange,
+  onPropsChange,
   showInspector = true,
   children,
   className = ""
@@ -287,6 +338,7 @@ export function ComponentCard({
             allSizes={allSizes}
             onVariantChange={onVariantChange}
             onSizeChange={onSizeChange}
+            onPropsChange={onPropsChange}
           />
         </div>
       )}
