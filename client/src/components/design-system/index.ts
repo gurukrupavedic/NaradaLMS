@@ -14,6 +14,7 @@ export * from './foundation';
 // Core components
 export * from './Card';
 export * from './Button';
+export * from './Input';
 
 // Showcase component
 export { DesignSystemShowcase } from './DesignSystemShowcase';
@@ -21,3 +22,4 @@ export { DesignSystemShowcase } from './DesignSystemShowcase';
 // Type definitions
 export type { CardProps } from './Card';
 export type { ButtonProps } from './Button';
+export type { InputProps } from './Input';

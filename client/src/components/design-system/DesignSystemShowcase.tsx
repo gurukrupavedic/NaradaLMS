@@ -11,7 +11,8 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./Card";
 import { Button } from "./Button";
-import { BookOpen, Edit, Music, Play, Save, Trash2 } from "lucide-react";
+import { Input } from "./Input";
+import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail } from "lucide-react";
 
 export function DesignSystemShowcase() {
   const [selectedVariant, setSelectedVariant] = useState<string>("blue");
@@ -20,6 +21,22 @@ export function DesignSystemShowcase() {
     "blue", "green", "purple", "orange", "pink", "indigo", 
     "teal", "cyan", "yellow", "lime", "rose", "emerald"
   ];
+
+  // Color mapping for swatches (using actual hex values)
+  const colorMap: Record<string, string> = {
+    blue: "#3b82f6",
+    green: "#22c55e", 
+    purple: "#a855f7",
+    orange: "#f97316",
+    pink: "#ec4899",
+    indigo: "#6366f1",
+    teal: "#14b8a6",
+    cyan: "#06b6d4",
+    yellow: "#eab308",
+    lime: "#84cc16",
+    rose: "#f43f5e",
+    emerald: "#10b981"
+  };
 
   const educationalVariants = [
     "lesson", "progress", "content", "feature", "audio", "text", "assessment", "track"
@@ -53,7 +70,10 @@ export function DesignSystemShowcase() {
                     : 'border-gray-200 hover:border-gray-400'
                 }`}
               >
-                <div className={`w-full h-8 rounded bg-${variant}-500 mb-2`}></div>
+                <div 
+                  className="w-full h-8 rounded mb-2" 
+                  style={{ backgroundColor: colorMap[variant] }}
+                ></div>
                 <div className="text-xs font-medium">{variant}</div>
               </button>
             ))}
@@ -71,7 +91,10 @@ export function DesignSystemShowcase() {
               <Card variant={selectedVariant as any} interactive glow="subtle">
                 <CardHeader className="text-center">
                   <div className="mx-auto mb-4">
-                    <BookOpen className={`h-12 w-12 text-${selectedVariant}-600`} />
+                    <BookOpen 
+                      className="h-12 w-12" 
+                      style={{ color: colorMap[selectedVariant] }}
+                    />
                   </div>
                   <CardTitle className="text-lg">Learning</CardTitle>
                   <CardDescription>
@@ -88,7 +111,10 @@ export function DesignSystemShowcase() {
               <Card variant={selectedVariant as any} interactive glow="subtle">
                 <CardHeader className="text-center">
                   <div className="mx-auto mb-4">
-                    <Edit className={`h-12 w-12 text-${selectedVariant}-600`} />
+                    <Edit 
+                      className="h-12 w-12" 
+                      style={{ color: colorMap[selectedVariant] }}
+                    />
                   </div>
                   <CardTitle className="text-lg">Manage Content</CardTitle>
                   <CardDescription>
@@ -105,7 +131,10 @@ export function DesignSystemShowcase() {
               <Card variant={selectedVariant as any} interactive glow="subtle">
                 <CardHeader className="text-center">
                   <div className="mx-auto mb-4">
-                    <Music className={`h-12 w-12 text-${selectedVariant}-600`} />
+                    <Music 
+                      className="h-12 w-12" 
+                      style={{ color: colorMap[selectedVariant] }}
+                    />
                   </div>
                   <CardTitle className="text-lg">Audio Content</CardTitle>
                   <CardDescription>
@@ -135,6 +164,47 @@ export function DesignSystemShowcase() {
                   </CardHeader>
                 </Card>
               ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Input Components Showcase */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Input Components</h2>
+          
+          {/* Input Variants */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Focus Color Variants</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Input variant="blue" placeholder="Blue focus ring" />
+              <Input variant="green" placeholder="Green focus ring" />
+              <Input variant="purple" placeholder="Purple focus ring" />
+              <Input variant="orange" placeholder="Orange focus ring" />
+              <Input variant="pink" placeholder="Pink focus ring" />
+              <Input variant="indigo" placeholder="Indigo focus ring" />
+            </div>
+          </div>
+
+          {/* Educational Input Variants */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Educational Input Types</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Search Lessons</label>
+                <Input educational="search" placeholder="Search for lessons..." />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Chapter Title</label>
+                <Input educational="title" placeholder="Enter chapter title" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Content Description</label>
+                <Input educational="description" placeholder="Describe the content" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Student Email</label>
+                <Input educational="email" type="email" placeholder="student@example.com" />
+              </div>
             </div>
           </div>
         </div>
