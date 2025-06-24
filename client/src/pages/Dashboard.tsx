@@ -7,10 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Clock, BookOpen, TrendingUp, Target } from 'lucide-react';
 import type { TrackWithChapters } from '@shared/schema';
 
-interface DashboardProps {
-  onTrackSelect: (trackId: number) => void;
-  onChapterSelect: (chapterId: number) => void;
-}
+import { DashboardProps } from '@shared/types';
 
 export function Dashboard({ onTrackSelect, onChapterSelect }: DashboardProps) {
   const { data: tracks, isLoading } = useQuery<TrackWithChapters[]>({

@@ -12,14 +12,7 @@ import { Plus, FileText, ArrowLeft } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TrackCard, ConfirmationModal } from "@/components/content-management";
 
-interface Track {
-  id: number;
-  title: string;
-  description: string;
-  order: number;
-  chapterCount: number;
-  lastModified: string;
-}
+import { TrackWithChapters } from '@shared/types';
 
 export function ContentManagement() {
   const [location, setLocation] = useLocation();
