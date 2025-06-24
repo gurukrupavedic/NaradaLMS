@@ -906,123 +906,80 @@ export function DesignSystemShowcase() {
               allSizes={[]}
               onVariantChange={setTooltipVariant}
             >
-              <div className="space-y-8">
-                {/* Educational Context Demos */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-gray-700">LMS Context Examples</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <SimpleTooltip
-                      content="Upload audio files to sync with text segments for enhanced learning"
-                      educational="audio"
-                      side="top"
-                    >
-                      <Button variant="orange" size="sm" className="w-full">
-                        🎵 Audio Upload
-                      </Button>
-                    </SimpleTooltip>
-                    
-                    <SimpleTooltip
-                      content="This feature is in beta - help us improve by providing feedback"
-                      educational="beta"
-                      side="top"
-                    >
-                      <Button variant="orange" size="sm" className="w-full">
-                        ⚡ Auto-Sync (Beta)
-                      </Button>
-                    </SimpleTooltip>
-                    
-                    <SimpleTooltip
-                      content="Press Ctrl+S to quickly save your chapter edits"
-                      educational="shortcut"
-                      side="bottom"
-                    >
-                      <Button variant="indigo" size="sm" className="w-full">
-                        💾 Save Chapter
-                      </Button>
-                    </SimpleTooltip>
-                    
-                    <SimpleTooltip
-                      content="Caution: Publishing makes content visible to all students immediately"
-                      educational="warning"
-                      side="bottom"
-                    >
-                      <Button variant="yellow" size="sm" className="w-full text-gray-900">
-                        ⚠️ Publish Content
-                      </Button>
-                    </SimpleTooltip>
-                  </div>
+              <div className="space-y-6">
+                {/* Interactive Tooltip with Inspector */}
+                <div className="text-center space-y-3">
+                  <SimpleTooltip
+                    content={`Dynamic tooltip adapting to ${tooltipVariant} variant from inspector`}
+                    variant={tooltipVariant as any}
+                    side="top"
+                  >
+                    <div className="inline-block p-4 bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl border border-gray-200/60 hover:shadow-lg transition-all duration-200 cursor-help">
+                      <div className="text-sm font-medium text-gray-700">Interactive Element</div>
+                      <div className="text-xs text-gray-500 mt-1">Hover to see {tooltipVariant} tooltip</div>
+                    </div>
+                  </SimpleTooltip>
                 </div>
 
-                {/* Interactive Variant Demo */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-gray-700">Interactive Color Variants</h4>
-                  <div className="flex flex-wrap gap-3">
-                    <SimpleTooltip
-                      content={`This tooltip changes color based on inspector selection (currently ${tooltipVariant})`}
-                      variant={tooltipVariant as any}
-                      side="top"
-                    >
-                      <Badge variant={tooltipVariant as any}>
-                        Hover Me
-                      </Badge>
-                    </SimpleTooltip>
-                    
-                    <SimpleTooltip
-                      content="Green variant for success states and positive actions"
-                      variant="green"
-                      side="top"
-                    >
-                      <Badge variant="green">Success</Badge>
-                    </SimpleTooltip>
-                    
-                    <SimpleTooltip
-                      content="Rose variant for delete actions and destructive operations"
-                      variant="rose"
-                      side="top"
-                    >
-                      <Badge variant="rose">Delete</Badge>
-                    </SimpleTooltip>
-                  </div>
+                {/* Elegant LMS Context Examples */}
+                <div className="grid grid-cols-2 gap-3">
+                  <SimpleTooltip
+                    content="Upload audio for chapter synchronization"
+                    educational="audio"
+                    side="top"
+                  >
+                    <div className="p-3 bg-orange-50 hover:bg-orange-100/70 rounded-lg border border-orange-200/60 hover:border-orange-300/80 transition-all duration-200 cursor-pointer hover:shadow-[0_4px_14px_rgba(251,146,60,0.15)]">
+                      <div className="text-sm font-medium text-orange-700">Audio Upload</div>
+                    </div>
+                  </SimpleTooltip>
+                  
+                  <SimpleTooltip
+                    content="Beta feature - provide feedback"
+                    educational="beta"
+                    side="top"
+                  >
+                    <div className="p-3 bg-orange-50 hover:bg-orange-100/70 rounded-lg border border-orange-200/60 hover:border-orange-300/80 transition-all duration-200 cursor-pointer hover:shadow-[0_4px_14px_rgba(251,146,60,0.15)]">
+                      <div className="text-sm font-medium text-orange-700">Auto-Sync (Beta)</div>
+                    </div>
+                  </SimpleTooltip>
+                  
+                  <SimpleTooltip
+                    content="Keyboard shortcut: Ctrl+S"
+                    educational="shortcut"
+                    side="bottom"
+                  >
+                    <div className="p-3 bg-indigo-50 hover:bg-indigo-100/70 rounded-lg border border-indigo-200/60 hover:border-indigo-300/80 transition-all duration-200 cursor-pointer hover:shadow-[0_4px_14px_rgba(99,102,241,0.15)]">
+                      <div className="text-sm font-medium text-indigo-700">Save Chapter</div>
+                    </div>
+                  </SimpleTooltip>
+                  
+                  <SimpleTooltip
+                    content="Warning: Makes content public instantly"
+                    educational="warning"
+                    side="bottom"
+                  >
+                    <div className="p-3 bg-yellow-50 hover:bg-yellow-100/70 rounded-lg border border-yellow-200/60 hover:border-yellow-300/80 transition-all duration-200 cursor-pointer hover:shadow-[0_4px_14px_rgba(234,179,8,0.15)]">
+                      <div className="text-sm font-medium text-yellow-700">Publish Content</div>
+                    </div>
+                  </SimpleTooltip>
                 </div>
 
-                {/* Positioning Demo */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-gray-700">Positioning Options</h4>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="flex justify-center">
-                      <SimpleTooltip
-                        content="Tooltip positioned above the element"
-                        variant="purple"
-                        side="top"
-                      >
-                        <Button variant="outline" size="sm">Top</Button>
+                {/* Clean Positioning Demo */}
+                <div className="relative">
+                  <div className="text-center space-y-3">
+                    <div className="text-xs font-medium text-gray-600 uppercase tracking-wide">Positioning Demo</div>
+                    <div className="flex justify-center gap-4">
+                      <SimpleTooltip content="Top positioned" variant="purple" side="top">
+                        <Badge variant="purple" className="cursor-help">Top</Badge>
                       </SimpleTooltip>
-                    </div>
-                    <div className="flex justify-center">
-                      <SimpleTooltip
-                        content="Tooltip positioned to the right"
-                        variant="teal"
-                        side="right"
-                      >
-                        <Button variant="outline" size="sm">Right</Button>
+                      <SimpleTooltip content="Right positioned" variant="teal" side="right">
+                        <Badge variant="teal" className="cursor-help">Right</Badge>
                       </SimpleTooltip>
-                    </div>
-                    <div className="flex justify-center">
-                      <SimpleTooltip
-                        content="Tooltip positioned below the element"
-                        variant="pink"
-                        side="bottom"
-                      >
-                        <Button variant="outline" size="sm">Bottom</Button>
+                      <SimpleTooltip content="Bottom positioned" variant="pink" side="bottom">
+                        <Badge variant="pink" className="cursor-help">Bottom</Badge>
                       </SimpleTooltip>
-                    </div>
-                    <div className="flex justify-center">
-                      <SimpleTooltip
-                        content="Tooltip positioned to the left"
-                        variant="cyan"
-                        side="left"
-                      >
-                        <Button variant="outline" size="sm">Left</Button>
+                      <SimpleTooltip content="Left positioned" variant="cyan" side="left">
+                        <Badge variant="cyan" className="cursor-help">Left</Badge>
                       </SimpleTooltip>
                     </div>
                   </div>
