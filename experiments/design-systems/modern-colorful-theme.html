@@ -26,16 +26,22 @@
         :root {
             --blue-modern: #3b82f6;
             --blue-light: #dbeafe;
+            --blue-fluorescent: #00bfff; /* Deep Sky Blue */
             --green-modern: #10b981;
             --green-light: #d1fae5;
+            --green-fluorescent: #00ff7f; /* Spring Green */
             --purple-modern: #8b5cf6;
             --purple-light: #ede9fe;
+            --purple-fluorescent: #9d4edd; /* Electric Purple */
             --orange-modern: #f59e0b;
             --orange-light: #fef3c7;
+            --orange-fluorescent: #ff6b35; /* Electric Orange */
             --pink-modern: #ec4899;
             --pink-light: #fce7f3;
+            --pink-fluorescent: #ff1493; /* Hot Pink */
             --indigo-modern: #6366f1;
             --indigo-light: #e0e7ff;
+            --indigo-fluorescent: #4169e1; /* Royal Blue */
         }
         
         /* Clean container */
@@ -65,49 +71,49 @@
         .feature-card.blue:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), 
                         0 0 0 1px rgba(59, 130, 246, 0.2), 
-                        0 0 10px rgba(59, 130, 246, 0.15),
-                        0 0 30px rgba(59, 130, 246, 0.08),
-                        0 0 50px rgba(59, 130, 246, 0.04);
+                        0 0 10px rgba(0, 191, 255, 0.15),
+                        0 0 30px rgba(0, 191, 255, 0.08),
+                        0 0 50px rgba(0, 191, 255, 0.04);
         }
         
         .feature-card.green:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), 
                         0 0 0 1px rgba(16, 185, 129, 0.2), 
-                        0 0 10px rgba(16, 185, 129, 0.15),
-                        0 0 30px rgba(16, 185, 129, 0.08),
-                        0 0 50px rgba(16, 185, 129, 0.04);
+                        0 0 10px rgba(0, 255, 127, 0.15),
+                        0 0 30px rgba(0, 255, 127, 0.08),
+                        0 0 50px rgba(0, 255, 127, 0.04);
         }
         
         .feature-card.purple:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), 
                         0 0 0 1px rgba(139, 92, 246, 0.2), 
-                        0 0 10px rgba(139, 92, 246, 0.15),
-                        0 0 30px rgba(139, 92, 246, 0.08),
-                        0 0 50px rgba(139, 92, 246, 0.04);
+                        0 0 10px rgba(157, 78, 221, 0.15),
+                        0 0 30px rgba(157, 78, 221, 0.08),
+                        0 0 50px rgba(157, 78, 221, 0.04);
         }
         
         .feature-card.orange:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), 
                         0 0 0 1px rgba(245, 158, 11, 0.2), 
-                        0 0 10px rgba(245, 158, 11, 0.15),
-                        0 0 30px rgba(245, 158, 11, 0.08),
-                        0 0 50px rgba(245, 158, 11, 0.04);
+                        0 0 10px rgba(255, 107, 53, 0.15),
+                        0 0 30px rgba(255, 107, 53, 0.08),
+                        0 0 50px rgba(255, 107, 53, 0.04);
         }
         
         .feature-card.pink:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), 
                         0 0 0 1px rgba(236, 72, 153, 0.2), 
-                        0 0 10px rgba(236, 72, 153, 0.15),
-                        0 0 30px rgba(236, 72, 153, 0.08),
-                        0 0 50px rgba(236, 72, 153, 0.04);
+                        0 0 10px rgba(255, 20, 147, 0.15),
+                        0 0 30px rgba(255, 20, 147, 0.08),
+                        0 0 50px rgba(255, 20, 147, 0.04);
         }
         
         .feature-card.indigo:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), 
                         0 0 0 1px rgba(99, 102, 241, 0.2), 
-                        0 0 10px rgba(99, 102, 241, 0.15),
-                        0 0 30px rgba(99, 102, 241, 0.08),
-                        0 0 50px rgba(99, 102, 241, 0.04);
+                        0 0 10px rgba(65, 105, 225, 0.15),
+                        0 0 30px rgba(65, 105, 225, 0.08),
+                        0 0 50px rgba(65, 105, 225, 0.04);
         }
         
         /* Color variants */
@@ -249,49 +255,49 @@
         [data-bs-theme="dark"] .feature-card.blue:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 
                         0 0 0 1px rgba(59, 130, 246, 0.3), 
-                        0 0 15px rgba(59, 130, 246, 0.2),
-                        0 0 40px rgba(59, 130, 246, 0.12),
-                        0 0 60px rgba(59, 130, 246, 0.06);
+                        0 0 15px rgba(0, 191, 255, 0.2),
+                        0 0 40px rgba(0, 191, 255, 0.12),
+                        0 0 60px rgba(0, 191, 255, 0.06);
         }
         
         [data-bs-theme="dark"] .feature-card.green:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 
                         0 0 0 1px rgba(16, 185, 129, 0.3), 
-                        0 0 15px rgba(16, 185, 129, 0.2),
-                        0 0 40px rgba(16, 185, 129, 0.12),
-                        0 0 60px rgba(16, 185, 129, 0.06);
+                        0 0 15px rgba(0, 255, 127, 0.2),
+                        0 0 40px rgba(0, 255, 127, 0.12),
+                        0 0 60px rgba(0, 255, 127, 0.06);
         }
         
         [data-bs-theme="dark"] .feature-card.purple:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 
                         0 0 0 1px rgba(139, 92, 246, 0.3), 
-                        0 0 15px rgba(139, 92, 246, 0.2),
-                        0 0 40px rgba(139, 92, 246, 0.12),
-                        0 0 60px rgba(139, 92, 246, 0.06);
+                        0 0 15px rgba(157, 78, 221, 0.2),
+                        0 0 40px rgba(157, 78, 221, 0.12),
+                        0 0 60px rgba(157, 78, 221, 0.06);
         }
         
         [data-bs-theme="dark"] .feature-card.orange:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 
                         0 0 0 1px rgba(245, 158, 11, 0.3), 
-                        0 0 15px rgba(245, 158, 11, 0.2),
-                        0 0 40px rgba(245, 158, 11, 0.12),
-                        0 0 60px rgba(245, 158, 11, 0.06);
+                        0 0 15px rgba(255, 107, 53, 0.2),
+                        0 0 40px rgba(255, 107, 53, 0.12),
+                        0 0 60px rgba(255, 107, 53, 0.06);
         }
         
         [data-bs-theme="dark"] .feature-card.pink:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 
                         0 0 0 1px rgba(236, 72, 153, 0.3), 
-                        0 0 15px rgba(236, 72, 153, 0.2),
-                        0 0 40px rgba(236, 72, 153, 0.12),
-                        0 0 60px rgba(236, 72, 153, 0.06);
+                        0 0 15px rgba(255, 20, 147, 0.2),
+                        0 0 40px rgba(255, 20, 147, 0.12),
+                        0 0 60px rgba(255, 20, 147, 0.06);
         }
         
         [data-bs-theme="dark"] .feature-card.indigo:hover {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 
                         0 0 0 1px rgba(99, 102, 241, 0.3), 
-                        0 0 15px rgba(99, 102, 241, 0.2),
-                        0 0 40px rgba(99, 102, 241, 0.12),
-                        0 0 60px rgba(99, 102, 241, 0.06);
+                        0 0 15px rgba(65, 105, 225, 0.2),
+                        0 0 40px rgba(65, 105, 225, 0.12),
+                        0 0 60px rgba(65, 105, 225, 0.06);
         }
         
         /* Smooth animations */
@@ -662,7 +668,7 @@
                             </div>
                         </div>
                         <p class="text-body-secondary mt-3 mb-0">
-                            <em>Modern, vibrant colors with subtle hover effects and elegant gradients - perfect for a contemporary LMS</em>
+                            <em>Modern, vibrant colors with fluorescent glow effects - bright, energetic, yet professional for a contemporary LMS</em>
                         </p>
                     </div>
                 </div>
