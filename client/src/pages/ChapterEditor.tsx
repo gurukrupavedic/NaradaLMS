@@ -726,7 +726,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   });
 
   const reorderSegmentsMutation = useMutation({
-    mutationFn: async (segments: any[]) => {
+    mutationFn: async (reorderedSegments: any[]) => {
       const segmentOrders = textSegments.map((segment, index) => ({
         id: segment.id,
         order: index
@@ -924,7 +924,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       const response = await apiRequest(
         "POST",
         "/api/media-segments/bulk",
-        { segments },
+        { segments: scriptSegments },
       );
       return response;
     },
@@ -1997,7 +1997,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     {textSegments.filter(s => s.script === contentScript).length} segments
                   </Badge>
                   <Badge variant="secondary" className="text-xs">
-                    {segments
+                    {textSegments
                       .filter(s => s.script === contentScript)
                       .filter(segment => 
                         allChapterMappings.some(mapping => mapping.segmentId === segment.id)
@@ -2042,8 +2042,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     onSegmentDelete={handleDeleteSegment}
                     onSegmentUpdate={handleUpdateSegment}
                     onPlayMapping={() => {}}
-                    onSegmentReorder={(segments) => {
-                      reorderSegmentsMutation.mutate(segments);
+                    onSegmentReorder={(reorderedSegments) => {
+                      reorderSegmentsMutation.mutate(reorderedSegments);
                     }}
                   />
                 </Panel>
@@ -2123,7 +2123,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   </div>
                 </div>
                 <Badge variant="secondary" className="text-xs">
-                  {segments
+                  {textSegments
                     .filter(s => s.script === contentScript)
                     .filter(segment => 
                       allChapterMappings.some(mapping => mapping.segmentId === segment.id)
@@ -2989,11 +2989,11 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     {/* Segment List */}
                     <div className="space-y-2">
                       <Label className="text-sm">
-                        Text Segments ({segments?.length || 0})
+                        Text Segments ({textSegments?.length || 0})
                       </Label>
                       <div className="max-h-64 overflow-y-auto space-y-2">
                         {textSegments && textSegments.length > 0 ? (
-                          segments.map((segment) => (
+                          textSegments.map((segment) => (
                             <div
                               key={segment.id}
                               className="p-3 border rounded-lg bg-white dark:bg-gray-800"
