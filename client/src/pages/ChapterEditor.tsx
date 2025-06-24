@@ -317,7 +317,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     console.log('ChapterEditor: Active tab changed to:', activeTab);
     console.log('ChapterEditor: chapterContent:', chapterContent);
     console.log('ChapterEditor: segments count:', textSegments.length);
-  }, [activeTab, textSegments.length]);
+  }, [activeTab, textSegments.length, chapterContent]);
 
   // === HELPER FUNCTIONS SECTION ===
 
