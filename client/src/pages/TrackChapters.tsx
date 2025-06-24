@@ -150,7 +150,7 @@ export default function TrackChapters() {
     moveChapterMutation.mutate({ chapterId, direction });
   };
 
-  if (isLoading) {
+  if (chaptersLoading) {
     return <div className="flex items-center justify-center h-screen">Loading chapters...</div>;
   }
 
