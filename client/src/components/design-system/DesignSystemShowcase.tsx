@@ -19,7 +19,11 @@ import { Alert, AlertTitle, AlertDescription } from "./Alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./Select";
 import { Avatar } from "./Avatar";
 import { TextSegment } from "./TextSegment";
-import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield } from "lucide-react";
+import { Textarea } from "./Textarea";
+import { Switch } from "./Switch";
+import { Tooltip, SimpleTooltip } from "./Tooltip";
+import { Loading } from "./Loading";
+import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, HelpCircle, Settings, Upload } from "lucide-react";
 
 export function DesignSystemShowcase() {
   const [selectedVariant, setSelectedVariant] = useState<string>("blue");
@@ -706,6 +710,180 @@ export function DesignSystemShowcase() {
                     size="sm"
                   />
                 ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Specialized Components Showcase */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Specialized Components</h2>
+          <p className="text-gray-600">Workflow-critical components for content creation and user interaction.</p>
+          
+          {/* Textarea Component */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Textarea - Content Creation</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Chapter Description</label>
+                <Textarea 
+                  educational="description"
+                  placeholder="Enter a detailed description of this chapter's content and learning objectives..."
+                  showCharCount
+                  maxLength={500}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Student Response</label>
+                <Textarea 
+                  educational="response"
+                  placeholder="Share your thoughts and reflections on this lesson..."
+                  size="lg"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Commentary Notes</label>
+                <Textarea 
+                  educational="commentary"
+                  placeholder="Add scholarly commentary and explanations..."
+                  size="sm"
+                  maxHeight={150}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Learning Instructions</label>
+                <Textarea 
+                  educational="instructions"
+                  placeholder="Provide clear instructions for students..."
+                  showCharCount
+                  maxLength={300}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Switch Component */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Switch - Feature Controls</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h4 className="font-medium">Content Publishing</h4>
+                <Switch 
+                  educational="published" 
+                  label="Publish Chapter"
+                  description="Make this chapter visible to students"
+                  defaultChecked
+                />
+                <Switch 
+                  educational="featured" 
+                  label="Featured Content"
+                  description="Highlight this chapter on the dashboard"
+                />
+                <Switch 
+                  educational="archived" 
+                  label="Archive Chapter"
+                  description="Move to archived content section"
+                />
+              </div>
+              <div className="space-y-4">
+                <h4 className="font-medium">User Preferences</h4>
+                <Switch 
+                  educational="notifications" 
+                  label="Email Notifications"
+                  description="Receive updates about course progress"
+                  defaultChecked
+                />
+                <Switch 
+                  educational="autoplay" 
+                  label="Audio Autoplay"
+                  description="Automatically play next audio segment"
+                />
+                <Switch 
+                  educational="captions" 
+                  label="Show Captions"
+                  description="Display text alongside audio playback"
+                  defaultChecked
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Tooltip Component */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Tooltip - Help & Guidance</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <SimpleTooltip content="Click to get help with this feature" educational="help">
+                <Button variant="outline-blue" size="sm">
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  Help
+                </Button>
+              </SimpleTooltip>
+              
+              <SimpleTooltip content="This feature is currently in beta testing" educational="beta" side="bottom">
+                <Button variant="outline-orange" size="sm">
+                  <Star className="h-4 w-4 mr-2" />
+                  Beta Feature
+                </Button>
+              </SimpleTooltip>
+              
+              <SimpleTooltip content="Use Ctrl+S to save your work quickly" educational="shortcut">
+                <Button variant="outline-purple" size="sm">
+                  <Save className="h-4 w-4 mr-2" />
+                  Save
+                </Button>
+              </SimpleTooltip>
+              
+              <SimpleTooltip content="Upload audio files in MP3 or WAV format" educational="tip" side="left">
+                <Button variant="outline-teal" size="sm">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload
+                </Button>
+              </SimpleTooltip>
+            </div>
+          </div>
+
+          {/* Loading Component */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Loading States - Processing Feedback</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-medium mb-3">Content Loading</h4>
+                <div className="border rounded-lg p-4">
+                  <Loading.Chapter educational="chapter" />
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium mb-3">Audio Processing</h4>
+                <div className="border rounded-lg p-4">
+                  <Loading.Audio />
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium mb-3">Upload Progress</h4>
+                <div className="border rounded-lg p-4 text-center">
+                  <Loading.Screen 
+                    message="Uploading audio files..." 
+                    educational="uploading"
+                    size="default"
+                  />
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium mb-3">Inline Spinners</h4>
+                <div className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Loading.Spinner educational="processing" size="sm" />
+                    <span className="text-sm">Processing content...</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Loading.Spinner educational="saving" size="default" />
+                    <span className="text-sm">Saving changes...</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Loading.Spinner educational="audio-processing" size="lg" />
+                    <span className="text-sm">Analyzing audio...</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

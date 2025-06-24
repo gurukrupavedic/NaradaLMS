@@ -23,6 +23,12 @@ export * from './Select';
 export * from './Avatar';
 export * from './TextSegment';
 
+// Specialized components
+export * from './Textarea';
+export * from './Switch';
+export * from './Tooltip';
+export * from './Loading';
+
 // Showcase component
 export { DesignSystemShowcase } from './DesignSystemShowcase';
 
@@ -37,3 +43,7 @@ export type { AlertProps } from './Alert';
 export type { SelectTriggerProps } from './Select';
 export type { AvatarProps } from './Avatar';
 export type { TextSegmentProps } from './TextSegment';
+export type { TextareaProps } from './Textarea';
+export type { SwitchProps } from './Switch';
+export type { TooltipContentProps } from './Tooltip';
+export type { SpinnerProps, SkeletonProps } from './Loading';
