@@ -30,6 +30,7 @@ import { Radio, RadioGroup, CommonRadioOptions } from "./Radio";
 import { Table, DataTable, LMSTableColumns } from "./Table";
 import { Slider, AudioSlider, ProgressSlider } from "./Slider";
 import { Breadcrumb, LMSBreadcrumbs } from "./Breadcrumb";
+import { AudioControls } from "./AudioControls";
 import { ComponentCard, ComponentInspector } from "./ComponentInspector";
 import { colorVariants, componentConfigs, getComponentConfig } from "./utils/componentMeta";
 import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, HelpCircle, Settings, Upload, Type, Volume2, Zap } from "lucide-react";
