@@ -46,7 +46,7 @@ const colorVariants = [
   "teal", "cyan", "yellow", "lime", "rose", "emerald"
 ];
 
-const sizeOptions = ["sm", "md", "lg", "xl"];
+const defaultSizeOptions = ["sm", "md", "lg"];
 
 // Color mapping for visual indicators
 const colorMap: Record<string, string> = {
