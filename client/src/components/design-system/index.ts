@@ -35,6 +35,11 @@ export * from './Loading';
 export * from './RichTextEditor';
 export * from './Dialog';
 
+// LMS-specific components
+export * from './Table';
+export * from './Slider';
+export * from './Breadcrumb';
+
 // Showcase component
 export { DesignSystemShowcase } from './DesignSystemShowcase';
 

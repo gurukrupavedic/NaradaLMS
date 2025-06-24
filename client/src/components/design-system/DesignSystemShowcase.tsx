@@ -27,6 +27,9 @@ import { RichTextEditor } from "./RichTextEditor";
 import { Dialog, ConfirmDialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from "./Dialog";
 import { Checkbox, CheckboxGroup } from "./Checkbox";
 import { Radio, RadioGroup, CommonRadioOptions } from "./Radio";
+import { Table, DataTable, LMSTableColumns } from "./Table";
+import { Slider, AudioSlider, ProgressSlider } from "./Slider";
+import { Breadcrumb, LMSBreadcrumbs } from "./Breadcrumb";
 import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, HelpCircle, Settings, Upload, Type } from "lucide-react";
 
 export function DesignSystemShowcase() {
@@ -35,10 +38,31 @@ export function DesignSystemShowcase() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [checkboxValue, setCheckboxValue] = useState<string[]>([]);
   const [radioValue, setRadioValue] = useState<string>("student");
+  const [sliderValue, setSliderValue] = useState(50);
+  const [audioCurrentTime, setAudioCurrentTime] = useState(30);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [selectedTableRows, setSelectedTableRows] = useState<string[]>([]);
   
   const colorVariants = [
     "blue", "green", "purple", "orange", "pink", "indigo", 
     "teal", "cyan", "yellow", "lime", "rose", "emerald"
+  ];
+
+  // Complete 24-color system (12 primary + 12 fluorescent)
+  const allColorVariants = [
+    // Primary colors
+    { name: "Blue", value: "blue", primary: "#3b82f6", fluorescent: "#00bfff" },
+    { name: "Green", value: "green", primary: "#10b981", fluorescent: "#00ff7f" },
+    { name: "Purple", value: "purple", primary: "#8b5cf6", fluorescent: "#9d4edd" },
+    { name: "Orange", value: "orange", primary: "#f59e0b", fluorescent: "#ff6b35" },
+    { name: "Pink", value: "pink", primary: "#ec4899", fluorescent: "#ff1493" },
+    { name: "Indigo", value: "indigo", primary: "#6366f1", fluorescent: "#4169e1" },
+    { name: "Teal", value: "teal", primary: "#14b8a6", fluorescent: "#00ced1" },
+    { name: "Cyan", value: "cyan", primary: "#06b6d4", fluorescent: "#00ffff" },
+    { name: "Yellow", value: "yellow", primary: "#eab308", fluorescent: "#ffff00" },
+    { name: "Lime", value: "lime", primary: "#65a30d", fluorescent: "#9aff00" },
+    { name: "Rose", value: "rose", primary: "#f43f5e", fluorescent: "#ff073a" },
+    { name: "Emerald", value: "emerald", primary: "#059669", fluorescent: "#00ff80" }
   ];
 
   // Color mapping for swatches (using actual hex values)
