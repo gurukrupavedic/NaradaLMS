@@ -18,7 +18,7 @@
         .devanagari { font-family: 'Noto Sans Devanagari', sans-serif; }
         body { 
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ffffff;
             min-height: 100vh;
         }
         
@@ -38,12 +38,11 @@
             --indigo-light: #e0e7ff;
         }
         
-        /* Glassmorphism container */
+        /* Clean container */
         .glass-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
         }
         
         /* Modern colorful cards */
@@ -151,12 +150,12 @@
         }
         
         [data-bs-theme="dark"] body {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            background: #0f172a;
         }
         
         [data-bs-theme="dark"] .glass-container {
-            background: rgba(30, 41, 59, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #1e293b;
+            border: 1px solid #334155;
         }
         
         [data-bs-theme="dark"] .feature-card {
