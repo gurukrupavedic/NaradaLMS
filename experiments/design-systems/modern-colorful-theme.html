@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Colorful Theme - Vedic LMS</title>
+    
+    <!-- Bootstrap 5.3.2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        .telugu { font-family: 'Noto Sans Telugu', sans-serif; }
+        .devanagari { font-family: 'Noto Sans Devanagari', sans-serif; }
+        body { 
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        /* Modern Colorful Theme Variables */
+        :root {
+            --blue-modern: #3b82f6;
+            --blue-light: #dbeafe;
+            --green-modern: #10b981;
+            --green-light: #d1fae5;
+            --purple-modern: #8b5cf6;
+            --purple-light: #ede9fe;
+            --orange-modern: #f59e0b;
+            --orange-light: #fef3c7;
+            --pink-modern: #ec4899;
+            --pink-light: #fce7f3;
+            --indigo-modern: #6366f1;
+            --indigo-light: #e0e7ff;
+        }
+        
+        /* Glassmorphism container */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Modern colorful cards */
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-color);
+            transition: height 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-card:hover::before {
+            height: 8px;
+        }
+        
+        /* Color variants */
+        .feature-card.blue { --accent-color: var(--blue-modern); }
+        .feature-card.green { --accent-color: var(--green-modern); }
+        .feature-card.purple { --accent-color: var(--purple-modern); }
+        .feature-card.orange { --accent-color: var(--orange-modern); }
+        .feature-card.pink { --accent-color: var(--pink-modern); }
+        .feature-card.indigo { --accent-color: var(--indigo-modern); }
+        
+        /* Icon backgrounds */
+        .icon-bg.blue { background: linear-gradient(135deg, var(--blue-light) 0%, rgba(59, 130, 246, 0.1) 100%); color: var(--blue-modern); }
+        .icon-bg.green { background: linear-gradient(135deg, var(--green-light) 0%, rgba(16, 185, 129, 0.1) 100%); color: var(--green-modern); }
+        .icon-bg.purple { background: linear-gradient(135deg, var(--purple-light) 0%, rgba(139, 92, 246, 0.1) 100%); color: var(--purple-modern); }
+        .icon-bg.orange { background: linear-gradient(135deg, var(--orange-light) 0%, rgba(245, 158, 11, 0.1) 100%); color: var(--orange-modern); }
+        .icon-bg.pink { background: linear-gradient(135deg, var(--pink-light) 0%, rgba(236, 72, 153, 0.1) 100%); color: var(--pink-modern); }
+        .icon-bg.indigo { background: linear-gradient(135deg, var(--indigo-light) 0%, rgba(99, 102, 241, 0.1) 100%); color: var(--indigo-modern); }
+        
+        /* Modern buttons */
+        .btn-modern {
+            border-radius: 12px;
+            font-weight: 500;
+            padding: 12px 24px;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .btn-modern.blue { background: var(--blue-modern); color: white; }
+        .btn-modern.blue:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3); }
+        
+        .btn-modern.green { background: var(--green-modern); color: white; }
+        .btn-modern.green:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3); }
+        
+        .btn-modern.purple { background: var(--purple-modern); color: white; }
+        .btn-modern.purple:hover { background: #7c3aed; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3); }
+        
+        /* Modern badges */
+        .badge-modern {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+        
+        .badge-modern.blue { background: var(--blue-light); color: var(--blue-modern); }
+        .badge-modern.green { background: var(--green-light); color: var(--green-modern); }
+        .badge-modern.purple { background: var(--purple-light); color: var(--purple-modern); }
+        .badge-modern.orange { background: var(--orange-light); color: var(--orange-modern); }
+        
+        /* Progress bars */
+        .progress-modern {
+            height: 8px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            overflow: hidden;
+        }
+        
+        .progress-bar-modern {
+            border-radius: 10px;
+            transition: width 0.6s ease;
+        }
+        
+        .progress-bar-modern.blue { background: linear-gradient(90deg, var(--blue-modern) 0%, #60a5fa 100%); }
+        .progress-bar-modern.green { background: linear-gradient(90deg, var(--green-modern) 0%, #34d399 100%); }
+        .progress-bar-modern.purple { background: linear-gradient(90deg, var(--purple-modern) 0%, #a78bfa 100%); }
+        
+        /* Dark mode adaptations */
+        [data-bs-theme="dark"] {
+            --blue-light: rgba(59, 130, 246, 0.1);
+            --green-light: rgba(16, 185, 129, 0.1);
+            --purple-light: rgba(139, 92, 246, 0.1);
+            --orange-light: rgba(245, 158, 11, 0.1);
+            --pink-light: rgba(236, 72, 153, 0.1);
+            --indigo-light: rgba(99, 102, 241, 0.1);
+        }
+        
+        [data-bs-theme="dark"] body {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        }
+        
+        [data-bs-theme="dark"] .glass-container {
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        [data-bs-theme="dark"] .feature-card {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Smooth animations */
+        * {
+            scroll-behavior: smooth;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modern Navigation -->
+    <nav class="glass-container rounded-0 border-0 shadow-lg">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center">
+                    <span class="fs-4 fw-bold text-primary">🎨 Modern Colorful Vedic LMS</span>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-outline-primary btn-sm" onclick="toggleTheme()">
+                        <span id="theme-icon">🌙</span>
+                        <span id="theme-text">Dark Mode</span>
+                    </button>
+                    <span class="badge-modern blue">Modern Design</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <!-- Hero Section -->
+        <div class="text-center mb-5 fade-in">
+            <h1 class="display-4 fw-bold mb-4">Modern & Colorful Design System</h1>
+            <p class="lead text-body-secondary mb-4">
+                Sleek, elegant, and vibrant - just like your dashboard tiles with subtle hover effects
+            </p>
+            <div class="devanagari fs-3 text-body-secondary mb-4">
+                स्वाध्यायान्मा प्रमदः । स्वाध्यायान्मा प्रमदः ।
+            </div>
+        </div>
+
+        <!-- Modern Dashboard Cards (Like Your Tiles) -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="h3 mb-4">Dashboard Features (Your Style)</h2>
+            </div>
+            
+            <!-- Learning Tracks -->
+            <div class="col-md-4 mb-4">
+                <div class="feature-card blue h-100">
+                    <div class="p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-bg blue rounded-3 p-3 me-3">
+                                <span class="fs-3">📚</span>
+                            </div>
+                            <div>
+                                <h5 class="fw-semibold mb-1">Learning Tracks</h5>
+                                <p class="text-body-secondary small mb-0">Browse and study content</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-light rounded-3 p-3 mb-3 text-center">
+                            <div class="display-6 fw-bold" style="color: var(--blue-modern);">3</div>
+                            <small class="text-body-secondary">Active Tracks</small>
+                        </div>
+                        
+                        <button class="btn btn-modern blue w-100">Explore Learning</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Management -->
+            <div class="col-md-4 mb-4">
+                <div class="feature-card green h-100">
+                    <div class="p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-bg green rounded-3 p-3 me-3">
+                                <span class="fs-3">✏️</span>
+                            </div>
+                            <div>
+                                <h5 class="fw-semibold mb-1">Content Management</h5>
+                                <p class="text-body-secondary small mb-0">Create and edit content</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-light rounded-3 p-3 mb-3 text-center">
+                            <div class="display-6 fw-bold" style="color: var(--green-modern);">28</div>
+                            <small class="text-body-secondary">Total Chapters</small>
+                        </div>
+                        
+                        <button class="btn btn-modern green w-100">Manage Content</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio Mapping -->
+            <div class="col-md-4 mb-4">
+                <div class="feature-card purple h-100">
+                    <div class="p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-bg purple rounded-3 p-3 me-3">
+                                <span class="fs-3">🎵</span>
+                            </div>
+                            <div>
+                                <h5 class="fw-semibold mb-1">Audio Mapping</h5>
+                                <p class="text-body-secondary small mb-0">Sync audio with text</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-light rounded-3 p-3 mb-3 text-center">
+                            <div class="display-6 fw-bold" style="color: var(--purple-modern);">89%</div>
+                            <small class="text-body-secondary">Complete</small>
+                        </div>
+                        
+                        <button class="btn btn-modern purple w-100">Map Audio</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Feature Cards -->
+        <div class="row mb-5">
+            <!-- Analytics -->
+            <div class="col-md-6 mb-4">
+                <div class="feature-card orange h-100">
+                    <div class="p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-bg orange rounded-3 p-3 me-3">
+                                <span class="fs-3">📊</span>
+                            </div>
+                            <div>
+                                <h5 class="fw-semibold mb-1">Analytics & Reports</h5>
+                                <p class="text-body-secondary small mb-0">Track learning progress</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-light rounded-3 p-3 mb-3">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="fw-bold" style="color: var(--orange-modern);">156</div>
+                                    <small class="text-body-secondary">Students</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="fw-bold" style="color: var(--orange-modern);">92%</div>
+                                    <small class="text-body-secondary">Completion</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="fw-bold" style="color: var(--orange-modern);">4.8</div>
+                                    <small class="text-body-secondary">Rating</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-modern blue w-100">View Analytics</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="col-md-6 mb-4">
+                <div class="feature-card pink h-100">
+                    <div class="p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-bg pink rounded-3 p-3 me-3">
+                                <span class="fs-3">⚙️</span>
+                            </div>
+                            <div>
+                                <h5 class="fw-semibold mb-1">System Settings</h5>
+                                <p class="text-body-secondary small mb-0">Configure your LMS</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-light rounded-3 p-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small">Theme Mode</span>
+                                <span class="badge-modern blue">Auto</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span class="small">Language</span>
+                                <span class="badge-modern green">Multi</span>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-modern purple w-100">Open Settings</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sacred Content with Modern Design -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="h3 mb-4">Sacred Texts - Modern Presentation</h2>
+            </div>
+            
+            <!-- Sanskrit Content -->
+            <div class="col-lg-6 mb-4">
+                <div class="feature-card blue">
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge-modern blue">Sanskrit - Śraddhā Sūktam</span>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-modern blue btn-sm py-1 px-3">Edit</button>
+                                <button class="btn btn-outline-primary btn-sm py-1 px-3">Audio</button>
+                            </div>
+                        </div>
+                        
+                        <div class="devanagari fs-5 lh-lg mb-3">
+                            श्रद्धाया॒ऽग्निः समि॑ध्यते । श्रद्धया॑ विन्दते ह॒विः ।<br>
+                            श्रद्धा॒म्भग॑स्य मू॒र्धनि॑ । वच॒सा-ऽऽवे॑दयामसि ।
+                        </div>
+                        
+                        <p class="text-body-secondary small fst-italic mb-3">
+                            "Through faith, the fire is kindled. Through faith, the offering is obtained."
+                        </p>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-2">
+                                <span class="badge-modern green">Mapped</span>
+                                <span class="badge-modern orange">Audio Ready</span>
+                            </div>
+                            <button class="btn btn-modern green btn-sm">Study Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Telugu Content -->
+            <div class="col-lg-6 mb-4">
+                <div class="feature-card purple">
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge-modern purple">Telugu - శ్రద్ధా సూక్తం</span>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-modern purple btn-sm py-1 px-3">Edit</button>
+                                <button class="btn btn-outline-secondary btn-sm py-1 px-3">Audio</button>
+                            </div>
+                        </div>
+                        
+                        <div class="telugu fs-5 lh-lg mb-3">
+                            శ్రద్ధాయాఽగ్నిః సమిధ్యతే । శ్రద్ధయా విందతే హవిః ।<br>
+                            శ్రద్ధాం భగస్య మూర్ధని । వచసాఽఽవేదయామసి ।
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-2">
+                                <span class="badge-modern orange">In Progress</span>
+                                <span class="badge-modern blue">Audio Available</span>
+                            </div>
+                            <button class="btn btn-modern purple btn-sm">Continue</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modern Progress Section -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="feature-card indigo">
+                    <div class="p-4">
+                        <h3 class="h4 mb-4">Learning Progress - Colorful & Modern</h3>
+                        
+                        <div class="row">
+                            <div class="col-lg-4 mb-4">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="fw-medium">Vaidika Nithya Karma</span>
+                                    <span class="text-body-secondary fw-medium">92%</span>
+                                </div>
+                                <div class="progress-modern mb-2">
+                                    <div class="progress-bar-modern blue" style="width: 92%"></div>
+                                </div>
+                                <small class="text-body-secondary">Almost complete - excellent progress!</small>
+                            </div>
+                            
+                            <div class="col-lg-4 mb-4">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="fw-medium">Śrī Rudram</span>
+                                    <span class="text-body-secondary fw-medium">65%</span>
+                                </div>
+                                <div class="progress-modern mb-2">
+                                    <div class="progress-bar-modern green" style="width: 65%"></div>
+                                </div>
+                                <small class="text-body-secondary">Good momentum - keep it up!</small>
+                            </div>
+                            
+                            <div class="col-lg-4 mb-4">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="fw-medium">Puruṣa Sūktam</span>
+                                    <span class="text-body-secondary fw-medium">23%</span>
+                                </div>
+                                <div class="progress-modern mb-2">
+                                    <div class="progress-bar-modern purple" style="width: 23%"></div>
+                                </div>
+                                <small class="text-body-secondary">Just getting started - great beginning!</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Color Palette Showcase -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="h3 mb-4">Modern Color Palette</h2>
+            </div>
+            
+            <div class="col-12">
+                <div class="feature-card blue">
+                    <div class="p-4">
+                        <h4 class="h5 mb-4">Sleek & Elegant Colors (Like Your Dashboard)</h4>
+                        <div class="row">
+                            <div class="col-md-2 mb-3">
+                                <div class="text-center">
+                                    <div class="rounded-3 p-4 mb-2" style="background: var(--blue-modern); color: white;">
+                                        <strong>Blue</strong>
+                                    </div>
+                                    <small class="text-body-secondary">#3b82f6</small>
+                                </div>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <div class="text-center">
+                                    <div class="rounded-3 p-4 mb-2" style="background: var(--green-modern); color: white;">
+                                        <strong>Green</strong>
+                                    </div>
+                                    <small class="text-body-secondary">#10b981</small>
+                                </div>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <div class="text-center">
+                                    <div class="rounded-3 p-4 mb-2" style="background: var(--purple-modern); color: white;">
+                                        <strong>Purple</strong>
+                                    </div>
+                                    <small class="text-body-secondary">#8b5cf6</small>
+                                </div>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <div class="text-center">
+                                    <div class="rounded-3 p-4 mb-2" style="background: var(--orange-modern); color: white;">
+                                        <strong>Orange</strong>
+                                    </div>
+                                    <small class="text-body-secondary">#f59e0b</small>
+                                </div>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <div class="text-center">
+                                    <div class="rounded-3 p-4 mb-2" style="background: var(--pink-modern); color: white;">
+                                        <strong>Pink</strong>
+                                    </div>
+                                    <small class="text-body-secondary">#ec4899</small>
+                                </div>
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <div class="text-center">
+                                    <div class="rounded-3 p-4 mb-2" style="background: var(--indigo-modern); color: white;">
+                                        <strong>Indigo</strong>
+                                    </div>
+                                    <small class="text-body-secondary">#6366f1</small>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-body-secondary mt-3 mb-0">
+                            <em>Modern, vibrant colors with subtle hover effects and elegant gradients - perfect for a contemporary LMS</em>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Theme Toggle Script -->
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            const isDark = html.getAttribute('data-bs-theme') === 'dark';
+            
+            if (isDark) {
+                html.setAttribute('data-bs-theme', 'light');
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark Mode';
+            } else {
+                html.setAttribute('data-bs-theme', 'dark');
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light Mode';
+            }
+        }
+        
+        // Add smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

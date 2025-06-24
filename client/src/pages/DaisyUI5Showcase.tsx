@@ -63,6 +63,12 @@ export function DaisyUI5Showcase() {
       highlight: "Design system comparison"
     },
     {
+      title: "Modern Colorful Theme",
+      description: "Sleek, elegant design with vibrant colors inspired by your dashboard tiles - blue, green, purple, orange, pink, indigo with subtle hover effects",
+      link: "/experiments/design-systems/modern-colorful-theme.html",
+      highlight: "Colorful & elegant"
+    },
+    {
       title: "Vedic Dashboard",
       description: "Complete dashboard redesign with autumn theme and Vedic aesthetic enhancements",
       link: "/experiments/02-vedic-dashboard.html",
