@@ -1101,34 +1101,81 @@ export function DesignSystemShowcase() {
             description="LMS text segmentation components"
             componentName="TextSegment"
             variant={textSegmentVariant}
-            props={{ selectable: true, mappable: true }}
+            size="md"
+            props={{ isMapped: false, showActions: true }}
             onVariantChange={setTextSegmentVariant}
-            allSizes={[]}
+            allSizes={["sm", "md", "lg"]}
           >
             <div className="space-y-4">
-              <TextSegment
-                variant={textSegmentVariant as any}
-                content="This is a sample text segment that would be used in the LMS for breaking down content into manageable pieces."
-                segmentId="seg-001"
-                isSelected={false}
-                isMapped={true}
-              />
-              
-              <TextSegment
-                variant="green"
-                content="Another segment showing different styling and mapping states for educational content organization."
-                segmentId="seg-002"
-                isSelected={true}
-                isMapped={false}
-              />
-              
-              <TextSegment
-                variant="purple"
-                content="Text segments can be mapped to audio timestamps for synchronized learning experiences."
-                segmentId="seg-003"
-                isSelected={false}
-                isMapped={true}
-              />
+              <div className="grid gap-4">
+                <TextSegment
+                  variant={textSegmentVariant as any}
+                  content="ॐ गं गणपतये नमः। शुक्लाम्बरधरं विष्णुं शशिवर्णं चतुर्भुजम्। प्रसन्नवदनं ध्यायेत् सर्वविघ्नोपशान्तये॥"
+                  segmentNumber={1}
+                  isMapped={true}
+                  isSelected={false}
+                />
+                
+                <TextSegment
+                  variant={textSegmentVariant as any}
+                  content="मूकं करोति वाचालं पङ्गुं लङ्घयते गिरिम्। यत्कृपा तमहं वन्दे परमानन्दमाधवम्॥"
+                  segmentNumber={2}
+                  isMapped={false}
+                  isSelected={true}
+                />
+                
+                <TextSegment
+                  variant={textSegmentVariant as any}
+                  content="सत्यं ज्ञानमनन्तं ब्रह्म। विज्ञानं आनन्दं ब्रह्म। सत्यं ब्रह्म। ज्ञानं ब्रह्म। आनन्दं ब्रह्म॥"
+                  segmentNumber={3}
+                  isMapped={true}
+                  isSelected={false}
+                />
+                
+                <TextSegment
+                  variant={textSegmentVariant as any}
+                  content="That which is the finest essence - this whole world has that as its Self. That is Reality. That is the Self. That thou art, O Śvetaketu."
+                  segmentNumber={4}
+                  isMapped={false}
+                  isSelected={false}
+                  state="dragging"
+                />
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4 mt-6">
+                <h4 className="text-sm font-medium mb-3">Interactive States Demo:</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-600 w-16">Static:</span>
+                    <TextSegment
+                      variant="blue"
+                      content="Default appearance, hover for actions"
+                      segmentNumber={1}
+                      size="sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-600 w-16">Selected:</span>
+                    <TextSegment
+                      variant="green"
+                      content="Currently selected segment"
+                      segmentNumber={2}
+                      isSelected={true}
+                      size="sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-600 w-16">Dragging:</span>
+                    <TextSegment
+                      variant="purple"
+                      content="Being dragged by user"
+                      segmentNumber={3}
+                      isDragging={true}
+                      size="sm"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </ComponentCard>
         </div>
