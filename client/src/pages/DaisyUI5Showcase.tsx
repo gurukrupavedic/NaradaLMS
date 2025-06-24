@@ -1,16 +1,16 @@
 import React from 'react';
 
 /**
- * DaisyUI5Showcase - DaisyUI 5.0 experiments showcase
+ * DaisyUI5Showcase - DaisyUI latest version experiments showcase
  * 
- * Isolated experiments with DaisyUI 5.0 to evaluate improved aesthetics
- * and better theme options for Vedic LMS. Complete isolation from main app.
+ * Isolated experiments with DaisyUI 4.12.24 to evaluate aesthetics
+ * and theme options for Vedic LMS. Complete isolation from main app.
  */
 export function DaisyUI5Showcase() {
   const experiments = [
     {
       title: "Theme Comparison",
-      description: "Interactive comparison of DaisyUI 5.0 themes (emerald, forest, luxury, autumn)",
+      description: "Interactive comparison of DaisyUI themes (emerald, forest, luxury, autumn) with proper configuration",
       link: "/experiments/01-theme-comparison.html",
       highlight: "Interactive theme switcher"
     },
@@ -27,9 +27,9 @@ export function DaisyUI5Showcase() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">DaisyUI 5.0 Experiments</h1>
+          <h1 className="text-3xl font-bold mb-2">DaisyUI Latest Experiments</h1>
           <p className="text-gray-600">
-            Exploring DaisyUI 5.0 with improved aesthetics and better theme options for Vedic LMS
+            Exploring DaisyUI 4.12.24 with modern aesthetics and theme options for Vedic LMS
           </p>
         </div>
 
@@ -45,7 +45,7 @@ export function DaisyUI5Showcase() {
 
         {/* Version Comparison Info */}
         <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-blue-900 mb-3">Latest Version Improvements</h2>
+          <h2 className="text-xl font-semibold text-blue-900 mb-3">DaisyUI 4.12.24 Features</h2>
           <div className="grid md:grid-cols-2 gap-6 text-sm">
             <div>
               <h3 className="font-medium text-blue-800 mb-2">Visual Enhancements:</h3>
@@ -77,7 +77,7 @@ export function DaisyUI5Showcase() {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <span className="inline-block px-3 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full mb-2">
-                    DaisyUI 5.0
+                    DaisyUI 4.12.24
                   </span>
                   {experiment.highlight && (
                     <span className="inline-block px-3 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full mb-2 ml-2">
