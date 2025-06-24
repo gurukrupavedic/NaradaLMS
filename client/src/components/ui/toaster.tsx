@@ -7,7 +7,7 @@ import {
   ToastTitle,
   ToastViewport,
   ToastAction,
-} from "@/components/ui/toast"
+} from "./toast"
 import { Copy } from "lucide-react"
 
 export function Toaster() {

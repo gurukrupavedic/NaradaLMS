@@ -24,7 +24,6 @@ export { RadioGroup, RadioGroupItem } from "./radio-group";
 export { Badge, type BadgeProps } from "./badge";
 export { Progress } from "./progress";
 export { Skeleton } from "./skeleton";
-export { useToast } from "@/hooks/use-toast";
 export { Toaster } from "./toaster";
 
 // Navigation Components
