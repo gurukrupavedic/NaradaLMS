@@ -157,6 +157,33 @@ const Avatar = React.forwardRef<
   // Generate fallback text
   const fallbackText = fallback || (name ? getInitials(name) : "?");
   
+  // If no src provided, use direct fallback without Radix Image
+  if (!src) {
+    return (
+      <div className="relative inline-block">
+        <div
+          ref={ref}
+          className={cn(
+            avatarVariants({ size }),
+            avatarFallbackVariants({ 
+              variant: finalVariant === "default" ? "blue" : finalVariant, 
+              size 
+            }),
+            className
+          )}
+          {...props}
+        >
+          {fallbackText}
+        </div>
+        
+        {showStatus && status && (
+          <div className={cn(statusVariants({ size, status }))} />
+        )}
+      </div>
+    );
+  }
+
+  // Use Radix only when src is provided
   return (
     <div className="relative inline-block">
       <AvatarPrimitive.Root
