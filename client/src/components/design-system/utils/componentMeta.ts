@@ -15,7 +15,8 @@ export const colorVariants = [
 
 export const sizeOptions = {
   small: ["sm", "md", "lg"],
-  full: ["sm", "md", "lg"]
+  full: ["sm", "md", "lg", "xl"],
+  selectOnly: ["sm", "md", "lg"] // Select component doesn't support xl
 };
 
 export interface ComponentConfig {

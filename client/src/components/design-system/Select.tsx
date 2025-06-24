@@ -27,7 +27,8 @@ const selectTriggerVariants = cva(
       size: {
         sm: "h-8 px-2 py-1 text-xs",
         md: "h-10 px-3 py-2 text-sm",
-        lg: "h-12 px-4 py-3 text-base"
+        lg: "h-12 px-4 py-3 text-base",
+        xl: "h-10 px-3 py-2 text-sm" // Fallback to md when xl is selected
       },
       variant: {
         default: "focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)]",
@@ -223,23 +224,26 @@ const SelectItem = React.forwardRef<
   const { variant = "default", size = "md" } = React.useContext(SelectContext);
   const colors = hoverColorMap[variant] || hoverColorMap.default;
 
-  // Size variants for SelectItem
+  // Size variants for SelectItem (xl not supported)
   const sizeStyles = {
     sm: "py-1.5 pl-7 pr-2 text-xs",
     md: "py-2.5 pl-8 pr-2 text-sm", 
-    lg: "py-3.5 pl-10 pr-2 text-base"
+    lg: "py-3.5 pl-10 pr-2 text-base",
+    xl: "py-2.5 pl-8 pr-2 text-sm" // Fallback to md when xl is selected
   };
 
   const iconSizes = {
     sm: "h-3 w-3",
     md: "h-4 w-4",
-    lg: "h-5 w-5"
+    lg: "h-5 w-5",
+    xl: "h-4 w-4" // Fallback to md when xl is selected
   };
 
   const iconPositions = {
     sm: "left-1.5",
     md: "left-2",
-    lg: "left-3"
+    lg: "left-3",
+    xl: "left-2" // Fallback to md when xl is selected
   };
 
   return (
