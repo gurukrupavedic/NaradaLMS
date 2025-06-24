@@ -1070,13 +1070,20 @@ export function DesignSystemShowcase() {
               componentName="Avatar"
               variant={avatarVariant}
               size={avatarSize}
-              props={{}}
+              props={{ showStatus: true, name: "John Doe" }}
+              allSizes={getComponentConfig("Avatar")?.sizes || ["sm", "md", "lg"]}
               onVariantChange={setAvatarVariant}
               onSizeChange={setAvatarSize}
             >
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <Avatar variant={avatarVariant as any} size={avatarSize as any} />
+                  <Avatar 
+                    variant={avatarVariant as any} 
+                    size={avatarSize as any} 
+                    name="John Doe"
+                    showStatus
+                    status="online"
+                  />
                   <div>
                     <p className="font-medium">John Doe</p>
                     <p className="text-sm text-gray-500">Administrator</p>
@@ -1084,9 +1091,9 @@ export function DesignSystemShowcase() {
                 </div>
                 
                 <div className="flex gap-3">
-                  <Avatar variant="green" size="sm" />
-                  <Avatar variant="purple" size="md" />
-                  <Avatar variant="orange" size="lg" />
+                  <Avatar variant="green" size="sm" name="Alice Smith" showStatus status="away" />
+                  <Avatar variant="purple" size="md" name="Bob Wilson" showStatus status="busy" />
+                  <Avatar variant="orange" size="lg" name="Carol Johnson" showStatus status="offline" />
                 </div>
               </div>
             </ComponentCard>

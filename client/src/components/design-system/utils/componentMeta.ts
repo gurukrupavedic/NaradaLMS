@@ -212,6 +212,15 @@ export const componentConfigs: Record<string, ComponentConfig> = {
     commonProps: ["dismissible"],
     description: "Status alerts and notifications",
     category: "specialized"
+  },
+
+  Avatar: {
+    name: "Avatar",
+    variants: colorVariants,
+    sizes: sizeOptions.small,
+    commonProps: ["showStatus", "name"],
+    description: "User profile avatars with status indicators",
+    category: "core"
   }
 };
 

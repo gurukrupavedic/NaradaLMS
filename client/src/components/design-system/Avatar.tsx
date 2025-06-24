@@ -141,8 +141,8 @@ function getInitials(name: string): string {
 }
 
 // Helper function to get color variant from name
-function getVariantFromName(name: string): keyof typeof educationalVariants {
-  const colors = Object.keys(educationalVariants) as (keyof typeof educationalVariants)[];
+function getVariantFromName(name: string): string {
+  const colors = ["blue", "green", "purple", "orange", "pink", "indigo", "teal", "cyan", "yellow", "lime", "rose", "emerald"];
   const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return colors[hash % colors.length];
 }
@@ -155,7 +155,7 @@ const Avatar = React.forwardRef<
   const finalVariant = educational || variant || (name ? getVariantFromName(name) : "blue");
   
   // Generate fallback text
-  const fallbackText = fallback || (name ? getInitials(name) : "?");
+  const fallbackText = fallback || (name ? getInitials(name) : "U");
   
   // Simple approach - always use direct div for now
   return (
