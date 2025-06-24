@@ -19,10 +19,10 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { Trash2, Link2, Link2Off, GripVertical } from "lucide-react";
+import { Trash2, Link2, Link2Off } from "lucide-react";
 
 const textSegmentVariants = cva(
-  "relative bg-white border rounded-lg transition-all duration-200 cursor-pointer group",
+  "relative bg-white border rounded-lg transition-all duration-200 cursor-grab active:cursor-grabbing group",
   {
     variants: {
       variant: {
@@ -44,7 +44,7 @@ const textSegmentVariants = cva(
       state: {
         static: "",
         dragging: "shadow-lg scale-[0.98] opacity-75 rotate-1 cursor-grabbing z-10",
-        selected: "ring-2 ring-blue-400 ring-offset-2 bg-blue-50/70 shadow-md scale-[1.02]"
+        selected: "shadow-lg shadow-blue-200/40 bg-gradient-to-r from-blue-50/80 to-white border-blue-300/60 scale-[1.01]"
       },
       size: {
         sm: "p-3 text-sm",
@@ -160,12 +160,7 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
           </div>
         )}
 
-        {/* Drag Handle (visible on hover) */}
-        {showActions && (
-          <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />
-          </div>
-        )}
+
 
         {/* Action Icons (visible on hover) */}
         {showActions && (
@@ -197,7 +192,7 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
 
         {/* Content - No title, just content */}
         <div className={cn(
-          "leading-relaxed text-gray-800",
+          "leading-relaxed text-gray-800 cursor-grab active:cursor-grabbing",
           segmentNumber ? "mt-2" : "",
           showActions ? "pr-16" : "", // Space for action icons
           size === "sm" ? "text-sm" : size === "lg" ? "text-lg" : "text-base"

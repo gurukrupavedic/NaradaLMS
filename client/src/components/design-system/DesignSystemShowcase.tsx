@@ -1142,37 +1142,43 @@ export function DesignSystemShowcase() {
                 />
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-4 mt-6">
-                <h4 className="text-sm font-medium mb-3">Interactive States Demo:</h4>
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-lg p-4 mt-6 border border-gray-200/60">
+                <h4 className="text-sm font-medium mb-3 text-gray-700">Interactive States Demo:</h4>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-600 w-16">Static:</span>
-                    <TextSegment
-                      variant="blue"
-                      content="Default appearance, hover for actions"
-                      segmentNumber={1}
-                      size="sm"
-                    />
+                    <span className="text-xs text-gray-600 w-16 font-medium">Static:</span>
+                    <div className="flex-1">
+                      <TextSegment
+                        variant="blue"
+                        content="Default appearance with grab cursor, hover for actions"
+                        segmentNumber={1}
+                        size="sm"
+                      />
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-600 w-16">Selected:</span>
-                    <TextSegment
-                      variant="green"
-                      content="Currently selected segment"
-                      segmentNumber={2}
-                      isSelected={true}
-                      size="sm"
-                    />
+                    <span className="text-xs text-gray-600 w-16 font-medium">Selected:</span>
+                    <div className="flex-1">
+                      <TextSegment
+                        variant="green"
+                        content="Modern gradient selection with subtle glow effect"
+                        segmentNumber={2}
+                        isSelected={true}
+                        size="sm"
+                      />
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-600 w-16">Dragging:</span>
-                    <TextSegment
-                      variant="purple"
-                      content="Being dragged by user"
-                      segmentNumber={3}
-                      isDragging={true}
-                      size="sm"
-                    />
+                    <span className="text-xs text-gray-600 w-16 font-medium">Dragging:</span>
+                    <div className="flex-1">
+                      <TextSegment
+                        variant="purple"
+                        content="Rotated and scaled during drag operation"
+                        segmentNumber={3}
+                        isDragging={true}
+                        size="sm"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
