@@ -13,6 +13,7 @@ import { useWarmTrackCache } from "@/lib/query-prefetch";
 const Landing = lazy(() => import("@/pages/Landing").then(module => ({ default: module.Landing })));
 const SimpleDashboard = lazy(() => import("@/components/SimpleDashboard"));
 const NotFound = lazy(() => import("@/pages/NotFound").then(module => ({ default: module.NotFound })));
+const DaisyUIExperiments = lazy(() => import("@/pages/DaisyUIExperiments").then(module => ({ default: module.DaisyUIExperiments })));
 const TrackView = lazy(() => import("@/pages/TrackView").then(module => ({ default: module.TrackView })));
 const ChapterView = lazy(() => import("@/pages/ChapterView").then(module => ({ default: module.ChapterView })));
 const ContentManagement = lazy(() => import("@/pages/ContentManagement").then(module => ({ default: module.ContentManagement })));
