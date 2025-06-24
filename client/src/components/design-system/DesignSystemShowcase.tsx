@@ -24,6 +24,9 @@ import { Switch } from "./Switch";
 import { Tooltip, SimpleTooltip } from "./Tooltip";
 import { Loading } from "./Loading";
 import { RichTextEditor } from "./RichTextEditor";
+import { Alert, AlertTitle, AlertDescription } from "./Alert";
+import { Progress } from "./Progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./Tabs";
 import { Dialog, ConfirmDialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from "./Dialog";
 import { Checkbox, CheckboxGroup } from "./Checkbox";
 import { Radio, RadioGroup, CommonRadioOptions } from "./Radio";
@@ -32,7 +35,7 @@ import { Slider, AudioSlider, ProgressSlider } from "./Slider";
 import { Breadcrumb, LMSBreadcrumbs } from "./Breadcrumb";
 import { ComponentCard, ComponentInspector } from "./ComponentInspector";
 import { colorVariants, componentConfigs } from "./utils/componentMeta";
-import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, HelpCircle, Settings, Upload, Type } from "lucide-react";
+import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, HelpCircle, Settings, Upload, Type, Volume2, Zap } from "lucide-react";
 
 export function DesignSystemShowcase() {
   const [selectedVariant, setSelectedVariant] = useState<string>("blue");
@@ -53,6 +56,32 @@ export function DesignSystemShowcase() {
   const [sliderVariant, setSliderVariant] = useState("orange");
   const [breadcrumbVariant, setBreadcrumbVariant] = useState("blue");
   const [breadcrumbSize, setBreadcrumbSize] = useState("md");
+  
+  // Additional component states
+  const [inputVariant, setInputVariant] = useState("blue");
+  const [inputSize, setInputSize] = useState("md");
+  const [cardVariant, setCardVariant] = useState("blue");
+  const [badgeVariant, setBadgeVariant] = useState("blue");
+  const [badgeSize, setBadgeSize] = useState("md");
+  const [progressVariant, setProgressVariant] = useState("blue");
+  const [progressSize, setProgressSize] = useState("md");
+  const [checkboxVariant, setCheckboxVariant] = useState("blue");
+  const [checkboxSize, setCheckboxSize] = useState("md");
+  const [radioVariant, setRadioVariant] = useState("blue");
+  const [radioSize, setRadioSize] = useState("md");
+  const [switchVariant, setSwitchVariant] = useState("blue");
+  const [switchSize, setSwitchSize] = useState("md");
+  const [textareaVariant, setTextareaVariant] = useState("blue");
+  const [textareaSize, setTextareaSize] = useState("md");
+  const [tabsVariant, setTabsVariant] = useState("blue");
+  const [tabsSize, setTabsSize] = useState("md");
+  const [tooltipVariant, setTooltipVariant] = useState("blue");
+  const [tooltipSize, setTooltipSize] = useState("md");
+  const [loadingVariant, setLoadingVariant] = useState("blue");
+  const [loadingSize, setLoadingSize] = useState("md");
+  const [basicSliderVariant, setBasicSliderVariant] = useState("blue");
+  const [basicSliderSize, setBasicSliderSize] = useState("md");
+  const [progressSliderVariant, setProgressSliderVariant] = useState("green");
 
   // Complete 24-color system (12 primary + 12 fluorescent)
   const allColorVariants = [
@@ -334,11 +363,11 @@ export function DesignSystemShowcase() {
               title="Form Controls"
               description="Checkbox and radio selections with inspector"
               componentName="CheckboxGroup"
-              variant={selectedVariant}
-              size="sm"
-              props={{}}
-              onVariantChange={setSelectedVariant}
-              allSizes={["sm", "md", "lg"]}
+              variant={checkboxVariant}
+              size={checkboxSize}
+              props={{ disabled: false, indeterminate: false }}
+              onVariantChange={setCheckboxVariant}
+              onSizeChange={setCheckboxSize}
             >
               <div className="space-y-4">
                 <CheckboxGroup
@@ -349,8 +378,8 @@ export function DesignSystemShowcase() {
                   ]}
                   value={checkboxValue}
                   onChange={setCheckboxValue}
-                  variant={selectedVariant as any}
-                  size="sm"
+                  variant={checkboxVariant as any}
+                  size={checkboxSize as any}
                 />
                 <RadioGroup
                   name="role"
@@ -358,8 +387,8 @@ export function DesignSystemShowcase() {
                   options={CommonRadioOptions.userRoles.slice(0, 2)}
                   value={radioValue}
                   onChange={setRadioValue}
-                  variant={selectedVariant as any}
-                  size="sm"
+                  variant={radioVariant as any}
+                  size={radioSize as any}
                 />
               </div>
             </ComponentCard>
@@ -446,9 +475,9 @@ export function DesignSystemShowcase() {
               title="Learning Progress"
               description="Track student completion"
               componentName="ProgressSlider"
-              variant="green"
+              variant={progressSliderVariant}
               props={{ showPercentage: true }}
-              allVariants={colorVariants}
+              onVariantChange={setProgressSliderVariant}
               allSizes={[]}
             >
               <div className="space-y-4">
@@ -456,7 +485,7 @@ export function DesignSystemShowcase() {
                   progress={75}
                   total={100}
                   label="Chapter Progress"
-                  variant="green"
+                  variant={progressSliderVariant as any}
                 />
                 <ProgressSlider
                   progress={45}
@@ -469,7 +498,7 @@ export function DesignSystemShowcase() {
                   max={100}
                   value={sliderValue}
                   onChange={setSliderValue}
-                  variant={selectedVariant as any}
+                  variant={basicSliderVariant as any}
                   label="Custom Slider"
                   showValue
                 />
@@ -532,44 +561,358 @@ export function DesignSystemShowcase() {
           </ComponentCard>
         </div>
 
-        {/* Input Components Showcase */}
+        {/* ENHANCED: Input Components with Inspector */}
         <div className="space-y-8">
           <h2 className="text-3xl font-semibold text-gray-900">Input Components</h2>
           
-          {/* Input Variants */}
-          <div>
-            <h3 className="text-xl font-medium mb-4">Focus Color Variants</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Input variant="blue" placeholder="Blue focus ring" />
-              <Input variant="green" placeholder="Green focus ring" />
-              <Input variant="purple" placeholder="Purple focus ring" />
-              <Input variant="orange" placeholder="Orange focus ring" />
-              <Input variant="pink" placeholder="Pink focus ring" />
-              <Input variant="indigo" placeholder="Indigo focus ring" />
-            </div>
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ComponentCard
+              title="Text Inputs"
+              description="Form inputs with focus color variants"
+              componentName="Input"
+              variant={inputVariant}
+              size={inputSize}
+              props={{ disabled: false, required: false }}
+              onVariantChange={setInputVariant}
+              onSizeChange={setInputSize}
+            >
+              <div className="space-y-4">
+                <Input 
+                  variant={inputVariant as any}
+                  size={inputSize as any}
+                  placeholder="Enter text here..." 
+                />
+                <Input 
+                  variant={inputVariant as any}
+                  size={inputSize as any}
+                  placeholder="Disabled input" 
+                  disabled 
+                />
+                <Input 
+                  variant={inputVariant as any}
+                  size={inputSize as any}
+                  placeholder="Required field" 
+                  required 
+                />
+              </div>
+            </ComponentCard>
 
-          {/* Educational Input Variants */}
-          <div>
-            <h3 className="text-xl font-medium mb-4">Educational Input Types</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search Lessons</label>
-                <Input educational="search" placeholder="Search for lessons..." />
+            <ComponentCard
+              title="Textarea Fields"
+              description="Multi-line text input areas"
+              componentName="Textarea"
+              variant={textareaVariant}
+              size={textareaSize}
+              props={{ disabled: false, required: false }}
+              onVariantChange={setTextareaVariant}
+              onSizeChange={setTextareaSize}
+            >
+              <div className="space-y-4">
+                <Textarea
+                  variant={textareaVariant as any}
+                  size={textareaSize as any}
+                  placeholder="Enter description..."
+                  rows={3}
+                />
+                <Textarea
+                  variant={textareaVariant as any}
+                  size={textareaSize as any}
+                  placeholder="Disabled textarea"
+                  disabled
+                  rows={2}
+                />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Chapter Title</label>
-                <Input educational="title" placeholder="Enter chapter title" />
+            </ComponentCard>
+          </div>
+        </div>
+
+        {/* ENHANCED: UI Elements with Inspector */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">UI Elements</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <ComponentCard
+              title="Status Badges"
+              description="Labels and status indicators"
+              componentName="Badge"
+              variant={badgeVariant}
+              size={badgeSize}
+              props={{}}
+              onVariantChange={setBadgeVariant}
+              onSizeChange={setBadgeSize}
+            >
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant={badgeVariant as any} size={badgeSize as any}>
+                    Active
+                  </Badge>
+                  <Badge variant="green" size={badgeSize as any}>
+                    Published
+                  </Badge>
+                  <Badge variant="yellow" size={badgeSize as any}>
+                    Draft
+                  </Badge>
+                  <Badge variant="rose" size={badgeSize as any}>
+                    Archived
+                  </Badge>
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Content Description</label>
-                <Input educational="description" placeholder="Describe the content" />
+            </ComponentCard>
+
+            <ComponentCard
+              title="Progress Bars"
+              description="Linear progress indicators"
+              componentName="Progress"
+              variant={progressVariant}
+              size={progressSize}
+              props={{ animated: false, showPercentage: true }}
+              onVariantChange={setProgressVariant}
+              onSizeChange={setProgressSize}
+            >
+              <div className="space-y-4">
+                <Progress
+                  value={75}
+                  variant={progressVariant as any}
+                  size={progressSize as any}
+                  label="Chapter Progress"
+                  showPercentage
+                />
+                <Progress
+                  value={45}
+                  variant="emerald"
+                  size={progressSize as any}
+                  label="Overall Completion"
+                  animated
+                />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Student Email</label>
-                <Input educational="email" type="email" placeholder="student@example.com" />
+            </ComponentCard>
+
+            <ComponentCard
+              title="Toggle Switches"
+              description="Binary choice controls"
+              componentName="Switch"
+              variant={switchVariant}
+              size={switchSize}
+              props={{ disabled: false }}
+              onVariantChange={setSwitchVariant}
+              onSizeChange={setSwitchSize}
+            >
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <Switch variant={switchVariant as any} size={switchSize as any} />
+                  <label className="text-sm font-medium">Enable notifications</label>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Switch variant="green" size={switchSize as any} defaultChecked />
+                  <label className="text-sm font-medium">Auto-save content</label>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Switch variant="gray" size={switchSize as any} disabled />
+                  <label className="text-sm font-medium text-gray-400">Disabled option</label>
+                </div>
               </div>
+            </ComponentCard>
+          </div>
+        </div>
+
+        {/* ENHANCED: Interactive Controls with Inspector */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Interactive Controls</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ComponentCard
+              title="Range Sliders"
+              description="Numeric input sliders"
+              componentName="Slider"
+              variant={basicSliderVariant}
+              size={basicSliderSize}
+              props={{ showValue: true, disabled: false }}
+              onVariantChange={setBasicSliderVariant}
+              onSizeChange={setBasicSliderSize}
+            >
+              <div className="space-y-6">
+                <Slider
+                  min={0}
+                  max={100}
+                  value={sliderValue}
+                  onChange={setSliderValue}
+                  variant={basicSliderVariant as any}
+                  size={basicSliderSize as any}
+                  label="Volume Control"
+                  showValue
+                />
+                <Slider
+                  min={1}
+                  max={10}
+                  value={5}
+                  onChange={() => {}}
+                  variant="purple"
+                  size={basicSliderSize as any}
+                  label="Difficulty Level"
+                  showValue
+                  formatValue={(val) => `Level ${val}`}
+                />
+              </div>
+            </ComponentCard>
+
+            <ComponentCard
+              title="Tab Navigation"
+              description="Content section tabs"
+              componentName="Tabs"
+              variant={tabsVariant}
+              size={tabsSize}
+              props={{}}
+              onVariantChange={setTabsVariant}
+              onSizeChange={setTabsSize}
+            >
+              <Tabs defaultValue="content" className="w-full">
+                <TabsList variant={tabsVariant as any} size={tabsSize as any}>
+                  <TabsTrigger value="content" variant={tabsVariant as any}>
+                    Content
+                  </TabsTrigger>
+                  <TabsTrigger value="audio" variant={tabsVariant as any}>
+                    Audio
+                  </TabsTrigger>
+                  <TabsTrigger value="settings" variant={tabsVariant as any}>
+                    Settings
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="content" className="mt-4">
+                  <p className="text-sm text-gray-600">Content management panel would appear here.</p>
+                </TabsContent>
+                <TabsContent value="audio" className="mt-4">
+                  <p className="text-sm text-gray-600">Audio controls and timeline would appear here.</p>
+                </TabsContent>
+                <TabsContent value="settings" className="mt-4">
+                  <p className="text-sm text-gray-600">Configuration options would appear here.</p>
+                </TabsContent>
+              </Tabs>
+            </ComponentCard>
+          </div>
+        </div>
+
+        {/* ENHANCED: Card Layouts with Inspector */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Card Layouts</h2>
+          
+          <ComponentCard
+            title="Content Cards"
+            description="Container cards with glow effects"
+            componentName="Card"
+            variant={cardVariant}
+            props={{ glow: "subtle", interactive: true }}
+            onVariantChange={setCardVariant}
+            allSizes={[]}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card variant={cardVariant as any} glow="subtle" interactive>
+                <CardHeader className="text-center">
+                  <BookOpen className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                  <CardTitle className="text-base">Learning Track</CardTitle>
+                  <CardDescription>Sanskrit Fundamentals</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button className="w-full" variant="outline">
+                    Continue Learning
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card variant="green" glow="subtle" interactive>
+                <CardHeader className="text-center">
+                  <Music className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                  <CardTitle className="text-base">Audio Content</CardTitle>
+                  <CardDescription>Chapter Recordings</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button className="w-full" variant="outline">
+                    Play Audio
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card variant="purple" glow="subtle" interactive>
+                <CardHeader className="text-center">
+                  <Settings className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                  <CardTitle className="text-base">Settings</CardTitle>
+                  <CardDescription>Preferences</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button className="w-full" variant="outline">
+                    Configure
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
+          </ComponentCard>
+        </div>
+
+        {/* ENHANCED: Specialized Components with Inspector */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Specialized Components</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <ComponentCard
+              title="Loading States"
+              description="Loading spinners and indicators"
+              componentName="Loading"
+              variant={loadingVariant}
+              size={loadingSize}
+              props={{}}
+              onVariantChange={setLoadingVariant}
+              onSizeChange={setLoadingSize}
+            >
+              <div className="space-y-4 text-center">
+                <Loading variant={loadingVariant as any} size={loadingSize as any} />
+                <Loading variant="green" size="lg" />
+                <Loading variant="purple" size="sm" />
+              </div>
+            </ComponentCard>
+
+            <ComponentCard
+              title="Help Tooltips"
+              description="Contextual information tooltips"
+              componentName="Tooltip"
+              variant={tooltipVariant}
+              size={tooltipSize}
+              props={{}}
+              onVariantChange={setTooltipVariant}
+              onSizeChange={setTooltipSize}
+            >
+              <div className="space-y-4">
+                <Tooltip content="This is a helpful tooltip" variant={tooltipVariant as any}>
+                  <Button variant="outline">Hover for tooltip</Button>
+                </Tooltip>
+                <SimpleTooltip text="Quick info" variant="green">
+                  <Badge variant="green">Info Badge</Badge>
+                </SimpleTooltip>
+              </div>
+            </ComponentCard>
+
+            <ComponentCard
+              title="Radio Selection"
+              description="Single choice radio buttons"
+              componentName="Radio"
+              variant={radioVariant}
+              size={radioSize}
+              props={{ disabled: false }}
+              onVariantChange={setRadioVariant}
+              onSizeChange={setRadioSize}
+            >
+              <RadioGroup
+                name="priority"
+                label="Priority Level"
+                options={[
+                  { value: "low", label: "Low" },
+                  { value: "medium", label: "Medium" },
+                  { value: "high", label: "High" }
+                ]}
+                value="medium"
+                onChange={() => {}}
+                variant={radioVariant as any}
+                size={radioSize as any}
+              />
+            </ComponentCard>
           </div>
         </div>
 
