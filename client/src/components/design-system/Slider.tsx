@@ -160,51 +160,84 @@ export function Slider({
   const currentValue = Array.isArray(value) ? value[0] : value;
   const percentage = ((currentValue - min) / (max - min)) * 100;
   
+  const debouncedValueChange = useCallback(
+    debounce((newValue: number) => {
+      if (onValueChange) {
+        onValueChange([newValue]);
+      }
+      if (onChange) {
+        onChange(newValue);
+      }
+    }, 16), // ~60fps
+    [onValueChange, onChange]
+  );
+  
   const handleValueChange = useCallback((newValue: number) => {
-    if (onValueChange) {
-      onValueChange([newValue]);
-    }
-    if (onChange) {
-      onChange(newValue);
-    }
-  }, [onValueChange, onChange]);
+    debouncedValueChange(newValue);
+  }, [debouncedValueChange]);
+
+  // Simple debounce implementation
+  function debounce(func: Function, wait: number) {
+    let timeout: NodeJS.Timeout;
+    return function executedFunction(...args: any[]) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (disabled || !sliderRef.current) return;
     e.preventDefault();
+    e.stopPropagation();
 
     const rect = sliderRef.current.getBoundingClientRect();
-    let isUpdating = false;
+    const fillElement = sliderRef.current.querySelector('[data-fill]') as HTMLElement;
+    const thumbElement = sliderRef.current.querySelector('[data-thumb]') as HTMLElement;
     
     const updateValue = (clientX: number) => {
-      if (isUpdating) return;
-      isUpdating = true;
+      const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
+      const percentage = (x / rect.width) * 100;
+      const newValue = min + (percentage / 100) * (max - min);
+      const steppedValue = step > 0 ? Math.round(newValue / step) * step : newValue;
+      const clampedValue = Math.max(min, Math.min(max, steppedValue));
+      const finalPercentage = ((clampedValue - min) / (max - min)) * 100;
       
-      requestAnimationFrame(() => {
-        const x = clientX - rect.left;
-        const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
-        const newValue = min + (percentage / 100) * (max - min);
-        const steppedValue = step > 0 ? Math.round(newValue / step) * step : newValue;
-        handleValueChange(Math.max(min, Math.min(max, steppedValue)));
-        isUpdating = false;
-      });
+      // Immediate DOM updates for visual feedback
+      if (fillElement) {
+        fillElement.style.width = `${finalPercentage}%`;
+      }
+      if (thumbElement) {
+        thumbElement.style.left = `${finalPercentage}%`;
+      }
+      
+      // Debounced callback update
+      handleValueChange(clampedValue);
     };
 
     updateValue(e.clientX);
 
     const handleMouseMove = (e: MouseEvent) => {
-      e.preventDefault();
       updateValue(e.clientX);
     };
     
-    const handleMouseUp = (e: MouseEvent) => {
-      e.preventDefault();
-      document.removeEventListener('mousemove', handleMouseMove, { passive: false } as any);
-      document.removeEventListener('mouseup', handleMouseUp, { passive: false } as any);
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('selectstart', preventDefault);
+      document.body.style.userSelect = '';
     };
 
-    document.addEventListener('mousemove', handleMouseMove, { passive: false });
-    document.addEventListener('mouseup', handleMouseUp, { passive: false });
+    const preventDefault = (e: Event) => e.preventDefault();
+    
+    // Disable text selection during drag
+    document.body.style.userSelect = 'none';
+    document.addEventListener('selectstart', preventDefault);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   }, [disabled, min, max, step, handleValueChange]);
 
   return (
@@ -235,17 +268,19 @@ export function Slider({
         >
           {/* Fill */}
           <div
-            className={`absolute top-0 left-0 ${sizeStyle.height} rounded-full ${variantStyle.fill} transition-none`}
+            data-fill
+            className={`absolute top-0 left-0 ${sizeStyle.height} rounded-full ${variantStyle.fill} will-change-[width]`}
             style={{ width: `${percentage}%` }}
           />
           
           {/* Thumb */}
           <div
+            data-thumb
             className={`
               absolute top-1/2 transform -translate-y-1/2 -translate-x-1/2
               ${sizeStyle.thumb} rounded-full border-2 shadow-sm
               ${variantStyle.thumb} ring-opacity-25
-              focus:ring-4 ${variantStyle.thumb} transition-none
+              focus:ring-4 ${variantStyle.thumb} will-change-[left]
               ${disabled ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}
             `}
             style={{ left: `${percentage}%` }}
