@@ -13,12 +13,13 @@ import { useWarmTrackCache } from "@/lib/query-prefetch";
 const Landing = lazy(() => import("@/pages/Landing").then(module => ({ default: module.Landing })));
 const SimpleDashboard = lazy(() => import("@/components/SimpleDashboard"));
 const NotFound = lazy(() => import("@/pages/NotFound").then(module => ({ default: module.NotFound })));
-const DaisyUIExperiments = lazy(() => import("@/pages/DaisyUIExperiments").then(module => ({ default: module.DaisyUIExperiments })));
+
 const TrackView = lazy(() => import("@/pages/TrackView").then(module => ({ default: module.TrackView })));
 const ChapterView = lazy(() => import("@/pages/ChapterView").then(module => ({ default: module.ChapterView })));
 const ContentManagement = lazy(() => import("@/pages/ContentManagement").then(module => ({ default: module.ContentManagement })));
 const TrackChapters = lazy(() => import("@/pages/TrackChapters").then(module => ({ default: module.TrackChapters })));
 const ChapterEditor = lazy(() => import("@/pages/ChapterEditor").then(module => ({ default: module.ChapterEditor })));
+const ExperimentsShowcase = lazy(() => import("@/pages/ExperimentsShowcase").then(module => ({ default: module.ExperimentsShowcase })));
 
 
 
@@ -58,7 +59,8 @@ function Router() {
 
             <Route path="/tracks/:trackId" component={TrackView} />
             <Route path="/chapters/:id" component={ChapterView} />
-            <Route path="/experiments/daisyui" component={DaisyUIExperiments} />
+            <Route path="/experiments/daisyui-showcase" component={ExperimentsShowcase} />
+
           </>
         )}
         <Route component={NotFound} />
