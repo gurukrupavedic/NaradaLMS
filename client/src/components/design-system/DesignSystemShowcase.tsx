@@ -933,16 +933,16 @@ export function DesignSystemShowcase() {
               description="Notifications and feedback messages"
               componentName="Alert"
               variant={alertVariant}
-              props={{ dismissible: true }}
+              props={{ dismissible: true, icon: "Info" }}
               onVariantChange={setAlertVariant}
               allSizes={[]}
             >
               <div className="space-y-4">
-                <Alert variant={alertVariant as any}>
+                <Alert variant={alertVariant as any} dismissible>
                   <Info className="h-4 w-4" />
-                  <AlertTitle>Information</AlertTitle>
+                  <AlertTitle>Interactive Alert</AlertTitle>
                   <AlertDescription>
-                    This is an informational alert with helpful context for users.
+                    This alert changes color when you select different variants. Click the X to dismiss it.
                   </AlertDescription>
                 </Alert>
 

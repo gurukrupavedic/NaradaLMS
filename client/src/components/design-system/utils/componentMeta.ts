@@ -207,9 +207,9 @@ export const componentConfigs: Record<string, ComponentConfig> = {
   
   Alert: {
     name: "Alert",
-    variants: ["info", "success", "warning", "error"],
+    variants: colorVariants,
     sizes: [],
-    commonProps: ["dismissible"],
+    commonProps: ["dismissible", "icon"],
     description: "Status alerts and notifications",
     category: "specialized"
   },

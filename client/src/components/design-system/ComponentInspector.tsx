@@ -22,6 +22,7 @@ export interface ComponentInspectorProps {
   allSizes?: string[];
   onVariantChange?: (variant: string) => void;
   onSizeChange?: (size: string) => void;
+  onIconChange?: (icon: string) => void;
   className?: string;
 }
 
@@ -110,8 +111,12 @@ export function ComponentInspector({
   allSizes = defaultSizeOptions,
   onVariantChange,
   onSizeChange,
+  onIconChange,
   className = ""
 }: ComponentInspectorProps) {
+  
+  // Icon options for components that support icons
+  const iconOptions = ["Info", "CheckCircle", "AlertCircle", "XCircle", "HelpCircle", "Star", "Crown", "Shield"];
   const [copied, setCopied] = useState(false);
   const [showProps, setShowProps] = useState(false);
 
