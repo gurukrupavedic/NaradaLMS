@@ -3,8 +3,7 @@
  * Provides runtime theme switching and color management
  */
 
-import { useState, useEffect, createContext, useContext } from 'react';
-import type { ReactNode } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 
 export type ColorfulTheme = 'light' | 'dark';
 export type ColorVariant = 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'indigo';
@@ -23,7 +22,6 @@ export function ColorfulThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ColorfulTheme>('light');
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load theme from localStorage on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('vedic-colorful-theme') as ColorfulTheme;
     if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
@@ -32,7 +30,6 @@ export function ColorfulThemeProvider({ children }: { children: ReactNode }) {
     setIsLoaded(true);
   }, []);
 
-  // Apply theme to document
   useEffect(() => {
     if (isLoaded) {
       document.documentElement.setAttribute('data-theme', theme);
@@ -85,18 +82,11 @@ export function useColorfulTheme() {
   return context;
 }
 
-/**
- * Hook for getting colorful component classes
- * Usage: const cardClasses = useColorClasses('blue', 'card');
- */
 export function useColorClasses(variant: ColorVariant, type: 'card' | 'button' | 'badge') {
   const { getColorClasses } = useColorfulTheme();
   return getColorClasses(variant, type);
 }
 
-/**
- * Utility function to get fluorescent glow styles for custom components
- */
 export function getFluorescentGlow(variant: ColorVariant, theme: ColorfulTheme = 'light') {
   const colorMap = {
     blue: { color: '59, 130, 246', fluorescent: '219, 234, 254' },
