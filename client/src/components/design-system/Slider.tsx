@@ -143,6 +143,7 @@ export function Slider({
   step = 1,
   value,
   onChange,
+  onValueChange,
   disabled = false,
   variant = "blue",
   size = "md",
@@ -155,7 +156,18 @@ export function Slider({
   const variantStyle = variantClasses[variant];
   const sizeStyle = sizeClasses[size];
 
-  const percentage = ((value - min) / (max - min)) * 100;
+  // Handle both array and single value formats
+  const currentValue = Array.isArray(value) ? value[0] : value;
+  const percentage = ((currentValue - min) / (max - min)) * 100;
+  
+  const handleValueChange = (newValue: number) => {
+    if (onValueChange) {
+      onValueChange([newValue]);
+    }
+    if (onChange) {
+      onChange(newValue);
+    }
+  };
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (disabled || !sliderRef.current) return;
