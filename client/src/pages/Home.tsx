@@ -10,8 +10,8 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { BookOpen, Presentation, Edit, UsersIcon, ChevronDown, Languages } from "lucide-react";
-import Dashboard from "@/components/Dashboard";
-import InstructorPanel from "@/components/InstructorPanel";
+import { Dashboard } from "@/components/Dashboard";
+import { InstructorPanel } from "@/components/InstructorPanel";
 
 import Administration from "@/components/Administration";
 import LanguageSwitcher from "@/components/LanguageSwitcher";

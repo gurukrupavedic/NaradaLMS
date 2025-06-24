@@ -47,7 +47,7 @@ interface AdminPanelProps {
   user: User;
 }
 
-export default function AdminPanel({ user }: AdminPanelProps) {
+export function AdminPanel({ user }: AdminPanelProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");

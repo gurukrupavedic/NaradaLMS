@@ -38,7 +38,7 @@ interface StudyStats {
   highestLevel: number;
 }
 
-export default function Dashboard() {
+export function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [filterStatus, setFilterStatus] = useState<string>('all');

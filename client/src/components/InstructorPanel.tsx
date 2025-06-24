@@ -21,7 +21,7 @@ interface StudentProgress {
   lastAccessed?: string;
 }
 
-export default function InstructorPanel() {
+export function InstructorPanel() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');

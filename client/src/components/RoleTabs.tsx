@@ -6,9 +6,9 @@ import {
   Edit, 
   UserCog 
 } from "lucide-react";
-import StudentDashboard from "./StudentDashboard";
-import InstructorPanel from "./InstructorPanel";
-import AdminPanel from "./AdminPanel";
+import { StudentDashboard } from "./StudentDashboard";
+import { InstructorPanel } from "./InstructorPanel";
+import { AdminPanel } from "./AdminPanel";
 import type { User } from "@shared/schema";
 
 interface RoleTabsProps {
@@ -51,7 +51,7 @@ const TABS: Tab[] = [
   },
 ];
 
-export default function RoleTabs({ user }: RoleTabsProps) {
+export function RoleTabs({ user }: RoleTabsProps) {
   // Remove role restrictions entirely - show all tabs for development
   const availableTabs = TABS;
 

@@ -32,7 +32,7 @@ interface StudentDashboardProps {
   user: User;
 }
 
-export default function StudentDashboard({ user }: StudentDashboardProps) {
+export function StudentDashboard({ user }: StudentDashboardProps) {
   const [, setLocation] = useLocation();
 
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
