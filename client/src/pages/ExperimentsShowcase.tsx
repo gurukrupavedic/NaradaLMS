@@ -24,6 +24,29 @@ export function ExperimentsShowcase() {
           </p>
         </div>
 
+        {/* Live Design System Demo */}
+        <div className="mb-12">
+          <Card className="border-2 border-emerald-200 hover:border-emerald-300 hover:shadow-lg transition-all duration-200">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl text-emerald-700 mb-2">
+                Live Design System Demo
+              </CardTitle>
+              <CardDescription className="text-lg">
+                Interactive components built for your LMS application
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => window.open('/design-system-showcase', '_blank')} 
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <Palette className="mr-2 h-5 w-5" />
+                Test Components Live
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Main Theme Showcases */}
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           {/* Light Theme Card */}

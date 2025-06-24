@@ -22,6 +22,7 @@ const ChapterEditor = lazy(() => import("@/pages/ChapterEditor").then(module => 
 const DaisyUI5Showcase = lazy(() => import("@/pages/DaisyUI5Showcase").then(module => ({ default: module.DaisyUI5Showcase })));
 const ColorfulDemo = lazy(() => import("@/components/demos/ColorfulDemo").then(module => ({ default: module.ColorfulDemo })));
 const ExperimentsShowcase = lazy(() => import("@/pages/ExperimentsShowcase").then(module => ({ default: module.ExperimentsShowcase })));
+const DesignSystemShowcase = lazy(() => import("@/components/design-system/DesignSystemShowcase").then(module => ({ default: module.DesignSystemShowcase })));
 
 
 
