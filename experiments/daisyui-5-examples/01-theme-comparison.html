@@ -10,7 +10,7 @@
         tailwind.config = {
             plugins: [require('daisyui')],
             daisyui: {
-                themes: ["light", "emerald", "forest", "luxury", "autumn", "business", "pastel"]
+                themes: ["light", "emerald", "forest", "luxury", "autumn", "business", "pastel", "cmyk", "dark", "night"]
             }
         }
     </script>
@@ -30,15 +30,20 @@
         </p>
 
         <!-- Theme Selector -->
-        <div class="flex justify-center mb-8">
+        <div class="flex justify-center mb-8 flex-wrap gap-2">
             <div class="join">
                 <button class="btn join-item" onclick="setTheme('light')">Light</button>
                 <button class="btn join-item" onclick="setTheme('emerald')">Emerald</button>
                 <button class="btn join-item" onclick="setTheme('forest')">Forest</button>
                 <button class="btn join-item" onclick="setTheme('luxury')">Luxury</button>
                 <button class="btn join-item" onclick="setTheme('autumn')">Autumn</button>
+            </div>
+            <div class="join">
                 <button class="btn join-item" onclick="setTheme('business')">Business</button>
                 <button class="btn join-item" onclick="setTheme('pastel')">Pastel</button>
+                <button class="btn join-item" onclick="setTheme('cmyk')">CMYK</button>
+                <button class="btn join-item" onclick="setTheme('dark')">Dark</button>
+                <button class="btn join-item" onclick="setTheme('night')">Night</button>
             </div>
         </div>
 
