@@ -21,6 +21,12 @@ export function DaisyUI5Showcase() {
       highlight: "Perfect theme pair"
     },
     {
+      title: "FlatUI / Bootflat Colors",
+      description: "Custom DaisyUI themes with vibrant FlatUI and Bootflat color schemes - beautiful flat design button palettes",
+      link: "/experiments/04-flatui-bootflat-style.html",
+      highlight: "Flat design colors"
+    },
+    {
       title: "Vedic Dashboard",
       description: "Complete dashboard redesign with autumn theme and Vedic aesthetic enhancements",
       link: "/experiments/02-vedic-dashboard.html",
