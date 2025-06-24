@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete Component Showcase - Modern Colorful Design System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Modern Colorful Design System - Complete Component Library */
+    
+    /* Design Tokens */
+    :root {
+      --blue-modern: #3b82f6;
+      --green-modern: #10b981;
+      --purple-modern: #8b5cf6;
+      --orange-modern: #f59e0b;
+      --pink-modern: #ec4899;
+      --indigo-modern: #6366f1;
+      
+      --blue-fluorescent: #dbeafe;
+      --green-fluorescent: #dcfce7;
+      --purple-fluorescent: #ede9fe;
+      --orange-fluorescent: #ffedd5;
+      --pink-fluorescent: #fce7f3;
+      --indigo-fluorescent: #e0e7ff;
+      
+      --blue-darker: #1d4ed8;
+      --green-darker: #047857;
+      --purple-darker: #7c3aed;
+      --orange-darker: #d97706;
+      --pink-darker: #be185d;
+      --indigo-darker: #4f46e5;
+    }
+
+    [data-theme="dark"] {
+      --background: #0f172a;
+      --foreground: #f8fafc;
+      --border: #334155;
+      --muted: #1e293b;
+      --muted-foreground: #94a3b8;
+    }
+
+    /* 1. CARDS */
+    .card-modern {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+
+    .feature-card {
+      padding: 20px;
+      position: relative;
+    }
+
+    .feature-card .icon-container {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      margin-bottom: 12px;
+    }
+
+    .feature-card:hover .icon-container {
+      transform: scale(1.05);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Card Color Variants */
+    .feature-card-blue {
+      border-color: var(--blue-modern);
+    }
+    .feature-card-blue .icon-container {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--blue-modern);
+    }
+    .feature-card-blue:hover {
+      border-color: var(--blue-modern);
+      box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(59, 130, 246, 0.3),
+        0 4px 20px rgba(219, 234, 254, 1),
+        0 0 25px rgba(219, 234, 254, 0.6);
+    }
+
+    .feature-card-green {
+      border-color: var(--green-modern);
+    }
+    .feature-card-green .icon-container {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--green-modern);
+    }
+    .feature-card-green:hover {
+      border-color: var(--green-modern);
+      box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(16, 185, 129, 0.3),
+        0 4px 20px rgba(220, 252, 231, 1),
+        0 0 25px rgba(220, 252, 231, 0.6);
+    }
+
+    .feature-card-purple {
+      border-color: var(--purple-modern);
+    }
+    .feature-card-purple .icon-container {
+      background: rgba(139, 92, 246, 0.1);
+      color: var(--purple-modern);
+    }
+    .feature-card-purple:hover {
+      border-color: var(--purple-modern);
+      box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(139, 92, 246, 0.3),
+        0 4px 20px rgba(237, 233, 254, 1),
+        0 0 25px rgba(237, 233, 254, 0.6);
+    }
+
+    .feature-card-orange {
+      border-color: var(--orange-modern);
+    }
+    .feature-card-orange .icon-container {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--orange-modern);
+    }
+    .feature-card-orange:hover {
+      border-color: var(--orange-modern);
+      box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(245, 158, 11, 0.3),
+        0 4px 20px rgba(255, 237, 213, 1),
+        0 0 25px rgba(255, 237, 213, 0.6);
+    }
+
+    .feature-card-pink {
+      border-color: var(--pink-modern);
+    }
+    .feature-card-pink .icon-container {
+      background: rgba(236, 72, 153, 0.1);
+      color: var(--pink-modern);
+    }
+    .feature-card-pink:hover {
+      border-color: var(--pink-modern);
+      box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(236, 72, 153, 0.3),
+        0 4px 20px rgba(252, 231, 243, 1),
+        0 0 25px rgba(252, 231, 243, 0.6);
+    }
+
+    .feature-card-indigo {
+      border-color: var(--indigo-modern);
+    }
+    .feature-card-indigo .icon-container {
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--indigo-modern);
+    }
+    .feature-card-indigo:hover {
+      border-color: var(--indigo-modern);
+      box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(99, 102, 241, 0.3),
+        0 4px 20px rgba(224, 231, 255, 1),
+        0 0 25px rgba(224, 231, 255, 0.6);
+    }
+
+    /* 2. BUTTONS */
+    .btn-modern {
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: 500;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary-blue {
+      background: var(--blue-modern);
+      color: white;
+      border-color: var(--blue-modern);
+    }
+    .btn-primary-blue:hover {
+      background: var(--blue-darker);
+      border-color: var(--blue-darker);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+
+    .btn-secondary-blue {
+      background: transparent;
+      color: var(--blue-modern);
+      border-color: var(--blue-modern);
+    }
+    .btn-secondary-blue:hover {
+      background: var(--blue-modern);
+      color: white;
+    }
+
+    .btn-primary-green {
+      background: var(--green-modern);
+      color: white;
+      border-color: var(--green-modern);
+    }
+    .btn-primary-green:hover {
+      background: var(--green-darker);
+      border-color: var(--green-darker);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+    }
+
+    .btn-secondary-green {
+      background: transparent;
+      color: var(--green-modern);
+      border-color: var(--green-modern);
+    }
+    .btn-secondary-green:hover {
+      background: var(--green-modern);
+      color: white;
+    }
+
+    .btn-primary-purple {
+      background: var(--purple-modern);
+      color: white;
+      border-color: var(--purple-modern);
+    }
+    .btn-primary-purple:hover {
+      background: var(--purple-darker);
+      border-color: var(--purple-darker);
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+    }
+
+    .btn-secondary-purple {
+      background: transparent;
+      color: var(--purple-modern);
+      border-color: var(--purple-modern);
+    }
+    .btn-secondary-purple:hover {
+      background: var(--purple-modern);
+      color: white;
+    }
+
+    /* Button Sizes */
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.75rem;
+    }
+
+    .btn-lg {
+      padding: 12px 24px;
+      font-size: 1rem;
+    }
+
+    /* 3. FORMS */
+    .input-modern {
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      padding: 8px 12px;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      background: white;
+      color: #1f2937;
+      width: 100%;
+    }
+
+    .input-modern:focus {
+      outline: none;
+      border-color: var(--blue-modern);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .input-error {
+      border-color: #ef4444;
+    }
+
+    .input-error:focus {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    .input-success {
+      border-color: var(--green-modern);
+    }
+
+    .input-success:focus {
+      border-color: var(--green-modern);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .select-modern {
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      padding: 8px 12px;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      background: white;
+      color: #1f2937;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .select-modern:focus {
+      outline: none;
+      border-color: var(--blue-modern);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .textarea-modern {
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      padding: 8px 12px;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      background: white;
+      color: #1f2937;
+      width: 100%;
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .textarea-modern:focus {
+      outline: none;
+      border-color: var(--blue-modern);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* 4. BADGES */
+    .badge-modern {
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-weight: 500;
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-blue {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--blue-modern);
+    }
+
+    .badge-green {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--green-modern);
+    }
+
+    .badge-purple {
+      background: rgba(139, 92, 246, 0.1);
+      color: var(--purple-modern);
+    }
+
+    .badge-orange {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--orange-modern);
+    }
+
+    .badge-pink {
+      background: rgba(236, 72, 153, 0.1);
+      color: var(--pink-modern);
+    }
+
+    .badge-red {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+
+    .badge-gray {
+      background: rgba(107, 114, 128, 0.1);
+      color: #6b7280;
+    }
+
+    /* 5. PROGRESS */
+    .progress-modern {
+      height: 8px;
+      border-radius: 10px;
+      background: #f1f5f9;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .progress-bar-modern {
+      border-radius: 10px;
+      transition: width 0.6s ease;
+      height: 100%;
+    }
+
+    .progress-bar-blue {
+      background: linear-gradient(90deg, var(--blue-modern) 0%, var(--blue-fluorescent) 100%);
+    }
+
+    .progress-bar-green {
+      background: linear-gradient(90deg, var(--green-modern) 0%, var(--green-fluorescent) 100%);
+    }
+
+    .progress-bar-purple {
+      background: linear-gradient(90deg, var(--purple-modern) 0%, var(--purple-fluorescent) 100%);
+    }
+
+    /* 6. NAVIGATION */
+    .navbar-modern {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+      padding: 12px 0;
+    }
+
+    .nav-link {
+      padding: 8px 16px;
+      border-radius: 8px;
+      color: #6b7280;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link:hover {
+      background: #f8fafc;
+      color: #1f2937;
+    }
+
+    .nav-link.active {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--blue-modern);
+      border-bottom: 2px solid var(--blue-modern);
+    }
+
+    /* 7. TABS */
+    .tabs-container {
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .tab-button {
+      padding: 12px 16px;
+      border: none;
+      background: none;
+      color: #6b7280;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .tab-button:hover {
+      color: #1f2937;
+    }
+
+    .tab-button.active {
+      color: var(--blue-modern);
+      border-bottom-color: var(--blue-modern);
+    }
+
+    /* 8. ALERTS */
+    .alert-modern {
+      padding: 12px 16px;
+      border-radius: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .alert-success {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: var(--green-darker);
+    }
+
+    .alert-warning {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      color: var(--orange-darker);
+    }
+
+    .alert-error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #dc2626;
+    }
+
+    .alert-info {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      color: var(--blue-darker);
+    }
+
+    /* 9. MODALS */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 10. TABLES */
+    .table-modern {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .table-modern th {
+      background: #f8fafc;
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .table-modern td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #6b7280;
+    }
+
+    .table-modern tr:hover {
+      background: #f8fafc;
+    }
+
+    /* 11. LOADING */
+    .loading-spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #f1f5f9;
+      border-top: 2px solid var(--blue-modern);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+      border-radius: 4px;
+    }
+
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* 12. SWITCHES */
+    .switch-modern {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch-modern input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .switch-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .switch-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .switch-slider {
+      background-color: var(--blue-modern);
+    }
+
+    input:checked + .switch-slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Dark Mode Adjustments */
+    [data-theme="dark"] {
+      background: #0f172a;
+      color: #f8fafc;
+    }
+
+    [data-theme="dark"] .card-modern {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    [data-theme="dark"] .input-modern,
+    [data-theme="dark"] .select-modern,
+    [data-theme="dark"] .textarea-modern {
+      background: #1e293b;
+      border-color: #334155;
+      color: #f8fafc;
+    }
+
+    [data-theme="dark"] .navbar-modern {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    [data-theme="dark"] .table-modern {
+      background: #1e293b;
+    }
+
+    [data-theme="dark"] .table-modern th {
+      background: #334155;
+      color: #f8fafc;
+    }
+
+    [data-theme="dark"] .table-modern td {
+      color: #cbd5e1;
+      border-color: #334155;
+    }
+
+    [data-theme="dark"] .modal-content {
+      background: #1e293b;
+      color: #f8fafc;
+    }
+
+    /* Component Showcase Styles */
+    .component-section {
+      margin-bottom: 48px;
+      padding: 24px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+
+    [data-theme="dark"] .component-section {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    .component-grid {
+      display: grid;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .component-grid.cols-2 {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .component-grid.cols-3 {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .component-grid.cols-4 {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .spec-list {
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 12px;
+      font-size: 0.875rem;
+    }
+
+    [data-theme="dark"] .spec-list {
+      background: #334155;
+    }
+
+    .icon {
+      width: 20px;
+      height: 20px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-slate-900 transition-colors">
+  <!-- Header -->
+  <div class="navbar-modern">
+    <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <span class="text-white font-bold text-sm">VL</span>
+        </div>
+        <h1 class="text-xl font-bold">Complete Component Showcase</h1>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <button onclick="toggleTheme()" class="btn-modern btn-secondary-blue">
+          <span class="icon">🌙</span>
+          Toggle Theme
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto p-6">
+    <!-- Introduction -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white">Modern Colorful Design System</h1>
+      <p class="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+        Complete component library with 55+ components, 6 color variants, fluorescent glow effects, and full dark mode support.
+      </p>
+      
+      <div class="flex flex-wrap justify-center gap-2 mt-6">
+        <span class="badge-blue">6 Color Variants</span>
+        <span class="badge-green">Fluorescent Effects</span>
+        <span class="badge-purple">55+ Components</span>
+        <span class="badge-orange">Dark Mode Ready</span>
+        <span class="badge-pink">Accessibility Compliant</span>
+        <span class="badge-gray">Production Ready</span>
+      </div>
+    </div>
+
+    <!-- 1. Cards -->
+    <div class="component-section">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">1. Cards & Feature Cards</h2>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">Interactive cards with fluorescent glow effects on hover</p>
+      
+      <div class="component-grid cols-3">
+        <div class="card-modern feature-card feature-card-blue">
+          <div class="icon-container">
+            <span class="icon">📚</span>
+          </div>
+          <h3 class="font-semibold mb-2">Learning Tracks</h3>
+          <p class="text-gray-600 text-sm">Browse and study content</p>
+        </div>
+        
+        <div class="card-modern feature-card feature-card-green">
+          <div class="icon-container">
+            <span class="icon">✏️</span>
+          </div>
+          <h3 class="font-semibold mb-2">Content Management</h3>
+          <p class="text-gray-600 text-sm">Create and edit content</p>
+        </div>
+        
+        <div class="card-modern feature-card feature-card-purple">
+          <div class="icon-container">
+            <span class="icon">🎵</span>
+          </div>
+          <h3 class="font-semibold mb-2">Audio Mapping</h3>
+          <p class="text-gray-600 text-sm">Sync audio with text</p>
+        </div>
+      </div>
+      
+      <div class="spec-list">
+        <strong>Specifications:</strong><br>
+        • Border radius: 12px<br>
+        • Padding: 20px<br>
+        • Icon container: 48×48px with 10% color background<br>
+        • Hover: translateY(-2px) + fluorescent glow<br>
+        • 6 color variants: blue, green, purple, orange, pink, indigo
+      </div>
+    </div>
+
+    <!-- 2. Buttons -->
+    <div class="component-section">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">2. Buttons</h2>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">Primary and secondary buttons in all color variants with multiple sizes</p>
+      
+      <div class="space-y-6">
+        <!-- Primary Buttons -->
+        <div>
+          <h3 class="font-semibold mb-3">Primary Buttons</h3>
+          <div class="flex flex-wrap gap-3">
+            <button class="btn-modern btn-primary-blue">Blue Primary</button>
+            <button class="btn-modern btn-primary-green">Green Primary</button>
+            <button class="btn-modern btn-primary-purple">Purple Primary</button>
+            <button class="btn-modern btn-primary-orange">Orange Primary</button>
+            <button class="btn-modern btn-primary-pink">Pink Primary</button>
+            <button class="btn-modern btn-primary-indigo">Indigo Primary</button>
+          </div>
+        </div>
+        
+        <!-- Secondary Buttons -->
+        <div>
+          <h3 class="font-semibold mb-3">Secondary Buttons</h3>
+          <div class="flex flex-wrap gap-3">
+            <button class="btn-modern btn-secondary-blue">Blue Secondary</button>
+            <button class="btn-modern btn-secondary-green">Green Secondary</button>
+            <button class="btn-modern btn-secondary-purple">Purple Secondary</button>
+          </div>
+        </div>
+        
+        <!-- Button Sizes -->
+        <div>
+          <h3 class="font-semibold mb-3">Button Sizes</h3>
+          <div class="flex items-center gap-3">
+            <button class="btn-modern btn-primary-blue btn-sm">Small</button>
+            <button class="btn-modern btn-primary-blue">Medium</button>
+            <button class="btn-modern btn-primary-blue btn-lg">Large</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="spec-list">
+        <strong>Specifications:</strong><br>
+        • Border radius: 8px<br>
+        • Padding: 10px 20px (Medium), 6px 12px (Small), 12px 24px (Large)<br>
+        • Font weight: 500<br>
+        • Transition: all 0.2s ease<br>
+        • Hover effects: darker color + shadow for primary, fill for secondary
+      </div>
+    </div>
+
+    <!-- 3. Form Elements -->
+    <div class="component-section">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">3. Form Elements</h2>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">Input fields, selects, textareas with validation states</p>
+      
+      <div class="component-grid cols-2">
+        <div>
+          <label class="block text-sm font-medium mb-2">Text Input</label>
+          <input type="text" class="input-modern" placeholder="Enter text here...">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-2">Input with Error</label>
+          <input type="text" class="input-modern input-error" placeholder="Error state" value="Invalid input">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-2">Input with Success</label>
+          <input type="text" class="input-modern input-success" placeholder="Success state" value="Valid input">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-2">Select Dropdown</label>
+          <select class="select-modern">
+            <option>Choose an option</option>
+            <option>Option 1</option>
+            <option>Option 2</option>
+          </select>
+        </div>
+        
+        <div class="col-span-2">
+          <label class="block text-sm font-medium mb-2">Textarea</label>
+          <textarea class="textarea-modern" placeholder="Enter your message here..."></textarea>
+        </div>
+      </div>
+      
+      <div class="spec-list">
+        <strong>Specifications:</strong><br>
+        • Height: 40px (inputs), min-height: 80px (textarea)<br>
+        • Border radius: 8px<br>
+        • Border: 1px solid #e2e8f0<br>
+        • Focus: blue border + 3px blue shadow<br>
+        • Error/Success states with color-coded borders
+      </div>
+    </div>
+
+    <!-- 4. Badges -->
+    <div class="component-section">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">4. Badges & Status Indicators</h2>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">Color-coded badges for status, categories, and labels</p>
+      
+      <div class="flex flex-wrap gap-3">
+        <span class="badge-modern badge-blue">
+          <span class="icon">ℹ️</span>
+          Information
+        </span>
+        <span class="badge-modern badge-green">
+          <span class="icon">✅</span>
+          Success
+        </span>
+        <span class="badge-modern badge-orange">
+          <span class="icon">⚠️</span>
+          Warning
+        </span>
+        <span class="badge-modern badge-red">
+          <span class="icon">❌</span>
+          Error
+        </span>
+        <span class="badge-modern badge-purple">
+          <span class="icon">⭐</span>
+          Featured
+        </span>
+        <span class="badge-modern badge-pink">
+          <span class="icon">💖</span>
+          Favorite
+        </span>
+        <span class="badge-modern badge-gray">
+          <span class="icon">📋</span>
+          Draft
+        </span>
+      </div>
+      
+      <div class="spec-list">
+        <strong>Specifications:</strong><br>
+        • Padding: 6px 12px<br>
+        • Border radius: 16px<br>
+        • Font size: 0.75rem, Font weight: 500<br>
+        • Background: 10% opacity of color<br>
+        • Can include icons with 4px gap
+      </div>
+    </div>
+
+    <!-- 5. Progress Indicators -->
+    <div class="component-section">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">5. Progress Indicators</h2>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">Linear and circular progress bars with gradient effects</p>
+      
+      <div class="space-y-6">
+        <!-- Linear Progress -->
+        <div>
+          <h3 class="font-semibold mb-3">Linear Progress Bars</h3>
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span>Course Completion</span>
+                <span>75%</span>
+              </div>
+              <div class="progress-modern">
+                <div class="progress-bar-modern progress-bar-blue" style="width: 75%"></div>
+              </div>
+            </div>
+            
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span>Chapter Progress</span>
+                <span>45%</span>
+              </div>
+              <div class="progress-modern">
+                <div class="progress-bar-modern progress-bar-green" style="width: 45%"></div>
+              </div>
+            </div>
+            
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span>Audio Mapping</span>
+                <span>90%</span>
+              </div>
+              <div class="progress-modern">
+                <div class="progress-bar-modern progress-bar-purple" style="width: 90%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Circular Progress -->
+        <div>
+          <h3 class="font-semibold mb-3">Circular Progress</h3>
+          <div class="flex gap-6">
+            <div class="text-center">
+              <svg class="w-16 h-16" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" stroke="#e2e8f0" stroke-width="8" fill="none"/>
+                <circle cx="50" cy="50" r="40" stroke="#3b82f6" stroke-width="8" fill="none"
+                        stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="63"
+                        transform="rotate(-90 50 50)"/>
+                <text x="50" y="55" text-anchor="middle" class="text-sm font-semibold fill-current">75%</text>
+              </svg>
+              <p class="text-sm mt-2">Complete</p>
+            </div>
+            
+            <div class="text-center">
+              <svg class="w-16 h-16" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" stroke="#e2e8f0" stroke-width="8" fill="none"/>
+                <circle cx="50" cy="50" r="40" stroke="#10b981" stroke-width="8" fill="none"
+                        stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="138"
+                        transform="rotate(-90 50 50)"/>
+                <text x="50" y="55" text-anchor="middle" class="text-sm font-semibold fill-current">45%</text>
+              </svg>
+              <p class="text-sm mt-2">In Progress</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="spec-list">
+        <strong>Specifications:</strong><br>
+        • Linear: height 8px, border-radius 10px<br>
+        • Gradient backgrounds: color → fluorescent variant<br>
+        • Smooth transitions: width 0.6s ease<br>
+        • Circular: configurable size and stroke width<br>
+        • Optional labels and percentages
+      </div>
+    </div>
+
+    <!-- 6. Navigation -->
+    <div class="component-section">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">6. Navigation Components</h2>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">Navigation bars, links, and tabs with active states</p>
+      
+      <div class="space-y-6">
+        <!-- Navigation Links -->
+        <div>
+          <h3 class="font-semibold mb-3">Navigation Links</h3>
+          <div class="flex gap-2">
+            <a href="#" class="nav-link active">
+              <span class="icon">🏠</span>
+              Dashboard
+            </a>
+            <a href="#" class="nav-link">
+              <span class="icon">📚</span>
+              Content
+            </a>
+            <a href="#" class="nav-link">
+              <span class="icon">👥</span>
+              Users
+            </a>
+            <a href="#" class="nav-link">
+              <span class="icon">⚙️</span>
+              Settings
+            </a>
+          </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div>
+          <h3 class="font-semibold mb-3">Tabs</h3>
+          <div class="tabs-container">
+            <div class="flex">
+              <button class="tab-button active">Overview</button>
+              <button class="tab-button">Analytics</button>
+              <button class="tab-button">Settings</button>
+              <button class="tab-button">Team</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="spec-list">
+        <strong>Specifications:</strong><br>
+        • Links: 8px padding, 8px border-radius<br>
+        • Active state: blue background + blue bottom border<br>
+        • Hover: light gray background<br>
+        • Tabs: 12px vertical padding, 2px bottom border for active<br>
+        • Smooth transitions for all states
+      </div>
+    </div>
+
+    <!-- 7. Alerts & Notifications -->
+    <div class="component-section">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">7. Alerts & Notifications</h2>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">Contextual alerts with icons and color coding</p>
+      
+      <div class="space-y-4">
+        <div class="alert-modern alert-success">
+          <span class="icon text-green-500">✅</span>
+          <div>
+            <strong>Success!</strong> Your changes have been saved successfully.
+          </div>
+        </div>
+        
+        <div class="alert-modern alert-warning">
+          <span class="icon text-orange-500">⚠️</span>
+          <div>
+            <strong>Warning!</strong> Please review your input before proceeding.
+          </div>
+        </div>
+        
+        <div class="alert-modern alert-error">
+          <span class="icon text-red-500">❌</span>
+          <div>
+            <strong>Error!</strong> Something went wrong. Please try again.
+          </div>
+        </div>
+        
+        <div class="alert-modern alert-info">
+          <span class="icon text-blue-500">ℹ️</span>
+          <div>
+            <strong>Info:</strong> This is important information you should know.
+          </div>
+        </div>
+      </div>
+      
+      <div class="spec-list">
+        <strong>Specifications:</strong><br>
+        • Padding: 12px 16px<br>
+        • Border radius: 8px<br>
+        • Background: 10% opacity of variant color<br>
+        • Border: 20% opacity of variant color<br>
+        • Icon + text layout with 12px gap
+      </div>
+    </div>
+
+    <!-- 8. Tables -->
+    <div class="component-section">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">8. Data Tables</h2>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">Structured data display with hover effects</p>
+      
+      <table class="table-modern">
+        <thead>
+          <tr>
+            <th>Course</th>
+            <th>Progress</th>
+            <th>Status</th>
+            <th>Last Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Vedic Mathematics</td>
+            <td>
+              <div class="progress-modern" style="width: 100px;">
+                <div class="progress-bar-modern progress-bar-blue" style="width: 75%"></div>
+              </div>
+            </td>
+            <td><span class="badge-modern badge-blue">Active</span></td>
+            <td>2 hours ago</td>
+          </tr>
+          <tr>
+            <td>Sanskrit Grammar</td>
+            <td>
+              <div class="progress-modern" style="width: 100px;">
+                <div class="progress-bar-modern progress-bar-green" style="width: 45%"></div>
+              </div>
+            </td>
+            <td><span class="badge-modern badge-orange">In Progress</span></td>
+            <td>1 day ago</td>
+          </tr>
+          <tr>
+            <td>Audio Lessons</td>
+            <td>
+              <div class="progress-modern" style="width: 100px;">
+                <div class="progress-bar-modern progress-bar-purple" style="width: 90%"></div>
+              </div>
+            </td>
+            <td><span class="badge-modern badge-green">Complete</span></td>
+            <td>3 days ago</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="spec-list">
+        <strong>Specifications:</strong><br>
+        • Border radius: 8px<br>
+        • Header: light gray background, 600 font weight<br>
+        • Padding: 12px 16px<br>
+        • Hover: light background on rows<br>
+        • Responsive design with overflow scroll
+      </div>
+    </div>
+
+    <!-- 9. Loading States -->
+    <div class="component-section">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">9. Loading States</h2>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">Spinners and skeleton loaders for async content</p>
+      
+      <div class="space-y-6">
+        <!-- Spinners -->
+        <div>
+          <h3 class="font-semibold mb-3">Loading Spinners</h3>
+          <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2">
+              <div class="loading-spinner"></div>
+              <span class="text-sm">Loading...</span>
+            </div>
+            
+            <button class="btn-modern btn-primary-blue" disabled>
+              <div class="loading-spinner" style="width: 16px; height: 16px;"></div>
+              Processing
+            </button>
+          </div>
+        </div>
+        
+        <!-- Skeleton Loaders -->
+        <div>
+          <h3 class="font-semibold mb-3">Skeleton Loaders</h3>
+          <div class="space-y-3">
+            <div class="skeleton h-4 w-3/4"></div>
+            <div class="skeleton h-4 w-1/2"></div>
+            <div class="skeleton h-20 w-full"></div>
+            <div class="flex gap-3">
+              <div class="skeleton h-10 w-20"></div>
+              <div class="skeleton h-10 w-20"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="spec-list">
+        <strong>Specifications:</strong><br>
+        • Spinner: circular border animation, 1s linear infinite<br>
+        • Skeleton: gradient animation, 1.5s infinite<br>
+        • Various sizes: 16px (inline), 24px (default), 32px (large)<br>
+        • Smooth loading animations
+      </div>
+    </div>
+
+    <!-- 10. Switches & Toggles -->
+    <div class="component-section">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">10. Switches & Toggles</h2>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">Toggle switches for boolean settings</p>
+      
+      <div class="space-y-4">
+        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800 rounded-lg">
+          <div>
+            <h4 class="font-medium">Dark Mode</h4>
+            <p class="text-sm text-gray-600 dark:text-gray-300">Toggle between light and dark themes</p>
+          </div>
+          <label class="switch-modern">
+            <input type="checkbox" onchange="toggleTheme()">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+        
+        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800 rounded-lg">
+          <div>
+            <h4 class="font-medium">Notifications</h4>
+            <p class="text-sm text-gray-600 dark:text-gray-300">Receive email notifications</p>
+          </div>
+          <label class="switch-modern">
+            <input type="checkbox" checked>
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+        
+        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800 rounded-lg">
+          <div>
+            <h4 class="font-medium">Auto-save</h4>
+            <p class="text-sm text-gray-600 dark:text-gray-300">Automatically save your progress</p>
+          </div>
+          <label class="switch-modern">
+            <input type="checkbox">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="spec-list">
+        <strong>Specifications:</strong><br>
+        • Size: 44×24px<br>
+        • Border radius: 24px (pill shape)<br>
+        • Slider: 20×20px circle<br>
+        • Smooth transition: 0.4s<br>
+        • Colors: gray (off), blue (on)
+      </div>
+    </div>
+
+    <!-- Color Palette Reference -->
+    <div class="component-section">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">11. Color Palette Reference</h2>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">Complete color system with fluorescent variants</p>
+      
+      <div class="component-grid cols-3">
+        <div class="text-center">
+          <div class="h-16 bg-blue-500 rounded-lg mb-2 flex items-center justify-center text-white font-bold">Blue</div>
+          <p class="text-sm">#3b82f6</p>
+          <p class="text-xs text-gray-600">Primary, Buttons, Links</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="h-16 bg-green-500 rounded-lg mb-2 flex items-center justify-center text-white font-bold">Green</div>
+          <p class="text-sm">#10b981</p>
+          <p class="text-xs text-gray-600">Success, Positive Actions</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="h-16 bg-purple-500 rounded-lg mb-2 flex items-center justify-center text-white font-bold">Purple</div>
+          <p class="text-sm">#8b5cf6</p>
+          <p class="text-xs text-gray-600">Features, Special Content</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="h-16 bg-orange-500 rounded-lg mb-2 flex items-center justify-center text-white font-bold">Orange</div>
+          <p class="text-sm">#f59e0b</p>
+          <p class="text-xs text-gray-600">Warnings, Attention</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="h-16 bg-pink-500 rounded-lg mb-2 flex items-center justify-center text-white font-bold">Pink</div>
+          <p class="text-sm">#ec4899</p>
+          <p class="text-xs text-gray-600">Highlights, Favorites</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="h-16 bg-indigo-500 rounded-lg mb-2 flex items-center justify-center text-white font-bold">Indigo</div>
+          <p class="text-sm">#6366f1</p>
+          <p class="text-xs text-gray-600">Secondary, Navigation</p>
+        </div>
+      </div>
+      
+      <div class="spec-list">
+        <strong>Fluorescent Variants:</strong><br>
+        • Blue: #dbeafe (Blue-100)<br>
+        • Green: #dcfce7 (Green-100)<br>
+        • Purple: #ede9fe (Purple-100)<br>
+        • Orange: #ffedd5 (Orange-100)<br>
+        • Pink: #fce7f3 (Pink-100)<br>
+        • Indigo: #e0e7ff (Indigo-100)
+      </div>
+    </div>
+
+    <!-- Implementation Guide -->
+    <div class="component-section">
+      <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">12. Implementation Guide</h2>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">How to use these components in your application</p>
+      
+      <div class="bg-gray-900 text-gray-100 p-6 rounded-lg overflow-x-auto">
+        <pre><code><!-- Feature Card Usage -->
+&lt;div class="card-modern feature-card feature-card-blue"&gt;
+  &lt;div class="icon-container"&gt;
+    &lt;span class="icon"&gt;📚&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;h3 class="font-semibold mb-2"&gt;Title&lt;/h3&gt;
+  &lt;p class="text-gray-600 text-sm"&gt;Description&lt;/p&gt;
+&lt;/div&gt;
+
+<!-- Button Usage -->
+&lt;button class="btn-modern btn-primary-blue"&gt;
+  Primary Action
+&lt;/button&gt;
+
+<!-- Progress Bar Usage -->
+&lt;div class="progress-modern"&gt;
+  &lt;div class="progress-bar-modern progress-bar-blue" style="width: 75%"&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+<!-- Badge Usage -->
+&lt;span class="badge-modern badge-green"&gt;
+  &lt;span class="icon"&gt;✅&lt;/span&gt;
+  Success
+&lt;/span&gt;</code></pre>
+      </div>
+      
+      <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <h4 class="font-semibold mb-2 text-blue-900 dark:text-blue-100">React Implementation</h4>
+        <p class="text-sm text-blue-800 dark:text-blue-200">
+          All components are available as React components in the <code>/components/ui/colorful-*</code> directory.
+          Use the <code>useColorfulTheme</code> hook for theme management and dynamic color switching.
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center py-12 border-t border-gray-200 dark:border-gray-700">
+      <h3 class="text-xl font-bold mb-2 text-gray-900 dark:text-white">Modern Colorful Design System</h3>
+      <p class="text-gray-600 dark:text-gray-300">Complete component library for Vedic LMS</p>
+      <div class="flex justify-center gap-4 mt-4">
+        <span class="badge-blue">55+ Components</span>
+        <span class="badge-green">Production Ready</span>
+        <span class="badge-purple">Fully Documented</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      
+      // Update button text
+      const button = document.querySelector('button[onclick="toggleTheme()"]');
+      const icon = button.querySelector('.icon');
+      icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    }
+
+    // Set initial theme based on system preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      const button = document.querySelector('button[onclick="toggleTheme()"]');
+      if (button) {
+        const icon = button.querySelector('.icon');
+        icon.textContent = '☀️';
+      }
+    }
+  </script>
+</body>
+</html>

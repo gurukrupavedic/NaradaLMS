@@ -13,7 +13,7 @@ export function DaisyUI5Showcase() {
   const designSystem = {
     title: "Modern Colorful Design System",
     description: "Complete design system with vibrant colors, fluorescent glow effects, and elegant interactions - the official UI standard for Vedic LMS",
-    link: "/experiments/design-systems/modern-colorful-theme.html",
+    link: "/experiments/design-systems/complete-component-showcase.html",
     highlight: "Official Design System"
   };
 
@@ -122,7 +122,7 @@ export function DaisyUI5Showcase() {
                 <Button 
                   variant="outline" 
                   className="w-full border-green-600 text-green-700 hover:bg-green-600 hover:text-white"
-                  onClick={() => window.open('/docs/modern-colorful-design-system.md', '_blank')}
+                  onClick={() => window.open('/experiments/design-systems/complete-component-showcase.html', '_blank')}
                 >
                   View Documentation
                 </Button>
@@ -138,7 +138,7 @@ export function DaisyUI5Showcase() {
                 <Button 
                   variant="outline" 
                   className="w-full border-purple-600 text-purple-700 hover:bg-purple-600 hover:text-white"
-                  onClick={() => window.open('/docs/design-system-migration-plan.md', '_blank')}
+                  onClick={() => window.open('/experiments/design-systems/complete-component-showcase.html', '_blank')}
                 >
                   View Plan
                 </Button>
