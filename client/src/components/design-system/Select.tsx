@@ -214,23 +214,43 @@ const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(({ className, children, ...props }, ref) => {
-  const { variant = "default" } = React.useContext(SelectContext);
+  const { variant = "default", size = "md" } = React.useContext(SelectContext);
   const colors = hoverColorMap[variant] || hoverColorMap.default;
-  
+
+  // Size variants for SelectItem
+  const sizeStyles = {
+    sm: "py-1.5 pl-7 pr-2 text-xs",
+    md: "py-2.5 pl-8 pr-2 text-sm", 
+    lg: "py-3 pl-9 pr-2 text-base"
+  };
+
+  const iconSizes = {
+    sm: "h-3 w-3",
+    md: "h-4 w-4",
+    lg: "h-5 w-5"
+  };
+
+  const iconPositions = {
+    sm: "left-1.5",
+    md: "left-2",
+    lg: "left-2.5"
+  };
+
   return (
     <SelectPrimitive.Item
       ref={ref}
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-md py-2.5 pl-8 pr-2 text-sm outline-none transition-all duration-150 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex w-full cursor-default select-none items-center rounded-md outline-none transition-all duration-150 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        sizeStyles[size as keyof typeof sizeStyles],
         colors.bg,
         colors.text,
         className
       )}
       {...props}
     >
-      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+      <span className={cn("absolute flex items-center justify-center", iconPositions[size as keyof typeof iconPositions])}>
         <SelectPrimitive.ItemIndicator>
-          <Check className={cn("h-4 w-4", colors.check)} />
+          <Check className={cn(iconSizes[size as keyof typeof iconSizes], colors.check)} />
         </SelectPrimitive.ItemIndicator>
       </span>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
