@@ -135,4 +135,4 @@ Changelog:
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
-Theme preferences: Night theme for dark mode, Business theme for light mode (professional aesthetic pairing). Likes Light theme structure but prefers vibrant FlatUI/Bootflat button color schemes over default DaisyUI colors.
+Theme preferences: Night theme for dark mode, Business theme for light mode (professional aesthetic pairing). Likes Light theme structure but prefers vibrant Bootflat button color schemes over default DaisyUI colors. Specifically prefers Bootflat over FlatUI. Referenced official Bootflat documentation (bootflat.github.io) for authentic color palette.
