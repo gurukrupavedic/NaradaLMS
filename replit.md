@@ -135,6 +135,7 @@ Changelog:
 - June 24, 2025. TRUE BOOTFLAT LIGHT THEME: User complained that previous experiment had dark background instead of light theme. Created true light theme with pure white background (#ffffff), light gray navbar (#f8f9fa), dark text on light backgrounds, and custom Bootflat-inspired button colors. Fixed DaisyUI theme configuration issues to ensure proper light theme appearance.
 - June 24, 2025. BOOTSTRAP 5 INSPIRED THEME: User found Bootflat colors too bright and light for comfortable viewing. Created professional theme based on Bootstrap 5 design system with subtle, accessible colors: primary (#0d6efd), secondary (#6c757d), success (#198754). Maintains excellent readability with proper contrast ratios and sophisticated styling.
 - June 24, 2025. BOOTSTRAP 5 MIGRATION PLANNING: User confirmed Bootstrap 5 is the best UI kit for both light and dark themes. Created comprehensive migration plan and full Bootstrap 5 prototype. Recommended approach: Bootstrap 5 + minimal Tailwind for utilities, phased migration strategy. User wants to completely adopt Bootstrap 5 design system with cleanest implementation possible.
+- June 24, 2025. DESIGN SYSTEMS COMPARISON: Created shadcn/ui vs Bootstrap 5 comparison experiment to help user make informed migration decision. Current app uses shadcn/ui + custom Vedic theme. User wants to understand differences between design systems for better decision making.
 
 ## User Preferences
 

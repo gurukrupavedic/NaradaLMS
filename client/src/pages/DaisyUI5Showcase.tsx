@@ -57,6 +57,12 @@ export function DaisyUI5Showcase() {
       highlight: "Full Bootstrap 5"
     },
     {
+      title: "shadcn/ui vs Bootstrap 5",
+      description: "Side-by-side comparison of design systems: shadcn/ui (current) vs Bootstrap 5 with migration analysis",
+      link: "/experiments/design-systems/shadcn-vs-bootstrap5.html",
+      highlight: "Design system comparison"
+    },
+    {
       title: "Vedic Dashboard",
       description: "Complete dashboard redesign with autumn theme and Vedic aesthetic enhancements",
       link: "/experiments/02-vedic-dashboard.html",
@@ -69,9 +75,9 @@ export function DaisyUI5Showcase() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">DaisyUI Latest Experiments</h1>
+          <h1 className="text-3xl font-bold mb-2">Design System Experiments</h1>
           <p className="text-gray-600">
-            Exploring DaisyUI 4.12.24 with modern aesthetics and theme options for Vedic LMS
+            Exploring UI frameworks and design systems for Vedic LMS - DaisyUI, Bootstrap 5, and shadcn/ui comparisons
           </p>
         </div>
 
