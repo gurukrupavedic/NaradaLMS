@@ -477,7 +477,7 @@ export function DesignSystemShowcase() {
                   <SelectTrigger educational="language">
                     <SelectValue placeholder="Select language" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent educational="language">
                     <SelectItem value="te">Telugu</SelectItem>
                     <SelectItem value="hi">Hindi</SelectItem>
                     <SelectItem value="en">English</SelectItem>
@@ -492,7 +492,7 @@ export function DesignSystemShowcase() {
                   <SelectTrigger educational="role">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent educational="role">
                     <SelectItem value="admin">Administrator</SelectItem>
                     <SelectItem value="instructor">Instructor</SelectItem>
                     <SelectItem value="student">Student</SelectItem>
@@ -507,7 +507,7 @@ export function DesignSystemShowcase() {
                   <SelectTrigger educational="track">
                     <SelectValue placeholder="Select track" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent educational="track">
                     <SelectItem value="basics">Vedic Basics</SelectItem>
                     <SelectItem value="mantras">Sacred Mantras</SelectItem>
                     <SelectItem value="advanced">Advanced Studies</SelectItem>
@@ -521,7 +521,7 @@ export function DesignSystemShowcase() {
                   <SelectTrigger educational="status">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent educational="status">
                     <SelectItem value="draft">Draft</SelectItem>
                     <SelectItem value="review">Under Review</SelectItem>
                     <SelectItem value="published">Published</SelectItem>

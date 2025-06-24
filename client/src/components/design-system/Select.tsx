@@ -76,6 +76,12 @@ export interface SelectTriggerProps
   educational?: keyof typeof educationalVariants;
 }
 
+export interface SelectContentProps
+  extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content> {
+  variant?: keyof typeof educationalVariants | "default";
+  educational?: keyof typeof educationalVariants;
+}
+
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   SelectTriggerProps
@@ -132,36 +138,46 @@ const SelectScrollDownButton = React.forwardRef<
 ));
 SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName;
 
+// Context to pass color variant to dropdown items
+const SelectContext = React.createContext<{ variant?: string }>({});
+
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, children, position = "popper", ...props }, ref) => (
-  <SelectPrimitive.Portal>
-    <SelectPrimitive.Content
-      ref={ref}
-      className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-lg border bg-white shadow-[0_10px_38px_-10px_rgba(22,23,24,0.35),0_10px_20px_-15px_rgba(22,23,24,0.2)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-        position === "popper" &&
-          "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
-        className
-      )}
-      position={position}
-      {...props}
-    >
-      <SelectScrollUpButton />
-      <SelectPrimitive.Viewport
-        className={cn(
-          "p-2",
-          position === "popper" &&
-            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
-        )}
-      >
-        {children}
-      </SelectPrimitive.Viewport>
-      <SelectScrollDownButton />
-    </SelectPrimitive.Content>
-  </SelectPrimitive.Portal>
-));
+  SelectContentProps
+>(({ className, children, position = "popper", variant, educational, ...props }, ref) => {
+  // Use educational variant if provided
+  const finalVariant = educational ? educationalVariants[educational] : variant || "blue";
+  
+  return (
+    <SelectContext.Provider value={{ variant: finalVariant }}>
+      <SelectPrimitive.Portal>
+        <SelectPrimitive.Content
+          ref={ref}
+          className={cn(
+            "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-lg border bg-white shadow-[0_10px_38px_-10px_rgba(22,23,24,0.35),0_10px_20px_-15px_rgba(22,23,24,0.2)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+            position === "popper" &&
+              "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
+            className
+          )}
+          position={position}
+          {...props}
+        >
+          <SelectScrollUpButton />
+          <SelectPrimitive.Viewport
+            className={cn(
+              "p-2",
+              position === "popper" &&
+                "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
+            )}
+          >
+            {children}
+          </SelectPrimitive.Viewport>
+          <SelectScrollDownButton />
+        </SelectPrimitive.Content>
+      </SelectPrimitive.Portal>
+    </SelectContext.Provider>
+  );
+});
 SelectContent.displayName = SelectPrimitive.Content.displayName;
 
 const SelectLabel = React.forwardRef<
@@ -176,26 +192,49 @@ const SelectLabel = React.forwardRef<
 ));
 SelectLabel.displayName = SelectPrimitive.Label.displayName;
 
+// Color mapping for hover states
+const hoverColorMap: Record<string, { bg: string; text: string; check: string }> = {
+  blue: { bg: "hover:bg-blue-50 focus:bg-blue-50", text: "hover:text-blue-700 focus:text-blue-700", check: "text-blue-600" },
+  green: { bg: "hover:bg-green-50 focus:bg-green-50", text: "hover:text-green-700 focus:text-green-700", check: "text-green-600" },
+  purple: { bg: "hover:bg-purple-50 focus:bg-purple-50", text: "hover:text-purple-700 focus:text-purple-700", check: "text-purple-600" },
+  orange: { bg: "hover:bg-orange-50 focus:bg-orange-50", text: "hover:text-orange-700 focus:text-orange-700", check: "text-orange-600" },
+  pink: { bg: "hover:bg-pink-50 focus:bg-pink-50", text: "hover:text-pink-700 focus:text-pink-700", check: "text-pink-600" },
+  indigo: { bg: "hover:bg-indigo-50 focus:bg-indigo-50", text: "hover:text-indigo-700 focus:text-indigo-700", check: "text-indigo-600" },
+  teal: { bg: "hover:bg-teal-50 focus:bg-teal-50", text: "hover:text-teal-700 focus:text-teal-700", check: "text-teal-600" },
+  cyan: { bg: "hover:bg-cyan-50 focus:bg-cyan-50", text: "hover:text-cyan-700 focus:text-cyan-700", check: "text-cyan-600" },
+  yellow: { bg: "hover:bg-yellow-50 focus:bg-yellow-50", text: "hover:text-yellow-700 focus:text-yellow-700", check: "text-yellow-600" },
+  lime: { bg: "hover:bg-lime-50 focus:bg-lime-50", text: "hover:text-lime-700 focus:text-lime-700", check: "text-lime-600" },
+  rose: { bg: "hover:bg-rose-50 focus:bg-rose-50", text: "hover:text-rose-700 focus:text-rose-700", check: "text-rose-600" },
+  emerald: { bg: "hover:bg-emerald-50 focus:bg-emerald-50", text: "hover:text-emerald-700 focus:text-emerald-700", check: "text-emerald-600" }
+};
+
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Item
-    ref={ref}
-    className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-md py-2.5 pl-8 pr-2 text-sm outline-none transition-all duration-150 hover:bg-blue-50 hover:text-blue-700 focus:bg-blue-50 focus:text-blue-700 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      className
-    )}
-    {...props}
-  >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-      <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4 text-blue-600" />
-      </SelectPrimitive.ItemIndicator>
-    </span>
-    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-  </SelectPrimitive.Item>
-));
+>(({ className, children, ...props }, ref) => {
+  const { variant = "blue" } = React.useContext(SelectContext);
+  const colors = hoverColorMap[variant] || hoverColorMap.blue;
+  
+  return (
+    <SelectPrimitive.Item
+      ref={ref}
+      className={cn(
+        "relative flex w-full cursor-default select-none items-center rounded-md py-2.5 pl-8 pr-2 text-sm outline-none transition-all duration-150 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        colors.bg,
+        colors.text,
+        className
+      )}
+      {...props}
+    >
+      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+        <SelectPrimitive.ItemIndicator>
+          <Check className={cn("h-4 w-4", colors.check)} />
+        </SelectPrimitive.ItemIndicator>
+      </span>
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    </SelectPrimitive.Item>
+  );
+});
 SelectItem.displayName = SelectPrimitive.Item.displayName;
 
 const SelectSeparator = React.forwardRef<
