@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./database-storage";
@@ -28,6 +28,82 @@ const upload = multer({
     }
   },
 });
+
+// Error response interface
+interface ApiErrorResponse {
+  error: {
+    message: string;
+    code?: string;
+    details?: any;
+    timestamp: string;
+    requestId: string;
+  };
+}
+
+function generateRequestId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+function createErrorResponse(message: string, code?: string, details?: any): ApiErrorResponse {
+  return {
+    error: {
+      message,
+      code,
+      details,
+      timestamp: new Date().toISOString(),
+      requestId: generateRequestId(),
+    },
+  };
+}
+
+// Global error handling middleware
+function globalErrorHandler(err: any, req: Request, res: Response, next: NextFunction) {
+  console.error(`Error in ${req.method} ${req.path}:`, err);
+  
+  // Database connection errors
+  if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
+    return res.status(503).json(createErrorResponse(
+      "Database temporarily unavailable",
+      "DATABASE_CONNECTION_ERROR",
+      { retryAfter: 30 }
+    ));
+  }
+  
+  // Validation errors
+  if (err.name === 'ValidationError') {
+    return res.status(422).json(createErrorResponse(
+      "Invalid input data",
+      "VALIDATION_ERROR",
+      err.details
+    ));
+  }
+  
+  // File upload errors
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json(createErrorResponse(
+      "File too large",
+      "FILE_SIZE_LIMIT",
+      { maxSize: '50MB' }
+    ));
+  }
+  
+  if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+    return res.status(400).json(createErrorResponse(
+      "Unexpected file field",
+      "INVALID_FILE_FIELD"
+    ));
+  }
+  
+  // Generic server error
+  const statusCode = err.statusCode || err.status || 500;
+  const message = statusCode === 500 ? "Internal server error" : err.message;
+  
+  res.status(statusCode).json(createErrorResponse(
+    message,
+    err.code || "INTERNAL_ERROR",
+    statusCode === 500 ? undefined : err.details
+  ));
+}
 
 /**
  * Register API routes for the Vedic LMS application

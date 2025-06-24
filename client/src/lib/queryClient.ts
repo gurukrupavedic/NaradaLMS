@@ -1,9 +1,29 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { createApiError, type ApiError } from "@/types/api-errors";
 
-async function throwIfResNotOk(res: Response) {
+async function throwIfResNotOk(res: Response): Promise<void> {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    let errorData: any = {};
+    
+    try {
+      const contentType = res.headers.get('content-type');
+      if (contentType?.includes('application/json')) {
+        errorData = await res.json();
+      } else {
+        errorData = { message: await res.text() };
+      }
+    } catch {
+      errorData = { message: res.statusText };
+    }
+
+    const apiError: ApiError = createApiError(
+      res.status,
+      errorData.message || `HTTP ${res.status}: ${res.statusText}`,
+      errorData.code,
+      errorData.details
+    );
+
+    throw apiError;
   }
 }
 
@@ -48,10 +68,31 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: Infinity,
-      retry: false,
+      retry: (failureCount, error: any) => {
+        // Maximum 3 retry attempts
+        if (failureCount >= 3) return false;
+        
+        // Don't retry client errors (4xx) or auth failures
+        if (error?.status >= 400 && error?.status < 500) return false;
+        if (error?.message?.includes('401') || error?.message?.includes('403')) return false;
+        
+        // Retry network and server errors
+        return error?.isNetworkError || error?.isServerError || error?.status >= 500;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 30000),
     },
     mutations: {
-      retry: false,
+      retry: (failureCount, error: any) => {
+        // Maximum 2 retry attempts for mutations
+        if (failureCount >= 2) return false;
+        
+        // Don't retry client errors (4xx)
+        if (error?.status >= 400 && error?.status < 500) return false;
+        
+        // Only retry network and server errors
+        return error?.isNetworkError || error?.isServerError;
+      },
+      retryDelay: 1000,
     },
   },
 });
