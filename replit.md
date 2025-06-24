@@ -139,6 +139,7 @@ Changelog:
 - June 24, 2025. MODERN COLORFUL THEME: User confirmed preference for modern, colorful, elegant design over traditional Vedic theme. Loves vibrant colors (blue, green, purple, orange, pink, indigo) with subtle hover effects like dashboard tiles. Created modern colorful theme experiment with sleek design, contrasting UI components, and contemporary aesthetic. User specifically appreciates colorful elements from experiments page styling.
 - June 24, 2025. COLORFUL THEME REFINEMENT: User loves the playful, colorful theme but requested clean white background instead of gradient. Updated modern colorful theme to use pure white background (#ffffff) while maintaining vibrant colorful UI components and elegant hover effects.
 - June 24, 2025. DASHBOARD-STYLE UI REFINEMENT: User requested subtle, classy refinements matching dashboard tile styling. Updated colorful theme with gentle hover effects (2px lift, 8% shadow opacity), refined icon backgrounds (48px containers with 10% color opacity), sophisticated border transitions, and professional button styling. Achieved perfect balance of subtlety and classiness like dashboard tiles.
+- June 24, 2025. GLOW EFFECT ENHANCEMENT: Added subtle glow effects matching dashboard tiles. Implemented multi-layered box-shadow with colored glow (10% opacity for light mode, 15-20% for dark mode) that creates the same elegant luminous border effect as the dashboard hover states.
 
 ## User Preferences
 
