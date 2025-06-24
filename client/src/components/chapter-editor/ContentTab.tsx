@@ -1,3 +1,14 @@
+/**
+ * ContentTab - Multi-script content editing interface
+ * 
+ * Provides rich text editing capabilities for Vedic content in multiple scripts
+ * (Telugu, Hindi, English). Features script-specific editors, real-time preview,
+ * and content validation with auto-save functionality.
+ * 
+ * @author Vedic LMS Team
+ * @since 2025-06-24
+ */
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
