@@ -20,6 +20,10 @@ import { AudioMappingTab } from "@/components/chapter-editor/AudioMappingTab";
 import { SegmentationTab } from "@/components/chapter-editor/SegmentationTab";
 import { ChapterHeader } from "@/components/chapter-editor/ChapterHeader";
 
+// Phase 4C: Context Integration
+import { ChapterEditorProvider } from "@/contexts/ChapterEditorContext";
+import { ContentTabWithContext } from "@/components/chapter-editor/ContentTabWithContext";
+
 // UI Components
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -111,6 +115,9 @@ export default function ChapterEditor() {
   
   // Phase 4B: Component Integration (Feature Flag) - Set to true to test tab components
   const USE_EXTRACTED_COMPONENTS = true; // Toggle to test components
+  
+  // Phase 4C: Context Integration (Feature Flag) - Set to true to test context providers
+  const USE_CONTEXT_INTEGRATION = true; // Toggle to test context
 
   // Phase 4A: Initialize Custom Hooks (parallel to existing state)
   const chapterDataHook = USE_EXTRACTED_HOOKS ? useChapterData(chapterId) : null;
@@ -1608,7 +1615,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     return <div className="p-6">Loading chapter...</div>;
   }
 
-  return (
+  // Phase 4C: Wrap entire component in context provider when enabled
+  const renderContent = () => (
     <div className="min-h-screen bg-background">
       <audio ref={audioRef} preload="metadata" />
 
@@ -3157,5 +3165,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
         </Tabs>
       </div>
     </div>
+  );
+
+  // Phase 4C: Return with or without context provider
+  return USE_CONTEXT_INTEGRATION ? (
+    <ChapterEditorProvider chapterId={chapterId} trackId={trackId}>
+      {renderContent()}
+    </ChapterEditorProvider>
+  ) : (
+    renderContent()
   );
 }
