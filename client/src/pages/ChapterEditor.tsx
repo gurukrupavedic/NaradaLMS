@@ -2012,7 +2012,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   <AnnotationLayer
                     content={chapterContent}
                     currentScript={contentScript}
-                    segments={segments}
+                    segments={textSegments}
                     selectedSegmentId={selectedSegmentId}
                     onSegmentCreate={handleCreateSegment}
                     onSegmentUpdate={handleUpdateSegment}
