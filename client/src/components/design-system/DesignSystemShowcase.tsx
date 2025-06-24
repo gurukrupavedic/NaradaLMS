@@ -33,7 +33,7 @@ import { Breadcrumb, LMSBreadcrumbs } from "./Breadcrumb";
 import { AudioControls } from "./AudioControls";
 import { ComponentCard, ComponentInspector } from "./ComponentInspector";
 import { colorVariants, componentConfigs, getComponentConfig } from "./utils/componentMeta";
-import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, HelpCircle, Settings, Upload, Type, Volume2, Zap } from "lucide-react";
+import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, HelpCircle, Settings, Upload, Type, Volume2, Zap, X } from "lucide-react";
 
 export function DesignSystemShowcase() {
   const [selectedVariant, setSelectedVariant] = useState<string>("blue");
