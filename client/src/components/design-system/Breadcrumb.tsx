@@ -158,12 +158,12 @@ export function Breadcrumb({
                 
                 {item.href && !isActive && !isEllipsis ? (
                   <Link href={item.href}>
-                    <span className={`
+                    <a className={`
                       ${sizeStyle.text} font-medium transition-colors cursor-pointer
                       ${variantStyle.inactive}
                     `}>
                       {item.label}
-                    </span>
+                    </a>
                   </Link>
                 ) : (
                   <span className={`

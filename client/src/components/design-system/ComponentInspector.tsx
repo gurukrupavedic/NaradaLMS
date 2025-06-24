@@ -82,14 +82,17 @@ function generateComponentReference(
 
   // Add notable props
   const notableProps = [];
-  if (props?.selectable) notableProps.push("selectable");
-  if (props?.sortable) notableProps.push("sortable");
-  if (props?.destructive) notableProps.push("destructive");
-  if (props?.loading) notableProps.push("loading");
-  if (props?.disabled) notableProps.push("disabled");
-  if (props?.showVolume) notableProps.push("showVolume");
-  if (props?.showValue) notableProps.push("showValue");
-  if (props?.showHome) notableProps.push("showHome");
+  if (props?.selectable === true) notableProps.push("selectable");
+  if (props?.sortable === true) notableProps.push("sortable");
+  if (props?.destructive === true) notableProps.push("destructive");
+  if (props?.loading === true) notableProps.push("loading");
+  if (props?.disabled === true) notableProps.push("disabled");
+  if (props?.showVolume === true) notableProps.push("showVolume");
+  if (props?.showValue === true) notableProps.push("showValue");
+  if (props?.showHome === true) notableProps.push("showHome");
+  if (props?.striped === true) notableProps.push("striped");
+  if (props?.hoverable === true) notableProps.push("hoverable");
+  if (props?.showPercentage === true) notableProps.push("showPercentage");
   
   if (notableProps.length > 0) {
     return `${parts.join(".")}(${notableProps.join(", ")})`;
@@ -125,7 +128,11 @@ export function ComponentInspector({
   };
 
   const notableProps = Object.entries(props).filter(([key, value]) => 
-    value === true && ["selectable", "sortable", "destructive", "loading", "disabled", "showVolume", "showValue", "showHome"].includes(key)
+    value === true && [
+      "selectable", "sortable", "destructive", "loading", "disabled", 
+      "showVolume", "showValue", "showHome", "striped", "hoverable", 
+      "showPercentage", "interactive", "glow"
+    ].includes(key)
   );
 
   return (

@@ -244,6 +244,50 @@ export function DesignSystemShowcase() {
           </div>
         </div>
 
+        {/* Demo Dialogs */}
+        <Dialog
+          isOpen={showDialog}
+          onClose={() => setShowDialog(false)}
+          title="User Invitation"
+          description="Invite a new user to join your learning track"
+          variant={selectedVariant as any}
+        >
+          <div className="space-y-4">
+            <Input 
+              placeholder="Enter email address" 
+              variant={selectedVariant as any}
+            />
+            <RadioGroup
+              name="invite-role"
+              label="Assign Role"
+              options={CommonRadioOptions.userRoles}
+              value="student"
+              onChange={() => {}}
+              variant={selectedVariant as any}
+              size="sm"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant={selectedVariant as any} onClick={() => setShowDialog(false)}>
+              Send Invitation
+            </Button>
+          </DialogFooter>
+        </Dialog>
+
+        <ConfirmDialog
+          isOpen={showConfirmDialog}
+          onClose={() => setShowConfirmDialog(false)}
+          onConfirm={() => console.log("Deleted!")}
+          title="Delete Chapter"
+          description="Are you sure you want to delete this chapter? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          destructive={true}
+        />
+
         {/* ENHANCED: Interactive Button Showcase */}
         <div className="space-y-8">
           <h2 className="text-3xl font-semibold text-gray-900">Interactive Components</h2>
@@ -255,7 +299,7 @@ export function DesignSystemShowcase() {
               componentName="Button"
               variant={buttonVariant}
               size={buttonSize}
-              props={{ destructive: false }}
+              props={{ destructive: false, loading: false }}
               onVariantChange={setButtonVariant}
               onSizeChange={setButtonSize}
             >
@@ -271,7 +315,7 @@ export function DesignSystemShowcase() {
                   variant={buttonVariant as any}
                   size={buttonSize as any}
                   className="w-full"
-                  loading
+                  loading={true}
                 >
                   Loading State
                 </Button>
