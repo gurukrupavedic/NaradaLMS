@@ -2,6 +2,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Tiro+Telugu:ital@0;1&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Sanskrit:ital@0;1&display=swap');
 
+/* Modern Colorful Design System Imports */
+@import './styles/design-system/tokens.css';
+@import './styles/design-system/components.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

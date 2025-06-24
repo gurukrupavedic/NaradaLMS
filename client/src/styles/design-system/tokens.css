@@ -1,0 +1,99 @@
+/**
+ * Modern Colorful Design System - Design Tokens
+ * Vedic LMS Design System v1.0
+ * 
+ * This file contains all design tokens for the modern colorful theme system.
+ * Supports both light and dark modes with fluorescent glow effects.
+ */
+
+/* ===== COLOR PALETTE ===== */
+:root {
+  /* Primary Modern Colors */
+  --blue-modern: #3b82f6;
+  --green-modern: #10b981;
+  --purple-modern: #8b5cf6;
+  --orange-modern: #f59e0b;
+  --pink-modern: #ec4899;
+  --indigo-modern: #6366f1;
+  
+  /* Fluorescent Colors (Tailwind Based) */
+  --blue-fluorescent: #dbeafe;
+  --green-fluorescent: #dcfce7;
+  --purple-fluorescent: #ede9fe;
+  --orange-fluorescent: #ffedd5;
+  --pink-fluorescent: #fce7f3;
+  --indigo-fluorescent: #e0e7ff;
+  
+  /* Darker Variants for Hover States */
+  --blue-darker: #1d4ed8;
+  --green-darker: #047857;
+  --purple-darker: #7c3aed;
+  --orange-darker: #d97706;
+  --pink-darker: #be185d;
+  --indigo-darker: #4f46e5;
+  
+  /* Neutral Colors */
+  --background: #ffffff;
+  --foreground: #1f2937;
+  --border: #e2e8f0;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+}
+
+/* Dark Mode Overrides */
+[data-theme="dark"] {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --border: #334155;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+}
+
+/* ===== SPACING SYSTEM ===== */
+:root {
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  --space-12: 3rem;    /* 48px */
+  --space-16: 4rem;    /* 64px */
+}
+
+/* ===== BORDER RADIUS ===== */
+:root {
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 50%;
+}
+
+/* ===== SHADOWS & GLOW EFFECTS ===== */
+:root {
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== TRANSITIONS ===== */
+:root {
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.6s ease;
+}
+
+/* ===== FLUORESCENT GLOW MIXINS ===== */
+:root {
+  --glow-light-border: 0.3;
+  --glow-light-main: 1;
+  --glow-light-halo: 0.6;
+  
+  --glow-dark-inner: 0.3;
+  --glow-dark-mid: 0.2;
+  --glow-dark-outer: 0.1;
+}

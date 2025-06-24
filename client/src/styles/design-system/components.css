@@ -1,0 +1,338 @@
+/**
+ * Modern Colorful Design System - Component Styles
+ * Vedic LMS Design System v1.0
+ * 
+ * This file contains all component-specific styles for the modern colorful theme.
+ */
+
+/* ===== CARDS ===== */
+.card-modern {
+  background: var(--background);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  transition: var(--transition-normal);
+  cursor: pointer;
+}
+
+.card-modern:hover {
+  transform: translateY(-2px);
+}
+
+/* Feature Cards (Dashboard Tiles) */
+.feature-card {
+  padding: var(--space-4);
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card .icon-container {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+}
+
+.feature-card:hover .icon-container {
+  transform: scale(1.05);
+}
+
+/* Color Variants */
+.feature-card-blue {
+  border-color: var(--blue-modern);
+}
+
+.feature-card-blue .icon-container {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--blue-modern);
+}
+
+.feature-card-blue:hover {
+  border-color: var(--blue-modern);
+  box-shadow: 
+    var(--shadow-lg),
+    0 0 0 1px rgba(59, 130, 246, var(--glow-light-border)),
+    0 4px 20px rgba(219, 234, 254, var(--glow-light-main)),
+    0 0 25px rgba(219, 234, 254, var(--glow-light-halo));
+}
+
+.feature-card-blue:hover .icon-container {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.feature-card-green {
+  border-color: var(--green-modern);
+}
+
+.feature-card-green .icon-container {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--green-modern);
+}
+
+.feature-card-green:hover {
+  border-color: var(--green-modern);
+  box-shadow: 
+    var(--shadow-lg),
+    0 0 0 1px rgba(16, 185, 129, var(--glow-light-border)),
+    0 4px 20px rgba(220, 252, 231, var(--glow-light-main)),
+    0 0 25px rgba(220, 252, 231, var(--glow-light-halo));
+}
+
+.feature-card-green:hover .icon-container {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.feature-card-purple {
+  border-color: var(--purple-modern);
+}
+
+.feature-card-purple .icon-container {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--purple-modern);
+}
+
+.feature-card-purple:hover {
+  border-color: var(--purple-modern);
+  box-shadow: 
+    var(--shadow-lg),
+    0 0 0 1px rgba(139, 92, 246, var(--glow-light-border)),
+    0 4px 20px rgba(237, 233, 254, var(--glow-light-main)),
+    0 0 25px rgba(237, 233, 254, var(--glow-light-halo));
+}
+
+.feature-card-purple:hover .icon-container {
+  background: rgba(139, 92, 246, 0.15);
+}
+
+.feature-card-orange {
+  border-color: var(--orange-modern);
+}
+
+.feature-card-orange .icon-container {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--orange-modern);
+}
+
+.feature-card-orange:hover {
+  border-color: var(--orange-modern);
+  box-shadow: 
+    var(--shadow-lg),
+    0 0 0 1px rgba(245, 158, 11, var(--glow-light-border)),
+    0 4px 20px rgba(255, 237, 213, var(--glow-light-main)),
+    0 0 25px rgba(255, 237, 213, var(--glow-light-halo));
+}
+
+.feature-card-orange:hover .icon-container {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.feature-card-pink {
+  border-color: var(--pink-modern);
+}
+
+.feature-card-pink .icon-container {
+  background: rgba(236, 72, 153, 0.1);
+  color: var(--pink-modern);
+}
+
+.feature-card-pink:hover {
+  border-color: var(--pink-modern);
+  box-shadow: 
+    var(--shadow-lg),
+    0 0 0 1px rgba(236, 72, 153, var(--glow-light-border)),
+    0 4px 20px rgba(252, 231, 243, var(--glow-light-main)),
+    0 0 25px rgba(252, 231, 243, var(--glow-light-halo));
+}
+
+.feature-card-pink:hover .icon-container {
+  background: rgba(236, 72, 153, 0.15);
+}
+
+.feature-card-indigo {
+  border-color: var(--indigo-modern);
+}
+
+.feature-card-indigo .icon-container {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--indigo-modern);
+}
+
+.feature-card-indigo:hover {
+  border-color: var(--indigo-modern);
+  box-shadow: 
+    var(--shadow-lg),
+    0 0 0 1px rgba(99, 102, 241, var(--glow-light-border)),
+    0 4px 20px rgba(224, 231, 255, var(--glow-light-main)),
+    0 0 25px rgba(224, 231, 255, var(--glow-light-halo));
+}
+
+.feature-card-indigo:hover .icon-container {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+/* ===== BUTTONS ===== */
+.btn-modern {
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: var(--transition-fast);
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary-blue {
+  background: var(--blue-modern);
+  color: white;
+  border-color: var(--blue-modern);
+}
+
+.btn-primary-blue:hover {
+  background: var(--blue-darker);
+  border-color: var(--blue-darker);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.btn-secondary-blue {
+  background: transparent;
+  color: var(--blue-modern);
+  border-color: var(--blue-modern);
+}
+
+.btn-secondary-blue:hover {
+  background: var(--blue-modern);
+  color: white;
+}
+
+/* ===== FORMS ===== */
+.input-modern {
+  height: 40px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  transition: var(--transition-fast);
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.input-modern:focus {
+  outline: none;
+  border-color: var(--blue-modern);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* ===== BADGES ===== */
+.badge-modern {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.badge-blue {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--blue-modern);
+}
+
+.badge-green {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--green-modern);
+}
+
+.badge-purple {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--purple-modern);
+}
+
+/* ===== PROGRESS INDICATORS ===== */
+.progress-modern {
+  height: 8px;
+  border-radius: 10px;
+  background: var(--muted);
+  overflow: hidden;
+}
+
+.progress-bar-modern {
+  border-radius: 10px;
+  transition: width var(--transition-slow);
+  height: 100%;
+}
+
+.progress-bar-blue {
+  background: linear-gradient(90deg, var(--blue-modern) 0%, var(--blue-fluorescent) 100%);
+}
+
+.progress-bar-green {
+  background: linear-gradient(90deg, var(--green-modern) 0%, var(--green-fluorescent) 100%);
+}
+
+/* ===== NAVIGATION ===== */
+.navbar-modern {
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  padding: 12px 0;
+}
+
+/* ===== DARK MODE ENHANCEMENTS ===== */
+[data-theme="dark"] .feature-card-blue:hover {
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(59, 130, 246, var(--glow-light-border)),
+    0 0 15px rgba(219, 234, 254, var(--glow-dark-inner)),
+    0 0 40px rgba(219, 234, 254, var(--glow-dark-mid)),
+    0 0 60px rgba(219, 234, 254, var(--glow-dark-outer));
+}
+
+[data-theme="dark"] .feature-card-green:hover {
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(16, 185, 129, var(--glow-light-border)),
+    0 0 15px rgba(220, 252, 231, var(--glow-dark-inner)),
+    0 0 40px rgba(220, 252, 231, var(--glow-dark-mid)),
+    0 0 60px rgba(220, 252, 231, var(--glow-dark-outer));
+}
+
+[data-theme="dark"] .feature-card-purple:hover {
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(139, 92, 246, var(--glow-light-border)),
+    0 0 15px rgba(237, 233, 254, var(--glow-dark-inner)),
+    0 0 40px rgba(237, 233, 254, var(--glow-dark-mid)),
+    0 0 60px rgba(237, 233, 254, var(--glow-dark-outer));
+}
+
+[data-theme="dark"] .feature-card-orange:hover {
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(245, 158, 11, var(--glow-light-border)),
+    0 0 15px rgba(255, 237, 213, var(--glow-dark-inner)),
+    0 0 40px rgba(255, 237, 213, var(--glow-dark-mid)),
+    0 0 60px rgba(255, 237, 213, var(--glow-dark-outer));
+}
+
+[data-theme="dark"] .feature-card-pink:hover {
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(236, 72, 153, var(--glow-light-border)),
+    0 0 15px rgba(252, 231, 243, var(--glow-dark-inner)),
+    0 0 40px rgba(252, 231, 243, var(--glow-dark-mid)),
+    0 0 60px rgba(252, 231, 243, var(--glow-dark-outer));
+}
+
+[data-theme="dark"] .feature-card-indigo:hover {
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(99, 102, 241, var(--glow-light-border)),
+    0 0 15px rgba(224, 231, 255, var(--glow-dark-inner)),
+    0 0 40px rgba(224, 231, 255, var(--glow-dark-mid)),
+    0 0 60px rgba(224, 231, 255, var(--glow-dark-outer));
+}
