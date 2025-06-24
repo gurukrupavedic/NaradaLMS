@@ -3,9 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Complete Component Showcase - Modern Colorful Design System v2</title>
+  <title>Complete Component Showcase - Modern Colorful Design System v4</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* Force white background with highest specificity */
+    html, body {
+      background-color: #ffffff !important;
+      background: #ffffff !important;
+    }
+    
+    html[data-theme="light"], 
+    html[data-theme="light"] body,
+    body[data-theme="light"] {
+      background-color: #ffffff !important;
+      background: #ffffff !important;
+    }
+    
     /* Modern Colorful Design System - Complete Component Library */
     
     /* TYPOGRAPHY SYSTEM */
@@ -80,10 +93,14 @@
       --text-error: #ef4444;          /* Light red for errors */
       
       /* Background Colors */
-      --background: #0f172a;          /* Dark slate main background */
       --background-subtle: #1e293b;   /* Lighter dark for subtle backgrounds */
       --background-muted: #334155;    /* Medium dark for muted backgrounds */
       --border-light: #475569;        /* Dark border color */
+    }
+    
+    /* Additional background forcing */
+    * {
+      background-color: inherit;
     }
     
     /* Typography Utility Classes */
@@ -999,7 +1016,7 @@
     }
   </style>
 </head>
-<body class="bg-white dark:bg-slate-900 transition-colors">
+<body style="background-color: #ffffff !important;" class="bg-white dark:bg-slate-900 transition-colors">
   <!-- Header -->
   <div class="navbar-modern">
     <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
@@ -2072,6 +2089,9 @@ import { ColorfulButton } from '@/components/ui/colorful-button';
 
     // Force light theme by default for showcase
     document.documentElement.setAttribute('data-theme', 'light');
+    document.body.setAttribute('data-theme', 'light');
+    document.body.style.backgroundColor = '#ffffff';
+    
     const button = document.querySelector('button[onclick="toggleTheme()"]');
     if (button) {
       const icon = button.querySelector('.icon');
