@@ -1,0 +1,166 @@
+import React from 'react';
+
+/**
+ * DaisyUI5Showcase - DaisyUI 5.0 experiments showcase
+ * 
+ * Isolated experiments with DaisyUI 5.0 to evaluate improved aesthetics
+ * and better theme options for Vedic LMS. Complete isolation from main app.
+ */
+export function DaisyUI5Showcase() {
+  const experiments = [
+    {
+      title: "Theme Comparison",
+      description: "Interactive comparison of DaisyUI 5.0 themes (emerald, forest, luxury, autumn)",
+      link: "/experiments/01-theme-comparison.html",
+      highlight: "Interactive theme switcher"
+    },
+    {
+      title: "Vedic Dashboard",
+      description: "Complete dashboard redesign with autumn theme and Vedic aesthetic enhancements",
+      link: "/experiments/02-vedic-dashboard.html",
+      highlight: "Vedic-inspired design"
+    }
+  ];
+
+  return (
+    <div className="container mx-auto p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">DaisyUI 5.0 Experiments</h1>
+          <p className="text-gray-600">
+            Exploring DaisyUI 5.0 with improved aesthetics and better theme options for Vedic LMS
+          </p>
+        </div>
+
+        {/* Back Navigation */}
+        <div className="mb-6">
+          <a 
+            href="/" 
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
+          >
+            ← Back to Dashboard
+          </a>
+        </div>
+
+        {/* Version Comparison Info */}
+        <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h2 class="text-xl font-semibold text-blue-900 mb-3">Version 5.0 Improvements</h2>
+          <div className="grid md:grid-cols-2 gap-6 text-sm">
+            <div>
+              <h3 className="font-medium text-blue-800 mb-2">Visual Enhancements:</h3>
+              <ul className="text-blue-700 space-y-1">
+                <li>• Refreshed color palettes with better harmony</li>
+                <li>• Improved typography and spacing</li>
+                <li>• Enhanced component aesthetics</li>
+                <li>• Better shadow and border styling</li>
+                <li>• More polished theme implementations</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-medium text-blue-800 mb-2">New Features:</h3>
+              <ul className="text-blue-700 space-y-1">
+                <li>• Better theme customization options</li>
+                <li>• Improved component consistency</li>
+                <li>• Enhanced accessibility features</li>
+                <li>• Better font integration support</li>
+                <li>• More semantic color meanings</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Experiments Grid */}
+        <div className="grid gap-8">
+          {experiments.map((experiment, index) => (
+            <div key={index} className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <span className="inline-block px-3 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full mb-2">
+                    DaisyUI 5.0
+                  </span>
+                  {experiment.highlight && (
+                    <span className="inline-block px-3 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full mb-2 ml-2">
+                      {experiment.highlight}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              <h3 className="text-xl font-semibold mb-3">{experiment.title}</h3>
+              <p className="text-gray-600 mb-4">{experiment.description}</p>
+              
+              <div className="flex gap-3">
+                <a 
+                  href={experiment.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-1M14 6h6m0 0v6m0-6L10 16" />
+                  </svg>
+                  Open Experiment
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Theme Recommendations */}
+        <div className="mt-8 bg-amber-50 border border-amber-200 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-amber-900 mb-3">Recommended Themes for Vedic LMS</h2>
+          <div className="grid md:grid-cols-3 gap-4 text-sm">
+            <div className="bg-white p-4 rounded border">
+              <h3 className="font-medium text-amber-800 mb-2">Autumn Theme</h3>
+              <p className="text-amber-700">Warm oranges and browns that complement traditional Vedic colors like saffron and gold.</p>
+            </div>
+            <div className="bg-white p-4 rounded border">
+              <h3 className="font-medium text-amber-800 mb-2">Forest Theme</h3>
+              <p className="text-amber-700">Natural earth tones that reflect the connection to nature in Vedic traditions.</p>
+            </div>
+            <div className="bg-white p-4 rounded border">
+              <h3 className="font-medium text-amber-800 mb-2">Emerald Theme</h3>
+              <p className="text-amber-700">Rich greens with warm accents suitable for spiritual and educational content.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Direct Access Links */}
+        <div className="mt-8 bg-gray-50 border border-gray-200 rounded-lg p-6">
+          <h3 className="font-semibold text-gray-900 mb-3">Direct Access URLs</h3>
+          <ul className="text-sm text-gray-600 space-y-2">
+            <li>• Theme Comparison: <code className="bg-gray-200 px-2 py-1 rounded text-xs">http://localhost:5000/experiments/01-theme-comparison.html</code></li>
+            <li>• Vedic Dashboard: <code className="bg-gray-200 px-2 py-1 rounded text-xs">http://localhost:5000/experiments/02-vedic-dashboard.html</code></li>
+          </ul>
+        </div>
+
+        {/* Experiment Status */}
+        <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h3 className="text-lg font-semibold text-yellow-900 mb-2">⚠️ Experimental Status</h3>
+          <p className="text-yellow-800 text-sm">
+            These experiments are completely isolated and don't affect the main application. 
+            The entire experiments directory can be safely deleted without any impact on production functionality.
+          </p>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mt-8 text-center space-x-4">
+          <a 
+            href="/experiments/01-theme-comparison.html" 
+            target="_blank"
+            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Quick Start - Theme Comparison
+          </a>
+          <a 
+            href="/" 
+            className="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Return to Main App
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}

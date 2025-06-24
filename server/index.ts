@@ -10,6 +10,16 @@ app.use(express.urlencoded({ extended: false }));
 
 
 
+// Serve experiment files FIRST (before Vite) - isolated, safe to delete
+const experimentsPath = path.join(process.cwd(), 'experiments/daisyui-5-examples');
+app.use('/experiments', express.static(experimentsPath, {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Content-Type', 'text/html');
+    }
+  }
+}));
+
 // Serve static files from public directory (for audio files)
 app.use(express.static('public'));
 

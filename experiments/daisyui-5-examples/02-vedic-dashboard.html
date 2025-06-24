@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="autumn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vedic Dashboard - DaisyUI 5.0 Autumn Theme</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5.0.0/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        .telugu { font-family: 'Noto Sans Telugu', sans-serif; }
+        .devanagari { font-family: 'Noto Sans Devanagari', sans-serif; }
+        .serif-heading { font-family: 'Crimson Text', serif; }
+        
+        /* Custom Vedic color extensions */
+        .vedic-saffron { background-color: #FF9933; }
+        .vedic-gold { background-color: #FFD700; }
+        .vedic-border { border-color: #FF9933; }
+        
+        /* Enhanced card shadows for autumn theme */
+        .vedic-card { 
+            box-shadow: 0 4px 6px -1px rgba(255, 153, 51, 0.1), 0 2px 4px -1px rgba(255, 153, 51, 0.06);
+        }
+    </style>
+</head>
+<body class="bg-base-100">
+    <!-- Header with Enhanced Styling -->
+    <div class="navbar bg-base-200 shadow-lg">
+        <div class="navbar-start">
+            <div class="flex items-center space-x-3">
+                <div class="avatar placeholder">
+                    <div class="bg-primary text-primary-content rounded-full w-10 h-10">
+                        <span class="text-lg">🕉️</span>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-xl font-semibold serif-heading">Vedic Learning Management System</h1>
+                    <p class="text-xs opacity-70">Traditional Knowledge, Modern Platform</p>
+                </div>
+            </div>
+        </div>
+        <div class="navbar-end">
+            <div class="flex items-center space-x-3">
+                <div class="badge badge-secondary">Development User</div>
+                <div class="dropdown dropdown-end">
+                    <label tabindex="0" class="btn btn-ghost btn-circle avatar">
+                        <div class="w-8 rounded-full bg-primary text-primary-content flex items-center justify-center">
+                            <span class="text-sm">👤</span>
+                        </div>
+                    </label>
+                    <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+                        <li><a>Profile</a></li>
+                        <li><a>Settings</a></li>
+                        <li><a>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto p-6">
+        <!-- Welcome Section -->
+        <div class="hero bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg mb-8">
+            <div class="hero-content text-center">
+                <div class="max-w-md">
+                    <h1 class="text-3xl font-bold serif-heading">॥ ॐ गं गणपतये नमः ॥</h1>
+                    <p class="py-6 devanagari text-lg">
+                        स्वाध्यायान्मा प्रमदः । स्वाध्यायान्मा प्रमदः ।
+                    </p>
+                    <p class="text-sm opacity-70">Welcome to your spiritual learning journey</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats shadow mb-8 w-full">
+            <div class="stat">
+                <div class="stat-figure text-primary">
+                    <span class="text-2xl">📚</span>
+                </div>
+                <div class="stat-title">Active Tracks</div>
+                <div class="stat-value text-primary">3</div>
+                <div class="stat-desc">2 published, 1 draft</div>
+            </div>
+            
+            <div class="stat">
+                <div class="stat-figure text-secondary">
+                    <span class="text-2xl">📖</span>
+                </div>
+                <div class="stat-title">Total Chapters</div>
+                <div class="stat-value text-secondary">28</div>
+                <div class="stat-desc">21 with audio</div>
+            </div>
+            
+            <div class="stat">
+                <div class="stat-figure text-accent">
+                    <span class="text-2xl">🎵</span>
+                </div>
+                <div class="stat-title">Audio Mappings</div>
+                <div class="stat-value text-accent">156</div>
+                <div class="stat-desc">89% completion</div>
+            </div>
+        </div>
+
+        <!-- Learning Tracks -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-semibold mb-6 serif-heading">Sacred Learning Tracks</h2>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Vaidika Nithya Karma -->
+                <div class="card bg-base-100 shadow-xl vedic-card hover:shadow-2xl transition-shadow">
+                    <div class="card-body">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="avatar placeholder">
+                                <div class="bg-primary text-primary-content rounded-lg w-12 h-12">
+                                    <span class="text-lg">🕉️</span>
+                                </div>
+                            </div>
+                            <div class="badge badge-success">Published</div>
+                        </div>
+                        <h2 class="card-title serif-heading">Vaidika Nithya Karma</h2>
+                        <p class="text-sm opacity-80">Daily rituals and practices for spiritual development and growth in the Vedic tradition.</p>
+                        
+                        <div class="flex justify-between items-center mt-4">
+                            <div class="badge badge-outline">12 chapters</div>
+                            <div class="badge badge-ghost">Telugu, Hindi</div>
+                        </div>
+                        
+                        <div class="card-actions justify-end mt-4">
+                            <button class="btn btn-primary btn-sm">Continue Learning</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Śrī Rudram -->
+                <div class="card bg-base-100 shadow-xl vedic-card hover:shadow-2xl transition-shadow">
+                    <div class="card-body">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="avatar placeholder">
+                                <div class="bg-secondary text-secondary-content rounded-lg w-12 h-12">
+                                    <span class="text-lg">🔥</span>
+                                </div>
+                            </div>
+                            <div class="badge badge-warning">Draft</div>
+                        </div>
+                        <h2 class="card-title serif-heading">Śrī Rudram</h2>
+                        <p class="text-sm opacity-80">Sacred hymns from the Vedas dedicated to Lord Rudra, including pronunciation guides and meanings.</p>
+                        
+                        <div class="flex justify-between items-center mt-4">
+                            <div class="badge badge-outline">8 chapters</div>
+                            <div class="badge badge-ghost">Sanskrit, Hindi</div>
+                        </div>
+                        
+                        <div class="card-actions justify-end mt-4">
+                            <button class="btn btn-secondary btn-sm">Continue Editing</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Puruṣa Sūktam -->
+                <div class="card bg-base-100 shadow-xl vedic-card hover:shadow-2xl transition-shadow">
+                    <div class="card-body">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="avatar placeholder">
+                                <div class="bg-accent text-accent-content rounded-lg w-12 h-12">
+                                    <span class="text-lg">🌟</span>
+                                </div>
+                            </div>
+                            <div class="badge badge-info">In Progress</div>
+                        </div>
+                        <h2 class="card-title serif-heading">Puruṣa Sūktam</h2>
+                        <p class="text-sm opacity-80">Cosmic hymn describing the universal form, with detailed commentary and chanting instructions.</p>
+                        
+                        <div class="flex justify-between items-center mt-4">
+                            <div class="badge badge-outline">6 chapters</div>
+                            <div class="badge badge-ghost">Sanskrit</div>
+                        </div>
+                        
+                        <div class="card-actions justify-end mt-4">
+                            <button class="btn btn-accent btn-sm">Begin Study</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Activity -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-semibold mb-6 serif-heading">Recent Activity</h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Recent Chapters -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title">Recently Updated Chapters</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="avatar placeholder">
+                                    <div class="bg-primary/20 text-primary rounded w-8 h-8">
+                                        <span class="text-xs">📖</span>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-medium">Śraddhā Sūktam</p>
+                                    <p class="text-xs opacity-70">Updated 2 hours ago</p>
+                                </div>
+                                <div class="badge badge-success badge-sm">Mapped</div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-3">
+                                <div class="avatar placeholder">
+                                    <div class="bg-secondary/20 text-secondary rounded w-8 h-8">
+                                        <span class="text-xs">📖</span>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-medium">Medhā Sūktam</p>
+                                    <p class="text-xs opacity-70">Updated yesterday</p>
+                                </div>
+                                <div class="badge badge-warning badge-sm">Pending</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audio Status -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title">Audio Mapping Progress</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm">Vaidika Nithya Karma</span>
+                                    <span class="text-sm">92%</span>
+                                </div>
+                                <progress class="progress progress-primary w-full" value="92" max="100"></progress>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm">Śrī Rudram</span>
+                                    <span class="text-sm">65%</span>
+                                </div>
+                                <progress class="progress progress-secondary w-full" value="65" max="100"></progress>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm">Puruṣa Sūktam</span>
+                                    <span class="text-sm">23%</span>
+                                </div>
+                                <progress class="progress progress-accent w-full" value="23" max="100"></progress>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Content Sample -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-6 serif-heading">Featured Content</h2>
+            
+            <div class="card bg-gradient-to-r from-primary/5 to-secondary/5 shadow-xl">
+                <div class="card-body">
+                    <h3 class="card-title serif-heading">Today's Verse</h3>
+                    <div class="grid md:grid-cols-2 gap-6 mt-4">
+                        <div class="space-y-3">
+                            <h4 class="font-medium">Sanskrit</h4>
+                            <p class="devanagari text-lg leading-relaxed">
+                                श्रद्धाया॒ऽग्निः समि॑ध्यते । श्रद्धया॑ विन्दते ह॒विः ।<br>
+                                श्रद्धा॒म्भग॑स्य मू॒र्धनि॑ । वच॒सा-ऽऽवे॑दयामसि ।
+                            </p>
+                        </div>
+                        <div class="space-y-3">
+                            <h4 class="font-medium">Telugu</h4>
+                            <p class="telugu text-lg leading-relaxed">
+                                శ్రద్ధాయాఽగ్నిః సమిధ్యతే । శ్రద్ధయా విందతే హవిః ।<br>
+                                శ్రద్ధాం భగస్య మూర్ధని । వచసాఽఽవేదయామసి ।
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-sm opacity-80 italic">
+                            "Through faith, the fire is kindled. Through faith, the offering is obtained. 
+                            We declare faith upon the head of fortune with our speech."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center text-sm opacity-70">
+            <p>॥ सर्वे भवन्तु सुखिनः सर्वे सन्तु निरामयाः ॥</p>
+            <p class="mt-2">May all beings be happy, may all beings be healthy</p>
+        </footer>
+    </div>
+</body>
+</html>

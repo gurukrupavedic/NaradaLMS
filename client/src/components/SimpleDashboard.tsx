@@ -29,9 +29,9 @@ const FEATURES: FeatureCard[] = [
   },
   {
     title: "Experiments",
-    description: "Test features and prototypes",
+    description: "DaisyUI 5.0 theme explorations",
     icon: Beaker,
-    route: "/experiments", 
+    route: "/experiments/daisyui-5", 
     color: "purple"
   }
 ];
