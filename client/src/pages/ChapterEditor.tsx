@@ -100,8 +100,8 @@ export default function ChapterEditor() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const segmentBoundaryListenerRef = useRef<(() => void) | null>(null);
 
-  // Phase 4A: Hook Integration (Feature Flag) - Set to true to test hooks
-  const USE_EXTRACTED_HOOKS = true; // Toggle to test hooks
+  // Phase 4A: Hook Integration (Feature Flag) - Set to false to preserve original functionality
+  const USE_EXTRACTED_HOOKS = false; // Toggle to test hooks
 
   // Phase 4A: Initialize Custom Hooks (parallel to existing state)
   const chapterDataHook = USE_EXTRACTED_HOOKS ? useChapterData(chapterId) : null;

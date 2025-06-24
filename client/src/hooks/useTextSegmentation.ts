@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface TextSelection {
@@ -116,14 +116,10 @@ export function useTextSegmentation() {
     onSegmentClick?: (segment: any) => void
   ) => {
     if (!text || !segments?.length) {
-      return (
-        <div
-          data-segmentable
-          className="whitespace-pre-wrap cursor-text"
-        >
-          {text || ""}
-        </div>
-      );
+      return React.createElement("div", {
+        "data-segmentable": true,
+        className: "whitespace-pre-wrap cursor-text"
+      }, text || "");
     }
 
     // Sort segments by start position
@@ -136,9 +132,10 @@ export function useTextSegmentation() {
       // Add text before this segment
       if (segment.startPosition > lastEnd) {
         parts.push(
-          <span key={`before-${index}`} className="cursor-text">
-            {text.substring(lastEnd, segment.startPosition)}
-          </span>
+          React.createElement("span", {
+            key: `before-${index}`,
+            className: "cursor-text"
+          }, text.substring(lastEnd, segment.startPosition))
         );
       }
 
@@ -149,20 +146,18 @@ export function useTextSegmentation() {
 
       // Add the segmented text with highlighting
       parts.push(
-        <span
-          key={`segment-${segment.id}`}
-          className={`px-1 py-0.5 rounded cursor-pointer transition-colors ${
+        React.createElement("span", {
+          key: `segment-${segment.id}`,
+          className: `px-1 py-0.5 rounded cursor-pointer transition-colors ${
             hasAudioMapping
               ? "bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700"
               : "bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700"
-          } hover:opacity-80`}
-          title={`${segment.conceptualName || `Segment ${segment.id}`}${
+          } hover:opacity-80`,
+          title: `${segment.conceptualName || `Segment ${segment.id}`}${
             hasAudioMapping ? " (Audio Mapped)" : " (No Audio)"
-          }`}
-          onClick={() => onSegmentClick?.(segment)}
-        >
-          {text.substring(segment.startPosition, segment.endPosition)}
-        </span>
+          }`,
+          onClick: () => onSegmentClick?.(segment)
+        }, text.substring(segment.startPosition, segment.endPosition))
       );
 
       lastEnd = segment.endPosition;
@@ -171,20 +166,17 @@ export function useTextSegmentation() {
     // Add remaining text
     if (lastEnd < text.length) {
       parts.push(
-        <span key="after" className="cursor-text">
-          {text.substring(lastEnd)}
-        </span>
+        React.createElement("span", {
+          key: "after",
+          className: "cursor-text"
+        }, text.substring(lastEnd))
       );
     }
 
-    return (
-      <div
-        data-segmentable
-        className="whitespace-pre-wrap"
-      >
-        {parts}
-      </div>
-    );
+    return React.createElement("div", {
+      "data-segmentable": true,
+      className: "whitespace-pre-wrap"
+    }, ...parts);
   }, []);
 
   // Validate text selection bounds
