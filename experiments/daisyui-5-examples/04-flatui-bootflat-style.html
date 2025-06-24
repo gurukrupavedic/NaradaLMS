@@ -26,17 +26,17 @@
                             "error": "#e74c3c",        // FlatUI Red
                         },
                         bootflat: {
-                            "primary": "#5bc0de",      // Bootflat Light Blue
-                            "secondary": "#5cb85c",    // Bootflat Green
-                            "accent": "#f0ad4e",       // Bootflat Orange
-                            "neutral": "#333333",      // Dark gray
+                            "primary": "#1abc9c",      // Bootflat Turquoise (official primary)
+                            "secondary": "#3498db",    // Bootflat Blue
+                            "accent": "#f39c12",       // Bootflat Orange
+                            "neutral": "#34495e",      // Bootflat Dark
                             "base-100": "#ffffff",     // White background
-                            "base-200": "#f8f8f8",     // Very light gray
-                            "base-300": "#e0e0e0",     // Light gray
-                            "info": "#5bc0de",         // Light blue
-                            "success": "#5cb85c",      // Green
-                            "warning": "#f0ad4e",      // Orange
-                            "error": "#d9534f",        // Red
+                            "base-200": "#ecf0f1",     // Bootflat Clouds
+                            "base-300": "#bdc3c7",     // Bootflat Silver
+                            "info": "#3498db",         // Bootflat Blue
+                            "success": "#2ecc71",      // Bootflat Emerald
+                            "warning": "#f39c12",      // Bootflat Orange
+                            "error": "#e74c3c",        // Bootflat Alizarin
                         }
                     }
                 ]
@@ -61,8 +61,8 @@
         <div class="navbar-end">
             <div class="flex items-center gap-3">
                 <span class="text-sm">Style:</span>
-                <button class="btn btn-sm btn-primary" onclick="setTheme('flatui')">FlatUI</button>
-                <button class="btn btn-sm btn-secondary" onclick="setTheme('bootflat')">Bootflat</button>
+                <button class="btn btn-sm btn-outline" onclick="setTheme('flatui')">FlatUI</button>
+                <button class="btn btn-sm btn-primary" onclick="setTheme('bootflat')">Bootflat (Preferred)</button>
             </div>
         </div>
     </div>
@@ -72,10 +72,10 @@
         <div class="hero bg-base-200 rounded-lg mb-8">
             <div class="hero-content text-center">
                 <div class="max-w-md">
-                    <h1 class="text-3xl font-bold">Beautiful Flat Design</h1>
+                    <h1 class="text-3xl font-bold">Bootflat Design Excellence</h1>
                     <p class="py-6">
-                        Experience the vibrant color palettes of FlatUI and Bootflat 
-                        with DaisyUI components for your Vedic LMS.
+                        Experience the Bootflat color palette - light blue, green, and orange 
+                        flat design colors perfectly suited for your Vedic LMS.
                     </p>
                     <button class="btn btn-primary mr-3">Get Started</button>
                     <button class="btn btn-outline">Learn More</button>
@@ -363,8 +363,8 @@
             document.documentElement.setAttribute('data-theme', theme);
         }
 
-        // Initialize with FlatUI theme
-        setTheme('flatui');
+        // Initialize with Bootflat theme (user preference)
+        setTheme('bootflat');
     </script>
 </body>
 </html>

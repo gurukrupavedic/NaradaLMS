@@ -27,6 +27,12 @@ export function DaisyUI5Showcase() {
       highlight: "Flat design colors"
     },
     {
+      title: "Bootflat Focused Design",
+      description: "Pure Bootflat color scheme with official turquoise (#1abc9c), blue (#3498db), and orange (#f39c12) from bootflat.github.io",
+      link: "/experiments/05-bootflat-focused.html",
+      highlight: "Official Bootflat colors"
+    },
+    {
       title: "Vedic Dashboard",
       description: "Complete dashboard redesign with autumn theme and Vedic aesthetic enhancements",
       link: "/experiments/02-vedic-dashboard.html",
