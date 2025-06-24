@@ -10,7 +10,7 @@ export function DaisyUI5Showcase() {
   const experiments = [
     {
       title: "Theme Comparison",
-      description: "Interactive comparison of DaisyUI themes (emerald, forest, luxury, autumn) with proper configuration",
+      description: "Interactive comparison of DaisyUI themes (emerald, forest, luxury, autumn, pastel) with proper configuration",
       link: "/experiments/01-theme-comparison.html",
       highlight: "Interactive theme switcher"
     },
