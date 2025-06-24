@@ -258,20 +258,17 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Content editor script state (moved here to be available for queries)
   const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
 
-  // Phase 4A: Use hook state when feature flag enabled
-  const activeTextContent = USE_EXTRACTED_HOOKS ? hookData?.textContent || textContent : textContent;
-  const activeContentScript = USE_EXTRACTED_HOOKS ? hookData?.contentScript || contentScript : contentScript;
-  const activeChapter = USE_EXTRACTED_HOOKS ? hookData?.chapter || chapter : chapter;
-  const activeChapterLoading = USE_EXTRACTED_HOOKS ? hookData?.chapterLoading || chapterLoading : chapterLoading;
+  // Fetch chapter details first (needed for activeChapter calculation)
+  const { data: chapter, isLoading: chapterLoading } = useQuery<ChapterData>({
+    queryKey: [`/api/chapters/${chapterId}/details`],
+    enabled: !!chapterId,
+  });
 
   // Segments query for database integration - script-specific (original - preserve until hooks validated)
   const { data: textSegments = [], refetch: refetchSegments, isLoading: segmentsLoading, error: segmentsError } = useQuery({
-    queryKey: [`/api/segments/${chapterId}/${activeContentScript || 'te'}`],
-    enabled: !!chapterId && !!activeContentScript
+    queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`],
+    enabled: !!chapterId && !!contentScript
   });
-
-  // Phase 4A: Use hook segments when feature flag enabled
-  const activeTextSegments = USE_EXTRACTED_HOOKS ? hookData?.textSegments || [] : textSegments;
 
   // Segment selection state
   const [selectedSegmentId, setSelectedSegmentId] = useState<number | undefined>(undefined);
@@ -550,12 +547,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // === DATA FETCHING SECTION ===
 
-  // Fetch chapter details (original - keep until hooks tested)
-  const { data: chapter, isLoading: chapterLoading } = useQuery<ChapterData>({
-    queryKey: [`/api/chapters/${chapterId}/details`],
-    enabled: !!chapterId,
-  });
-
   // Phase 4A: Hook state integration (side-by-side comparison)
   const hookData = USE_EXTRACTED_HOOKS ? {
     chapter: chapterDataHook?.chapter,
@@ -577,6 +568,13 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     currentSelection: textSegmentationHook?.currentSelection,
     hasSelection: textSegmentationHook?.hasSelection,
   } : null;
+
+  // Phase 4A: Use hook state when feature flag enabled (after hookData is defined)
+  const activeTextContent = USE_EXTRACTED_HOOKS ? hookData?.textContent || textContent : textContent;
+  const activeContentScript = USE_EXTRACTED_HOOKS ? hookData?.contentScript || contentScript : contentScript;
+  const activeChapter = USE_EXTRACTED_HOOKS ? hookData?.chapter || chapter : chapter;
+  const activeChapterLoading = USE_EXTRACTED_HOOKS ? hookData?.chapterLoading || chapterLoading : chapterLoading;
+  const activeTextSegments = USE_EXTRACTED_HOOKS ? hookData?.textSegments || [] : textSegments;
 
   // Fetch audio files
   const { data: audioFiles, refetch: refetchAudioFiles } = useQuery<any[]>({
@@ -1597,7 +1595,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // === RENDER LOGIC SECTION ===
 
-  if (activeChapterLoading) {
+  if (chapterLoading) {
     return <div className="p-6">Loading chapter...</div>;
   }
 
@@ -3058,11 +3056,11 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     {/* Segment List */}
                     <div className="space-y-2">
                       <Label className="text-sm">
-                        Text Segments ({activeTextSegments?.length || 0})
+                        Text Segments ({textSegments?.length || 0})
                       </Label>
                       <div className="max-h-64 overflow-y-auto space-y-2">
-                        {activeTextSegments && activeTextSegments.length > 0 ? (
-                          activeTextSegments.map((segment) => (
+                        {textSegments && textSegments.length > 0 ? (
+                          textSegments.map((segment) => (
                             <div
                               key={segment.id}
                               className="p-3 border rounded-lg bg-white dark:bg-gray-800"
