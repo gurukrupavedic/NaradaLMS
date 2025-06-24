@@ -1,4 +1,38 @@
 import { useState, useCallback } from "react";
+/**
+ * useSegmentData - Text segmentation data management hook
+ * 
+ * Manages CRUD operations for text segments with script-specific handling.
+ * Provides optimized queries for segment retrieval, creation, updates, and
+ * deletion with automatic cache invalidation and error handling.
+ * 
+ * @example
+ * ```tsx
+ * function SegmentationTab() {
+ *   const {
+ *     segments,
+ *     isLoading,
+ *     createSegment,
+ *     updateSegment,
+ *     deleteSegment
+ *   } = useSegmentData(chapterId, script);
+ *   
+ *   const handleCreateSegment = (segmentData) => {
+ *     createSegment.mutate(segmentData);
+ *   };
+ *   
+ *   return <div>...</div>;
+ * }
+ * ```
+ * 
+ * @param chapterId - Chapter identifier for segment filtering
+ * @param script - Script type (te, hi, en) for language-specific segments
+ * @returns Segment data and mutation functions
+ * 
+ * @author Vedic LMS Team
+ * @since 2025-06-24
+ */
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";

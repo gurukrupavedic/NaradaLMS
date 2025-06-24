@@ -1,3 +1,33 @@
+/**
+ * ChapterHeader - Chapter management interface header component
+ * 
+ * Provides chapter title editing, navigation, publishing controls, and status
+ * indicators. Includes breadcrumb navigation, inline title editing, and
+ * publish/unpublish functionality with visual status feedback.
+ * 
+ * @example
+ * ```tsx
+ * <ChapterHeader
+ *   trackId="1"
+ *   chapter={chapterData}
+ *   isPublished={true}
+ *   onNavigateBack={() => navigate('/tracks/1')}
+ *   onTitleChange={(title) => updateChapter({ title })}
+ *   onPublishToggle={() => togglePublishStatus()}
+ * />
+ * ```
+ * 
+ * @param trackId - Parent track identifier for navigation
+ * @param chapter - Chapter data object
+ * @param isPublished - Current publish status
+ * @param onNavigateBack - Callback for back navigation
+ * @param onTitleChange - Callback for title updates
+ * @param onPublishToggle - Callback for publish status changes
+ * 
+ * @author Vedic LMS Team
+ * @since 2025-06-24
+ */
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

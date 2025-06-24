@@ -1,3 +1,36 @@
+/**
+ * useChapterData - Comprehensive chapter data management hook
+ * 
+ * Provides complete CRUD operations for chapter management including content
+ * editing, status updates, and real-time data synchronization. Handles
+ * multi-script content (Telugu, Hindi, English) with optimistic updates.
+ * 
+ * @example
+ * ```tsx
+ * function ChapterEditor() {
+ *   const {
+ *     chapter,
+ *     isLoading,
+ *     updateChapter,
+ *     publishChapter,
+ *     unpublishChapter
+ *   } = useChapterData(chapterId);
+ *   
+ *   const handleSave = (content) => {
+ *     updateChapter.mutate({ content });
+ *   };
+ *   
+ *   return <div>...</div>;
+ * }
+ * ```
+ * 
+ * @param chapterId - Unique identifier for the chapter
+ * @returns Chapter data and mutation functions
+ * 
+ * @author Vedic LMS Team
+ * @since 2025-06-24
+ */
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
