@@ -749,7 +749,7 @@ export function DesignSystemShowcase() {
                   <label className="text-sm font-medium">Auto-save content</label>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <Switch variant="gray" size={switchSize as any} disabled />
+                  <Switch variant="purple" size={switchSize as any} disabled />
                   <label className="text-sm font-medium text-gray-400">Disabled option</label>
                 </div>
               </div>

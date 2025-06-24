@@ -39,9 +39,9 @@ const switchVariants = cva(
         emerald: "data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-gray-200 focus-visible:shadow-[0_0_0_2px_rgba(16,185,129,0.3)]"
       },
       size: {
-        sm: "h-5 w-9",
-        default: "h-6 w-11",
-        lg: "h-7 w-13"
+        sm: "h-4 w-7",
+        default: "h-6 w-11", 
+        lg: "h-8 w-14"
       }
     },
     defaultVariants: {
@@ -56,9 +56,9 @@ const switchThumbVariants = cva(
   {
     variants: {
       size: {
-        sm: "h-4 w-4 data-[state=checked]:translate-x-4",
+        sm: "h-3 w-3 data-[state=checked]:translate-x-3",
         default: "h-5 w-5 data-[state=checked]:translate-x-5",
-        lg: "h-6 w-6 data-[state=checked]:translate-x-6"
+        lg: "h-7 w-7 data-[state=checked]:translate-x-7"
       }
     },
     defaultVariants: {
