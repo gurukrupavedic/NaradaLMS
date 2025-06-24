@@ -346,30 +346,66 @@ export function DesignSystemShowcase() {
               onVariantChange={setButtonVariant}
               onSizeChange={setButtonSize}
             >
-              <div className="space-y-3">
-                <Button 
-                  variant={buttonVariant as any}
-                  size={buttonSize as any}
-                  className="w-full"
-                >
-                  Primary Action
-                </Button>
-                <Button 
-                  variant={buttonVariant as any}
-                  size={buttonSize as any}
-                  className="w-full"
-                  loading={true}
-                >
-                  Loading State
-                </Button>
-                <Button 
-                  variant="rose"
-                  size={buttonSize as any}
-                  className="w-full"
-                  onClick={() => setShowConfirmDialog(true)}
-                >
-                  Delete Action
-                </Button>
+              <div className="space-y-4">
+                {/* Solid Variants */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Solid Buttons</h4>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button variant={buttonVariant as any} size={buttonSize as any}>
+                      Primary
+                    </Button>
+                    <Button variant={buttonVariant as any} size={buttonSize as any} loading={true}>
+                      Loading
+                    </Button>
+                    <Button variant={buttonVariant as any} size={buttonSize as any} icon={<Edit className="h-4 w-4" />}>
+                      With Icon
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Outline Variants */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Outline Buttons</h4>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button variant={`outline-${buttonVariant}` as any} size={buttonSize as any}>
+                      Secondary
+                    </Button>
+                    <Button variant="outline-gray" size={buttonSize as any}>
+                      Cancel
+                    </Button>
+                    <Button variant={`outline-${buttonVariant}` as any} size={buttonSize as any} icon={<Save className="h-4 w-4" />}>
+                      Save Draft
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Ghost Variants */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Ghost Buttons</h4>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button variant={`ghost-${buttonVariant}` as any} size={buttonSize as any}>
+                      Minimal
+                    </Button>
+                    <Button variant="ghost-gray" size={buttonSize as any}>
+                      Close
+                    </Button>
+                    <Button variant={`ghost-${buttonVariant}` as any} size={buttonSize as any} icon={<Settings className="h-4 w-4" />}>
+                      Settings
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Size Demonstration */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">All Sizes</h4>
+                  <div className="flex gap-2 items-center flex-wrap">
+                    <Button variant={buttonVariant as any} size="xs">XS</Button>
+                    <Button variant={buttonVariant as any} size="sm">SM</Button>
+                    <Button variant={buttonVariant as any} size="md">MD</Button>
+                    <Button variant={buttonVariant as any} size="lg">LG</Button>
+                    <Button variant={buttonVariant as any} size="xl">XL</Button>
+                  </div>
+                </div>
               </div>
             </ComponentCard>
 
