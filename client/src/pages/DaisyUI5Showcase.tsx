@@ -107,10 +107,34 @@ export function DaisyUI5Showcase() {
           ))}
         </div>
 
+        {/* Night Theme Light Equivalents */}
+        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-blue-900 mb-3">Night Theme Light Equivalents</h2>
+          <p className="text-blue-800 mb-4">Since you like the Night theme, here are light themes with similar elegance and sophistication:</p>
+          <div className="grid md:grid-cols-3 gap-4 text-sm">
+            <div className="bg-white p-4 rounded border">
+              <h3 className="font-medium text-blue-800 mb-2">Business Theme</h3>
+              <p className="text-blue-700">Clean, professional light theme with similar contrast and readability to Night.</p>
+            </div>
+            <div className="bg-white p-4 rounded border">
+              <h3 className="font-medium text-blue-800 mb-2">Luxury Theme</h3>
+              <p className="text-blue-700">Sophisticated light theme with refined elegance matching Night's premium feel.</p>
+            </div>
+            <div className="bg-white p-4 rounded border">
+              <h3 className="font-medium text-blue-800 mb-2">CMYK Theme</h3>
+              <p className="text-blue-700">High contrast light theme with crisp, modern aesthetics similar to Night's clarity.</p>
+            </div>
+          </div>
+        </div>
+
         {/* Theme Recommendations */}
         <div className="mt-8 bg-amber-50 border border-amber-200 rounded-lg p-6">
           <h2 className="text-xl font-semibold text-amber-900 mb-3">Recommended Themes for Vedic LMS</h2>
           <div className="grid md:grid-cols-3 gap-4 text-sm">
+            <div className="bg-white p-4 rounded border">
+              <h3 className="font-medium text-amber-800 mb-2">Night + Business</h3>
+              <p className="text-amber-700">Dark/light mode pair with elegant, professional aesthetics for focused learning.</p>
+            </div>
             <div className="bg-white p-4 rounded border">
               <h3 className="font-medium text-amber-800 mb-2">Autumn Theme</h3>
               <p className="text-amber-700">Warm oranges and browns that complement traditional Vedic colors like saffron and gold.</p>
@@ -118,10 +142,6 @@ export function DaisyUI5Showcase() {
             <div className="bg-white p-4 rounded border">
               <h3 className="font-medium text-amber-800 mb-2">Forest Theme</h3>
               <p className="text-amber-700">Natural earth tones that reflect the connection to nature in Vedic traditions.</p>
-            </div>
-            <div className="bg-white p-4 rounded border">
-              <h3 className="font-medium text-amber-800 mb-2">Emerald Theme</h3>
-              <p className="text-amber-700">Rich greens with warm accents suitable for spiritual and educational content.</p>
             </div>
           </div>
         </div>
