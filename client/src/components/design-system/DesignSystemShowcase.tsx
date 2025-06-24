@@ -12,7 +12,9 @@ import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./Card";
 import { Button } from "./Button";
 import { Input } from "./Input";
-import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./Tabs";
+import { Progress, CircularProgress } from "./Progress";
+import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers } from "lucide-react";
 
 export function DesignSystemShowcase() {
   const [selectedVariant, setSelectedVariant] = useState<string>("blue");
@@ -205,6 +207,137 @@ export function DesignSystemShowcase() {
                 <label className="text-sm font-medium">Student Email</label>
                 <Input educational="email" type="email" placeholder="student@example.com" />
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs Components Showcase */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Tabs Components</h2>
+          
+          {/* ChapterEditor Style Tabs */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">ChapterEditor Navigation Tabs</h3>
+            <Tabs defaultValue="content" className="w-full">
+              <TabsList variant={selectedVariant as any} className="grid w-full grid-cols-3">
+                <TabsTrigger 
+                  value="content" 
+                  variant={selectedVariant as any}
+                  icon={<FileText className="h-4 w-4" />}
+                >
+                  Content
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="audio" 
+                  variant={selectedVariant as any}
+                  icon={<Headphones className="h-4 w-4" />}
+                  badge="3"
+                >
+                  Audio Mapping
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="segments" 
+                  variant={selectedVariant as any}
+                  icon={<Layers className="h-4 w-4" />}
+                  badge="12"
+                >
+                  Segmentation
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="content" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Content Editor</CardTitle>
+                    <CardDescription>Rich text editing for multi-language content</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Input placeholder="Chapter title..." educational="title" />
+                    <Input placeholder="Chapter description..." educational="description" />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="audio" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Audio Mapping</CardTitle>
+                    <CardDescription>Synchronize audio timestamps with text segments</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Progress value={65} educational="processing" label="Mapping Progress" showPercentage />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="segments" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Text Segmentation</CardTitle>
+                    <CardDescription>Break content into meaningful segments</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Progress value={85} educational="completion" label="Segments Created" showPercentage />
+                      <Progress value={45} educational="lesson" label="Mapped Segments" showPercentage />
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Educational Tabs Variants */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Educational Tab Variants</h3>
+            <div className="space-y-6">
+              {['content', 'audio', 'segments', 'overview'].map((educational) => (
+                <div key={educational}>
+                  <h4 className="text-sm font-medium mb-2 capitalize">{educational} Context</h4>
+                  <Tabs defaultValue="tab1">
+                    <TabsList educational={educational as any}>
+                      <TabsTrigger value="tab1" educational={educational as any}>Tab 1</TabsTrigger>
+                      <TabsTrigger value="tab2" educational={educational as any}>Tab 2</TabsTrigger>
+                      <TabsTrigger value="tab3" educational={educational as any}>Tab 3</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Progress Components Showcase */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-900">Progress Components</h2>
+          
+          {/* Linear Progress */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Learning Progress Indicators</h3>
+            <div className="space-y-6">
+              <Progress value={75} educational="lesson" label="Lesson Progress" showPercentage />
+              <Progress value={45} educational="chapter" label="Chapter Completion" showPercentage />
+              <Progress value={90} educational="track" label="Track Mastery" showPercentage />
+              <Progress value={60} educational="assessment" label="Assessment Score" showPercentage />
+            </div>
+          </div>
+
+          {/* Circular Progress */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Circular Progress Indicators</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <CircularProgress value={85} variant="lesson" label="Lesson Progress" showPercentage />
+              <CircularProgress value={70} variant="completion" label="Overall Progress" showPercentage />
+              <CircularProgress value={95} variant="mastery" label="Mastery Level" showPercentage />
+              <CircularProgress value={40} variant="practice" label="Practice Hours" showPercentage />
+            </div>
+          </div>
+
+          {/* Size Variants */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Progress Size Variants</h3>
+            <div className="space-y-4">
+              <Progress value={60} size="sm" educational="lesson" label="Small" showPercentage />
+              <Progress value={60} size="default" educational="lesson" label="Default" showPercentage />
+              <Progress value={60} size="lg" educational="lesson" label="Large" showPercentage />
+              <Progress value={60} size="xl" educational="lesson" label="Extra Large" showPercentage />
             </div>
           </div>
         </div>

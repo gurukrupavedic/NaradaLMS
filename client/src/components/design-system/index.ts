@@ -15,6 +15,8 @@ export * from './foundation';
 export * from './Card';
 export * from './Button';
 export * from './Input';
+export * from './Tabs';
+export * from './Progress';
 
 // Showcase component
 export { DesignSystemShowcase } from './DesignSystemShowcase';
@@ -23,3 +25,5 @@ export { DesignSystemShowcase } from './DesignSystemShowcase';
 export type { CardProps } from './Card';
 export type { ButtonProps } from './Button';
 export type { InputProps } from './Input';
+export type { TabsListProps, TabsTriggerProps } from './Tabs';
+export type { ProgressProps, CircularProgressProps } from './Progress';
