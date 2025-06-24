@@ -536,61 +536,73 @@ export function DesignSystemShowcase() {
         {/* Avatar Components Showcase */}
         <div className="space-y-8">
           <h2 className="text-3xl font-semibold text-gray-900">Avatar Components</h2>
+          <p className="text-gray-600">User profile pictures with initials fallback - shows user identity and online status in your LMS.</p>
           
-          {/* Role-based Avatars */}
+          {/* Real LMS Use Cases */}
           <div>
-            <h3 className="text-xl font-medium mb-4">Educational Role Avatars</h3>
-            <div className="flex flex-wrap items-center gap-6">
-              <div className="text-center space-y-2">
-                <Avatar educational="admin" name="Admin User" showStatus status="online" size="lg" />
-                <p className="text-sm text-gray-600">Admin</p>
+            <h3 className="text-xl font-medium mb-4">LMS User Profiles</h3>
+            <div className="bg-gray-50 rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-medium">Chapter Discussion</h4>
+                <span className="text-sm text-gray-500">3 participants</span>
               </div>
-              <div className="text-center space-y-2">
-                <Avatar educational="instructor" name="Dr. Sharma" showStatus status="online" size="lg" />
-                <p className="text-sm text-gray-600">Instructor</p>
-              </div>
-              <div className="text-center space-y-2">
-                <Avatar educational="student" name="Priya Patel" showStatus status="away" size="lg" />
-                <p className="text-sm text-gray-600">Student</p>
-              </div>
-              <div className="text-center space-y-2">
-                <Avatar educational="guest" name="Guest User" showStatus status="offline" size="lg" />
-                <p className="text-sm text-gray-600">Guest</p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Avatar name="Dr. Raghuram" educational="instructor" showStatus status="online" />
+                  <div>
+                    <p className="font-medium text-sm">Dr. Raghuram</p>
+                    <p className="text-xs text-gray-500">Instructor • Online</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Avatar name="Priya Sharma" educational="student" showStatus status="away" />
+                  <div>
+                    <p className="font-medium text-sm">Priya Sharma</p>
+                    <p className="text-xs text-gray-500">Student • Away</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Avatar name="Admin Panel" educational="admin" showStatus status="online" />
+                  <div>
+                    <p className="font-medium text-sm">Admin Panel</p>
+                    <p className="text-xs text-gray-500">Administrator • Online</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Size Variants */}
+          {/* Header Bar Example */}
           <div>
-            <h3 className="text-xl font-medium mb-4">Avatar Size Variants</h3>
-            <div className="flex items-end gap-4">
-              <Avatar name="Small" size="sm" />
-              <Avatar name="Default" size="default" />
-              <Avatar name="Large" size="lg" />
-              <Avatar name="Extra Large" size="xl" />
-              <Avatar name="2X Large" size="2xl" />
+            <h3 className="text-xl font-medium mb-4">Header Bar (Current User)</h3>
+            <div className="bg-white border rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <h4 className="font-semibold">Vedic Learning Management System</h4>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-600">Welcome back, Dr. Sharma</span>
+                  <Avatar name="Dr. Sharma" educational="instructor" showStatus status="online" size="sm" />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Status Indicators */}
+          {/* Size Reference */}
           <div>
-            <h3 className="text-xl font-medium mb-4">Status Indicators</h3>
-            <div className="flex gap-6">
-              <div className="text-center space-y-2">
-                <Avatar name="Online User" showStatus status="online" />
-                <p className="text-xs text-gray-600">Online</p>
+            <h3 className="text-xl font-medium mb-4">Size Guide</h3>
+            <div className="flex items-center gap-6">
+              <div className="text-center">
+                <Avatar name="SM" size="sm" />
+                <p className="text-xs mt-1 text-gray-500">Small (headers)</p>
               </div>
-              <div className="text-center space-y-2">
-                <Avatar name="Away User" showStatus status="away" />
-                <p className="text-xs text-gray-600">Away</p>
+              <div className="text-center">
+                <Avatar name="DF" size="default" />
+                <p className="text-xs mt-1 text-gray-500">Default (lists)</p>
               </div>
-              <div className="text-center space-y-2">
-                <Avatar name="Busy User" showStatus status="busy" />
-                <p className="text-xs text-gray-600">Busy</p>
-              </div>
-              <div className="text-center space-y-2">
-                <Avatar name="Offline User" showStatus status="offline" />
-                <p className="text-xs text-gray-600">Offline</p>
+              <div className="text-center">
+                <Avatar name="LG" size="lg" />
+                <p className="text-xs mt-1 text-gray-500">Large (profiles)</p>
               </div>
             </div>
           </div>
