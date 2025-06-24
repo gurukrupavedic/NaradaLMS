@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/Landing";
-import SimpleDashboard from "@/components/simple-dashboard";
+import SimpleDashboard from "@/components/SimpleDashboard";
 import NotFound from "@/pages/not-found";
 import TrackView from "@/pages/TrackView";
 import ChapterView from "@/pages/ChapterView";

@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ResponsiveTitle } from "@/components/ResponsiveTitle";
+
 import { ArrowLeft, Plus, FileText } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ChapterCard, ConfirmationModal } from "@/components/content-management";
