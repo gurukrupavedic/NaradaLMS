@@ -1110,7 +1110,9 @@ export function DesignSystemShowcase() {
               <div className="grid gap-4">
                 <TextSegment
                   variant={textSegmentVariant as any}
-                  content="ॐ गं गणपतये नमः। शुक्लाम्बरधरं विष्णुं शशिवर्णं चतुर्भुजम्। प्रसन्नवदनं ध्यायेत् सर्वविघ्नोपशान्तये॥"
+                  content="ॐ गं गणपतये नमः। शुक्लाम्बरधरं विष्णुं शशिवर्णं चतुर्भुजम्। प्रसन्नवदनं ध्यायेत् सर्वविघ्नोपशान्तये॥
+
+This is a longer Sanskrit verse that demonstrates the responsive text wrapping capability. The segment automatically adjusts its height to accommodate all content without truncation."
                   segmentNumber={1}
                   isMapped={true}
                   isSelected={false}
@@ -1118,7 +1120,9 @@ export function DesignSystemShowcase() {
                 
                 <TextSegment
                   variant={textSegmentVariant as any}
-                  content="मूकं करोति वाचालं पङ्गुं लङ्घयते गिरिम्। यत्कृपा तमहं वन्दे परमानन्दमाधवम्॥"
+                  content="मूकं करोति वाचालं पङ्गुं लङ्घयते गिरिम्। यत्कृपा तमहं वन्दे परमानन्दमाधवम्॥
+
+Short segment that shows how content adapts naturally to available space without artificial limitations."
                   segmentNumber={2}
                   isMapped={false}
                   isSelected={true}
@@ -1126,7 +1130,11 @@ export function DesignSystemShowcase() {
                 
                 <TextSegment
                   variant={textSegmentVariant as any}
-                  content="सत्यं ज्ञानमनन्तं ब्रह्म। विज्ञानं आनन्दं ब्रह्म। सत्यं ब्रह्म। ज्ञानं ब्रह्म। आनन्दं ब्रह्म॥"
+                  content="सत्यं ज्ञानमनन्तं ब्रह्म। विज्ञानं आनन्दं ब्रह्म। सत्यं ब्रह्म। ज्ञानं ब्रह्म। आनन्दं ब्रह्म॥
+
+That which is the finest essence - this whole world has that as its Self. That is Reality. That is the Self. That thou art, O Śvetaketu.
+
+This bilingual segment demonstrates how the component handles mixed languages and longer content with proper line breaks and responsive height adjustment."
                   segmentNumber={3}
                   isMapped={true}
                   isSelected={false}
@@ -1134,7 +1142,7 @@ export function DesignSystemShowcase() {
                 
                 <TextSegment
                   variant={textSegmentVariant as any}
-                  content="That which is the finest essence - this whole world has that as its Self. That is Reality. That is the Self. That thou art, O Śvetaketu."
+                  content="A very long educational text segment that would typically be used in the Vedic LMS for comprehensive content delivery. This demonstrates how the component handles extensive content without truncation, maintaining readability and proper formatting across multiple lines. The text wraps naturally and the segment height adjusts automatically to accommodate all content."
                   segmentNumber={4}
                   isMapped={false}
                   isSelected={false}

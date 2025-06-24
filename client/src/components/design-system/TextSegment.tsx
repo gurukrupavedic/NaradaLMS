@@ -5,6 +5,7 @@
  * Follows modern design principles: icon-based status, clean color hierarchy.
  * 
  * Features:
+ * - Responsive auto-height with text wrapping (no truncation)
  * - Icon-only mapping status (green Link2/gray Link2Off)
  * - Universal blue selection state (works with any variant color)
  * - Clean interactive states: static, dragging, selected
@@ -82,7 +83,8 @@ const numberPillVariants = cva(
       }
     },
     defaultVariants: {
-      variant: "gray"
+      variant: "gray",
+      size: "md"
     }
   }
 );
@@ -92,7 +94,7 @@ export interface TextSegmentProps
     VariantProps<typeof textSegmentVariants> {
   content: string;
   segmentNumber?: number;
-  maxLength?: number;
+  maxLines?: number; // Optional line limit instead of character truncation
   isMapped?: boolean;
   isSelected?: boolean;
   isDragging?: boolean;
@@ -107,7 +109,7 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
     className, 
     content, 
     segmentNumber,
-    maxLength = 150, 
+    maxLines, // Optional line limiting instead of character truncation
     variant = "gray",
     size = "md",
     state,
@@ -124,11 +126,6 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
     // Determine state based on props
     const currentState = isDragging ? "dragging" : isSelected ? "selected" : "static";
     const finalState = state || currentState;
-    
-    // Truncate content if needed
-    const truncatedContent = content.length > maxLength 
-      ? content.substring(0, maxLength) + "..."
-      : content;
     
     const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
       if (!isDragging) {
@@ -197,14 +194,18 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
           </div>
         )}
 
-        {/* Content - No title, just content */}
+        {/* Content - Responsive with auto-height and text wrapping */}
         <div className={cn(
-          "leading-relaxed text-gray-800 cursor-grab active:cursor-grabbing",
+          "leading-relaxed text-gray-800 cursor-grab active:cursor-grabbing whitespace-pre-wrap break-words",
           segmentNumber ? "mt-2" : "",
           showActions ? "pr-16" : "", // Space for action icons
-          size === "sm" ? "text-sm" : size === "lg" ? "text-lg" : "text-base"
+          size === "sm" ? "text-sm" : size === "lg" ? "text-lg" : "text-base",
+          maxLines && "line-clamp-none", // Disable line clamping by default
+          maxLines === 3 && "line-clamp-3",
+          maxLines === 4 && "line-clamp-4",
+          maxLines === 5 && "line-clamp-5"
         )}>
-          {truncatedContent}
+          {content}
         </div>
 
 
