@@ -14,6 +14,12 @@ import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 import { useSegmentData } from "@/hooks/useSegmentData";
 import { useTextSegmentation } from "@/hooks/useTextSegmentation";
 
+// Phase 4B: Tab Components
+import { ContentTab } from "@/components/chapter-editor/ContentTab";
+import { AudioMappingTab } from "@/components/chapter-editor/AudioMappingTab";
+import { SegmentationTab } from "@/components/chapter-editor/SegmentationTab";
+import { ChapterHeader } from "@/components/chapter-editor/ChapterHeader";
+
 // UI Components
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -102,6 +108,9 @@ export default function ChapterEditor() {
 
   // Phase 4A: Hook Integration (Feature Flag) - Set to false to preserve original functionality
   const USE_EXTRACTED_HOOKS = false; // Toggle to test hooks
+  
+  // Phase 4B: Component Integration (Feature Flag) - Set to true to test tab components
+  const USE_EXTRACTED_COMPONENTS = true; // Toggle to test components
 
   // Phase 4A: Initialize Custom Hooks (parallel to existing state)
   const chapterDataHook = USE_EXTRACTED_HOOKS ? useChapterData(chapterId) : null;
@@ -3119,7 +3128,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
             </div>
           </TabsContent>
 
-          {/* Preview Tab */}
+          {/* Preview Tab - Always use original implementation */}
           <TabsContent value="preview" className="space-y-6">
             <div className="relative h-full">
               <Card>
