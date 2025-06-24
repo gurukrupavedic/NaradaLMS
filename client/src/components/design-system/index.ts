@@ -36,7 +36,7 @@ export * from './RichTextEditor';
 export * from './Dialog';
 
 // LMS-specific components
-export * from './Table';
+// Table removed - will be redesigned with clear requirements
 export * from './Slider';
 export * from './Breadcrumb';
 

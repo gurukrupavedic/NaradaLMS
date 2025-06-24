@@ -27,7 +27,7 @@ import { Textarea } from "./Textarea";
 import { Dialog, ConfirmDialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from "./Dialog";
 import { Checkbox, CheckboxGroup } from "./Checkbox";
 import { Radio, RadioGroup, CommonRadioOptions } from "./Radio";
-import { Table, DataTable, LMSTableColumns } from "./Table";
+// Table import removed - component will be redesigned
 import { Slider, AudioSlider, ProgressSlider } from "./Slider";
 import { Breadcrumb, LMSBreadcrumbs } from "./Breadcrumb";
 import { AudioControls } from "./AudioControls";
@@ -45,13 +45,12 @@ export function DesignSystemShowcase() {
   const [sliderValue, setSliderValue] = useState(50);
   const [audioCurrentTime, setAudioCurrentTime] = useState(30);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const [selectedTableRows, setSelectedTableRows] = useState<string[]>([]);
+  // Table selection state removed
   
   // Enhanced state for component variants
   const [buttonVariant, setButtonVariant] = useState("blue");
   const [buttonSize, setButtonSize] = useState("md");
-  const [tableVariant, setTableVariant] = useState("blue");
-  const [tableSize, setTableSize] = useState("md");
+  // Table state removed - component will be redesigned
   const [sliderVariant, setSliderVariant] = useState("orange");
   const [sliderSize, setSliderSize] = useState("md");
   const [breadcrumbVariant, setBreadcrumbVariant] = useState("blue");
