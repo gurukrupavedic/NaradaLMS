@@ -40,8 +40,8 @@ const tabsListVariants = cva(
       },
       size: {
         sm: "h-8 p-0.5 rounded-lg gap-0.5",
-        md: "h-11 p-1 rounded-xl gap-1", 
-        lg: "h-13 p-1 rounded-xl gap-1"
+        md: "h-11 p-1 rounded-lg gap-1", 
+        lg: "h-13 p-1 rounded-lg gap-1"
       }
     },
     defaultVariants: {
@@ -71,9 +71,9 @@ const tabsTriggerVariants = cva(
         emerald: "text-emerald-700/80 data-[state=active]:bg-gradient-to-br data-[state=active]:from-emerald-600 data-[state=active]:to-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:bg-emerald-200/50 hover:text-emerald-800 data-[state=active]:shadow-inner"
       },
       size: {
-        sm: "px-3 py-1 text-xs rounded-lg min-w-[56px] data-[state=active]:scale-[1.02]",
-        md: "px-4 py-2 text-sm rounded-xl min-w-[72px] data-[state=active]:scale-[1.02]", 
-        lg: "px-5 py-2.5 text-sm rounded-xl min-w-[88px] font-medium data-[state=active]:scale-[1.02] data-[state=active]:font-semibold"
+        sm: "px-3 py-1 text-xs rounded-md min-w-[56px] data-[state=active]:scale-[1.02]",
+        md: "px-4 py-2 text-sm rounded-md min-w-[72px] data-[state=active]:scale-[1.02]", 
+        lg: "px-5 py-2.5 text-sm rounded-lg min-w-[88px] font-medium data-[state=active]:scale-[1.02] data-[state=active]:font-semibold"
       }
     },
     defaultVariants: {
