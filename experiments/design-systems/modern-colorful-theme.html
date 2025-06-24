@@ -45,34 +45,21 @@
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
         }
         
-        /* Modern colorful cards */
+        /* Modern colorful cards - Dashboard tile style */
         .feature-card {
             background: white;
-            border-radius: 16px;
+            border-radius: 12px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: none;
+            border: 1px solid #e2e8f0;
             overflow: hidden;
             position: relative;
-        }
-        
-        .feature-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--accent-color);
-            transition: height 0.3s ease;
+            cursor: pointer;
         }
         
         .feature-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        }
-        
-        .feature-card:hover::before {
-            height: 8px;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border-color: var(--accent-color);
         }
         
         /* Color variants */
@@ -83,31 +70,74 @@
         .feature-card.pink { --accent-color: var(--pink-modern); }
         .feature-card.indigo { --accent-color: var(--indigo-modern); }
         
-        /* Icon backgrounds */
-        .icon-bg.blue { background: linear-gradient(135deg, var(--blue-light) 0%, rgba(59, 130, 246, 0.1) 100%); color: var(--blue-modern); }
-        .icon-bg.green { background: linear-gradient(135deg, var(--green-light) 0%, rgba(16, 185, 129, 0.1) 100%); color: var(--green-modern); }
-        .icon-bg.purple { background: linear-gradient(135deg, var(--purple-light) 0%, rgba(139, 92, 246, 0.1) 100%); color: var(--purple-modern); }
-        .icon-bg.orange { background: linear-gradient(135deg, var(--orange-light) 0%, rgba(245, 158, 11, 0.1) 100%); color: var(--orange-modern); }
-        .icon-bg.pink { background: linear-gradient(135deg, var(--pink-light) 0%, rgba(236, 72, 153, 0.1) 100%); color: var(--pink-modern); }
-        .icon-bg.indigo { background: linear-gradient(135deg, var(--indigo-light) 0%, rgba(99, 102, 241, 0.1) 100%); color: var(--indigo-modern); }
-        
-        /* Modern buttons */
-        .btn-modern {
-            border-radius: 12px;
-            font-weight: 500;
-            padding: 12px 24px;
-            transition: all 0.3s ease;
-            border: none;
+        /* Icon backgrounds - Dashboard tile style */
+        .icon-bg {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 1.25rem;
+            transition: all 0.2s ease;
         }
         
-        .btn-modern.blue { background: var(--blue-modern); color: white; }
-        .btn-modern.blue:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3); }
+        .icon-bg.blue { background: rgba(59, 130, 246, 0.1); color: var(--blue-modern); }
+        .icon-bg.green { background: rgba(16, 185, 129, 0.1); color: var(--green-modern); }
+        .icon-bg.purple { background: rgba(139, 92, 246, 0.1); color: var(--purple-modern); }
+        .icon-bg.orange { background: rgba(245, 158, 11, 0.1); color: var(--orange-modern); }
+        .icon-bg.pink { background: rgba(236, 72, 153, 0.1); color: var(--pink-modern); }
+        .icon-bg.indigo { background: rgba(99, 102, 241, 0.1); color: var(--indigo-modern); }
         
-        .btn-modern.green { background: var(--green-modern); color: white; }
-        .btn-modern.green:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3); }
+        .feature-card:hover .icon-bg.blue { background: rgba(59, 130, 246, 0.15); }
+        .feature-card:hover .icon-bg.green { background: rgba(16, 185, 129, 0.15); }
+        .feature-card:hover .icon-bg.purple { background: rgba(139, 92, 246, 0.15); }
+        .feature-card:hover .icon-bg.orange { background: rgba(245, 158, 11, 0.15); }
+        .feature-card:hover .icon-bg.pink { background: rgba(236, 72, 153, 0.15); }
+        .feature-card:hover .icon-bg.indigo { background: rgba(99, 102, 241, 0.15); }
         
-        .btn-modern.purple { background: var(--purple-modern); color: white; }
-        .btn-modern.purple:hover { background: #7c3aed; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3); }
+        /* Modern buttons - Dashboard style */
+        .btn-modern {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 10px 20px;
+            transition: all 0.2s ease;
+            border: 1px solid;
+            font-size: 0.875rem;
+        }
+        
+        .btn-modern.blue { 
+            background: var(--blue-modern); 
+            color: white; 
+            border-color: var(--blue-modern);
+        }
+        .btn-modern.blue:hover { 
+            background: #2563eb; 
+            border-color: #2563eb;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        
+        .btn-modern.green { 
+            background: var(--green-modern); 
+            color: white; 
+            border-color: var(--green-modern);
+        }
+        .btn-modern.green:hover { 
+            background: #059669; 
+            border-color: #059669;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+        
+        .btn-modern.purple { 
+            background: var(--purple-modern); 
+            color: white; 
+            border-color: var(--purple-modern);
+        }
+        .btn-modern.purple:hover { 
+            background: #7c3aed; 
+            border-color: #7c3aed;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+        }
         
         /* Modern badges */
         .badge-modern {
@@ -160,7 +190,12 @@
         
         [data-bs-theme="dark"] .feature-card {
             background: #1e293b;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid #334155;
+        }
+        
+        [data-bs-theme="dark"] .feature-card:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
         }
         
         /* Smooth animations */
@@ -220,8 +255,8 @@
                 <div class="feature-card blue h-100">
                     <div class="p-4">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="icon-bg blue rounded-3 p-3 me-3">
-                                <span class="fs-3">📚</span>
+                            <div class="icon-bg blue me-3">
+                                <span>📚</span>
                             </div>
                             <div>
                                 <h5 class="fw-semibold mb-1">Learning Tracks</h5>
@@ -244,8 +279,8 @@
                 <div class="feature-card green h-100">
                     <div class="p-4">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="icon-bg green rounded-3 p-3 me-3">
-                                <span class="fs-3">✏️</span>
+                            <div class="icon-bg green me-3">
+                                <span>✏️</span>
                             </div>
                             <div>
                                 <h5 class="fw-semibold mb-1">Content Management</h5>
@@ -268,8 +303,8 @@
                 <div class="feature-card purple h-100">
                     <div class="p-4">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="icon-bg purple rounded-3 p-3 me-3">
-                                <span class="fs-3">🎵</span>
+                            <div class="icon-bg purple me-3">
+                                <span>🎵</span>
                             </div>
                             <div>
                                 <h5 class="fw-semibold mb-1">Audio Mapping</h5>
@@ -295,8 +330,8 @@
                 <div class="feature-card orange h-100">
                     <div class="p-4">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="icon-bg orange rounded-3 p-3 me-3">
-                                <span class="fs-3">📊</span>
+                            <div class="icon-bg orange me-3">
+                                <span>📊</span>
                             </div>
                             <div>
                                 <h5 class="fw-semibold mb-1">Analytics & Reports</h5>
@@ -331,8 +366,8 @@
                 <div class="feature-card pink h-100">
                     <div class="p-4">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="icon-bg pink rounded-3 p-3 me-3">
-                                <span class="fs-3">⚙️</span>
+                            <div class="icon-bg pink me-3">
+                                <span>⚙️</span>
                             </div>
                             <div>
                                 <h5 class="fw-semibold mb-1">System Settings</h5>
