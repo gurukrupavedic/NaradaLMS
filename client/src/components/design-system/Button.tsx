@@ -38,6 +38,20 @@ const buttonVariants = cva(
         rose: "bg-rose-600 text-white hover:bg-rose-700 hover:shadow-[0_4px_14px_rgba(244,63,94,0.4)] active:bg-rose-800",
         emerald: "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-[0_4px_14px_rgba(16,185,129,0.4)] active:bg-emerald-800",
         
+        // Colorful outline variants
+        "outline-blue": "border border-blue-300 text-blue-600 bg-transparent hover:bg-blue-50 hover:border-blue-400 hover:shadow-[0_2px_8px_rgba(59,130,246,0.15)]",
+        "outline-green": "border border-green-300 text-green-600 bg-transparent hover:bg-green-50 hover:border-green-400 hover:shadow-[0_2px_8px_rgba(34,197,94,0.15)]",
+        "outline-purple": "border border-purple-300 text-purple-600 bg-transparent hover:bg-purple-50 hover:border-purple-400 hover:shadow-[0_2px_8px_rgba(147,51,234,0.15)]",
+        "outline-orange": "border border-orange-300 text-orange-600 bg-transparent hover:bg-orange-50 hover:border-orange-400 hover:shadow-[0_2px_8px_rgba(249,115,22,0.15)]",
+        "outline-pink": "border border-pink-300 text-pink-600 bg-transparent hover:bg-pink-50 hover:border-pink-400 hover:shadow-[0_2px_8px_rgba(236,72,153,0.15)]",
+        "outline-indigo": "border border-indigo-300 text-indigo-600 bg-transparent hover:bg-indigo-50 hover:border-indigo-400 hover:shadow-[0_2px_8px_rgba(99,102,241,0.15)]",
+        "outline-teal": "border border-teal-300 text-teal-600 bg-transparent hover:bg-teal-50 hover:border-teal-400 hover:shadow-[0_2px_8px_rgba(20,184,166,0.15)]",
+        "outline-cyan": "border border-cyan-300 text-cyan-600 bg-transparent hover:bg-cyan-50 hover:border-cyan-400 hover:shadow-[0_2px_8px_rgba(8,145,178,0.15)]",
+        "outline-yellow": "border border-yellow-300 text-yellow-600 bg-transparent hover:bg-yellow-50 hover:border-yellow-400 hover:shadow-[0_2px_8px_rgba(202,138,4,0.15)]",
+        "outline-lime": "border border-lime-300 text-lime-600 bg-transparent hover:bg-lime-50 hover:border-lime-400 hover:shadow-[0_2px_8px_rgba(101,163,13,0.15)]",
+        "outline-rose": "border border-rose-300 text-rose-600 bg-transparent hover:bg-rose-50 hover:border-rose-400 hover:shadow-[0_2px_8px_rgba(244,63,94,0.15)]",
+        "outline-emerald": "border border-emerald-300 text-emerald-600 bg-transparent hover:bg-emerald-50 hover:border-emerald-400 hover:shadow-[0_2px_8px_rgba(16,185,129,0.15)]",
+        
         // Standard variants
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",

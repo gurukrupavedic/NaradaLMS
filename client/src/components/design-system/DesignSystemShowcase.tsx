@@ -102,7 +102,7 @@ export function DesignSystemShowcase() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant="outline">
+                  <Button className="w-full" variant={`outline-${selectedVariant}` as any}>
                     Get Started
                   </Button>
                 </CardContent>
@@ -122,7 +122,7 @@ export function DesignSystemShowcase() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant="outline">
+                  <Button className="w-full" variant={`outline-${selectedVariant}` as any}>
                     Get Started
                   </Button>
                 </CardContent>
@@ -142,7 +142,7 @@ export function DesignSystemShowcase() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant="outline">
+                  <Button className="w-full" variant={`outline-${selectedVariant}` as any}>
                     Get Started
                   </Button>
                 </CardContent>
@@ -213,12 +213,24 @@ export function DesignSystemShowcase() {
         <div className="space-y-8">
           <h2 className="text-3xl font-semibold text-gray-900">Button Components</h2>
           
-          {/* Color Variants */}
+          {/* Solid Color Variants */}
           <div>
-            <h3 className="text-xl font-medium mb-4">Color Variants</h3>
+            <h3 className="text-xl font-medium mb-4">Solid Color Variants</h3>
             <div className="flex flex-wrap gap-3">
               {colorVariants.map((variant) => (
                 <Button key={variant} variant={variant as any}>
+                  {variant.charAt(0).toUpperCase() + variant.slice(1)}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Outline Color Variants */}
+          <div>
+            <h3 className="text-xl font-medium mb-4">Outline Color Variants</h3>
+            <div className="flex flex-wrap gap-3">
+              {colorVariants.map((variant) => (
+                <Button key={variant} variant={`outline-${variant}` as any}>
                   {variant.charAt(0).toUpperCase() + variant.slice(1)}
                 </Button>
               ))}
@@ -280,7 +292,7 @@ export function DesignSystemShowcase() {
                   <CardDescription>Browse and study learning tracks</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button educational="lesson" className="w-full">
+                  <Button variant="outline-blue" className="w-full">
                     Get Started
                   </Button>
                 </CardContent>
@@ -295,7 +307,7 @@ export function DesignSystemShowcase() {
                   <CardDescription>Create and edit learning content</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button educational="edit" className="w-full">
+                  <Button variant="outline-green" className="w-full">
                     Get Started
                   </Button>
                 </CardContent>
@@ -310,7 +322,7 @@ export function DesignSystemShowcase() {
                   <CardDescription>Design system showcases</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button educational="preview" className="w-full">
+                  <Button variant="outline-purple" className="w-full">
                     Get Started
                   </Button>
                 </CardContent>
