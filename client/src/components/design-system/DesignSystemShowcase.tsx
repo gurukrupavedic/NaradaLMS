@@ -866,14 +866,33 @@ export function DesignSystemShowcase() {
               componentName="Loading"
               variant={loadingVariant}
               size={loadingSize}
-              props={{}}
+              props={{ message: "Loading content..." }}
+              allSizes={getComponentConfig("Loading")?.sizes || ["sm", "md", "lg", "xl"]}
               onVariantChange={setLoadingVariant}
               onSizeChange={setLoadingSize}
             >
-              <div className="space-y-4 text-center">
-                <Loading variant={loadingVariant as any} size={loadingSize as any} />
-                <Loading variant="green" size="lg" />
-                <Loading variant="purple" size="sm" />
+              <div className="space-y-6 text-center">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-700">Interactive Loading (changes with inspector)</p>
+                  <Loading variant={loadingVariant as any} size={loadingSize as any} message="Processing chapter..." />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-600">Size Comparison</p>
+                    <div className="flex items-center justify-center gap-3">
+                      <Loading.Spinner variant="blue" size="sm" />
+                      <Loading.Spinner variant="green" size="md" />
+                      <Loading.Spinner variant="purple" size="lg" />
+                      <Loading.Spinner variant="orange" size="xl" />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-600">Skeleton Loading</p>
+                    <Loading.Content variant={loadingVariant as any} />
+                  </div>
+                </div>
               </div>
             </ComponentCard>
 

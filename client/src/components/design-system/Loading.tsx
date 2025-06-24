@@ -40,14 +40,14 @@ const spinnerVariants = cva(
       },
       size: {
         sm: "h-4 w-4 border",
-        default: "h-6 w-6 border-2",
+        md: "h-6 w-6 border-2",
         lg: "h-8 w-8 border-2",
         xl: "h-12 w-12 border-3"
       }
     },
     defaultVariants: {
       variant: "default",
-      size: "default"
+      size: "md"
     }
   }
 );
@@ -146,7 +146,7 @@ export interface LoadingScreenProps {
   message?: string;
   variant?: keyof typeof educationalVariants | "default";
   educational?: keyof typeof educationalVariants;
-  size?: "sm" | "default" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
 

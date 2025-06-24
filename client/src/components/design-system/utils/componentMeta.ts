@@ -199,8 +199,8 @@ export const componentConfigs: Record<string, ComponentConfig> = {
   Loading: {
     name: "Loading",
     variants: colorVariants,
-    sizes: sizeOptions.small,
-    commonProps: [],
+    sizes: sizeOptions.full,
+    commonProps: ["message", "educational"],
     description: "Loading spinners and skeleton states",
     category: "specialized"
   },
