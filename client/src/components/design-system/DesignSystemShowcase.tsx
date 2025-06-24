@@ -53,6 +53,7 @@ export function DesignSystemShowcase() {
   const [tableVariant, setTableVariant] = useState("blue");
   const [tableSize, setTableSize] = useState("md");
   const [sliderVariant, setSliderVariant] = useState("orange");
+  const [sliderSize, setSliderSize] = useState("md");
   const [breadcrumbVariant, setBreadcrumbVariant] = useState("blue");
   const [breadcrumbSize, setBreadcrumbSize] = useState("md");
   
@@ -483,6 +484,58 @@ export function DesignSystemShowcase() {
                 variant={sliderVariant as any}
                 showVolume={true}
               />
+            </ComponentCard>
+
+            <ComponentCard
+              title="Full Audio Controls"
+              description="Complete audio player with timeline and controls"
+              componentName="AudioControls"
+              variant={sliderVariant}
+              size={sliderSize}
+              props={{ 
+                isPlaying: isAudioPlaying, 
+                showSkipButtons: true,
+                showPlaybackRate: true,
+                showVolumeControl: true
+              }}
+              onVariantChange={setSliderVariant}
+              onSizeChange={setSliderSize}
+            >
+              <div className="space-y-4">
+                <AudioControls
+                  variant={sliderVariant as any}
+                  size={sliderSize as any}
+                  title="Chapter 1: Vedic Foundations"
+                  isPlaying={isAudioPlaying}
+                  currentTime={audioCurrentTime}
+                  duration={120}
+                  volume={75}
+                  playbackRate={1}
+                  bufferedProgress={85}
+                  onPlay={() => setIsAudioPlaying(true)}
+                  onPause={() => setIsAudioPlaying(false)}
+                  onStop={() => {
+                    setIsAudioPlaying(false);
+                    setAudioCurrentTime(0);
+                  }}
+                  onSeek={(time) => setAudioCurrentTime(time)}
+                  onSkipBackward={() => setAudioCurrentTime(Math.max(0, audioCurrentTime - 10))}
+                  onSkipForward={() => setAudioCurrentTime(Math.min(120, audioCurrentTime + 10))}
+                />
+                
+                <AudioControls
+                  variant="green"
+                  size={sliderSize as any}
+                  title="Short Audio Clip"
+                  currentTime={25}
+                  duration={45}
+                  volume={60}
+                  playbackRate={1.5}
+                  bufferedProgress={30}
+                  showSkipButtons={false}
+                  showPlaybackRate={false}
+                />
+              </div>
             </ComponentCard>
 
             <ComponentCard

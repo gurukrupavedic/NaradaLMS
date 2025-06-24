@@ -176,6 +176,15 @@ export const componentConfigs: Record<string, ComponentConfig> = {
     category: "data"
   },
 
+  AudioControls: {
+    name: "AudioControls",
+    variants: colorVariants,
+    sizes: sizeOptions.small,
+    commonProps: ["isPlaying", "showSkipButtons", "showPlaybackRate", "showVolumeControl"],
+    description: "Complete audio player with timeline and controls",
+    category: "specialized"
+  },
+
   // Navigation Components
   Breadcrumb: {
     name: "Breadcrumb",
