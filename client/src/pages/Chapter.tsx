@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AudioPlayer } from "@/components/AudioPlayer";
-import InteractiveSegment from "@/components/InteractiveSegment";
+import { InteractiveSegment } from "@/components/InteractiveSegment";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useToast } from "@/hooks/use-toast";

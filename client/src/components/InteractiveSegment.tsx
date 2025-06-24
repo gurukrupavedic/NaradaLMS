@@ -8,7 +8,7 @@ interface InteractiveSegmentProps {
   onClick: () => void;
 }
 
-export default function InteractiveSegment({ 
+export function InteractiveSegment({ 
   segmentId, 
   text, 
   isActive, 

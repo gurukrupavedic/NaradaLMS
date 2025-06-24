@@ -12,7 +12,7 @@ import { useWarmTrackCache } from "@/lib/query-prefetch";
 // Phase 5A: Bundle Optimization - Route-based code splitting
 const Landing = lazy(() => import("@/pages/Landing"));
 const SimpleDashboard = lazy(() => import("@/components/SimpleDashboard"));
-const NotFound = lazy(() => import("@/pages/not-found"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 const TrackView = lazy(() => import("@/pages/TrackView"));
 const ChapterView = lazy(() => import("@/pages/ChapterView"));
 const ContentManagement = lazy(() => import("@/pages/ContentManagement"));

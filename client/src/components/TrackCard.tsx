@@ -20,7 +20,7 @@ interface TrackCardProps {
   onContinue: () => void;
 }
 
-export default function TrackCard({ track, onContinue }: TrackCardProps) {
+export function TrackCard({ track, onContinue }: TrackCardProps) {
   const progressPercentage = track.chapterCount > 0 ? (track.completedChapters / track.chapterCount) * 100 : 0;
   const isCompleted = track.completedChapters === track.chapterCount && track.chapterCount > 0;
   const isStarted = track.completedChapters > 0;
