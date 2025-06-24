@@ -818,7 +818,7 @@ export function DesignSystemShowcase() {
                 <CardHeader className="text-center">
                   <BookOpen className={`h-8 w-8 mx-auto mb-2 text-${cardVariant}-600`} />
                   <CardTitle className={`text-base text-${cardVariant}-700 font-semibold`}>Learning Track</CardTitle>
-                  <CardDescription>Sanskrit Fundamentals</CardDescription>
+                  <CardDescription className={`text-${cardVariant}-500`}>Sanskrit Fundamentals</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button className="w-full" variant={`outline-${cardVariant}` as any}>
@@ -831,7 +831,7 @@ export function DesignSystemShowcase() {
                 <CardHeader className="text-center">
                   <Music className={`h-8 w-8 mx-auto mb-2 text-${cardVariant}-600`} />
                   <CardTitle className={`text-base text-${cardVariant}-700 font-semibold`}>Audio Content</CardTitle>
-                  <CardDescription>Chapter Recordings</CardDescription>
+                  <CardDescription className={`text-${cardVariant}-500`}>Chapter Recordings</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button className="w-full" variant={`outline-${cardVariant}` as any}>
@@ -844,7 +844,7 @@ export function DesignSystemShowcase() {
                 <CardHeader className="text-center">
                   <Settings className={`h-8 w-8 mx-auto mb-2 text-${cardVariant}-600`} />
                   <CardTitle className={`text-base text-${cardVariant}-700 font-semibold`}>Settings</CardTitle>
-                  <CardDescription>Preferences</CardDescription>
+                  <CardDescription className={`text-${cardVariant}-500`}>Preferences</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button className="w-full" variant={`outline-${cardVariant}` as any}>
