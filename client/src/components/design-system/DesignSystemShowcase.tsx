@@ -985,12 +985,14 @@ export function DesignSystemShowcase() {
               onSizeChange={setDialogSize}
             >
               <div className="space-y-4">
-                <Button onClick={() => setShowComponentDialog(true)} variant={dialogVariant as any}>
-                  Open Dialog
-                </Button>
-                <Button variant="rose" onClick={() => setShowConfirmDialog(true)}>
-                  Delete Confirmation
-                </Button>
+                <div className="flex gap-3">
+                  <Button onClick={() => setShowComponentDialog(true)} variant={dialogVariant as any}>
+                    Open Dialog
+                  </Button>
+                  <Button variant="rose" onClick={() => setShowConfirmDialog(true)}>
+                    Delete Confirmation
+                  </Button>
+                </div>
                 
                 <Dialog 
                   isOpen={showComponentDialog} 
