@@ -809,19 +809,36 @@
       margin: 16px 0;
     }
 
+    /* Additional text color overrides */
+    .text-center p {
+      color: #000000 !important;
+      font-weight: 500 !important;
+    }
+
+    [data-theme="dark"] .text-center p {
+      color: #e5e7eb !important;
+    }
+
     .variation-item {
       text-align: center;
       padding: 16px;
       background: #f8fafc;
       border-radius: 8px;
       border: 1px solid #e2e8f0;
-      color: #1f2937;
     }
 
     [data-theme="dark"] .variation-item {
       background: #334155;
       border-color: #475569;
-      color: #f8fafc;
+    }
+
+    /* Force text colors to override any inherited styles */
+    .component-section p {
+      color: #000000 !important;
+    }
+
+    [data-theme="dark"] .component-section p {
+      color: #e5e7eb !important;
     }
 
     /* Stats and Metrics */
@@ -925,7 +942,7 @@
       <div class="section-header">
         <span class="component-category">Foundation</span>
         <h2 class="text-3xl font-bold mt-2 text-gray-900 dark:text-white">Design Principles</h2>
-        <p class="text-black dark:text-gray-200 mt-2 font-medium">Core principles that guide our design decisions</p>
+        <p class="text-black dark:text-gray-200 mt-2 font-medium" style="color: #000000 !important;">Core principles that guide our design decisions</p>
       </div>
       
       <div class="grid md:grid-cols-3 gap-6">
@@ -934,7 +951,7 @@
             <span class="text-white text-2xl">🎨</span>
           </div>
           <h3 class="text-lg font-semibold mb-2">Modern & Vibrant</h3>
-          <p class="text-black dark:text-gray-200 text-sm font-medium">Contemporary aesthetics with vibrant colors that engage users while maintaining professionalism</p>
+          <p class="text-black dark:text-gray-200 text-sm font-medium" style="color: #000000 !important; font-weight: 600 !important;">Contemporary aesthetics with vibrant colors that engage users while maintaining professionalism</p>
         </div>
         
         <div class="text-center p-6">
@@ -942,7 +959,7 @@
             <span class="text-white text-2xl">✨</span>
           </div>
           <h3 class="text-lg font-semibold mb-2">Elegant Interactions</h3>
-          <p class="text-black dark:text-gray-200 text-sm font-medium">Subtle fluorescent glow effects and smooth transitions that provide delightful user feedback</p>
+          <p class="text-black dark:text-gray-200 text-sm font-medium" style="color: #000000 !important; font-weight: 600 !important;">Subtle fluorescent glow effects and smooth transitions that provide delightful user feedback</p>
         </div>
         
         <div class="text-center p-6">
@@ -950,7 +967,7 @@
             <span class="text-white text-2xl">♿</span>
           </div>
           <h3 class="text-lg font-semibold mb-2">Accessibility First</h3>
-          <p class="text-black dark:text-gray-200 text-sm font-medium">WCAG 2.1 compliant with proper contrast ratios and keyboard navigation support</p>
+          <p class="text-black dark:text-gray-200 text-sm font-medium" style="color: #000000 !important; font-weight: 600 !important;">WCAG 2.1 compliant with proper contrast ratios and keyboard navigation support</p>
         </div>
       </div>
     </div>
