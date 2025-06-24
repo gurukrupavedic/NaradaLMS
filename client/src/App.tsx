@@ -10,14 +10,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWarmTrackCache } from "@/lib/query-prefetch";
 
 // Phase 5A: Bundle Optimization - Route-based code splitting
-const Landing = lazy(() => import("@/pages/Landing"));
+const Landing = lazy(() => import("@/pages/Landing").then(module => ({ default: module.Landing })));
 const SimpleDashboard = lazy(() => import("@/components/SimpleDashboard"));
-const NotFound = lazy(() => import("@/pages/NotFound"));
-const TrackView = lazy(() => import("@/pages/TrackView"));
-const ChapterView = lazy(() => import("@/pages/ChapterView"));
-const ContentManagement = lazy(() => import("@/pages/ContentManagement"));
-const TrackChapters = lazy(() => import("@/pages/TrackChapters"));
-const ChapterEditor = lazy(() => import("@/pages/ChapterEditor"));
+const NotFound = lazy(() => import("@/pages/NotFound").then(module => ({ default: module.NotFound })));
+const TrackView = lazy(() => import("@/pages/TrackView").then(module => ({ default: module.TrackView })));
+const ChapterView = lazy(() => import("@/pages/ChapterView").then(module => ({ default: module.ChapterView })));
+const ContentManagement = lazy(() => import("@/pages/ContentManagement").then(module => ({ default: module.ContentManagement })));
+const TrackChapters = lazy(() => import("@/pages/TrackChapters").then(module => ({ default: module.TrackChapters })));
+const ChapterEditor = lazy(() => import("@/pages/ChapterEditor").then(module => ({ default: module.ChapterEditor })));
 
 
 
@@ -65,7 +65,7 @@ function Router() {
   );
 }
 
-function App() {
+export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -77,5 +77,3 @@ function App() {
     </QueryClientProvider>
   );
 }
-
-export default App;
