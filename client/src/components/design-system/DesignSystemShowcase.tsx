@@ -507,10 +507,10 @@ export function DesignSystemShowcase() {
                 title="Chapter 1: Vedic Foundations"
                 isPlaying={isAudioPlaying}
                 currentTime={audioCurrentTime}
-                duration={120}
+                duration={120.7}
                 volume={75}
                 playbackRate={1}
-                bufferedProgress={85}
+                bufferedProgress={85.3}
                 onPlay={() => setIsAudioPlaying(true)}
                 onPause={() => setIsAudioPlaying(false)}
                 onStop={() => {
@@ -518,8 +518,8 @@ export function DesignSystemShowcase() {
                   setAudioCurrentTime(0);
                 }}
                 onSeek={(time) => setAudioCurrentTime(time)}
-                onSkipBackward={() => setAudioCurrentTime(Math.max(0, audioCurrentTime - 10))}
-                onSkipForward={() => setAudioCurrentTime(Math.min(120, audioCurrentTime + 10))}
+                onSkipBackward={() => setAudioCurrentTime(Math.max(0, audioCurrentTime - 10.0))}
+                onSkipForward={() => setAudioCurrentTime(Math.min(120.7, audioCurrentTime + 10.0))}
               />
             </ComponentCard>
 

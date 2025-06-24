@@ -129,8 +129,9 @@ export interface AudioControlsProps
 
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const wholeSecs = Math.floor(seconds % 60);
+  const tenths = Math.floor((seconds % 1) * 10);
+  return `${mins}:${wholeSecs.toString().padStart(2, '0')}.${tenths}`;
 }
 
 const AudioControls = React.forwardRef<HTMLDivElement, AudioControlsProps>(
