@@ -27,6 +27,9 @@ import { ContentTabWithContext } from "@/components/chapter-editor/ContentTabWit
 // Phase 5A: Performance Optimization
 import { TabLoadingSkeleton } from "@/components/ui/tab-loading-skeleton";
 
+// Phase 5C: Query Optimization
+import { usePrefetchAdjacentChapters, usePrefetchAudioMetadata } from "@/lib/query-prefetch";
+
 // UI Components
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -121,6 +124,12 @@ export default function ChapterEditor() {
   
   // Phase 5: Performance Optimization (Feature Flag) - Set to true to enable optimizations
   const USE_PERFORMANCE_OPTIMIZATIONS = true; // Toggle to test performance improvements
+
+  // Phase 5C: Query prefetching for better performance
+  if (USE_PERFORMANCE_OPTIMIZATIONS) {
+    usePrefetchAdjacentChapters(trackId, chapterId);
+    usePrefetchAudioMetadata(chapterId);
+  }
 
   // Phase 4A: Initialize Custom Hooks (parallel to existing state)
   const chapterDataHook = USE_EXTRACTED_HOOKS ? useChapterData(chapterId) : null;

@@ -31,7 +31,8 @@ interface ChapterHeaderProps {
   toggleStatusMutation: any;
 }
 
-export function ChapterHeader({
+// Phase 5B: React Performance Optimization - Add memoization
+export const ChapterHeader = React.memo(function ChapterHeader({
   trackId,
   onNavigateBack,
   chapter,
@@ -48,6 +49,34 @@ export function ChapterHeader({
   updateChapterMetadataMutation,
   toggleStatusMutation,
 }: ChapterHeaderProps) {
+  // Phase 5B: Memoized callbacks
+  const handleNavigateBack = React.useCallback(() => {
+    onNavigateBack();
+  }, [onNavigateBack]);
+
+  const handleStartEditing = React.useCallback(() => {
+    onStartEditingMetadata();
+  }, [onStartEditingMetadata]);
+
+  const handleCancelEditing = React.useCallback(() => {
+    onCancelEditingMetadata();
+  }, [onCancelEditingMetadata]);
+
+  const handleSaveMetadata = React.useCallback(() => {
+    onSaveMetadata();
+  }, [onSaveMetadata]);
+
+  const handleTitleChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onTitleChange(e.target.value);
+  }, [onTitleChange]);
+
+  const handleDescriptionChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onDescriptionChange(e.target.value);
+  }, [onDescriptionChange]);
+
+  const handleToggleStatus = React.useCallback(() => {
+    onToggleStatus();
+  }, [onToggleStatus]);
   return (
     <div className="border-b bg-white shadow-sm">
       <div className="container mx-auto px-6 py-3">
@@ -56,7 +85,7 @@ export function ChapterHeader({
             <Button
               variant="ghost"
               size="sm"
-              onClick={onNavigateBack}
+              onClick={handleNavigateBack}
               className="text-muted-foreground hover:text-foreground"
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
@@ -140,7 +169,7 @@ export function ChapterHeader({
             </Badge>
             
             <Button
-              onClick={onToggleStatus}
+              onClick={handleToggleStatus}
               disabled={toggleStatusMutation.isPending}
               variant={isPublished ? "outline" : "default"}
               size="sm"
@@ -152,4 +181,4 @@ export function ChapterHeader({
       </div>
     </div>
   );
-}
+});

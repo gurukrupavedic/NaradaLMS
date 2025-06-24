@@ -35,7 +35,8 @@ interface ContentTabProps {
   updateChapterMetadataMutation: any;
 }
 
-export function ContentTab({
+// Phase 5B: React Performance Optimization - Add memoization
+export const ContentTab = React.memo(function ContentTab({
   chapter,
   textContent,
   contentScript,
@@ -53,6 +54,30 @@ export function ContentTab({
   updateContentMutation,
   updateChapterMetadataMutation,
 }: ContentTabProps) {
+  // Phase 5B: Memoize expensive operations
+  const contentEditorProps = React.useMemo(() => ({
+    content: textContent[contentScript] || "",
+    onChange: (content: string) => onContentChange(contentScript, content),
+    editable: !isPublished,
+    placeholder: `Enter content in ${contentScript.toUpperCase()}...`,
+    className: "min-h-96",
+  }), [textContent, contentScript, isPublished, onContentChange]);
+
+  const handleStartEditing = React.useCallback(() => {
+    onStartEditingMetadata();
+  }, [onStartEditingMetadata]);
+
+  const handleCancelEditing = React.useCallback(() => {
+    onCancelEditingMetadata();
+  }, [onCancelEditingMetadata]);
+
+  const handleSaveMetadata = React.useCallback(() => {
+    onSaveMetadata();
+  }, [onSaveMetadata]);
+
+  const handleScriptChange = React.useCallback((script: "te" | "hi" | "en") => {
+    onScriptChange(script);
+  }, [onScriptChange]);
   return (
     <TabsContent value="content" className="space-y-6">
       <div className="grid gap-6">
@@ -70,7 +95,7 @@ export function ContentTab({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={onStartEditingMetadata}
+                  onClick={handleStartEditing}
                 >
                   <Edit2 className="w-4 h-4 mr-2" />
                   Edit
@@ -101,7 +126,7 @@ export function ContentTab({
                 </div>
                 <div className="flex gap-2">
                   <Button
-                    onClick={onSaveMetadata}
+                    onClick={handleSaveMetadata}
                     disabled={updateChapterMetadataMutation.isPending}
                     size="sm"
                   >
@@ -110,7 +135,7 @@ export function ContentTab({
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={onCancelEditingMetadata}
+                    onClick={handleCancelEditing}
                     size="sm"
                   >
                     <X className="w-4 h-4 mr-2" />
@@ -147,7 +172,7 @@ export function ContentTab({
               <div className="flex items-center gap-4">
                 <ScriptSelector
                   value={contentScript}
-                  onValueChange={onScriptChange}
+                  onValueChange={handleScriptChange}
                   disabled={isPublished}
                 />
                 {updateContentMutation.isPending && (
@@ -170,13 +195,7 @@ export function ContentTab({
                 <Label className="text-sm font-medium">
                   Content ({contentScript.toUpperCase()})
                 </Label>
-                <RichTextEditor
-                  content={textContent[contentScript] || ""}
-                  onChange={(content) => onContentChange(contentScript, content)}
-                  editable={!isPublished}
-                  placeholder={`Enter content in ${contentScript.toUpperCase()}...`}
-                  className="min-h-96"
-                />
+                <RichTextEditor {...contentEditorProps} />
               </div>
 
               {!isPublished && (
@@ -202,4 +221,4 @@ export function ContentTab({
       </div>
     </TabsContent>
   );
-}
+});

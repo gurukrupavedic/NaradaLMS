@@ -18,7 +18,8 @@ interface ContentTabWithContextProps {
   updateChapterMetadataMutation: any;
 }
 
-export function ContentTabWithContext({
+// Phase 5B: React Performance Optimization - Add memoization  
+export const ContentTabWithContext = React.memo(function ContentTabWithContext({
   onContentChange,
   onSaveMetadata,
   updateContentMutation,
@@ -35,14 +36,25 @@ export function ContentTabWithContext({
   } = useMetadataEditing();
   const { setContentScript, updateTextContent } = useChapterEditor();
 
-  const handleContentChange = (script: string, content: string) => {
+  // Phase 5B: Memoized callbacks and values
+  const handleContentChange = React.useCallback((script: string, content: string) => {
     updateTextContent(script, content);
     onContentChange(script, content);
-  };
+  }, [updateTextContent, onContentChange]);
 
-  const handleStartEditingMetadata = () => {
+  const handleStartEditingMetadata = React.useCallback(() => {
     startEditingMetadata(chapter?.title || "", chapter?.description || "");
-  };
+  }, [startEditingMetadata, chapter?.title, chapter?.description]);
+
+  const contentEditorProps = React.useMemo(() => ({
+    content: textContent[contentScript] || "",
+    onChange: (content: string) => handleContentChange(contentScript, content),
+    editable: !isPublished,
+    placeholder: `Enter content in ${contentScript.toUpperCase()}...`,
+    className: "min-h-96",
+  }), [textContent, contentScript, isPublished, handleContentChange]);
+
+
 
   return (
     <TabsContent value="content" className="space-y-6">
@@ -167,13 +179,7 @@ export function ContentTabWithContext({
                 <Label className="text-sm font-medium">
                   Content ({contentScript.toUpperCase()})
                 </Label>
-                <RichTextEditor
-                  content={textContent[contentScript] || ""}
-                  onChange={(content) => handleContentChange(contentScript, content)}
-                  editable={!isPublished}
-                  placeholder={`Enter content in ${contentScript.toUpperCase()}...`}
-                  className="min-h-96"
-                />
+                <RichTextEditor {...contentEditorProps} />
               </div>
 
               {!isPublished && (
@@ -199,4 +205,4 @@ export function ContentTabWithContext({
       </div>
     </TabsContent>
   );
-}
+});

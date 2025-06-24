@@ -64,7 +64,6 @@ export {
   // Dashboard Icons
   Book,
   BookOpen,
-  Clock,
   Award,
   
   // Content Management Icons

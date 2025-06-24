@@ -46,7 +46,8 @@ interface SegmentationTabProps {
   getMappingStatus: (segmentId: number, mappings: any[]) => string;
 }
 
-export function SegmentationTab({
+// Phase 5B: React Performance Optimization - Add memoization
+export const SegmentationTab = React.memo(function SegmentationTab({
   chapterId,
   chapterContent,
   isPublished,
@@ -66,24 +67,43 @@ export function SegmentationTab({
   renderSegmentedText,
   getMappingStatus,
 }: SegmentationTabProps) {
-  // Filter segments for current script
-  const scriptSegments = textSegments.filter(
-    (segment) => segment.script === selectedScript
+  // Phase 5B: Memoize expensive computations
+  const scriptSegments = React.useMemo(() => 
+    textSegments.filter((segment) => segment.script === selectedScript),
+    [textSegments, selectedScript]
   );
 
-  // Get segment counts by script
-  const segmentCounts = {
+  const segmentCounts = React.useMemo(() => ({
     te: textSegments.filter(s => s.script === 'te').length,
     hi: textSegments.filter(s => s.script === 'hi').length,
     en: textSegments.filter(s => s.script === 'en').length,
-  };
+  }), [textSegments]);
 
-  // Get mapping counts
-  const totalMappings = allChapterMappings.length;
-  const scriptMappings = allChapterMappings.filter(mapping => {
-    const segment = textSegments.find(s => s.id === mapping.textSegmentId);
-    return segment?.script === selectedScript;
-  }).length;
+  const { totalMappings, scriptMappings } = React.useMemo(() => {
+    const total = allChapterMappings.length;
+    const script = allChapterMappings.filter(mapping => {
+      const segment = textSegments.find(s => s.id === mapping.textSegmentId);
+      return segment?.script === selectedScript;
+    }).length;
+    return { totalMappings: total, scriptMappings: script };
+  }, [allChapterMappings, textSegments, selectedScript]);
+
+  // Phase 5B: Memoized callbacks
+  const handleScriptChange = React.useCallback((script: "te" | "hi" | "en") => {
+    onScriptChange(script);
+  }, [onScriptChange]);
+
+  const handleSegmentNameChange = React.useCallback((name: string) => {
+    onSegmentNameChange(name);
+  }, [onSegmentNameChange]);
+
+  const handleCreateSegment = React.useCallback(() => {
+    onCreateSegment();
+  }, [onCreateSegment]);
+
+  const handleDeleteSegment = React.useCallback((id: number) => {
+    onDeleteSegment(id);
+  }, [onDeleteSegment]);
 
   return (
     <TabsContent value="segmentation" className="space-y-6">
@@ -102,7 +122,7 @@ export function SegmentationTab({
                 </div>
                 <ScriptSelector
                   value={selectedScript}
-                  onValueChange={onScriptChange}
+                  onValueChange={handleScriptChange}
                   disabled={isPublished}
                 />
               </div>
@@ -221,7 +241,7 @@ export function SegmentationTab({
                       <Input
                         id="segmentName"
                         value={segmentName}
-                        onChange={(e) => onSegmentNameChange(e.target.value)}
+                        onChange={(e) => handleSegmentNameChange(e.target.value)}
                         placeholder="Enter segment name"
                         className="text-sm"
                       />
@@ -234,7 +254,7 @@ export function SegmentationTab({
                     )}
                     
                     <Button
-                      onClick={onCreateSegment}
+                      onClick={handleCreateSegment}
                       disabled={
                         !hasSelection ||
                         !segmentName.trim() ||
@@ -315,4 +335,4 @@ export function SegmentationTab({
       </div>
     </TabsContent>
   );
-}
+});

@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary, AppErrorFallback } from "@/components/ui/error-boundary";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import { useAuth } from "@/hooks/useAuth";
+import { useWarmTrackCache } from "@/lib/query-prefetch";
 
 // Phase 5A: Bundle Optimization - Route-based code splitting
 const Landing = lazy(() => import("@/pages/Landing"));
@@ -23,6 +24,9 @@ const ChapterEditor = lazy(() => import("@/pages/ChapterEditor"));
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [location, navigate] = useLocation();
+  
+  // Phase 5C: Background cache warming
+  useWarmTrackCache();
 
   if (isLoading) {
     return (
