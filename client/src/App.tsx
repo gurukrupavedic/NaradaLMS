@@ -21,6 +21,7 @@ const TrackChapters = lazy(() => import("@/pages/TrackChapters").then(module => 
 const ChapterEditor = lazy(() => import("@/pages/ChapterEditor").then(module => ({ default: module.ChapterEditor })));
 const DaisyUI5Showcase = lazy(() => import("@/pages/DaisyUI5Showcase").then(module => ({ default: module.DaisyUI5Showcase })));
 const ColorfulDemo = lazy(() => import("@/components/demos/ColorfulDemo").then(module => ({ default: module.ColorfulDemo })));
+const ExperimentsShowcase = lazy(() => import("@/pages/ExperimentsShowcase").then(module => ({ default: module.ExperimentsShowcase })));
 
 
 
@@ -61,6 +62,7 @@ function Router() {
 
             <Route path="/tracks/:trackId" component={TrackView} />
             <Route path="/chapters/:id" component={ChapterView} />
+            <Route path="/experiments" component={ExperimentsShowcase} />
             <Route path="/experiments/daisyui-5" component={DaisyUI5Showcase} />
 
 
