@@ -8,6 +8,12 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { extractPlainText, isHtmlContent, plainTextToHtml } from "@/lib/html-utils";
 
+// Phase 4A: Custom Hooks
+import { useChapterData } from "@/hooks/useChapterData";
+import { useAudioPlayer } from "@/hooks/useAudioPlayer";
+import { useSegmentData } from "@/hooks/useSegmentData";
+import { useTextSegmentation } from "@/hooks/useTextSegmentation";
+
 // UI Components
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,8 +100,8 @@ export default function ChapterEditor() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const segmentBoundaryListenerRef = useRef<(() => void) | null>(null);
 
-  // Phase 4A: Hook Integration (Feature Flag)
-  const USE_EXTRACTED_HOOKS = false; // Toggle to test hooks
+  // Phase 4A: Hook Integration (Feature Flag) - Set to true to test hooks
+  const USE_EXTRACTED_HOOKS = true; // Toggle to test hooks
 
   // Phase 4A: Initialize Custom Hooks (parallel to existing state)
   const chapterDataHook = USE_EXTRACTED_HOOKS ? useChapterData(chapterId) : null;
@@ -563,6 +569,13 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     duration: audioPlayerHook?.duration,
     textSegments: segmentDataHook?.textSegments || [],
     allChapterMappings: segmentDataHook?.allChapterMappings || [],
+    // Audio player state
+    selectedAudioFile: audioPlayerHook?.selectedAudioFile,
+    timeMarks: audioPlayerHook?.timeMarks || [],
+    selectedMark: audioPlayerHook?.selectedMark,
+    // Text segmentation
+    currentSelection: textSegmentationHook?.currentSelection,
+    hasSelection: textSegmentationHook?.hasSelection,
   } : null;
 
   // Fetch audio files
@@ -595,7 +608,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     enabled: !!selectedAudioFileId,
   });
 
-  const isPublished = chapter?.status === "published";
+  const isPublished = activeChapter?.status === "published";
 
   // === MUTATIONS SECTION ===
 
@@ -907,14 +920,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }
   }, [activeChapter?.content, USE_EXTRACTED_HOOKS]);
 
-  // Auto-save functionality with debounce
+  // Auto-save functionality with debounce (original - preserve until hooks validated)
   useEffect(() => {
-    if (!chapter?.content || isPublished) return;
+    if (!activeChapter?.content || isPublished || USE_EXTRACTED_HOOKS) return;
 
     const hasChanges =
-      textContent.te !== (chapter.content.te || "") ||
-      textContent.hi !== (chapter.content.hi || "") ||
-      textContent.en !== (chapter.content.en || "");
+      textContent.te !== (activeChapter.content.te || "") ||
+      textContent.hi !== (activeChapter.content.hi || "") ||
+      textContent.en !== (activeChapter.content.en || "");
 
     if (!hasChanges) return;
 
@@ -924,7 +937,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }, 2000); // Auto-save after 2 seconds of no typing
 
     return () => clearTimeout(timeoutId);
-  }, [textContent, chapter?.content, isPublished, updateContentMutation]);
+  }, [textContent, activeChapter?.content, isPublished, updateContentMutation, USE_EXTRACTED_HOOKS]);
 
   // Add global mouse event listeners for dragging
   useEffect(() => {
@@ -1584,7 +1597,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // === RENDER LOGIC SECTION ===
 
-  if (chapterLoading) {
+  if (activeChapterLoading) {
     return <div className="p-6">Loading chapter...</div>;
   }
 
@@ -3045,11 +3058,11 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     {/* Segment List */}
                     <div className="space-y-2">
                       <Label className="text-sm">
-                        Text Segments ({textSegments?.length || 0})
+                        Text Segments ({activeTextSegments?.length || 0})
                       </Label>
                       <div className="max-h-64 overflow-y-auto space-y-2">
-                        {textSegments && textSegments.length > 0 ? (
-                          textSegments.map((segment) => (
+                        {activeTextSegments && activeTextSegments.length > 0 ? (
+                          activeTextSegments.map((segment) => (
                             <div
                               key={segment.id}
                               className="p-3 border rounded-lg bg-white dark:bg-gray-800"
