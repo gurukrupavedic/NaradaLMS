@@ -37,6 +37,7 @@ import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText
 export function DesignSystemShowcase() {
   const [selectedVariant, setSelectedVariant] = useState<string>("blue");
   const [showDialog, setShowDialog] = useState(false);
+  const [showComponentDialog, setShowComponentDialog] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [checkboxValue, setCheckboxValue] = useState<string[]>([]);
   const [radioValue, setRadioValue] = useState<string>("student");
@@ -983,21 +984,50 @@ export function DesignSystemShowcase() {
               onSizeChange={setDialogSize}
             >
               <div className="space-y-4">
-                <Button onClick={() => setShowDialog(true)} variant={dialogVariant as any}>
+                <Button onClick={() => setShowComponentDialog(true)} variant={dialogVariant as any}>
                   Open Dialog
                 </Button>
                 <Button variant="rose" onClick={() => setShowConfirmDialog(true)}>
                   Delete Confirmation
                 </Button>
                 
-                <Dialog isOpen={showDialog} onClose={() => setShowDialog(false)} title="Edit Chapter" variant={dialogVariant as any} size={dialogSize as any}>
-                  <DialogContent>
-                    <p>This is a sample dialog content where you would edit chapter details.</p>
-                  </DialogContent>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setShowDialog(false)}>Cancel</Button>
-                    <Button onClick={() => setShowDialog(false)}>Save Changes</Button>
-                  </DialogFooter>
+                <Dialog 
+                  isOpen={showComponentDialog} 
+                  onClose={() => setShowComponentDialog(false)} 
+                  title="Edit Chapter" 
+                  description="Update chapter content and settings"
+                  variant={dialogVariant as any} 
+                  size={dialogSize as any}
+                >
+                  <p>This is a sample dialog content where you would edit chapter details. The dialog adapts to different variants and sizes based on your selection.</p>
+                  
+                  <div className="mt-4 space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Chapter Title</label>
+                      <input 
+                        type="text" 
+                        defaultValue="Introduction to Vedic Mathematics"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                      <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>Published</option>
+                        <option>Draft</option>
+                        <option>Review</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6 flex justify-end gap-3">
+                    <Button variant="outline" onClick={() => setShowComponentDialog(false)}>
+                      Cancel
+                    </Button>
+                    <Button variant={dialogVariant as any} onClick={() => setShowComponentDialog(false)}>
+                      Save Changes
+                    </Button>
+                  </div>
                 </Dialog>
 
                 <ConfirmDialog
@@ -1009,6 +1039,7 @@ export function DesignSystemShowcase() {
                   confirmText="Delete"
                   cancelText="Cancel"
                   variant="rose"
+                  destructive={true}
                 />
               </div>
             </ComponentCard>
