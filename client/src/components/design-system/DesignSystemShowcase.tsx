@@ -786,13 +786,13 @@ export function DesignSystemShowcase() {
             >
               <Tabs defaultValue="content" className="w-full">
                 <TabsList variant={tabsVariant as any} size={tabsSize as any}>
-                  <TabsTrigger value="content" variant={tabsVariant as any}>
+                  <TabsTrigger value="content" variant={tabsVariant as any} size={tabsSize as any}>
                     Content
                   </TabsTrigger>
-                  <TabsTrigger value="audio" variant={tabsVariant as any}>
+                  <TabsTrigger value="audio" variant={tabsVariant as any} size={tabsSize as any}>
                     Audio
                   </TabsTrigger>
-                  <TabsTrigger value="settings" variant={tabsVariant as any}>
+                  <TabsTrigger value="settings" variant={tabsVariant as any} size={tabsSize as any}>
                     Settings
                   </TabsTrigger>
                 </TabsList>

@@ -20,7 +20,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const tabsListVariants = cva(
-  "inline-flex h-12 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
+  "inline-flex items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
   {
     variants: {
       variant: {
@@ -37,16 +37,22 @@ const tabsListVariants = cva(
         lime: "bg-lime-50 border border-lime-200",
         rose: "bg-rose-50 border border-rose-200",
         emerald: "bg-emerald-50 border border-emerald-200"
+      },
+      size: {
+        sm: "h-8 p-0.5",
+        md: "h-12 p-1",
+        lg: "h-16 p-1.5"
       }
     },
     defaultVariants: {
-      variant: "default"
+      variant: "default",
+      size: "md"
     }
   }
 );
 
 const tabsTriggerVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_rgba(59,130,246,0.2)] disabled:pointer-events-none disabled:opacity-50 gap-2",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-all focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_rgba(59,130,246,0.2)] disabled:pointer-events-none disabled:opacity-50 gap-2",
   {
     variants: {
       variant: {
@@ -63,10 +69,16 @@ const tabsTriggerVariants = cva(
         lime: "text-lime-700 data-[state=active]:bg-lime-600 data-[state=active]:text-white data-[state=active]:shadow-[0_2px_8px_rgba(101,163,13,0.25)] hover:bg-lime-100 hover:text-lime-800",
         rose: "text-rose-700 data-[state=active]:bg-rose-600 data-[state=active]:text-white data-[state=active]:shadow-[0_2px_8px_rgba(244,63,94,0.25)] hover:bg-rose-100 hover:text-rose-800",
         emerald: "text-emerald-700 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-[0_2px_8px_rgba(16,185,129,0.25)] hover:bg-emerald-100 hover:text-emerald-800"
+      },
+      size: {
+        sm: "px-2 py-1 text-xs",
+        md: "px-4 py-2.5 text-sm", 
+        lg: "px-6 py-3 text-base"
       }
     },
     defaultVariants: {
-      variant: "default"
+      variant: "default",
+      size: "md"
     }
   }
 );
@@ -99,14 +111,14 @@ export interface TabsListProps
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   TabsListProps
->(({ className, variant, educational, ...props }, ref) => {
+>(({ className, variant, size, educational, ...props }, ref) => {
   // Use educational variant if provided
   const finalVariant = educational ? educationalVariants[educational] : variant;
   
   return (
     <TabsPrimitive.List
       ref={ref}
-      className={cn(tabsListVariants({ variant: finalVariant }), className)}
+      className={cn(tabsListVariants({ variant: finalVariant, size }), className)}
       {...props}
     />
   );
@@ -124,7 +136,7 @@ export interface TabsTriggerProps
 const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   TabsTriggerProps
->(({ className, variant, educational, badge, icon, children, ...props }, ref) => {
+>(({ className, variant, size, educational, badge, icon, children, ...props }, ref) => {
   // Use educational variant if provided
   const finalVariant = educational ? educationalVariants[educational] : variant;
   
