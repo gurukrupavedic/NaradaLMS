@@ -94,6 +94,15 @@ export default function ChapterEditor() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const segmentBoundaryListenerRef = useRef<(() => void) | null>(null);
 
+  // Phase 4A: Hook Integration (Feature Flag)
+  const USE_EXTRACTED_HOOKS = false; // Toggle to test hooks
+
+  // Phase 4A: Initialize Custom Hooks (parallel to existing state)
+  const chapterDataHook = USE_EXTRACTED_HOOKS ? useChapterData(chapterId) : null;
+  const audioPlayerHook = USE_EXTRACTED_HOOKS ? useAudioPlayer(chapterId, audioRef) : null;
+  const segmentDataHook = USE_EXTRACTED_HOOKS ? useSegmentData(chapterId, chapterDataHook?.contentScript || "te") : null;
+  const textSegmentationHook = USE_EXTRACTED_HOOKS ? useTextSegmentation() : null;
+
   // Shradha Suktam content in all three languages
 const SHRADHA_SUKTAM_CONTENT = {
   te: `శ్ర॒ద్ధాయా॒ఽగ్నిః సమి॑ధ్యతే । శ్ర॒ద్ధయా॑ విందతే హ॒విః ।
@@ -233,7 +242,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }
   };
 
-  // State management
+  // State management (original - preserve until hooks validated)
   const [textContent, setTextContent] = useState({
     te: "",
     hi: "",
@@ -243,11 +252,20 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Content editor script state (moved here to be available for queries)
   const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
 
-  // Segments query for database integration - script-specific  
+  // Phase 4A: Use hook state when feature flag enabled
+  const activeTextContent = USE_EXTRACTED_HOOKS ? hookData?.textContent || textContent : textContent;
+  const activeContentScript = USE_EXTRACTED_HOOKS ? hookData?.contentScript || contentScript : contentScript;
+  const activeChapter = USE_EXTRACTED_HOOKS ? hookData?.chapter || chapter : chapter;
+  const activeChapterLoading = USE_EXTRACTED_HOOKS ? hookData?.chapterLoading || chapterLoading : chapterLoading;
+
+  // Segments query for database integration - script-specific (original - preserve until hooks validated)
   const { data: textSegments = [], refetch: refetchSegments, isLoading: segmentsLoading, error: segmentsError } = useQuery({
-    queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`],
-    enabled: !!chapterId && !!contentScript
+    queryKey: [`/api/segments/${chapterId}/${activeContentScript || 'te'}`],
+    enabled: !!chapterId && !!activeContentScript
   });
+
+  // Phase 4A: Use hook segments when feature flag enabled
+  const activeTextSegments = USE_EXTRACTED_HOOKS ? hookData?.textSegments || [] : textSegments;
 
   // Segment selection state
   const [selectedSegmentId, setSelectedSegmentId] = useState<number | undefined>(undefined);
@@ -526,11 +544,26 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // === DATA FETCHING SECTION ===
 
-  // Fetch chapter details
+  // Fetch chapter details (original - keep until hooks tested)
   const { data: chapter, isLoading: chapterLoading } = useQuery<ChapterData>({
     queryKey: [`/api/chapters/${chapterId}/details`],
     enabled: !!chapterId,
   });
+
+  // Phase 4A: Hook state integration (side-by-side comparison)
+  const hookData = USE_EXTRACTED_HOOKS ? {
+    chapter: chapterDataHook?.chapter,
+    chapterLoading: chapterDataHook?.chapterLoading,
+    textContent: chapterDataHook?.textContent,
+    contentScript: chapterDataHook?.contentScript,
+    isPublished: chapterDataHook?.isPublished,
+    audioPlayer: audioPlayerHook?.audioPlayer,
+    isPlaying: audioPlayerHook?.isPlaying,
+    currentTime: audioPlayerHook?.currentTime,
+    duration: audioPlayerHook?.duration,
+    textSegments: segmentDataHook?.textSegments || [],
+    allChapterMappings: segmentDataHook?.allChapterMappings || [],
+  } : null;
 
   // Fetch audio files
   const { data: audioFiles, refetch: refetchAudioFiles } = useQuery<any[]>({
@@ -851,28 +884,28 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // === CUSTOM HOOKS SECTION ===
 
-  // Initialize text content when chapter loads
+  // Initialize text content when chapter loads (original - preserve until hooks validated)
   useEffect(() => {
-    if (chapter?.content) {
-      console.log('Chapter content loaded:', JSON.stringify(chapter.content, null, 2));
+    if (activeChapter?.content && !USE_EXTRACTED_HOOKS) {
+      console.log('Chapter content loaded:', JSON.stringify(activeChapter.content, null, 2));
       setTextContent({
-        te: chapter.content.te || "",
-        hi: chapter.content.hi || "",
-        en: chapter.content.en || "",
+        te: activeChapter.content.te || "",
+        hi: activeChapter.content.hi || "",
+        en: activeChapter.content.en || "",
       });
     }
-  }, [chapter]);
+  }, [activeChapter, USE_EXTRACTED_HOOKS]);
 
-  // Initialize chapterContent for segmentation display
+  // Initialize chapterContent for segmentation display (original - preserve until hooks validated)
   useEffect(() => {
-    if (chapter?.content) {
+    if (activeChapter?.content && !USE_EXTRACTED_HOOKS) {
       setChapterContent({
-        te: chapter.content.te || "",
-        hi: chapter.content.hi || "",
-        en: chapter.content.en || "",
+        te: activeChapter.content.te || "",
+        hi: activeChapter.content.hi || "",
+        en: activeChapter.content.en || "",
       });
     }
-  }, [chapter?.content]);
+  }, [activeChapter?.content, USE_EXTRACTED_HOOKS]);
 
   // Auto-save functionality with debounce
   useEffect(() => {
