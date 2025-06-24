@@ -221,7 +221,7 @@ const SelectItem = React.forwardRef<
   const sizeStyles = {
     sm: "py-1.5 pl-7 pr-2 text-xs",
     md: "py-2.5 pl-8 pr-2 text-sm", 
-    lg: "py-3 pl-9 pr-2 text-base"
+    lg: "py-3.5 pl-10 pr-2 text-base"
   };
 
   const iconSizes = {
@@ -233,7 +233,7 @@ const SelectItem = React.forwardRef<
   const iconPositions = {
     sm: "left-1.5",
     md: "left-2",
-    lg: "left-2.5"
+    lg: "left-3"
   };
 
   return (
