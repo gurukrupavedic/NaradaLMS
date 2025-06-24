@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { ScriptSelector } from "@/components/common/ScriptSelector";
-import { Edit2, Save, X } from "lucide-react";
+import { Edit2, Save, X } from "@/lib/icons";
 
 interface ContentTabProps {
   // Chapter data

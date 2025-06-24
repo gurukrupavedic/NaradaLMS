@@ -1,18 +1,22 @@
+import React, { Suspense, lazy } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary, AppErrorFallback } from "@/components/ui/error-boundary";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 import { useAuth } from "@/hooks/useAuth";
-import Landing from "@/pages/Landing";
-import SimpleDashboard from "@/components/SimpleDashboard";
-import NotFound from "@/pages/not-found";
-import TrackView from "@/pages/TrackView";
-import ChapterView from "@/pages/ChapterView";
-import ContentManagement from "@/pages/ContentManagement";
-import TrackChapters from "@/pages/TrackChapters";
-import ChapterEditor from "@/pages/ChapterEditor";
+
+// Phase 5A: Bundle Optimization - Route-based code splitting
+const Landing = lazy(() => import("@/pages/Landing"));
+const SimpleDashboard = lazy(() => import("@/components/SimpleDashboard"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+const TrackView = lazy(() => import("@/pages/TrackView"));
+const ChapterView = lazy(() => import("@/pages/ChapterView"));
+const ContentManagement = lazy(() => import("@/pages/ContentManagement"));
+const TrackChapters = lazy(() => import("@/pages/TrackChapters"));
+const ChapterEditor = lazy(() => import("@/pages/ChapterEditor"));
 
 
 
@@ -29,30 +33,31 @@ function Router() {
   }
 
   return (
-    <Switch>
-      {!isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
-        <>
-          <Route path="/" component={() => <SimpleDashboard user={user as any} />} />
-          <Route path="/dashboard" component={() => <SimpleDashboard user={user as any} />} />
-          {/* Content Management Routes */}
-          <Route path="/manage" component={() => <ContentManagement />} />
-          <Route path="/manage/tracks/:trackId" component={() => <TrackChapters />} />
-          <Route path="/manage/tracks/:trackId/chapters/:chapterId" component={() => <ChapterEditor />} />
-          
-          {/* Legacy redirects for old content-management URLs */}
-          <Route path="/content-management" component={() => <ContentManagement />} />
-          <Route path="/content-management/tracks/:trackId" component={() => <TrackChapters />} />
-          <Route path="/content-management/tracks/:trackId/chapters/:chapterId" component={() => <ChapterEditor />} />
+    <Suspense fallback={<LoadingScreen message="Loading application..." />}>
+      <Switch>
+        {!isAuthenticated ? (
+          <Route path="/" component={Landing} />
+        ) : (
+          <>
+            <Route path="/" component={() => <SimpleDashboard user={user as any} />} />
+            <Route path="/dashboard" component={() => <SimpleDashboard user={user as any} />} />
+            {/* Content Management Routes */}
+            <Route path="/manage" component={() => <ContentManagement />} />
+            <Route path="/manage/tracks/:trackId" component={() => <TrackChapters />} />
+            <Route path="/manage/tracks/:trackId/chapters/:chapterId" component={() => <ChapterEditor />} />
+            
+            {/* Legacy redirects for old content-management URLs */}
+            <Route path="/content-management" component={() => <ContentManagement />} />
+            <Route path="/content-management/tracks/:trackId" component={() => <TrackChapters />} />
+            <Route path="/content-management/tracks/:trackId/chapters/:chapterId" component={() => <ChapterEditor />} />
 
-
-          <Route path="/tracks/:trackId" component={TrackView} />
-          <Route path="/chapters/:id" component={ChapterView} />
-        </>
-      )}
-      <Route component={NotFound} />
-    </Switch>
+            <Route path="/tracks/:trackId" component={TrackView} />
+            <Route path="/chapters/:id" component={ChapterView} />
+          </>
+        )}
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 

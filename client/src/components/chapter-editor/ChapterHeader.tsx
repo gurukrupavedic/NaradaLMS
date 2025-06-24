@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Edit2, Save, X } from "lucide-react";
+import { ChevronLeft, Edit2, Save, X } from "@/lib/icons";
 
 interface ChapterHeaderProps {
   // Navigation

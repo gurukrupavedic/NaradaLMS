@@ -24,6 +24,9 @@ import { ChapterHeader } from "@/components/chapter-editor/ChapterHeader";
 import { ChapterEditorProvider } from "@/contexts/ChapterEditorContext";
 import { ContentTabWithContext } from "@/components/chapter-editor/ContentTabWithContext";
 
+// Phase 5A: Performance Optimization
+import { TabLoadingSkeleton } from "@/components/ui/tab-loading-skeleton";
+
 // UI Components
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,15 +40,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 // Business Components
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
-// Icons
+// Phase 5A: Bundle Optimization - Use centralized icon imports
 import {
   FileText, Upload, Music, Eye, ChevronLeft, Play, Pause, Square,
   MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2, Link2Off, Clock,
-  Timer,
-  Ruler,
-  Type,
-  Settings,
-} from "lucide-react";
+  Timer, Ruler, Type, Settings,
+} from "@/lib/icons";
 import { useLocation } from "wouter";
 import { ScriptSelector } from "@/components/common/ScriptSelector";
 import { AnnotationLayer } from "@/components/text-segmentation/AnnotationLayer";
@@ -118,6 +118,9 @@ export default function ChapterEditor() {
   
   // Phase 4C: Context Integration (Feature Flag) - Set to true to test context providers
   const USE_CONTEXT_INTEGRATION = true; // Toggle to test context
+  
+  // Phase 5: Performance Optimization (Feature Flag) - Set to true to enable optimizations
+  const USE_PERFORMANCE_OPTIMIZATIONS = true; // Toggle to test performance improvements
 
   // Phase 4A: Initialize Custom Hooks (parallel to existing state)
   const chapterDataHook = USE_EXTRACTED_HOOKS ? useChapterData(chapterId) : null;

@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { 
   Upload, Play, Pause, Square, MapPin, X, Trash2, Plus, 
   Music, Edit2, Save, Timer 
-} from "lucide-react";
+} from "@/lib/icons";
 
 interface AudioMappingTabProps {
   // Chapter data
