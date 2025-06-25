@@ -576,7 +576,6 @@ export function DesignSystemShowcase() {
               </div>
             </div>
           </ComponentCard>
-        </div>
 
         {/* ENHANCED: Input Components with Inspector */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
