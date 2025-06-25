@@ -147,8 +147,7 @@ export function DesignSystemShowcase() {
           </p>
         </div>
 
-        {/* Card Components Showcase - MOVED TO TOP */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Component 1 */}
             <ComponentCard
               title="1. Feature Cards"
               description="Dashboard-style cards for primary application features"
@@ -239,11 +238,9 @@ export function DesignSystemShowcase() {
                 ))}
               </div>
             </ComponentCard>
-        </div>
 
-        {/* NEW: Complete 24-Color System */}
-        <div className="mt-8">
-          <ComponentCard
+        {/* Component 3 */}
+        <ComponentCard
             title="3. Design System Color Palette"
             description="Complete 24-color system with primary colors and fluorescent glow variants"
             componentName="ColorSystem"
@@ -276,7 +273,6 @@ export function DesignSystemShowcase() {
               </div>
             </div>
           </ComponentCard>
-        </div>
 
         {/* Demo Dialogs */}
         <Dialog
@@ -322,9 +318,8 @@ export function DesignSystemShowcase() {
           destructive={true}
         />
 
-        {/* ENHANCED: Interactive Button Showcase */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-            <ComponentCard
+        {/* Component 4 */}
+        <ComponentCard
               title="4. Action Buttons - Sophisticated Design"
               description="Classy, modern button styling with refined fluorescent touches"
               componentName="Button"
@@ -526,11 +521,9 @@ export function DesignSystemShowcase() {
                 />
               </div>
             </ComponentCard>
-        </div>
 
-        {/* ENHANCED: Navigation System with Inspector */}
-        <div className="mt-8">
-          <ComponentCard
+        {/* Component 10 */}
+        <ComponentCard
             title="10. Content Navigation"
             description="Hierarchical breadcrumb navigation"
             componentName="Breadcrumb"
