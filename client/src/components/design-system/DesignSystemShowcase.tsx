@@ -152,84 +152,96 @@ export function DesignSystemShowcase() {
         <div className="space-y-8">
           <h2 className="text-3xl font-semibold text-gray-900">Card Components</h2>
           
-          {/* Feature Cards (like SimpleDashboard) */}
-          <div>
-            <h3 className="text-xl font-medium mb-4">Feature Cards</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card variant="blue" interactive glow="subtle">
-                <CardHeader className="text-center">
-                  <div className="mx-auto mb-4">
-                    <BookOpen 
-                      className="h-12 w-12 text-blue-600"
-                    />
-                  </div>
-                  <CardTitle className="text-lg">Learning</CardTitle>
-                  <CardDescription>
-                    Browse and study learning tracks
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button className="w-full" variant="outline" color="blue">
-                    Get Started
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card variant="green" interactive glow="subtle">
-                <CardHeader className="text-center">
-                  <div className="mx-auto mb-4">
-                    <Edit 
-                      className="h-12 w-12 text-green-600"
-                    />
-                  </div>
-                  <CardTitle className="text-lg">Manage Content</CardTitle>
-                  <CardDescription>
-                    Create and edit learning content
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button className="w-full" variant="outline" color="green">
-                    Get Started
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card variant="purple" interactive glow="subtle">
-                <CardHeader className="text-center">
-                  <div className="mx-auto mb-4">
-                    <Music 
-                      className="h-12 w-12 text-purple-600"
-                    />
-                  </div>
-                  <CardTitle className="text-lg">Audio Content</CardTitle>
-                  <CardDescription>
-                    Manage audio-text synchronization
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button className="w-full" variant="outline" color="purple">
-                    Get Started
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Educational Variants */}
-          <div>
-            <h3 className="text-xl font-medium mb-4">Educational Variants</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {educationalVariants.map((variant) => (
-                <Card key={variant} educational={variant as any} glow="subtle">
-                  <CardHeader>
-                    <CardTitle className="text-base capitalize">{variant}</CardTitle>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ComponentCard
+              title="Feature Cards"
+              description="Dashboard-style cards for primary application features"
+              componentName="FeatureCard"
+              variant="blue"
+              props={{ interactive: true, glow: "subtle" }}
+              allSizes={[]}
+            >
+              <div className="grid grid-cols-1 gap-6">
+                <Card variant="blue" interactive glow="subtle">
+                  <CardHeader className="text-center">
+                    <div className="mx-auto mb-4">
+                      <BookOpen 
+                        className="h-12 w-12 text-blue-600"
+                      />
+                    </div>
+                    <CardTitle className="text-lg">Learning</CardTitle>
                     <CardDescription>
-                      {variant} content card variant
+                      Browse and study learning tracks
                     </CardDescription>
                   </CardHeader>
+                  <CardContent>
+                    <Button className="w-full" variant="outline" color="blue">
+                      Get Started
+                    </Button>
+                  </CardContent>
                 </Card>
-              ))}
-            </div>
+
+                <Card variant="green" interactive glow="subtle">
+                  <CardHeader className="text-center">
+                    <div className="mx-auto mb-4">
+                      <Edit 
+                        className="h-12 w-12 text-green-600"
+                      />
+                    </div>
+                    <CardTitle className="text-lg">Manage Content</CardTitle>
+                    <CardDescription>
+                      Create and edit learning content
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button className="w-full" variant="outline" color="green">
+                      Get Started
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card variant="purple" interactive glow="subtle">
+                  <CardHeader className="text-center">
+                    <div className="mx-auto mb-4">
+                      <Music 
+                        className="h-12 w-12 text-purple-600"
+                      />
+                    </div>
+                    <CardTitle className="text-lg">Audio Content</CardTitle>
+                    <CardDescription>
+                      Manage audio-text synchronization
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button className="w-full" variant="outline" color="purple">
+                      Get Started
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </ComponentCard>
+
+            <ComponentCard
+              title="Educational Variants"
+              description="Semantic card variants for different content types"
+              componentName="EducationalCard"
+              variant="purple"
+              props={{ educational: "chapter", glow: "subtle" }}
+              allSizes={[]}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {educationalVariants.map((variant) => (
+                  <Card key={variant} educational={variant as any} glow="subtle">
+                    <CardHeader>
+                      <CardTitle className="text-base capitalize">{variant}</CardTitle>
+                      <CardDescription>
+                        {variant} content card variant
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
+            </ComponentCard>
           </div>
         </div>
 
