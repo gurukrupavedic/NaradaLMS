@@ -49,7 +49,7 @@ export function DesignSystemShowcase() {
   
   // Enhanced state for component variants
   const [buttonVariant, setButtonVariant] = useState("blue");
-  const [buttonSize, setButtonSize] = useState("md");
+  const [buttonSize, setButtonSize] = useState("default");
   // Table state removed - component will be redesigned
   const [sliderVariant, setSliderVariant] = useState("orange");
   const [sliderSize, setSliderSize] = useState("md");
