@@ -16,6 +16,7 @@ export {
   EyeOff,
   Loader2,
   Dot,
+  ChevronUp,
   
   // Audio Controls
   Play,
@@ -29,7 +30,6 @@ export {
   
   // Content Icons
   FileText,
-  Eye,
   Type,
   Ruler,
   Settings,
@@ -75,6 +75,4 @@ export {
   // Content Management Icons
   Edit,
   MoreVertical,
-  ChevronRight,
-  Search,
 } from "lucide-react";

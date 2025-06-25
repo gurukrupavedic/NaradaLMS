@@ -9,7 +9,7 @@
  */
 
 import React from "react";
-import { ChevronRight, Home } from "lucide-react";
+import { ChevronRight, Home } from "@/lib/icons";
 import { Link } from "wouter";
 
 export interface BreadcrumbItem {
