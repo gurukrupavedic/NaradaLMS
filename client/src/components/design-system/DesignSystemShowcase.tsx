@@ -151,7 +151,7 @@ export function DesignSystemShowcase() {
         {/* Card Components Showcase - MOVED TO TOP */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
-              title="Feature Cards"
+              title="1. Feature Cards"
               description="Dashboard-style cards for primary application features"
               componentName="FeatureCard"
               variant="blue"
@@ -219,7 +219,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="Educational Variants"
+              title="2. Educational Variants"
               description="Semantic card variants for different content types"
               componentName="EducationalCard"
               variant="purple"
@@ -244,7 +244,7 @@ export function DesignSystemShowcase() {
 
         {/* NEW: Complete 24-Color System */}
         <ComponentCard
-            title="Design System Color Palette"
+            title="3. Design System Color Palette"
             description="Complete 24-color system with primary colors and fluorescent glow variants"
             componentName="ColorSystem"
             variant="blue"
@@ -324,7 +324,7 @@ export function DesignSystemShowcase() {
         {/* ENHANCED: Interactive Button Showcase */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
-              title="Action Buttons - Sophisticated Design"
+              title="4. Action Buttons - Sophisticated Design"
               description="Classy, modern button styling with refined fluorescent touches"
               componentName="Button"
               variant={buttonVariant}
@@ -383,7 +383,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="Checkbox Selection"
+              title="5. Checkbox Selection"
               description="Multi-selection checkboxes with inspector"
               componentName="CheckboxGroup"
               variant={checkboxVariant}
@@ -406,7 +406,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="Radio Selection"
+              title="6. Radio Selection"
               description="Single choice radio buttons with inspector"
               componentName="Radio"
               variant={radioVariant}
@@ -433,7 +433,7 @@ export function DesignSystemShowcase() {
         {/* ENHANCED: Audio & Progress Controls with Inspector */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
-              title="Audio Timeline"
+              title="7. Audio Timeline"
               description="Perfect for audio-text synchronization"
               componentName="AudioSlider"
               variant={sliderVariant}
@@ -453,7 +453,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="Full Audio Controls"
+              title="8. Full Audio Controls"
               description="Complete audio player with timeline and controls"
               componentName="AudioControls"
               variant={sliderVariant}
@@ -490,7 +490,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="Learning Progress"
+              title="9. Learning Progress"
               description="Track student completion"
               componentName="ProgressSlider"
               variant={progressSliderVariant}
@@ -529,7 +529,7 @@ export function DesignSystemShowcase() {
 
         {/* ENHANCED: Navigation System with Inspector */}
         <ComponentCard
-            title="Content Navigation"
+            title="10. Content Navigation"
             description="Hierarchical breadcrumb navigation"
             componentName="Breadcrumb"
             variant={breadcrumbVariant}
@@ -580,7 +580,7 @@ export function DesignSystemShowcase() {
         {/* ENHANCED: Input Components with Inspector */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
-              title="Text Inputs"
+              title="11. Text Inputs"
               description="Form inputs with focus color variants"
               componentName="Input"
               variant={inputVariant}
@@ -611,7 +611,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="Textarea Fields"
+              title="12. Textarea Fields"
               description="Multi-line text input areas"
               componentName="Textarea"
               variant={textareaVariant}
@@ -641,7 +641,7 @@ export function DesignSystemShowcase() {
         {/* ENHANCED: UI Elements with Inspector */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <ComponentCard
-              title="Status Badges"
+              title="13. Status Badges"
               description="Labels and status indicators with multiple styles"
               componentName="Badge"
               variant={badgeVariant}
@@ -752,7 +752,7 @@ export function DesignSystemShowcase() {
         {/* ENHANCED: Interactive Controls with Inspector */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
-              title="Range Sliders"
+              title="16. Range Sliders"
               description="Numeric input sliders"
               componentName="Slider"
               variant={basicSliderVariant}
@@ -826,7 +826,7 @@ export function DesignSystemShowcase() {
 
         {/* ENHANCED: Card Layouts with Inspector */}
         <ComponentCard
-            title="Content Cards"
+            title="18. Content Cards"
             description="Container cards with glow effects"
             componentName="Card"
             variant={cardVariant}
@@ -879,7 +879,7 @@ export function DesignSystemShowcase() {
         {/* ENHANCED: Specialized Components with Inspector */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <ComponentCard
-              title="Loading States"
+              title="19. Loading States"
               description="Loading spinners and indicators"
               componentName="Loading"
               variant={loadingVariant}
@@ -1050,7 +1050,7 @@ export function DesignSystemShowcase() {
         {/* ENHANCED: Alert & Dialog Components with Inspector */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
-              title="System Alerts"
+              title="21. System Alerts"
               description="Notifications and feedback messages"
               componentName="Alert"
               variant={alertVariant}
@@ -1171,7 +1171,7 @@ export function DesignSystemShowcase() {
         {/* ENHANCED: Selection Components with Inspector */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
-              title="Select Dropdowns"
+              title="23. Select Dropdowns"
               description="Dropdown selection menus"
               componentName="Select"
               variant={selectVariant}
@@ -1251,7 +1251,7 @@ export function DesignSystemShowcase() {
 
         {/* ENHANCED: Text Segment Components with Inspector */}
         <ComponentCard
-            title="Content Segments"
+            title="25. Content Segments"
             description="LMS text segmentation components"
             componentName="TextSegment"
             variant={textSegmentVariant}
