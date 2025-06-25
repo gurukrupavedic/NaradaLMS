@@ -29,9 +29,9 @@ const switchVariants = cva(
           "data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-600 data-[state=checked]:to-blue-500",
           "data-[state=unchecked]:bg-gradient-to-r data-[state=unchecked]:from-gray-200 data-[state=unchecked]:to-gray-100",
           "data-[state=checked]:border-blue-400/30 data-[state=unchecked]:border-gray-300",
-          "data-[state=checked]:shadow-[0_0_8px_rgba(59,130,246,0.08)]",
-          "focus-visible:shadow-[0_0_0_3px_rgba(59,130,246,0.15)]",
-          "hover:data-[state=checked]:shadow-[0_0_12px_rgba(59,130,246,0.12)]",
+          "data-[state=checked]:shadow-[0_0_12px_rgba(59,130,246,0.12)]",
+          "focus-visible:shadow-[0_0_0_3px_rgba(59,130,246,0.2)]",
+          "hover:data-[state=checked]:shadow-[0_0_16px_rgba(59,130,246,0.16)]",
           "hover:data-[state=unchecked]:border-gray-400"
         ],
         green: [
@@ -135,9 +135,9 @@ const switchVariants = cva(
         ]
       },
       size: {
-        sm: "h-4 w-8",
-        default: "h-6 w-12", 
-        lg: "h-8 w-14"
+        sm: "h-5 w-9",
+        default: "h-7 w-13", 
+        lg: "h-9 w-16"
       }
     },
     defaultVariants: {
@@ -153,19 +153,19 @@ const switchThumbVariants = cva(
     variants: {
       size: {
         sm: [
-          "h-3 w-3 data-[state=checked]:translate-x-4",
-          "shadow-[0_1px_4px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.04)]",
-          "data-[state=checked]:shadow-[0_2px_6px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.6)]"
+          "h-4 w-4 data-[state=checked]:translate-x-4",
+          "shadow-[0_2px_6px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)]",
+          "data-[state=checked]:shadow-[0_3px_8px_rgba(0,0,0,0.2),0_0_0_1px_rgba(255,255,255,0.8)]"
         ],
         default: [
-          "h-4 w-4 data-[state=checked]:translate-x-6",
-          "shadow-[0_2px_6px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.2)]",
-          "data-[state=checked]:shadow-[0_3px_8px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.6),inset_0_1px_0_rgba(255,255,255,0.3)]"
+          "h-5 w-5 data-[state=checked]:translate-x-6",
+          "shadow-[0_3px_8px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.3)]",
+          "data-[state=checked]:shadow-[0_4px_12px_rgba(0,0,0,0.2),0_0_0_1px_rgba(255,255,255,0.8),inset_0_1px_0_rgba(255,255,255,0.4)]"
         ],
         lg: [
-          "h-6 w-6 data-[state=checked]:translate-x-6",
-          "shadow-[0_3px_8px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.2)]",
-          "data-[state=checked]:shadow-[0_4px_10px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.6),inset_0_1px_0_rgba(255,255,255,0.3)]"
+          "h-7 w-7 data-[state=checked]:translate-x-7",
+          "shadow-[0_4px_10px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.3)]",
+          "data-[state=checked]:shadow-[0_5px_14px_rgba(0,0,0,0.2),0_0_0_1px_rgba(255,255,255,0.8),inset_0_1px_0_rgba(255,255,255,0.4)]"
         ]
       }
     },
@@ -175,25 +175,25 @@ const switchThumbVariants = cva(
   }
 );
 
-// Subtle thumb inner highlight for checked state
+// Enhanced thumb inner highlight for checked state
 const switchThumbInnerVariants = cva(
   "absolute inset-0.5 rounded-full opacity-0 transition-opacity duration-300 ease-out",
   {
     variants: {
       variant: {
-        default: "data-[state=checked]:opacity-10 bg-gray-400",
-        blue: "data-[state=checked]:opacity-12 bg-blue-300",
-        green: "data-[state=checked]:opacity-12 bg-green-300",
-        purple: "data-[state=checked]:opacity-12 bg-purple-300",
-        orange: "data-[state=checked]:opacity-12 bg-orange-300",
-        pink: "data-[state=checked]:opacity-12 bg-pink-300",
-        indigo: "data-[state=checked]:opacity-12 bg-indigo-300",
-        teal: "data-[state=checked]:opacity-12 bg-teal-300",
-        cyan: "data-[state=checked]:opacity-12 bg-cyan-300",
-        yellow: "data-[state=checked]:opacity-12 bg-yellow-300",
-        lime: "data-[state=checked]:opacity-12 bg-lime-300",
-        rose: "data-[state=checked]:opacity-12 bg-rose-300",
-        emerald: "data-[state=checked]:opacity-12 bg-emerald-300"
+        default: "data-[state=checked]:opacity-15 bg-gray-400",
+        blue: "data-[state=checked]:opacity-18 bg-blue-300",
+        green: "data-[state=checked]:opacity-18 bg-green-300",
+        purple: "data-[state=checked]:opacity-18 bg-purple-300",
+        orange: "data-[state=checked]:opacity-18 bg-orange-300",
+        pink: "data-[state=checked]:opacity-18 bg-pink-300",
+        indigo: "data-[state=checked]:opacity-18 bg-indigo-300",
+        teal: "data-[state=checked]:opacity-18 bg-teal-300",
+        cyan: "data-[state=checked]:opacity-18 bg-cyan-300",
+        yellow: "data-[state=checked]:opacity-18 bg-yellow-300",
+        lime: "data-[state=checked]:opacity-18 bg-lime-300",
+        rose: "data-[state=checked]:opacity-18 bg-rose-300",
+        emerald: "data-[state=checked]:opacity-18 bg-emerald-300"
       }
     },
     defaultVariants: {
