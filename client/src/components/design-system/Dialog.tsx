@@ -10,7 +10,7 @@
 
 import React from "react";
 import { X } from "lucide-react";
-import { Button } from "./Button";
+import { Button } from "./Button.new";
 
 export interface DialogProps {
   isOpen: boolean;
@@ -235,13 +235,15 @@ export function ConfirmDialog({
         <div className="flex justify-center gap-3">
           <Button
             variant="outline"
+            color="gray"
             onClick={onClose}
             className="min-w-20"
           >
             {cancelText}
           </Button>
           <Button
-            variant={confirmVariant}
+            variant="solid"
+            color={confirmVariant}
             onClick={() => {
               onConfirm();
               onClose();

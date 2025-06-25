@@ -11,7 +11,6 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./Card";
 import { Button } from "./Button.new";
-import { Button as ButtonNew } from "./Button.new";
 import { Input } from "./Input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./Tabs";
 import { Progress, CircularProgress } from "./Progress";
@@ -869,9 +868,9 @@ export function DesignSystemShowcase() {
                   <CardDescription className={`text-${cardVariant}-500`}>Sanskrit Fundamentals</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ButtonNew variant="outline" color={cardVariant as any} className="w-full">
+                  <Button variant="outline" color={cardVariant as any} className="w-full">
                     Continue Learning
-                  </ButtonNew>
+                  </Button>
                 </CardContent>
               </Card>
 
@@ -882,9 +881,9 @@ export function DesignSystemShowcase() {
                   <CardDescription className="text-green-500">Chapter Recordings</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ButtonNew variant="outline" color="green" className="w-full">
+                  <Button variant="outline" color="green" className="w-full">
                     Play Audio
-                  </ButtonNew>
+                  </Button>
                 </CardContent>
               </Card>
 
@@ -895,9 +894,9 @@ export function DesignSystemShowcase() {
                   <CardDescription className="text-purple-500">Preferences</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ButtonNew variant="outline" color="purple" className="w-full">
+                  <Button variant="outline" color="purple" className="w-full">
                     Configure
-                  </ButtonNew>
+                  </Button>
                 </CardContent>
               </Card>
             </div>
@@ -1141,10 +1140,10 @@ export function DesignSystemShowcase() {
             >
               <div className="space-y-4">
                 <div className="flex gap-3">
-                  <Button onClick={() => setShowComponentDialog(true)} variant={dialogVariant as any}>
+                  <Button onClick={() => setShowComponentDialog(true)} variant="solid" color={dialogVariant as any}>
                     Open Dialog
                   </Button>
-                  <Button variant="rose" onClick={() => setShowConfirmDialog(true)}>
+                  <Button variant="solid" color="rose" onClick={() => setShowConfirmDialog(true)}>
                     Delete Confirmation
                   </Button>
                 </div>
@@ -1179,10 +1178,10 @@ export function DesignSystemShowcase() {
                   </div>
                   
                   <div className="mt-6 flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => setShowComponentDialog(false)}>
+                    <Button variant="outline" color="gray" onClick={() => setShowComponentDialog(false)}>
                       Cancel
                     </Button>
-                    <Button variant={dialogVariant as any} onClick={() => setShowComponentDialog(false)}>
+                    <Button variant="solid" color={dialogVariant as any} onClick={() => setShowComponentDialog(false)}>
                       Save Changes
                     </Button>
                   </div>
