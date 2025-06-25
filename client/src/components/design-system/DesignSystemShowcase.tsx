@@ -136,7 +136,6 @@ export function DesignSystemShowcase() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 space-y-8">
-        
         {/* Header */}
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
@@ -242,7 +241,8 @@ export function DesignSystemShowcase() {
         </div>
 
         {/* NEW: Complete 24-Color System */}
-        <ComponentCard
+        <div className="mt-8">
+          <ComponentCard
             title="3. Design System Color Palette"
             description="Complete 24-color system with primary colors and fluorescent glow variants"
             componentName="ColorSystem"
