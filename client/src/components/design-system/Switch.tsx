@@ -154,7 +154,7 @@ const switchThumbVariants = cva(
     variants: {
       size: {
         sm: [
-          "h-4 w-4 data-[state=checked]:translate-x-5",
+          "h-4 w-4 data-[state=checked]:translate-x-4",
           "shadow-[0_2px_6px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)]",
           "data-[state=checked]:shadow-[0_3px_8px_rgba(0,0,0,0.2),0_0_0_1px_rgba(255,255,255,0.8)]"
         ],
