@@ -49,7 +49,7 @@ const colorVariants = [
   "teal", "cyan", "yellow", "lime", "rose", "emerald"
 ];
 
-const defaultSizeOptions = ["sm", "md", "lg"];
+const defaultSizeOptions = ["sm", "default", "lg"];
 
 // Define toggleable props for each component
 function getToggleableProps(componentName: string): string[] {
