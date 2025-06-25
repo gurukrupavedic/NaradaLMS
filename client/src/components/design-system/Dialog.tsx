@@ -9,7 +9,7 @@
  */
 
 import React from "react";
-import { X } from "lucide-react";
+import { X } from "@/lib/icons";
 import { Button } from "./Button.new";
 
 export interface DialogProps {

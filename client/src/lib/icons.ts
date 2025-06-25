@@ -10,6 +10,12 @@ export {
   Upload,
   Music,
   Timer,
+  Check,
+  Search,
+  Eye,
+  EyeOff,
+  Loader2,
+  Dot,
   
   // Audio Controls
   Play,
