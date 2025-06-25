@@ -351,7 +351,7 @@ export function DesignSystemShowcase() {
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold text-gray-700">Refined Fluorescent Design</h4>
                   <p className="text-xs text-gray-500">Classy, sophisticated styling with whisper-light interactions</p>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-4 flex-wrap">
                     <Button variant="solid" color={buttonVariant} size={buttonSize}>
                       Primary
                     </Button>
@@ -367,7 +367,7 @@ export function DesignSystemShowcase() {
                 {/* Interactive Examples */}
                 <div className="space-y-2 pt-4 border-t border-gray-200">
                   <h4 className="text-sm font-semibold text-gray-700">Interactive Examples</h4>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-4 flex-wrap">
                     <Button variant="solid" color={buttonVariant} size={buttonSize} loading>
                       Loading
                     </Button>
@@ -386,7 +386,7 @@ export function DesignSystemShowcase() {
                 {/* Size Demonstration */}
                 <div className="space-y-2 pt-4 border-t border-gray-200">
                   <h4 className="text-sm font-semibold text-gray-700">Size Progression</h4>
-                  <div className="flex gap-2 items-center flex-wrap">
+                  <div className="flex gap-4 items-center flex-wrap">
                     <Button variant="solid" color={buttonVariant} size="sm">Small</Button>
                     <Button variant="solid" color={buttonVariant} size="default">Default</Button>
                     <Button variant="solid" color={buttonVariant} size="lg">Large</Button>
