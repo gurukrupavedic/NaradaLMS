@@ -337,8 +337,8 @@ export function DesignSystemShowcase() {
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
-              title="Action Buttons"
-              description="Primary UI buttons with inspector"
+              title="Action Buttons - Style Comparison"
+              description="5 different styling approaches within our design system"
               componentName="Button"
               variant={buttonVariant}
               size={buttonSize}
@@ -346,84 +346,106 @@ export function DesignSystemShowcase() {
               onVariantChange={setButtonVariant}
               onSizeChange={setButtonSize}
             >
-              <div className="space-y-4">
-                {/* Solid Variants */}
+              <div className="space-y-6">
+                {/* Style 1: Classic (Current) */}
                 <div className="space-y-2">
-                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Solid Buttons</h4>
+                  <h4 className="text-sm font-semibold text-gray-700">1. Classic Style (Current)</h4>
+                  <p className="text-xs text-gray-500">Clean baseline styling</p>
                   <div className="flex gap-2 flex-wrap">
-                    <Button variant="solid" color={buttonVariant} size={buttonSize}>
+                    <Button variant="solid" color={buttonVariant} size={buttonSize} styleApproach="classic">
                       Primary
                     </Button>
-                    <Button variant="solid" color={buttonVariant} size={buttonSize} icon={<Edit className="h-4 w-4" />}>
-                      With Icon
+                    <Button variant="outline" color={buttonVariant} size={buttonSize} styleApproach="classic">
+                      Secondary
                     </Button>
-                    <Button variant="solid" color={buttonVariant} size={buttonSize} loading>
+                    <Button variant="ghost" color={buttonVariant} size={buttonSize} styleApproach="classic">
+                      Ghost
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Style 2: Fluorescent Glow */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-gray-700">2. Fluorescent Glow</h4>
+                  <p className="text-xs text-gray-500">Dashboard tile-inspired glow effects</p>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button variant="solid" color={buttonVariant} size={buttonSize} styleApproach="fluorescent">
+                      Primary
+                    </Button>
+                    <Button variant="outline" color={buttonVariant} size={buttonSize} styleApproach="fluorescent">
+                      Secondary
+                    </Button>
+                    <Button variant="ghost" color={buttonVariant} size={buttonSize} styleApproach="fluorescent">
+                      Ghost
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Style 3: Modern Gradient */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-gray-700">3. Modern Gradient</h4>
+                  <p className="text-xs text-gray-500">Gradient backgrounds with enhanced depth</p>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button variant="solid" color={buttonVariant} size={buttonSize} styleApproach="gradient">
+                      Primary
+                    </Button>
+                    <Button variant="outline" color={buttonVariant} size={buttonSize} styleApproach="gradient">
+                      Secondary
+                    </Button>
+                    <Button variant="ghost" color={buttonVariant} size={buttonSize} styleApproach="gradient">
+                      Ghost
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Style 4: Enhanced Depth */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-gray-700">4. Enhanced Depth</h4>
+                  <p className="text-xs text-gray-500">Sophisticated shadows and transformations</p>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button variant="solid" color={buttonVariant} size={buttonSize} styleApproach="enhanced">
+                      Primary
+                    </Button>
+                    <Button variant="outline" color={buttonVariant} size={buttonSize} styleApproach="enhanced">
+                      Secondary
+                    </Button>
+                    <Button variant="ghost" color={buttonVariant} size={buttonSize} styleApproach="enhanced">
+                      Ghost
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Style 5: Card-Inspired */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-gray-700">5. Card-Inspired</h4>
+                  <p className="text-xs text-gray-500">Feature card hover mechanics</p>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button variant="solid" color={buttonVariant} size={buttonSize} styleApproach="card">
+                      Primary
+                    </Button>
+                    <Button variant="outline" color={buttonVariant} size={buttonSize} styleApproach="card">
+                      Secondary
+                    </Button>
+                    <Button variant="ghost" color={buttonVariant} size={buttonSize} styleApproach="card">
+                      Ghost
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Additional Examples */}
+                <div className="space-y-2 pt-4 border-t border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-700">Additional Examples</h4>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button variant="solid" color={buttonVariant} size={buttonSize} styleApproach="fluorescent" loading>
                       Loading
                     </Button>
-                    <Button variant="solid" color="rose" size={buttonSize}>
+                    <Button variant="solid" color={buttonVariant} size={buttonSize} styleApproach="card" icon={<Edit className="h-4 w-4" />}>
+                      With Icon
+                    </Button>
+                    <Button variant="solid" color="rose" size={buttonSize} styleApproach="enhanced">
                       Delete
                     </Button>
                   </div>
-                </div>
-
-                {/* Outline Variants */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Outline Buttons</h4>
-                  <div className="flex gap-2 flex-wrap">
-                    <Button variant="outline" color={buttonVariant} size={buttonSize}>
-                      Secondary
-                    </Button>
-                    <Button variant="outline" color={buttonVariant} size={buttonSize} icon={<Save className="h-4 w-4" />}>
-                      Save Draft
-                    </Button>
-                    <Button variant="outline" color="rose" size={buttonSize}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Ghost Variants */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Ghost Buttons</h4>
-                  <div className="flex gap-2 flex-wrap">
-                    <Button variant="ghost" color={buttonVariant} size={buttonSize}>
-                      Minimal
-                    </Button>
-                    <Button variant="ghost" color={buttonVariant} size={buttonSize} icon={<Settings className="h-4 w-4" />}>
-                      Settings
-                    </Button>
-                    <Button variant="ghost" color="rose" size={buttonSize} icon={<X className="h-4 w-4" />}>
-                      Close
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Size Demonstration */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Size Progression</h4>
-                  <div className="flex gap-2 items-center flex-wrap">
-                    <Button variant="solid" color={buttonVariant} size="sm">Small (32px)</Button>
-                    <Button variant="solid" color={buttonVariant} size="default">Default (40px)</Button>
-                    <Button variant="solid" color={buttonVariant} size="lg">Large (48px)</Button>
-                  </div>
-                </div>
-
-                {/* Icon Button Sizes */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Icon Buttons</h4>
-                  <div className="flex gap-2 items-center flex-wrap">
-                    <Button variant="solid" color={buttonVariant} size="sm" icon={<Edit className="h-3 w-3" />} />
-                    <Button variant="solid" color={buttonVariant} size="default" icon={<Edit className="h-4 w-4" />} />
-                    <Button variant="solid" color={buttonVariant} size="lg" icon={<Edit className="h-5 w-5" />} />
-                  </div>
-                </div>
-
-                {/* Full Width Example */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Full Width</h4>
-                  <Button variant="solid" color={buttonVariant} size={buttonSize} fullWidth>
-                    Full Width Button
-                  </Button>
                 </div>
               </div>
             </ComponentCard>
