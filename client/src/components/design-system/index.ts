@@ -36,9 +36,9 @@ export * from './RichTextEditor';
 export * from './Dialog';
 
 // LMS-specific components
-// Table removed - will be redesigned with clear requirements
 export * from './Slider';
 export * from './Breadcrumb';
+export * from './AudioControls';
 
 // Inspector utilities
 export * from './ComponentInspector';
@@ -63,3 +63,4 @@ export type { SwitchProps } from './Switch';
 export type { TooltipContentProps } from './Tooltip';
 export type { SpinnerProps, SkeletonProps } from './Loading';
 export type { RichTextEditorProps } from './RichTextEditor';
+export type { AudioControlsProps } from './AudioControls';

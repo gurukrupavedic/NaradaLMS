@@ -1,6 +1,5 @@
 import { useLocation } from "wouter";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button } from "@/components/design-system";
 import { BookOpen, Edit, Beaker, User as UserIcon } from "lucide-react";
 import type { User } from "@shared/schema";
 
