@@ -97,7 +97,7 @@ export const componentConfigs: Record<string, ComponentConfig> = {
   Switch: {
     name: "Switch",
     variants: colorVariants,
-    sizes: sizeOptions.small,
+    sizes: ["sm", "default", "lg"],
     commonProps: ["disabled"],
     description: "Toggle switches for binary choices",
     category: "form"
