@@ -2,10 +2,10 @@ import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Button, Card, CardContent, CardHeader, CardTitle, Badge,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from "@/components/design-system";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { InteractiveSegment } from "@/components/InteractiveSegment";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";

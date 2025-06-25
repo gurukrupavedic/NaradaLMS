@@ -1,10 +1,8 @@
 import React, { useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TabsContent } from "@/components/ui/Tabs";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
+import { 
+  Button, Card, CardContent, CardHeader, CardTitle,
+  TabsContent, Input, Label, Progress
+} from "@/components/design-system";
 import { 
   Upload, Play, Pause, Square, MapPin, X, Trash2, Plus, 
   Music, Edit2, Save, Timer 
