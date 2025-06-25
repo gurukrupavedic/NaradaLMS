@@ -33,7 +33,7 @@ export const componentConfigs: Record<string, ComponentConfig> = {
   Button: {
     name: "Button",
     variants: colorVariants,
-    sizes: ["sm", "md", "lg"],
+    sizes: ["sm", "default", "lg"],
     commonProps: ["loading", "disabled", "fullWidth"],
     description: "Refined action buttons with solid, outline, and ghost variants",
     category: "core"

@@ -49,24 +49,24 @@ export function DesignSystemShowcase() {
   
   // Enhanced state for component variants
   const [buttonVariant, setButtonVariant] = useState("blue");
-  const [buttonSize, setButtonSize] = useState("default");
+  const [buttonSize, setButtonSize] = useState("md");
   // Table state removed - component will be redesigned
   const [sliderVariant, setSliderVariant] = useState("orange");
-  const [sliderSize, setSliderSize] = useState("default");
+  const [sliderSize, setSliderSize] = useState("md");
   const [breadcrumbVariant, setBreadcrumbVariant] = useState("blue");
-  const [breadcrumbSize, setBreadcrumbSize] = useState("default");
+  const [breadcrumbSize, setBreadcrumbSize] = useState("md");
   
   // Additional component states
   const [inputVariant, setInputVariant] = useState("blue");
-  const [inputSize, setInputSize] = useState("default");
+  const [inputSize, setInputSize] = useState("md");
   const [cardVariant, setCardVariant] = useState("blue");
   const [badgeVariant, setBadgeVariant] = useState("blue");
-  const [badgeSize, setBadgeSize] = useState("default");
+  const [badgeSize, setBadgeSize] = useState("md");
   const [progressVariant, setProgressVariant] = useState("blue");
   const [radioVariant, setRadioVariant] = useState("blue");
   const [radioSize, setRadioSize] = useState("md");
   const [priorityValue, setPriorityValue] = useState("medium");
-  const [progressSize, setProgressSize] = useState("default");
+  const [progressSize, setProgressSize] = useState("md");
   const [checkboxVariant, setCheckboxVariant] = useState("blue");
   const [checkboxSize, setCheckboxSize] = useState("md");
   const [switchVariant, setSwitchVariant] = useState("blue");
