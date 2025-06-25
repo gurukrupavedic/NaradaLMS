@@ -1,10 +1,10 @@
 /**
- * Dialog Component - Vedic LMS Design System
+ * Dialog Component - LMS Design System v1.0
  * 
  * Modal dialogs for critical user interactions in the LMS.
  * Supports confirmation dialogs, forms, and content overlays.
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

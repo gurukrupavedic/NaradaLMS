@@ -1,5 +1,5 @@
 /**
- * Modern Colorful Switch Component - Vedic LMS Design System
+ * Modern Colorful Switch Component - LMS Design System v1.0
  * 
  * Enhanced switch/toggle component with vibrant colors and educational variants.
  * Perfect for publish/unpublish controls, feature toggles, and settings in LMS.
@@ -10,7 +10,7 @@
  * - Loading states and disabled styling
  * - Size variants and label support
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

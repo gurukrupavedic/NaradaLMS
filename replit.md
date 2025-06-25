@@ -172,3 +172,4 @@ Changelog:
 
 Preferred communication style: Simple, everyday language.
 Theme preferences: Prefers modern, colorful, elegant design over traditional Vedic brown/gold colors. Loves vibrant color palette with blue, green, purple, orange, pink, indigo (like dashboard tiles). Appreciates subtle, classy hover effects and sleek design. Specifically likes the colorful, contrasting UI components from experiments page. Wants contemporary aesthetic rather than traditional themes. Bootstrap 5 design system preferred for professional implementation with custom colorful palette. Values refined, whisper-light design elements that feel sophisticated and classy rather than bold or heavy.
+Design System: Prefers "LMS Design System v1.0" branding with 26 components for professional nomenclature in designer-developer communications.

@@ -1,5 +1,5 @@
 /**
- * Modern Colorful Input Component - Vedic LMS Design System
+ * Modern Colorful Input Component - LMS Design System v1.0
  * 
  * Enhanced input component with vibrant focus colors and educational variants.
  * Replaces shadcn/ui Input with modern colorful design system aesthetics.
@@ -10,7 +10,7 @@
  * - Consistent styling with design system
  * - Size variants and state management
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

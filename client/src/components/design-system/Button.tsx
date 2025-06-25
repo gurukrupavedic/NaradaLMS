@@ -1,5 +1,5 @@
 /**
- * Enhanced Button Component - Vedic LMS Design System
+ * Enhanced Button Component - LMS Design System v1.0
  * 
  * Advanced button component with 5 sophisticated styling approaches.
  * All styles follow our unified design system principles with vibrant colors.
@@ -11,7 +11,7 @@
  * - enhanced: Sophisticated depth and shadow system
  * - card: Feature card-inspired hover mechanics
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

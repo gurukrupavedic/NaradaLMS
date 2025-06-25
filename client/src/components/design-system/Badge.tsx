@@ -1,5 +1,5 @@
 /**
- * Modern Colorful Badge Component - Vedic LMS Design System
+ * Modern Colorful Badge Component - LMS Design System v1.0
  * 
  * Enhanced badge component with vibrant colors, educational variants, and status indicators.
  * Replaces shadcn/ui Badge with modern colorful design system aesthetics.
@@ -10,7 +10,7 @@
  * - Status indicators and achievement badges
  * - Size variants and icon support
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

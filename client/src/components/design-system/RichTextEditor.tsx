@@ -1,5 +1,5 @@
 /**
- * Modern Rich Text Editor Component - Vedic LMS Design System
+ * Modern Rich Text Editor Component - LMS Design System v1.0
  * 
  * Comprehensive TipTap-based editor with vibrant colors and educational variants.
  * Perfect for chapter content creation, descriptions, and multi-language text editing.
@@ -11,7 +11,7 @@
  * - Multi-language support (Telugu, Hindi, English/IAST)
  * - Character counting and validation
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

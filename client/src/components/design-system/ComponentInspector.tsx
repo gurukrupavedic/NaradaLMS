@@ -4,7 +4,7 @@
  * Provides copy-to-clipboard functionality and visual property inspection
  * for design system components. Enables precise component referencing.
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

@@ -1,10 +1,10 @@
 /**
- * Slider Component - Vedic LMS Design System
+ * Slider Component - LMS Design System v1.0
  * 
  * Range sliders for audio timeline controls and learning progress.
  * Perfect for audio-text synchronization and interactive controls.
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

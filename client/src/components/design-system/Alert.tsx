@@ -1,5 +1,5 @@
 /**
- * Modern Colorful Alert Component - Vedic LMS Design System
+ * Modern Colorful Alert Component - LMS Design System v1.0
  * 
  * Enhanced alert component with vibrant colors, educational variants, and status indicators.
  * Replaces shadcn/ui Alert with modern colorful design system aesthetics.
@@ -10,7 +10,7 @@
  * - Dismissible alerts with smooth animations
  * - Success, warning, error, and info states
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

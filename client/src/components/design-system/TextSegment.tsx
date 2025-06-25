@@ -1,5 +1,5 @@
 /**
- * LMS Text Segment Component - Vedic LMS Design System
+ * LMS Text Segment Component - LMS Design System v1.0
  * 
  * Clean, visual-first text segment cards for ChapterEditor with minimal UI clutter.
  * Follows modern design principles: icon-based status, clean color hierarchy.
@@ -13,7 +13,7 @@
  * - Content-only display with numbered pills
  * - 24-color variant system with no color conflicts
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

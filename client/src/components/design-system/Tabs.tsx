@@ -1,5 +1,5 @@
 /**
- * Modern Colorful Tabs Component - Vedic LMS Design System
+ * Modern Colorful Tabs Component - LMS Design System v1.0
  * 
  * Enhanced tabs component with vibrant colors, educational variants, and smooth animations.
  * Replaces shadcn/ui Tabs with modern colorful design system aesthetics.
@@ -10,7 +10,7 @@
  * - Smooth transitions and hover effects
  * - Icon support and badge integration
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

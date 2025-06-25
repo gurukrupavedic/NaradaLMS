@@ -4,7 +4,7 @@
  * Interactive showcase for testing design system components in isolation
  * before integrating into the main LMS application.
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

@@ -1,5 +1,5 @@
 /**
- * Modern Loading Components - Vedic LMS Design System
+ * Modern Loading Components - LMS Design System v1.0
  * 
  * Comprehensive loading states with vibrant colors and educational variants.
  * Perfect for content loading, processing states, and skeleton UI in LMS.
@@ -10,7 +10,7 @@
  * - Educational semantic variants for LMS contexts
  * - Size variants and custom messaging
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

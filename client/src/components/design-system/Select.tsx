@@ -1,5 +1,5 @@
 /**
- * Modern Colorful Select Component - Vedic LMS Design System
+ * Modern Colorful Select Component - LMS Design System v1.0
  * 
  * Enhanced select component with vibrant colors, educational variants, and improved UX.
  * Replaces shadcn/ui Select with modern colorful design system aesthetics.
@@ -10,7 +10,7 @@
  * - Icon support and custom styling
  * - Consistent with Input component design
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

@@ -1,5 +1,5 @@
 /**
- * Modern Colorful Card Component - Vedic LMS Design System
+ * Modern Colorful Card Component - LMS Design System v1.0
  * 
  * Enhanced card component with vibrant colors, glow effects, and educational variants.
  * Replaces shadcn/ui Card with modern colorful design system aesthetics.
@@ -10,7 +10,7 @@
  * - Consistent hover states and interactions
  * - Multi-language typography support
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

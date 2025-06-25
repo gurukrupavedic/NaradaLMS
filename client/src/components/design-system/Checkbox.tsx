@@ -1,10 +1,10 @@
 /**
- * Checkbox Component - Vedic LMS Design System
+ * Checkbox Component - LMS Design System v1.0
  * 
  * Checkbox inputs for multi-selection in LMS contexts.
  * Supports bulk operations, permissions, and content selection.
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

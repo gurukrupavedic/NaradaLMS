@@ -1,10 +1,10 @@
 /**
- * Radio Component - Vedic LMS Design System
+ * Radio Component - LMS Design System v1.0
  * 
  * Radio inputs for single-choice selections in LMS contexts.
  * Supports user roles, difficulty levels, and preference settings.
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

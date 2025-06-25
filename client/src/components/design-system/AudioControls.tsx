@@ -1,5 +1,5 @@
 /**
- * Full Audio Controls Component - Vedic LMS Design System
+ * Full Audio Controls Component - LMS Design System v1.0
  * 
  * Comprehensive audio player with timeline, play/pause, volume, speed controls.
  * Perfect for LMS audio content, chapter playback, and audio-text synchronization.
@@ -13,7 +13,7 @@
  * - 12 vibrant color variants
  * - Size variants and loading states
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

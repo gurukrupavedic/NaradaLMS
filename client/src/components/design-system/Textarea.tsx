@@ -1,5 +1,5 @@
 /**
- * Modern Colorful Textarea Component - Vedic LMS Design System
+ * Modern Colorful Textarea Component - LMS Design System v1.0
  * 
  * Enhanced textarea component with vibrant colors, educational variants, and auto-resize.
  * Perfect for content creation, descriptions, and multi-line text input in LMS.
@@ -10,7 +10,7 @@
  * - Character counting and validation
  * - Educational semantic variants for LMS contexts
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

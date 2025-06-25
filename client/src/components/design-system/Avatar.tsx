@@ -1,5 +1,5 @@
 /**
- * Modern Colorful Avatar Component - Vedic LMS Design System
+ * Modern Colorful Avatar Component - LMS Design System v1.0
  * 
  * Enhanced avatar component with vibrant colors, educational variants, and status indicators.
  * Replaces shadcn/ui Avatar with modern colorful design system aesthetics.
@@ -10,7 +10,7 @@
  * - Status indicators and online presence
  * - Size variants and initials generation
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 

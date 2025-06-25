@@ -1,5 +1,5 @@
 /**
- * Modern Colorful Tooltip Component - Vedic LMS Design System
+ * Modern Colorful Tooltip Component - LMS Design System v1.0
  * 
  * Enhanced tooltip component with vibrant colors and educational variants.
  * Perfect for help text, feature explanations, and user guidance in LMS.
@@ -10,7 +10,7 @@
  * - Multiple positioning options
  * - Keyboard navigation support
  * 
- * @author Vedic LMS Design System
+ * @author LMS Design System v1.0
  * @since 2025-06-24
  */
 
