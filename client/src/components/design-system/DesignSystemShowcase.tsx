@@ -268,7 +268,7 @@ export function DesignSystemShowcase() {
           onClose={() => setShowDialog(false)}
           title="User Invitation"
           description="Invite a new user to join your learning track"
-          variant={selectedVariant as any}
+          variant="blue"
         >
           <div className="space-y-4">
             <Input 
