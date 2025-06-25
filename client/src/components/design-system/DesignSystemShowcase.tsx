@@ -135,15 +135,14 @@ export function DesignSystemShowcase() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto space-y-12">
+    <div className="min-h-screen bg-gray-50 p-6 space-y-8">
         
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Vedic LMS Design System
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Modern Colorful Design System
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Modern colorful components for educational experiences
           </p>
         </div>
