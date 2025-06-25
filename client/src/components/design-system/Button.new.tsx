@@ -140,35 +140,17 @@ const getStyleApproach = (variant: string, color: string, styleApproach: string)
 
   const approaches = {
     solid: {
-      classic: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-sm hover:shadow-md transition-all duration-200`,
-      
       fluorescent: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-md hover:shadow-[0_0_30px_rgba(59,130,246,0.8),0_0_60px_rgba(59,130,246,0.4)] hover:transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-300/60`,
-      
-      gradient: `bg-gradient-to-br from-${color}-400 via-${color}-500 to-${color}-600 hover:from-${color}-500 hover:via-${color}-600 hover:to-${color}-700 text-white shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-white/20`,
-      
-      enhanced: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-xl hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:transform hover:-translate-y-2 hover:scale-110 transition-all duration-400 ring-2 ring-${color}-200 hover:ring-${color}-300`,
       
       card: `${colorInfo.primary} text-white shadow-lg hover:shadow-[0_8px_25px_rgba(0,0,0,0.15),0_0_0_2px_rgba(59,130,246,0.4),0_4px_20px_rgba(219,234,254,1),0_0_25px_rgba(219,234,254,0.8)] hover:transform hover:-translate-y-1 transition-all duration-300 border border-${color}-300/50 hover:border-${color}-200`
     },
     outline: {
-      classic: `border-2 ${colorInfo.border} ${colorInfo.hoverBorder} bg-white ${colorInfo.bgHover} ${colorInfo.text} transition-all duration-200`,
-      
       fluorescent: `border-3 border-${color}-400 bg-white ${colorInfo.text} hover:bg-${color}-50 hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] hover:border-${color}-500 hover:transform hover:-translate-y-1 transition-all duration-300`,
-      
-      gradient: `border-3 border-${color}-400 bg-white ${colorInfo.text} hover:bg-gradient-to-r hover:from-${color}-500 hover:to-${color}-600 hover:text-white hover:border-transparent hover:scale-105 transition-all duration-300 shadow-md hover:shadow-xl`,
-      
-      enhanced: `border-3 border-${color}-400 bg-white ${colorInfo.text} hover:shadow-[0_15px_35px_rgba(0,0,0,0.2)] hover:bg-${color}-500 hover:text-white hover:border-${color}-500 hover:transform hover:-translate-y-2 hover:scale-105 transition-all duration-400`,
       
       card: `border-3 border-${color}-300 bg-white ${colorInfo.text} hover:shadow-[0_8px_25px_rgba(0,0,0,0.1),0_0_0_2px_rgba(59,130,246,0.3),0_4px_20px_rgba(219,234,254,0.8)] hover:border-${color}-400 hover:bg-${color}-25 transition-all duration-300`
     },
     ghost: {
-      classic: `${colorInfo.bgHover} ${colorInfo.text} hover:bg-opacity-80 transition-all duration-200`,
-      
       fluorescent: `${colorInfo.text} hover:bg-gradient-to-r hover:from-${color}-100 hover:to-${color}-200 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] hover:transform hover:-translate-y-1 hover:scale-105 transition-all duration-300`,
-      
-      gradient: `${colorInfo.text} hover:bg-gradient-to-r hover:from-${color}-500 hover:to-${color}-600 hover:text-white hover:shadow-xl hover:scale-105 transition-all duration-300`,
-      
-      enhanced: `${colorInfo.text} hover:bg-${color}-500 hover:text-white hover:shadow-[0_15px_35px_rgba(0,0,0,0.2)] hover:transform hover:-translate-y-2 hover:scale-110 transition-all duration-400`,
       
       card: `${colorInfo.text} hover:bg-white hover:shadow-[0_8px_25px_rgba(0,0,0,0.1),0_0_0_1px_rgba(59,130,246,0.3),0_4px_20px_rgba(219,234,254,0.8)] hover:transform hover:-translate-y-1 transition-all duration-300`
     }
@@ -181,7 +163,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: "solid" | "outline" | "ghost";
   color?: keyof typeof colorConfig;
   size?: keyof typeof sizeStyles;
-  styleApproach?: "classic" | "fluorescent" | "gradient" | "enhanced" | "card";
+  styleApproach?: "fluorescent" | "card";
   loading?: boolean;
   icon?: React.ReactNode;
   iconPosition?: "left" | "right";
@@ -194,7 +176,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     variant = "solid", 
     color = "blue", 
     size = "default", 
-    styleApproach = "classic",
+    styleApproach = "fluorescent",
     loading = false,
     icon,
     iconPosition = "left",
