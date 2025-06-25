@@ -796,18 +796,74 @@ export function DesignSystemShowcase() {
               onVariantChange={setSwitchVariant}
               onSizeChange={setSwitchSize}
             >
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <Switch variant={switchVariant as any} size={switchSize as any} />
-                  <label className="text-sm font-medium">Enable notifications</label>
+              <div className="space-y-6">
+                {/* Basic Switches */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-700">Basic Toggle Switches</h4>
+                  <div className="flex items-center space-x-3">
+                    <Switch variant={switchVariant as any} size={switchSize as any} />
+                    <label className="text-sm font-medium">Enable notifications</label>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Switch variant="green" size={switchSize as any} defaultChecked />
+                    <label className="text-sm font-medium">Auto-save content</label>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Switch variant="purple" size={switchSize as any} disabled />
+                    <label className="text-sm font-medium text-gray-400">Disabled option</label>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <Switch variant="green" size={switchSize as any} defaultChecked />
-                  <label className="text-sm font-medium">Auto-save content</label>
+
+                {/* Enhanced Switches with Status Text */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-700">Enhanced with Status Text</h4>
+                  <div className="flex items-center space-x-3">
+                    <Switch 
+                      variant="blue" 
+                      size={switchSize as any} 
+                      showStatusText 
+                      defaultChecked 
+                    />
+                    <label className="text-sm font-medium">Audio Controls</label>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Switch 
+                      variant="orange" 
+                      size={switchSize as any} 
+                      showStatusText 
+                      onText="LIVE" 
+                      offText="OFF" 
+                    />
+                    <label className="text-sm font-medium">Live Mode</label>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Switch 
+                      variant="teal" 
+                      size={switchSize as any} 
+                      showStatusText 
+                      onText="AUTO" 
+                      offText="MANUAL" 
+                      defaultChecked 
+                    />
+                    <label className="text-sm font-medium">Auto-sync</label>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <Switch variant="purple" size={switchSize as any} disabled />
-                  <label className="text-sm font-medium text-gray-400">Disabled option</label>
+
+                {/* Educational Semantic Variants */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-700">Educational Semantics</h4>
+                  <div className="flex items-center space-x-3">
+                    <Switch educational="published" size={switchSize as any} defaultChecked />
+                    <label className="text-sm font-medium">Published Content</label>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Switch educational="notifications" size={switchSize as any} />
+                    <label className="text-sm font-medium">Learning Alerts</label>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Switch educational="darkmode" size={switchSize as any} />
+                    <label className="text-sm font-medium">Dark Theme</label>
+                  </div>
                 </div>
               </div>
             </ComponentCard>
