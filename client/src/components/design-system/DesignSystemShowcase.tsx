@@ -276,7 +276,6 @@ export function DesignSystemShowcase() {
               </div>
             </div>
           </ComponentCard>
-        </div>
 
         {/* Demo Dialogs */}
         <Dialog
@@ -427,7 +426,6 @@ export function DesignSystemShowcase() {
                 size={radioSize as any}
               />
             </ComponentCard>
-          </div>
         </div>
 
         {/* Data Management section removed - Table component will be redesigned with clear requirements */}
@@ -527,7 +525,6 @@ export function DesignSystemShowcase() {
                 />
               </div>
             </ComponentCard>
-          </div>
         </div>
 
         {/* ENHANCED: Navigation System with Inspector */}
@@ -752,7 +749,6 @@ export function DesignSystemShowcase() {
                 </div>
               </div>
             </ComponentCard>
-          </div>
         </div>
 
         {/* ENHANCED: Interactive Controls with Inspector */}
@@ -885,13 +881,9 @@ export function DesignSystemShowcase() {
               </Card>
             </div>
           </ComponentCard>
-        </div>
 
         {/* ENHANCED: Specialized Components with Inspector */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Specialized Components</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <ComponentCard
               title="Loading States"
               description="Loading spinners and indicators"
@@ -1059,14 +1051,10 @@ export function DesignSystemShowcase() {
                 />
               </div>
             </ComponentCard>
-          </div>
         </div>
 
         {/* ENHANCED: Alert & Dialog Components with Inspector */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Alert & Dialog Components</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
               title="System Alerts"
               description="Notifications and feedback messages"
@@ -1184,14 +1172,10 @@ export function DesignSystemShowcase() {
                 />
               </div>
             </ComponentCard>
-          </div>
         </div>
 
         {/* ENHANCED: Selection Components with Inspector */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Selection Components</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
               title="Select Dropdowns"
               description="Dropdown selection menus"
@@ -1269,14 +1253,10 @@ export function DesignSystemShowcase() {
                 </div>
               </div>
             </ComponentCard>
-          </div>
         </div>
 
         {/* ENHANCED: Text Segment Components with Inspector */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Text Segment Components</h2>
-          
-          <ComponentCard
+        <ComponentCard
             title="Content Segments"
             description="LMS text segmentation components"
             componentName="TextSegment"
