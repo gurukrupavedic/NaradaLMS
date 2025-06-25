@@ -13,7 +13,7 @@ export * from './foundation';
 
 // Core components
 export * from './Card';
-export * from './Button.new';
+export * from './Button';
 export * from './Input';
 export * from './Tabs';
 export * from './Progress';
@@ -49,7 +49,7 @@ export { DesignSystemShowcase } from './DesignSystemShowcase';
 
 // Type definitions
 export type { CardProps } from './Card';
-export type { ButtonProps } from './Button.new';
+export type { ButtonProps } from './Button';
 export type { InputProps } from './Input';
 export type { TabsListProps, TabsTriggerProps } from './Tabs';
 export type { ProgressProps, CircularProgressProps } from './Progress';

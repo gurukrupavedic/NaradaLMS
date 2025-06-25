@@ -10,7 +10,7 @@
 
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./Card";
-import { Button } from "./Button.new";
+import { Button } from "./Button";
 import { Input } from "./Input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./Tabs";
 import { Progress, CircularProgress } from "./Progress";

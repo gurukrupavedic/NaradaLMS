@@ -10,7 +10,7 @@
 
 import React, { useState } from "react";
 import { Copy, Check, Eye, Settings } from "lucide-react";
-import { Button } from "./Button.new";
+import { Button } from "./Button";
 import { Badge } from "./Badge";
 
 export interface ComponentInspectorProps {
