@@ -150,7 +150,7 @@ export function DesignSystemShowcase() {
         {/* Component 1 */}
             <ComponentCard
               title="1. Feature Cards"
-              description="Dashboard-style cards for primary application features"
+              description="Interactive dashboard cards designed for primary application navigation and feature discovery. Built with vibrant 12-color variants, subtle glow effects, and smooth hover animations that lift cards 2px for elegant visual feedback. Essential for creating engaging landing pages and feature showcases where users need clear visual hierarchy and intuitive navigation paths. Each card supports custom icons, titles, descriptions, and action buttons with consistent styling across the design system. Features responsive grid layouts that adapt from single-column mobile displays to multi-column desktop arrangements. Integrates seamlessly with the broader card ecosystem while maintaining distinctive visual prominence through enhanced shadows and interactive states. Perfect for onboarding flows, feature tours, and main navigation interfaces where visual appeal drives user engagement and discovery."
               componentName="FeatureCard"
               variant={featureCardVariant}
               props={{ interactive: true, glow: "subtle" }}
@@ -219,7 +219,7 @@ export function DesignSystemShowcase() {
 
             <ComponentCard
               title="2. Educational Variants"
-              description="Semantic card variants for different content types"
+              description="Specialized card variants semantically designed for educational content organization and learning management. Features dedicated variants for lessons, chapters, tracks, quizzes, assignments, and progress indicators, each with purposeful visual styling that communicates content type at a glance. Built specifically for LMS environments where content categorization is critical for student navigation and instructor management. Each variant maintains consistent interaction patterns while providing unique visual identities through color-coded borders, backgrounds, and typography hierarchies. Supports educational metadata display including completion status, difficulty levels, estimated time, and prerequisites. Integrates with learning analytics and progress tracking systems to provide real-time visual feedback on student advancement. Essential for course builders, student dashboards, and content libraries where instant content recognition improves learning efficiency and reduces cognitive load during educational navigation."
               componentName="EducationalCard"
               variant="purple"
               props={{ educational: "chapter", glow: "subtle" }}
@@ -242,7 +242,7 @@ export function DesignSystemShowcase() {
         {/* Component 3 */}
         <ComponentCard
             title="3. Typography System"
-            description="Complete typography scale with multi-language support"
+            description="Comprehensive typography foundation supporting multilingual Vedic educational content with three specialized font families: Inter for modern English interfaces, Tiro Devanagari Sanskrit for authentic Sanskrit text rendering, and Tiro Telugu for traditional Telugu scripts. Built on mathematical 8px grid system ensuring precise vertical rhythm and visual consistency across all text elements. Includes four heading levels (Display Large through Heading 3) and four body text sizes, all maintaining WCAG AA compliance with 4.5:1 contrast ratios minimum. Essential for establishing clear information hierarchy in educational content where text clarity directly impacts learning comprehension. Responsive design ensures readability across devices from mobile study sessions to classroom displays. Language-specific fonts preserve cultural authenticity for Sanskrit mantras, Telugu verses, and English instruction. Integrates seamlessly with audio synchronization components for multilingual learning experiences where text and speech must maintain visual and auditory harmony."
             componentName="Typography"
             variant="blue"
             props={{ showSizes: true, showWeights: true }}
@@ -319,7 +319,7 @@ export function DesignSystemShowcase() {
         {/* Component 4 */}
         <ComponentCard
             title="4. Design System Color Palette"
-            description="Complete 24-color system with primary colors and fluorescent glow variants"
+            description="Comprehensive 24-color foundation featuring 12 primary vibrant colors paired with 12 fluorescent glow variants for creating sophisticated visual hierarchies and interactive states. Each color maintains consistent semantic meaning across the system: blue for primary actions, green for success states, purple for premium features, orange for warnings, and specialized educational colors for content categorization. Fluorescent variants provide subtle lighting effects for hover states, focus indicators, and emphasis without overwhelming the interface. Built with accessibility as core principle, ensuring all color combinations meet WCAG contrast requirements while maintaining visual vibrancy. Developer-friendly implementation includes copy-ready hex codes, CSS custom properties, and Tailwind class utilities. Essential reference for designers and developers to maintain color consistency across components, features, and user flows. Replaces traditional neutral color schemes with energetic, modern palette that enhances user engagement while preserving professional educational standards."
             componentName="ColorSystem"
             variant="blue"
             props={{ showHexCodes: true, showNames: true }}
@@ -398,7 +398,7 @@ export function DesignSystemShowcase() {
         {/* Component 4 */}
         <ComponentCard
               title="5. Action Buttons - Sophisticated Design"
-              description="Classy, modern button styling with refined fluorescent touches"
+              description="Advanced button system with five sophisticated styling approaches: classic baseline, fluorescent dashboard-inspired glows, modern gradient backgrounds, enhanced depth shadows, and card-like hover mechanics. Each style maintains consistent interaction patterns while offering distinct visual personalities for different interface contexts. Built with refined proportions, elegant transitions, and sophisticated color treatments that elevate standard button interactions into premium user experiences. Features comprehensive variant system including solid, outline, ghost, and destructive states across all 12 design system colors. Size variants accommodate everything from compact icon buttons to prominent call-to-action elements. Loading states, disabled styling, and keyboard navigation ensure complete accessibility coverage. Essential for creating cohesive interaction patterns across forms, navigation, content actions, and critical user flows. Fluorescent hover effects provide subtle visual feedback that enhances perceived quality without overwhelming the interface or compromising professional educational standards."
               componentName="Button"
               variant={buttonVariant}
               size={buttonSize}
@@ -457,7 +457,7 @@ export function DesignSystemShowcase() {
 
             <ComponentCard
               title="6. Checkbox Selection"
-              description="Multi-selection checkboxes with inspector"
+              description="Multi-selection checkbox controls designed for educational content management and user preference settings. Features vibrant color variants that provide clear visual feedback for selection states while maintaining accessibility standards for colorblind users. Built with educational semantics including variants for lesson completion tracking, quiz answer selection, permission management, and content filtering. Each checkbox includes smooth transition animations, focus states for keyboard navigation, and proper ARIA labels for screen reader compatibility. Supports grouped selections with master toggle functionality essential for bulk content operations. Indeterminate states handle partial selections in hierarchical content structures like course outlines with chapters and lessons. Size variants accommodate dense data tables, spacious forms, and compact inline selections. Integrates seamlessly with form validation systems and real-time data binding. Essential for content curation interfaces, student assessment tools, administrative dashboards, and any interface requiring clear multi-selection patterns with immediate visual confirmation."
               componentName="CheckboxGroup"
               variant={checkboxVariant}
               size={checkboxSize}
@@ -480,7 +480,7 @@ export function DesignSystemShowcase() {
 
             <ComponentCard
               title="7. Radio Selection"
-              description="Single choice radio buttons with inspector"
+              description="Single-choice radio button controls optimized for educational assessments, preferences, and exclusive option selection. Designed with clear visual hierarchy and immediate selection feedback essential for quiz interfaces, survey forms, and configuration settings where only one option can be active. Features vibrant color coding that aids quick visual scanning while maintaining semantic meaning across the educational interface. Built with smooth selection animations and proper keyboard navigation supporting arrow key traversal between options. Educational variants include assessment answer choices, difficulty level selection, language preferences, and content format options. Supports grouped radio sets with clear visual boundaries and descriptive labels that enhance comprehension during high-stakes assessments. Size variants accommodate everything from compact preference panels to spacious quiz interfaces. Integrates with validation systems to provide immediate feedback on required selections. Essential for creating clear decision points in learning flows where exclusive choices drive personalized educational experiences and accurate assessment scoring."
               componentName="Radio"
               variant={radioVariant}
               size={radioSize}
@@ -502,7 +502,7 @@ export function DesignSystemShowcase() {
         {/* Component 7 */}
         <ComponentCard
               title="8. Audio Timeline"
-              description="Perfect for audio-text synchronization"
+              description="Specialized audio timeline slider designed for precise audio-text synchronization in educational content. Essential for Vedic LMS where Sanskrit chants, Telugu verses, and English instruction require exact timing alignment with written text for effective learning. Features smooth scrubbing controls, precise time indicators, and visual waveform representation that helps instructors and students navigate audio content efficiently. Built with educational semantics including chapter markers, verse boundaries, and pronunciation guide timing. Supports both instructor content creation workflows and student learning interfaces with different interaction patterns for each use case. Volume controls and playback speed adjustment enable personalized learning experiences. Color variants provide visual feedback for different audio content types and learning states. Integrates seamlessly with text segmentation components to create synchronized multimedia learning experiences. Progress indicators show completion status across lengthy audio content. Essential for language learning, pronunciation training, meditation guidance, and any educational context where audio timing precision directly impacts learning effectiveness and comprehension."
               componentName="AudioSlider"
               variant={sliderVariant}
               props={{ showVolume: true }}
@@ -522,7 +522,7 @@ export function DesignSystemShowcase() {
 
             <ComponentCard
               title="9. Full Audio Controls"
-              description="Complete audio player with timeline and controls"
+              description="Comprehensive audio player combining timeline controls with complete playback management for educational media content. Features play/pause, skip controls, volume adjustment, playback speed modification, and chapter navigation essential for structured learning content. Built specifically for educational contexts where students need full control over audio pacing, repetition, and focus areas. Timeline integration provides visual progress tracking with clickable segments for quick navigation to specific content sections. Volume controls accommodate different learning environments from quiet personal study to classroom presentations. Playback speed adjustment supports language learning where slower speeds aid pronunciation practice and faster speeds enable review. Chapter markers help organize lengthy lectures or meditation sessions into digestible segments. Color variants distinguish between different content types and learning states. Keyboard shortcuts enable hands-free operation during note-taking or practice sessions. Integrates with text synchronization for multimedia learning experiences where audio and visual content must remain perfectly aligned throughout user interactions and content navigation."
               componentName="AudioControls"
               variant={sliderVariant}
               size={sliderSize}
@@ -559,7 +559,7 @@ export function DesignSystemShowcase() {
 
             <ComponentCard
               title="10. Learning Progress"
-              description="Track student completion"
+              description="Educational progress tracking sliders designed for visualizing student advancement through learning materials and course content. Features percentage indicators, milestone markers, and visual completion states that motivate continued learning engagement. Built with educational psychology principles including incremental progress visualization and achievement recognition that encourages consistent study habits. Supports multiple progress types including overall course completion, chapter advancement, skill mastery levels, and daily learning goals. Color-coded variants indicate different progress states: blue for active learning, green for completed sections, orange for areas needing attention, and purple for advanced achievements. Interactive elements allow students to set personal goals and track their pace against recommended schedules. Integrates with learning analytics to provide detailed insights into learning patterns and areas requiring additional focus. Essential for student dashboards, instructor monitoring interfaces, and parent progress reports where clear visual communication of educational advancement builds confidence and maintains motivation throughout extended learning journeys."
               componentName="ProgressSlider"
               variant={progressSliderVariant}
               props={progressSliderProps}
@@ -597,7 +597,7 @@ export function DesignSystemShowcase() {
         {/* Component 10 */}
         <ComponentCard
             title="11. Content Navigation"
-            description="Hierarchical breadcrumb navigation"
+            description="Hierarchical breadcrumb navigation system designed for complex educational content structures with multiple levels of organization. Essential for LMS environments where students navigate through institutions, courses, tracks, chapters, lessons, and individual content items. Features clear visual hierarchy with separators, hover states, and clickable elements that enable quick navigation to any level in the content structure. Built with educational context awareness including course codes, chapter numbers, lesson titles, and progress indicators at each navigation level. Color variants provide visual coding for different content types and organizational structures. Responsive design ensures breadcrumbs remain functional and readable across devices while preserving full navigation context. Supports truncation patterns for lengthy hierarchies without losing essential navigation functionality. Integrates with learning management systems to provide real-time context about current location within the broader educational journey. Essential for maintaining student orientation during deep content exploration and enabling quick return to higher-level course organization without losing progress or context in complex learning environments."
             componentName="Breadcrumb"
             variant={breadcrumbVariant}
             size={breadcrumbSize}
@@ -647,7 +647,7 @@ export function DesignSystemShowcase() {
         {/* Component 11 */}
         <ComponentCard
               title="12. Text Inputs"
-              description="Form inputs with focus color variants"
+              description="Single-line form input fields optimized for educational content creation and student information collection. Features vibrant focus states with color-coded variants that provide immediate visual feedback during data entry while maintaining professional appearance suitable for academic environments. Built with comprehensive validation states including error indicators, success confirmation, and loading states essential for real-time form processing. Supports educational input types including student names, course identifiers, assessment responses, and multilingual text entry with proper character support for Sanskrit and Telugu scripts. Placeholder text and helper labels provide clear guidance for expected input formats and requirements. Size variants accommodate compact inline editing, standard form layouts, and prominent input areas for critical information. Keyboard navigation and accessibility features ensure compatibility with assistive technologies used in educational settings. Integrates seamlessly with form validation systems and real-time collaboration features. Essential for content authoring tools, student registration systems, assessment creation interfaces, and any educational workflow requiring reliable text input with immediate visual feedback and validation."
               componentName="Input"
               variant={inputVariant}
               size={inputSize}
@@ -678,7 +678,7 @@ export function DesignSystemShowcase() {
 
             <ComponentCard
               title="13. Textarea Fields"
-              description="Multi-line text input areas"
+              description="Multi-line text input areas designed for educational content creation, student responses, and extended text entry in learning management systems. Features auto-resizing capabilities that adapt to content length while maintaining visual consistency across different input volumes. Built with multilingual support essential for Vedic education including proper handling of Sanskrit Devanagari, Telugu scripts, and English text with appropriate font rendering and character spacing. Supports rich text input including formatting controls, character counting, and real-time validation feedback for educational writing assignments. Resize handles and maximum height constraints prevent layout disruption while accommodating lengthy responses. Focus states with vibrant color coding provide clear visual feedback during active editing sessions. Integrates with spell-checking, grammar assistance, and language detection systems tailored for educational content. Essential for essay submissions, reflection journals, discussion forum posts, content authoring workflows, and any educational interface requiring extended text input with proper formatting, validation, and multilingual character support for comprehensive learning documentation and assessment."
               componentName="Textarea"
               variant={textareaVariant}
               size={textareaSize}
@@ -706,7 +706,7 @@ export function DesignSystemShowcase() {
         {/* Component 13 */}
         <ComponentCard
               title="14. Status Badges"
-              description="Labels and status indicators with multiple styles"
+              description="Compact status indicators and labels designed for educational content organization and learning progress communication. Features three distinct styling approaches: classic baseline, modern gradients with subtle depth, and sharp accented borders for different interface contexts. Essential for displaying completion status, difficulty levels, content categories, student achievements, and administrative states throughout the LMS. Color variants provide semantic meaning including blue for informational states, green for completed tasks, orange for pending actions, red for critical alerts, and purple for premium content. Size variants accommodate dense data tables, spacious content cards, and inline text labeling. Built with educational semantics including course status, enrollment states, assessment grades, and learning milestones. Supports dynamic content updates with smooth transitions for real-time status changes. Integrates with notification systems and progress tracking to provide immediate visual feedback. Essential for creating scannable interfaces where status information must be quickly understood at a glance while maintaining visual hierarchy and reducing cognitive load during content navigation and learning assessment."
               componentName="Badge"
               variant={badgeVariant}
               size={badgeSize}
@@ -760,7 +760,7 @@ export function DesignSystemShowcase() {
 
             <ComponentCard
               title="15. Progress Bars"
-              description="Linear progress indicators"
+              description="Linear progress indicators designed for educational advancement tracking and task completion visualization across learning management interfaces. Features smooth animations, percentage displays, and color-coded states that communicate different types of progress including course completion, skill development, assignment submission rates, and learning goal achievement. Built with motivational design principles that encourage continued engagement through clear visual feedback and milestone recognition. Supports multiple progress patterns including determinate completion tracking, indeterminate loading states, and segmented progress for multi-part assessments. Color variants provide semantic meaning with blue for active progress, green for completed tasks, orange for approaching deadlines, and purple for advanced achievements. Label integration displays contextual information including time estimates, completion percentages, and next steps. Size variants accommodate compact inline progress indicators and prominent dashboard displays. Essential for student motivation interfaces, instructor monitoring dashboards, administrative reporting views, and any educational context where visual progress communication drives engagement and provides clear feedback on learning advancement and goal achievement."
               componentName="Progress"
               variant={progressVariant}
               size={progressSize}
@@ -788,7 +788,7 @@ export function DesignSystemShowcase() {
 
             <ComponentCard
               title="16. Toggle Switches"
-              description="Binary choice controls"
+              description="Binary choice controls optimized for educational settings and user preference management with smooth animations and clear on/off states. Essential for feature toggles, notification preferences, accessibility options, and learning mode selections where immediate visual feedback prevents confusion during critical educational workflows. Built with vibrant color coding that provides instant state recognition while maintaining professional appearance suitable for academic environments. Features include disabled states for restricted settings, loading indicators for real-time updates, and proper keyboard navigation for accessibility compliance. Educational variants support learning preferences including audio enabled/disabled, text highlighting on/off, difficulty mode selection, and collaborative features activation. Size variants accommodate compact preference panels and prominent setting interfaces. Integrates with user profile systems and learning analytics to persist preferences across sessions and devices. Label positioning and descriptive text ensure clear understanding of toggle functionality. Essential for personalized learning environments, instructor dashboard controls, accessibility accommodation settings, and any educational interface requiring clear binary choices with immediate visual confirmation and reliable state management."
               componentName="Switch"
               variant={switchVariant}
               size={switchSize}
@@ -815,7 +815,7 @@ export function DesignSystemShowcase() {
         {/* Component 16 */}
         <ComponentCard
               title="17. Range Sliders"
-              description="Numeric input sliders"
+              description="Numeric input sliders designed for educational parameter adjustment and value selection with smooth interaction patterns and real-time feedback. Essential for learning customization including volume control, playback speed, difficulty levels, font size adjustment, and timer settings where precise numeric input enhances educational experience. Features visual value indicators, step controls, and range constraints that prevent invalid selections while providing clear feedback during adjustment. Built with educational semantics supporting assessment scoring, learning pace adjustment, content filtering, and accessibility accommodations. Color variants provide visual coding for different parameter types and interaction states. Keyboard navigation supports arrow keys and numeric input for precise control essential during educational activities requiring exact values. Label formatting includes units, ranges, and contextual descriptions that guide appropriate usage. Integrates with learning analytics to track preference patterns and optimize default settings. Essential for personalized learning interfaces, instructor content configuration, accessibility tools, assessment creation workflows, and any educational context requiring precise numeric input with immediate visual feedback and constrained value ranges."
               componentName="Slider"
               variant={basicSliderVariant}
               size={basicSliderSize}
@@ -853,7 +853,7 @@ export function DesignSystemShowcase() {
 
             <ComponentCard
               title="18. Tab Navigation"
-              description="Content section tabs"
+              description="Content section navigation designed for organizing complex educational interfaces into focused, accessible areas without overwhelming users with simultaneous information display. Essential for LMS environments where content editing, progress tracking, resource management, and communication tools require clear separation while maintaining workflow continuity. Features smooth transitions, keyboard navigation, and visual indicators for active sections that enhance usability during extended educational sessions. Built with educational context awareness including content tabs, resource tabs, discussion tabs, and assessment tabs each with appropriate semantic styling. Supports nested tab structures for complex educational workflows while maintaining clear visual hierarchy. Color variants provide coding for different content types and functional areas. Badge integration displays notification counts, completion status, and activity indicators without disrupting navigation flow. Responsive design ensures tab functionality across devices from mobile content review to desktop content creation. Essential for content authoring interfaces, student learning dashboards, instructor management panels, and any educational workflow requiring organized information architecture with quick context switching and preserved user focus."
               componentName="Tabs"
               variant={tabsVariant}
               size={tabsSize}
@@ -887,7 +887,7 @@ export function DesignSystemShowcase() {
         {/* Component 18 */}
         <ComponentCard
             title="19. Content Cards"
-            description="Container cards with glow effects"
+            description="Versatile container cards with subtle glow effects designed for displaying educational content, resources, and learning materials with elegant visual hierarchy. Features responsive layouts, hover animations, and color-coded variants that organize different content types while maintaining consistent interaction patterns across the educational interface. Built with educational semantics including lesson cards, resource cards, assignment cards, and announcement cards each with appropriate visual styling and information architecture. Glow effects provide sophisticated visual feedback during interaction without overwhelming the professional educational environment. Supports flexible content layouts including images, text, metadata, action buttons, and progress indicators essential for comprehensive content display. Size variants accommodate everything from compact resource listings to prominent featured content displays. Interactive states include hover elevation, selection highlighting, and loading placeholders for dynamic content updates. Integrates seamlessly with content management systems and learning analytics. Essential for course catalogs, resource libraries, student portfolios, instructor dashboards, and any educational interface requiring attractive, organized content presentation with clear visual hierarchy and intuitive interaction patterns."
             componentName="Card"
             variant={cardVariant}
             props={{ glow: "subtle", interactive: true }}
@@ -939,7 +939,7 @@ export function DesignSystemShowcase() {
         {/* Component 19 */}
         <ComponentCard
               title="20. Loading States"
-              description="Loading spinners and indicators"
+              description="Comprehensive loading indicators and skeleton states designed for educational interfaces where content loading times directly impact learning flow and user engagement. Features multiple loading patterns including spinners for quick actions, progress bars for determinate processes, and skeleton screens for content preview during longer load times. Built with educational context awareness providing appropriate messaging for content loading, assessment processing, video streaming, and collaborative feature synchronization. Color variants align with semantic meaning including blue for general loading, green for successful processing, orange for slower operations requiring patience, and purple for premium content access. Size variants accommodate inline loading indicators, modal overlays, and full-screen loading experiences. Educational messaging includes estimated time remaining, process descriptions, and helpful tips that maintain engagement during necessary waiting periods. Integrates with error handling to provide graceful fallbacks when loading fails. Essential for maintaining positive user experience during content access, assessment submission, video streaming, collaborative editing, and any educational workflow where loading feedback prevents user frustration and abandonment during critical learning activities."
               componentName="Loading"
               variant={loadingVariant}
               size={loadingSize}
@@ -975,7 +975,7 @@ export function DesignSystemShowcase() {
 
             <ComponentCard
               title="21. Help Tooltips"
-              description="Contextual information and guidance tooltips"
+              description="Contextual help and guidance tooltips designed for educational interfaces where feature discovery and user guidance are essential for effective learning management. Features whisper-light aesthetic with subtle backgrounds, elegant positioning, and educational semantic variants that provide assistance without disrupting learning flow. Built with multiple positioning options, delay controls, and keyboard navigation support essential for accessibility in educational environments. Educational variants include feature explanations, workflow guidance, terminology definitions, and learning tips each with appropriate styling and content structure. Color coding provides semantic meaning with blue for informational guidance, green for success tips, orange for important warnings, and purple for advanced feature explanations. Integrates with user onboarding systems and contextual help frameworks to provide progressive disclosure of complex features. Supports rich content including formatted text, icons, and action links for comprehensive guidance delivery. Essential for reducing learning curves in complex LMS interfaces, providing just-in-time help during content creation, offering assessment guidance, and supporting any educational workflow where contextual assistance enhances user confidence and reduces support requirements while maintaining focus on learning objectives."
               componentName="Tooltip"
               variant={tooltipVariant}
               size={tooltipSize}
@@ -1068,7 +1068,7 @@ export function DesignSystemShowcase() {
         {/* Component 21 */}
         <ComponentCard
               title="22. System Alerts"
-              description="Notifications and feedback messages"
+              description="System notifications and feedback messages designed for educational environments where clear communication of status changes, achievements, warnings, and critical information maintains learning continuity and prevents user confusion. Features semantic color coding with green for success notifications, blue for informational updates, orange for warnings requiring attention, and red for critical alerts demanding immediate action. Built with educational context including assignment submission confirmations, deadline reminders, achievement announcements, system maintenance notices, and collaborative activity updates. Dismissible controls with auto-timeout options prevent interface clutter while ensuring important information reaches users. Icon integration provides immediate visual recognition of message types and severity levels. Supports rich content including action buttons, progress indicators, and formatted text for comprehensive communication. Integrates with notification preference systems allowing users to customize delivery methods and frequency. Essential for maintaining awareness of learning progress, system status, collaborative activities, deadline management, and any educational workflow requiring reliable communication of important information while preserving focus on learning activities and preventing critical information from being overlooked during extended educational sessions."
               componentName="Alert"
               variant={alertVariant}
               props={{ dismissible: true, icon: "Info" }}
@@ -1112,7 +1112,7 @@ export function DesignSystemShowcase() {
 
             <ComponentCard
               title="23. Dialog Modals"
-              description="Modal dialogs for confirmations"
+              description="Modal dialog system designed for educational workflows requiring focused user attention, confirmations, and complex interactions without losing context in the underlying learning interface. Features backdrop overlays, keyboard navigation, focus trapping, and responsive sizing that maintains usability across devices from mobile content review to desktop content creation. Built with educational semantics including assignment submission confirmations, content deletion warnings, collaboration invitations, assessment completion dialogs, and multimedia upload interfaces. Supports various interaction patterns including simple confirmations, multi-step wizards, form submissions, and media preview overlays. Color variants provide visual coding for different dialog types and severity levels. Accessibility features include proper ARIA labeling, keyboard navigation, and screen reader support essential for inclusive educational environments. Animation states provide smooth entry and exit transitions that maintain professional appearance. Integrates with form validation, file handling, and workflow management systems. Essential for protecting critical educational data through confirmation dialogs, facilitating complex content operations, managing user permissions, and any educational workflow requiring focused interaction while preserving underlying context and preventing accidental data loss."
               componentName="Dialog"
               variant={dialogVariant}
               size={dialogSize}
@@ -1186,7 +1186,7 @@ export function DesignSystemShowcase() {
         {/* Component 23 */}
         <ComponentCard
               title="24. Select Dropdowns"
-              description="Dropdown selection menus"
+              description="Dropdown selection menus optimized for educational content management and user preference selection with search capabilities, multi-select options, and clear visual hierarchy. Essential for course selection, category filtering, user role assignment, language preferences, and any educational workflow requiring selection from predefined option sets. Features include searchable options for large datasets, keyboard navigation for accessibility, and clear visual indicators for selected states. Built with educational semantics supporting course catalogs, student rosters, content categorization, assessment question types, and administrative settings. Color variants provide visual coding for different selection contexts and validation states. Supports grouped options, disabled states, and loading indicators for dynamic content population. Placeholder text and helper labels guide appropriate selection while validation feedback prevents submission errors. Size variants accommodate compact inline selections and prominent form elements. Integrates with form systems, user management, and content organization workflows. Essential for maintaining organized educational data, enabling efficient content discovery, supporting administrative operations, and any educational interface requiring reliable option selection with search capabilities and clear feedback for complex educational workflows requiring precise data entry."
               componentName="Select"
               variant={selectVariant}
               size={selectSize}
@@ -1230,7 +1230,7 @@ export function DesignSystemShowcase() {
 
             <ComponentCard
               title="25. Avatar Display"
-              description="User profile avatars"
+              description="User profile avatars designed for educational environments with role-based visual coding, status indicators, and consistent representation across learning management interfaces. Features automatic initials generation, image fallbacks, and vibrant color backgrounds that provide visual identity while maintaining professional appearance suitable for academic settings. Built with educational role support including student avatars, instructor profiles, administrator accounts, and guest users each with appropriate visual styling and status indicators. Online presence indicators show availability for collaboration and communication essential for educational community building. Size variants accommodate everything from compact comment displays to prominent profile headers. Color variants provide semantic coding for different user types and institutional affiliations. Status indicators include online/offline presence, active learning sessions, and availability for consultation. Integrates with user management systems, messaging platforms, and collaborative tools. Essential for humanizing educational interfaces, building learning communities, enabling instructor-student connections, supporting peer collaboration, and any educational workflow where user identity and availability information enhances communication and creates more engaging, personalized learning experiences."
               componentName="Avatar"
               variant={avatarVariant}
               size={avatarSize}
@@ -1264,7 +1264,7 @@ export function DesignSystemShowcase() {
         {/* Component 25 */}
         <ComponentCard
             title="26. Text Segments"
-            description="LMS text segmentation components"
+            description="Specialized text segmentation components designed for precise audio-text synchronization in educational content creation and multilingual learning experiences. Essential for Vedic LMS where Sanskrit chants, Telugu verses, and English instruction require exact alignment between spoken and written content for effective pronunciation training and comprehension. Features responsive auto-height with text wrapping, icon-based mapping status indicators, and universal blue selection states that work seamlessly with any color variant. Built with clean visual hierarchy including numbered segment pills, hover-revealed actions, and persistent mapping status icons that maintain clarity during complex content organization workflows. Supports drag-and-drop reordering, bulk operations, and real-time collaboration for instructor content development. Color variants provide semantic coding for different content types while maintaining readability across all language scripts. Integrates with audio timeline components to create synchronized multimedia learning experiences. Essential for language learning applications, pronunciation training systems, meditation guidance platforms, and any educational context where precise timing between audio narration and text display directly impacts learning effectiveness and student comprehension of complex multilingual content."
             componentName="TextSegment"
             variant={textSegmentVariant}
             size="md"
