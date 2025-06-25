@@ -422,13 +422,8 @@ export function DesignSystemShowcase() {
                 size={radioSize as any}
               />
             </ComponentCard>
-        </div>
-
-        {/* Data Management section removed - Table component will be redesigned with clear requirements */}
-
-        {/* ENHANCED: Audio & Progress Controls with Inspector */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-            <ComponentCard
+        {/* Component 7 */}
+        <ComponentCard
               title="7. Audio Timeline"
               description="Perfect for audio-text synchronization"
               componentName="AudioSlider"
@@ -571,11 +566,9 @@ export function DesignSystemShowcase() {
               </div>
             </div>
           </ComponentCard>
-        </div>
 
-        {/* ENHANCED: Input Components with Inspector */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-            <ComponentCard
+        {/* Component 11 */}
+        <ComponentCard
               title="11. Text Inputs"
               description="Form inputs with focus color variants"
               componentName="Input"
@@ -632,11 +625,9 @@ export function DesignSystemShowcase() {
                 />
               </div>
             </ComponentCard>
-        </div>
 
-        {/* ENHANCED: UI Elements with Inspector */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-            <ComponentCard
+        {/* Component 13 */}
+        <ComponentCard
               title="13. Status Badges"
               description="Labels and status indicators with multiple styles"
               componentName="Badge"
@@ -743,11 +734,9 @@ export function DesignSystemShowcase() {
                 </div>
               </div>
             </ComponentCard>
-        </div>
 
-        {/* ENHANCED: Interactive Controls with Inspector */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-            <ComponentCard
+        {/* Component 16 */}
+        <ComponentCard
               title="16. Range Sliders"
               description="Numeric input sliders"
               componentName="Slider"
@@ -818,11 +807,8 @@ export function DesignSystemShowcase() {
                 </TabsContent>
               </Tabs>
             </ComponentCard>
-        </div>
-
-        {/* ENHANCED: Card Layouts with Inspector */}
-        <div className="mt-8">
-          <ComponentCard
+        {/* Component 18 */}
+        <ComponentCard
             title="18. Content Cards"
             description="Container cards with glow effects"
             componentName="Card"
@@ -872,11 +858,9 @@ export function DesignSystemShowcase() {
               </Card>
             </div>
           </ComponentCard>
-        </div>
 
-        {/* ENHANCED: Specialized Components with Inspector */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-            <ComponentCard
+        {/* Component 19 */}
+        <ComponentCard
               title="19. Loading States"
               description="Loading spinners and indicators"
               componentName="Loading"
@@ -1004,11 +988,8 @@ export function DesignSystemShowcase() {
               </div>
             </ComponentCard>
 
-        </div>
-
-        {/* ENHANCED: Alert & Dialog Components with Inspector */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-            <ComponentCard
+        {/* Component 21 */}
+        <ComponentCard
               title="21. System Alerts"
               description="Notifications and feedback messages"
               componentName="Alert"
@@ -1125,11 +1106,8 @@ export function DesignSystemShowcase() {
                 />
               </div>
             </ComponentCard>
-        </div>
-
-        {/* ENHANCED: Selection Components with Inspector */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-            <ComponentCard
+        {/* Component 23 */}
+        <ComponentCard
               title="23. Select Dropdowns"
               description="Dropdown selection menus"
               componentName="Select"
@@ -1206,11 +1184,8 @@ export function DesignSystemShowcase() {
                 </div>
               </div>
             </ComponentCard>
-        </div>
-
-        {/* ENHANCED: Text Segment Components with Inspector */}
-        <div className="mt-8">
-          <ComponentCard
+        {/* Component 25 */}
+        <ComponentCard
             title="25. Text Segments"
             description="LMS text segmentation components"
             componentName="TextSegment"
@@ -1318,7 +1293,6 @@ This bilingual segment demonstrates how the component handles mixed languages an
               </div>
             </div>
           </ComponentCard>
-        </div>
       </div>
     );
   }
