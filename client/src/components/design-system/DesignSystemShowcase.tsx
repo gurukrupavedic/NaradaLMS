@@ -236,28 +236,40 @@ export function DesignSystemShowcase() {
         {/* NEW: Complete 24-Color System */}
         <div className="space-y-8">
           <h2 className="text-3xl font-semibold text-gray-900">Complete 24-Color System</h2>
-          <p className="text-gray-600">12 primary colors + 12 fluorescent glow variants</p>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {allColorVariants.map((color) => (
-              <div key={color.value} className="bg-white rounded-lg p-4 border text-center">
-                <div className="space-y-2">
-                  <div 
-                    className="w-full h-12 rounded-lg border"
-                    style={{ backgroundColor: color.primary }}
-                  ></div>
-                  <div 
-                    className="w-full h-4 rounded border"
-                    style={{ backgroundColor: color.fluorescent }}
-                  ></div>
-                  <div>
-                    <p className="text-sm font-medium">{color.name}</p>
-                    <p className="text-xs text-gray-500">Primary + Glow</p>
+          <ComponentCard
+            title="Design System Color Palette"
+            description="Complete 24-color system with primary colors and fluorescent glow variants"
+            componentName="ColorSystem"
+            variant="blue"
+            props={{ showHexCodes: true, showNames: true }}
+            allSizes={[]}
+          >
+            <div className="space-y-4">
+              <p className="text-gray-600">12 primary colors + 12 fluorescent glow variants</p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {allColorVariants.map((color) => (
+                  <div key={color.value} className="bg-white rounded-lg p-4 border text-center">
+                    <div className="space-y-2">
+                      <div 
+                        className="w-full h-12 rounded-lg border"
+                        style={{ backgroundColor: color.primary }}
+                      ></div>
+                      <div 
+                        className="w-full h-4 rounded border"
+                        style={{ backgroundColor: color.fluorescent }}
+                      ></div>
+                      <div>
+                        <p className="text-sm font-medium">{color.name}</p>
+                        <p className="text-xs text-gray-500">Primary + Glow</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          </ComponentCard>
         </div>
 
         {/* Demo Dialogs */}
