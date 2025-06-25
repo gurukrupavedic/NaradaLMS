@@ -237,7 +237,6 @@ export function DesignSystemShowcase() {
                 ))}
               </div>
             </ComponentCard>
-          </div>
         </div>
 
         {/* NEW: Complete 24-Color System */}

@@ -23,7 +23,7 @@ const DaisyUI5Showcase = lazy(() => import("@/pages/DaisyUI5Showcase").then(modu
 const ColorfulDemo = lazy(() => import("@/components/demos/ColorfulDemo").then(module => ({ default: module.ColorfulDemo })));
 const ExperimentsShowcase = lazy(() => import("@/pages/ExperimentsShowcase").then(module => ({ default: module.ExperimentsShowcase })));
 const DesignSystemShowcase = lazy(() => import("@/components/design-system/DesignSystemShowcase").then(module => ({ default: module.DesignSystemShowcase })));
-const DesignSystemExperiment = lazy(() => import("@/pages/DesignSystemExperiment").then(module => ({ default: module.DesignSystemExperiment })));
+const DesignSystemExperiment = lazy(() => import("@/pages/DesignSystemExperiment"));
 
 
 
