@@ -396,8 +396,8 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="Form Controls"
-              description="Checkbox and radio selections with inspector"
+              title="Checkbox Selection"
+              description="Multi-selection checkboxes with inspector"
               componentName="CheckboxGroup"
               variant={checkboxVariant}
               size={checkboxSize}
@@ -405,28 +405,39 @@ export function DesignSystemShowcase() {
               onVariantChange={setCheckboxVariant}
               onSizeChange={setCheckboxSize}
             >
-              <div className="space-y-4">
-                <CheckboxGroup
-                  label="Content Selection"
-                  options={[
-                    { id: "ch1", label: "Chapter 1" },
-                    { id: "ch2", label: "Chapter 2" }
-                  ]}
-                  value={checkboxValue}
-                  onChange={setCheckboxValue}
-                  variant={checkboxVariant as any}
-                  size={checkboxSize as any}
-                />
-                <RadioGroup
-                  name="role"
-                  label="User Role"
-                  options={CommonRadioOptions.userRoles.slice(0, 2)}
-                  value={radioValue}
-                  onChange={setRadioValue}
-                  variant={radioVariant as any}
-                  size={radioSize as any}
-                />
-              </div>
+              <CheckboxGroup
+                label="Content Selection"
+                options={[
+                  { id: "ch1", label: "Chapter 1" },
+                  { id: "ch2", label: "Chapter 2" }
+                ]}
+                value={checkboxValue}
+                onChange={setCheckboxValue}
+                variant={checkboxVariant as any}
+                size={checkboxSize as any}
+              />
+            </ComponentCard>
+
+            <ComponentCard
+              title="Radio Selection"
+              description="Single choice radio buttons with inspector"
+              componentName="Radio"
+              variant={radioVariant}
+              size={radioSize}
+              props={{ disabled: false, direction: "vertical" }}
+              allSizes={getComponentConfig("Radio")?.sizes || ["sm", "md", "lg"]}
+              onVariantChange={setRadioVariant}
+              onSizeChange={setRadioSize}
+            >
+              <RadioGroup
+                name="role"
+                label="User Role"
+                options={CommonRadioOptions.userRoles.slice(0, 2)}
+                value={radioValue}
+                onChange={setRadioValue}
+                variant={radioVariant as any}
+                size={radioSize as any}
+              />
             </ComponentCard>
           </div>
         </div>
