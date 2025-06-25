@@ -64,3 +64,6 @@ export type { TooltipContentProps } from './Tooltip';
 export type { SpinnerProps, SkeletonProps } from './Loading';
 export type { RichTextEditorProps } from './RichTextEditor';
 export type { AudioControlsProps } from './AudioControls';
+
+// Re-exported UI types
+export type { LabelProps } from '@/components/ui/label';
