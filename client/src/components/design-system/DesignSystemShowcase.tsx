@@ -695,7 +695,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="Progress Bars"
+              title="14. Progress Bars"
               description="Linear progress indicators"
               componentName="Progress"
               variant={progressVariant}
@@ -723,7 +723,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="Toggle Switches"
+              title="15. Toggle Switches"
               description="Binary choice controls"
               componentName="Switch"
               variant={switchVariant}
@@ -790,7 +790,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="Tab Navigation"
+              title="17. Tab Navigation"
               description="Content section tabs"
               componentName="Tabs"
               variant={tabsVariant}
@@ -1007,7 +1007,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="Radio Selection"
+              title="21. Radio Selection"
               description="Single choice radio buttons"
               componentName="Radio"
               variant={radioVariant}
@@ -1094,7 +1094,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="Dialog Modals"
+              title="22. Dialog Modals"
               description="Modal dialogs for confirmations"
               componentName="Dialog"
               variant={dialogVariant}
@@ -1215,7 +1215,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="Avatar Display"
+              title="24. Avatar Display"
               description="User profile avatars"
               componentName="Avatar"
               variant={avatarVariant}
@@ -1251,7 +1251,7 @@ export function DesignSystemShowcase() {
 
         {/* ENHANCED: Text Segment Components with Inspector */}
         <ComponentCard
-            title="25. Content Segments"
+            title="25. Text Segments"
             description="LMS text segmentation components"
             componentName="TextSegment"
             variant={textSegmentVariant}
