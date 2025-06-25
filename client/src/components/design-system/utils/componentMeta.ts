@@ -94,15 +94,6 @@ export const componentConfigs: Record<string, ComponentConfig> = {
     category: "form"
   },
   
-  Radio: {
-    name: "Radio",
-    variants: colorVariants,
-    sizes: sizeOptions.small,
-    commonProps: ["disabled"],
-    description: "Single-choice radio buttons",
-    category: "form"
-  },
-  
   Dialog: {
     name: "Dialog",
     variants: colorVariants,
