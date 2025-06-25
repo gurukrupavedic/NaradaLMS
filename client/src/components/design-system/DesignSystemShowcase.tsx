@@ -636,7 +636,6 @@ export function DesignSystemShowcase() {
                 />
               </div>
             </ComponentCard>
-          </div>
         </div>
 
         {/* ENHANCED: UI Elements with Inspector */}
@@ -823,14 +822,10 @@ export function DesignSystemShowcase() {
                 </TabsContent>
               </Tabs>
             </ComponentCard>
-          </div>
         </div>
 
         {/* ENHANCED: Card Layouts with Inspector */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Card Layouts</h2>
-          
-          <ComponentCard
+        <ComponentCard
             title="Content Cards"
             description="Container cards with glow effects"
             componentName="Card"
@@ -1363,11 +1358,6 @@ This bilingual segment demonstrates how the component handles mixed languages an
               </div>
             </div>
           </ComponentCard>
-        </div>
-
-
-
       </div>
-    </div>
-  );
-}
+    );
+  }
