@@ -915,7 +915,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="Help Tooltips"
+              title="20. Help Tooltips"
               description="Contextual information and guidance tooltips"
               componentName="Tooltip"
               variant={tooltipVariant}
@@ -1007,7 +1007,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="21. Radio Selection"
+              title="DUPLICATE - Radio Selection"
               description="Single choice radio buttons"
               componentName="Radio"
               variant={radioVariant}
