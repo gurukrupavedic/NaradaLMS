@@ -230,15 +230,15 @@ export const semanticColors = {
   locked: '#9ca3af', // colors.gray[400]
   
   // Content types  
-  audio: colors.orange[600],
-  text: colors.teal[600],
-  assessment: colors.pink[600],
+  audio: '#ea580c', // colors.orange[600]
+  text: '#0d9488', // colors.teal[600] 
+  assessment: '#db2777', // colors.pink[600]
   
   // System states
-  success: colors.green[600],
-  warning: colors.yellow[600], 
-  error: colors.rose[600],
-  info: colors.blue[600]
+  success: '#16a34a', // colors.green[600]
+  warning: '#d97706', // colors.yellow[600]
+  error: '#e11d48', // colors.rose[600]
+  info: '#2563eb' // colors.blue[600]
 } as const;
 
 // Component Variants
