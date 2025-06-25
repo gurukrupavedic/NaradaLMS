@@ -276,6 +276,7 @@ export function DesignSystemShowcase() {
               </div>
             </div>
           </ComponentCard>
+        </div>
 
         {/* Demo Dialogs */}
         <Dialog
@@ -322,7 +323,7 @@ export function DesignSystemShowcase() {
         />
 
         {/* ENHANCED: Interactive Button Showcase */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             <ComponentCard
               title="4. Action Buttons - Sophisticated Design"
               description="Classy, modern button styling with refined fluorescent touches"
@@ -431,7 +432,7 @@ export function DesignSystemShowcase() {
         {/* Data Management section removed - Table component will be redesigned with clear requirements */}
 
         {/* ENHANCED: Audio & Progress Controls with Inspector */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             <ComponentCard
               title="7. Audio Timeline"
               description="Perfect for audio-text synchronization"
@@ -528,7 +529,8 @@ export function DesignSystemShowcase() {
         </div>
 
         {/* ENHANCED: Navigation System with Inspector */}
-        <ComponentCard
+        <div className="mt-8">
+          <ComponentCard
             title="10. Content Navigation"
             description="Hierarchical breadcrumb navigation"
             componentName="Breadcrumb"
@@ -576,9 +578,10 @@ export function DesignSystemShowcase() {
               </div>
             </div>
           </ComponentCard>
+        </div>
 
         {/* ENHANCED: Input Components with Inspector */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             <ComponentCard
               title="11. Text Inputs"
               description="Form inputs with focus color variants"
@@ -639,7 +642,7 @@ export function DesignSystemShowcase() {
         </div>
 
         {/* ENHANCED: UI Elements with Inspector */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
             <ComponentCard
               title="13. Status Badges"
               description="Labels and status indicators with multiple styles"
@@ -750,7 +753,7 @@ export function DesignSystemShowcase() {
         </div>
 
         {/* ENHANCED: Interactive Controls with Inspector */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             <ComponentCard
               title="16. Range Sliders"
               description="Numeric input sliders"
@@ -825,7 +828,8 @@ export function DesignSystemShowcase() {
         </div>
 
         {/* ENHANCED: Card Layouts with Inspector */}
-        <ComponentCard
+        <div className="mt-8">
+          <ComponentCard
             title="18. Content Cards"
             description="Container cards with glow effects"
             componentName="Card"
@@ -875,9 +879,10 @@ export function DesignSystemShowcase() {
               </Card>
             </div>
           </ComponentCard>
+        </div>
 
         {/* ENHANCED: Specialized Components with Inspector */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
             <ComponentCard
               title="19. Loading States"
               description="Loading spinners and indicators"
@@ -1009,7 +1014,7 @@ export function DesignSystemShowcase() {
         </div>
 
         {/* ENHANCED: Alert & Dialog Components with Inspector */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             <ComponentCard
               title="21. System Alerts"
               description="Notifications and feedback messages"
@@ -1130,7 +1135,7 @@ export function DesignSystemShowcase() {
         </div>
 
         {/* ENHANCED: Selection Components with Inspector */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             <ComponentCard
               title="23. Select Dropdowns"
               description="Dropdown selection menus"
@@ -1211,7 +1216,8 @@ export function DesignSystemShowcase() {
         </div>
 
         {/* ENHANCED: Text Segment Components with Inspector */}
-        <ComponentCard
+        <div className="mt-8">
+          <ComponentCard
             title="25. Text Segments"
             description="LMS text segmentation components"
             componentName="TextSegment"
@@ -1319,6 +1325,7 @@ This bilingual segment demonstrates how the component handles mixed languages an
               </div>
             </div>
           </ComponentCard>
+        </div>
       </div>
     );
   }
