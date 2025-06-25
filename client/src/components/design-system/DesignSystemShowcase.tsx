@@ -36,7 +36,7 @@ import { colorVariants, componentConfigs, getComponentConfig } from "./utils/com
 import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, HelpCircle, Settings, Upload, Type, Volume2, Zap, X } from "lucide-react";
 
 export function DesignSystemShowcase() {
-  const [selectedVariant, setSelectedVariant] = useState<string>("blue");
+
   const [showDialog, setShowDialog] = useState(false);
   const [showComponentDialog, setShowComponentDialog] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -148,29 +148,7 @@ export function DesignSystemShowcase() {
           </p>
         </div>
 
-        {/* Color Variant Selector */}
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h2 className="text-2xl font-semibold mb-4">Color Variants</h2>
-          <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
-            {colorVariants.map((variant) => (
-              <button
-                key={variant}
-                onClick={() => setSelectedVariant(variant)}
-                className={`p-3 rounded-lg border-2 transition-all capitalize ${
-                  selectedVariant === variant 
-                    ? 'border-gray-800 ring-2 ring-gray-300' 
-                    : 'border-gray-200 hover:border-gray-400'
-                }`}
-              >
-                <div 
-                  className="w-full h-8 rounded mb-2" 
-                  style={{ backgroundColor: colorMap[variant] }}
-                ></div>
-                <div className="text-xs font-medium">{variant}</div>
-              </button>
-            ))}
-          </div>
-        </div>
+
 
         {/* Card Components Showcase */}
         <div className="space-y-8">
@@ -180,12 +158,11 @@ export function DesignSystemShowcase() {
           <div>
             <h3 className="text-xl font-medium mb-4">Feature Cards</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card variant={selectedVariant as any} interactive glow="subtle">
+              <Card variant="blue" interactive glow="subtle">
                 <CardHeader className="text-center">
                   <div className="mx-auto mb-4">
                     <BookOpen 
-                      className="h-12 w-12" 
-                      style={{ color: colorMap[selectedVariant] }}
+                      className="h-12 w-12 text-blue-600"
                     />
                   </div>
                   <CardTitle className="text-lg">Learning</CardTitle>
@@ -194,18 +171,17 @@ export function DesignSystemShowcase() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant={`outline-${selectedVariant}` as any}>
+                  <Button className="w-full" variant="outline" color="blue">
                     Get Started
                   </Button>
                 </CardContent>
               </Card>
 
-              <Card variant={selectedVariant as any} interactive glow="subtle">
+              <Card variant="green" interactive glow="subtle">
                 <CardHeader className="text-center">
                   <div className="mx-auto mb-4">
                     <Edit 
-                      className="h-12 w-12" 
-                      style={{ color: colorMap[selectedVariant] }}
+                      className="h-12 w-12 text-green-600"
                     />
                   </div>
                   <CardTitle className="text-lg">Manage Content</CardTitle>
@@ -214,18 +190,17 @@ export function DesignSystemShowcase() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant={`outline-${selectedVariant}` as any}>
+                  <Button className="w-full" variant="outline" color="green">
                     Get Started
                   </Button>
                 </CardContent>
               </Card>
 
-              <Card variant={selectedVariant as any} interactive glow="subtle">
+              <Card variant="purple" interactive glow="subtle">
                 <CardHeader className="text-center">
                   <div className="mx-auto mb-4">
                     <Music 
-                      className="h-12 w-12" 
-                      style={{ color: colorMap[selectedVariant] }}
+                      className="h-12 w-12 text-purple-600"
                     />
                   </div>
                   <CardTitle className="text-lg">Audio Content</CardTitle>
@@ -234,7 +209,7 @@ export function DesignSystemShowcase() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant={`outline-${selectedVariant}` as any}>
+                  <Button className="w-full" variant="outline" color="purple">
                     Get Started
                   </Button>
                 </CardContent>
@@ -298,7 +273,7 @@ export function DesignSystemShowcase() {
           <div className="space-y-4">
             <Input 
               placeholder="Enter email address" 
-              variant={selectedVariant as any}
+              variant="blue"
             />
             <RadioGroup
               name="invite-role"
@@ -306,7 +281,7 @@ export function DesignSystemShowcase() {
               options={CommonRadioOptions.userRoles}
               value="student"
               onChange={() => {}}
-              variant={selectedVariant as any}
+              variant="blue"
               size="sm"
             />
           </div>
@@ -314,7 +289,7 @@ export function DesignSystemShowcase() {
             <Button variant="outline" onClick={() => setShowDialog(false)}>
               Cancel
             </Button>
-            <Button variant={selectedVariant as any} onClick={() => setShowDialog(false)}>
+            <Button variant="solid" color="blue" onClick={() => setShowDialog(false)}>
               Send Invitation
             </Button>
           </DialogFooter>
