@@ -64,7 +64,7 @@ export function DesignSystemShowcase() {
   const [badgeSize, setBadgeSize] = useState("default");
   const [progressVariant, setProgressVariant] = useState("blue");
   const [radioVariant, setRadioVariant] = useState("blue");
-  const [radioSize, setRadioSize] = useState("default");
+  const [radioSize, setRadioSize] = useState("md");
   const [priorityValue, setPriorityValue] = useState("medium");
   const [progressSize, setProgressSize] = useState("default");
   const [checkboxVariant, setCheckboxVariant] = useState("blue");
