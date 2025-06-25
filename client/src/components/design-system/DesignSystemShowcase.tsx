@@ -1006,45 +1006,6 @@ export function DesignSystemShowcase() {
               </div>
             </ComponentCard>
 
-            <ComponentCard
-              title="DUPLICATE - Radio Selection"
-              description="Single choice radio buttons"
-              componentName="Radio"
-              variant={radioVariant}
-              size={radioSize}
-              props={{ disabled: false, direction: "vertical" }}
-              allSizes={getComponentConfig("Radio")?.sizes || ["sm", "md", "lg"]}
-              onVariantChange={setRadioVariant}
-              onSizeChange={setRadioSize}
-            >
-              <div className="space-y-6">
-                <RadioGroup
-                  name="priority"
-                  label="Priority Level"
-                  description="Select task priority for chapter editing"
-                  options={[
-                    { value: "low", label: "Low Priority", description: "Non-urgent content updates" },
-                    { value: "medium", label: "Medium Priority", description: "Standard content review" },
-                    { value: "high", label: "High Priority", description: "Critical content fixes" }
-                  ]}
-                  value={priorityValue}
-                  onChange={setPriorityValue}
-                  variant={radioVariant as any}
-                  size={radioSize as any}
-                />
-                
-                <RadioGroup
-                  name="difficulty"
-                  label="Content Difficulty"
-                  options={CommonRadioOptions.difficultyLevels}
-                  value={radioValue}
-                  onChange={setRadioValue}
-                  variant={radioVariant as any}
-                  size={radioSize as any}
-                  direction="horizontal"
-                />
-              </div>
-            </ComponentCard>
         </div>
 
         {/* ENHANCED: Alert & Dialog Components with Inspector */}
