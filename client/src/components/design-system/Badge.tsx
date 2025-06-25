@@ -231,29 +231,33 @@ export interface BadgeProps
   dotColor?: string;
 }
 
-function Badge({ className, variant, style, size, educational, icon, pulse, dotColor, children, ...props }: BadgeProps) {
-  // Use educational variant if provided
-  const finalVariant = educational ? educationalVariants[educational] : variant;
-  
-  return (
-    <div 
-      className={cn(
-        badgeVariants({ variant: finalVariant, style, size }), 
-        pulse && "animate-pulse",
-        className
-      )} 
-      {...props}
-    >
-      {dotColor && (
-        <span 
-          className="w-1.5 h-1.5 rounded-full mr-1.5 flex-shrink-0"
-          style={{ backgroundColor: dotColor }}
-        />
-      )}
-      {icon && <span className="mr-1 flex-shrink-0">{icon}</span>}
-      {children}
-    </div>
-  );
-}
+const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
+  ({ className, variant, style, size, educational, icon, pulse, dotColor, children, ...props }, ref) => {
+    // Use educational variant if provided
+    const finalVariant = educational ? educationalVariants[educational] : variant;
+    
+    return (
+      <div 
+        ref={ref}
+        className={cn(
+          badgeVariants({ variant: finalVariant, style, size }), 
+          pulse && "animate-pulse",
+          className
+        )} 
+        {...props}
+      >
+        {dotColor && (
+          <span 
+            className="w-1.5 h-1.5 rounded-full mr-1.5 flex-shrink-0"
+            style={{ backgroundColor: dotColor }}
+          />
+        )}
+        {icon && <span className="mr-1 flex-shrink-0">{icon}</span>}
+        {children}
+      </div>
+    );
+  }
+);
+Badge.displayName = "Badge";
 
 export { Badge, badgeVariants };
