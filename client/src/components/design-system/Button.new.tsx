@@ -39,8 +39,8 @@ const colorConfig = {
     primary: "bg-blue-500", hover: "hover:bg-blue-600", 
     text: "text-blue-700", border: "border-blue-300", 
     hoverBorder: "hover:border-blue-400", bgHover: "hover:bg-blue-50",
-    fluorescent: "hover:shadow-[0_4px_14px_rgba(219,234,254,0.8)]",
-    gradient: "bg-gradient-to-r from-blue-500 to-blue-600",
+    fluorescent: "hover:shadow-[0_4px_20px_rgba(59,130,246,0.6)] hover:shadow-blue-200/80",
+    gradient: "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700",
     cardGlow: "hover:shadow-[0_8px_25px_rgba(0,0,0,0.08),0_0_0_1px_rgba(59,130,246,0.3),0_4px_20px_rgba(219,234,254,1),0_0_25px_rgba(219,234,254,0.6)]"
   },
   green: { 
@@ -133,32 +133,44 @@ const colorConfig = {
   }
 };
 
-// Styling approach generators
+// Styling approach generators with dramatic visual differences
 const getStyleApproach = (variant: string, color: string, styleApproach: string) => {
   const colorInfo = colorConfig[color as keyof typeof colorConfig];
   if (!colorInfo) return "";
 
   const approaches = {
     solid: {
-      classic: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-sm hover:shadow-md`,
-      fluorescent: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-sm ${colorInfo.fluorescent} hover:transform hover:-translate-y-0.5`,
-      gradient: `${colorInfo.gradient} hover:shadow-lg text-white shadow-md hover:shadow-xl hover:scale-[1.02]`,
-      enhanced: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-lg hover:shadow-2xl hover:transform hover:-translate-y-1 hover:scale-[1.01]`,
-      card: `${colorInfo.primary} text-white shadow-sm hover:border-transparent border border-transparent ${colorInfo.cardGlow} hover:transform hover:-translate-y-0.5`
+      classic: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-sm hover:shadow-md transition-all duration-200`,
+      
+      fluorescent: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-md hover:shadow-[0_0_30px_rgba(59,130,246,0.8),0_0_60px_rgba(59,130,246,0.4)] hover:transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-300/60`,
+      
+      gradient: `bg-gradient-to-br from-${color}-400 via-${color}-500 to-${color}-600 hover:from-${color}-500 hover:via-${color}-600 hover:to-${color}-700 text-white shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-white/20`,
+      
+      enhanced: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-xl hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:transform hover:-translate-y-2 hover:scale-110 transition-all duration-400 ring-2 ring-${color}-200 hover:ring-${color}-300`,
+      
+      card: `${colorInfo.primary} text-white shadow-lg hover:shadow-[0_8px_25px_rgba(0,0,0,0.15),0_0_0_2px_rgba(59,130,246,0.4),0_4px_20px_rgba(219,234,254,1),0_0_25px_rgba(219,234,254,0.8)] hover:transform hover:-translate-y-1 transition-all duration-300 border border-${color}-300/50 hover:border-${color}-200`
     },
     outline: {
-      classic: `border-2 ${colorInfo.border} ${colorInfo.hoverBorder} bg-white ${colorInfo.bgHover} ${colorInfo.text}`,
-      fluorescent: `border-2 ${colorInfo.border} bg-white ${colorInfo.text} hover:bg-white ${colorInfo.fluorescent} hover:border-opacity-50`,
-      gradient: `border-2 ${colorInfo.border} bg-white ${colorInfo.text} hover:${colorInfo.gradient} hover:text-white hover:border-transparent`,
-      enhanced: `border-2 ${colorInfo.border} bg-white ${colorInfo.text} hover:shadow-xl hover:${colorInfo.primary} hover:text-white hover:border-transparent hover:transform hover:-translate-y-0.5`,
-      card: `border-2 ${colorInfo.border} bg-white ${colorInfo.text} ${colorInfo.cardGlow} hover:border-opacity-30`
+      classic: `border-2 ${colorInfo.border} ${colorInfo.hoverBorder} bg-white ${colorInfo.bgHover} ${colorInfo.text} transition-all duration-200`,
+      
+      fluorescent: `border-3 border-${color}-400 bg-white ${colorInfo.text} hover:bg-${color}-50 hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] hover:border-${color}-500 hover:transform hover:-translate-y-1 transition-all duration-300`,
+      
+      gradient: `border-3 border-${color}-400 bg-white ${colorInfo.text} hover:bg-gradient-to-r hover:from-${color}-500 hover:to-${color}-600 hover:text-white hover:border-transparent hover:scale-105 transition-all duration-300 shadow-md hover:shadow-xl`,
+      
+      enhanced: `border-3 border-${color}-400 bg-white ${colorInfo.text} hover:shadow-[0_15px_35px_rgba(0,0,0,0.2)] hover:bg-${color}-500 hover:text-white hover:border-${color}-500 hover:transform hover:-translate-y-2 hover:scale-105 transition-all duration-400`,
+      
+      card: `border-3 border-${color}-300 bg-white ${colorInfo.text} hover:shadow-[0_8px_25px_rgba(0,0,0,0.1),0_0_0_2px_rgba(59,130,246,0.3),0_4px_20px_rgba(219,234,254,0.8)] hover:border-${color}-400 hover:bg-${color}-25 transition-all duration-300`
     },
     ghost: {
-      classic: `${colorInfo.bgHover} ${colorInfo.text} hover:bg-opacity-80`,
-      fluorescent: `${colorInfo.text} hover:bg-white ${colorInfo.fluorescent} hover:transform hover:-translate-y-0.5`,
-      gradient: `${colorInfo.text} hover:${colorInfo.gradient} hover:text-white hover:shadow-lg`,
-      enhanced: `${colorInfo.text} hover:${colorInfo.primary} hover:text-white hover:shadow-lg hover:transform hover:-translate-y-0.5`,
-      card: `${colorInfo.text} hover:bg-white ${colorInfo.cardGlow}`
+      classic: `${colorInfo.bgHover} ${colorInfo.text} hover:bg-opacity-80 transition-all duration-200`,
+      
+      fluorescent: `${colorInfo.text} hover:bg-gradient-to-r hover:from-${color}-100 hover:to-${color}-200 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] hover:transform hover:-translate-y-1 hover:scale-105 transition-all duration-300`,
+      
+      gradient: `${colorInfo.text} hover:bg-gradient-to-r hover:from-${color}-500 hover:to-${color}-600 hover:text-white hover:shadow-xl hover:scale-105 transition-all duration-300`,
+      
+      enhanced: `${colorInfo.text} hover:bg-${color}-500 hover:text-white hover:shadow-[0_15px_35px_rgba(0,0,0,0.2)] hover:transform hover:-translate-y-2 hover:scale-110 transition-all duration-400`,
+      
+      card: `${colorInfo.text} hover:bg-white hover:shadow-[0_8px_25px_rgba(0,0,0,0.1),0_0_0_1px_rgba(59,130,246,0.3),0_4px_20px_rgba(219,234,254,0.8)] hover:transform hover:-translate-y-1 transition-all duration-300`
     }
   };
 
