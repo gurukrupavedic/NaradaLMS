@@ -33,9 +33,9 @@ export const componentConfigs: Record<string, ComponentConfig> = {
   Button: {
     name: "Button",
     variants: colorVariants,
-    sizes: sizeOptions.small,
-    commonProps: ["destructive", "loading", "disabled"],
-    description: "Primary action buttons with multiple variants",
+    sizes: ["sm", "default", "lg", "icon"],
+    commonProps: ["loading", "disabled", "fullWidth"],
+    description: "Refined action buttons with solid, outline, and ghost variants",
     category: "core"
   },
   

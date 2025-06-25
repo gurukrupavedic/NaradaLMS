@@ -351,14 +351,16 @@ export function DesignSystemShowcase() {
                 <div className="space-y-2">
                   <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Solid Buttons</h4>
                   <div className="flex gap-2 flex-wrap">
-                    <Button variant={buttonVariant as any} size={buttonSize as any}>
+                    <Button variant="solid" color={buttonVariant} size={buttonSize}>
                       Primary
                     </Button>
-                    <Button variant={buttonVariant as any} size={buttonSize as any}>
-                      <Edit className="h-4 w-4 mr-2" />
+                    <Button variant="solid" color={buttonVariant} size={buttonSize} icon={<Edit className="h-4 w-4" />}>
                       With Icon
                     </Button>
-                    <Button variant="rose" size={buttonSize as any}>
+                    <Button variant="solid" color={buttonVariant} size={buttonSize} loading>
+                      Loading
+                    </Button>
+                    <Button variant="solid" color="rose" size={buttonSize}>
                       Delete
                     </Button>
                   </div>
@@ -368,14 +370,13 @@ export function DesignSystemShowcase() {
                 <div className="space-y-2">
                   <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Outline Buttons</h4>
                   <div className="flex gap-2 flex-wrap">
-                    <Button variant={`outline-${buttonVariant}` as any} size={buttonSize as any}>
+                    <Button variant="outline" color={buttonVariant} size={buttonSize}>
                       Secondary
                     </Button>
-                    <Button variant="outline" size={buttonSize as any}>
-                      <Save className="h-4 w-4 mr-2" />
+                    <Button variant="outline" color={buttonVariant} size={buttonSize} icon={<Save className="h-4 w-4" />}>
                       Save Draft
                     </Button>
-                    <Button variant="outline" size={buttonSize as any}>
+                    <Button variant="outline" color="rose" size={buttonSize}>
                       Cancel
                     </Button>
                   </div>
@@ -385,15 +386,13 @@ export function DesignSystemShowcase() {
                 <div className="space-y-2">
                   <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Ghost Buttons</h4>
                   <div className="flex gap-2 flex-wrap">
-                    <Button variant="ghost" size={buttonSize as any}>
+                    <Button variant="ghost" color={buttonVariant} size={buttonSize}>
                       Minimal
                     </Button>
-                    <Button variant="ghost" size={buttonSize as any}>
-                      <Settings className="h-4 w-4 mr-2" />
+                    <Button variant="ghost" color={buttonVariant} size={buttonSize} icon={<Settings className="h-4 w-4" />}>
                       Settings
                     </Button>
-                    <Button variant="ghost" size={buttonSize as any}>
-                      <X className="h-4 w-4 mr-2" />
+                    <Button variant="ghost" color="rose" size={buttonSize} icon={<X className="h-4 w-4" />}>
                       Close
                     </Button>
                   </div>
@@ -403,10 +402,19 @@ export function DesignSystemShowcase() {
                 <div className="space-y-2">
                   <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">All Sizes</h4>
                   <div className="flex gap-2 items-center flex-wrap">
-                    <Button variant={buttonVariant as any} size="sm">SM</Button>
-                    <Button variant={buttonVariant as any} size="default">Default</Button>
-                    <Button variant={buttonVariant as any} size="lg">LG</Button>
+                    <Button variant="solid" color={buttonVariant} size="sm">SM</Button>
+                    <Button variant="solid" color={buttonVariant} size="default">Default</Button>
+                    <Button variant="solid" color={buttonVariant} size="lg">LG</Button>
+                    <Button variant="solid" color={buttonVariant} size="icon" icon={<Edit className="h-4 w-4" />} />
                   </div>
+                </div>
+
+                {/* Full Width Example */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Full Width</h4>
+                  <Button variant="solid" color={buttonVariant} size={buttonSize} fullWidth>
+                    Full Width Button
+                  </Button>
                 </div>
               </div>
             </ComponentCard>

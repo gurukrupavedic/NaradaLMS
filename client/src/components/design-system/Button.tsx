@@ -1,130 +1,134 @@
 /**
- * Modern Colorful Button Component - Vedic LMS Design System
+ * Refined Button Component - Vedic LMS Design System
  * 
- * Enhanced button component with vibrant colors, glow effects, and educational variants.
- * Replaces shadcn/ui Button with modern colorful design system aesthetics.
+ * Lightweight, modern button component with refined visual weight and clean API.
+ * Removes CVA complexity for direct className composition and better performance.
  * 
  * Features:
- * - 12 vibrant color variants with fluorescent glow effects
- * - Educational semantic variants for LMS contexts
- * - Consistent hover states and interactions
- * - Size variants and icon support
+ * - 12 refined color variants with subtle interactions
+ * - Solid, outline, and ghost variants
+ * - Proper loading states and icon support
+ * - Consistent size progression and spacing
  * 
  * @author Vedic LMS Design System
  * @since 2025-06-24
  */
 
 import * as React from "react";
-import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_rgba(255,255,255,0.4),0_0_0_4px_currentColor] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-  {
-    variants: {
-      variant: {
-        // Primary colored variants
-        blue: "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-[0_4px_14px_rgba(59,130,246,0.4)] active:bg-blue-800",
-        green: "bg-green-600 text-white hover:bg-green-700 hover:shadow-[0_4px_14px_rgba(34,197,94,0.4)] active:bg-green-800",
-        purple: "bg-purple-600 text-white hover:bg-purple-700 hover:shadow-[0_4px_14px_rgba(147,51,234,0.4)] active:bg-purple-800",
-        orange: "bg-orange-600 text-white hover:bg-orange-700 hover:shadow-[0_4px_14px_rgba(249,115,22,0.4)] active:bg-orange-800",
-        pink: "bg-pink-600 text-white hover:bg-pink-700 hover:shadow-[0_4px_14px_rgba(236,72,153,0.4)] active:bg-pink-800",
-        indigo: "bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-[0_4px_14px_rgba(99,102,241,0.4)] active:bg-indigo-800",
-        teal: "bg-teal-600 text-white hover:bg-teal-700 hover:shadow-[0_4px_14px_rgba(20,184,166,0.4)] active:bg-teal-800",
-        cyan: "bg-cyan-600 text-white hover:bg-cyan-700 hover:shadow-[0_4px_14px_rgba(8,145,178,0.4)] active:bg-cyan-800",
-        yellow: "bg-yellow-600 text-white hover:bg-yellow-700 hover:shadow-[0_4px_14px_rgba(202,138,4,0.4)] active:bg-yellow-800",
-        lime: "bg-lime-600 text-white hover:bg-lime-700 hover:shadow-[0_4px_14px_rgba(101,163,13,0.4)] active:bg-lime-800",
-        rose: "bg-rose-600 text-white hover:bg-rose-700 hover:shadow-[0_4px_14px_rgba(244,63,94,0.4)] active:bg-rose-800",
-        emerald: "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-[0_4px_14px_rgba(16,185,129,0.4)] active:bg-emerald-800",
-        
-        // Colorful outline variants
-        "outline-blue": "border border-blue-300 text-blue-600 bg-transparent hover:bg-blue-50 hover:border-blue-400 hover:shadow-[0_2px_8px_rgba(59,130,246,0.15)]",
-        "outline-green": "border border-green-300 text-green-600 bg-transparent hover:bg-green-50 hover:border-green-400 hover:shadow-[0_2px_8px_rgba(34,197,94,0.15)]",
-        "outline-purple": "border border-purple-300 text-purple-600 bg-transparent hover:bg-purple-50 hover:border-purple-400 hover:shadow-[0_2px_8px_rgba(147,51,234,0.15)]",
-        "outline-orange": "border border-orange-300 text-orange-600 bg-transparent hover:bg-orange-50 hover:border-orange-400 hover:shadow-[0_2px_8px_rgba(249,115,22,0.15)]",
-        "outline-pink": "border border-pink-300 text-pink-600 bg-transparent hover:bg-pink-50 hover:border-pink-400 hover:shadow-[0_2px_8px_rgba(236,72,153,0.15)]",
-        "outline-indigo": "border border-indigo-300 text-indigo-600 bg-transparent hover:bg-indigo-50 hover:border-indigo-400 hover:shadow-[0_2px_8px_rgba(99,102,241,0.15)]",
-        "outline-teal": "border border-teal-300 text-teal-600 bg-transparent hover:bg-teal-50 hover:border-teal-400 hover:shadow-[0_2px_8px_rgba(20,184,166,0.15)]",
-        "outline-cyan": "border border-cyan-300 text-cyan-600 bg-transparent hover:bg-cyan-50 hover:border-cyan-400 hover:shadow-[0_2px_8px_rgba(8,145,178,0.15)]",
-        "outline-yellow": "border border-yellow-300 text-yellow-600 bg-transparent hover:bg-yellow-50 hover:border-yellow-400 hover:shadow-[0_2px_8px_rgba(202,138,4,0.15)]",
-        "outline-lime": "border border-lime-300 text-lime-600 bg-transparent hover:bg-lime-50 hover:border-lime-400 hover:shadow-[0_2px_8px_rgba(101,163,13,0.15)]",
-        "outline-rose": "border border-rose-300 text-rose-600 bg-transparent hover:bg-rose-50 hover:border-rose-400 hover:shadow-[0_2px_8px_rgba(244,63,94,0.15)]",
-        "outline-emerald": "border border-emerald-300 text-emerald-600 bg-transparent hover:bg-emerald-50 hover:border-emerald-400 hover:shadow-[0_2px_8px_rgba(16,185,129,0.15)]",
-        
-        // Standard variants
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline"
-      },
-      size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10"
-      },
-      glow: {
-        none: "",
-        subtle: "hover:shadow-[0_4px_14px_rgba(0,0,0,0.1)]",
-        medium: "hover:shadow-[0_4px_20px_rgba(0,0,0,0.15)]",
-        strong: "hover:shadow-[0_6px_30px_rgba(0,0,0,0.2)]"
-      }
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-      glow: "none"
-    }
+// Base styles for all buttons
+const baseStyles = "inline-flex items-center justify-center font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] select-none";
+
+// Size variants with consistent progression
+const sizeStyles = {
+  sm: "h-8 px-3 text-sm rounded-md gap-1.5",
+  default: "h-9 px-4 text-sm rounded-lg gap-2", 
+  lg: "h-10 px-5 text-base rounded-lg gap-2",
+  icon: "h-9 w-9 rounded-lg"
+};
+
+// Color variants with refined palette
+const colorConfig = {
+  blue: { bg: "bg-blue-500", hover: "hover:bg-blue-600", text: "text-blue-700", border: "border-blue-300", hoverBorder: "hover:border-blue-400", bgHover: "hover:bg-blue-50" },
+  green: { bg: "bg-green-500", hover: "hover:bg-green-600", text: "text-green-700", border: "border-green-300", hoverBorder: "hover:border-green-400", bgHover: "hover:bg-green-50" },
+  purple: { bg: "bg-purple-500", hover: "hover:bg-purple-600", text: "text-purple-700", border: "border-purple-300", hoverBorder: "hover:border-purple-400", bgHover: "hover:bg-purple-50" },
+  orange: { bg: "bg-orange-500", hover: "hover:bg-orange-600", text: "text-orange-700", border: "border-orange-300", hoverBorder: "hover:border-orange-400", bgHover: "hover:bg-orange-50" },
+  pink: { bg: "bg-pink-500", hover: "hover:bg-pink-600", text: "text-pink-700", border: "border-pink-300", hoverBorder: "hover:border-pink-400", bgHover: "hover:bg-pink-50" },
+  indigo: { bg: "bg-indigo-500", hover: "hover:bg-indigo-600", text: "text-indigo-700", border: "border-indigo-300", hoverBorder: "hover:border-indigo-400", bgHover: "hover:bg-indigo-50" },
+  teal: { bg: "bg-teal-500", hover: "hover:bg-teal-600", text: "text-teal-700", border: "border-teal-300", hoverBorder: "hover:border-teal-400", bgHover: "hover:bg-teal-50" },
+  cyan: { bg: "bg-cyan-500", hover: "hover:bg-cyan-600", text: "text-cyan-700", border: "border-cyan-300", hoverBorder: "hover:border-cyan-400", bgHover: "hover:bg-cyan-50" },
+  yellow: { bg: "bg-yellow-500", hover: "hover:bg-yellow-600", text: "text-yellow-700", border: "border-yellow-300", hoverBorder: "hover:border-yellow-400", bgHover: "hover:bg-yellow-50" },
+  lime: { bg: "bg-lime-500", hover: "hover:bg-lime-600", text: "text-lime-700", border: "border-lime-300", hoverBorder: "hover:border-lime-400", bgHover: "hover:bg-lime-50" },
+  rose: { bg: "bg-rose-500", hover: "hover:bg-rose-600", text: "text-rose-700", border: "border-rose-300", hoverBorder: "hover:border-rose-400", bgHover: "hover:bg-rose-50" },
+  emerald: { bg: "bg-emerald-500", hover: "hover:bg-emerald-600", text: "text-emerald-700", border: "border-emerald-300", hoverBorder: "hover:border-emerald-400", bgHover: "hover:bg-emerald-50" }
+};
+
+// Variant style generators
+const getVariantStyles = (variant: string, color: string) => {
+  const colorInfo = colorConfig[color as keyof typeof colorConfig];
+  if (!colorInfo) return "";
+
+  switch (variant) {
+    case "solid":
+      return `${colorInfo.bg} ${colorInfo.hover} text-white shadow-sm hover:shadow-md`;
+    case "outline":
+      return `border-2 ${colorInfo.border} ${colorInfo.hoverBorder} bg-white ${colorInfo.bgHover} ${colorInfo.text}`;
+    case "ghost":
+      return `${colorInfo.bgHover} ${colorInfo.text} hover:bg-opacity-80`;
+    default:
+      return `${colorInfo.bg} ${colorInfo.hover} text-white shadow-sm hover:shadow-md`;
   }
-);
+};
 
-// Educational semantic variants for LMS contexts
-const educationalVariants = {
-  // Actions
-  save: "green",
-  edit: "blue", 
-  delete: "rose",
-  publish: "emerald",
-  preview: "purple",
-  
-  // Content types
-  lesson: "blue",
-  audio: "orange",
-  text: "teal",
-  assessment: "pink",
-  
-  // Navigation
-  next: "indigo",
-  previous: "purple",
-  home: "cyan"
-} as const;
-
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean;
-  educational?: keyof typeof educationalVariants;
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "solid" | "outline" | "ghost";
+  color?: keyof typeof colorConfig;
+  size?: keyof typeof sizeStyles;
+  loading?: boolean;
+  icon?: React.ReactNode;
+  iconPosition?: "left" | "right";
+  fullWidth?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, glow, educational, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
+  ({ 
+    className, 
+    variant = "solid", 
+    color = "blue", 
+    size = "default", 
+    loading = false,
+    icon,
+    iconPosition = "left",
+    fullWidth = false,
+    children, 
+    disabled, 
+    ...props 
+  }, ref) => {
+    const isDisabled = disabled || loading;
     
-    // Use educational variant if provided
-    const finalVariant = educational ? educationalVariants[educational] : variant;
-    
+    const buttonClasses = cn(
+      baseStyles,
+      sizeStyles[size],
+      getVariantStyles(variant, color),
+      fullWidth && "w-full",
+      className
+    );
+
     return (
-      <Comp
-        className={cn(buttonVariants({ variant: finalVariant, size, glow }), className)}
+      <button
+        className={buttonClasses}
         ref={ref}
+        disabled={isDisabled}
         {...props}
-      />
+      >
+        {loading && (
+          <Loader2 className={cn(
+            "animate-spin",
+            size === "sm" ? "h-3 w-3" : size === "lg" ? "h-5 w-5" : "h-4 w-4"
+          )} />
+        )}
+        {!loading && icon && iconPosition === "left" && (
+          <span className={cn(
+            size === "sm" ? "h-3 w-3" : size === "lg" ? "h-5 w-5" : "h-4 w-4"
+          )}>
+            {icon}
+          </span>
+        )}
+        {children}
+        {!loading && icon && iconPosition === "right" && (
+          <span className={cn(
+            size === "sm" ? "h-3 w-3" : size === "lg" ? "h-5 w-5" : "h-4 w-4"
+          )}>
+            {icon}
+          </span>
+        )}
+      </button>
     );
   }
 );
+
 Button.displayName = "Button";
 
-export { Button, buttonVariants };
+export { Button };
