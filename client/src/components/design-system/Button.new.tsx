@@ -18,16 +18,16 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-// Base styles for all buttons
-const baseStyles = "inline-flex items-center justify-center font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer";
+// Base styles for all buttons - refined for sophisticated feel
+const baseStyles = "inline-flex items-center justify-center font-medium transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer active:scale-[0.98]";
 
-// Size variants with proper progression
+// Size variants with refined proportions for sophisticated feel
 const sizeStyles = {
-  sm: "h-8 px-3 py-1.5 text-sm rounded-md gap-1.5",
-  default: "h-10 px-4 py-2 text-sm rounded-lg gap-2", 
-  lg: "h-12 px-6 py-2.5 text-base rounded-lg gap-2.5",
+  sm: "h-8 px-3 text-sm rounded-lg gap-1.5",
+  default: "h-10 px-4 text-sm rounded-lg gap-2", 
+  lg: "h-12 px-6 text-base rounded-lg gap-2.5",
   icon: {
-    sm: "h-8 w-8 rounded-md",
+    sm: "h-8 w-8 rounded-lg",
     default: "h-10 w-10 rounded-lg", 
     lg: "h-12 w-12 rounded-lg"
   }
@@ -140,13 +140,13 @@ const getStyleApproach = (variant: string, color: string, styleApproach: string)
 
   const approaches = {
     solid: {
-      fluorescent: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-md hover:shadow-[0_0_30px_rgba(59,130,246,0.8),0_0_60px_rgba(59,130,246,0.4)] hover:transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-300/60`
+      fluorescent: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-sm hover:shadow-[0_4px_14px_rgba(59,130,246,0.25),0_0_0_1px_rgba(59,130,246,0.1)] hover:transform hover:-translate-y-0.5 transition-all duration-200 ease-out`
     },
     outline: {
-      fluorescent: `border-3 border-${color}-400 bg-white ${colorInfo.text} hover:bg-${color}-50 hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] hover:border-${color}-500 hover:transform hover:-translate-y-1 transition-all duration-300`
+      fluorescent: `border border-${color}-200 ${colorInfo.text} bg-white hover:border-${color}-300 hover:bg-${color}-25 hover:shadow-[0_4px_14px_rgba(59,130,246,0.15)] hover:transform hover:-translate-y-0.5 transition-all duration-200 ease-out`
     },
     ghost: {
-      fluorescent: `${colorInfo.text} hover:bg-gradient-to-r hover:from-${color}-100 hover:to-${color}-200 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] hover:transform hover:-translate-y-1 hover:scale-105 transition-all duration-300`
+      fluorescent: `${colorInfo.text} hover:bg-${color}-50 hover:shadow-[0_4px_14px_rgba(59,130,246,0.1)] hover:transform hover:-translate-y-0.5 transition-all duration-200 ease-out`
     }
   };
 

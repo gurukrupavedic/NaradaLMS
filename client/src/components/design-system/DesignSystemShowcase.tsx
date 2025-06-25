@@ -337,8 +337,8 @@ export function DesignSystemShowcase() {
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
-              title="Action Buttons - Fluorescent Design"
-              description="Single refined button styling ready for customization"
+              title="Action Buttons - Sophisticated Design"
+              description="Classy, modern button styling with refined fluorescent touches"
               componentName="Button"
               variant={buttonVariant}
               size={buttonSize}
@@ -349,8 +349,8 @@ export function DesignSystemShowcase() {
               <div className="space-y-6">
                 {/* Fluorescent Glow Style */}
                 <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-gray-700">Fluorescent Glow Design</h4>
-                  <p className="text-xs text-gray-500">Dashboard tile-inspired glow effects with scale transforms</p>
+                  <h4 className="text-sm font-semibold text-gray-700">Refined Fluorescent Design</h4>
+                  <p className="text-xs text-gray-500">Classy, sophisticated styling with subtle glow and movement</p>
                   <div className="flex gap-2 flex-wrap">
                     <Button variant="solid" color={buttonVariant} size={buttonSize}>
                       Primary
