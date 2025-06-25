@@ -149,10 +149,7 @@ export function DesignSystemShowcase() {
         </div>
 
         {/* Card Components Showcase - MOVED TO TOP */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Card Components</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
               title="Feature Cards"
               description="Dashboard-style cards for primary application features"
@@ -246,10 +243,7 @@ export function DesignSystemShowcase() {
         </div>
 
         {/* NEW: Complete 24-Color System */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Complete 24-Color System</h2>
-          
-          <ComponentCard
+        <ComponentCard
             title="Design System Color Palette"
             description="Complete 24-color system with primary colors and fluorescent glow variants"
             componentName="ColorSystem"
@@ -329,10 +323,7 @@ export function DesignSystemShowcase() {
         />
 
         {/* ENHANCED: Interactive Button Showcase */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Interactive Components</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
               title="Action Buttons - Sophisticated Design"
               description="Classy, modern button styling with refined fluorescent touches"
@@ -442,10 +433,7 @@ export function DesignSystemShowcase() {
         {/* Data Management section removed - Table component will be redesigned with clear requirements */}
 
         {/* ENHANCED: Audio & Progress Controls with Inspector */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Audio & Progress Controls</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
               title="Audio Timeline"
               description="Perfect for audio-text synchronization"
@@ -543,10 +531,7 @@ export function DesignSystemShowcase() {
         </div>
 
         {/* ENHANCED: Navigation System with Inspector */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Navigation System</h2>
-          
-          <ComponentCard
+        <ComponentCard
             title="Content Navigation"
             description="Hierarchical breadcrumb navigation"
             componentName="Breadcrumb"
@@ -597,10 +582,7 @@ export function DesignSystemShowcase() {
         </div>
 
         {/* ENHANCED: Input Components with Inspector */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Input Components</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
               title="Text Inputs"
               description="Form inputs with focus color variants"
@@ -662,10 +644,7 @@ export function DesignSystemShowcase() {
         </div>
 
         {/* ENHANCED: UI Elements with Inspector */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">UI Elements</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <ComponentCard
               title="Status Badges"
               description="Labels and status indicators with multiple styles"
@@ -777,10 +756,7 @@ export function DesignSystemShowcase() {
         </div>
 
         {/* ENHANCED: Interactive Controls with Inspector */}
-        <div className="space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Interactive Controls</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
               title="Range Sliders"
               description="Numeric input sliders"
