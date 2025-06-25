@@ -318,7 +318,7 @@ export function DesignSystemShowcase() {
 
         {/* Component 4 */}
         <ComponentCard
-            title="X. Design System Color Palette"
+            title="4. Design System Color Palette"
             description="Complete 24-color system with primary colors and fluorescent glow variants"
             componentName="ColorSystem"
             variant="blue"
@@ -705,7 +705,7 @@ export function DesignSystemShowcase() {
 
         {/* Component 13 */}
         <ComponentCard
-              title="X. Status Badges"
+              title="14. Status Badges"
               description="Labels and status indicators with multiple styles"
               componentName="Badge"
               variant={badgeVariant}
@@ -759,7 +759,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="X. Progress Bars"
+              title="15. Progress Bars"
               description="Linear progress indicators"
               componentName="Progress"
               variant={progressVariant}
@@ -787,7 +787,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="X. Toggle Switches"
+              title="16. Toggle Switches"
               description="Binary choice controls"
               componentName="Switch"
               variant={switchVariant}
@@ -814,7 +814,7 @@ export function DesignSystemShowcase() {
 
         {/* Component 16 */}
         <ComponentCard
-              title="X. Range Sliders"
+              title="17. Range Sliders"
               description="Numeric input sliders"
               componentName="Slider"
               variant={basicSliderVariant}
@@ -852,7 +852,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="X. Tab Navigation"
+              title="18. Tab Navigation"
               description="Content section tabs"
               componentName="Tabs"
               variant={tabsVariant}
@@ -886,7 +886,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
         {/* Component 18 */}
         <ComponentCard
-            title="X. Content Cards"
+            title="19. Content Cards"
             description="Container cards with glow effects"
             componentName="Card"
             variant={cardVariant}
@@ -938,7 +938,7 @@ export function DesignSystemShowcase() {
 
         {/* Component 19 */}
         <ComponentCard
-              title="X. Loading States"
+              title="20. Loading States"
               description="Loading spinners and indicators"
               componentName="Loading"
               variant={loadingVariant}
@@ -974,7 +974,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="X. Help Tooltips"
+              title="21. Help Tooltips"
               description="Contextual information and guidance tooltips"
               componentName="Tooltip"
               variant={tooltipVariant}
@@ -1067,7 +1067,7 @@ export function DesignSystemShowcase() {
 
         {/* Component 21 */}
         <ComponentCard
-              title="X. System Alerts"
+              title="22. System Alerts"
               description="Notifications and feedback messages"
               componentName="Alert"
               variant={alertVariant}
@@ -1111,7 +1111,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="X. Dialog Modals"
+              title="23. Dialog Modals"
               description="Modal dialogs for confirmations"
               componentName="Dialog"
               variant={dialogVariant}
@@ -1185,7 +1185,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
         {/* Component 23 */}
         <ComponentCard
-              title="X. Select Dropdowns"
+              title="24. Select Dropdowns"
               description="Dropdown selection menus"
               componentName="Select"
               variant={selectVariant}
@@ -1229,7 +1229,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="X. Avatar Display"
+              title="25. Avatar Display"
               description="User profile avatars"
               componentName="Avatar"
               variant={avatarVariant}
@@ -1263,7 +1263,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
         {/* Component 25 */}
         <ComponentCard
-            title="X. Text Segments"
+            title="26. Text Segments"
             description="LMS text segmentation components"
             componentName="TextSegment"
             variant={textSegmentVariant}
