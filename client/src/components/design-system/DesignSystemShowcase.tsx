@@ -71,7 +71,7 @@ export function DesignSystemShowcase() {
   const [checkboxVariant, setCheckboxVariant] = useState("blue");
   const [checkboxSize, setCheckboxSize] = useState("md");
   const [switchVariant, setSwitchVariant] = useState("blue");
-  const [switchSize, setSwitchSize] = useState("default");
+  const [switchSize, setSwitchSize] = useState("md");
   const [textareaVariant, setTextareaVariant] = useState("blue");
   const [textareaSize, setTextareaSize] = useState("md");
   const [tabsVariant, setTabsVariant] = useState("blue");
