@@ -519,6 +519,8 @@ export function DesignSystemShowcase() {
                 onTogglePlay={() => setIsAudioPlaying(!isAudioPlaying)}
                 variant={sliderVariant as any}
                 showVolume={audioSliderProps.showVolume}
+                onVolumeChange={(vol) => console.log('Volume:', vol)}
+                volume={0.8}
               />
             </ComponentCard>
 
