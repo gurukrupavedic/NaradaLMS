@@ -143,7 +143,7 @@ const getStyleApproach = (variant: string, color: string, styleApproach: string)
       fluorescent: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-sm hover:shadow-[0_2px_8px_rgba(59,130,246,0.15)] hover:transform hover:-translate-y-px transition-all duration-150 ease-out`
     },
     outline: {
-      fluorescent: `border border-${color}-200 ${colorInfo.text} bg-white hover:border-${color}-300 hover:bg-${color}-25 hover:shadow-[0_4px_12px_rgba(59,130,246,0.2)] hover:transform hover:-translate-y-px transition-all duration-150 ease-out`
+      fluorescent: `border border-${color}-200 ${colorInfo.text} bg-white hover:border-${color}-300 hover:bg-${color}-25 hover:shadow-[inset_0_1px_0_rgba(59,130,246,0.1),0_4px_12px_rgba(59,130,246,0.2)] hover:transform hover:-translate-y-px transition-all duration-150 ease-out`
     },
     ghost: {
       fluorescent: `${colorInfo.text} hover:bg-${color}-50 hover:shadow-[0_2px_8px_rgba(59,130,246,0.08)] hover:transform hover:-translate-y-px transition-all duration-150 ease-out`
