@@ -162,7 +162,6 @@ const AudioControls = React.forwardRef<HTMLDivElement, AudioControlsProps>(
     loading = false,
     ...props 
   }, ref) => {
-    const [showVolumeSlider, setShowVolumeSlider] = React.useState(false);
     const [showRateSelector, setShowRateSelector] = React.useState(false);
     
     const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -269,11 +268,9 @@ const AudioControls = React.forwardRef<HTMLDivElement, AudioControlsProps>(
           <div className="flex items-center space-x-1">
             {/* Volume Control */}
             {showVolumeControl && (
-              <div className="relative">
+              <div className="flex items-center space-x-2">
                 <button
                   onClick={onMuteToggle}
-                  onMouseEnter={() => setShowVolumeSlider(true)}
-                  onMouseLeave={() => setShowVolumeSlider(false)}
                   className={cn(buttonVariants({ variant, size }))}
                   title={isMuted ? "Unmute" : "Mute"}
                 >
@@ -288,25 +285,18 @@ const AudioControls = React.forwardRef<HTMLDivElement, AudioControlsProps>(
                   )}
                 </button>
                 
-                {/* Volume Slider */}
-                {showVolumeSlider && (
-                  <div 
-                    className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-lg p-2 shadow-lg z-20 w-24"
-                    onMouseEnter={() => setShowVolumeSlider(true)}
-                    onMouseLeave={() => setShowVolumeSlider(false)}
-                  >
-                    <Slider
-                      value={[isMuted ? 0 : volume]}
-                      max={100}
-                      step={1}
-                      variant={variant}
-                      size="sm"
-                      onValueChange={(value) => onVolumeChange?.(value[0])}
-                      orientation="vertical"
-                      className="h-16"
-                    />
-                  </div>
-                )}
+                {/* Volume Slider - Always visible, horizontal */}
+                <div className="w-20">
+                  <Slider
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={isMuted ? 0 : volume}
+                    onChange={(value) => onVolumeChange?.(value)}
+                    variant={variant}
+                    size="sm"
+                  />
+                </div>
               </div>
             )}
             
