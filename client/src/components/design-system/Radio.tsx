@@ -48,7 +48,7 @@ const sizeClasses = {
     label: "text-sm",
     description: "text-xs"
   },
-  md: {
+  default: {
     radio: "h-5 w-5",
     label: "text-base",
     description: "text-sm"
