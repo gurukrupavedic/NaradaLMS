@@ -241,7 +241,84 @@ export function DesignSystemShowcase() {
 
         {/* Component 3 */}
         <ComponentCard
-            title="3. Design System Color Palette"
+            title="3. Typography System"
+            description="Complete typography scale with multi-language support"
+            componentName="Typography"
+            variant="blue"
+            props={{ showSizes: true, showWeights: true }}
+            allSizes={[]}
+          >
+            <div className="space-y-8">
+              {/* Display and Headings */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-gray-700">Display & Headings</h4>
+                <div className="space-y-3">
+                  <div className="flex items-baseline justify-between p-3 bg-gray-50 rounded-md">
+                    <span className="text-4xl font-bold text-gray-900">Display Large</span>
+                    <span className="text-xs text-gray-500">36px / 700</span>
+                  </div>
+                  <div className="flex items-baseline justify-between p-3 bg-gray-50 rounded-md">
+                    <span className="text-3xl font-semibold text-gray-900">Heading 1</span>
+                    <span className="text-xs text-gray-500">30px / 600</span>
+                  </div>
+                  <div className="flex items-baseline justify-between p-3 bg-gray-50 rounded-md">
+                    <span className="text-2xl font-semibold text-gray-900">Heading 2</span>
+                    <span className="text-xs text-gray-500">24px / 600</span>
+                  </div>
+                  <div className="flex items-baseline justify-between p-3 bg-gray-50 rounded-md">
+                    <span className="text-xl font-medium text-gray-900">Heading 3</span>
+                    <span className="text-xs text-gray-500">20px / 500</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Body Text */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-gray-700">Body Text</h4>
+                <div className="space-y-3">
+                  <div className="flex items-baseline justify-between p-3 bg-gray-50 rounded-md">
+                    <span className="text-lg text-gray-800">Body Large</span>
+                    <span className="text-xs text-gray-500">18px / 400</span>
+                  </div>
+                  <div className="flex items-baseline justify-between p-3 bg-gray-50 rounded-md">
+                    <span className="text-base text-gray-800">Body Base</span>
+                    <span className="text-xs text-gray-500">16px / 400</span>
+                  </div>
+                  <div className="flex items-baseline justify-between p-3 bg-gray-50 rounded-md">
+                    <span className="text-sm text-gray-600">Body Small</span>
+                    <span className="text-xs text-gray-500">14px / 400</span>
+                  </div>
+                  <div className="flex items-baseline justify-between p-3 bg-gray-50 rounded-md">
+                    <span className="text-xs font-medium text-gray-600">Caption</span>
+                    <span className="text-xs text-gray-500">12px / 500</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Multi-language Support */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-gray-700">Multi-language Typography</h4>
+                <div className="space-y-3">
+                  <div className="p-3 bg-blue-50 rounded-md">
+                    <div className="text-lg font-medium text-blue-900 mb-1">English (Inter)</div>
+                    <div className="text-base text-blue-800">The quick brown fox jumps over the lazy dog</div>
+                  </div>
+                  <div className="p-3 bg-green-50 rounded-md" style={{ fontFamily: 'Tiro Devanagari Sanskrit, serif' }}>
+                    <div className="text-lg font-medium text-green-900 mb-1">Sanskrit (Tiro Devanagari)</div>
+                    <div className="text-base text-green-800">ॐ गं गणपतये नमः शुक्लाम्बरधरं विष्णुम्</div>
+                  </div>
+                  <div className="p-3 bg-purple-50 rounded-md" style={{ fontFamily: 'Tiro Telugu, serif' }}>
+                    <div className="text-lg font-medium text-purple-900 mb-1">Telugu (Tiro Telugu)</div>
+                    <div className="text-base text-purple-800">వేదాలు మానవత్వానికి అత్యంత పవిత్రమైన గ్రంథాలు</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ComponentCard>
+
+        {/* Component 4 */}
+        <ComponentCard
+            title="X. Design System Color Palette"
             description="Complete 24-color system with primary colors and fluorescent glow variants"
             componentName="ColorSystem"
             variant="blue"
@@ -320,7 +397,7 @@ export function DesignSystemShowcase() {
 
         {/* Component 4 */}
         <ComponentCard
-              title="4. Action Buttons - Sophisticated Design"
+              title="5. Action Buttons - Sophisticated Design"
               description="Classy, modern button styling with refined fluorescent touches"
               componentName="Button"
               variant={buttonVariant}
@@ -379,7 +456,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="5. Checkbox Selection"
+              title="6. Checkbox Selection"
               description="Multi-selection checkboxes with inspector"
               componentName="CheckboxGroup"
               variant={checkboxVariant}
@@ -402,7 +479,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="6. Radio Selection"
+              title="7. Radio Selection"
               description="Single choice radio buttons with inspector"
               componentName="Radio"
               variant={radioVariant}
@@ -424,7 +501,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
         {/* Component 7 */}
         <ComponentCard
-              title="7. Audio Timeline"
+              title="8. Audio Timeline"
               description="Perfect for audio-text synchronization"
               componentName="AudioSlider"
               variant={sliderVariant}
@@ -444,7 +521,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="8. Full Audio Controls"
+              title="9. Full Audio Controls"
               description="Complete audio player with timeline and controls"
               componentName="AudioControls"
               variant={sliderVariant}
@@ -481,7 +558,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="9. Learning Progress"
+              title="10. Learning Progress"
               description="Track student completion"
               componentName="ProgressSlider"
               variant={progressSliderVariant}
@@ -519,7 +596,7 @@ export function DesignSystemShowcase() {
 
         {/* Component 10 */}
         <ComponentCard
-            title="10. Content Navigation"
+            title="11. Content Navigation"
             description="Hierarchical breadcrumb navigation"
             componentName="Breadcrumb"
             variant={breadcrumbVariant}
@@ -569,7 +646,7 @@ export function DesignSystemShowcase() {
 
         {/* Component 11 */}
         <ComponentCard
-              title="11. Text Inputs"
+              title="12. Text Inputs"
               description="Form inputs with focus color variants"
               componentName="Input"
               variant={inputVariant}
@@ -600,7 +677,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="12. Textarea Fields"
+              title="13. Textarea Fields"
               description="Multi-line text input areas"
               componentName="Textarea"
               variant={textareaVariant}
@@ -628,7 +705,7 @@ export function DesignSystemShowcase() {
 
         {/* Component 13 */}
         <ComponentCard
-              title="13. Status Badges"
+              title="X. Status Badges"
               description="Labels and status indicators with multiple styles"
               componentName="Badge"
               variant={badgeVariant}
@@ -682,7 +759,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="14. Progress Bars"
+              title="X. Progress Bars"
               description="Linear progress indicators"
               componentName="Progress"
               variant={progressVariant}
@@ -710,7 +787,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="15. Toggle Switches"
+              title="X. Toggle Switches"
               description="Binary choice controls"
               componentName="Switch"
               variant={switchVariant}
@@ -737,7 +814,7 @@ export function DesignSystemShowcase() {
 
         {/* Component 16 */}
         <ComponentCard
-              title="16. Range Sliders"
+              title="X. Range Sliders"
               description="Numeric input sliders"
               componentName="Slider"
               variant={basicSliderVariant}
@@ -775,7 +852,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="17. Tab Navigation"
+              title="X. Tab Navigation"
               description="Content section tabs"
               componentName="Tabs"
               variant={tabsVariant}
@@ -809,7 +886,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
         {/* Component 18 */}
         <ComponentCard
-            title="18. Content Cards"
+            title="X. Content Cards"
             description="Container cards with glow effects"
             componentName="Card"
             variant={cardVariant}
@@ -861,7 +938,7 @@ export function DesignSystemShowcase() {
 
         {/* Component 19 */}
         <ComponentCard
-              title="19. Loading States"
+              title="X. Loading States"
               description="Loading spinners and indicators"
               componentName="Loading"
               variant={loadingVariant}
@@ -897,7 +974,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="20. Help Tooltips"
+              title="X. Help Tooltips"
               description="Contextual information and guidance tooltips"
               componentName="Tooltip"
               variant={tooltipVariant}
@@ -990,7 +1067,7 @@ export function DesignSystemShowcase() {
 
         {/* Component 21 */}
         <ComponentCard
-              title="21. System Alerts"
+              title="X. System Alerts"
               description="Notifications and feedback messages"
               componentName="Alert"
               variant={alertVariant}
@@ -1034,7 +1111,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="22. Dialog Modals"
+              title="X. Dialog Modals"
               description="Modal dialogs for confirmations"
               componentName="Dialog"
               variant={dialogVariant}
@@ -1108,7 +1185,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
         {/* Component 23 */}
         <ComponentCard
-              title="23. Select Dropdowns"
+              title="X. Select Dropdowns"
               description="Dropdown selection menus"
               componentName="Select"
               variant={selectVariant}
@@ -1152,7 +1229,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
 
             <ComponentCard
-              title="24. Avatar Display"
+              title="X. Avatar Display"
               description="User profile avatars"
               componentName="Avatar"
               variant={avatarVariant}
@@ -1186,7 +1263,7 @@ export function DesignSystemShowcase() {
             </ComponentCard>
         {/* Component 25 */}
         <ComponentCard
-            title="25. Text Segments"
+            title="X. Text Segments"
             description="LMS text segmentation components"
             componentName="TextSegment"
             variant={textSegmentVariant}
