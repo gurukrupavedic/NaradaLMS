@@ -148,9 +148,7 @@ export function DesignSystemShowcase() {
           </p>
         </div>
 
-
-
-        {/* Card Components Showcase */}
+        {/* Card Components Showcase - MOVED TO TOP */}
         <div className="space-y-8">
           <h2 className="text-3xl font-semibold text-gray-900">Card Components</h2>
           
