@@ -154,17 +154,17 @@ const switchThumbVariants = cva(
     variants: {
       size: {
         sm: [
-          "h-5 w-5 data-[state=checked]:translate-x-4",
+          "h-4 w-4 data-[state=checked]:translate-x-5",
           "shadow-[0_2px_6px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)]",
           "data-[state=checked]:shadow-[0_3px_8px_rgba(0,0,0,0.2),0_0_0_1px_rgba(255,255,255,0.8)]"
         ],
         md: [
-          "h-5 w-5 data-[state=checked]:translate-x-6",
+          "h-5 w-5 data-[state=checked]:translate-x-5",
           "shadow-[0_3px_8px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.3)]",
           "data-[state=checked]:shadow-[0_4px_12px_rgba(0,0,0,0.2),0_0_0_1px_rgba(255,255,255,0.8),inset_0_1px_0_rgba(255,255,255,0.4)]"
         ],
         default: [
-          "h-5 w-5 data-[state=checked]:translate-x-6",
+          "h-5 w-5 data-[state=checked]:translate-x-5",
           "shadow-[0_3px_8px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.3)]",
           "data-[state=checked]:shadow-[0_4px_12px_rgba(0,0,0,0.2),0_0_0_1px_rgba(255,255,255,0.8),inset_0_1px_0_rgba(255,255,255,0.4)]"
         ],
