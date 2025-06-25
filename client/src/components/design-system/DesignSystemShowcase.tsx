@@ -337,8 +337,8 @@ export function DesignSystemShowcase() {
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ComponentCard
-              title="Action Buttons - Final Designs"
-              description="2 refined styling approaches for our design system"
+              title="Action Buttons - Fluorescent Design"
+              description="Single refined button styling ready for customization"
               componentName="Button"
               variant={buttonVariant}
               size={buttonSize}
@@ -347,55 +347,38 @@ export function DesignSystemShowcase() {
               onSizeChange={setButtonSize}
             >
               <div className="space-y-6">
-                {/* Style 1: Fluorescent Glow */}
+                {/* Fluorescent Glow Style */}
                 <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-gray-700">1. Fluorescent Glow (Default)</h4>
+                  <h4 className="text-sm font-semibold text-gray-700">Fluorescent Glow Design</h4>
                   <p className="text-xs text-gray-500">Dashboard tile-inspired glow effects with scale transforms</p>
                   <div className="flex gap-2 flex-wrap">
-                    <Button variant="solid" color={buttonVariant} size={buttonSize} styleApproach="fluorescent">
+                    <Button variant="solid" color={buttonVariant} size={buttonSize}>
                       Primary
                     </Button>
-                    <Button variant="outline" color={buttonVariant} size={buttonSize} styleApproach="fluorescent">
+                    <Button variant="outline" color={buttonVariant} size={buttonSize}>
                       Secondary
                     </Button>
-                    <Button variant="ghost" color={buttonVariant} size={buttonSize} styleApproach="fluorescent">
+                    <Button variant="ghost" color={buttonVariant} size={buttonSize}>
                       Ghost
                     </Button>
                   </div>
                 </div>
 
-                {/* Style 2: Card-Inspired */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-gray-700">2. Card-Inspired</h4>
-                  <p className="text-xs text-gray-500">Feature card hover mechanics with multi-layer glow system</p>
-                  <div className="flex gap-2 flex-wrap">
-                    <Button variant="solid" color={buttonVariant} size={buttonSize} styleApproach="card">
-                      Primary
-                    </Button>
-                    <Button variant="outline" color={buttonVariant} size={buttonSize} styleApproach="card">
-                      Secondary
-                    </Button>
-                    <Button variant="ghost" color={buttonVariant} size={buttonSize} styleApproach="card">
-                      Ghost
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Additional Examples */}
+                {/* Interactive Examples */}
                 <div className="space-y-2 pt-4 border-t border-gray-200">
                   <h4 className="text-sm font-semibold text-gray-700">Interactive Examples</h4>
                   <div className="flex gap-2 flex-wrap">
-                    <Button variant="solid" color={buttonVariant} size={buttonSize} styleApproach="fluorescent" loading>
+                    <Button variant="solid" color={buttonVariant} size={buttonSize} loading>
                       Loading
                     </Button>
-                    <Button variant="solid" color={buttonVariant} size={buttonSize} styleApproach="card" icon={<Edit className="h-4 w-4" />}>
+                    <Button variant="solid" color={buttonVariant} size={buttonSize} icon={<Edit className="h-4 w-4" />}>
                       With Icon
                     </Button>
-                    <Button variant="solid" color="rose" size={buttonSize} styleApproach="fluorescent">
+                    <Button variant="solid" color="rose" size={buttonSize}>
                       Delete
                     </Button>
-                    <Button variant="outline" color={buttonVariant} size={buttonSize} styleApproach="card" fullWidth>
-                      Full Width Card Style
+                    <Button variant="outline" color={buttonVariant} size={buttonSize} fullWidth>
+                      Full Width Button
                     </Button>
                   </div>
                 </div>
@@ -404,9 +387,9 @@ export function DesignSystemShowcase() {
                 <div className="space-y-2 pt-4 border-t border-gray-200">
                   <h4 className="text-sm font-semibold text-gray-700">Size Progression</h4>
                   <div className="flex gap-2 items-center flex-wrap">
-                    <Button variant="solid" color={buttonVariant} size="sm" styleApproach="fluorescent">Small</Button>
-                    <Button variant="solid" color={buttonVariant} size="default" styleApproach="fluorescent">Default</Button>
-                    <Button variant="solid" color={buttonVariant} size="lg" styleApproach="fluorescent">Large</Button>
+                    <Button variant="solid" color={buttonVariant} size="sm">Small</Button>
+                    <Button variant="solid" color={buttonVariant} size="default">Default</Button>
+                    <Button variant="solid" color={buttonVariant} size="lg">Large</Button>
                   </div>
                 </div>
               </div>

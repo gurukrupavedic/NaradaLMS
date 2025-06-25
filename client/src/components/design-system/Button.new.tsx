@@ -140,19 +140,13 @@ const getStyleApproach = (variant: string, color: string, styleApproach: string)
 
   const approaches = {
     solid: {
-      fluorescent: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-md hover:shadow-[0_0_30px_rgba(59,130,246,0.8),0_0_60px_rgba(59,130,246,0.4)] hover:transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-300/60`,
-      
-      card: `${colorInfo.primary} text-white shadow-lg hover:shadow-[0_8px_25px_rgba(0,0,0,0.15),0_0_0_2px_rgba(59,130,246,0.4),0_4px_20px_rgba(219,234,254,1),0_0_25px_rgba(219,234,254,0.8)] hover:transform hover:-translate-y-1 transition-all duration-300 border border-${color}-300/50 hover:border-${color}-200`
+      fluorescent: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-md hover:shadow-[0_0_30px_rgba(59,130,246,0.8),0_0_60px_rgba(59,130,246,0.4)] hover:transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 border-2 border-blue-400/30 hover:border-blue-300/60`
     },
     outline: {
-      fluorescent: `border-3 border-${color}-400 bg-white ${colorInfo.text} hover:bg-${color}-50 hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] hover:border-${color}-500 hover:transform hover:-translate-y-1 transition-all duration-300`,
-      
-      card: `border-3 border-${color}-300 bg-white ${colorInfo.text} hover:shadow-[0_8px_25px_rgba(0,0,0,0.1),0_0_0_2px_rgba(59,130,246,0.3),0_4px_20px_rgba(219,234,254,0.8)] hover:border-${color}-400 hover:bg-${color}-25 transition-all duration-300`
+      fluorescent: `border-3 border-${color}-400 bg-white ${colorInfo.text} hover:bg-${color}-50 hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] hover:border-${color}-500 hover:transform hover:-translate-y-1 transition-all duration-300`
     },
     ghost: {
-      fluorescent: `${colorInfo.text} hover:bg-gradient-to-r hover:from-${color}-100 hover:to-${color}-200 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] hover:transform hover:-translate-y-1 hover:scale-105 transition-all duration-300`,
-      
-      card: `${colorInfo.text} hover:bg-white hover:shadow-[0_8px_25px_rgba(0,0,0,0.1),0_0_0_1px_rgba(59,130,246,0.3),0_4px_20px_rgba(219,234,254,0.8)] hover:transform hover:-translate-y-1 transition-all duration-300`
+      fluorescent: `${colorInfo.text} hover:bg-gradient-to-r hover:from-${color}-100 hover:to-${color}-200 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] hover:transform hover:-translate-y-1 hover:scale-105 transition-all duration-300`
     }
   };
 
@@ -163,7 +157,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: "solid" | "outline" | "ghost";
   color?: keyof typeof colorConfig;
   size?: keyof typeof sizeStyles;
-  styleApproach?: "fluorescent" | "card";
+  styleApproach?: "fluorescent";
   loading?: boolean;
   icon?: React.ReactNode;
   iconPosition?: "left" | "right";
