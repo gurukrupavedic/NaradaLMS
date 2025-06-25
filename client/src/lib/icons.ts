@@ -26,6 +26,7 @@ export {
   
   // Navigation
   ChevronLeft,
+  ChevronRight,
   ArrowRight,
   
   // Content Icons
