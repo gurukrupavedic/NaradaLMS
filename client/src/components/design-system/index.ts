@@ -26,6 +26,7 @@ export * from './TextSegment';
 // Form components
 export * from './Checkbox';
 export * from './Radio';
+export { Label } from '@/components/ui/label';
 
 // Specialized components
 export * from './Textarea';
