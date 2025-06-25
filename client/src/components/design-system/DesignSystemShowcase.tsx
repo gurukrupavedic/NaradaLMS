@@ -351,7 +351,7 @@ export function DesignSystemShowcase() {
                 {/* Fluorescent Glow Style */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold text-gray-700">Refined Fluorescent Design</h4>
-                  <p className="text-xs text-gray-500">Classy, sophisticated styling with whisper-light interactions</p>
+                  <p className="text-xs text-gray-500">Classy, sophisticated styling with elegant hover effects</p>
                   <div className="flex gap-4 flex-wrap">
                     <Button variant="solid" color={buttonVariant} size={buttonSize}>
                       Primary

@@ -19,7 +19,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 // Base styles for all buttons - refined for sophisticated feel
-const baseStyles = "inline-flex items-center justify-center font-medium transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer active:scale-[0.99]";
+const baseStyles = "inline-flex items-center justify-center font-medium transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer";
 
 // Size variants with refined proportions for sophisticated feel
 const sizeStyles = {
@@ -140,13 +140,13 @@ const getStyleApproach = (variant: string, color: string, styleApproach: string)
 
   const approaches = {
     solid: {
-      fluorescent: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-sm hover:shadow-[0_2px_8px_rgba(59,130,246,0.15)] hover:transform hover:-translate-y-px transition-all duration-150 ease-out`
+      fluorescent: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-sm hover:shadow-[0_2px_8px_rgba(59,130,246,0.15)] transition-all duration-150 ease-out`
     },
     outline: {
-      fluorescent: `border border-${color}-200 ${colorInfo.text} bg-white hover:border-${color}-300 hover:bg-${color}-25 hover:shadow-[inset_0_1px_0_rgba(59,130,246,0.1),0_4px_12px_rgba(59,130,246,0.2)] hover:transform hover:-translate-y-px transition-all duration-150 ease-out`
+      fluorescent: `border border-${color}-200 ${colorInfo.text} bg-white hover:border-${color}-300 hover:bg-${color}-25 hover:shadow-[inset_0_1px_0_rgba(59,130,246,0.1),0_4px_12px_rgba(59,130,246,0.2)] transition-all duration-150 ease-out`
     },
     ghost: {
-      fluorescent: `${colorInfo.text} hover:bg-${color}-50 hover:shadow-[0_2px_8px_rgba(59,130,246,0.08)] hover:transform hover:-translate-y-px transition-all duration-150 ease-out`
+      fluorescent: `${colorInfo.text} hover:bg-${color}-50 hover:shadow-[0_2px_8px_rgba(59,130,246,0.08)] transition-all duration-150 ease-out`
     }
   };
 
