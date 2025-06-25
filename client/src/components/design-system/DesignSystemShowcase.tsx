@@ -11,6 +11,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./Card";
 import { Button } from "./Button.new";
+import { Button as ButtonNew } from "./Button.new";
 import { Input } from "./Input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./Tabs";
 import { Progress, CircularProgress } from "./Progress";
@@ -868,9 +869,9 @@ export function DesignSystemShowcase() {
                   <CardDescription className={`text-${cardVariant}-500`}>Sanskrit Fundamentals</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant={`outline-${cardVariant}` as any}>
+                  <ButtonNew variant="outline" color={cardVariant as any} className="w-full">
                     Continue Learning
-                  </Button>
+                  </ButtonNew>
                 </CardContent>
               </Card>
 
@@ -881,9 +882,9 @@ export function DesignSystemShowcase() {
                   <CardDescription className="text-green-500">Chapter Recordings</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant="outline-green">
+                  <ButtonNew variant="outline" color="green" className="w-full">
                     Play Audio
-                  </Button>
+                  </ButtonNew>
                 </CardContent>
               </Card>
 
@@ -894,9 +895,9 @@ export function DesignSystemShowcase() {
                   <CardDescription className="text-purple-500">Preferences</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full" variant="outline-purple">
+                  <ButtonNew variant="outline" color="purple" className="w-full">
                     Configure
-                  </Button>
+                  </ButtonNew>
                 </CardContent>
               </Card>
             </div>
