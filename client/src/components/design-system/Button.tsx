@@ -21,12 +21,16 @@ import { cn } from "@/lib/utils";
 // Base styles for all buttons
 const baseStyles = "inline-flex items-center justify-center font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] select-none";
 
-// Size variants with consistent progression
+// Size variants with proper progression and balance
 const sizeStyles = {
-  sm: "h-8 px-3 text-sm rounded-md gap-1.5",
-  default: "h-9 px-4 text-sm rounded-lg gap-2", 
-  lg: "h-10 px-5 text-base rounded-lg gap-2",
-  icon: "h-9 w-9 rounded-lg"
+  sm: "h-8 px-3 py-1.5 text-sm rounded-md gap-1.5",
+  default: "h-10 px-4 py-2 text-sm rounded-lg gap-2", 
+  lg: "h-12 px-6 py-2.5 text-base rounded-lg gap-2.5",
+  icon: {
+    sm: "h-8 w-8 rounded-md",
+    default: "h-10 w-10 rounded-lg", 
+    lg: "h-12 w-12 rounded-lg"
+  }
 };
 
 // Color variants with refined palette
@@ -87,10 +91,16 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ...props 
   }, ref) => {
     const isDisabled = disabled || loading;
+    const isIconOnly = !children && icon;
+    
+    // Use icon-specific sizing for icon-only buttons
+    const sizeClass = isIconOnly ? 
+      (typeof sizeStyles.icon === 'object' ? sizeStyles.icon[size] : sizeStyles.icon) : 
+      sizeStyles[size];
     
     const buttonClasses = cn(
       baseStyles,
-      sizeStyles[size],
+      sizeClass,
       getVariantStyles(variant, color),
       fullWidth && "w-full",
       className

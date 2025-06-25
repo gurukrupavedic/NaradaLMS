@@ -400,12 +400,21 @@ export function DesignSystemShowcase() {
 
                 {/* Size Demonstration */}
                 <div className="space-y-2">
-                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">All Sizes</h4>
+                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Size Progression</h4>
                   <div className="flex gap-2 items-center flex-wrap">
-                    <Button variant="solid" color={buttonVariant} size="sm">SM</Button>
-                    <Button variant="solid" color={buttonVariant} size="default">Default</Button>
-                    <Button variant="solid" color={buttonVariant} size="lg">LG</Button>
-                    <Button variant="solid" color={buttonVariant} size="icon" icon={<Edit className="h-4 w-4" />} />
+                    <Button variant="solid" color={buttonVariant} size="sm">Small (32px)</Button>
+                    <Button variant="solid" color={buttonVariant} size="default">Default (40px)</Button>
+                    <Button variant="solid" color={buttonVariant} size="lg">Large (48px)</Button>
+                  </div>
+                </div>
+
+                {/* Icon Button Sizes */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Icon Buttons</h4>
+                  <div className="flex gap-2 items-center flex-wrap">
+                    <Button variant="solid" color={buttonVariant} size="sm" icon={<Edit className="h-3 w-3" />} />
+                    <Button variant="solid" color={buttonVariant} size="default" icon={<Edit className="h-4 w-4" />} />
+                    <Button variant="solid" color={buttonVariant} size="lg" icon={<Edit className="h-5 w-5" />} />
                   </div>
                 </div>
 
