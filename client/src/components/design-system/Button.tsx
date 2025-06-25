@@ -22,9 +22,9 @@ const baseStyles = "inline-flex items-center justify-center font-medium transiti
 
 // Size variants with proper progression and balance
 const sizeStyles = {
-  sm: "h-8 px-3 py-1.5 text-sm rounded-md gap-1.5",
-  default: "h-10 px-4 py-2 text-sm rounded-lg gap-2", 
-  lg: "h-12 px-6 py-2.5 text-base rounded-lg gap-2.5",
+  sm: "h-8 px-3 text-sm rounded-md gap-1.5",
+  default: "h-10 px-4 text-sm rounded-lg gap-2", 
+  lg: "h-12 px-6 text-base rounded-lg gap-2.5",
   icon: {
     sm: "h-8 w-8 rounded-md",
     default: "h-10 w-10 rounded-lg", 
