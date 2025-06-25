@@ -94,15 +94,6 @@ export const componentConfigs: Record<string, ComponentConfig> = {
     category: "form"
   },
   
-  Dialog: {
-    name: "Dialog",
-    variants: colorVariants,
-    sizes: sizeOptions.full,
-    commonProps: ["destructive", "showCloseButton"],
-    description: "Modal dialogs and confirmations",
-    category: "form"
-  },
-  
   Switch: {
     name: "Switch",
     variants: colorVariants,
