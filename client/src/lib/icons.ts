@@ -28,6 +28,7 @@ export {
   ChevronLeft,
   ChevronRight,
   ArrowRight,
+  Home,
   
   // Content Icons
   FileText,
