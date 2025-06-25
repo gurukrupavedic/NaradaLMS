@@ -48,6 +48,7 @@ export function DesignSystemShowcase() {
   // Table selection state removed
   
   // Enhanced state for component variants
+  const [featureCardVariant, setFeatureCardVariant] = useState("blue");
   const [buttonVariant, setButtonVariant] = useState("blue");
   const [buttonSize, setButtonSize] = useState("default");
   // Table state removed - component will be redesigned
@@ -152,16 +153,17 @@ export function DesignSystemShowcase() {
               title="1. Feature Cards"
               description="Dashboard-style cards for primary application features"
               componentName="FeatureCard"
-              variant="blue"
+              variant={featureCardVariant}
               props={{ interactive: true, glow: "subtle" }}
               allSizes={[]}
+              onVariantChange={setFeatureCardVariant}
             >
               <div className="grid grid-cols-1 gap-6">
-                <Card variant="blue" interactive glow="subtle">
+                <Card variant={featureCardVariant as any} interactive glow="subtle">
                   <CardHeader className="text-center">
                     <div className="mx-auto mb-4">
                       <BookOpen 
-                        className="h-12 w-12 text-blue-600"
+                        className={`h-12 w-12 text-${featureCardVariant}-600`}
                       />
                     </div>
                     <CardTitle className="text-lg">Learning</CardTitle>
@@ -170,7 +172,7 @@ export function DesignSystemShowcase() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button className="w-full" variant="outline" color="blue">
+                    <Button className="w-full" variant="outline" color={featureCardVariant as any}>
                       Get Started
                     </Button>
                   </CardContent>
