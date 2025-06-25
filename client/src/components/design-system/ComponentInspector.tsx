@@ -72,6 +72,7 @@ function getToggleableProps(componentName: string): string[] {
     Slider: ["showValue", "disabled"],
     AudioSlider: ["showVolume"],
     ProgressSlider: ["showPercentage"],
+    AudioControls: ["isPlaying", "showSkipButtons", "showPlaybackRate", "showVolumeControl"],
     TextSegment: ["isMapped", "showActions"]
   };
   

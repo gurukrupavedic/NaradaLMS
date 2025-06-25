@@ -54,6 +54,7 @@ export function DesignSystemShowcase() {
   // Table state removed - component will be redesigned
   const [sliderVariant, setSliderVariant] = useState("orange");
   const [sliderSize, setSliderSize] = useState("md");
+  const [audioSliderProps, setAudioSliderProps] = useState({ showVolume: true });
   const [breadcrumbVariant, setBreadcrumbVariant] = useState("blue");
   const [breadcrumbSize, setBreadcrumbSize] = useState("md");
   
@@ -505,8 +506,9 @@ export function DesignSystemShowcase() {
               description="Specialized audio timeline slider designed for precise audio-text synchronization in educational content. Essential for Vedic LMS where Sanskrit chants, Telugu verses, and English instruction require exact timing alignment with written text for effective learning. Features smooth scrubbing controls, precise time indicators, and visual waveform representation that helps instructors and students navigate audio content efficiently. Built with educational semantics including chapter markers, verse boundaries, and pronunciation guide timing. Supports both instructor content creation workflows and student learning interfaces with different interaction patterns for each use case. Volume controls and playback speed adjustment enable personalized learning experiences. Color variants provide visual feedback for different audio content types and learning states. Integrates seamlessly with text segmentation components to create synchronized multimedia learning experiences. Progress indicators show completion status across lengthy audio content. Essential for language learning, pronunciation training, meditation guidance, and any educational context where audio timing precision directly impacts learning effectiveness and comprehension."
               componentName="AudioSlider"
               variant={sliderVariant}
-              props={{ showVolume: true }}
+              props={{ showVolume: audioSliderProps.showVolume }}
               onVariantChange={setSliderVariant}
+              onPropsChange={setAudioSliderProps}
               allSizes={[]}
             >
               <AudioSlider
@@ -516,7 +518,7 @@ export function DesignSystemShowcase() {
                 isPlaying={isAudioPlaying}
                 onTogglePlay={() => setIsAudioPlaying(!isAudioPlaying)}
                 variant={sliderVariant as any}
-                showVolume={true}
+                showVolume={audioSliderProps.showVolume}
               />
             </ComponentCard>
 
