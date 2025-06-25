@@ -94,7 +94,8 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
             return (
               <Card 
                 key={feature.title}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${getColorClasses(feature.color)}`}
+                variant={feature.color as any}
+                className="cursor-pointer transition-all duration-200"
                 onClick={() => handleFeatureClick(feature.route)}
               >
                 <CardHeader className="text-center">

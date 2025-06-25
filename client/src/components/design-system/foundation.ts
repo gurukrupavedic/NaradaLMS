@@ -224,10 +224,10 @@ export const shadows = {
 // Educational Semantic Colors
 export const semanticColors = {
   // Learning states
-  lesson: colors.blue[600],
-  progress: colors.purple[600],
-  completed: colors.green[600],
-  locked: colors.gray[400],
+  lesson: '#2563eb', // colors.blue[600]
+  progress: '#9333ea', // colors.purple[600]
+  completed: '#16a34a', // colors.green[600]
+  locked: '#9ca3af', // colors.gray[400]
   
   // Content types  
   audio: colors.orange[600],

@@ -20,7 +20,6 @@ export function Landing() {
             variant="blue"
             size="lg"
             onClick={() => window.location.reload()}
-            className="px-12 py-4 text-lg"
           >
             Enter Vedic LMS
           </Button>

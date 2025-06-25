@@ -9,8 +9,9 @@
  */
 
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  Card, CardContent, CardHeader, CardTitle, Badge
+} from '@/components/design-system';
 import { Clock, Link2Off } from 'lucide-react';
 import { TimestampPill } from './TimestampPill';
 import { ConnectedCirclesIcon } from '@shared/components/icons';
