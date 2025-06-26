@@ -141,7 +141,7 @@ export function DesignSystemShowcase() {
         {/* Header */}
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Modern Colorful Design System
+            LMS Design System v1.0
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Modern colorful components for educational experiences

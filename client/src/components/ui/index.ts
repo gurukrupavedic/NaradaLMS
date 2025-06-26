@@ -11,7 +11,7 @@ export { Textarea } from "./textarea";
 
 // Layout Components
 export { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "./card";
-export { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
+export { Tabs, TabsContent, TabsList, TabsTrigger } from "./Tabs";
 export { Separator } from "./separator";
 
 // Form Components
