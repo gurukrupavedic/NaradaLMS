@@ -9,9 +9,9 @@
  */
 
 import React from 'react';
-import { 
-  Button, Card, CardContent, CardHeader, CardTitle, Progress
-} from '@/components/design-system';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { Play, Pause, Square, RotateCcw } from 'lucide-react';
 import { formatDuration } from '@shared/utils/text-segmentation';

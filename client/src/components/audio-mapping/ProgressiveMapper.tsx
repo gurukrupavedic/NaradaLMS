@@ -9,7 +9,7 @@
  */
 
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/design-system';
+import { Card, CardContent } from '@/components/ui/card';
 import { AudioPlayerPanel } from './AudioPlayerPanel';
 import { SegmentMappingGrid } from './SegmentMappingGrid';
 import { MappingWarningDialog } from '@/components/ui/mapping-warning-dialog';

@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, Play, Pause, Volume2, VolumeX } from "lucide-react";
-import { 
-  Button, Card, CardContent, CardHeader, CardTitle, Badge
-} from "@/components/design-system";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
 interface TextReferences {

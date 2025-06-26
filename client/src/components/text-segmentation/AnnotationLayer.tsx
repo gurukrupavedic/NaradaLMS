@@ -9,7 +9,8 @@
  */
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Button, Badge } from '@/components/design-system';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, X } from 'lucide-react';
 import type { TextSegment, Script, ContentMap, TextRange } from '@shared/types/text-segmentation';

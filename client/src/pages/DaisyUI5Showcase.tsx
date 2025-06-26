@@ -8,10 +8,9 @@
 
 import React from "react";
 import { Link } from "wouter";
-import { 
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
-  Button, Badge
-} from "@/components/design-system";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
 export function DaisyUI5Showcase() {

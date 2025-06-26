@@ -30,14 +30,18 @@ import { TabLoadingSkeleton } from "@/components/ui/tab-loading-skeleton";
 // Phase 5C: Query Optimization
 import { usePrefetchAdjacentChapters, usePrefetchAudioMetadata } from "@/lib/query-prefetch";
 
-// UI Components from LMS Design System v1.0
-import { 
-  Button, Card, CardContent, CardHeader, CardTitle,
-  Tabs, TabsContent, TabsList, TabsTrigger,
-  Textarea, Input, Label, Badge,
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-  RichTextEditor
-} from "@/components/design-system";
+// UI Components
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Business Components
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 // Phase 5A: Bundle Optimization - Use centralized icon imports
 import {

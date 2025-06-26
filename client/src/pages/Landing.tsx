@@ -1,4 +1,4 @@
-import { Button } from '@/components/design-system';
+import { Button } from '@/components/ui/button';
 
 export function Landing() {
   return (
@@ -17,9 +17,9 @@ export function Landing() {
           </p>
           
           <Button 
-            variant="blue"
             size="lg"
             onClick={() => window.location.reload()}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
           >
             Enter Vedic LMS
           </Button>

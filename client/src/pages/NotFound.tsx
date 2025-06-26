@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/design-system";
+import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 
 export function NotFound() {

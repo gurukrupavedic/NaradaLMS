@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TabsContent } from "@/components/ui/Tabs";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/design-system";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { ScriptSelector } from "@/components/common/ScriptSelector";

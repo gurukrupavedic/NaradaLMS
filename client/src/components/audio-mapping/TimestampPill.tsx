@@ -9,7 +9,7 @@
  */
 
 import React, { useState } from 'react';
-import { Input } from '@/components/design-system';
+import { Input } from '@/components/ui/input';
 import { Play, X, Check, X as Cancel } from 'lucide-react';
 import { formatDuration } from '@shared/utils/text-segmentation';
 

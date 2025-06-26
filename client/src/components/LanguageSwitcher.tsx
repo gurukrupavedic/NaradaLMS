@@ -1,4 +1,4 @@
-import { Button } from "@/components/design-system";
+import { Button } from "@/components/ui/button";
 
 interface LanguageSwitcherProps {
   selectedLanguage: string;

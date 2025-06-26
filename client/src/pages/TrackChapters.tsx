@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { 
-  Button, Card, CardContent, CardHeader, CardTitle,
-  Input, Textarea, Label, Badge
-} from "@/components/design-system";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
 import { ArrowLeft, Plus, FileText } from "lucide-react";

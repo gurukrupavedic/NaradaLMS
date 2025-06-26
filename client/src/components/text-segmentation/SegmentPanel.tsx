@@ -9,7 +9,8 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Button, Badge } from '@/components/design-system';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Trash2, Play, Circle, Link, Link2Off } from 'lucide-react';
 import { ConnectedCirclesIcon } from '@shared/components/icons';
 import { LinkStatusIcon } from '@shared/components/LinkStatusIcon';

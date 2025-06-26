@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TabsContent } from "@/components/ui/Tabs";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/design-system";
+import { Label } from "@/components/ui/label";
 import { ScriptSelector } from "@/components/common/ScriptSelector";
 import { AnnotationLayer } from "@/components/text-segmentation/AnnotationLayer";
 import { LinkStatusIcon } from "@/components/ui/link-status-icon";

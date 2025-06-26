@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from '@/components/design-system';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Play, Pause, Volume2 } from 'lucide-react';
 import type { AudioFile, AudioSegmentMapping, Segment } from '@shared/schema';
