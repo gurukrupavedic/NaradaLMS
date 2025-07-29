@@ -902,11 +902,21 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Content update mutation
   const updateContentMutation = useMutation({
     mutationFn: async (content: any) => {
-      await apiRequest("PATCH", `/api/chapters/${chapterId}`, {
+      const response = await apiRequest("PATCH", `/api/chapters/${chapterId}`, {
         content,
       });
+      return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (savedChapter) => {
+      // Sync local state with server response to prevent desync
+      if (savedChapter?.content) {
+        setTextContent({
+          te: savedChapter.content.te || "",
+          hi: savedChapter.content.hi || "",
+          en: savedChapter.content.en || "",
+        });
+      }
+      
       toast({ title: "Content saved" });
       queryClient.invalidateQueries({
         queryKey: [`/api/chapters/${chapterId}/details`],
@@ -926,10 +936,19 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Initialize text content when chapter loads (original - preserve until hooks validated)
   useEffect(() => {
     if (activeChapter?.content && !USE_EXTRACTED_HOOKS) {
-      setTextContent({
-        te: activeChapter.content.te || "",
-        hi: activeChapter.content.hi || "",
-        en: activeChapter.content.en || "",
+      setTextContent(prev => {
+        const newContent = {
+          te: activeChapter.content.te || "",
+          hi: activeChapter.content.hi || "",
+          en: activeChapter.content.en || "",
+        };
+        
+        // Only update if content actually changed
+        if (JSON.stringify(prev) === JSON.stringify(newContent)) {
+          return prev;
+        }
+        
+        return newContent;
       });
     }
   }, [activeChapter?.content, USE_EXTRACTED_HOOKS]);
