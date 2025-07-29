@@ -69,10 +69,14 @@ export const ContentTab = React.memo(function ContentTab({
 }: ContentTabProps) {
   // Phase 5B: Memoize expensive operations
   const contentEditorProps = React.useMemo(() => ({
-    content: textContent[contentScript] || "",
-    onChange: (content: string) => onContentChange(contentScript, content),
-    editable: !isPublished,
+    value: textContent[contentScript] || "",
+    onChange: (content: string) => {
+      console.log('ContentTab: Content changed for', contentScript, ':', content.substring(0, 50) + '...');
+      onContentChange(contentScript, content);
+    },
+    disabled: isPublished,
     placeholder: `Enter content in ${contentScript.toUpperCase()}...`,
+    language: contentScript,
     className: "min-h-96",
   }), [textContent, contentScript, isPublished, onContentChange]);
 
@@ -169,7 +173,7 @@ export const ContentTab = React.memo(function ContentTab({
                     Description
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    {chapter?.description || "No description provided"}
+                    {(chapter as any)?.description || "No description provided"}
                   </p>
                 </div>
               </>
@@ -184,8 +188,9 @@ export const ContentTab = React.memo(function ContentTab({
               <CardTitle>Content Editor</CardTitle>
               <div className="flex items-center gap-4">
                 <ScriptSelector
-                  value={contentScript}
-                  onValueChange={handleScriptChange}
+                  currentScript={contentScript}
+                  availableScripts={["te", "hi", "en"]}
+                  onScriptChange={onScriptChange}
                   disabled={isPublished}
                 />
                 {updateContentMutation.isPending && (
