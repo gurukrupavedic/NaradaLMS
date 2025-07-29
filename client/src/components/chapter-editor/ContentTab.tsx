@@ -20,9 +20,11 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { ScriptSelector } from "@/components/common/ScriptSelector";
 import { Edit2, Save, X } from "@/lib/icons";
 
+import type { Chapter } from "@shared/schema";
+
 interface ContentTabProps {
   // Chapter data
-  chapter: any;
+  chapter: Chapter | undefined;
   textContent: { te: string; hi: string; en: string };
   contentScript: "te" | "hi" | "en";
   isPublished: boolean;

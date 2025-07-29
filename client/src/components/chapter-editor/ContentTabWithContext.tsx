@@ -9,6 +9,7 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { ScriptSelector } from "@/components/common/ScriptSelector";
 import { Edit2, Save, X } from "lucide-react";
 import { useChapterData, useMetadataEditing, useChapterEditor } from "@/contexts/ChapterEditorContext";
+import type { Chapter } from "@shared/schema";
 
 interface ContentTabWithContextProps {
   // Actions that still need to be passed from parent (mutations)

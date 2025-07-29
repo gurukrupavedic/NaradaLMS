@@ -35,20 +35,12 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import type { Chapter } from "@shared/schema";
 
 interface ChapterContent {
   te?: string;
   hi?: string;
   en?: string;
-}
-
-interface ChapterData {
-  id: number;
-  trackId: number;
-  title: string;
-  description: string;
-  status: "draft" | "published";
-  content: ChapterContent;
 }
 
 export function useChapterData(chapterId: string) {
@@ -78,7 +70,7 @@ export function useChapterData(chapterId: string) {
     data: chapter,
     isLoading: chapterLoading,
     error: chapterError,
-  } = useQuery({
+  } = useQuery<Chapter>({
     queryKey: [`/api/chapters/${chapterId}/details`],
     enabled: !!chapterId,
   });
@@ -159,9 +151,9 @@ export function useChapterData(chapterId: string) {
     if (chapter?.content) {
       console.log('Chapter content loaded:', JSON.stringify(chapter.content, null, 2));
       setTextContent({
-        te: chapter.content.te || "",
-        hi: chapter.content.hi || "",
-        en: chapter.content.en || "",
+        te: (chapter.content?.te as string) || "",
+        hi: (chapter.content?.hi as string) || "",
+        en: (chapter.content?.en as string) || "",
       });
     }
   }, [chapter]);
@@ -170,9 +162,9 @@ export function useChapterData(chapterId: string) {
   useEffect(() => {
     if (chapter?.content) {
       setChapterContent({
-        te: chapter.content.te || "",
-        hi: chapter.content.hi || "",
-        en: chapter.content.en || "",
+        te: (chapter.content?.te as string) || "",
+        hi: (chapter.content?.hi as string) || "",
+        en: (chapter.content?.en as string) || "",
       });
     }
   }, [chapter?.content]);
@@ -182,9 +174,9 @@ export function useChapterData(chapterId: string) {
     if (!chapter?.content || isPublished) return;
 
     const hasChanges =
-      textContent.te !== (chapter.content.te || "") ||
-      textContent.hi !== (chapter.content.hi || "") ||
-      textContent.en !== (chapter.content.en || "");
+      textContent.te !== ((chapter.content?.te as string) || "") ||
+      textContent.hi !== ((chapter.content?.hi as string) || "") ||
+      textContent.en !== ((chapter.content?.en as string) || "");
 
     if (!hasChanges) return;
 
@@ -199,7 +191,7 @@ export function useChapterData(chapterId: string) {
   // Metadata editing helpers
   const startEditingMetadata = () => {
     setEditingTitle(chapter?.title || "");
-    setEditingDescription(chapter?.description || "");
+    setEditingDescription((chapter as any)?.description || "");
     setIsEditingMetadata(true);
   };
 
