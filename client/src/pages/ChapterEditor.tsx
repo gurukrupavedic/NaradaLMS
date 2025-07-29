@@ -951,14 +951,42 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Auto-save functionality with debounce (original - preserve until hooks validated)
   useEffect(() => {
-    if (!activeChapter?.content || isPublished || USE_EXTRACTED_HOOKS) return;
+    console.log('Auto-save useEffect triggered - debugging:', {
+      hasActiveChapterContent: !!activeChapter?.content,
+      isPublished,
+      USE_EXTRACTED_HOOKS,
+      textContent,
+      activeChapterContent: activeChapter?.content
+    });
+
+    if (!activeChapter?.content || isPublished || USE_EXTRACTED_HOOKS) {
+      console.log('Auto-save early return:', {
+        noActiveChapterContent: !activeChapter?.content,
+        isPublished,
+        USE_EXTRACTED_HOOKS
+      });
+      return;
+    }
 
     const hasChanges =
       textContent.te !== (activeChapter.content.te || "") ||
       textContent.hi !== (activeChapter.content.hi || "") ||
       textContent.en !== (activeChapter.content.en || "");
 
-    if (!hasChanges) return;
+    console.log('Auto-save comparison check:', {
+      'textContent.te': textContent.te,
+      'activeChapter.content.te': activeChapter.content.te,
+      'textContent.hi': textContent.hi, 
+      'activeChapter.content.hi': activeChapter.content.hi,
+      'textContent.en': textContent.en,
+      'activeChapter.content.en': activeChapter.content.en,
+      hasChanges
+    });
+
+    if (!hasChanges) {
+      console.log('Auto-save: No changes detected, skipping');
+      return;
+    }
 
     console.log('Auto-save triggered - hasChanges detected:', {
       textContent,
