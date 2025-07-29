@@ -948,21 +948,30 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Auto-save functionality with debounce (original - preserve until hooks validated)
   useEffect(() => {
-    if (!activeChapter?.content || isPublished || USE_EXTRACTED_HOOKS) return;
+    if (!activeChapter?.content || isPublished || USE_EXTRACTED_HOOKS) {
+      console.log('Auto-save skipped: chapter=', !!activeChapter?.content, 'published=', isPublished, 'hooks=', USE_EXTRACTED_HOOKS);
+      return;
+    }
 
     const hasChanges =
       textContent.te !== (activeChapter.content.te || "") ||
       textContent.hi !== (activeChapter.content.hi || "") ||
       textContent.en !== (activeChapter.content.en || "");
 
+    console.log('Auto-save check: hasChanges=', hasChanges, 'textContent=', textContent, 'original=', activeChapter.content);
+
     if (!hasChanges) return;
 
+    console.log('Auto-save: Changes detected, setting 2-second timer...');
     const timeoutId = setTimeout(() => {
       console.log('Auto-save triggering with content:', textContent);
       updateContentMutation.mutate(textContent);
     }, 2000); // Auto-save after 2 seconds of no typing
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      console.log('Auto-save: Clearing previous timer');
+      clearTimeout(timeoutId);
+    };
   }, [textContent, activeChapter?.content, isPublished, updateContentMutation, USE_EXTRACTED_HOOKS]);
 
   // Add global mouse event listeners for dragging
@@ -1845,12 +1854,17 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               <div className="h-[calc(100vh-300px)]">
                 <RichTextEditor
                   value={textContent[contentScript] || ''}
-                  onChange={(html) =>
-                    setTextContent((prev) => ({
-                      ...prev,
-                      [contentScript]: html,
-                    }))
-                  }
+                  onChange={(html) => {
+                    console.log('ChapterEditor: RichTextEditor onChange called with:', html.substring(0, 50) + '...');
+                    setTextContent((prev) => {
+                      const newContent = {
+                        ...prev,
+                        [contentScript]: html,
+                      };
+                      console.log('ChapterEditor: Setting textContent to:', newContent);
+                      return newContent;
+                    });
+                  }}
                   placeholder={`Enter ${contentScript === "te" ? "Telugu" : contentScript === "hi" ? "Devanagari" : "IAST"} content...`}
                   language={contentScript}
                 />
