@@ -1883,10 +1883,17 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 <RichTextEditor
                   value={textContent[contentScript] || ''}
                   onChange={(html) => {
-                    setTextContent((prev) => ({
-                      ...prev,
-                      [contentScript]: html,
-                    }));
+                    console.log('ChapterEditor onChange - received HTML:', html);
+                    console.log('ChapterEditor onChange - contentScript:', contentScript);
+                    console.log('ChapterEditor onChange - updating textContent state');
+                    setTextContent((prev) => {
+                      const newState = {
+                        ...prev,
+                        [contentScript]: html,
+                      };
+                      console.log('ChapterEditor onChange - new textContent state:', newState);
+                      return newState;
+                    });
                   }}
                   disabled={isPublished}
                   placeholder={`Enter ${contentScript === "te" ? "Telugu" : contentScript === "hi" ? "Devanagari" : "IAST"} content...`}
