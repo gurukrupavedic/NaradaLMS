@@ -925,6 +925,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Initialize text content when chapter loads (original - preserve until hooks validated)
   useEffect(() => {
+    console.log('Chapter load effect triggered. Chapter exists:', !!activeChapter?.content, 'USE_EXTRACTED_HOOKS:', USE_EXTRACTED_HOOKS);
     if (activeChapter?.content && !USE_EXTRACTED_HOOKS) {
       console.log('Chapter content loaded:', JSON.stringify(activeChapter.content, null, 2));
       setTextContent({
@@ -932,6 +933,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
         hi: activeChapter.content.hi || "",
         en: activeChapter.content.en || "",
       });
+      console.log('TextContent state updated from chapter load');
+    } else {
+      console.log('Chapter content not loaded - activeChapter?.content:', !!activeChapter?.content, 'USE_EXTRACTED_HOOKS:', USE_EXTRACTED_HOOKS);
     }
   }, [activeChapter, USE_EXTRACTED_HOOKS]);
 
@@ -1852,6 +1856,16 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               </div>
 
               <div className="h-[calc(100vh-300px)]">
+                <div className="border-2 border-red-500 p-2 mb-2 bg-red-50">
+                  <strong>DEBUG:</strong> Editor loaded. Current value length: {(textContent[contentScript] || '').length}. 
+                  Script: {contentScript}. Published: {isPublished ? 'YES' : 'NO'}.
+                  <button 
+                    onClick={() => console.log('DEBUG: Current textContent state:', textContent)}
+                    className="ml-2 px-2 py-1 bg-blue-500 text-white text-xs rounded"
+                  >
+                    Log Current State
+                  </button>
+                </div>
                 <RichTextEditor
                   value={textContent[contentScript] || ''}
                   onChange={(html) => {
@@ -1865,6 +1879,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       return newContent;
                     });
                   }}
+                  disabled={isPublished}
                   placeholder={`Enter ${contentScript === "te" ? "Telugu" : contentScript === "hi" ? "Devanagari" : "IAST"} content...`}
                   language={contentScript}
                 />
