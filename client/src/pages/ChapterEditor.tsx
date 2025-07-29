@@ -936,19 +936,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Initialize text content when chapter loads (original - preserve until hooks validated)
   useEffect(() => {
     if (activeChapter?.content && !USE_EXTRACTED_HOOKS) {
-      setTextContent(prev => {
-        const newContent = {
-          te: activeChapter.content.te || "",
-          hi: activeChapter.content.hi || "",
-          en: activeChapter.content.en || "",
-        };
-        
-        // Only update if content actually changed
-        if (JSON.stringify(prev) === JSON.stringify(newContent)) {
-          return prev;
-        }
-        
-        return newContent;
+      setTextContent({
+        te: activeChapter.content.te || "",
+        hi: activeChapter.content.hi || "",
+        en: activeChapter.content.en || "",
       });
     }
   }, [activeChapter?.content, USE_EXTRACTED_HOOKS]);
@@ -975,7 +966,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
     if (!hasChanges) return;
 
+    console.log('Auto-save triggered - hasChanges detected:', {
+      textContent,
+      activeChapterContent: activeChapter.content,
+      hasChanges
+    });
+
     const timeoutId = setTimeout(() => {
+      console.log('Executing auto-save mutation with content:', textContent);
       updateContentMutation.mutate(textContent);
     }, 2000); // Auto-save after 2 seconds of no typing
 
