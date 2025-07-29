@@ -149,13 +149,9 @@ export function RichTextEditor({
       console.log('Editor HTML:', editor.getHTML());
       console.log('Editor focused:', editor.isFocused);
       
-      // Only update if the editor is not focused (user is not typing)
-      if (!editor.isFocused) {
-        console.log('Updating editor content with external value');
-        editor.commands.setContent(value, false);
-      } else {
-        console.log('Skipping update - editor is focused');
-      }
+      // Always update from external value - this fixes the auto-save persistence issue
+      console.log('Updating editor content with external value (forced)');
+      editor.commands.setContent(value, false);
     }
   }, [value, editor]);
 

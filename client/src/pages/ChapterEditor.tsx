@@ -908,16 +908,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       return await response.json();
     },
     onSuccess: (savedChapter) => {
-      // Sync local state with server response to prevent desync
-      if (savedChapter?.content) {
-        setTextContent({
-          te: savedChapter.content.te || "",
-          hi: savedChapter.content.hi || "",
-          en: savedChapter.content.en || "",
-        });
-      }
-      
+      console.log('Content save success - server response:', savedChapter);
       toast({ title: "Content saved" });
+      
+      // Don't sync local state here - let cache invalidation handle it
       queryClient.invalidateQueries({
         queryKey: [`/api/chapters/${chapterId}/details`],
       });
