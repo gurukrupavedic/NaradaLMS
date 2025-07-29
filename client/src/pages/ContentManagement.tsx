@@ -8,7 +8,7 @@ import { Plus, FileText, ArrowLeft } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TrackCard, ConfirmationModal } from "@/components/content-management";
 
-import { TrackWithChapters } from '@shared/types';
+import type { Track } from '@shared/schema';
 
 export function ContentManagement() {
   const [location, setLocation] = useLocation();
