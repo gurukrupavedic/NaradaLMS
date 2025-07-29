@@ -968,18 +968,13 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       return;
     }
 
-    const hasChanges =
-      textContent.te !== (activeChapter.content.te || "") ||
-      textContent.hi !== (activeChapter.content.hi || "") ||
-      textContent.en !== (activeChapter.content.en || "");
+    // Only check the currently active script for changes
+    const hasChanges = textContent[contentScript] !== (activeChapter.content?.[contentScript] || "");
 
     console.log('Auto-save comparison check:', {
-      'textContent.te': textContent.te,
-      'activeChapter.content.te': activeChapter.content.te,
-      'textContent.hi': textContent.hi, 
-      'activeChapter.content.hi': activeChapter.content.hi,
-      'textContent.en': textContent.en,
-      'activeChapter.content.en': activeChapter.content.en,
+      contentScript,
+      'textContent[contentScript]': textContent[contentScript],
+      'activeChapter.content[contentScript]': activeChapter.content?.[contentScript],
       hasChanges
     });
 
