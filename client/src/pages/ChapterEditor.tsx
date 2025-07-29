@@ -925,19 +925,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Initialize text content when chapter loads (original - preserve until hooks validated)
   useEffect(() => {
-    console.log('Chapter load effect triggered. Chapter exists:', !!activeChapter?.content, 'USE_EXTRACTED_HOOKS:', USE_EXTRACTED_HOOKS);
     if (activeChapter?.content && !USE_EXTRACTED_HOOKS) {
-      console.log('Chapter content loaded:', JSON.stringify(activeChapter.content, null, 2));
       setTextContent({
         te: activeChapter.content.te || "",
         hi: activeChapter.content.hi || "",
         en: activeChapter.content.en || "",
       });
-      console.log('TextContent state updated from chapter load');
-    } else {
-      console.log('Chapter content not loaded - activeChapter?.content:', !!activeChapter?.content, 'USE_EXTRACTED_HOOKS:', USE_EXTRACTED_HOOKS);
     }
-  }, [activeChapter, USE_EXTRACTED_HOOKS]);
+  }, [activeChapter?.content, USE_EXTRACTED_HOOKS]);
 
   // Initialize chapterContent for segmentation display (original - preserve until hooks validated)
   useEffect(() => {
@@ -952,30 +947,20 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Auto-save functionality with debounce (original - preserve until hooks validated)
   useEffect(() => {
-    if (!activeChapter?.content || isPublished || USE_EXTRACTED_HOOKS) {
-      console.log('Auto-save skipped: chapter=', !!activeChapter?.content, 'published=', isPublished, 'hooks=', USE_EXTRACTED_HOOKS);
-      return;
-    }
+    if (!activeChapter?.content || isPublished || USE_EXTRACTED_HOOKS) return;
 
     const hasChanges =
       textContent.te !== (activeChapter.content.te || "") ||
       textContent.hi !== (activeChapter.content.hi || "") ||
       textContent.en !== (activeChapter.content.en || "");
 
-    console.log('Auto-save check: hasChanges=', hasChanges, 'textContent=', textContent, 'original=', activeChapter.content);
-
     if (!hasChanges) return;
 
-    console.log('Auto-save: Changes detected, setting 2-second timer...');
     const timeoutId = setTimeout(() => {
-      console.log('Auto-save triggering with content:', textContent);
       updateContentMutation.mutate(textContent);
     }, 2000); // Auto-save after 2 seconds of no typing
 
-    return () => {
-      console.log('Auto-save: Clearing previous timer');
-      clearTimeout(timeoutId);
-    };
+    return () => clearTimeout(timeoutId);
   }, [textContent, activeChapter?.content, isPublished, updateContentMutation, USE_EXTRACTED_HOOKS]);
 
   // Add global mouse event listeners for dragging
@@ -1856,28 +1841,13 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               </div>
 
               <div className="h-[calc(100vh-300px)]">
-                <div className="border-2 border-red-500 p-2 mb-2 bg-red-50">
-                  <strong>DEBUG:</strong> Editor loaded. Current value length: {(textContent[contentScript] || '').length}. 
-                  Script: {contentScript}. Published: {isPublished ? 'YES' : 'NO'}.
-                  <button 
-                    onClick={() => console.log('DEBUG: Current textContent state:', textContent)}
-                    className="ml-2 px-2 py-1 bg-blue-500 text-white text-xs rounded"
-                  >
-                    Log Current State
-                  </button>
-                </div>
                 <RichTextEditor
                   value={textContent[contentScript] || ''}
                   onChange={(html) => {
-                    console.log('ChapterEditor: RichTextEditor onChange called with:', html.substring(0, 50) + '...');
-                    setTextContent((prev) => {
-                      const newContent = {
-                        ...prev,
-                        [contentScript]: html,
-                      };
-                      console.log('ChapterEditor: Setting textContent to:', newContent);
-                      return newContent;
-                    });
+                    setTextContent((prev) => ({
+                      ...prev,
+                      [contentScript]: html,
+                    }));
                   }}
                   disabled={isPublished}
                   placeholder={`Enter ${contentScript === "te" ? "Telugu" : contentScript === "hi" ? "Devanagari" : "IAST"} content...`}

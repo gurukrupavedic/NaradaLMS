@@ -70,10 +70,7 @@ export const ContentTab = React.memo(function ContentTab({
   // Phase 5B: Memoize expensive operations
   const contentEditorProps = React.useMemo(() => ({
     value: textContent[contentScript] || "",
-    onChange: (content: string) => {
-      console.log('ContentTab: Content changed for', contentScript, ':', content.substring(0, 50) + '...');
-      onContentChange(contentScript, content);
-    },
+    onChange: (content: string) => onContentChange(contentScript, content),
     disabled: isPublished,
     placeholder: `Enter content in ${contentScript.toUpperCase()}...`,
     language: contentScript,
