@@ -285,6 +285,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Content editor script state (moved here to be available for queries)
   const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
+  
+  // Auto-save status state
+  const [saveStatus, setSaveStatus] = useState<'clean' | 'saving' | 'saved'>('clean');
 
   // Fetch chapter details first (needed for activeChapter calculation)
   const { data: chapter, isLoading: chapterLoading } = useQuery<ChapterData>({
@@ -902,6 +905,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Content update mutation
   const updateContentMutation = useMutation({
     mutationFn: async (content: any) => {
+      setSaveStatus('saving');
       const response = await apiRequest("PATCH", `/api/chapters/${chapterId}`, {
         content,
       });
@@ -909,7 +913,13 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     },
     onSuccess: (savedChapter) => {
       console.log('Content save success - server response:', savedChapter);
+      setSaveStatus('saved');
       toast({ title: "Content saved" });
+      
+      // Auto-hide success status after 3 seconds
+      setTimeout(() => {
+        setSaveStatus('clean');
+      }, 3000);
       
       // Don't sync local state here - let cache invalidation handle it
       queryClient.invalidateQueries({
@@ -917,6 +927,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       });
     },
     onError: (error: any) => {
+      setSaveStatus('clean');
       toast({
         title: "Failed to save content",
         description: error.message,
@@ -1863,17 +1874,19 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   onScriptChange={setContentScript}
                 />
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  {updateContentMutation.isPending ? (
+                  {saveStatus === 'saving' && (
                     <>
                       <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
                       Saving...
                     </>
-                  ) : (
+                  )}
+                  {saveStatus === 'saved' && (
                     <>
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                       Auto-saved
                     </>
                   )}
+                  {/* saveStatus === 'clean' shows nothing */}
                 </div>
               </div>
 
