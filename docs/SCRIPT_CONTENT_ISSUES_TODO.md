@@ -22,7 +22,7 @@ This document tracks critical inconsistencies in script labeling, content format
 
 ### 🏷️ ISSUE 1: Script Labeling Inconsistencies
 
-**Priority:** High  
+**Priority:** Medium  
 **Effort:** 2 hours  
 **Risk:** Low  
 
@@ -280,22 +280,22 @@ return htmlRegex.test(content);
 ## Implementation Priority
 
 ### Phase 1 (Critical - Week 1)
-- Issue 4: Segment Positioning Calculation Errors
-- Issue 1: Script Labeling Inconsistencies  
-- Issue 2: Font Class Fragmentation
+- Issue 4: Segment Positioning Calculation Errors (CRITICAL - Data corruption risk)
 
-### Phase 2 (High Priority - Week 2)
-- Issue 3: HTML Content Processing Inconsistencies
-- Issue 5: Database Content Encoding Problems
-- Issue 8: Component Interface Mismatches
+### Phase 2 (High Priority - Week 2)  
+- Issue 2: Font Class Fragmentation (HIGH - Visual inconsistency affects usability)
+- Issue 3: HTML Content Processing Inconsistencies (HIGH - Affects core content display)
+- Issue 5: Database Content Encoding Problems (HIGH - Potential data integrity issues)
 
 ### Phase 3 (Medium Priority - Week 3)
-- Issue 6: Content Format Detection Logic
-- Issue 9: Content Validation Absence
-- Issue 10: Font Loading Coordination
+- Issue 1: Script Labeling Inconsistencies (MEDIUM - Cosmetic consistency issue)
+- Issue 8: Component Interface Mismatches (MEDIUM - Technical debt)
+- Issue 6: Content Format Detection Logic (MEDIUM - Edge case handling)
+- Issue 9: Content Validation Absence (MEDIUM - Input validation)
+- Issue 10: Font Loading Coordination (MEDIUM - Resource optimization)
 
 ### Phase 4 (Enhancement - Week 4)
-- Issue 7: Script-Specific Typography Rules
+- Issue 7: Script-Specific Typography Rules (LOW - Enhancement feature)
 
 ## Success Criteria
 
