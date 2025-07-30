@@ -991,7 +991,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
     const timeoutId = setTimeout(() => {
       console.log('Executing auto-save mutation with content:', textContent);
-      updateContentMutation.mutate(textContent);
+      updateContentMutation.mutate({
+        ...activeChapter.content,
+        [contentScript]: textContent[contentScript],
+      });
     }, 2000); // Auto-save after 2 seconds of no typing
 
     return () => clearTimeout(timeoutId);
