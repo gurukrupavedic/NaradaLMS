@@ -998,7 +998,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }, 2000); // Auto-save after 2 seconds of no typing
 
     return () => clearTimeout(timeoutId);
-  }, [textContent, activeChapter?.content, isPublished, updateContentMutation, USE_EXTRACTED_HOOKS]);
+  }, [textContent, activeChapter?.content, isPublished, contentScript]);
 
   // Add global mouse event listeners for dragging
   useEffect(() => {
