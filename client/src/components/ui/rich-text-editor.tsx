@@ -395,19 +395,19 @@ export function RichTextEditor({
             onValueChange={setFontSize}
             disabled={disabled}
           >
-            <SelectTrigger className="w-[90px] h-8 text-xs">
+            <SelectTrigger className="w-[80px] h-8 text-xs">
               <SelectValue placeholder="Size" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="default">Default</SelectItem>
-              <SelectItem value="12px">Small (12px)</SelectItem>
+              <SelectItem value="12px">12px</SelectItem>
               <SelectItem value="14px">14px</SelectItem>
-              <SelectItem value="16px">Normal (16px)</SelectItem>
+              <SelectItem value="16px">16px</SelectItem>
               <SelectItem value="18px">18px</SelectItem>
-              <SelectItem value="20px">Large (20px)</SelectItem>
+              <SelectItem value="20px">20px</SelectItem>
               <SelectItem value="24px">24px</SelectItem>
               <SelectItem value="28px">28px</SelectItem>
-              <SelectItem value="32px">Huge (32px)</SelectItem>
+              <SelectItem value="32px">32px</SelectItem>
               <SelectItem value="36px">36px</SelectItem>
               <SelectItem value="48px">48px</SelectItem>
             </SelectContent>
