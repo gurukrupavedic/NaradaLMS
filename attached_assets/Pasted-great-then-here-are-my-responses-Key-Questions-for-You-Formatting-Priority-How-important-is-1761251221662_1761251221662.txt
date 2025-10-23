@@ -1,0 +1,23 @@
+great, then here are my responses ...
+Key Questions for You:
+Formatting Priority: How important is showing the rich formatting (fonts, sizes, colors) in Preview? Or is plain text acceptable for MVP?
+yea I dont mind sticking to plain text then, on all 3 tabs - segmentation, mapping and preview. because this is where we are creating text tags,  creating audio tags, mapping text and audio, then click a text tag to automatically let the audio player start at the mapped audio tag. 
+
+
+ContentEntry Migration: Are you planning to implement that {display, segmentation} structure? That would solve the HTML/plain text split elegantly.
+
+yes, if you think this is the way you suggest we can achieve the desired display but make text tagging and text tag highlighting work, I dont mind doing a full clean up. I also want you to understand that this application is not yet in production. Which means we do not have a burden of data migration. We can clean up all the data and start fresh as many times as we want. 
+
+Highlighting Style: When audio plays, should the active segment:
+
+Change background color?
+Glow/pulse?
+Auto-scroll into view?
+Show progress bar as it speaks?
+Audio Controls: What playback features do you want? (play/pause, seek, speed, loop segment?)
+
+I have a screenshot of this. Basically all the ui elements are something we already have or implemented. The very simple thing here is that. The preview screen allows user to see the text with all the text segmentation/ tags highlighted, mouseover and click highlighting is all exactly same behavior as in 'segmentation' tab. only difference is that when user clicks on a text segment, we high light that segment in blue and also automatically move the audio control player to the start time of the mapped audio segment corresponding to the text segment user has highlighted on.
+
+
+
+My Recommendation: Start with plain text Preview for MVP to validate the workflow end-to-end, then enhance with HTML rendering once that's working. What do you think?
