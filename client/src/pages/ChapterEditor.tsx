@@ -364,6 +364,16 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Active tab state for proper tab management
   const [activeTab, setActiveTab] = useState<string>("content");
   
+  // Preview tab state variables
+  const [selectedTextSegmentPreview, setSelectedTextSegmentPreview] = useState<number | undefined>(undefined);
+  const [previewAudioRef] = useState<HTMLAudioElement>(() => new Audio());
+  const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
+  const [previewCurrentTime, setPreviewCurrentTime] = useState(0);
+  const [previewDuration, setPreviewDuration] = useState(0);
+  const [previewVolume, setPreviewVolume] = useState(80);
+  const [previewPlaybackRate, setPreviewPlaybackRate] = useState(1);
+  const [selectedAudioFilePreview, setSelectedAudioFilePreview] = useState<number | null>(null);
+  
   // Debug logging for tab state
   useEffect(() => {
     console.log('ChapterEditor: Active tab changed to:', activeTab);
