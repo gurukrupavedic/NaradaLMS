@@ -278,44 +278,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }
   };
 
-  // Preview tab segment click handler - finds mapping and seeks to audio timestamp
-  const handlePreviewSegmentClick = useCallback((segmentId: number | undefined) => {
-    if (!segmentId) {
-      setSelectedTextSegmentPreview(undefined);
-      return;
-    }
-
-    // Highlight the selected segment
-    setSelectedTextSegmentPreview(segmentId);
-
-    // Find the audio mapping for this segment
-    const mapping = mappings.find(m => m.textSegmentId === segmentId);
-    
-    if (!mapping) {
-      console.log('No mapping found for segment:', segmentId);
-      return;
-    }
-
-    // If the audio file is different from the currently loaded one, load it
-    if (selectedAudioFilePreview !== mapping.audioFileId) {
-      const audioFile = chapter?.audioFiles?.find(f => f.id === mapping.audioFileId);
-      if (audioFile) {
-        previewAudioRef.src = audioFile.url;
-        setSelectedAudioFilePreview(mapping.audioFileId);
-        
-        // Wait for audio to load before seeking
-        previewAudioRef.addEventListener('loadedmetadata', () => {
-          previewAudioRef.currentTime = mapping.startTime;
-          setPreviewCurrentTime(mapping.startTime);
-        }, { once: true });
-      }
-    } else {
-      // Same audio file, just seek
-      previewAudioRef.currentTime = mapping.startTime;
-      setPreviewCurrentTime(mapping.startTime);
-    }
-  }, [mappings, selectedAudioFilePreview, chapter?.audioFiles, previewAudioRef]);
-
   // State management (original - preserve until hooks validated)
   const [textContent, setTextContent] = useState({
     te: "",
@@ -413,6 +375,44 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   const [previewVolume, setPreviewVolume] = useState(80);
   const [previewPlaybackRate, setPreviewPlaybackRate] = useState(1);
   const [selectedAudioFilePreview, setSelectedAudioFilePreview] = useState<number | null>(null);
+  
+  // Preview tab segment click handler - finds mapping and seeks to audio timestamp
+  const handlePreviewSegmentClick = useCallback((segmentId: number | undefined) => {
+    if (!segmentId) {
+      setSelectedTextSegmentPreview(undefined);
+      return;
+    }
+
+    // Highlight the selected segment
+    setSelectedTextSegmentPreview(segmentId);
+
+    // Find the audio mapping for this segment
+    const mapping = mappings.find(m => m.textSegmentId === segmentId);
+    
+    if (!mapping) {
+      console.log('No mapping found for segment:', segmentId);
+      return;
+    }
+
+    // If the audio file is different from the currently loaded one, load it
+    if (selectedAudioFilePreview !== mapping.audioFileId) {
+      const audioFile = chapter?.audioFiles?.find(f => f.id === mapping.audioFileId);
+      if (audioFile) {
+        previewAudioRef.src = audioFile.url;
+        setSelectedAudioFilePreview(mapping.audioFileId);
+        
+        // Wait for audio to load before seeking
+        previewAudioRef.addEventListener('loadedmetadata', () => {
+          previewAudioRef.currentTime = mapping.startTime;
+          setPreviewCurrentTime(mapping.startTime);
+        }, { once: true });
+      }
+    } else {
+      // Same audio file, just seek
+      previewAudioRef.currentTime = mapping.startTime;
+      setPreviewCurrentTime(mapping.startTime);
+    }
+  }, [mappings, selectedAudioFilePreview, chapter?.audioFiles]);
   
   // Debug logging for tab state
   useEffect(() => {
@@ -1414,7 +1414,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       audio.removeEventListener("play", handlePlay);
       audio.removeEventListener("pause", handlePause);
     };
-  }, [previewAudioRef, selectedAudioFilePreview]);
+  }, [selectedAudioFilePreview]);
 
   const validateFileType = (file: File) => {
     const allowedTypes = ["audio/", "video/"];
