@@ -55,6 +55,16 @@ export function RichTextEditor({
   language,
   className
 }: RichTextEditorProps) {
+  // Get default font based on language
+  const getDefaultFont = () => {
+    switch (language) {
+      case "te": return "'JIMS', 'Noto Sans Telugu', sans-serif";
+      case "hi": return "'Adishila San', 'Noto Sans Devanagari', serif";
+      case "en": return "'JIMS', 'Noto Sans Telugu', sans-serif";
+      default: return "'JIMS', 'Noto Sans Telugu', sans-serif";
+    }
+  };
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -155,6 +165,15 @@ export function RichTextEditor({
     }
   }, [value, editor]);
 
+  // Apply default font when language changes
+  useEffect(() => {
+    if (editor && !editor.isDestroyed) {
+      const defaultFont = getDefaultFont();
+      // Apply default font to entire document if no font is set
+      editor.chain().focus().setFontFamily(defaultFont).run();
+    }
+  }, [language, editor]);
+
   // Ensure editor is editable when initialized or disabled state changes
   useEffect(() => {
     if (editor) {
@@ -196,9 +215,9 @@ export function RichTextEditor({
 
   const getFontClass = () => {
     switch (language) {
-      case "te": return "font-['Noto Sans Telugu']";
-      case "hi": return "font-['Noto Sans Devanagari']";
-      case "en": return "font-mono";
+      case "te": return "font-['JIMS','Noto_Sans_Telugu',sans-serif]";
+      case "hi": return "font-['Adishila_San','Noto_Sans_Devanagari',serif]";
+      case "en": return "font-['JIMS','Noto_Sans_Telugu',sans-serif]";
       default: return "";
     }
   };
@@ -289,6 +308,8 @@ export function RichTextEditor({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="default">Default</SelectItem>
+              <SelectItem value="'JIMS', 'Noto Sans Telugu', sans-serif">JIMS (Telugu/IAST)</SelectItem>
+              <SelectItem value="'Adishila San', 'Noto Sans Devanagari', serif">Adishila San (Devanagari)</SelectItem>
               <SelectItem value="'Noto Sans Telugu', sans-serif">Noto Telugu</SelectItem>
               <SelectItem value="'Noto Sans Devanagari', sans-serif">Noto Devanagari</SelectItem>
               <SelectItem value="'Sanskrit 2003', serif">Sanskrit 2003</SelectItem>

@@ -5,7 +5,7 @@ export function FontLoader() {
   useEffect(() => {
     // Load Google Fonts for Vedic scripts
     const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tiro+Telugu:ital@0;1&family=Tiro+Devanagari+Sanskrit:ital@0;1&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Telugu:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
 
@@ -19,9 +19,9 @@ export function FontLoader() {
 
 // Font classes for different scripts
 export const fontClasses = {
-  telugu: "font-['Tiro_Telugu',serif]",
-  devanagari: "font-['Tiro_Devanagari_Sanskrit',serif]",
-  english: "font-['Tiro_Devanagari_Sanskrit',serif]", // IAST uses Devanagari font
+  telugu: "font-['JIMS','Noto_Sans_Telugu',sans-serif]",
+  devanagari: "font-['Adishila_San','Noto_Sans_Devanagari',serif]",
+  english: "font-['JIMS','Noto_Sans_Telugu',sans-serif]", // IAST uses JIMS font
   interface: "font-['Inter',sans-serif]",
 };
 

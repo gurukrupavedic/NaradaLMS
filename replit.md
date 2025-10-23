@@ -25,6 +25,14 @@ The application features a full-stack architecture:
 -   **Content Creation Workflow**: Involves administrative track creation, chapter development, audio integration, text segmentation, and audio mapping.
 -   **UI/UX Decisions**: The design system emphasizes a modern, colorful, and elegant aesthetic, with vibrant colors, subtle hover effects, and a clean white background. It incorporates elements like multi-layered box-shadows for a luminous effect and a comprehensive 24-color palette. The "LMS Design System v1.0" with 26 components is the established standard.
 
+**Typography & Fonts:**
+-   **Telugu & IAST Scripts**: Uses JIMS font as default (with Noto Sans Telugu fallback via Google Fonts)
+-   **Devanagari Script**: Uses Adishila San font as default (with Noto Sans Devanagari fallback via Google Fonts)
+-   **Interface Text**: Uses Inter font family
+-   Custom fonts configured in `client/src/index.css` with @font-face declarations
+-   Font files location: `client/public/fonts/` (see README.md in that directory for installation instructions)
+-   Automatic font application based on selected script in editor, segmentation, mapping, and preview tabs
+
 ## External Dependencies
 
 **Frontend:**

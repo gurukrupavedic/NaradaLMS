@@ -1,10 +1,42 @@
+/* All @import statements must come first */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Tiro+Telugu:ital@0;1&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Sanskrit:ital@0;1&display=swap');
-
-/* Modern Colorful Design System Imports */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
 @import './styles/design-system/tokens.css';
 @import './styles/design-system/components.css';
+
+/* Custom Fonts for Vedic Content */
+@font-face {
+  font-family: 'JIMS';
+  src: url('/fonts/JIMS-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Adishila San';
+  src: url('/fonts/AdishilaSan-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Adishila San';
+  src: url('/fonts/AdishilaSan-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Adishila San';
+  src: url('/fonts/AdishilaSan-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 @tailwind base;
 @tailwind components;
@@ -90,16 +122,40 @@
 }
 
 @layer utilities {
-  .font-tiro-telugu {
-    font-family: 'Tiro Telugu', serif;
+  /* JIMS font for Telugu and IAST/English scripts */
+  .font-jims {
+    font-family: 'JIMS', 'Noto Sans Telugu', sans-serif;
   }
 
-  .font-tiro-devanagari {
-    font-family: 'Tiro Devanagari Sanskrit', serif;
+  /* Adishila San for Devanagari script */
+  .font-adishila-san {
+    font-family: 'Adishila San', 'Noto Sans Devanagari', serif;
+  }
+
+  /* Primary font classes for scripts */
+  .font-telugu {
+    font-family: 'JIMS', 'Noto Sans Telugu', sans-serif;
+  }
+
+  .font-devanagari {
+    font-family: 'Adishila San', 'Noto Sans Devanagari', serif;
+  }
+
+  .font-vedic {
+    font-family: 'JIMS', 'Noto Sans Telugu', sans-serif;
   }
 
   .font-inter {
     font-family: 'Inter', sans-serif;
+  }
+
+  /* Legacy font classes - kept for backward compatibility */
+  .font-tiro-telugu {
+    font-family: 'JIMS', 'Noto Sans Telugu', 'Tiro Telugu', sans-serif;
+  }
+
+  .font-tiro-devanagari {
+    font-family: 'Adishila San', 'Noto Sans Devanagari', 'Tiro Devanagari Sanskrit', serif;
   }
 
   .text-vedic-brown {
