@@ -3290,8 +3290,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 <div className="flex items-center gap-4">
                   <h2 className="text-xl font-semibold">Preview</h2>
                   <ScriptSelector
-                    value={contentScript}
-                    onChange={setContentScript}
+                    currentScript={contentScript}
+                    availableScripts={['te', 'hi', 'en']}
+                    onScriptChange={setContentScript}
                   />
                 </div>
                 
