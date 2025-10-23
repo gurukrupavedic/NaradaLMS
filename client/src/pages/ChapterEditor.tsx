@@ -625,6 +625,12 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     enabled: !!chapterId,
   });
 
+  // All mappings for the chapter (for counting mapped segments)
+  const { data: allChapterMappings = [] } = useQuery({
+    queryKey: [`/api/mappings/chapter/${chapterId}`],
+    enabled: !!chapterId
+  });
+
   // Preview tab segment click handler - finds mapping and seeks to audio timestamp
   const handlePreviewSegmentClick = useCallback((segmentId: number | undefined) => {
     if (!segmentId) {
@@ -1193,12 +1199,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
         variant: "destructive",
       });
     },
-  });
-
-  // All mappings for the chapter (for counting mapped segments)
-  const { data: allChapterMappings = [] } = useQuery({
-    queryKey: [`/api/mappings/chapter/${chapterId}`],
-    enabled: !!chapterId
   });
 
   // === MAPPING OPERATIONS SECTION ===
