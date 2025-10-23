@@ -28,7 +28,7 @@ const getScriptLabel = (script: Script): string => {
 
 export const ScriptSelector: React.FC<ScriptSelectorProps> = ({
   currentScript,
-  availableScripts,
+  availableScripts = ['te', 'hi', 'en'],
   onScriptChange,
   disabled = false
 }) => {
