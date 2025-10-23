@@ -3318,7 +3318,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     <SelectContent>
                       {audioFiles && Array.isArray(audioFiles) && audioFiles.map((file: any) => (
                         <SelectItem key={file.id} value={file.id.toString()}>
-                          {file.filename}
+                          {file.displayName || file.filename}
                         </SelectItem>
                       ))}
                     </SelectContent>
