@@ -16,6 +16,7 @@ import { Plus, X } from 'lucide-react';
 import type { TextSegment, Script, ContentMap, TextRange } from '@shared/types/text-segmentation';
 import { getDisplayText, normalizeLineBreaks } from '@shared/utils/text-segmentation';
 import { ScriptSelector } from "@/components/common/ScriptSelector";
+import { SegmentedTextDisplay } from './SegmentedTextDisplay';
 
 const getScriptLabel = (script: Script): string => {
   switch (script) {
@@ -170,68 +171,6 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     window.getSelection()?.removeAllRanges();
   }, [selectedRange, currentScript, segments.length, onSegmentCreate]);
 
-  // Render highlighted text with segment overlays
-  const renderHighlightedText = () => {
-    if (!normalizedText) {
-      return <div className="text-muted-foreground">No content available for {currentScript}</div>;
-    }
-
-    // Get all segments for current script
-    const scriptSegments = segments
-      .sort((a, b) => a.startPosition - b.startPosition);
-
-    if (scriptSegments.length === 0) {
-      return <div className="whitespace-pre-wrap leading-relaxed font-serif">{normalizedText}</div>;
-    }
-
-    const parts: React.ReactNode[] = [];
-    let lastIndex = 0;
-
-    scriptSegments.forEach((segment, index) => {
-      const range = { start: segment.startPosition, end: segment.endPosition };
-      
-      // Add text before this segment
-      if (range.start > lastIndex) {
-        parts.push(
-          <span key={`text-${index}`} className="whitespace-pre-wrap">
-            {normalizedText.slice(lastIndex, range.start)}
-          </span>
-        );
-      }
-
-      // Add highlighted segment
-      const isSelected = segment.id === selectedSegmentId;
-      parts.push(
-        <span
-          key={segment.id}
-          className={`relative rounded px-1 py-0.5 cursor-pointer select-none transition-colors ${
-            isSelected 
-              ? 'bg-blue-200 text-blue-900 ring-2 ring-blue-400' 
-              : 'bg-yellow-100 text-yellow-900 hover:bg-yellow-200'
-          }`}
-          title={`Segment ${segment.order + 1}: ${normalizedText.slice(range.start, Math.min(range.end, range.start + 50))}${range.end - range.start > 50 ? '...' : ''}`}
-          onClick={() => onSegmentSelect?.(isSelected ? undefined : segment.id)}
-        >
-          {normalizedText.slice(range.start, range.end)}
-
-        </span>
-      );
-
-      lastIndex = range.end;
-    });
-
-    // Add remaining text
-    if (lastIndex < normalizedText.length) {
-      parts.push(
-        <span key="text-end" className="whitespace-pre-wrap">
-          {normalizedText.slice(lastIndex)}
-        </span>
-      );
-    }
-
-    return <div className="leading-relaxed">{parts}</div>;
-  };
-
   return (
     <div className="h-full">
       {/* Content Area */}
@@ -246,15 +185,18 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
           {/* Text Content with Highlighting */}
           <div
             ref={textRef}
-            className="relative p-6 cursor-text text-base leading-relaxed"
-            style={{
-              fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
-                          currentScript === 'hi' ? "'Adishila San', 'Noto Sans Devanagari', serif" :
-                          "'JIMS', 'Noto Sans Telugu', sans-serif"
-            }}
+            className="relative p-6 text-base"
             onMouseUp={handleTextSelection}
           >
-            {renderHighlightedText()}
+            <SegmentedTextDisplay
+              content={content}
+              currentScript={currentScript}
+              segments={segments}
+              selectedSegmentId={selectedSegmentId}
+              onSegmentClick={onSegmentSelect}
+              mode="edit"
+              className=""
+            />
           </div>
 
           {/* Floating Toolbar with proper positioning */}
