@@ -1416,6 +1416,15 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     };
   }, [selectedAudioFilePreview]);
 
+  // Auto-select first audio file in Preview tab when audioFiles load
+  useEffect(() => {
+    if (audioFiles && audioFiles.length > 0 && !selectedAudioFilePreview) {
+      const firstAudioFile = audioFiles[0];
+      setSelectedAudioFilePreview(firstAudioFile.id);
+      previewAudioRef.src = `/uploads/${firstAudioFile.filename}`;
+    }
+  }, [audioFiles, selectedAudioFilePreview]);
+
   const validateFileType = (file: File) => {
     const allowedTypes = ["audio/", "video/"];
     if (!allowedTypes.some((type) => file.type.startsWith(type))) {
