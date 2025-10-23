@@ -13,8 +13,66 @@ import ListItem from '@tiptap/extension-list-item'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import FontFamily from '@tiptap/extension-font-family'
-import { Node, mergeAttributes } from '@tiptap/core'
+import { Node, mergeAttributes, Extension } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
+
+// Custom FontSize extension
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    fontSize: {
+      setFontSize: (size: string) => ReturnType
+      unsetFontSize: () => ReturnType
+    }
+  }
+}
+
+const FontSize = Extension.create({
+  name: 'fontSize',
+
+  addOptions() {
+    return {
+      types: ['textStyle'],
+    }
+  },
+
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: element => element.style.fontSize?.replace(/['"]+/g, ''),
+            renderHTML: attributes => {
+              if (!attributes.fontSize) {
+                return {}
+              }
+              return {
+                style: `font-size: ${attributes.fontSize}`,
+              }
+            },
+          },
+        },
+      },
+    ]
+  },
+
+  addCommands() {
+    return {
+      setFontSize: (fontSize: string) => ({ chain }) => {
+        return chain()
+          .setMark('textStyle', { fontSize })
+          .run()
+      },
+      unsetFontSize: () => ({ chain }) => {
+        return chain()
+          .setMark('textStyle', { fontSize: null })
+          .removeEmptyTextStyle()
+          .run()
+      },
+    }
+  },
+})
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { 
@@ -117,6 +175,7 @@ export function RichTextEditor({
       FontFamily.configure({
         types: ['textStyle'],
       }),
+      FontSize,
     ],
     editorProps: {
       attributes: {
@@ -204,6 +263,14 @@ export function RichTextEditor({
       editor?.chain().focus().unsetFontFamily().run();
     } else {
       editor?.chain().focus().setFontFamily(fontFamily).run();
+    }
+  }, [editor]);
+
+  const setFontSize = useCallback((fontSize: string) => {
+    if (fontSize === 'default') {
+      editor?.chain().focus().unsetFontSize().run();
+    } else {
+      editor?.chain().focus().setFontSize(fontSize).run();
     }
   }, [editor]);
 
@@ -319,6 +386,30 @@ export function RichTextEditor({
               <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
               <SelectItem value="'Noto Sans', sans-serif">Noto Sans</SelectItem>
               <SelectItem value="Courier New, monospace">Courier New</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Font Size Selector */}
+          <Select
+            value={editor?.getAttributes('textStyle')?.fontSize || 'default'}
+            onValueChange={setFontSize}
+            disabled={disabled}
+          >
+            <SelectTrigger className="w-[90px] h-8 text-xs">
+              <SelectValue placeholder="Size" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default</SelectItem>
+              <SelectItem value="12px">Small (12px)</SelectItem>
+              <SelectItem value="14px">14px</SelectItem>
+              <SelectItem value="16px">Normal (16px)</SelectItem>
+              <SelectItem value="18px">18px</SelectItem>
+              <SelectItem value="20px">Large (20px)</SelectItem>
+              <SelectItem value="24px">24px</SelectItem>
+              <SelectItem value="28px">28px</SelectItem>
+              <SelectItem value="32px">Huge (32px)</SelectItem>
+              <SelectItem value="36px">36px</SelectItem>
+              <SelectItem value="48px">48px</SelectItem>
             </SelectContent>
           </Select>
 
