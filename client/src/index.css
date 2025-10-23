@@ -244,4 +244,9 @@
   .completeness-indicator.incomplete {
     @apply text-red-500;
   }
+
+  /* Force 28px font size for Vedic content text - overrides inline styles */
+  .ProseMirror * {
+    font-size: 28px !important;
+  }
 }
