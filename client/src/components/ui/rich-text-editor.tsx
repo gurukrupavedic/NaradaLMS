@@ -259,19 +259,11 @@ export function RichTextEditor({
   }, [editor]);
 
   const setFontFamily = useCallback((fontFamily: string) => {
-    if (fontFamily === 'default') {
-      editor?.chain().focus().unsetFontFamily().run();
-    } else {
-      editor?.chain().focus().setFontFamily(fontFamily).run();
-    }
+    editor?.chain().focus().setFontFamily(fontFamily).run();
   }, [editor]);
 
   const setFontSize = useCallback((fontSize: string) => {
-    if (fontSize === 'default') {
-      editor?.chain().focus().unsetFontSize().run();
-    } else {
-      editor?.chain().focus().setFontSize(fontSize).run();
-    }
+    editor?.chain().focus().setFontSize(fontSize).run();
   }, [editor]);
 
   const setAlignment = useCallback((alignment: string) => {
@@ -366,7 +358,7 @@ export function RichTextEditor({
 
           {/* Font Selector */}
           <Select
-            value={editor?.getAttributes('textStyle')?.fontFamily || 'default'}
+            value={editor?.getAttributes('textStyle')?.fontFamily || "'JIMS', 'Noto Sans Telugu', sans-serif"}
             onValueChange={setFontFamily}
             disabled={disabled}
           >
@@ -374,7 +366,6 @@ export function RichTextEditor({
               <SelectValue placeholder="Font" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="default">Default</SelectItem>
               <SelectItem value="'JIMS', 'Noto Sans Telugu', sans-serif">JIMS (Telugu/IAST)</SelectItem>
               <SelectItem value="'Adishila San', 'Noto Sans Devanagari', serif">Adishila San (Devanagari)</SelectItem>
               <SelectItem value="'Noto Sans Telugu', sans-serif">Noto Telugu</SelectItem>
@@ -391,7 +382,7 @@ export function RichTextEditor({
 
           {/* Font Size Selector */}
           <Select
-            value={editor?.getAttributes('textStyle')?.fontSize || 'default'}
+            value={editor?.getAttributes('textStyle')?.fontSize || '16px'}
             onValueChange={setFontSize}
             disabled={disabled}
           >
@@ -399,7 +390,6 @@ export function RichTextEditor({
               <SelectValue placeholder="Size" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="default">Default</SelectItem>
               <SelectItem value="12px">12px</SelectItem>
               <SelectItem value="14px">14px</SelectItem>
               <SelectItem value="16px">16px</SelectItem>
