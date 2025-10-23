@@ -53,6 +53,7 @@ import { useLocation } from "wouter";
 import { ScriptSelector } from "@/components/common/ScriptSelector";
 import { AnnotationLayer } from "@/components/text-segmentation/AnnotationLayer";
 import { SegmentPanel } from "@/components/text-segmentation/SegmentPanel";
+import { SegmentedTextDisplay } from "@/components/text-segmentation/SegmentedTextDisplay";
 import { ProgressiveMapper } from "@/components/audio-mapping/ProgressiveMapper";
 import { ConnectedCirclesIcon } from "@shared/components/icons";
 import { LinkStatusIcon } from "@shared/components/LinkStatusIcon";
@@ -60,6 +61,7 @@ import { getMappingStatus } from "@shared/utils/mapping-status";
 import { progressiveMappingApi } from "@/services/progressiveMappingApi";
 import { AudioMappingDatabase, convertDatabaseMapping, convertToDatabase } from "@shared/types/text-segmentation";
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { AudioControls } from "@/components/design-system/AudioControls";
 
 interface ChapterData {
   id: number;
@@ -1385,6 +1387,34 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       audio.removeEventListener("ended", handleEnded);
     };
   }, [selectedAudioFile]);
+
+  // Preview audio event handlers
+  useEffect(() => {
+    const audio = previewAudioRef;
+    if (!audio) return;
+
+    const handleTimeUpdate = () => setPreviewCurrentTime(audio.currentTime);
+    const handleLoadedMetadata = () => {
+      setPreviewDuration(audio.duration);
+    };
+    const handleEnded = () => setIsPreviewPlaying(false);
+    const handlePlay = () => setIsPreviewPlaying(true);
+    const handlePause = () => setIsPreviewPlaying(false);
+
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("ended", handleEnded);
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
+
+    return () => {
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("ended", handleEnded);
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
+    };
+  }, [previewAudioRef, selectedAudioFilePreview]);
 
   const validateFileType = (file: File) => {
     const allowedTypes = ["audio/", "video/"];
@@ -3255,17 +3285,121 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
           {/* Preview Tab - Always use original implementation */}
           <TabsContent value="preview" className="space-y-6">
             <div className="relative h-full">
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <Eye className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-medium mb-2">
-                    Preview Mode
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Preview functionality will be implemented here.
-                  </p>
-                </CardContent>
-              </Card>
+              {/* Header with Script Selector and Audio File Selector */}
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-xl font-semibold">Preview</h2>
+                  <ScriptSelector
+                    value={contentScript}
+                    onChange={setContentScript}
+                  />
+                </div>
+                
+                {/* Audio File Selector */}
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="preview-audio-select" className="text-sm font-medium">
+                    Audio File:
+                  </Label>
+                  <Select
+                    value={selectedAudioFilePreview?.toString() || ""}
+                    onValueChange={(value) => {
+                      const audioFileId = parseInt(value);
+                      const audioFile = chapter?.audioFiles?.find(f => f.id === audioFileId);
+                      if (audioFile) {
+                        previewAudioRef.src = audioFile.url;
+                        setSelectedAudioFilePreview(audioFileId);
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="preview-audio-select" className="w-[200px]">
+                      <SelectValue placeholder="Select audio file" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {chapter?.audioFiles?.map((file) => (
+                        <SelectItem key={file.id} value={file.id.toString()}>
+                          {file.filename}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Two-panel layout */}
+              <div className="grid grid-cols-2 gap-6 h-[600px]">
+                {/* Left Panel - Segmented Text Display */}
+                <Card className="overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">
+                      Content ({contentScript === 'te' ? 'Telugu' : contentScript === 'hi' ? 'Hindi' : 'English'})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="h-[480px] overflow-auto p-6">
+                      {chapterContent[contentScript] ? (
+                        <SegmentedTextDisplay
+                          content={chapterContent}
+                          currentScript={contentScript}
+                          segments={textSegments}
+                          selectedSegmentId={selectedTextSegmentPreview}
+                          onSegmentClick={handlePreviewSegmentClick}
+                          mode="preview"
+                          className=""
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                          <FileText className="w-12 h-12 mb-4 opacity-50" />
+                          <p>No content available for this script</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Right Panel - Audio Controls */}
+                <Card className="overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Audio Playback</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedAudioFilePreview ? (
+                      <AudioControls
+                        currentTime={previewCurrentTime}
+                        duration={previewDuration}
+                        isPlaying={isPreviewPlaying}
+                        volume={previewVolume}
+                        playbackRate={previewPlaybackRate}
+                        onPlay={() => {
+                          previewAudioRef.play();
+                          setIsPreviewPlaying(true);
+                        }}
+                        onPause={() => {
+                          previewAudioRef.pause();
+                          setIsPreviewPlaying(false);
+                        }}
+                        onSeek={(time) => {
+                          previewAudioRef.currentTime = time;
+                          setPreviewCurrentTime(time);
+                        }}
+                        onVolumeChange={(vol) => {
+                          previewAudioRef.volume = vol / 100;
+                          setPreviewVolume(vol);
+                        }}
+                        onPlaybackRateChange={(rate) => {
+                          previewAudioRef.playbackRate = rate;
+                          setPreviewPlaybackRate(rate);
+                        }}
+                        className="mt-4"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                        <Music className="w-12 h-12 mb-4 opacity-50" />
+                        <p>Select an audio file to preview</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
 
               {/* Blocking Overlay for Published Chapters */}
               {isPublished && (
