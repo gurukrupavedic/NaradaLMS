@@ -3282,38 +3282,31 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
             </div>
           </TabsContent>
 
-          {/* Preview Tab - Always use original implementation */}
+          {/* Preview Tab */}
           <TabsContent value="preview" className="space-y-6">
-            <div className="relative h-full">
-              {/* Header with Script Selector and Audio File Selector */}
-              <div className="mb-4 flex items-center justify-between">
+            <div className="relative">
+              {/* Header with Script Selector, Audio File, and Mapped Count */}
+              <div className="flex justify-between items-center p-4 bg-gray-50 border rounded-lg">
                 <div className="flex items-center gap-4">
-                  <h2 className="text-xl font-semibold">Preview</h2>
                   <ScriptSelector
                     currentScript={contentScript}
                     availableScripts={['te', 'hi', 'en']}
                     onScriptChange={setContentScript}
                   />
-                </div>
-                
-                {/* Audio File Selector */}
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="preview-audio-select" className="text-sm font-medium">
-                    Audio File:
-                  </Label>
+                  
                   <Select
                     value={selectedAudioFilePreview?.toString() || ""}
                     onValueChange={(value) => {
                       const audioFileId = parseInt(value);
                       const audioFile = audioFiles?.find((f: any) => f.id === audioFileId);
                       if (audioFile) {
-                        previewAudioRef.src = audioFile.url;
+                        previewAudioRef.src = `/uploads/${audioFile.filename}`;
                         setSelectedAudioFilePreview(audioFileId);
                       }
                     }}
                   >
-                    <SelectTrigger id="preview-audio-select" className="w-[200px]">
-                      <SelectValue placeholder="Select audio file" />
+                    <SelectTrigger className="w-[250px]">
+                      <SelectValue placeholder="Audio File" />
                     </SelectTrigger>
                     <SelectContent>
                       {audioFiles && Array.isArray(audioFiles) && audioFiles.map((file: any) => (
@@ -3324,92 +3317,89 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     </SelectContent>
                   </Select>
                 </div>
+                
+                <Badge variant="secondary" className="text-xs">
+                  {mappings?.length || 0} mapped
+                </Badge>
               </div>
 
-              {/* Two-panel layout */}
-              <div className="grid grid-cols-2 gap-6 h-[600px]">
-                {/* Left Panel - Segmented Text Display */}
-                <Card className="overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">
-                      Content ({contentScript === 'te' ? 'Telugu' : contentScript === 'hi' ? 'Hindi' : 'English'})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div className="h-[480px] overflow-auto p-6">
-                      {chapterContent[contentScript] ? (
-                        <SegmentedTextDisplay
-                          content={chapterContent}
-                          currentScript={contentScript}
-                          segments={textSegments}
-                          selectedSegmentId={selectedTextSegmentPreview}
-                          onSegmentClick={handlePreviewSegmentClick}
-                          mode="preview"
-                          className=""
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                          <FileText className="w-12 h-12 mb-4 opacity-50" />
-                          <p>No content available for this script</p>
-                        </div>
-                      )}
+              {/* Audio Player Card */}
+              <Card>
+                <CardContent className="pt-6">
+                  {selectedAudioFilePreview ? (
+                    <AudioControls
+                      currentTime={previewCurrentTime}
+                      duration={previewDuration}
+                      isPlaying={isPreviewPlaying}
+                      volume={previewVolume}
+                      playbackRate={previewPlaybackRate}
+                      onPlay={() => {
+                        previewAudioRef.play().catch((error) => {
+                          console.error('Failed to play audio:', error);
+                          setIsPreviewPlaying(false);
+                        });
+                        setIsPreviewPlaying(true);
+                      }}
+                      onPause={() => {
+                        previewAudioRef.pause();
+                        setIsPreviewPlaying(false);
+                      }}
+                      onStop={() => {
+                        previewAudioRef.pause();
+                        previewAudioRef.currentTime = 0;
+                        setIsPreviewPlaying(false);
+                        setPreviewCurrentTime(0);
+                      }}
+                      onSeek={(time) => {
+                        previewAudioRef.currentTime = time;
+                        setPreviewCurrentTime(time);
+                      }}
+                      onVolumeChange={(vol) => {
+                        previewAudioRef.volume = vol / 100;
+                        setPreviewVolume(vol);
+                      }}
+                      onPlaybackRateChange={(rate) => {
+                        previewAudioRef.playbackRate = rate;
+                        setPreviewPlaybackRate(rate);
+                      }}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                      <Music className="w-12 h-12 mb-4 opacity-50" />
+                      <p>Select an audio file to preview</p>
                     </div>
-                  </CardContent>
-                </Card>
+                  )}
+                </CardContent>
+              </Card>
 
-                {/* Right Panel - Audio Controls */}
-                <Card className="overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Audio Playback</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {selectedAudioFilePreview ? (
-                      <AudioControls
-                        currentTime={previewCurrentTime}
-                        duration={previewDuration}
-                        isPlaying={isPreviewPlaying}
-                        volume={previewVolume}
-                        playbackRate={previewPlaybackRate}
-                        onPlay={() => {
-                          previewAudioRef.play().catch((error) => {
-                            console.error('Failed to play audio:', error);
-                            setIsPreviewPlaying(false);
-                          });
-                          setIsPreviewPlaying(true);
-                        }}
-                        onPause={() => {
-                          previewAudioRef.pause();
-                          setIsPreviewPlaying(false);
-                        }}
-                        onStop={() => {
-                          previewAudioRef.pause();
-                          previewAudioRef.currentTime = 0;
-                          setIsPreviewPlaying(false);
-                          setPreviewCurrentTime(0);
-                        }}
-                        onSeek={(time) => {
-                          previewAudioRef.currentTime = time;
-                          setPreviewCurrentTime(time);
-                        }}
-                        onVolumeChange={(vol) => {
-                          previewAudioRef.volume = vol / 100;
-                          setPreviewVolume(vol);
-                        }}
-                        onPlaybackRateChange={(rate) => {
-                          previewAudioRef.playbackRate = rate;
-                          setPreviewPlaybackRate(rate);
-                        }}
-                        className="mt-4"
+              {/* Content Display Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    Content ({contentScript === 'te' ? 'Telugu' : contentScript === 'hi' ? 'Hindi' : 'English'})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="max-h-[500px] overflow-auto">
+                    {chapterContent[contentScript] ? (
+                      <SegmentedTextDisplay
+                        content={chapterContent}
+                        currentScript={contentScript}
+                        segments={textSegments}
+                        selectedSegmentId={selectedTextSegmentPreview}
+                        onSegmentClick={handlePreviewSegmentClick}
+                        mode="preview"
+                        className=""
                       />
                     ) : (
-                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                        <Music className="w-12 h-12 mb-4 opacity-50" />
-                        <p>Select an audio file to preview</p>
+                      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                        <FileText className="w-12 h-12 mb-4 opacity-50" />
+                        <p>No content available for this script</p>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Blocking Overlay for Published Chapters */}
               {isPublished && (
