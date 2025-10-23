@@ -138,7 +138,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                                 fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
                                             currentScript === 'hi' ? "'Adishila San', 'Noto Sans Devanagari', serif" :
                                             "'JIMS', 'Noto Sans Telugu', sans-serif",
-                                fontSize: '20px'
+                                fontSize: '24px'
                               }}
                             >
                               {segmentText}

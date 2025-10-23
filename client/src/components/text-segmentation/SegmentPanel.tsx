@@ -239,7 +239,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                         {/* Text Content */}
                         <div 
                           className="text-gray-700 leading-relaxed break-words"
-                          style={{ fontSize: '20px' }}
+                          style={{ fontSize: '24px' }}
                         >
                           {segmentText}
                         </div>
