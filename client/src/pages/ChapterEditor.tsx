@@ -3319,7 +3319,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 </div>
                 
                 <Badge variant="secondary" className="text-xs">
-                  {mappings?.length || 0} mapped
+                  {textSegments
+                    .filter(s => s.script === contentScript)
+                    .filter(segment => 
+                      mappings?.some(mapping => 
+                        mapping.segmentId === segment.id && 
+                        (!selectedAudioFilePreview || mapping.audioFileId === selectedAudioFilePreview)
+                      )
+                    ).length} mapped
                 </Badge>
               </div>
 
