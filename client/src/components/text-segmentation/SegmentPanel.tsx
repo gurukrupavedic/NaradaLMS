@@ -239,7 +239,12 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                         {/* Text Content */}
                         <div 
                           className="text-gray-700 leading-relaxed break-words"
-                          style={{ fontSize: '28px' }}
+                          style={{ 
+                            fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
+                                        currentScript === 'hi' ? "'Adishila San', 'Noto Sans Devanagari', serif" :
+                                        "'JIMS', 'Noto Sans Telugu', sans-serif",
+                            fontSize: '28px' 
+                          }}
                         >
                           {segmentText}
                         </div>
