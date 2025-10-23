@@ -3371,12 +3371,21 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                         volume={previewVolume}
                         playbackRate={previewPlaybackRate}
                         onPlay={() => {
-                          previewAudioRef.play();
+                          previewAudioRef.play().catch((error) => {
+                            console.error('Failed to play audio:', error);
+                            setIsPreviewPlaying(false);
+                          });
                           setIsPreviewPlaying(true);
                         }}
                         onPause={() => {
                           previewAudioRef.pause();
                           setIsPreviewPlaying(false);
+                        }}
+                        onStop={() => {
+                          previewAudioRef.pause();
+                          previewAudioRef.currentTime = 0;
+                          setIsPreviewPlaying(false);
+                          setPreviewCurrentTime(0);
                         }}
                         onSeek={(time) => {
                           previewAudioRef.currentTime = time;
