@@ -45,7 +45,7 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
     if (scriptSegments.length === 0) {
       return (
         <div 
-          className="whitespace-pre-wrap leading-relaxed"
+          className="text-xl whitespace-pre-wrap leading-relaxed"
           style={{
             fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
                         currentScript === 'hi' ? "'Adishila San', 'Noto Sans Devanagari', serif" :
@@ -104,7 +104,7 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
 
     return (
       <div 
-        className="leading-relaxed"
+        className="text-xl leading-relaxed"
         style={{
           fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
                       currentScript === 'hi' ? "'Adishila San', 'Noto Sans Devanagari', serif" :

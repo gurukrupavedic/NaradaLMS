@@ -559,7 +559,7 @@ export function RichTextEditor({
         <EditorContent 
           editor={editor} 
           className={cn(
-            "text-base leading-normal w-full",
+            "text-xl leading-normal w-full",
             "[&_.ProseMirror]:min-h-[568px] [&_.ProseMirror]:outline-none [&_.ProseMirror]:cursor-text",
             "[&_.ProseMirror]:p-4 [&_.ProseMirror]:w-full [&_.ProseMirror]:box-border",
             "[&_.ProseMirror]:max-w-none",

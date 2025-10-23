@@ -237,7 +237,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                       {/* Right: Content Area */}
                       <div className="flex-1 min-w-0">
                         {/* Text Content */}
-                        <div className="text-sm text-gray-700 leading-relaxed break-words">
+                        <div className="text-xl text-gray-700 leading-relaxed break-words">
                           {segmentText}
                         </div>
                       </div>
