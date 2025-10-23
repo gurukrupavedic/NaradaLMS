@@ -396,7 +396,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
     // If the audio file is different from the currently loaded one, load it
     if (selectedAudioFilePreview !== mapping.audioFileId) {
-      const audioFile = chapter?.audioFiles?.find(f => f.id === mapping.audioFileId);
+      const audioFile = audioFiles?.find((f: any) => f.id === mapping.audioFileId);
       if (audioFile) {
         previewAudioRef.src = audioFile.url;
         setSelectedAudioFilePreview(mapping.audioFileId);
@@ -412,7 +412,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       previewAudioRef.currentTime = mapping.startTime;
       setPreviewCurrentTime(mapping.startTime);
     }
-  }, [mappings, selectedAudioFilePreview, chapter?.audioFiles]);
+  }, [mappings, selectedAudioFilePreview, audioFiles]);
   
   // Debug logging for tab state
   useEffect(() => {
@@ -3305,7 +3305,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     value={selectedAudioFilePreview?.toString() || ""}
                     onValueChange={(value) => {
                       const audioFileId = parseInt(value);
-                      const audioFile = chapter?.audioFiles?.find(f => f.id === audioFileId);
+                      const audioFile = audioFiles?.find((f: any) => f.id === audioFileId);
                       if (audioFile) {
                         previewAudioRef.src = audioFile.url;
                         setSelectedAudioFilePreview(audioFileId);
@@ -3316,7 +3316,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       <SelectValue placeholder="Select audio file" />
                     </SelectTrigger>
                     <SelectContent>
-                      {chapter?.audioFiles?.map((file) => (
+                      {audioFiles && Array.isArray(audioFiles) && audioFiles.map((file: any) => (
                         <SelectItem key={file.id} value={file.id.toString()}>
                           {file.filename}
                         </SelectItem>
