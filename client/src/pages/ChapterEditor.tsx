@@ -635,8 +635,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     // Highlight the selected segment
     setSelectedTextSegmentPreview(segmentId);
 
-    // Find the audio mapping for this segment
-    const mapping = mappings.find(m => m.textSegmentId === segmentId);
+    // Find the audio mapping for this segment from all chapter mappings (backend data)
+    const mapping = allChapterMappings.find(m => m.segmentId === segmentId);
     
     if (!mapping) {
       console.log('No mapping found for segment:', segmentId);
@@ -647,7 +647,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     if (selectedAudioFilePreview !== mapping.audioFileId) {
       const audioFile = audioFiles?.find((f: any) => f.id === mapping.audioFileId);
       if (audioFile) {
-        previewAudioRef.src = audioFile.url;
+        previewAudioRef.src = `/uploads/${audioFile.filename}`;
         setSelectedAudioFilePreview(mapping.audioFileId);
         
         // Wait for audio to load before seeking
@@ -661,7 +661,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       previewAudioRef.currentTime = mapping.startTime;
       setPreviewCurrentTime(mapping.startTime);
     }
-  }, [mappings, selectedAudioFilePreview, audioFiles]);
+  }, [allChapterMappings, selectedAudioFilePreview, audioFiles]);
 
   // Fetch mappings for the selected audio file
   const { data: audioFileMappings = [], refetch: refetchMappings } = useQuery<AudioMappingDatabase[]>({
@@ -3322,7 +3322,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   {textSegments
                     .filter(s => s.script === contentScript)
                     .filter(segment => 
-                      mappings?.some(mapping => 
+                      allChapterMappings?.some(mapping => 
                         mapping.segmentId === segment.id && 
                         (!selectedAudioFilePreview || mapping.audioFileId === selectedAudioFilePreview)
                       )
