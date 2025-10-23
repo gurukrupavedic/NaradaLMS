@@ -1008,13 +1008,22 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Initialize chapterContent for segmentation display (original - preserve until hooks validated)
   useEffect(() => {
     if (activeChapter?.content && !USE_EXTRACTED_HOOKS) {
-      setChapterContent({
+      // Only update if the actual content values have changed
+      const newContent = {
         te: activeChapter.content.te || "",
         hi: activeChapter.content.hi || "",
         en: activeChapter.content.en || "",
+      };
+      
+      setChapterContent(prev => {
+        // Check if content actually changed
+        if (prev.te === newContent.te && prev.hi === newContent.hi && prev.en === newContent.en) {
+          return prev; // Return same reference to prevent re-render
+        }
+        return newContent;
       });
     }
-  }, [activeChapter?.content, USE_EXTRACTED_HOOKS]);
+  }, [activeChapter?.content?.te, activeChapter?.content?.hi, activeChapter?.content?.en, USE_EXTRACTED_HOOKS]);
 
   // Auto-save functionality with debounce (original - preserve until hooks validated)
   useEffect(() => {
