@@ -246,7 +246,12 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
           {/* Text Content with Highlighting */}
           <div
             ref={textRef}
-            className="relative p-6 cursor-text font-serif text-base leading-relaxed"
+            className="relative p-6 cursor-text text-base leading-relaxed"
+            style={{
+              fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
+                          currentScript === 'hi' ? "'Adishila San', 'Noto Sans Devanagari', serif" :
+                          "'JIMS', 'Noto Sans Telugu', sans-serif"
+            }}
             onMouseUp={handleTextSelection}
           >
             {renderHighlightedText()}
