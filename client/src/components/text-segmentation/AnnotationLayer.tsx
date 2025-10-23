@@ -185,7 +185,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
           {/* Text Content with Highlighting */}
           <div
             ref={textRef}
-            className="relative p-6 text-base"
+            className="relative p-6"
             onMouseUp={handleTextSelection}
           >
             <SegmentedTextDisplay
