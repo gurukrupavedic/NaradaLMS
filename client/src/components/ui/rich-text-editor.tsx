@@ -382,7 +382,7 @@ export function RichTextEditor({
 
           {/* Font Size Selector */}
           <Select
-            value={editor?.getAttributes('textStyle')?.fontSize || '16px'}
+            value={editor?.getAttributes('textStyle')?.fontSize || '28px'}
             onValueChange={setFontSize}
             disabled={disabled}
           >
