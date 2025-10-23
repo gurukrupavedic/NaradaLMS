@@ -2,180 +2,46 @@
 
 ## Overview
 
-The Vedic Learning Management System is a comprehensive full-stack application designed for managing and delivering Vedic educational content. The system supports multilingual content (Telugu, Hindi/Devanagari, English/IAST) with advanced audio-text synchronization features for educational content mapping. All core functionality is operational including text segmentation, audio mapping, and visual status indicators.
-
-## System Architecture
-
-### Full-Stack Architecture
-- **Frontend**: React with TypeScript, using Vite for development and builds
-- **Backend**: Express.js server with RESTful API endpoints
-- **Database**: PostgreSQL with Drizzle ORM for schema management
-- **UI Framework**: shadcn/ui components with Tailwind CSS for styling
-- **Authentication**: Replit Auth integration for user management
-
-### Application Structure
-```
-├── client/          # React frontend application
-├── server/          # Express.js backend
-├── shared/          # Shared types, utilities, and schemas
-├── docs/           # Comprehensive documentation
-└── migrations/     # Database schema migrations
-```
-
-## Key Components
-
-### Content Management System
-- **Track Management**: Hierarchical learning tracks with sequential ordering
-- **Chapter Management**: Rich text content in multiple languages (Telugu, Hindi, English)
-- **Audio File Management**: Upload and manage audio recordings with metadata
-- **Text Segmentation**: Break content into meaningful segments for mapping
-- **Audio-Text Mapping**: Synchronize audio timestamps with text segments
-
-### User Interface Architecture
-- **Content Management Interface**: Full CRUD operations for educational content
-- **Text Segmentation Studio**: Visual interface for creating text segments
-- **Progressive Audio Mapping**: Innovative "click-when-heard" mapping workflow
-- **Multi-language Support**: Seamless switching between Telugu, Hindi, and English content
-
-### Database Schema
-- **Users**: Multi-role support with invitation system
-- **Tracks**: Top-level learning curriculum organization
-- **Chapters**: Individual learning units with multilingual content
-- **Audio Files**: Media files with metadata and duration tracking
-- **Text Segments**: Granular text portions with language-specific references
-- **Audio Mappings**: Timestamp associations between audio and text segments
-
-## Data Flow
-
-### Content Creation Workflow
-1. **Track Creation**: Administrative users create learning tracks
-2. **Chapter Development**: Content managers add chapters with rich text content
-3. **Audio Integration**: Upload audio files and associate with chapters
-4. **Text Segmentation**: Break chapter content into logical segments
-5. **Audio Mapping**: Map audio timestamps to corresponding text segments
-
-### Learning Interface (Planned)
-1. **Content Discovery**: Students browse available tracks and chapters
-2. **Interactive Learning**: Synchronized audio-text playback
-3. **Progress Tracking**: Monitor learning completion and proficiency
-
-## External Dependencies
-
-### Frontend Dependencies
-- **React Ecosystem**: React 18, React Router (wouter), TanStack Query
-- **UI Components**: Radix UI primitives, shadcn/ui component library
-- **Rich Text Editing**: TipTap editor with multiple extensions
-- **Form Management**: React Hook Form with Zod validation
-
-### Backend Dependencies
-- **Server Framework**: Express.js with TypeScript support
-- **Database**: PostgreSQL with Neon serverless connection pooling
-- **ORM**: Drizzle with schema migrations and type safety
-- **File Upload**: Multer for audio file handling
-- **Audio Processing**: music-metadata for audio file analysis
-
-### Development Tools
-- **Build System**: Vite with hot module replacement
-- **Type Safety**: TypeScript with strict configuration
-- **Styling**: Tailwind CSS with custom Vedic theme colors
-- **Development**: tsx for server-side TypeScript execution
-
-## Deployment Strategy
-
-### Development Environment
-- **Runtime**: Node.js 20 with npm package management
-- **Database**: PostgreSQL 16 with automatic provisioning
-- **Development Server**: Concurrent frontend (port 5000) and backend serving
-
-### Production Deployment
-- **Build Process**: Vite frontend build + esbuild backend compilation
-- **Deployment Target**: Autoscale deployment on Replit infrastructure
-- **Static Assets**: Express static file serving for uploaded audio content
-- **Database**: Neon PostgreSQL with connection pooling and error handling
-
-### Environment Configuration
-- **SESSION_SECRET**: Required for user session management
-- **DATABASE_URL**: PostgreSQL connection string with WebSocket support
-- **REPLIT_DOMAINS**: Required for authentication integration
-
-## Changelog
-
-Changelog:
-- June 23, 2025. Initial setup
-- June 23, 2025. ROLLBACK POINT: Before segment creation fix - Application working except segment creation fails with "Cannot convert undefined or null to object" error in createSegmentMutation
-- June 23, 2025. FIXED: AnnotationLayer data contract mismatch - Updated handleCreateSegment to accept both new format (script/startPosition/endPosition) and legacy format (textReferences) for backward compatibility
-- June 23, 2025. COMPLETED: Segment creation fix - Updated all UI display logic to use new script-specific format instead of textReferences. Segment creation now fully functional.
-- June 23, 2025. COMPLETED: Segmentation tab improvements - Added script-specific segment counts, chapter-wide mapping counts, and link status icons for segment cards. Fixed Link2Off import error.
-- June 23, 2025. ROLLBACK POINT: Infinite render loop issue - Application experiencing maximum update depth exceeded error in ChapterEditor.tsx. LinkStatusIcon implementation complete but causing stability issues.
-- June 23, 2025. FIXED: Infinite render loop resolved - Fixed useEffect dependency causing continuous re-renders. Implemented shared LinkStatusIcon component and mapping utilities for consistent status visualization across all tabs.
-- June 23, 2025. ROLLBACK POINT: Segmentation tab icons fix - Application stable except segmentation tab shows all segments as unmapped due to duplicate API route returning wrong data format. Created comprehensive rollback documentation before implementing surgical route fix.
-- June 23, 2025. COMPLETED: Segmentation tab mapping icons - Removed duplicate API route and fixed SegmentPanel props to receive allChapterMappings data instead of empty array. Icons now display correct mapped/unmapped status with green connected circles for mapped segments and gray disconnected icons for unmapped segments.
-- June 23, 2025. COMPLETED: UI cleanup - Removed experimental segmentation studio button from chapter header, keeping only essential publish/unpublish functionality.
-- June 23, 2025. ROLLBACK POINT: Phase 1 cleanup preparation - Application fully functional with segmentation tab mapping icons working correctly. Created comprehensive rollback documentation before Phase 1 zero-risk cleanup (file removal, constants extraction, documentation).
-- June 23, 2025. COMPLETED: Phase 1 cleanup - Removed 83+ unused files (attached_assets, legacy components, duplicate routes), extracted constants to shared/constants.ts, added comprehensive JSDoc documentation to storage interface and API routes. File structure improved to A-, technical debt reduced to B-, documentation enhanced to B+.
-- June 23, 2025. ROLLBACK POINT: Phase 2 naming & organization preparation - Application fully functional after Phase 1 cleanup. Identified 3 critical broken imports, 4 files requiring rename, and import organization opportunities. Created comprehensive rollback documentation before Phase 2 naming standardization and organization improvements.
-- June 23, 2025. COMPLETED: Phase 2 naming & organization - Fixed 3 broken imports, renamed 4 component files to PascalCase (AdminPanel, RoleTabs, SimpleDashboard, StudentDashboard), organized ChapterEditor imports into logical groups, improved variable naming (segments→textSegments, metadata→audioMetadata). File structure upgraded to A, code style to A-, naming clarity to A-.
-- June 24, 2025. ROLLBACK POINT: Phase 3 error handling preparation - Application fully functional after Phase 2 completion. Created comprehensive rollback documentation for Phase 3 error handling improvements. Identified 73 surgical intervention points across 23 files with zero-risk implementation strategy. Ready for error boundary creation, API standardization, loading state enhancements, and network resilience features.
-- June 24, 2025. PHASE 3A-3C COMPLETED: Error handling foundation and integration - Created React error boundary component, enhanced loading states with skeleton UI, implemented structured API error types, added intelligent retry logic to queryClient (3 attempts for queries, 2 for mutations), standardized server error responses with global middleware, enhanced mutation error handlers with specific user guidance for segment creation, audio upload, and track management. Loading states now show throughout UI with spinners and skeleton placeholders.
-- June 24, 2025. ROLLBACK POINT: Phase 4 component architecture preparation - Application fully functional after Phase 3 error handling completion. ChapterEditor.tsx is 3,108-line monolith with 23 useState hooks, 15 mutations/queries, and mixed concerns. Created comprehensive rollback documentation for surgical decomposition into focused components and custom hooks. Target: 92% code reduction while preserving exact functionality. Ready for hook extraction, component creation, and context integration.
-- June 24, 2025. PHASE 4A-4C COMPLETED: Component architecture transformation - Successfully decomposed 3,108-line ChapterEditor monolith into maintainable architecture. Created 4 custom hooks (useChapterData, useAudioPlayer, useSegmentData, useTextSegmentation), 4 focused components (ContentTab, AudioMappingTab, SegmentationTab, ChapterHeader), and React Context system with useReducer for optimized state management. Achieved 94% code reduction in main component while preserving exact functionality. Feature flag system enables safe testing and instant rollback capabilities.
-- June 24, 2025. PHASE 5A COMPLETED: Bundle optimization - Implemented route-based code splitting with lazy loading for 8 major components (Landing, SimpleDashboard, ChapterEditor, etc.), created centralized icon barrel export reducing lucide-react bundle impact from 33MB to tree-shakable imports, added Suspense boundaries with loading skeletons for improved perceived performance. Bundle size reduced significantly while maintaining all functionality.
-- June 24, 2025. PHASE 5B COMPLETED: React performance optimization - Added React.memo to 4 major components (ContentTab, SegmentationTab, ChapterHeader, ContentTabWithContext), implemented useMemo for expensive computations (segment filtering, mapping calculations), added useCallback for event handlers to prevent unnecessary re-renders. Re-render optimization achieved while preserving audio system functionality.
-- June 24, 2025. PHASE 5C COMPLETED: Query optimization - Implemented intelligent prefetching system with usePrefetchAdjacentChapters for navigation performance, background cache warming for track data, audio metadata prefetching for better UX. Query response times improved while maintaining data freshness.
-- June 24, 2025. CLEANUP PHASE COMPLETED: Surgical code cleanup with clinical precision - Removed 2 unused legacy files (rich-text-editor-old.tsx, test-audio-mapping-workflow.js), standardized file naming (not-found.tsx → NotFound.tsx), converted 20 components from default exports to named exports for consistency. All functionality preserved, zero breaking changes, application performance maintained.
-- June 24, 2025. ADVANCED CLEANUP COMPLETED: Items 4-6 implementation - Created centralized constants file extracting 23 magic numbers across 8 files for maintainable configuration. Implemented barrel exports reducing UI import statements by 65% across 25+ files. Consolidated duplicate interfaces creating single source of truth for all data types. Application running stable with improved code organization and reduced maintenance overhead.
-- June 24, 2025. ITEMS 7-8 COMPLETED: Documentation & Performance Monitoring - Added comprehensive JSDoc documentation to 40+ files including all custom hooks, core components, utilities, and server functions. Created complete performance monitoring infrastructure with PerformanceMonitor, MetricsCollector, usePerformanceMonitor hook, and DatabaseMonitor. Integrated API response tracking, database query timing, component load monitoring, and error correlation. Zero functional impact while enabling production-ready performance insights and improved developer experience.
-- June 24, 2025. EXPERIMENTS CLEANUP: Isolated DaisyUI experiments under Experiments tile - Created experiments/daisyui-examples/ with HTML prototypes showing pastel theme migration. Added ExperimentsShowcase page accessible via Experiments tile route. Removed all experimental code from main dashboard and routes. Experiments completely isolated and safe to delete without affecting production code.
-- June 24, 2025. DAISYUI EXPERIMENTS REMOVED: User feedback indicated pastel theme not suitable for Vedic LMS aesthetic. Completely removed all DaisyUI experiments, static files, routes, and dependencies. Experiments tile reset to generic placeholder. Zero impact on main application functionality.
-- June 24, 2025. DAISYUI 5.0 EXPERIMENTS CREATED: Created new isolated experiments with DaisyUI 5.0 to explore improved aesthetics and better theme options. Added theme comparison tool and Vedic-inspired dashboard with autumn theme. All experiments isolated under Experiments tile with zero impact on main application.
-- June 24, 2025. DAISYUI EXPERIMENTS FIXED: Corrected version issues - DaisyUI 5.0 doesn't exist, updated to 4.12.24 (latest actual version). Fixed CDN loading, HTML syntax errors, and added proper Tailwind configuration. Added pastel theme to comparison tool per user request. Experiments now display properly styled components.
-- June 24, 2025. NIGHT + BUSINESS THEME PAIRING: Created perfect light/dark mode combination for user's Vedic LMS. Night theme as dark mode with Business theme as complementary light mode. Added interactive pairing demo showing consistent professional aesthetics, matching contrast ratios, and smooth transitions. User confirmed Night theme preference for dark mode.
-- June 24, 2025. FLATUI/BOOTFLAT CUSTOM THEMES: User likes Light theme structure but dislikes default button colors. Created custom DaisyUI themes with vibrant FlatUI and Bootflat color schemes. Added interactive experiment with beautiful flat design button palettes matching popular Bootstrap flat design kits. User specifically mentioned liking Bootflat and FlatUI color schemes.
-- June 24, 2025. BOOTFLAT LIGHT INSPIRED THEME: User found original Bootflat primary/secondary colors too heavy. Created softer light theme inspired by Bootflat principles with gentle colors: light blue (#74b9ff), light turquoise (#81ecec), light orange (#fdcb6e). Maintains Bootflat aesthetic but with reduced saturation for comfortable reading.
-- June 24, 2025. TRUE BOOTFLAT LIGHT THEME: User complained that previous experiment had dark background instead of light theme. Created true light theme with pure white background (#ffffff), light gray navbar (#f8f9fa), dark text on light backgrounds, and custom Bootflat-inspired button colors. Fixed DaisyUI theme configuration issues to ensure proper light theme appearance.
-- June 24, 2025. BOOTSTRAP 5 INSPIRED THEME: User found Bootflat colors too bright and light for comfortable viewing. Created professional theme based on Bootstrap 5 design system with subtle, accessible colors: primary (#0d6efd), secondary (#6c757d), success (#198754). Maintains excellent readability with proper contrast ratios and sophisticated styling.
-- June 24, 2025. BOOTSTRAP 5 MIGRATION PLANNING: User confirmed Bootstrap 5 is the best UI kit for both light and dark themes. Created comprehensive migration plan and full Bootstrap 5 prototype. Recommended approach: Bootstrap 5 + minimal Tailwind for utilities, phased migration strategy. User wants to completely adopt Bootstrap 5 design system with cleanest implementation possible.
-- June 24, 2025. DESIGN SYSTEMS COMPARISON: Created shadcn/ui vs Bootstrap 5 comparison experiment to help user make informed migration decision. Current app uses shadcn/ui + custom Vedic theme. User wants to understand differences between design systems for better decision making.
-- June 24, 2025. MODERN COLORFUL THEME: User confirmed preference for modern, colorful, elegant design over traditional Vedic theme. Loves vibrant colors (blue, green, purple, orange, pink, indigo) with subtle hover effects like dashboard tiles. Created modern colorful theme experiment with sleek design, contrasting UI components, and contemporary aesthetic. User specifically appreciates colorful elements from experiments page styling.
-- June 24, 2025. COLORFUL THEME REFINEMENT: User loves the playful, colorful theme but requested clean white background instead of gradient. Updated modern colorful theme to use pure white background (#ffffff) while maintaining vibrant colorful UI components and elegant hover effects.
-- June 24, 2025. DASHBOARD-STYLE UI REFINEMENT: User requested subtle, classy refinements matching dashboard tile styling. Updated colorful theme with gentle hover effects (2px lift, 8% shadow opacity), refined icon backgrounds (48px containers with 10% color opacity), sophisticated border transitions, and professional button styling. Achieved perfect balance of subtlety and classiness like dashboard tiles.
-- June 24, 2025. GLOW EFFECT ENHANCEMENT: Added subtle glow effects matching dashboard tiles. Implemented multi-layered box-shadow with colored glow (10% opacity for light mode, 15-20% for dark mode) that creates the same elegant luminous border effect as the dashboard hover states.
-- June 24, 2025. HALOGEN-STYLE GLOW REFINEMENT: Enhanced glow effects to be more halogen/neon-like while staying subtle. Implemented multi-layered diffused glow with 5 shadow layers (inner 15% to outer 4% opacity) creating luminous, professional halogen-style lighting that radiates outward up to 50-60px for sophisticated visual impact.
-- June 24, 2025. FLUORESCENT GLOW COLORS: Updated glow effects with fluorescent cousins of main colors for brighter, more energetic appearance. Blue→Deep Sky Blue (#00bfff), Green→Spring Green (#00ff7f), Purple→Electric Purple (#9d4edd), Orange→Electric Orange (#ff6b35), Pink→Hot Pink (#ff1493), Indigo→Royal Blue (#4169e1). Creates vibrant fluorescent aura while maintaining professional aesthetic.
-- June 24, 2025. PERFECT DASHBOARD FLUORESCENT MATCH: Applied exact Tailwind fluorescent colors from SimpleDashboard (blue-100, green-100, purple-100, etc.) with higher opacity (60%→20%) for perfect recreation of dashboard's subtle, classy glow effects. Now matches the refined fluorescent aesthetic of the dashboard tiles.
-- June 24, 2025. DASHBOARD LIGHT MODE PRECISION: Simplified light mode glow to single shadow layer (0 4px 14px, 80% opacity) matching exact SimpleDashboard behavior. Dark mode maintains multi-layer diffusion for optimal contrast. Light mode now perfectly recreates dashboard tile subtlety.
-- June 24, 2025. ENHANCED FLUORESCENT INTENSITY: Increased light mode glow intensity with stronger border (30% opacity), larger glow area (20px), full opacity fluorescent layer (100%), and outer halo (60% opacity at 25px) for more vibrant, luminous appearance while maintaining professional aesthetic.
-- June 24, 2025. DESIGN SYSTEM COMPLETION: Created comprehensive Modern Colorful Design System documentation with complete UI specifications, migration plan, cleaned up experimental files, and reorganized experiments page to feature the finalized design system as the official standard for Vedic LMS.
-- June 25, 2025. BUTTON COMPONENT CLEANUP COMPLETED: Surgical removal of button fragmentation across design system. Deleted 9 files including Button.tsx (orphaned), Button.old.tsx (CVA backup), entire ColorfulDemo ecosystem (colorful-button, colorful-card, colorful-progress, ColorfulDemo, useColorfulTheme, ThemeSwitcher, ColorfulNavbar). Removed 500+ lines of experimental code. Updated design system exports to use Button.new.tsx as single source of truth. Zero breaking changes to main LMS application (ui/button.tsx preserved). Design system now primed for future scaling with clean, focused architecture.
-- June 25, 2025. ROLLBACK POINT: 3-tier optimization preparation - Application fully functional after button cleanup completion. Created comprehensive rollback documentation before 3-tier optimization: React warnings (Breadcrumb nested anchor, Badge ref forwarding), file naming consistency (kebab-case → PascalCase), and bundle optimization (icon barrel exports). All changes identified with surgical precision. Ready for simultaneous implementation with zero-risk approach.
-- June 25, 2025. 3-TIER OPTIMIZATION COMPLETED: Successfully implemented all three optimization tiers simultaneously. TIER 1: Fixed React warnings - eliminated Breadcrumb nested anchor warning by removing manual `<a>` tag, added React.forwardRef to Badge component for proper ref handling. TIER 2: Standardized file naming - renamed 5 UI components (fonts→Fonts, aspect-ratio→AspectRatio, alert-dialog→AlertDialog, pagination→Pagination, tabs→Tabs) with automatic import path updates across 70+ files. TIER 3: Bundle optimization - converted 8 design-system components to use centralized icon barrel exports from @/lib/icons, reducing lucide-react import overhead. All React console warnings eliminated, file naming 100% consistent, improved bundle efficiency achieved.
-- June 25, 2025. ROLLBACK POINT: Button.new cleanup preparation - Application fully functional after 3-tier optimization completion. Created comprehensive rollback documentation before final Button.new.tsx → Button.tsx cleanup. Analysis reveals 6 direct imports requiring surgical update across 5 design-system files. Zero impact on main LMS application (uses ui/button.tsx separately). Ready for final naming cleanup with surgical precision.
-- June 25, 2025. BUTTON NAMING CLEANUP COMPLETED: Successfully renamed Button.new.tsx → Button.tsx within design system only. Updated 6 import references across 5 design-system files (ComponentInspector, RichTextEditor, DesignSystemShowcase, Dialog, index.ts). Zero impact on main LMS application which uses separate ui/button.tsx. Design system now has clean, conventional component naming with professional import paths. Final naming artifact eliminated - architecture now production-ready.
-- June 25, 2025. CONTENT EDITING PIPELINE FIXED: Root cause identified - published chapters have disabled editing via `disabled={isPublished}` prop. Fixed component interface mismatches between RichTextEditor (expected value/onChange/disabled/language) and ScriptSelector (expected currentScript/availableScripts/onScriptChange). Auto-save system confirmed working - monitors textContent changes with 2-second debounce, skips when published/hooks enabled. Content editing now fully functional for draft chapters with automatic persistence.
-- June 25, 2025. SWITCH COMPONENT ENHANCEMENT COMPLETED: Completely refined Switch component with sophisticated visual design aligned with colorful design system principles. Added gradient backgrounds, fluorescent glow effects, enhanced shadows, smooth 300ms animations, inner thumb glow, status text display (ON/OFF), improved hover states, and professional visual depth. Features 12 vibrant color variants with matching glow effects, three-layer shadow system, border animations, and optional status text for better UX. Component now exhibits premium character with engaging interactions while maintaining accessibility and educational semantic variants.
-- June 25, 2025. SWITCH COMPONENT PERFECTED: Achieved pixel-perfect Switch component with flawless inspector synchronization and visual precision. Fixed size mapping by supporting both "md" and "default" sizes, corrected invalid Tailwind classes, and fine-tuned thumb positioning for perfect spacing: sm (h-4 w-4, translate-x-4), md (h-5 w-5, translate-x-5), lg (h-6 w-6, translate-x-8). All three sizes now exhibit professional visual quality with thumbs perfectly contained within track bounds. Switch component represents design system excellence with vibrant colors, smooth animations, and educational semantic variants ready for production deployment.
-- June 24, 2025. SEPARATE THEME PAGES: Created dedicated light-theme-showcase.html and dark-theme-showcase.html to eliminate theme switching complexity. Light theme features clean white background with subtle fluorescent glows, dark theme has enhanced multi-layer glow effects optimized for dark environments. Both pages showcase complete typography system, interactive buttons, form elements, and design principles with proper color contrast and accessibility.
-- June 24, 2025. EXPERIMENTS PAGE CLEANUP: Reorganized DaisyUI experiments page with prominent theme showcase cards, design system features, component library stats, and moved legacy experiments to secondary section. Clear navigation to both light and dark theme showcases with proper descriptions and visual indicators.
-- June 24, 2025. COMPREHENSIVE UI COMPONENTS: Added complete UI component gallery to both light and dark theme showcases including navigation (breadcrumbs, tabs), advanced form elements (selects, checkboxes, radio buttons, toggles), alerts & notifications (info, success, warning, error), data display (progress bars, badges, tables), maintaining theme-specific styling and colors.
-- June 24, 2025. COMPLETE 24-COLOR PALETTE IMPLEMENTATION: Extended design system from 6 to 12 vibrant colors by adding teal, cyan, yellow (sticky note style), lime, rose, and emerald. Replaced violet with emerald for better distinction from purple, and replaced amber with yellow (#eab308) to avoid similarity with orange. Added comprehensive 24-color palette section showcasing all 12 primary colors and 12 fluorescent glow variants with individual cards, color swatches, names, and copy-ready hex codes. Fixed yellow button text color consistency (white like all other buttons). Both light and dark theme showcases now feature complete developer-ready color documentation with responsive grid layout optimized for all screen sizes.
-- June 24, 2025. COMPONENT REORGANIZATION: Reorganized both light and dark theme showcases according to user's component grouping table: Inputs (Button, Input, Textarea, Select, Checkbox, Radio, Switch), Data Display (Badge, Progress, Table), Navigation (Breadcrumbs, Tabs), Feedback/Overlay (Alert), Typography/Media (Heading, Text, Link), plus Coming Soon section listing 17 future components across all groups. Maintained all existing designs while improving organization and discoverability. Zero breaking changes to established UI components.
-- June 24, 2025. THEME SYNCHRONIZATION: Synchronized light and dark theme showcases to have identical content and structure. Light theme now includes all components that dark theme had: enhanced badge collection (6 badges vs 4), updated table structure with component-focused data, improved typography grid layout, and consistent progress indicators. Both themes now feature complete parity in component coverage and organization.
-- June 24, 2025. COMPLETE THEME SYNCHRONIZATION: Added all 4 missing major sections to light theme (Navigation, Feedback/Overlay, Typography/Media, Coming Soon) with identical content structure. Light theme expanded from 824 to 1051+ lines matching dark theme exactly. Both showcases now have complete parity: 4 alert types, breadcrumbs/tabs navigation, typography grid layout, 6 coming-soon component cards, and proper H1/H2 hierarchical organization.
-- June 24, 2025. SURGICAL REORGANIZATION COMPLETE: Successfully reorganized both light and dark theme showcases with perfect 6-group component structure. Color palette extracted and relocated to dedicated Design System section. Added Layout/Utility section with preview components. Enhanced all 6 groups with descriptions, component counts, and colored progress indicators. Coming Soon cards now include reference links to main sections. Both themes achieve 1288+ lines with identical organization and user-friendly navigation.
-- June 24, 2025. ENHANCED STRUCTURE IMPLEMENTATION: Applied comprehensive structural improvements to both theme showcases. Added Component Groups Overview (6 color-coded cards with navigation), Sticky Navigation Bar (color-coded pills with component counts), Enhanced Group Headers (numbered, themed, with next navigation), and Visual Group Separators (elegant dividers). Light theme: 1,603 lines, Dark theme: 1,608 lines. Perfect 6-group structure now clearly evident with at-a-glance understanding, easy navigation, and logical flow.
-- June 24, 2025. DESIGN SYSTEM CONSOLIDATION COMPLETED: Successfully consolidated fragmented experimental showcases into clean architecture. Created proper experiments index with dedicated design system experiment route (/experiments/design-system). Established single source of truth for production-ready 15-component system with educational semantics. Cleaned up legacy DaisyUI experiments with proper redirects. Architecture now follows index → experiment pattern for scalable future development. Design system ready for main line integration into LMS application.
-- June 24, 2025. LMS TEXT SEGMENT REFINEMENT: Removed drag handle (cursor already indicates draggability per user feedback), updated selection design from ring-based to modern gradient with subtle glow effect matching design system principles (slick, modern, classy, clean). Selection now uses gradient background and shadow instead of ring offset for better visual integration.
-- June 24, 2025. ICON-BASED MAPPING STATUS: Eliminated green background tint for mapping status to resolve color conflicts (especially with blue variants). Implemented clean icon-only approach: persistent green Link2/gray Link2Off icons for mapping status with tooltips. Universal blue selection works cleanly with any variant color. Hover-revealed delete, always-visible mapping status creates professional, scalable design without color chaos.
-- June 24, 2025. TIER 2 LMS COMPONENTS COMPLETED: Added essential LMS-focused components including Table/DataTable for user and content management, Slider/AudioSlider/ProgressSlider for audio-text synchronization and learning progress, and Breadcrumb for hierarchical content navigation. Expanded to complete 24-color system (12 primary + 12 fluorescent variants) with educational semantic meanings. All 18 components now ready for main LMS integration with comprehensive demos in design system showcase.
-- June 24, 2025. TOOLTIP COMPONENT PERFECTED: Completely overhauled Tooltip component with comprehensive LMS use cases, educational semantic variants, and position controls through inspector. Applied refined classy design with light pastel backgrounds, subtle shadows, and elegant typography. User confirmed design perfection with whisper-light aesthetic that maintains colorful design system principles while achieving sophisticated elegance.
-- June 25, 2025. DESIGN SYSTEM REBRANDING COMPLETED: Updated entire system branding from "Modern Colorful Design System" to "LMS Design System v1.0" with 26 components. Updated all component headers, documentation, showcase titles, and system overview cards. Fixed import issues causing app crashes by correcting Tabs component path. System now properly branded for professional designer-developer communications.
-- July 29, 2025. AUTO-SAVE BUG INVESTIGATION: Extensive debugging session attempted to resolve auto-save failure for Hindi/English content. Multiple approaches tested including API response enhancement, state synchronization, content initialization changes, and comparison logic modifications. Root cause identified as auto-save comparison checking all scripts instead of active script only. Implemented fix changing comparison to `textContent[contentScript] !== activeChapter.content[contentScript]` but issue persists. Project handed off to alternative development team for resolution.
-- July 29, 2025. PROJECT HANDOFF: Development transferred to external team due to unresolved auto-save functionality. Core LMS features remain functional including content management, track/chapter organization, audio upload, text segmentation, and audio-text mapping. Auto-save feature requires additional investigation by fresh perspective.
-- July 30, 2025. TEXT SEGMENTATION STATUS CONFIRMED: User testing on Śraddhā sūktaṁ English script confirms text segmentation is fully functional. Multi-line selections work correctly with minor UI display issue where line breaks are removed from segment cards (content preserved, just visual formatting). Current implementation using getDisplayText() approach successfully resolved historical DOM vs storage positioning conflicts. Segmentation, audio mapping, and content management workflows operational.
-- July 30, 2025. AUTO-SAVE BUG FIXED: Resolved critical auto-save infinite loop preventing content persistence. Root cause was unstable useEffect dependencies causing continuous re-renders that prevented 2-second mutation timeout from completing. Fixed by removing updateContentMutation and USE_EXTRACTED_HOOKS from dependency array and adding missing contentScript dependency. Auto-save now works correctly - user can edit content across all three language scripts (Telugu, Hindi, English) and changes persist after page refresh. System confirmed working through successful database updates.
+The Vedic Learning Management System is a full-stack application for managing and delivering Vedic educational content. It supports multilingual content (Telugu, Hindi/Devanagari, English/IAST) with advanced audio-text synchronization. Key functionalities include text segmentation, audio mapping, and visual status indicators. The system aims to provide a comprehensive platform for Vedic education, with a focus on modern, elegant design.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 Theme preferences: Prefers modern, colorful, elegant design over traditional Vedic brown/gold colors. Loves vibrant color palette with blue, green, purple, orange, pink, indigo (like dashboard tiles). Appreciates subtle, classy hover effects and sleek design. Specifically likes the colorful, contrasting UI components from experiments page. Wants contemporary aesthetic rather than traditional themes. Bootstrap 5 design system preferred for professional implementation with custom colorful palette. Values refined, whisper-light design elements that feel sophisticated and classy rather than bold or heavy.
 Design System: Prefers "LMS Design System v1.0" branding with 26 components for professional nomenclature in designer-developer communications.
+
+## System Architecture
+
+The application features a full-stack architecture:
+-   **Frontend**: React with TypeScript, Vite, shadcn/ui components, and Tailwind CSS.
+-   **Backend**: Express.js server with RESTful API endpoints.
+-   **Database**: PostgreSQL with Drizzle ORM.
+-   **Authentication**: Replit Auth integration.
+
+**Key Features:**
+-   **Content Management System**: Supports creation and management of tracks, chapters (multilingual), audio files, text segmentation, and audio-text mapping.
+-   **User Interface**: Provides CRUD operations for content, a visual Text Segmentation Studio, and an innovative "click-when-heard" audio mapping workflow. Multi-language switching is seamless.
+-   **Database Schema**: Includes tables for Users, Tracks, Chapters, Audio Files, Text Segments, and Audio Mappings to support hierarchical content organization and synchronization.
+-   **Content Creation Workflow**: Involves administrative track creation, chapter development, audio integration, text segmentation, and audio mapping.
+-   **UI/UX Decisions**: The design system emphasizes a modern, colorful, and elegant aesthetic, with vibrant colors, subtle hover effects, and a clean white background. It incorporates elements like multi-layered box-shadows for a luminous effect and a comprehensive 24-color palette. The "LMS Design System v1.0" with 26 components is the established standard.
+
+## External Dependencies
+
+**Frontend:**
+-   React 18, React Router (wouter), TanStack Query
+-   Radix UI primitives, shadcn/ui component library
+-   TipTap editor
+-   React Hook Form with Zod validation
+
+**Backend:**
+-   Express.js
+-   PostgreSQL with Neon (serverless connection pooling)
+-   Drizzle ORM
+-   Multer (for audio file handling)
+-   music-metadata (for audio file analysis)
+
+**Development Tools:**
+-   Vite
+-   TypeScript
+-   Tailwind CSS
+-   tsx (for server-side TypeScript execution)
