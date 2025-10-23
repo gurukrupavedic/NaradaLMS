@@ -376,44 +376,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   const [previewPlaybackRate, setPreviewPlaybackRate] = useState(1);
   const [selectedAudioFilePreview, setSelectedAudioFilePreview] = useState<number | null>(null);
   
-  // Preview tab segment click handler - finds mapping and seeks to audio timestamp
-  const handlePreviewSegmentClick = useCallback((segmentId: number | undefined) => {
-    if (!segmentId) {
-      setSelectedTextSegmentPreview(undefined);
-      return;
-    }
-
-    // Highlight the selected segment
-    setSelectedTextSegmentPreview(segmentId);
-
-    // Find the audio mapping for this segment
-    const mapping = mappings.find(m => m.textSegmentId === segmentId);
-    
-    if (!mapping) {
-      console.log('No mapping found for segment:', segmentId);
-      return;
-    }
-
-    // If the audio file is different from the currently loaded one, load it
-    if (selectedAudioFilePreview !== mapping.audioFileId) {
-      const audioFile = audioFiles?.find((f: any) => f.id === mapping.audioFileId);
-      if (audioFile) {
-        previewAudioRef.src = audioFile.url;
-        setSelectedAudioFilePreview(mapping.audioFileId);
-        
-        // Wait for audio to load before seeking
-        previewAudioRef.addEventListener('loadedmetadata', () => {
-          previewAudioRef.currentTime = mapping.startTime;
-          setPreviewCurrentTime(mapping.startTime);
-        }, { once: true });
-      }
-    } else {
-      // Same audio file, just seek
-      previewAudioRef.currentTime = mapping.startTime;
-      setPreviewCurrentTime(mapping.startTime);
-    }
-  }, [mappings, selectedAudioFilePreview, audioFiles]);
-  
   // Debug logging for tab state
   useEffect(() => {
     console.log('ChapterEditor: Active tab changed to:', activeTab);
@@ -662,6 +624,44 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     queryKey: [`/api/audio-files/${chapterId}`],
     enabled: !!chapterId,
   });
+
+  // Preview tab segment click handler - finds mapping and seeks to audio timestamp
+  const handlePreviewSegmentClick = useCallback((segmentId: number | undefined) => {
+    if (!segmentId) {
+      setSelectedTextSegmentPreview(undefined);
+      return;
+    }
+
+    // Highlight the selected segment
+    setSelectedTextSegmentPreview(segmentId);
+
+    // Find the audio mapping for this segment
+    const mapping = mappings.find(m => m.textSegmentId === segmentId);
+    
+    if (!mapping) {
+      console.log('No mapping found for segment:', segmentId);
+      return;
+    }
+
+    // If the audio file is different from the currently loaded one, load it
+    if (selectedAudioFilePreview !== mapping.audioFileId) {
+      const audioFile = audioFiles?.find((f: any) => f.id === mapping.audioFileId);
+      if (audioFile) {
+        previewAudioRef.src = audioFile.url;
+        setSelectedAudioFilePreview(mapping.audioFileId);
+        
+        // Wait for audio to load before seeking
+        previewAudioRef.addEventListener('loadedmetadata', () => {
+          previewAudioRef.currentTime = mapping.startTime;
+          setPreviewCurrentTime(mapping.startTime);
+        }, { once: true });
+      }
+    } else {
+      // Same audio file, just seek
+      previewAudioRef.currentTime = mapping.startTime;
+      setPreviewCurrentTime(mapping.startTime);
+    }
+  }, [mappings, selectedAudioFilePreview, audioFiles]);
 
   // Fetch mappings for the selected audio file
   const { data: audioFileMappings = [], refetch: refetchMappings } = useQuery<AudioMappingDatabase[]>({
