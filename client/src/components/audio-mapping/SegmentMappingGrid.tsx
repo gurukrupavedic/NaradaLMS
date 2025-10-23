@@ -133,11 +133,12 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                           {/* Right: Content */}
                           <div className="flex-1 min-w-0">
                             <div 
-                              className="text-xl text-gray-700 leading-relaxed"
+                              className="text-gray-700 leading-relaxed"
                               style={{
                                 fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
                                             currentScript === 'hi' ? "'Adishila San', 'Noto Sans Devanagari', serif" :
-                                            "'JIMS', 'Noto Sans Telugu', sans-serif"
+                                            "'JIMS', 'Noto Sans Telugu', sans-serif",
+                                fontSize: '20px'
                               }}
                             >
                               {segmentText}

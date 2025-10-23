@@ -45,11 +45,12 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
     if (scriptSegments.length === 0) {
       return (
         <div 
-          className="text-xl whitespace-pre-wrap leading-relaxed"
+          className="whitespace-pre-wrap leading-relaxed"
           style={{
             fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
                         currentScript === 'hi' ? "'Adishila San', 'Noto Sans Devanagari', serif" :
-                        "'JIMS', 'Noto Sans Telugu', sans-serif"
+                        "'JIMS', 'Noto Sans Telugu', sans-serif",
+            fontSize: '20px'
           }}
         >
           {normalizedText}
@@ -104,11 +105,12 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
 
     return (
       <div 
-        className="text-xl leading-relaxed"
+        className="leading-relaxed"
         style={{
           fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
                       currentScript === 'hi' ? "'Adishila San', 'Noto Sans Devanagari', serif" :
-                      "'JIMS', 'Noto Sans Telugu', sans-serif"
+                      "'JIMS', 'Noto Sans Telugu', sans-serif",
+          fontSize: '20px'
         }}
       >
         {parts}
