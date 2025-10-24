@@ -58,7 +58,7 @@ const mappingSegmentCardVariants = cva(
 );
 
 const numberPillVariants = cva(
-  "absolute -top-2 -left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm z-10 bg-gray-500"
+  "absolute -top-2 -left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm z-10 bg-gray-500 pointer-events-none"
 );
 
 export interface MappingSegmentCardProps
