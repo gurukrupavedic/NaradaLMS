@@ -876,9 +876,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }
   });
 
-  const handleSegmentReorder = useCallback((reorderedSegments: any[]) => {
+  const handleSegmentReorder = (reorderedSegments: any[]) => {
     reorderSegmentsMutation.mutate(reorderedSegments);
-  }, [reorderSegmentsMutation.mutate]);
+  };
 
   const handleCreateSegment = useCallback((segment: any) => {
     // Handle both new format (from AnnotationLayer) and legacy format
