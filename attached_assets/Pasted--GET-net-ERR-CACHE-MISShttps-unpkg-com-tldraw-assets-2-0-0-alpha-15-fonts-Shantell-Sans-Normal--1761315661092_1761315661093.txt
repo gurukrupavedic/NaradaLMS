@@ -1,0 +1,248 @@
+
+GET net::ERR_CACHE_MISShttps://unpkg.com/@tldraw/assets@2.0.0-alpha.15/fonts/Shantell_Sans-Normal-SemiBold.woff2
+GET net::ERR_CACHE_MISShttps://unpkg.com/@tldraw/assets@2.0.0-alpha.15/fonts/IBMPlexSerif-Medium.woff2
+GET net::ERR_CACHE_MISShttps://unpkg.com/@tldraw/assets@2.0.0-alpha.15/fonts/IBMPlexSans-Medium.woff2
+GET net::ERR_CACHE_MISShttps://unpkg.com/@tldraw/assets@2.0.0-alpha.15/fonts/IBMPlexMono-Medium.woff2
+Navigated to https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/manage/tracks/1/chapters/3 via a page reload
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+GET net::ERR_CACHE_MISShttps://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/fonts/JIMS-Regular.ttf
+Editor content mismatch detected:
+External value:
+Editor HTML: <p></p>
+Editor focused: false
+Updating editor content with external value (forced)
+Editor onChange - HTML content: <p></p>
+ChapterEditor onChange - received HTML: <p></p>
+ChapterEditor onChange - contentScript: te
+ChapterEditor onChange - updating textContent state
+ChapterEditor onChange - new textContent state: {"te":"<p></p>","hi":"","en":""}
+Editor content mismatch detected:
+External value: <p><span style="font-family: JIMS; font-size: 22pt">ఓం యశ్ఛంద॑సామృష॒భో వి॒శ్వరూ॑పః । ఛందో॒భ్యోఽధ్య॒మృతా᳚థ్సంబ॒భూవ॑ ।</span></p><p style="text-align: justify"><span style="font-family: JIMS; font-size: 22pt">స మేంద్రో॑ మే॒ధయా᳚ స్పృణోతు । అ॒మృ...
+Show more
+Editor HTML: <p></p>
+Editor focused: true
+Updating editor content with external value (forced)
+Clicked<buttonid="radix-:r0:-trigg..."type="button"+5 more>
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/src/pages/ChapterEditor.tsx:73:22
+)
+    at component
+    at Route (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=54218ac0:323:16
+)
+    at Switch (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=54218ac0:379:17
+)
+    at Suspense
+    at Router (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/src/App.tsx?v=FFh91ab4cW1xaD_1rMSct:55:32
+)
+    at ErrorBoundary (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/src/components/ui/error-boundary.tsx:165:5
+)
+    at Provider (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=54218ac0:38:15
+)
+    at TooltipProvider (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=54218ac0:65:5
+)
+    at QueryClientProvider (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=54218ac0:2805:3
+)
+    at App
+Show less
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/src/pages/ChapterEditor.tsx:73:22
+)
+    at component
+    at Route (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=54218ac0:323:16
+)
+    at Switch (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=54218ac0:379:17
+)
+    at Suspense
+    at Router (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/src/App.tsx?v=FFh91ab4cW1xaD_1rMSct:55:32
+)
+    at ErrorBoundary (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/src/components/ui/error-boundary.tsx:165:5
+)
+    at Provider (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=54218ac0:38:15
+)
+    at TooltipProvider (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=54218ac0:65:5
+)
+    at QueryClientProvider (
+https://f49483ab-2527-4370-8b38-857a2687e44c-00-39b1pk4ehy97s.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=54218ac0:2805:3
+)
+    at App
+Show less
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.%s 
+    at ChapterEditor (
+https://f49483ab-252
+...
+Show more
+Video stopped

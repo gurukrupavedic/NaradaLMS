@@ -379,30 +379,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // === HELPER FUNCTIONS SECTION ===
 
-  // Helper functions for drag operations
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (!isDragging || !selectedMark || !timelineRef.current) return;
-
-      const rect = timelineRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const percentage = Math.max(0, Math.min(1, x / rect.width));
-      const newTime = percentage * duration;
-
-      setTimeMarks((prev) =>
-        prev
-          .map((mark) => (mark === selectedMark ? newTime : mark))
-          .sort((a, b) => a - b),
-      );
-      setSelectedMark(newTime);
-    },
-    [isDragging, selectedMark, duration],
-  );
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
   const updateMarkTimestamp = (oldMark: number, newTimestamp: string) => {
     const [minutes, seconds] = newTimestamp.split(":").map(Number);
     if (
@@ -1059,15 +1035,34 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Add global mouse event listeners for dragging
   useEffect(() => {
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      return () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-      };
-    }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+    if (!isDragging) return;
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!selectedMark || !timelineRef.current) return;
+      const rect = timelineRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const percentage = Math.max(0, Math.min(1, x / rect.width));
+      const newTime = percentage * duration;
+      setTimeMarks((prev) =>
+        prev
+          .map((mark) => (mark === selectedMark ? newTime : mark))
+          .sort((a, b) => a - b),
+      );
+      setSelectedMark(newTime);
+    };
+
+    const onMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    
+    return () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [isDragging, selectedMark, duration]);
 
   // Cleanup audio player on unmount
   useEffect(() => {
