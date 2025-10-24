@@ -1072,7 +1072,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
         audioPlayer.removeEventListener("loadedmetadata", () => {});
         audioPlayer.removeEventListener("timeupdate", () => {});
         audioPlayer.removeEventListener("error", () => {});
-        setAudioPlayer(null);
       }
     };
   }, [audioPlayer]);
@@ -1403,20 +1402,20 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Auto-select first audio file in Preview tab when audioFiles load
   useEffect(() => {
-    if (audioFiles && audioFiles.length > 0 && !selectedAudioFilePreview) {
+    if (audioFiles && audioFiles.length > 0 && selectedAudioFilePreview === null) {
       const firstAudioFile = audioFiles[0];
       setSelectedAudioFilePreview(firstAudioFile.id);
       previewAudioRef.src = `/uploads/${firstAudioFile.filename}`;
     }
-  }, [audioFiles, selectedAudioFilePreview]);
+  }, [audioFiles]);
 
   // Auto-select first audio file in Mapping tab when audioFiles load
   useEffect(() => {
-    if (audioFiles && audioFiles.length > 0 && !selectedAudioFile) {
+    if (audioFiles && audioFiles.length > 0 && selectedAudioFile === null) {
       const firstAudioFile = audioFiles[0];
       setSelectedAudioFile(firstAudioFile);
     }
-  }, [audioFiles, selectedAudioFile]);
+  }, [audioFiles]);
 
   const validateFileType = (file: File) => {
     const allowedTypes = ["audio/", "video/"];
