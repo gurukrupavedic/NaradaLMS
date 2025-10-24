@@ -207,53 +207,19 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, index)}
                     onDragEnd={handleDragEnd}
-                    className={`
-                      relative p-3 border rounded-lg cursor-grab transition-all
-                      ${isSelected ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-300' : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:bg-white'}
-                      ${isDragging ? 'opacity-50 cursor-grabbing' : ''}
-                      ${isDraggedOver ? 'border-blue-400 bg-blue-50' : ''}
-                    `}
-                    onClick={() => onSegmentSelect(segment.id)}
+                    className={isDraggedOver ? 'ring-2 ring-blue-400 rounded-lg' : ''}
                   >
-                    {/* Main Content Layout */}
-                    <div className="flex items-start gap-3">
-                      {/* Left: Number Badge */}
-                      <Badge variant="secondary" className="text-xs px-2 py-1 min-w-6 justify-center flex-shrink-0 rounded-full bg-gray-200 text-gray-700">
-                        {segment.order + 1}
-                      </Badge>
-                      
-                      {/* Right: Content Area */}
-                      <div className="flex-1 min-w-0">
-                        {/* Text Content */}
-                        <div 
-                          className="text-gray-700 leading-relaxed break-words"
-                          style={{ 
-                            fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
-                                        currentScript === 'hi' ? "'Adishila San', 'Noto Sans Devanagari', serif" :
-                                        "'JIMS', 'Noto Sans Telugu', sans-serif",
-                            fontSize: '28px' 
-                          }}
-                        >
-                          {segmentText}
-                        </div>
-                      </div>
-
-                      {/* Far Right: Status Icon and Delete Button */}
-                      <div className="flex-shrink-0 flex items-center gap-1">
-                        <LinkStatusIcon status={mappingStatus} size="md" />
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSegmentDelete(segment.id);
-                          }}
-                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700 cursor-pointer"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
+                    <TextSegmentCard
+                      content={segmentText}
+                      script={currentScript}
+                      fontSize="28px"
+                      segmentNumber={segment.order + 1}
+                      isSelected={isSelected}
+                      isDragging={isDragging}
+                      isMapped={mappingStatus === 'mapped'}
+                      onDelete={() => onSegmentDelete(segment.id)}
+                      onSelect={() => onSegmentSelect(segment.id)}
+                    />
                   </div>
                 );
               })
