@@ -727,14 +727,17 @@ export class DatabaseStorage implements IStorage {
     if (!this.initialized) return;
     
     try {
-      for (const { id, order } of segmentOrders) {
-        await db
-          .update(textSegments)
-          .set({ order })
-          .where(eq(textSegments.id, id));
-      }
+      await db.transaction(async (tx) => {
+        for (const { id, order } of segmentOrders) {
+          await tx
+            .update(textSegments)
+            .set({ order })
+            .where(eq(textSegments.id, id));
+        }
+      });
     } catch (error) {
       console.error('Error updating segment order:', error);
+      throw error;
     }
   }
 

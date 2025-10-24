@@ -885,8 +885,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ 
-        queryKey: [`/api/segments/${chapterId}`],
-        exact: false
+        queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`]
       });
     }
   });
