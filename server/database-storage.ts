@@ -736,19 +736,21 @@ export class DatabaseStorage implements IStorage {
     }
     
     try {
-      console.log('🔄 REORDER DEBUG - Starting transaction...');
-      await db.transaction(async (tx) => {
-        for (const { id, order } of segmentOrders) {
-          console.log(`  Updating segment ID ${id} to order ${order}`);
-          const result = await tx
-            .update(textSegments)
-            .set({ order })
-            .where(eq(textSegments.id, id))
-            .returning();
-          console.log(`  Updated segment ${id}:`, result);
-        }
-      });
-      console.log('✅ REORDER DEBUG - Transaction completed successfully');
+      console.log('🔄 REORDER DEBUG - Starting sequential updates (NO TRANSACTION - Neon poolQueryViaFetch=true does not support transactions)...');
+      
+      // Execute updates sequentially without transaction
+      // Note: Neon's poolQueryViaFetch=true mode does not properly support transactions
+      for (const { id, order } of segmentOrders) {
+        console.log(`  Updating segment ID ${id} to order ${order}`);
+        const result = await db
+          .update(textSegments)
+          .set({ order })
+          .where(eq(textSegments.id, id))
+          .returning();
+        console.log(`  Updated segment ${id}:`, result);
+      }
+      
+      console.log('✅ REORDER DEBUG - All updates completed successfully');
     } catch (error) {
       console.error('❌ REORDER DEBUG - Error updating segment order:', error);
       throw error;
