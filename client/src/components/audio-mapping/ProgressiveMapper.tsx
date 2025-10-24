@@ -27,8 +27,8 @@ interface ProgressiveMapperProps {
   mappings: AudioMapping[];
   selectedAudioFile?: { id: number; filename: string; displayName?: string };
   onMappingCreate: (mapping: AudioMapping) => void;
-  onMappingUpdate: (segmentId: string, mapping: Partial<AudioMapping>) => void;
-  onMappingDelete: (segmentId: string) => void;
+  onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
+  onMappingDelete: (segmentId: number) => void;
 }
 
 export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
@@ -55,7 +55,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   
   // Mapping session state
   const [mappingSession, setMappingSession] = useState<'idle' | 'active' | 'paused'>('idle');
-  const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
+  const [activeSegmentId, setActiveSegmentId] = useState<number | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number>(0);
   
   // Warning dialog state
