@@ -12,9 +12,12 @@
  * - Hover-revealed delete action, persistent mapping icon
  * - Content-only display with numbered pills
  * - 24-color variant system with no color conflicts
+ * - Script-aware font rendering (Telugu/JIMS, Hindi/Adishila San, English/JIMS)
+ * - Custom font sizing support (28px default for Vedic content)
  * 
  * @author LMS Design System v1.0
  * @since 2025-06-24
+ * @updated 2025-10-24 - Added script and fontSize props
  */
 
 import * as React from "react";
@@ -102,6 +105,8 @@ export interface TextSegmentProps
   onDelete?: () => void;
   onToggleMapping?: () => void;
   showActions?: boolean;
+  script?: 'te' | 'hi' | 'en'; // Script for automatic font-family mapping
+  fontSize?: string; // Custom font size (e.g., '28px', '1.5rem')
 }
 
 const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
@@ -120,12 +125,33 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
     onDelete,
     onToggleMapping,
     showActions = true,
+    script,
+    fontSize,
     onClick,
+    style,
     ...props 
   }, ref) => {
     // Determine state based on props
     const currentState = isDragging ? "dragging" : isSelected ? "selected" : "static";
     const finalState = state || currentState;
+    
+    // Get font family based on script
+    const getFontFamily = (scriptType?: 'te' | 'hi' | 'en'): string | undefined => {
+      if (!scriptType) return undefined;
+      
+      switch (scriptType) {
+        case 'te':
+          return "'JIMS', 'Noto Sans Telugu', sans-serif";
+        case 'hi':
+          return "'Adishila San', 'Noto Sans Devanagari', serif";
+        case 'en':
+          return "'JIMS', 'Noto Sans Telugu', sans-serif";
+        default:
+          return undefined;
+      }
+    };
+    
+    const fontFamily = getFontFamily(script);
     
     const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
       if (!isDragging) {
@@ -195,16 +221,23 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
         )}
 
         {/* Content - Responsive with auto-height and text wrapping */}
-        <div className={cn(
-          "leading-relaxed text-gray-800 cursor-grab active:cursor-grabbing whitespace-pre-wrap break-words",
-          segmentNumber ? "mt-2" : "",
-          showActions ? "pr-16" : "", // Space for action icons
-          size === "sm" ? "text-sm" : size === "lg" ? "text-lg" : "text-base",
-          maxLines && "line-clamp-none", // Disable line clamping by default
-          maxLines === 3 && "line-clamp-3",
-          maxLines === 4 && "line-clamp-4",
-          maxLines === 5 && "line-clamp-5"
-        )}>
+        <div 
+          className={cn(
+            "leading-relaxed text-gray-800 cursor-grab active:cursor-grabbing whitespace-pre-wrap break-words",
+            segmentNumber ? "mt-2" : "",
+            showActions ? "pr-16" : "", // Space for action icons
+            size === "sm" ? "text-sm" : size === "lg" ? "text-lg" : "text-base",
+            maxLines && "line-clamp-none", // Disable line clamping by default
+            maxLines === 3 && "line-clamp-3",
+            maxLines === 4 && "line-clamp-4",
+            maxLines === 5 && "line-clamp-5"
+          )}
+          style={{
+            fontFamily: fontFamily,
+            fontSize: fontSize,
+            ...style
+          }}
+        >
           {content}
         </div>
 
