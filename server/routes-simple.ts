@@ -532,10 +532,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const chapterId = parseInt(req.params.chapterId);
       const { segmentOrders } = req.body;
       
+      // DEBUG: Log incoming reorder request
+      console.log('🔍 REORDER DEBUG - Endpoint received:');
+      console.log('  Chapter ID:', chapterId);
+      console.log('  Number of segments to reorder:', segmentOrders?.length);
+      console.log('  Segment orders:', JSON.stringify(segmentOrders, null, 2));
+      
       await storage.updateSegmentOrder(chapterId, segmentOrders);
+      
+      console.log('✅ REORDER DEBUG - updateSegmentOrder completed successfully');
+      
       res.json({ message: "Segments reordered successfully" });
     } catch (error) {
-      console.error("Error reordering segments:", error);
+      console.error("❌ REORDER DEBUG - Error reordering segments:", error);
       res.status(500).json({ message: "Failed to reorder segments" });
     }
   });

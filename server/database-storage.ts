@@ -723,20 +723,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSegmentOrder(chapterId: number, segmentOrders: { id: number; order: number }[]): Promise<void> {
+    console.log('🔍 REORDER DEBUG - updateSegmentOrder called:');
+    console.log('  Chapter ID:', chapterId);
+    console.log('  Segment orders to update:', segmentOrders);
+    
     await this.ensureInitialized();
-    if (!this.initialized) return;
+    console.log('  Database initialized:', this.initialized);
+    
+    if (!this.initialized) {
+      console.log('⚠️ REORDER DEBUG - Database NOT initialized, skipping update');
+      return;
+    }
     
     try {
+      console.log('🔄 REORDER DEBUG - Starting transaction...');
       await db.transaction(async (tx) => {
         for (const { id, order } of segmentOrders) {
-          await tx
+          console.log(`  Updating segment ID ${id} to order ${order}`);
+          const result = await tx
             .update(textSegments)
             .set({ order })
-            .where(eq(textSegments.id, id));
+            .where(eq(textSegments.id, id))
+            .returning();
+          console.log(`  Updated segment ${id}:`, result);
         }
       });
+      console.log('✅ REORDER DEBUG - Transaction completed successfully');
     } catch (error) {
-      console.error('Error updating segment order:', error);
+      console.error('❌ REORDER DEBUG - Error updating segment order:', error);
       throw error;
     }
   }
