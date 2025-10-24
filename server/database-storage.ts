@@ -2,7 +2,7 @@ import { db } from "./db";
 import { 
   tracks, chapters, audioFiles, textSegments, mediaSegments, segmentMappings, audioMappings, users
 } from "@shared/schema";
-import { eq, and, max } from "drizzle-orm";
+import { eq, and, max, asc } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { MemStorage } from "./storage-simplified";
 const memStorage = new MemStorage();
@@ -660,8 +660,12 @@ export class DatabaseStorage implements IStorage {
       const whereConditions = script 
         ? and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script))
         : eq(textSegments.chapterId, chapterId);
-        
-      return await db.select().from(textSegments).where(whereConditions).orderBy(textSegments.order);
+      
+      console.log(`🔍 GET SEGMENTS DEBUG - Fetching segments for chapter ${chapterId}, script: ${script}`);
+      const results = await db.select().from(textSegments).where(whereConditions).orderBy(asc(textSegments.order));
+      console.log(`🔍 GET SEGMENTS DEBUG - Found ${results.length} segments, first 3 IDs: ${results.slice(0, 3).map(s => `${s.id}(order:${s.order})`).join(', ')}`);
+      
+      return results;
     } catch (error) {
       return memStorage.getSegmentsByChapter(chapterId, script);
     }
