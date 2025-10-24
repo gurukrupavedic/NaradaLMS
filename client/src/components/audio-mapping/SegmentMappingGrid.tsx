@@ -8,7 +8,7 @@
  * Purpose: Interactive segment grid for audio mapping
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +48,8 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
   onMappingDelete,
   onEndSession
 }) => {
+  const [editingSegmentId, setEditingSegmentId] = useState<number | null>(null);
+
   const getSegmentMapping = (segmentId: number): AudioMapping | undefined => {
     return mappings.find(m => m.segmentId === segmentId);
   };
