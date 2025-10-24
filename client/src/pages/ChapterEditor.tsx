@@ -3301,7 +3301,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
           <TabsContent value="preview" className="space-y-6">
             <div className="relative">
               {/* Header with Script Selector, Audio File, and Mapped Count */}
-              <div className="flex justify-between items-center p-4 bg-gray-50 border rounded-lg">
+              <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
                 <div className="flex items-center gap-4">
                   <ScriptSelector
                     currentScript={contentScript}
