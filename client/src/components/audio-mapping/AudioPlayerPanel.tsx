@@ -83,7 +83,6 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
           <Button
             variant="outline"
             onClick={togglePlayPause}
-            disabled={mappingSession === 'idle'}
             className="w-full"
           >
             {isPlaying ? (
