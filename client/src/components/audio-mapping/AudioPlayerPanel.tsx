@@ -133,7 +133,7 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
                 className="w-full"
               >
                 <Square className="h-4 w-4 mr-2" />
-                Stop Session
+                End Session
               </Button>
               <Button 
                 variant="outline" 
