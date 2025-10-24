@@ -60,14 +60,6 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
   // Get normalized text content (same for both display and segmentation)
   const normalizedText = getDisplayText(content, currentScript);
-  
-  // Debug logging
-  useEffect(() => {
-    console.log('AnnotationLayer: content received:', content);
-    console.log('AnnotationLayer: currentScript:', currentScript);
-    console.log('AnnotationLayer: normalizedText:', normalizedText?.substring(0, 100) + '...');
-    console.log('AnnotationLayer: segments:', segments);
-  }, [content, currentScript, normalizedText, segments]);
 
   // Simplified text position calculation with normalization
   const getTextPosition = (selectedText: string): { start: number, end: number } => {
