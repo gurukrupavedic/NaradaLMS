@@ -300,7 +300,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Segments query for database integration - script-specific (original - preserve until hooks validated)
   const { data: textSegments = [], refetch: refetchSegments, isLoading: segmentsLoading, error: segmentsError } = useQuery({
     queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`],
-    enabled: !!chapterId && !!contentScript
+    enabled: !!chapterId && !!contentScript,
+    staleTime: 0,
   });
 
   // Segment selection state
@@ -883,12 +884,25 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
         segmentOrders
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ 
-        queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`]
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [`/api/segments`, chapterId],
+        refetchType: 'all'
+      });
+      await refetchSegments();
+    },
+    onError: () => {
+      toast({
+        title: "Failed to reorder segments",
+        description: "Please try again",
+        variant: "destructive"
       });
     }
   });
+
+  const handleSegmentReorder = useCallback((reorderedSegments: any[]) => {
+    reorderSegmentsMutation.mutate(reorderedSegments);
+  }, [reorderSegmentsMutation.mutate]);
 
   const handleCreateSegment = useCallback((segment: any) => {
     // Handle both new format (from AnnotationLayer) and legacy format
@@ -2265,9 +2279,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     onSegmentDelete={handleDeleteSegment}
                     onSegmentUpdate={handleUpdateSegment}
                     onPlayMapping={() => {}}
-                    onSegmentReorder={(reorderedSegments) => {
-                      reorderSegmentsMutation.mutate(reorderedSegments);
-                    }}
+                    onSegmentReorder={handleSegmentReorder}
                   />
                 </Panel>
               </PanelGroup>
