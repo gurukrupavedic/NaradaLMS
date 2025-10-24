@@ -58,8 +58,8 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Segment Mapping</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base font-medium">Segment Mapping</CardTitle>
       </CardHeader>
       <CardContent className="p-0 h-[calc(100vh-450px)] flex flex-col">
         <div className="flex-1 relative overflow-auto">
