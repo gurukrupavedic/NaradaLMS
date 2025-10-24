@@ -1020,46 +1020,18 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Auto-save functionality with debounce (original - preserve until hooks validated)
   useEffect(() => {
-    console.log('Auto-save useEffect triggered - debugging:', {
-      hasActiveChapterContent: !!activeChapter?.content,
-      isPublished,
-      USE_EXTRACTED_HOOKS,
-      textContent,
-      activeChapterContent: activeChapter?.content
-    });
-
     if (!activeChapter?.content || isPublished || USE_EXTRACTED_HOOKS) {
-      console.log('Auto-save early return:', {
-        noActiveChapterContent: !activeChapter?.content,
-        isPublished,
-        USE_EXTRACTED_HOOKS
-      });
       return;
     }
 
     // Only check the currently active script for changes
     const hasChanges = textContent[contentScript] !== (activeChapter.content?.[contentScript] || "");
 
-    console.log('Auto-save comparison check:', {
-      contentScript,
-      'textContent[contentScript]': textContent[contentScript],
-      'activeChapter.content[contentScript]': activeChapter.content?.[contentScript],
-      hasChanges
-    });
-
     if (!hasChanges) {
-      console.log('Auto-save: No changes detected, skipping');
       return;
     }
 
-    console.log('Auto-save triggered - hasChanges detected:', {
-      textContent,
-      activeChapterContent: activeChapter.content,
-      hasChanges
-    });
-
     const timeoutId = setTimeout(() => {
-      console.log('Executing auto-save mutation with content:', textContent);
       updateContentMutation.mutate({
         ...activeChapter.content,
         [contentScript]: textContent[contentScript],
@@ -1067,7 +1039,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }, 2000); // Auto-save after 2 seconds of no typing
 
     return () => clearTimeout(timeoutId);
-  }, [textContent, activeChapter?.content, isPublished, contentScript]);
+  }, [textContent, activeChapter?.content, isPublished, contentScript, USE_EXTRACTED_HOOKS]);
 
   // Add global mouse event listeners for dragging
   useEffect(() => {
