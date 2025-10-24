@@ -8,7 +8,7 @@
  * Purpose: Interactive timestamp display and editing
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Play, X, Check, X as Cancel } from 'lucide-react';
 import { formatDuration } from '@shared/utils/text-segmentation';
@@ -17,9 +17,12 @@ interface TimestampPillProps {
   segmentId: number;
   startTime: number;
   endTime: number;
+  isEditing: boolean;
   onPlay: (startTime: number, endTime: number) => void;
   onDelete: (segmentId: number) => void;
   onTimestampUpdate: (segmentId: number, updates: { startTime?: number; endTime?: number }) => void;
+  onEditStart: () => void;
+  onEditCancel: () => void;
   duration: number;
 }
 
@@ -27,13 +30,16 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
   segmentId,
   startTime,
   endTime,
+  isEditing,
   onPlay,
   onDelete,
   onTimestampUpdate,
+  onEditStart,
+  onEditCancel,
   duration
 }) => {
-  const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editValue, setEditValue] = useState<string>('');
+  const pillRef = useRef<HTMLDivElement>(null);
 
   const parseTimeFromEdit = (timeString: string): number => {
     const parts = timeString.split(':');
@@ -48,7 +54,7 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
   };
 
   const startEditingTimestamp = () => {
-    setIsEditing(true);
+    onEditStart();
     setEditValue(formatDuration(endTime, { showDecimal: true }));
   };
 
@@ -58,14 +64,30 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
       onTimestampUpdate(segmentId, { endTime: newTime });
     }
     
-    setIsEditing(false);
+    onEditCancel();
     setEditValue('');
   };
 
   const cancelTimestampEdit = () => {
-    setIsEditing(false);
+    onEditCancel();
     setEditValue('');
   };
+
+  // Click-outside detection to auto-cancel edit mode
+  useEffect(() => {
+    if (!isEditing) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pillRef.current && !pillRef.current.contains(event.target as Node)) {
+        cancelTimestampEdit();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isEditing]);
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -78,7 +100,10 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
   };
 
   return (
-    <div className="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium min-w-[85px] shadow-sm hover:border-gray-300 hover:shadow-md transition-all">
+    <div 
+      ref={pillRef}
+      className="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium min-w-[85px] shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
+    >
       {/* Delete button */}
       <button
         onClick={handleDelete}
