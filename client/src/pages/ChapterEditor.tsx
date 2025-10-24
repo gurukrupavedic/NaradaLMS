@@ -862,10 +862,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [`/api/segments`, chapterId],
-        refetchType: 'all'
+        queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`]
       });
-      await refetchSegments();
     },
     onError: () => {
       toast({
