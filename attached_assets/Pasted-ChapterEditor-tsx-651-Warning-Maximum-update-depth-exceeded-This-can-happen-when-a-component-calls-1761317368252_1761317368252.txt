@@ -1,0 +1,23 @@
+ChapterEditor.tsx:651 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render. Error Component Stack
+    at ChapterEditor (ChapterEditor.tsx:109:22)
+    at component (<anonymous>)
+    at Router (App.tsx:33:32)
+    at ErrorBoundary (error-boundary.tsx:104:5)
+rich-text-editor.tsx:216 Editor content mismatch detected:
+rich-text-editor.tsx:217 External value: 
+rich-text-editor.tsx:218 Editor HTML: <p></p>
+rich-text-editor.tsx:219 Editor focused: false
+rich-text-editor.tsx:222 Updating editor content with external value (forced)
+rich-text-editor.tsx:208 Editor onChange - HTML content: <p></p>
+ChapterEditor.tsx:1974 ChapterEditor onChange - received HTML: <p></p>
+ChapterEditor.tsx:1975 ChapterEditor onChange - contentScript: te
+ChapterEditor.tsx:1976 ChapterEditor onChange - updating textContent state
+ChapterEditor.tsx:1982 ChapterEditor onChange - new textContent state: 
+{te: '<p></p>', hi: '', en: ''}
+rich-text-editor.tsx:216 Editor content mismatch detected:
+rich-text-editor.tsx:217 External value: <p><span style="font-family: JIMS, &quot;Noto Sans Telugu&quot;, sans-serif; font-size: 12px">శ్ర॒ద్ధాయా॒ఽగ్నిః సమి॑ధ్యతే । శ్ర॒ద్ధయా॑ విందతే హ॒విః । </span><span style="font-family: JIMS, &quot;Noto Sans Telugu&quot;, sans-serif"><br>శ్ర॒ద్ధాం భగ॑స్య మూ॒ర్ధని॑ । వచ॒సాఽఽవే॑దయామసి । <br>ప్రి॒యగ్గ్ శ్ర॑ద్ధే॒ దద॑తః । ప్రి॒యగ్గ్ శ్ర॑ద్ధే॒ దిదా॑సతః ।<br></span><span style="font-family: JIMS, &quot;Noto Sans Telugu&quot;, sans-serif; font-size: 28px">ప్రి॒యం భో॒జేషు॒ యజ్వ॑సు ॥ 1</span><span style="font-family: JIMS, &quot;Noto Sans Telugu&quot;, sans-serif"><br><br>ఇ॒దం మ॑ ఉది॒తం కృ॑ధి । యథా॑ దే॒వా అసు॑రేషు ।<br>శ్ర॒ద్ధాము॒గ్రేषు॑ చక్రి॒రే । ఏ॒వం భో॒జేషు॒ యజ్వ॑సు ।<br>అ॒స్మాక॑ముది॒తం కృ॑ధి । శ్ర॒ద్ధాం దే॑వా॒ యజ॑మానాః ।<br>వా॒యుగో॑పా॒ ఉపా॑సతే । శ్ర॒ద్ధాగ్ం హృ॑ద॒య్య॑యాఽఽకూ᳚త్యా ।<br>శ్ర॒ద్ధయా॑ హూయతే హ॒విః । శ్ర॒ద్ధాం ప్రా॒తర్హ॑వామహే ॥ 2<br><br>శ్ర॒ద్ధాం మ॒ధ్యంది॑నం॒ పరি॑ । శ్ర॒ద్ధాగ్ం సూర్య॑స్య ని॒మృచి॑ ।<br>శ్రద్ధే॒ శ్రద్ధా॑పయే॒హ మా᳚ । శ్ర॒ద్ధా దే॒వానధి॑వస్తే ।<br>శ్ర॒ద్ధా విశ్వ॑మి॒దం జగ॑త్ । శ్ర॒ద్ధాం కామ॑స్య మా॒తరం᳚ ।<br>హ॒విషా॑ వర్ధయామసి । ఓం శాంతిః॒ శాంతిః॒ శాంతిః॑ ॥ 3</span></p>
+rich-text-editor.tsx:218 Editor HTML: <p></p>
+rich-text-editor.tsx:219 Editor focused: true
+rich-text-editor.tsx:222 Updating editor content with external value (forced)
+2
+/manage/tracks/1/chapters/2:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
