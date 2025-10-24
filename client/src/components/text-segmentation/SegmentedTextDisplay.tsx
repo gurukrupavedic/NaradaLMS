@@ -78,9 +78,9 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
       parts.push(
         <span
           key={segment.id}
-          className={`relative rounded px-1 py-0.5 cursor-pointer select-none transition-colors ${
+          className={`relative rounded-sm px-0.5 mx-0.5 cursor-pointer select-none transition-colors ${
             isSelected 
-              ? 'bg-blue-200 text-blue-900 ring-2 ring-blue-400' 
+              ? 'bg-blue-200 text-blue-900 border-2 border-blue-400' 
               : 'bg-yellow-100 text-yellow-900 hover:bg-yellow-200'
           }`}
           title={`Segment ${segment.order + 1}: ${normalizedText.slice(range.start, Math.min(range.end, range.start + 50))}${range.end - range.start > 50 ? '...' : ''}`}
