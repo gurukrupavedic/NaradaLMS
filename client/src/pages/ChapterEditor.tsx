@@ -874,9 +874,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   const reorderSegmentsMutation = useMutation({
     mutationFn: async (reorderedSegments: any[]) => {
-      const segmentOrders = textSegments.map((segment, index) => ({
+      const segmentOrders = reorderedSegments.map(segment => ({
         id: segment.id,
-        order: index
+        order: segment.order
       }));
       
       return apiRequest("PATCH", `/api/segments/${chapterId}/reorder`, {
@@ -884,7 +884,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`] });
+      queryClient.invalidateQueries({ 
+        queryKey: [`/api/segments/${chapterId}`],
+        exact: false
+      });
     }
   });
 
