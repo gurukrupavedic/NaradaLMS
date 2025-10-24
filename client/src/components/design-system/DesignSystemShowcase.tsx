@@ -98,6 +98,8 @@ export function DesignSystemShowcase() {
   const [avatarVariant, setAvatarVariant] = useState("blue");
   const [avatarSize, setAvatarSize] = useState("md");
   const [textSegmentVariant, setTextSegmentVariant] = useState("blue");
+  const [textSegmentScript, setTextSegmentScript] = useState<'te' | 'hi' | 'en'>('te');
+  const [textSegmentFontSize, setTextSegmentFontSize] = useState("28px");
 
   // Complete 24-color system (12 primary + 12 fluorescent)
   const allColorVariants = [
@@ -1324,63 +1326,226 @@ export function DesignSystemShowcase() {
         {/* Component 25 */}
         <ComponentCard
             title="26. Text Segments"
-            description="Specialized text segmentation components designed for precise audio-text synchronization in educational content creation and multilingual learning experiences. Essential for Vedic LMS where Sanskrit chants, Telugu verses, and English instruction require exact alignment between spoken and written content for effective pronunciation training and comprehension. Features responsive auto-height with text wrapping, icon-based mapping status indicators, and universal blue selection states that work seamlessly with any color variant. Built with clean visual hierarchy including numbered segment pills, hover-revealed actions, and persistent mapping status icons that maintain clarity during complex content organization workflows. Supports drag-and-drop reordering, bulk operations, and real-time collaboration for instructor content development. Color variants provide semantic coding for different content types while maintaining readability across all language scripts. Integrates with audio timeline components to create synchronized multimedia learning experiences. Essential for language learning applications, pronunciation training systems, meditation guidance platforms, and any educational context where precise timing between audio narration and text display directly impacts learning effectiveness and student comprehension of complex multilingual content."
+            description="Specialized text segmentation components designed for precise audio-text synchronization in educational content creation and multilingual learning experiences. Essential for Vedic LMS where Sanskrit chants, Telugu verses, and English instruction require exact alignment between spoken and written content for effective pronunciation training and comprehension. Features responsive auto-height with text wrapping, icon-based mapping status indicators, and universal blue selection states that work seamlessly with any color variant. Built with clean visual hierarchy including numbered segment pills, hover-revealed actions, and persistent mapping status icons that maintain clarity during complex content organization workflows. Supports drag-and-drop reordering, bulk operations, and real-time collaboration for instructor content development. Color variants provide semantic coding for different content types while maintaining readability across all language scripts. Script-aware font rendering automatically applies JIMS for Telugu/English and Adishila San for Hindi. Custom fontSize support ensures consistent 28px Vedic content display. Integrates with audio timeline components to create synchronized multimedia learning experiences. Essential for language learning applications, pronunciation training systems, meditation guidance platforms, and any educational context where precise timing between audio narration and text display directly impacts learning effectiveness and student comprehension of complex multilingual content."
             componentName="TextSegment"
             variant={textSegmentVariant}
             size="md"
-            props={{ isMapped: false, showActions: true }}
+            props={{ isMapped: false, showActions: true, script: textSegmentScript, fontSize: textSegmentFontSize }}
             onVariantChange={setTextSegmentVariant}
             allSizes={["sm", "md", "lg"]}
           >
-            <div className="space-y-4">
-              <div className="grid gap-4">
-                <TextSegment
-                  variant={textSegmentVariant as any}
-                  content="ॐ गं गणपतये नमः। शुक्लाम्बरधरं विष्णुं शशिवर्णं चतुर्भुजम्। प्रसन्नवदनं ध्यायेत् सर्वविघ्नोपशान्तये॥
-
-This is a longer Sanskrit verse that demonstrates the responsive text wrapping capability. The segment automatically adjusts its height to accommodate all content without truncation."
-                  segmentNumber={1}
-                  isMapped={true}
-                  isSelected={false}
-                />
-                
-                <TextSegment
-                  variant={textSegmentVariant as any}
-                  content="मूकं करोति वाचालं पङ्गुं लङ्घयते गिरिम्। यत्कृपा तमहं वन्दे परमानन्दमाधवम्॥
-
-Short segment that shows how content adapts naturally to available space without artificial limitations."
-                  segmentNumber={2}
-                  isMapped={false}
-                  isSelected={true}
-                />
-                
-                <TextSegment
-                  variant={textSegmentVariant as any}
-                  content="सत्यं ज्ञानमनन्तं ब्रह्म। विज्ञानं आनन्दं ब्रह्म। सत्यं ब्रह्म। ज्ञानं ब्रह्म। आनन्दं ब्रह्म॥
-
-That which is the finest essence - this whole world has that as its Self. That is Reality. That is the Self. That thou art, O Śvetaketu.
-
-This bilingual segment demonstrates how the component handles mixed languages and longer content with proper line breaks and responsive height adjustment."
-                  segmentNumber={3}
-                  isMapped={true}
-                  isSelected={false}
-                />
-                
-                <TextSegment
-                  variant={textSegmentVariant as any}
-                  content="A very long educational text segment that would typically be used in the Vedic LMS for comprehensive content delivery. This demonstrates how the component handles extensive content without truncation, maintaining readability and proper formatting across multiple lines. The text wraps naturally and the segment height adjusts automatically to accommodate all content."
-                  segmentNumber={4}
-                  isMapped={false}
-                  isSelected={false}
-                  state="dragging"
-                />
+            <div className="space-y-6">
+              {/* Interactive Controls for Script and Font Size */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50/50 rounded-lg p-4 border border-blue-200/60">
+                <h4 className="text-sm font-semibold mb-3 text-blue-900">Script & Font Controls</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-blue-700">Script (Font Family)</label>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={textSegmentScript === 'te' ? 'solid' : 'outline'}
+                        color="blue"
+                        onClick={() => setTextSegmentScript('te')}
+                      >
+                        Telugu (JIMS)
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={textSegmentScript === 'hi' ? 'solid' : 'outline'}
+                        color="green"
+                        onClick={() => setTextSegmentScript('hi')}
+                      >
+                        Hindi (Adishila)
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={textSegmentScript === 'en' ? 'solid' : 'outline'}
+                        color="purple"
+                        onClick={() => setTextSegmentScript('en')}
+                      >
+                        English (JIMS)
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-blue-700">Font Size</label>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={textSegmentFontSize === '20px' ? 'solid' : 'outline'}
+                        color="orange"
+                        onClick={() => setTextSegmentFontSize('20px')}
+                      >
+                        20px
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={textSegmentFontSize === '24px' ? 'solid' : 'outline'}
+                        color="orange"
+                        onClick={() => setTextSegmentFontSize('24px')}
+                      >
+                        24px
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={textSegmentFontSize === '28px' ? 'solid' : 'outline'}
+                        color="orange"
+                        onClick={() => setTextSegmentFontSize('28px')}
+                      >
+                        28px
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={textSegmentFontSize === '32px' ? 'solid' : 'outline'}
+                        color="orange"
+                        onClick={() => setTextSegmentFontSize('32px')}
+                      >
+                        32px
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-lg p-4 mt-6 border border-gray-200/60">
-                <h4 className="text-sm font-medium mb-3 text-gray-700">Interactive States Demo:</h4>
+              {/* Interactive Demo with Script & Font Size */}
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-lg p-4 border border-gray-200/60">
+                <h4 className="text-sm font-semibold mb-3 text-gray-700">Interactive Script Demo (changes with controls above)</h4>
+                <div className="space-y-3">
+                  {textSegmentScript === 'te' && (
+                    <TextSegment
+                      variant={textSegmentVariant as any}
+                      content="వేదం అనగా జ్ఞానం. ఋగ్వేదం, యజుర్వేదం, సామవేదం, అథర్వణవేదం నాలుగు వేదాలు."
+                      segmentNumber={1}
+                      script="te"
+                      fontSize={textSegmentFontSize}
+                      isMapped={true}
+                    />
+                  )}
+                  {textSegmentScript === 'hi' && (
+                    <TextSegment
+                      variant={textSegmentVariant as any}
+                      content="ॐ गं गणपतये नमः। शुक्लाम्बरधरं विष्णुं शशिवर्णं चतुर्भुजम्।"
+                      segmentNumber={1}
+                      script="hi"
+                      fontSize={textSegmentFontSize}
+                      isMapped={true}
+                    />
+                  )}
+                  {textSegmentScript === 'en' && (
+                    <TextSegment
+                      variant={textSegmentVariant as any}
+                      content="Oṁ gaṁ gaṇapataye namaḥ. Śuklāmbaradharaṁ viṣṇuṁ śaśivarṇaṁ caturbhujam."
+                      segmentNumber={1}
+                      script="en"
+                      fontSize={textSegmentFontSize}
+                      isMapped={true}
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Script Comparison Demo */}
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50/50 rounded-lg p-4 border border-purple-200/60">
+                <h4 className="text-sm font-semibold mb-3 text-purple-900">Script-Aware Font Rendering (28px)</h4>
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-xs font-medium text-purple-700 mb-1">Telugu - JIMS Font</div>
+                    <TextSegment
+                      variant="blue"
+                      content="వేదం అనగా జ్ఞానం. ఋగ్వేదం, యజుర్వేదం, సామవేదం"
+                      segmentNumber={1}
+                      script="te"
+                      fontSize="28px"
+                      size="sm"
+                      isMapped={true}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-green-700 mb-1">Hindi/Devanagari - Adishila San Font</div>
+                    <TextSegment
+                      variant="green"
+                      content="ॐ गं गणपतये नमः। शुक्लाम्बरधरं विष्णुं"
+                      segmentNumber={2}
+                      script="hi"
+                      fontSize="28px"
+                      size="sm"
+                      isMapped={false}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-purple-700 mb-1">English/IAST - JIMS Font</div>
+                    <TextSegment
+                      variant="purple"
+                      content="Oṁ gaṁ gaṇapataye namaḥ. Śuklāmbaradharaṁ viṣṇuṁ"
+                      segmentNumber={3}
+                      script="en"
+                      fontSize="28px"
+                      size="sm"
+                      isSelected={true}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Font Size Comparison */}
+              <div className="bg-gradient-to-br from-orange-50 to-yellow-50/50 rounded-lg p-4 border border-orange-200/60">
+                <h4 className="text-sm font-semibold mb-3 text-orange-900">Font Size Variants (Telugu/JIMS)</h4>
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-xs font-medium text-orange-700 mb-1">20px - Small</div>
+                    <TextSegment
+                      variant="orange"
+                      content="వేదం అనగా జ్ఞానం"
+                      script="te"
+                      fontSize="20px"
+                      size="sm"
+                      showActions={false}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-orange-700 mb-1">24px - Medium</div>
+                    <TextSegment
+                      variant="orange"
+                      content="వేదం అనగా జ్ఞానం"
+                      script="te"
+                      fontSize="24px"
+                      size="sm"
+                      showActions={false}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-orange-700 mb-1">28px - Vedic Standard</div>
+                    <TextSegment
+                      variant="orange"
+                      content="వేదం అనగా జ్ఞానం"
+                      script="te"
+                      fontSize="28px"
+                      size="sm"
+                      showActions={false}
+                      isMapped={true}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-orange-700 mb-1">32px - Large</div>
+                    <TextSegment
+                      variant="orange"
+                      content="వేదం అనగా జ్ఞానం"
+                      script="te"
+                      fontSize="32px"
+                      size="sm"
+                      showActions={false}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Interactive States Demo */}
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-lg p-4 border border-gray-200/60">
+                <h4 className="text-sm font-semibold mb-3 text-gray-700">Interactive States Demo:</h4>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-600 w-16 font-medium">Static:</span>
+                    <span className="text-xs text-gray-600 w-20 font-medium">Static:</span>
                     <div className="flex-1">
                       <TextSegment
                         variant="blue"
@@ -1391,7 +1556,7 @@ This bilingual segment demonstrates how the component handles mixed languages an
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-600 w-16 font-medium">Selected:</span>
+                    <span className="text-xs text-gray-600 w-20 font-medium">Selected:</span>
                     <div className="flex-1">
                       <TextSegment
                         variant="green"
@@ -1403,7 +1568,7 @@ This bilingual segment demonstrates how the component handles mixed languages an
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-600 w-16 font-medium">Mapped:</span>
+                    <span className="text-xs text-gray-600 w-20 font-medium">Mapped:</span>
                     <div className="flex-1">
                       <TextSegment
                         variant="blue"
@@ -1415,7 +1580,7 @@ This bilingual segment demonstrates how the component handles mixed languages an
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-600 w-16 font-medium">Dragging:</span>
+                    <span className="text-xs text-gray-600 w-20 font-medium">Dragging:</span>
                     <div className="flex-1">
                       <TextSegment
                         variant="purple"
