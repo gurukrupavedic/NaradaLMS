@@ -661,9 +661,7 @@ export class DatabaseStorage implements IStorage {
         ? and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script))
         : eq(textSegments.chapterId, chapterId);
       
-      console.log(`🔍 GET SEGMENTS DEBUG - Fetching segments for chapter ${chapterId}, script: ${script}`);
       const results = await db.select().from(textSegments).where(whereConditions).orderBy(asc(textSegments.order));
-      console.log(`🔍 GET SEGMENTS DEBUG - Found ${results.length} segments, first 3 IDs: ${results.slice(0, 3).map(s => `${s.id}(order:${s.order})`).join(', ')}`);
       
       return results;
     } catch (error) {
@@ -727,36 +725,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSegmentOrder(chapterId: number, segmentOrders: { id: number; order: number }[]): Promise<void> {
-    console.log('🔍 REORDER DEBUG - updateSegmentOrder called:');
-    console.log('  Chapter ID:', chapterId);
-    console.log('  Segment orders to update:', segmentOrders);
-    
     await this.ensureInitialized();
-    console.log('  Database initialized:', this.initialized);
     
     if (!this.initialized) {
-      console.log('⚠️ REORDER DEBUG - Database NOT initialized, skipping update');
       return;
     }
     
     try {
-      console.log('🔄 REORDER DEBUG - Starting sequential updates (NO TRANSACTION - Neon poolQueryViaFetch=true does not support transactions)...');
-      
       // Execute updates sequentially without transaction
       // Note: Neon's poolQueryViaFetch=true mode does not properly support transactions
       for (const { id, order } of segmentOrders) {
-        console.log(`  Updating segment ID ${id} to order ${order}`);
-        const result = await db
+        await db
           .update(textSegments)
           .set({ order })
           .where(eq(textSegments.id, id))
           .returning();
-        console.log(`  Updated segment ${id}:`, result);
       }
-      
-      console.log('✅ REORDER DEBUG - All updates completed successfully');
     } catch (error) {
-      console.error('❌ REORDER DEBUG - Error updating segment order:', error);
+      console.error('Error updating segment order:', error);
       throw error;
     }
   }
