@@ -163,32 +163,41 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     window.getSelection()?.removeAllRanges();
   }, [selectedRange, currentScript, segments.length, onSegmentCreate]);
 
+  // Ref for scroll container to pass to floating toolbar
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   return (
     <div className="h-full">
       {/* Content Area */}
       <div className="pb-4 h-full">
         {/* White Container with integrated header */}
-        <div className="bg-white border rounded-lg h-[600px] overflow-auto shadow-sm">
-          {/* Header - now inside content container and sticky */}
-          <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
+        <div className="bg-white border rounded-lg h-[600px] overflow-hidden shadow-sm">
+          {/* Header - fixed at top */}
+          <div className="px-6 py-3 bg-gray-50 border-b">
             <h2 className="text-base font-semibold text-gray-700">Content ({currentScript === 'te' ? 'Telugu' : currentScript === 'hi' ? 'Hindi' : 'English'})</h2>
           </div>
 
-          {/* Text Content with Highlighting */}
-          <div
-            ref={textRef}
-            className="relative p-6"
-            onMouseUp={handleTextSelection}
+          {/* Scrollable Content Wrapper */}
+          <div 
+            ref={scrollContainerRef}
+            className="h-[calc(100%-60px)] overflow-y-auto"
           >
-            <SegmentedTextDisplay
-              content={content}
-              currentScript={currentScript}
-              segments={segments}
-              selectedSegmentId={selectedSegmentId}
-              onSegmentClick={onSegmentSelect}
-              mode="edit"
-              className=""
-            />
+            {/* Text Content with Highlighting */}
+            <div
+              ref={textRef}
+              className="relative p-6"
+              onMouseUp={handleTextSelection}
+            >
+              <SegmentedTextDisplay
+                content={content}
+                currentScript={currentScript}
+                segments={segments}
+                selectedSegmentId={selectedSegmentId}
+                onSegmentClick={onSegmentSelect}
+                mode="edit"
+                className=""
+              />
+            </div>
           </div>
 
           {/* Floating Toolbar with proper positioning */}
@@ -201,6 +210,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
                 setSelectedRange(null);
                 window.getSelection()?.removeAllRanges();
               }}
+              scrollContainerRef={scrollContainerRef}
             />
           )}
         </div>
