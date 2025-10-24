@@ -78,7 +78,7 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
       parts.push(
         <span
           key={segment.id}
-          className={`relative rounded-sm px-0.5 mx-0.5 cursor-pointer select-none transition-colors ${
+          className={`relative rounded-sm px-0.5 mx-0.5 align-middle cursor-pointer select-none transition-colors ${
             isSelected 
               ? 'bg-blue-200 text-blue-900 border-2 border-blue-400' 
               : 'bg-yellow-100 text-yellow-900 hover:bg-yellow-200'
