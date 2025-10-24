@@ -12,16 +12,16 @@ import type { TextSegment, AudioMapping } from '../types/text-segmentation';
 
 interface MappingControlsProps {
   mappingSession: 'idle' | 'active' | 'paused';
-  activeSegmentId: string | null;
+  activeSegmentId: number | null;
   currentTime: number;
   sessionStartTime: number;
   segments: TextSegment[];
   mappings: AudioMapping[];
   selectedAudioFileId?: number;
   onMappingCreate: (mapping: AudioMapping) => void;
-  onMappingDelete: (segmentId: string) => void;
+  onMappingDelete: (segmentId: number) => void;
   onSessionChange: (session: 'idle' | 'active' | 'paused') => void;
-  onActiveSegmentChange: (segmentId: string | null) => void;
+  onActiveSegmentChange: (segmentId: number | null) => void;
   onSessionStartTimeChange: (time: number) => void;
   onSessionStartRequest?: (existingCount: number) => void;
 }
@@ -42,7 +42,7 @@ export const useMappingControls = ({
   onSessionStartRequest
 }: MappingControlsProps) => {
 
-  const handleSegmentClick = (segmentId: string) => {
+  const handleSegmentClick = (segmentId: number) => {
     if (mappingSession !== 'active') return;
 
     // End previous segment if exists
