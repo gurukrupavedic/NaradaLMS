@@ -14,12 +14,12 @@ import { Play, X, Check, X as Cancel } from 'lucide-react';
 import { formatDuration } from '@shared/utils/text-segmentation';
 
 interface TimestampPillProps {
-  segmentId: string;
+  segmentId: number;
   startTime: number;
   endTime: number;
   onPlay: (startTime: number, endTime: number) => void;
-  onDelete: (segmentId: string) => void;
-  onTimestampUpdate: (segmentId: string, updates: { startTime?: number; endTime?: number }) => void;
+  onDelete: (segmentId: number) => void;
+  onTimestampUpdate: (segmentId: number, updates: { startTime?: number; endTime?: number }) => void;
   duration: number;
 }
 
