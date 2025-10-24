@@ -1399,6 +1399,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     }
   }, [audioFiles, selectedAudioFilePreview]);
 
+  // Auto-select first audio file in Mapping tab when audioFiles load
+  useEffect(() => {
+    if (audioFiles && audioFiles.length > 0 && !selectedAudioFile) {
+      const firstAudioFile = audioFiles[0];
+      setSelectedAudioFile(firstAudioFile);
+    }
+  }, [audioFiles, selectedAudioFile]);
+
   const validateFileType = (file: File) => {
     const allowedTypes = ["audio/", "video/"];
     if (!allowedTypes.some((type) => file.type.startsWith(type))) {
