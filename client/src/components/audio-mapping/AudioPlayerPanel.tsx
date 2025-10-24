@@ -53,50 +53,56 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
 }) => {
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Audio Controls</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base font-medium">Audio Controls</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Audio element */}
         <audio ref={audioRef} src={audioUrl} preload="metadata" />
         
-        {/* Progress bar */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{formatDuration(currentTime)}</span>
-            <span>{formatDuration(duration)}</span>
+        {/* Audio Playback Section */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-muted-foreground">Audio Playback</h3>
+          
+          {/* Progress bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>{formatDuration(currentTime)}</span>
+              <span>{formatDuration(duration)}</span>
+            </div>
+            <Slider
+              value={[currentTime]}
+              max={duration}
+              step={0.1}
+              onValueChange={([value]) => seekTo(value)}
+              className="w-full"
+            />
           </div>
-          <Slider
-            value={[currentTime]}
-            max={duration}
-            step={0.1}
-            onValueChange={([value]) => seekTo(value)}
+          
+          {/* Audio play/pause control */}
+          <Button
+            variant="outline"
+            onClick={togglePlayPause}
+            disabled={mappingSession === 'idle'}
             className="w-full"
-          />
+          >
+            {isPlaying ? (
+              <>
+                <Pause className="h-4 w-4 mr-2" />
+                Pause
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4 mr-2" />
+                Play
+              </>
+            )}
+          </Button>
         </div>
         
-        {/* Controls */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              onClick={togglePlayPause}
-              disabled={mappingSession === 'idle'}
-              className="w-full"
-            >
-              {isPlaying ? (
-                <>
-                  <Pause className="h-4 w-4 mr-2" />
-                  Pause
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-2" />
-                  Play
-                </>
-              )}
-            </Button>
-          </div>
+        {/* Mapping Session Controls Section */}
+        <div className="space-y-3 pt-2 border-t">
+          <h3 className="text-sm font-medium text-muted-foreground">Mapping Session Controls</h3>
           
           {mappingSession === 'idle' ? (
             <Button onClick={startMappingSession} className="w-full">
@@ -112,12 +118,12 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
                 {mappingSession === 'paused' ? (
                   <>
                     <Play className="h-4 w-4 mr-2" />
-                    Resume
+                    Resume Session
                   </>
                 ) : (
                   <>
                     <Pause className="h-4 w-4 mr-2" />
-                    Pause
+                    Pause Session
                   </>
                 )}
               </Button>
@@ -127,7 +133,7 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
                 className="w-full"
               >
                 <Square className="h-4 w-4 mr-2" />
-                Stop
+                Stop Session
               </Button>
               <Button 
                 variant="outline" 
@@ -135,7 +141,7 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
                 className="w-full"
               >
                 <RotateCcw className="h-4 w-4 mr-2" />
-                Reset
+                Reset Session
               </Button>
             </div>
           )}
