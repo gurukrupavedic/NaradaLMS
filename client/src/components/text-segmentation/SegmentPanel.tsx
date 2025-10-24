@@ -213,7 +213,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                       content={segmentText}
                       script={currentScript}
                       fontSize="28px"
-                      segmentNumber={segment.order + 1}
+                      segmentNumber={index + 1}
                       isSelected={isSelected}
                       isDragging={isDragging}
                       isMapped={mappingStatus === 'mapped'}
