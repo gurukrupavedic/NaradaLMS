@@ -83,12 +83,15 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                           segmentId={segment.id}
                           startTime={mapping.startTime}
                           endTime={mapping.endTime}
+                          isEditing={editingSegmentId === segment.id}
                           onPlay={(start, end) => {
                             const fakeEvent = { stopPropagation: () => {} } as React.MouseEvent;
                             onPlaySegment(mapping, fakeEvent);
                           }}
                           onDelete={(segmentId) => onMappingDelete(segmentId)}
                           onTimestampUpdate={onMappingUpdate}
+                          onEditStart={() => setEditingSegmentId(segment.id)}
+                          onEditCancel={() => setEditingSegmentId(null)}
                           duration={duration}
                         />
                       ) : (
