@@ -10,8 +10,9 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Link2Off } from 'lucide-react';
+import { Clock, Link2Off, Square } from 'lucide-react';
 import { TimestampPill } from './TimestampPill';
 import { ConnectedCirclesIcon } from '@shared/components/icons';
 import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
@@ -30,7 +31,7 @@ interface SegmentMappingGridProps {
   onPlaySegment: (mapping: AudioMapping, event: React.MouseEvent) => void;
   onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
   onMappingDelete: (segmentId: number) => void;
-
+  onEndSession: () => void;
 }
 
 export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
@@ -44,7 +45,8 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
   onSegmentClick,
   onPlaySegment,
   onMappingUpdate,
-  onMappingDelete
+  onMappingDelete,
+  onEndSession
 }) => {
   const getSegmentMapping = (segmentId: number): AudioMapping | undefined => {
     return mappings.find(m => m.segmentId === segmentId);
@@ -150,6 +152,25 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                   </div>
                 );
               })}
+              
+              {/* END button - only shown during active or paused sessions */}
+              {(mappingSession === 'active' || mappingSession === 'paused') && (
+                <div className="mt-6 pt-4 border-t">
+                  <Button 
+                    onClick={onEndSession}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-medium"
+                    disabled={!activeSegmentId && mappingSession !== 'paused'}
+                  >
+                    <Square className="h-5 w-5 mr-2" />
+                    END
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    {activeSegmentId 
+                      ? "Click to mark end of current segment and complete session"
+                      : "Start recording a segment first, or pause/stop the session"}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

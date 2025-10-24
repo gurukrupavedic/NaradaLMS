@@ -189,6 +189,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
           onPlaySegment={handlePlaySegment}
           onMappingUpdate={onMappingUpdate}
           onMappingDelete={onMappingDelete}
+          onEndSession={stopMappingSession}
         />
       </div>
 
