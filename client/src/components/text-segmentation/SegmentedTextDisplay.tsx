@@ -39,7 +39,7 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
     }
 
     // Get all segments for current script
-    const scriptSegments = segments
+    const scriptSegments = [...segments]
       .sort((a, b) => a.startPosition - b.startPosition);
 
     if (scriptSegments.length === 0) {
