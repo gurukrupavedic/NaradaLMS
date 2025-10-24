@@ -54,17 +54,20 @@ const sizeClasses = {
   sm: {
     height: "h-1",
     thumb: "h-4 w-4",
-    label: "text-sm"
+    label: "text-sm",
+    padding: "px-2"
   },
   md: {
     height: "h-2",
     thumb: "h-5 w-5",
-    label: "text-base"
+    label: "text-base",
+    padding: "px-2.5"
   },
   lg: {
     height: "h-3",
     thumb: "h-6 w-6",
-    label: "text-lg"
+    label: "text-lg",
+    padding: "px-3"
   }
 };
 
@@ -257,7 +260,7 @@ export function Slider({
         </div>
       )}
       
-      <div className="relative">
+      <div className={`relative ${sizeStyle.padding}`}>
         <div
           ref={sliderRef}
           className={`
