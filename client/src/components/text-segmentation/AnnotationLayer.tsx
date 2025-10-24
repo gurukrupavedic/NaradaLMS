@@ -224,7 +224,8 @@ const FloatingSelectionToolbar: React.FC<{
   segments: TextSegment[];
   onCreateSegment: () => void;
   onCancel: () => void;
-}> = ({ segments, onCreateSegment, onCancel }) => {
+  scrollContainerRef: React.RefObject<HTMLDivElement>;
+}> = ({ segments, onCreateSegment, onCancel, scrollContainerRef }) => {
   const [position, setPosition] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
@@ -262,13 +263,20 @@ const FloatingSelectionToolbar: React.FC<{
 
     updatePosition();
     window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition);
+    
+    // Listen to scroll events from the scroll container instead of window
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', updatePosition);
+    }
 
     return () => {
       window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', updatePosition);
+      }
     };
-  }, []);
+  }, [scrollContainerRef]);
 
   return (
     <div
