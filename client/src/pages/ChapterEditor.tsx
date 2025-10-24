@@ -3325,6 +3325,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               <div className="mb-4">
                 {selectedAudioFilePreview ? (
                   <AudioControls
+                    title={audioFiles?.find((f: any) => f.id === selectedAudioFilePreview)?.displayName || 
+                           audioFiles?.find((f: any) => f.id === selectedAudioFilePreview)?.filename || 
+                           'Audio File'}
                     currentTime={previewCurrentTime}
                     duration={previewDuration}
                     isPlaying={isPreviewPlaying}
