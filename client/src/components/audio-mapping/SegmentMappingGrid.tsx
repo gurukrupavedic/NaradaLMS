@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, Link2Off, Square } from 'lucide-react';
 import { TimestampPill } from './TimestampPill';
+import { EmptyTimestampPill } from './EmptyTimestampPill';
 import { ConnectedCirclesIcon } from '@shared/components/icons';
 import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
 import { getSegmentText } from '@shared/utils/text-segmentation';
@@ -31,6 +32,7 @@ interface SegmentMappingGridProps {
   onPlaySegment: (mapping: AudioMapping, event: React.MouseEvent) => void;
   onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
   onMappingDelete: (segmentId: number) => void;
+  onMappingCreate: (mapping: AudioMapping) => void;
   onEndSession: () => void;
 }
 
@@ -46,6 +48,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
   onPlaySegment,
   onMappingUpdate,
   onMappingDelete,
+  onMappingCreate,
   onEndSession
 }) => {
   const [editingSegmentId, setEditingSegmentId] = useState<number | null>(null);
@@ -74,6 +77,12 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                 const status = getSegmentStatus(segment.id);
                 const segmentText = getSegmentText(segment, content, currentScript);
                 
+                // Calculate values for EmptyTimestampPill
+                const isFirstSegment = index === 0;
+                const prevSegment = index > 0 ? segments[index - 1] : null;
+                const prevMapping = prevSegment ? mappings.find(m => m.segmentId === prevSegment.id) : null;
+                const previousSegmentEndTime = prevMapping?.endTime ?? 0;
+                
                 return (
                   <div key={segment.id} className="flex items-center gap-4 min-w-fit">
                     {/* Left: Timestamp pill */}
@@ -95,7 +104,16 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                           duration={duration}
                         />
                       ) : (
-                        <div className="w-full h-8 rounded-lg bg-white border border-gray-200 shadow-sm"></div>
+                        <EmptyTimestampPill
+                          segmentId={segment.id}
+                          isFirstSegment={isFirstSegment}
+                          previousSegmentEndTime={previousSegmentEndTime}
+                          isEditing={editingSegmentId === segment.id}
+                          onEditStart={() => setEditingSegmentId(segment.id)}
+                          onEditCancel={() => setEditingSegmentId(null)}
+                          onMappingCreate={onMappingCreate}
+                          duration={duration}
+                        />
                       )}
                     </div>
 
