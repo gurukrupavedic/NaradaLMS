@@ -80,11 +80,21 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
           <div className="flex items-center justify-center gap-2">
             <Button
               variant="outline"
-              size="sm"
               onClick={togglePlayPause}
               disabled={mappingSession === 'idle'}
+              className="w-full"
             >
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              {isPlaying ? (
+                <>
+                  <Pause className="h-4 w-4 mr-2" />
+                  Pause
+                </>
+              ) : (
+                <>
+                  <Play className="h-4 w-4 mr-2" />
+                  Play
+                </>
+              )}
             </Button>
           </div>
           
@@ -99,7 +109,17 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
                 onClick={pauseMappingSession}
                 className="w-full"
               >
-                {mappingSession === 'paused' ? 'Resume' : 'Pause'}
+                {mappingSession === 'paused' ? (
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    Resume
+                  </>
+                ) : (
+                  <>
+                    <Pause className="h-4 w-4 mr-2" />
+                    Pause
+                  </>
+                )}
               </Button>
               <Button 
                 variant="outline" 
