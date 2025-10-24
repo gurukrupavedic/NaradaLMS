@@ -375,13 +375,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   const [previewVolume, setPreviewVolume] = useState(80);
   const [previewPlaybackRate, setPreviewPlaybackRate] = useState(1);
   const [selectedAudioFilePreview, setSelectedAudioFilePreview] = useState<number | null>(null);
-  
-  // Debug logging for tab state
-  useEffect(() => {
-    console.log('ChapterEditor: Active tab changed to:', activeTab);
-    console.log('ChapterEditor: chapterContent:', chapterContent);
-    console.log('ChapterEditor: segments count:', textSegments.length);
-  }, [activeTab, textSegments.length, chapterContent]);
 
   // === HELPER FUNCTIONS SECTION ===
 
