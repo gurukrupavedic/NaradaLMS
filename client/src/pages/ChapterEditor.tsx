@@ -3282,28 +3282,31 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     onScriptChange={setContentScript}
                   />
                   
-                  <Select
-                    value={selectedAudioFilePreview?.toString() || ""}
-                    onValueChange={(value) => {
-                      const audioFileId = parseInt(value);
-                      const audioFile = audioFiles?.find((f: any) => f.id === audioFileId);
-                      if (audioFile) {
-                        previewAudioRef.src = `/uploads/${audioFile.filename}`;
-                        setSelectedAudioFilePreview(audioFileId);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-[250px]">
-                      <SelectValue placeholder="Audio File" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {audioFiles && Array.isArray(audioFiles) && audioFiles.map((file: any) => (
-                        <SelectItem key={file.id} value={file.id.toString()}>
-                          {file.displayName || file.filename}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium">Audio File:</label>
+                    <Select
+                      value={selectedAudioFilePreview?.toString() || ""}
+                      onValueChange={(value) => {
+                        const audioFileId = parseInt(value);
+                        const audioFile = audioFiles?.find((f: any) => f.id === audioFileId);
+                        if (audioFile) {
+                          previewAudioRef.src = `/uploads/${audioFile.filename}`;
+                          setSelectedAudioFilePreview(audioFileId);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-[250px]">
+                        <SelectValue placeholder="Select audio file" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {audioFiles && Array.isArray(audioFiles) && audioFiles.map((file: any) => (
+                          <SelectItem key={file.id} value={file.id.toString()}>
+                            {file.displayName || file.filename}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 
                 <Badge variant="secondary" className="text-xs">
