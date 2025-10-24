@@ -265,7 +265,7 @@ const AudioControls = React.forwardRef<HTMLDivElement, AudioControlsProps>(
           </div>
           
           {/* Right Controls */}
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-3">
             {/* Volume Control */}
             {showVolumeControl && (
               <div className="flex items-center space-x-2">
