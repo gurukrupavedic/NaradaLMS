@@ -9,11 +9,8 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Trash2, Play, Circle, Link, Link2Off } from 'lucide-react';
-import { ConnectedCirclesIcon } from '@shared/components/icons';
-import { LinkStatusIcon } from '@shared/components/LinkStatusIcon';
+import { Circle } from 'lucide-react';
+import { TextSegment as TextSegmentCard } from '@/components/design-system/TextSegment';
 import { getMappingStatus } from '@shared/utils/mapping-status';
 import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
 import { getSegmentText, getSegmentsForScript, formatDuration } from '@shared/utils/text-segmentation';
