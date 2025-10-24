@@ -2303,7 +2303,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                           setSelectedAudioFile(file || null);
                         }}
                       >
-                        <SelectTrigger className="w-64">
+                        <SelectTrigger className="w-80">
                           <SelectValue placeholder="Select audio file" />
                         </SelectTrigger>
                         <SelectContent>
@@ -3295,7 +3295,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                         }
                       }}
                     >
-                      <SelectTrigger className="w-[250px]">
+                      <SelectTrigger className="w-80">
                         <SelectValue placeholder="Select audio file" />
                       </SelectTrigger>
                       <SelectContent>
