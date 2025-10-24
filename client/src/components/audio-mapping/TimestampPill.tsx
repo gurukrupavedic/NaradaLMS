@@ -10,7 +10,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { Play, X, Check, X as Cancel } from 'lucide-react';
+import { Play, X, Check, X as Cancel, Trash2 } from 'lucide-react';
 import { formatDuration } from '@shared/utils/text-segmentation';
 
 interface TimestampPillProps {
@@ -104,15 +104,6 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
       ref={pillRef}
       className="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium min-w-[85px] shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
     >
-      {/* Delete button */}
-      <button
-        onClick={handleDelete}
-        className="flex items-center justify-center w-5 h-5 rounded hover:bg-red-50 text-gray-500 hover:text-red-600 mr-2 transition-all hover:scale-105"
-        title="Delete mapping"
-      >
-        <X className="h-3.5 w-3.5" />
-      </button>
-
       {/* End timestamp display */}
       <div className="flex-1 flex items-center justify-center text-gray-700">
         {isEditing ? (
@@ -152,6 +143,17 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
           title="Play this segment"
         >
           <Play className="h-3.5 w-3.5" />
+        </button>
+      )}
+
+      {/* Delete button - hidden during editing */}
+      {!isEditing && (
+        <button
+          onClick={handleDelete}
+          className="flex items-center justify-center w-5 h-5 rounded hover:bg-red-50 text-gray-500 hover:text-red-600 ml-2 transition-all hover:scale-105"
+          title="Delete mapping"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
         </button>
       )}
     </div>
