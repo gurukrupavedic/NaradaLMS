@@ -25,8 +25,8 @@ interface SegmentPanelProps {
   content: ContentMap;
   currentSegmentId?: number;
   onSegmentSelect: (segmentId: number | undefined) => void;
-  onSegmentDelete: (segmentId: string) => void;
-  onSegmentUpdate: (id: string, updates: Partial<TextSegment>) => void;
+  onSegmentDelete: (segmentId: number) => void;
+  onSegmentUpdate: (id: number, updates: Partial<TextSegment>) => void;
   onPlayMapping: (mapping: AudioMapping) => void;
   onSegmentReorder: (segments: TextSegment[]) => void;
 }
@@ -71,7 +71,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
   ).length;
 
   // Get language label
-  const getLanguageLabel = (lang: Language): string => {
+  const getLanguageLabel = (lang: Script): string => {
     switch (lang) {
       case 'te': return 'Telugu';
       case 'hi': return 'Hindi';
@@ -82,16 +82,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
 
   // Get mapping status for a segment - simplified to mapped/unmapped only
   const getSegmentMappingStatus = (segment: TextSegment): 'mapped' | 'unmapped' => {
-    // Convert segment ID to number for compatibility
-    const segmentId = typeof segment.id === 'string' ? parseInt(segment.id) : segment.id;
-    
-    // Convert mappings to compatible format
-    const dbMappings = mappings.map(m => ({
-      segmentId: typeof m.segmentId === 'string' ? parseInt(m.segmentId) : m.segmentId,
-      ...m
-    }));
-    
-    return getMappingStatus(segmentId, dbMappings);
+    return getMappingStatus(segment.id, mappings);
   };
 
   // Drag and drop handlers

@@ -2391,15 +2391,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   )}
                   <ProgressiveMapper
                     audioUrl={`/uploads/${selectedAudioFile.filename}`}
-                    segments={textSegments.map(s => ({ ...s, id: s.id.toString() }))} // Convert for compatibility
+                    segments={textSegments}
                     currentScript={contentScript}
                     content={chapterContent}
-                    mappings={mappings.map(convertDatabaseMapping)} // Real backend data
+                    mappings={mappings.map(convertDatabaseMapping)}
                     selectedAudioFile={selectedAudioFile}
                     onMappingCreate={(mapping) => {
-                      // Convert UI format to database format and create
                       createMappingMutation.mutate({
-                        segmentId: parseInt(mapping.segmentId),
+                        segmentId: mapping.segmentId,
                         audioFileId: selectedAudioFile.id,
                         startTime: mapping.startTime,
                         endTime: mapping.endTime,
@@ -2407,9 +2406,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       });
                     }}
                     onMappingUpdate={(segmentId, updates) => {
-                      // Update mapping timestamps
                       updateMappingMutation.mutate({
-                        segmentId: parseInt(segmentId),
+                        segmentId: segmentId,
                         updates: {
                           startTime: updates.startTime,
                           endTime: updates.endTime
@@ -2417,10 +2415,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       });
                     }}
                     onMappingDelete={(segmentId) => {
-                      // Delete mapping
                       deleteMappingMutation.mutate({
                         audioFileId: selectedAudioFile.id,
-                        segmentId: parseInt(segmentId)
+                        segmentId: segmentId
                       });
                     }}
                   />

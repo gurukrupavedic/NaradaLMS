@@ -33,8 +33,8 @@ interface AnnotationLayerProps {
   segments: TextSegment[];
   selectedSegmentId?: number;
   onSegmentCreate: (segment: { script: string; startPosition: number; endPosition: number; }) => void;
-  onSegmentUpdate: (id: string, updates: Partial<TextSegment>) => void;
-  onSegmentDelete: (id: string) => void;
+  onSegmentUpdate: (id: number, updates: Partial<TextSegment>) => void;
+  onSegmentDelete: (id: number) => void;
   onSegmentSelect?: (segmentId: number | undefined) => void;
   // NEW PROPS FOR LANGUAGE SELECTOR INTEGRATION
   onScriptChange: (script: Script) => void;
@@ -50,8 +50,8 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   onSegmentUpdate,
   onSegmentDelete,
   onSegmentSelect,
-  onLanguageChange,
-  availableLanguages
+  onScriptChange,
+  availableScripts
 }) => {
   // State for text selection and segment creation
   const [selectedRange, setSelectedRange] = useState<TextRange | null>(null);
@@ -282,10 +282,7 @@ const FloatingSelectionToolbar: React.FC<{
         size="sm"
         variant="ghost"
         className="h-8 w-8 p-0 text-white hover:bg-green-500/20 hover:text-green-300 transition-colors"
-        onClick={() => {
-          const segmentName = `Segment ${segments.length + 1}`;
-          onCreateSegment(segmentName);
-        }}
+        onClick={onCreateSegment}
         title={`Create Segment #${segments.length + 1}`}
       >
         <Plus className="h-4 w-4" />
