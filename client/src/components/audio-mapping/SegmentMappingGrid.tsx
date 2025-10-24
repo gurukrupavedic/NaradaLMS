@@ -129,30 +129,28 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                             : 'border-gray-200 bg-white hover:bg-gray-50'
                         }`}
                       >
-                        <div className="flex items-start px-4 py-3">
+                        <div className="flex items-center px-4 py-3 gap-4">
                           {/* Left: Number and status */}
-                          <div className="flex items-center gap-3 mr-4">
+                          <div className="flex items-center gap-3 flex-shrink-0">
                             <Badge variant="secondary" className="text-xs px-2 py-0.5 min-w-6 justify-center">
                               {index + 1}
                             </Badge>
-                            <div className="flex-shrink-0">
-                              {status === 'active' ? (
-                                <Badge variant="default" className="text-xs bg-blue-100 text-blue-700">
-                                  <Clock className="h-3 w-3 mr-1 animate-strong-pulse" />
-                                  Recording
-                                </Badge>
-                              ) : status === 'completed' ? (
-                                <Badge variant="default" className="text-xs bg-green-100 text-green-700">
-                                  <ConnectedCirclesIcon className="h-4 w-4 mr-1" />
-                                  Mapped
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-xs">
-                                  <Link2Off className="h-3 w-3 mr-1" />
-                                  Ready
-                                </Badge>
-                              )}
-                            </div>
+                            {status === 'active' ? (
+                              <Badge variant="default" className="text-xs bg-blue-100 text-blue-700">
+                                <Clock className="h-3 w-3 mr-1 animate-strong-pulse" />
+                                Recording
+                              </Badge>
+                            ) : status === 'completed' ? (
+                              <Badge variant="default" className="text-xs bg-green-100 text-green-700">
+                                <ConnectedCirclesIcon className="h-4 w-4 mr-1" />
+                                Mapped
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs">
+                                <Link2Off className="h-3 w-3 mr-1" />
+                                Ready
+                              </Badge>
+                            )}
                           </div>
                           
                           {/* Right: Content */}
