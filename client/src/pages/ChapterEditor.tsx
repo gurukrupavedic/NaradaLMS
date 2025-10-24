@@ -3351,7 +3351,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       previewAudioRef.currentTime = time;
                       setPreviewCurrentTime(time);
                     }}
-                    onVolumeChange={(vol) => {
+                    onVolumeUpdate={(vol) => {
                       previewAudioRef.volume = vol / 100;
                       setPreviewVolume(vol);
                     }}

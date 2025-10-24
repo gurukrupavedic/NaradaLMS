@@ -113,7 +113,7 @@ export interface AudioControlsProps
   onPause?: () => void;
   onStop?: () => void;
   onSeek?: (time: number) => void;
-  onVolumeChange?: (volume: number) => void;
+  onVolumeUpdate?: (volume: number) => void;
   onMuteToggle?: () => void;
   onPlaybackRateChange?: (rate: number) => void;
   onSkipBackward?: () => void;
@@ -150,7 +150,7 @@ const AudioControls = React.forwardRef<HTMLDivElement, AudioControlsProps>(
     onPause,
     onStop,
     onSeek,
-    onVolumeChange,
+    onVolumeUpdate,
     onMuteToggle,
     onPlaybackRateChange,
     onSkipBackward,
@@ -184,7 +184,7 @@ const AudioControls = React.forwardRef<HTMLDivElement, AudioControlsProps>(
             value={[currentTime]}
             max={duration}
             step={0.1}
-            variant={variant}
+            variant={variant === "default" || variant === null ? undefined : variant}
             size={size === "sm" ? "sm" : size === "lg" ? "lg" : "md"}
             onValueChange={(value) => onSeek?.(value[0])}
             disabled={loading}
@@ -292,8 +292,8 @@ const AudioControls = React.forwardRef<HTMLDivElement, AudioControlsProps>(
                     max={100}
                     step={1}
                     value={isMuted ? 0 : volume}
-                    onChange={(value) => onVolumeChange?.(value)}
-                    variant={variant}
+                    onChange={(value) => onVolumeUpdate?.(value)}
+                    variant={variant === "default" || variant === null ? undefined : variant}
                     size="sm"
                   />
                 </div>
