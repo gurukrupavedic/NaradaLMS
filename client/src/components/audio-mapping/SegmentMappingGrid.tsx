@@ -24,12 +24,12 @@ interface SegmentMappingGridProps {
   content: ContentMap;
   mappings: AudioMapping[];
   mappingSession: 'idle' | 'active' | 'paused';
-  activeSegmentId: string | null;
+  activeSegmentId: number | null;
   duration: number;
-  onSegmentClick: (segmentId: string) => void;
+  onSegmentClick: (segmentId: number) => void;
   onPlaySegment: (mapping: AudioMapping, event: React.MouseEvent) => void;
-  onMappingUpdate: (segmentId: string, mapping: Partial<AudioMapping>) => void;
-  onMappingDelete: (segmentId: string) => void;
+  onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
+  onMappingDelete: (segmentId: number) => void;
 
 }
 
@@ -46,11 +46,11 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
   onMappingUpdate,
   onMappingDelete
 }) => {
-  const getSegmentMapping = (segmentId: string): AudioMapping | undefined => {
+  const getSegmentMapping = (segmentId: number): AudioMapping | undefined => {
     return mappings.find(m => m.segmentId === segmentId);
   };
 
-  const getSegmentStatus = (segmentId: string) => {
+  const getSegmentStatus = (segmentId: number) => {
     if (activeSegmentId === segmentId) return 'active';
     if (getSegmentMapping(segmentId)) return 'completed';
     return 'inactive';
