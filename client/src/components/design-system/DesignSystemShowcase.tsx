@@ -19,6 +19,7 @@ import { Alert, AlertTitle, AlertDescription } from "./Alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./Select";
 import { Avatar } from "./Avatar";
 import { TextSegment } from "./TextSegment";
+import { MappingSegmentCard } from "./MappingSegmentCard";
 import { RichTextEditor } from "./RichTextEditor";
 import { Switch } from "./Switch";
 import { Tooltip, SimpleTooltip } from "./Tooltip";
@@ -100,6 +101,8 @@ export function DesignSystemShowcase() {
   const [textSegmentVariant, setTextSegmentVariant] = useState("blue");
   const [textSegmentScript, setTextSegmentScript] = useState<'te' | 'hi' | 'en'>('te');
   const [textSegmentFontSize, setTextSegmentFontSize] = useState("28px");
+  const [mappingSegmentStatus, setMappingSegmentStatus] = useState<'ready' | 'recording' | 'mapped'>('ready');
+  const [mappingSegmentScript, setMappingSegmentScript] = useState<'te' | 'hi' | 'en'>('te');
 
   // Complete 24-color system (12 primary + 12 fluorescent)
   const allColorVariants = [
@@ -1588,6 +1591,154 @@ export function DesignSystemShowcase() {
                         segmentNumber={3}
                         isDragging={true}
                         size="sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ComponentCard>
+
+        {/* Component 27 - MappingSegmentCard */}
+        <ComponentCard
+            title="27. Mapping Segment Cards"
+            description="Compact, status-focused segment cards optimized for audio mapping workflow. Shows three distinct states: ready (unmapped), recording (active session), and mapped (completed). Features status badges with icons, compact design matching TextSegment aesthetics, script-aware font rendering with 28px default size. Designed specifically for the audio-text synchronization workflow with clear visual feedback for recording sessions. No drag/drop or delete actions - purely for displaying segment status during mapping operations. Clean integration with timestamp pills in the mapping interface."
+            componentName="MappingSegmentCard"
+            variant={mappingSegmentStatus}
+            props={{ script: mappingSegmentScript, fontSize: "28px" }}
+            allSizes={[]}
+            onVariantChange={(status) => setMappingSegmentStatus(status as 'ready' | 'recording' | 'mapped')}
+          >
+            <div className="space-y-6">
+              {/* Status States Demo */}
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-lg p-4 border border-gray-200/60">
+                <h4 className="text-sm font-semibold mb-3 text-gray-700">Mapping Status States:</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-600 w-24 font-medium">Ready:</span>
+                    <div className="flex-1">
+                      <MappingSegmentCard
+                        status="ready"
+                        content="Segment ready for audio mapping - click to start recording"
+                        script="te"
+                        fontSize="20px"
+                        segmentNumber={1}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-600 w-24 font-medium">Recording:</span>
+                    <div className="flex-1">
+                      <MappingSegmentCard
+                        status="recording"
+                        content="Active recording session - pulsing animation indicates progress"
+                        script="te"
+                        fontSize="20px"
+                        segmentNumber={2}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-600 w-24 font-medium">Mapped:</span>
+                    <div className="flex-1">
+                      <MappingSegmentCard
+                        status="mapped"
+                        content="Successfully mapped to audio with timestamp data"
+                        script="te"
+                        fontSize="20px"
+                        segmentNumber={3}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Script Examples */}
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-lg p-4 border border-blue-200/60">
+                <h4 className="text-sm font-semibold mb-3 text-blue-900">Multi-Script Support (28px):</h4>
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-xs font-medium text-blue-700 mb-1">Telugu (JIMS)</div>
+                    <MappingSegmentCard
+                      status="ready"
+                      content="వేదం అనగా జ్ఞానం - ఇది మన సనాతన ధర్మం యొక్క మూలాధారం"
+                      script="te"
+                      fontSize="28px"
+                      segmentNumber={1}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-green-700 mb-1">Hindi (Adishila San)</div>
+                    <MappingSegmentCard
+                      status="recording"
+                      content="वेद अर्थात् ज्ञान - यह हमारे सनातन धर्म का मूल आधार है"
+                      script="hi"
+                      fontSize="28px"
+                      segmentNumber={2}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-purple-700 mb-1">English/IAST (JIMS)</div>
+                    <MappingSegmentCard
+                      status="mapped"
+                      content="veda iti jñānam - etat sanātana-dharmasya mūlam"
+                      script="en"
+                      fontSize="28px"
+                      segmentNumber={3}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Workflow Context Demo */}
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-lg p-4 border border-purple-200/60">
+                <h4 className="text-sm font-semibold mb-3 text-purple-900">Mapping Workflow Example:</h4>
+                <div className="space-y-2">
+                  <div className="flex gap-3 items-center">
+                    <span className="text-xs font-mono text-purple-700 w-24">00:00-00:05</span>
+                    <div className="flex-1">
+                      <MappingSegmentCard
+                        status="mapped"
+                        content="ఓం భూర్ భువః స్వః"
+                        script="te"
+                        fontSize="24px"
+                        segmentNumber={1}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 items-center">
+                    <span className="text-xs font-mono text-purple-700 w-24">00:05-00:12</span>
+                    <div className="flex-1">
+                      <MappingSegmentCard
+                        status="mapped"
+                        content="తత్ సవితుర్ వరేణ్యం"
+                        script="te"
+                        fontSize="24px"
+                        segmentNumber={2}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 items-center">
+                    <span className="text-xs font-mono text-purple-700 w-24 opacity-50">--:--</span>
+                    <div className="flex-1">
+                      <MappingSegmentCard
+                        status="recording"
+                        content="భర్గో దేవస్య ధీమహి"
+                        script="te"
+                        fontSize="24px"
+                        segmentNumber={3}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 items-center">
+                    <span className="text-xs font-mono text-purple-700 w-24 opacity-50">--:--</span>
+                    <div className="flex-1">
+                      <MappingSegmentCard
+                        status="ready"
+                        content="ధియో యో నః ప్రచోదయాత్"
+                        script="te"
+                        fontSize="24px"
+                        segmentNumber={4}
                       />
                     </div>
                   </div>
