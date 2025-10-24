@@ -3321,54 +3321,52 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 </Badge>
               </div>
 
-              {/* Audio Player Card */}
-              <Card>
-                <CardContent className="pt-6">
-                  {selectedAudioFilePreview ? (
-                    <AudioControls
-                      currentTime={previewCurrentTime}
-                      duration={previewDuration}
-                      isPlaying={isPreviewPlaying}
-                      volume={previewVolume}
-                      playbackRate={previewPlaybackRate}
-                      onPlay={() => {
-                        previewAudioRef.play().catch((error) => {
-                          console.error('Failed to play audio:', error);
-                          setIsPreviewPlaying(false);
-                        });
-                        setIsPreviewPlaying(true);
-                      }}
-                      onPause={() => {
-                        previewAudioRef.pause();
+              {/* Audio Controls */}
+              <div className="mb-4">
+                {selectedAudioFilePreview ? (
+                  <AudioControls
+                    currentTime={previewCurrentTime}
+                    duration={previewDuration}
+                    isPlaying={isPreviewPlaying}
+                    volume={previewVolume}
+                    playbackRate={previewPlaybackRate}
+                    onPlay={() => {
+                      previewAudioRef.play().catch((error) => {
+                        console.error('Failed to play audio:', error);
                         setIsPreviewPlaying(false);
-                      }}
-                      onStop={() => {
-                        previewAudioRef.pause();
-                        previewAudioRef.currentTime = 0;
-                        setIsPreviewPlaying(false);
-                        setPreviewCurrentTime(0);
-                      }}
-                      onSeek={(time) => {
-                        previewAudioRef.currentTime = time;
-                        setPreviewCurrentTime(time);
-                      }}
-                      onVolumeChange={(vol) => {
-                        previewAudioRef.volume = vol / 100;
-                        setPreviewVolume(vol);
-                      }}
-                      onPlaybackRateChange={(rate) => {
-                        previewAudioRef.playbackRate = rate;
-                        setPreviewPlaybackRate(rate);
-                      }}
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                      <Music className="w-12 h-12 mb-4 opacity-50" />
-                      <p>Select an audio file to preview</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                      });
+                      setIsPreviewPlaying(true);
+                    }}
+                    onPause={() => {
+                      previewAudioRef.pause();
+                      setIsPreviewPlaying(false);
+                    }}
+                    onStop={() => {
+                      previewAudioRef.pause();
+                      previewAudioRef.currentTime = 0;
+                      setIsPreviewPlaying(false);
+                      setPreviewCurrentTime(0);
+                    }}
+                    onSeek={(time) => {
+                      previewAudioRef.currentTime = time;
+                      setPreviewCurrentTime(time);
+                    }}
+                    onVolumeChange={(vol) => {
+                      previewAudioRef.volume = vol / 100;
+                      setPreviewVolume(vol);
+                    }}
+                    onPlaybackRateChange={(rate) => {
+                      previewAudioRef.playbackRate = rate;
+                      setPreviewPlaybackRate(rate);
+                    }}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground border rounded-lg bg-white">
+                    <Music className="w-12 h-12 mb-4 opacity-50" />
+                    <p>Select an audio file to preview</p>
+                  </div>
+                )}
+              </div>
 
               {/* Content Display Card */}
               <Card>
