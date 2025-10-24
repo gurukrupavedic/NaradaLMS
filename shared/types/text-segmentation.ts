@@ -20,7 +20,7 @@ export interface TextSegment {
 }
 
 export interface AudioMapping {
-  segmentId: string;
+  segmentId: number;
   startTime: number;
   endTime: number;
 }
@@ -38,13 +38,13 @@ export interface AudioMappingDatabase {
 
 // Conversion utilities for type compatibility
 export const convertDatabaseMapping = (db: AudioMappingDatabase): AudioMapping => ({
-  segmentId: db.segmentId.toString(),
+  segmentId: db.segmentId,
   startTime: db.startTime,
   endTime: db.endTime
 });
 
 export const convertToDatabase = (mapping: AudioMapping, audioFileId: number): Omit<AudioMappingDatabase, 'id' | 'createdBy' | 'createdAt'> => ({
-  segmentId: parseInt(mapping.segmentId),
+  segmentId: mapping.segmentId,
   audioFileId,
   startTime: mapping.startTime,
   endTime: mapping.endTime
