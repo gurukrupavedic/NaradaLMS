@@ -307,9 +307,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Segment selection state
   const [selectedSegmentId, setSelectedSegmentId] = useState<number | undefined>(undefined);
 
-  // Mapping state for progressive mapping
-  const [mappings, setMappings] = useState<AudioMappingDatabase[]>([]);
-
   // Content state for chapter content
   const [chapterContent, setChapterContent] = useState<{
     te?: string;
@@ -637,7 +634,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       previewAudioRef.currentTime = mapping.startTime;
       setPreviewCurrentTime(mapping.startTime);
     }
-  }, [allChapterMappings, selectedAudioFilePreview, audioFiles]);
+  }, [allChapterMappings?.length, selectedAudioFilePreview, audioFiles?.length]);
 
   // Fetch mappings for the selected audio file
   const { data: audioFileMappings = [], refetch: refetchMappings } = useQuery<AudioMappingDatabase[]>({
@@ -646,10 +643,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     queryFn: () => progressiveMappingApi.getMappingsByAudioFile(selectedAudioFile!.id)
   });
 
-  // Update mappings state when data changes
-  useEffect(() => {
-    setMappings(audioFileMappings);
-  }, [audioFileMappings]);
+  // Note: Using audioFileMappings directly - no need for separate state
 
 
 
@@ -1405,7 +1399,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       setSelectedAudioFilePreview(firstAudioFile.id);
       previewAudioRef.src = `/uploads/${firstAudioFile.filename}`;
     }
-  }, [audioFiles]);
+  }, [audioFiles?.length, selectedAudioFilePreview]);
 
   // Auto-select first audio file in Mapping tab when audioFiles load
   useEffect(() => {
@@ -1413,7 +1407,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       const firstAudioFile = audioFiles[0];
       setSelectedAudioFile(firstAudioFile);
     }
-  }, [audioFiles]);
+  }, [audioFiles?.length, selectedAudioFile]);
 
   const validateFileType = (file: File) => {
     const allowedTypes = ["audio/", "video/"];
@@ -2373,7 +2367,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     segments={textSegments}
                     currentScript={contentScript}
                     content={chapterContent}
-                    mappings={mappings.map(convertDatabaseMapping)}
+                    mappings={audioFileMappings.map(convertDatabaseMapping)}
                     selectedAudioFile={selectedAudioFile}
                     onMappingCreate={(mapping) => {
                       createMappingMutation.mutate({
