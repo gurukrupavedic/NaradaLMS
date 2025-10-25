@@ -3334,7 +3334,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                         mapping.segmentId === segment.id && 
                         (!selectedAudioFilePreview || mapping.audioFileId === selectedAudioFilePreview)
                       )
-                    ).length} mapped
+                    ).length}/{textSegments.filter(s => s.script === contentScript).length} mapped
                 </Badge>
               </div>
 
