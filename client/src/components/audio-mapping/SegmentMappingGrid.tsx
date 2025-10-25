@@ -63,7 +63,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
   };
 
   return (
-    <Card className="h-full">
+    <Card>
       <CardHeader className="py-3 px-6">
         <CardTitle className="text-base font-medium">Segment Mapping</CardTitle>
       </CardHeader>
