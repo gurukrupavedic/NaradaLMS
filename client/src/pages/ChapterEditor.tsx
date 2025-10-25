@@ -2335,27 +2335,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       <span className="text-sm text-gray-500">No audio files uploaded</span>
                     </div>
                   )}
-                  
-                  <div className="flex items-center gap-2">
-                    <label htmlFor="audio-upload-mapping" className="cursor-pointer">
-                      <Button variant="outline" size="sm" asChild className="h-8 w-8 p-0">
-                        <span title="Upload Audio">
-                          <Upload className="h-4 w-4" />
-                        </span>
-                      </Button>
-                    </label>
-                    <Input
-                      id="audio-upload-mapping"
-                      type="file"
-                      accept="audio/*"
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) {
-                          audioUploadMutation.mutate(e.target.files[0]);
-                        }
-                      }}
-                      className="hidden"
-                    />
-                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Badge variant="secondary" className="text-xs">
