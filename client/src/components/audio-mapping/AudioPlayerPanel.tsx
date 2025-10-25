@@ -100,7 +100,7 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
         {/* Mapping Session Controls Section */}
         <div className="space-y-3 pt-2 border-t">
           {mappingSession === 'idle' ? (
-            <Button onClick={startMappingSession} className="w-full flex items-center justify-center">
+            <Button onClick={startMappingSession} className="w-full">
               Start Mapping Session
             </Button>
           ) : (
@@ -108,35 +108,44 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
               <Button 
                 variant="outline" 
                 onClick={pauseMappingSession}
-                className="w-full flex items-center justify-center"
+                className="w-full justify-start"
               >
-                {mappingSession === 'paused' ? (
-                  <>
-                    <Play className="h-4 w-4 mr-2" />
-                    Resume Session
-                  </>
-                ) : (
-                  <>
-                    <Pause className="h-4 w-4 mr-2" />
-                    Pause Session
-                  </>
-                )}
+                <div className="flex items-center w-full">
+                  <div className="w-5 flex items-center justify-center">
+                    {mappingSession === 'paused' ? (
+                      <Play className="h-4 w-4" />
+                    ) : (
+                      <Pause className="h-4 w-4" />
+                    )}
+                  </div>
+                  <span className="ml-2">
+                    {mappingSession === 'paused' ? 'Resume Session' : 'Pause Session'}
+                  </span>
+                </div>
               </Button>
               <Button 
                 variant="outline" 
                 onClick={stopMappingSession}
-                className="w-full flex items-center justify-center"
+                className="w-full justify-start"
               >
-                <Square className="h-4 w-4 mr-2" />
-                End Session
+                <div className="flex items-center w-full">
+                  <div className="w-5 flex items-center justify-center">
+                    <Square className="h-4 w-4" />
+                  </div>
+                  <span className="ml-2">End Session</span>
+                </div>
               </Button>
               <Button 
                 variant="outline" 
                 onClick={resetMappingSession}
-                className="w-full flex items-center justify-center"
+                className="w-full justify-start"
               >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Reset Session
+                <div className="flex items-center w-full">
+                  <div className="w-5 flex items-center justify-center">
+                    <RotateCcw className="h-4 w-4" />
+                  </div>
+                  <span className="ml-2">Reset Session</span>
+                </div>
               </Button>
             </div>
           )}
