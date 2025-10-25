@@ -10,7 +10,6 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { Play, Pause, Square, RotateCcw } from 'lucide-react';
@@ -52,13 +51,18 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
   resetMappingSession
 }) => {
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="py-3 px-6">
-        <CardTitle className="text-base font-medium">Audio Controls</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6 flex-1 overflow-auto">
-        {/* Audio element */}
-        <audio ref={audioRef} src={audioUrl} preload="metadata" />
+    <div className="h-full">
+      <div className="bg-white border rounded-lg h-full overflow-hidden shadow-sm flex flex-col">
+        {/* Header */}
+        <div className="px-6 py-3 bg-gray-50 border-b flex-shrink-0">
+          <h2 className="text-base font-medium text-gray-700">Audio Controls</h2>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="p-6 space-y-6">
+            {/* Audio element */}
+            <audio ref={audioRef} src={audioUrl} preload="metadata" />
         
         {/* Audio Playback Section */}
         <div className="space-y-3">
@@ -151,15 +155,17 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
           )}
         </div>
 
-        {/* Instructions */}
-        {mappingSession === 'active' && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-700">
-              <strong>How to map:</strong> Click on each segment card (right) when you hear it being recited in the audio.
-            </p>
+            {/* Instructions */}
+            {mappingSession === 'active' && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-700">
+                  <strong>How to map:</strong> Click on each segment card (right) when you hear it being recited in the audio.
+                </p>
+              </div>
+            )}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      </div>
+    </div>
   );
 };
