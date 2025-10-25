@@ -6,7 +6,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 // Internal Libraries
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { extractPlainText, isHtmlContent, plainTextToHtml } from "@/lib/html-utils";
+import { isHtmlContent, plainTextToHtml } from "@/lib/html-utils";
+import { htmlToPlainText } from "@shared/utils/text-segmentation";
 
 // Phase 4A: Custom Hooks
 import { useChapterData } from "@/hooks/useChapterData";
@@ -1564,13 +1565,13 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     // Calculate character positions within the full text (extract plain text from HTML for position calculation)
     const fullTextContent = textContent[selectedScript] || "";
     const fullText = isHtmlContent(fullTextContent) 
-      ? extractPlainText(fullTextContent) 
+      ? htmlToPlainText(fullTextContent) 
       : fullTextContent;
     
     // For HTML content, we need to map the selection to plain text positions
     if (isHtmlContent(fullTextContent)) {
       // Get the plain text equivalent of the selection
-      const plainTextSelection = extractPlainText(selectedText);
+      const plainTextSelection = htmlToPlainText(selectedText);
       const startPos = fullText.indexOf(plainTextSelection);
       const endPos = startPos + plainTextSelection.length;
       
