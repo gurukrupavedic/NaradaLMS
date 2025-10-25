@@ -53,7 +53,7 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
 }) => {
   return (
     <Card className="h-full">
-      <CardHeader className="pb-3">
+      <CardHeader className="py-3 px-6">
         <CardTitle className="text-base font-medium">Audio Controls</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
