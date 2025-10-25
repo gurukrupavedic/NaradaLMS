@@ -133,16 +133,16 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
   return (
     <div ref={panelRef} className="h-full">
       {/* White Container with integrated header */}
-      <div className="bg-white border rounded-lg h-[600px] overflow-hidden shadow-sm">
+      <div className="bg-white border rounded-lg h-full overflow-hidden shadow-sm flex flex-col">
         {/* Header - sticky and integrated */}
-        <div className="sticky top-0 z-10 px-6 py-3 bg-gray-50 border-b">
+        <div className="px-6 py-3 bg-gray-50 border-b flex-shrink-0">
           <h2 className="text-base font-semibold text-gray-700">
             Segments ({currentScript === 'te' ? 'TE' : currentScript === 'hi' ? 'DEV' : 'IAST'})
           </h2>
         </div>
 
         {/* Segments List with Independent Scrolling */}
-        <div className="h-[calc(100%-60px)] overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="p-4 space-y-3">
             {currentScriptSegments.length === 0 ? (
               <div className="py-12 px-6">
