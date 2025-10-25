@@ -20,7 +20,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { Clock, Link2Off, Zap } from "lucide-react";
+import { Clock, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 // Connected circles icon for "Mapped" status
@@ -137,7 +137,7 @@ const MappingSegmentCard = React.forwardRef<HTMLDivElement, MappingSegmentCardPr
               </Badge>
             ) : (
               <Badge variant="outline" className="text-xs pointer-events-none">
-                <Link2Off className="h-3 w-3 mr-1" />
+                <Zap className="h-3 w-3 mr-1 text-gray-400" />
                 Ready
               </Badge>
             )}

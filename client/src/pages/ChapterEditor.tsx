@@ -1973,20 +1973,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               value="audio-mapping" 
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-                className="w-4 h-4"
-              >
-                <circle cx="6" cy="12" r="3" />
-                <circle cx="18" cy="12" r="3" />
-                <line x1="9" y1="12" x2="15" y2="12" />
-              </svg>
+              <Zap className="w-4 h-4" />
               Mapping
             </TabsTrigger>
             <div className="flex items-center px-2 text-gray-400">

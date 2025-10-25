@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Link2Off, Zap } from 'lucide-react';
+import { Zap } from 'lucide-react';
 
 interface LinkStatusIconProps {
   status: 'mapped' | 'unmapped';
@@ -24,17 +24,9 @@ export const LinkStatusIcon: React.FC<LinkStatusIconProps> = ({
   size = 'md', 
   className = '' 
 }) => {
-  if (status === 'mapped') {
-    return (
-      <Zap 
-        className={`text-green-600 ${sizeClasses[size]} ${className}`} 
-      />
-    );
-  }
-  
   return (
-    <Link2Off 
-      className={`text-gray-400 opacity-60 ${sizeClasses[size]} ${className}`} 
+    <Zap 
+      className={`${status === 'mapped' ? 'text-green-600' : 'text-gray-400 opacity-60'} ${sizeClasses[size]} ${className}`} 
     />
   );
 };

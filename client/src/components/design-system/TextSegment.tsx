@@ -23,7 +23,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { Trash2, Link2Off, Zap } from "lucide-react";
+import { Trash2, Zap } from "lucide-react";
 
 // Connected circles icon for "Mapped" status
 const ConnectedCirclesIcon = ({ className }: { className?: string }) => (
@@ -224,7 +224,7 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
               )}
               title={isMapped ? "Mapped to audio" : "Not mapped"}
             >
-              {isMapped ? <Zap className="h-3 w-3" /> : <Link2Off className="h-3 w-3" />}
+              <Zap className={cn("h-3 w-3", isMapped ? "text-green-600" : "text-gray-400")} />
             </button>
 
             {/* Delete Icon - Hover only */}
