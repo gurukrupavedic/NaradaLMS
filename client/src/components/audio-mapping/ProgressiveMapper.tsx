@@ -153,7 +153,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-12 gap-4 h-[calc(100vh-300px)]">
+    <div className="grid grid-cols-12 gap-4 h-full">
       {/* Left Column: Audio Player Panel */}
       <div className="col-span-4">
         <AudioPlayerPanel
