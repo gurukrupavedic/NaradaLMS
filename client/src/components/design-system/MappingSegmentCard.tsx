@@ -109,11 +109,11 @@ const MappingSegmentCard = React.forwardRef<HTMLDivElement, MappingSegmentCardPr
           <div className="flex-shrink-0">
             {status === 'recording' ? (
               <Badge 
-                variant="blue" 
+                variant="orange" 
                 badgeStyle="classic"
                 pulse
                 icon={<Clock className="h-3 w-3" />}
-                className="w-26 flex justify-start pointer-events-none"
+                className="w-27 flex justify-start pointer-events-none"
               >
                 Recording
               </Badge>
@@ -122,16 +122,16 @@ const MappingSegmentCard = React.forwardRef<HTMLDivElement, MappingSegmentCardPr
                 variant="green" 
                 badgeStyle="classic"
                 icon={<Zap className="h-3 w-3" />}
-                className="w-26 flex justify-start pointer-events-none"
+                className="w-27 flex justify-start pointer-events-none"
               >
                 Mapped
               </Badge>
             ) : (
               <Badge 
-                variant="outline" 
+                variant="cyan" 
                 badgeStyle="classic"
-                icon={<Zap className="h-3 w-3 text-gray-400" />}
-                className="w-26 flex justify-start pointer-events-none"
+                icon={<Zap className="h-3 w-3" />}
+                className="w-27 flex justify-start pointer-events-none"
               >
                 Ready
               </Badge>
