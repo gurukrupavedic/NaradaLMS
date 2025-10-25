@@ -6,8 +6,7 @@
  */
 
 import React from 'react';
-import { Link2Off } from 'lucide-react';
-import { ConnectedCirclesIcon } from '@shared/components/icons';
+import { Link2Off, Zap } from 'lucide-react';
 
 interface LinkStatusIconProps {
   status: 'mapped' | 'unmapped';
@@ -27,7 +26,7 @@ export const LinkStatusIcon: React.FC<LinkStatusIconProps> = ({
 }) => {
   if (status === 'mapped') {
     return (
-      <ConnectedCirclesIcon 
+      <Zap 
         className={`text-green-600 ${sizeClasses[size]} ${className}`} 
       />
     );
