@@ -42,7 +42,7 @@ const badgeVariants = cva(
         rose: "border-transparent bg-rose-100/70 text-rose-700 hover:bg-rose-200/80 hover:text-rose-800",
         emerald: "border-transparent bg-emerald-100/70 text-emerald-700 hover:bg-emerald-200/80 hover:text-emerald-800"
       },
-      style: {
+      badgeStyle: {
         // Style 1: Classic rounded with subtle shadow
         classic: "rounded-full px-2.5 py-0.5 text-xs border-transparent",
         
@@ -61,131 +61,131 @@ const badgeVariants = cva(
     compoundVariants: [
       // Modern style gets subtle gradient backgrounds 
       {
-        style: "modern",
+        badgeStyle: "modern",
         variant: "blue",
         class: "from-blue-400/80 to-blue-500/80 text-white shadow-blue-500/15 hover:shadow-blue-500/25"
       },
       {
-        style: "modern", 
+        badgeStyle: "modern", 
         variant: "green",
         class: "from-green-400/80 to-green-500/80 text-white shadow-green-500/15 hover:shadow-green-500/25"
       },
       {
-        style: "modern",
+        badgeStyle: "modern",
         variant: "purple", 
         class: "from-purple-400/80 to-purple-500/80 text-white shadow-purple-500/15 hover:shadow-purple-500/25"
       },
       {
-        style: "modern",
+        badgeStyle: "modern",
         variant: "orange",
         class: "from-orange-400/80 to-orange-500/80 text-white shadow-orange-500/15 hover:shadow-orange-500/25"
       },
       {
-        style: "modern",
+        badgeStyle: "modern",
         variant: "pink",
         class: "from-pink-400/80 to-pink-500/80 text-white shadow-pink-500/15 hover:shadow-pink-500/25"
       },
       {
-        style: "modern",
+        badgeStyle: "modern",
         variant: "indigo", 
         class: "from-indigo-400/80 to-indigo-500/80 text-white shadow-indigo-500/15 hover:shadow-indigo-500/25"
       },
       {
-        style: "modern",
+        badgeStyle: "modern",
         variant: "teal",
         class: "from-teal-400/80 to-teal-500/80 text-white shadow-teal-500/15 hover:shadow-teal-500/25"
       },
       {
-        style: "modern",
+        badgeStyle: "modern",
         variant: "cyan",
         class: "from-cyan-400/80 to-cyan-500/80 text-white shadow-cyan-500/15 hover:shadow-cyan-500/25"
       },
       {
-        style: "modern",
+        badgeStyle: "modern",
         variant: "yellow",
         class: "from-yellow-400/80 to-yellow-500/80 text-white shadow-yellow-500/15 hover:shadow-yellow-500/25"
       },
       {
-        style: "modern",
+        badgeStyle: "modern",
         variant: "lime",
         class: "from-lime-400/80 to-lime-500/80 text-white shadow-lime-500/15 hover:shadow-lime-500/25"
       },
       {
-        style: "modern",
+        badgeStyle: "modern",
         variant: "rose",
         class: "from-rose-400/80 to-rose-500/80 text-white shadow-rose-500/15 hover:shadow-rose-500/25"
       },
       {
-        style: "modern",
+        badgeStyle: "modern",
         variant: "emerald",
         class: "from-emerald-400/80 to-emerald-500/80 text-white shadow-emerald-500/15 hover:shadow-emerald-500/25"
       },
       
       // Sharp style gets subtle backgrounds with accent borders
       {
-        style: "sharp",
+        badgeStyle: "sharp",
         variant: "blue",
         class: "bg-blue-100 text-blue-800 border-blue-600"
       },
       {
-        style: "sharp",
+        badgeStyle: "sharp",
         variant: "green", 
         class: "bg-green-100 text-green-800 border-green-600"
       },
       {
-        style: "sharp",
+        badgeStyle: "sharp",
         variant: "purple",
         class: "bg-purple-100 text-purple-800 border-purple-600"
       },
       {
-        style: "sharp",
+        badgeStyle: "sharp",
         variant: "orange",
         class: "bg-orange-100 text-orange-800 border-orange-600"
       },
       {
-        style: "sharp",
+        badgeStyle: "sharp",
         variant: "pink",
         class: "bg-pink-100 text-pink-800 border-pink-600"
       },
       {
-        style: "sharp",
+        badgeStyle: "sharp",
         variant: "indigo",
         class: "bg-indigo-100 text-indigo-800 border-indigo-600"
       },
       {
-        style: "sharp",
+        badgeStyle: "sharp",
         variant: "teal",
         class: "bg-teal-100 text-teal-800 border-teal-600"
       },
       {
-        style: "sharp",
+        badgeStyle: "sharp",
         variant: "cyan",
         class: "bg-cyan-100 text-cyan-800 border-cyan-600"
       },
       {
-        style: "sharp",
+        badgeStyle: "sharp",
         variant: "yellow",
         class: "bg-yellow-100 text-yellow-800 border-yellow-600"
       },
       {
-        style: "sharp",
+        badgeStyle: "sharp",
         variant: "lime",
         class: "bg-lime-100 text-lime-800 border-lime-600"
       },
       {
-        style: "sharp",
+        badgeStyle: "sharp",
         variant: "rose",
         class: "bg-rose-100 text-rose-800 border-rose-600"
       },
       {
-        style: "sharp",
+        badgeStyle: "sharp",
         variant: "emerald",
         class: "bg-emerald-100 text-emerald-800 border-emerald-600"
       }
     ],
     defaultVariants: {
       variant: "default",
-      style: "classic",
+      badgeStyle: "classic",
       size: "md"
     },
   }
@@ -232,7 +232,7 @@ export interface BadgeProps
 }
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-  ({ className, variant, style, size, educational, icon, pulse, dotColor, children, ...props }, ref) => {
+  ({ className, variant, badgeStyle, size, educational, icon, pulse, dotColor, children, ...props }, ref) => {
     // Use educational variant if provided
     const finalVariant = educational ? educationalVariants[educational] : variant;
     
@@ -240,7 +240,7 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
       <div 
         ref={ref}
         className={cn(
-          badgeVariants({ variant: finalVariant, style, size }), 
+          badgeVariants({ variant: finalVariant, badgeStyle, size }), 
           pulse && "animate-pulse",
           className
         )} 
