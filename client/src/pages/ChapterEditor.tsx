@@ -3408,6 +3408,18 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 </div>
                 
                 <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-medium">Learn Mode:</label>
+                    <Switch
+                      checked={learnMode}
+                      onCheckedChange={setLearnMode}
+                      data-testid="toggle-learn-mode"
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {learnMode ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                  
                   <div className="flex gap-2">
                     <Badge variant="secondary" className="text-xs">
                       {textSegments.filter(s => s.script === contentScript).length} segments
@@ -3422,18 +3434,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                           )
                         ).length} mapped
                     </Badge>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs font-medium">Learn Mode:</label>
-                    <Switch
-                      checked={learnMode}
-                      onCheckedChange={setLearnMode}
-                      data-testid="toggle-learn-mode"
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      {learnMode ? 'ON' : 'OFF'}
-                    </span>
                   </div>
                 </div>
               </div>
