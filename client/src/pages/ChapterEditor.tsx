@@ -2272,7 +2272,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   onScriptChange={setContentScript}
                 />
                 <div className="flex gap-2">
-                  <Badge variant="blue" style="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
+                  <Badge variant="blue" badgeStyle="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
                     {textSegments.filter(s => s.script === contentScript).length} segments
                   </Badge>
                 </div>
@@ -2370,10 +2370,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Badge variant="blue" style="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
+                  <Badge variant="blue" badgeStyle="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
                     {textSegments.filter(s => s.script === contentScript).length} segments
                   </Badge>
-                  <Badge variant="green" style="sharp" className="text-xs" icon={<Zap className="h-3 w-3" />}>
+                  <Badge variant="green" badgeStyle="sharp" className="text-xs" icon={<Zap className="h-3 w-3" />}>
                     {textSegments
                       .filter(s => s.script === contentScript)
                       .filter(segment => 
@@ -2506,10 +2506,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 onScriptChange={setContentScript}
               />
               <div className="flex gap-2">
-                <Badge variant="blue" style="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
+                <Badge variant="blue" badgeStyle="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
                   {textSegments.filter(s => s.script === contentScript).length} segments
                 </Badge>
-                <Badge variant="green" style="sharp" className="text-xs" icon={<Zap className="h-3 w-3" />}>
+                <Badge variant="green" badgeStyle="sharp" className="text-xs" icon={<Zap className="h-3 w-3" />}>
                   {textSegments
                     .filter(s => s.script === contentScript)
                     .filter(segment => 
@@ -3396,10 +3396,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 </div>
                 
                 <div className="flex gap-2">
-                  <Badge variant="blue" style="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
+                  <Badge variant="blue" badgeStyle="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
                     {textSegments.filter(s => s.script === contentScript).length} segments
                   </Badge>
-                  <Badge variant="green" style="sharp" className="text-xs" icon={<Zap className="h-3 w-3" />}>
+                  <Badge variant="green" badgeStyle="sharp" className="text-xs" icon={<Zap className="h-3 w-3" />}>
                     {textSegments
                       .filter(s => s.script === contentScript)
                       .filter(segment => 
