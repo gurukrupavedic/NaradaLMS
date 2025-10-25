@@ -40,6 +40,7 @@ export {
   Link2,
   Link2Off,
   Clock,
+  CheckCircle,
   
   // Additional Common Icons
   Bold,

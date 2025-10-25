@@ -38,7 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/design-system/Badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/design-system/Switch";
 
@@ -49,7 +49,7 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import {
   FileText, Upload, Music, Eye, ChevronLeft, Play, Pause, Square,
   MapPin, X, Trash2, Plus, ArrowRight, Save, Edit2, Link2, Link2Off, Clock,
-  Timer, Ruler, Type, Settings,
+  Timer, Ruler, Type, Settings, List, CheckCircle,
 } from "@/lib/icons";
 import { useLocation } from "wouter";
 import { ScriptSelector } from "@/components/common/ScriptSelector";
@@ -2383,10 +2383,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="blue" style="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
                     {textSegments.filter(s => s.script === contentScript).length} segments
                   </Badge>
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="green" style="sharp" className="text-xs" icon={<CheckCircle className="h-3 w-3" />}>
                     {textSegments
                       .filter(s => s.script === contentScript)
                       .filter(segment => 
@@ -2519,10 +2519,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 onScriptChange={setContentScript}
               />
               <div className="flex gap-2">
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="blue" style="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
                   {textSegments.filter(s => s.script === contentScript).length} segments
                 </Badge>
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="green" style="sharp" className="text-xs" icon={<CheckCircle className="h-3 w-3" />}>
                   {textSegments
                     .filter(s => s.script === contentScript)
                     .filter(segment => 
