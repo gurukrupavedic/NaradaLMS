@@ -2414,7 +2414,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       )}
                       
                       {/* Left Panel: Audio Player */}
-                      <Panel defaultSize={33} minSize={25}>
+                      <Panel defaultSize={33} minSize={20}>
                         <AudioPlayerPanel
                           audioRef={state.audioRef}
                           audioUrl={state.audioUrl}
