@@ -2263,9 +2263,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 </Panel>
                 
                 {/* Resize Handle */}
-                <PanelResizeHandle className="w-1 bg-transparent relative">
-                  <div className="absolute left-0 top-0 w-1 h-[600px] bg-gray-300 hover:bg-gray-400 transition-colors pointer-events-none"></div>
-                </PanelResizeHandle>
+                <PanelResizeHandle className="w-1 bg-gray-400 hover:bg-gray-600 transition-colors" />
                 
                 {/* Right Panel: Segment Management */}
                 <Panel defaultSize={50} minSize={30}>
@@ -2436,7 +2434,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                         />
                       </Panel>
 
-                      <PanelResizeHandle className="w-1 bg-gray-300 hover:bg-gray-400 transition-colors" />
+                      <PanelResizeHandle className="w-1 bg-gray-400 hover:bg-gray-600 transition-colors" />
 
                       {/* Right Panel: Segment Mapping Grid */}
                       <Panel defaultSize={67} minSize={40}>
