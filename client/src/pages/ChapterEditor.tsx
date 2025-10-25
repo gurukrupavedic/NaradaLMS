@@ -3488,9 +3488,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       onCheckedChange={setLearnMode}
                       variant="orange"
                       size="sm"
-                      showStatusText
-                      onText="ON"
-                      offText="OFF"
                       data-testid="toggle-learn-mode"
                     />
                   </div>
