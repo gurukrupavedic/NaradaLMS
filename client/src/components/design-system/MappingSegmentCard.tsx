@@ -122,7 +122,7 @@ const MappingSegmentCard = React.forwardRef<HTMLDivElement, MappingSegmentCardPr
         </div>
 
         {/* Content with status badge */}
-        <div className="flex items-center px-4 py-2 gap-4">
+        <div className="flex items-center px-4 py-1.5 gap-4">
           {/* Status Badge */}
           <div className="flex-shrink-0">
             {status === 'recording' ? (
