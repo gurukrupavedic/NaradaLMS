@@ -9,36 +9,6 @@
  */
 
 /**
- * Extract plain text from HTML content for segmentation compatibility
- * 
- * Safely converts HTML content to plain text while preserving text structure
- * and handling multi-script content (Telugu, Hindi, English). Removes HTML
- * tags and normalizes whitespace for consistent text processing.
- * 
- * @param html - HTML content string to process
- * @returns Clean plain text with normalized whitespace
- * 
- * @example
- * ```typescript
- * const html = '<p>श्रद्धा <span>सूक्तम्</span></p>';
- * const text = extractPlainText(html); // "श्रद्धा सूक्तम्"
- * ```
- */
-export function extractPlainText(html: string): string {
-  if (!html) return '';
-  
-  // Create a temporary div to parse HTML
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = html;
-  
-  // Get text content and normalize whitespace
-  const plainText = tempDiv.textContent || tempDiv.innerText || '';
-  
-  // Normalize whitespace while preserving line breaks
-  return plainText.replace(/\s+/g, ' ').trim();
-}
-
-/**
  * Check if content contains HTML markup or is plain text
  * 
  * Analyzes content string to determine if it contains HTML tags,
