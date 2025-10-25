@@ -62,8 +62,6 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
         
         {/* Audio Playback Section */}
         <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground">Audio Playback</h3>
-          
           {/* Progress bar */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm text-muted-foreground">
