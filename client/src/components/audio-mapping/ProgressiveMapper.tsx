@@ -72,7 +72,8 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   selectedAudioFile,
   onMappingCreate,
   onMappingUpdate,
-  onMappingDelete
+  onMappingDelete,
+  children
 }) => {
   // Audio player hook
   const {
