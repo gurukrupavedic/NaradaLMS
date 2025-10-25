@@ -145,15 +145,6 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
             </div>
           )}
         </div>
-        
-        {/* Progress */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>Audio File Progress</span>
-            <span>{mappedCount} / {totalCount}</span>
-          </div>
-          <Progress value={progressPercentage} className="w-full" />
-        </div>
 
         {/* Instructions */}
         {mappingSession === 'active' && (
