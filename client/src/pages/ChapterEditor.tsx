@@ -2370,7 +2370,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               </div>
 
               {selectedAudioFile && textSegments.length > 0 ? (
-                <div className="h-full">
+                <div>
                   {isMappingLoading && (
                     <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
                       <div className="text-center">
