@@ -2436,7 +2436,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                         />
                       </Panel>
 
-                      <PanelResizeHandle className="w-2 bg-gray-200 hover:bg-blue-400 transition-colors" />
+                      <PanelResizeHandle className="w-1 bg-gray-300 hover:bg-gray-400 transition-colors" />
 
                       {/* Right Panel: Segment Mapping Grid */}
                       <Panel defaultSize={67} minSize={40}>
