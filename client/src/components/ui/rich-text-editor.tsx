@@ -571,10 +571,10 @@ export function RichTextEditor({
             onValueChange={(value) => setEditorMode(value as 'html' | 'text')}
           >
             <TabsList variant="indigo" size="sm">
-              <TabsTrigger value="html" data-testid="toggle-html-mode">
+              <TabsTrigger value="html" variant="indigo" size="sm" data-testid="toggle-html-mode">
                 HTML
               </TabsTrigger>
-              <TabsTrigger value="text" data-testid="toggle-text-mode">
+              <TabsTrigger value="text" variant="indigo" size="sm" data-testid="toggle-text-mode">
                 Text
               </TabsTrigger>
             </TabsList>
