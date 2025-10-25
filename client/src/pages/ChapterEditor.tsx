@@ -2246,7 +2246,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               </div>
 
               <PanelGroup id="text-segmentation-panels" direction="horizontal" className="flex-1 min-h-0">
-                {/* Left Panel: Content Area */}}
+                {/* Left Panel: Content Area */}
                 <Panel defaultSize={50} minSize={30}>
                   <AnnotationLayer
                     content={chapterContent}
