@@ -126,17 +126,17 @@ const MappingSegmentCard = React.forwardRef<HTMLDivElement, MappingSegmentCardPr
           {/* Status Badge */}
           <div className="flex-shrink-0">
             {status === 'recording' ? (
-              <Badge variant="default" className="text-xs bg-blue-100 text-blue-700">
+              <Badge variant="default" className="text-xs bg-blue-100 text-blue-700 pointer-events-none">
                 <Clock className="h-3 w-3 mr-1 animate-strong-pulse" />
                 Recording
               </Badge>
             ) : status === 'mapped' ? (
-              <Badge variant="default" className="text-xs bg-green-100 text-green-700">
+              <Badge variant="default" className="text-xs bg-green-100 text-green-700 pointer-events-none">
                 <ConnectedCirclesIcon className="h-4 w-4 mr-1" />
                 Mapped
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs pointer-events-none">
                 <Link2Off className="h-3 w-3 mr-1" />
                 Ready
               </Badge>
