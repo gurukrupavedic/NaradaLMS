@@ -203,7 +203,7 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
       >
         {/* Numbering Pill */}
         {segmentNumber && (
-          <div className={cn(numberPillVariants({ variant }))}>
+          <div className={cn(numberPillVariants({ variant: isSelected ? "indigo" : variant }))}>
             {segmentNumber}
           </div>
         )}
