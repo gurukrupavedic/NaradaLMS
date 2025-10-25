@@ -1950,7 +1950,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
           {/* Text Content Tab */}
           <TabsContent value="content" className="h-[calc(100vh-200px)]">
-            <div className="relative h-full">
+            <div className="relative h-full flex flex-col">
               {/* Script Selection & Status */}
               <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
                 <ScriptSelector
@@ -1975,7 +1975,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 </div>
               </div>
 
-              <div className="h-[calc(100vh-300px)]">
+              <div className="flex-1 min-h-0">
                 <RichTextEditor
                   value={textContent[contentScript] || ''}
                   onChange={(html) => {
@@ -2221,7 +2221,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
           {/* Text Segmentation Tab */}
           <TabsContent value="text-segmentation" className="h-[calc(100vh-200px)]">
-            <div className="relative h-full">
+            <div className="relative h-full flex flex-col">
               {/* Language Selection & Stats */}
               <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
                 <ScriptSelector
@@ -2243,7 +2243,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 </div>
               </div>
 
-              <PanelGroup direction="horizontal" className="h-[calc(100vh-300px)]">
+              <PanelGroup direction="horizontal" className="flex-1 min-h-0">
                 {/* Left Panel: Content Area */}
                 <Panel defaultSize={50} minSize={30}>
                   <AnnotationLayer
@@ -2298,7 +2298,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
           {/* Mapping Tab */}
           <TabsContent value="audio-mapping" className="h-[calc(100vh-200px)]">
-            <div className="relative h-full">
+            <div className="relative h-full flex flex-col">
               {/* Audio Controls */}
               <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
                 <div className="flex gap-4">
@@ -2370,7 +2370,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               </div>
 
               {selectedAudioFile && textSegments.length > 0 ? (
-                <div>
+                <div className="flex-1 min-h-0">
                   {isMappingLoading && (
                     <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
                       <div className="text-center">
