@@ -21,6 +21,10 @@ The application features a full-stack architecture:
 **Key Features:**
 -   **Content Management System**: Supports creation and management of tracks, chapters (multilingual), audio files, text segmentation, and audio-text mapping.
 -   **User Interface**: Provides CRUD operations for content, a visual Text Segmentation Studio, and an innovative "click-when-heard" audio mapping workflow. Multi-language switching is seamless.
+-   **Preview Tab Learn Mode**: Toggle switch for two distinct student experiences:
+    -   **Learn Mode ON**: Interactive segmented view with clickable audio-mapped segments (yellow highlights, auto-play from start to end timestamps)
+    -   **Learn Mode OFF**: Clean, distraction-free HTML article view for recitation (script-specific fonts, 28px text)
+    -   State persists via localStorage for consistent user experience across sessions
 -   **Database Schema**: Includes tables for Users, Tracks, Chapters, Audio Files, Text Segments, and Audio Mappings to support hierarchical content organization and synchronization.
 -   **Content Creation Workflow**: Involves administrative track creation, chapter development, audio integration, text segmentation, and audio mapping.
 -   **UI/UX Decisions**: The design system emphasizes a modern, colorful, and elegant aesthetic, with vibrant colors, subtle hover effects, and a clean white background. It incorporates elements like multi-layered box-shadows for a luminous effect and a comprehensive 24-color palette. The "LMS Design System v1.0" with 26 components is the established standard.
