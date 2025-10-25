@@ -39,6 +39,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 // Business Components
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -3496,15 +3497,30 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 </div>
                 <div className="flex-1 min-h-0 overflow-auto p-6">
                     {chapterContent[contentScript] ? (
-                      <SegmentedTextDisplay
-                        content={chapterContent}
-                        currentScript={contentScript}
-                        segments={textSegments}
-                        selectedSegmentId={selectedTextSegmentPreview}
-                        onSegmentClick={handlePreviewSegmentClick}
-                        mode="preview"
-                        className=""
-                      />
+                      learnMode ? (
+                        <SegmentedTextDisplay
+                          content={chapterContent}
+                          currentScript={contentScript}
+                          segments={textSegments}
+                          selectedSegmentId={selectedTextSegmentPreview}
+                          onSegmentClick={handlePreviewSegmentClick}
+                          mode="preview"
+                          className=""
+                        />
+                      ) : (
+                        <div 
+                          className={`
+                            prose max-w-none
+                            ${contentScript === 'te' ? 'font-jims' : contentScript === 'hi' ? 'font-adishila' : 'font-jims'}
+                          `}
+                          style={{
+                            fontSize: '28px',
+                            lineHeight: '1.6'
+                          }}
+                          dangerouslySetInnerHTML={{ __html: chapterContent[contentScript] }}
+                          data-testid="html-content-view"
+                        />
+                      )
                     ) : (
                       <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                         <FileText className="w-12 h-12 mb-4 opacity-50" />
