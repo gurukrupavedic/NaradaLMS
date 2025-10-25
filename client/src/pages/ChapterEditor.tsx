@@ -1199,6 +1199,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     },
     onSuccess: () => {
       refetchMappings();
+      queryClient.invalidateQueries({ queryKey: [`/api/mappings/chapter/${chapterId}`] });
       toast({ title: "Mapping created successfully" });
     },
     onError: (error: any) => {
@@ -1223,6 +1224,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     },
     onSuccess: () => {
       refetchMappings();
+      queryClient.invalidateQueries({ queryKey: [`/api/mappings/chapter/${chapterId}`] });
       toast({ title: "Mapping updated successfully" });
     },
     onError: (error: any) => {
@@ -1242,6 +1244,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     },
     onSuccess: () => {
       refetchMappings();
+      queryClient.invalidateQueries({ queryKey: [`/api/mappings/chapter/${chapterId}`] });
       toast({ title: "Mapping deleted successfully" });
     },
     onError: (error: any) => {
