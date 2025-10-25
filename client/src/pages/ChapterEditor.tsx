@@ -376,6 +376,15 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   const [previewVolume, setPreviewVolume] = useState(80);
   const [previewPlaybackRate, setPreviewPlaybackRate] = useState(1);
   const [selectedAudioFilePreview, setSelectedAudioFilePreview] = useState<number | null>(null);
+  const [learnMode, setLearnMode] = useState<boolean>(() => {
+    const stored = localStorage.getItem('preview-learn-mode');
+    return stored ? JSON.parse(stored) : true;
+  });
+
+  // Sync learnMode to localStorage
+  useEffect(() => {
+    localStorage.setItem('preview-learn-mode', JSON.stringify(learnMode));
+  }, [learnMode]);
 
   // === HELPER FUNCTIONS SECTION ===
 
