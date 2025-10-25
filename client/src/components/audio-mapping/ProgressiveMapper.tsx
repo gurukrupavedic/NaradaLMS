@@ -155,7 +155,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   return (
     <div className="grid grid-cols-12 gap-4 h-full">
       {/* Left Column: Audio Player Panel */}
-      <div className="col-span-4">
+      <div className="col-span-4 h-full">
         <AudioPlayerPanel
           audioRef={audioRef}
           audioUrl={audioUrl}
@@ -176,7 +176,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
       </div>
 
       {/* Right Column: Segment Mapping Grid */}
-      <div className="col-span-8">
+      <div className="col-span-8 h-full">
         <SegmentMappingGrid
           segments={currentScriptSegments}
           currentScript={currentScript}
