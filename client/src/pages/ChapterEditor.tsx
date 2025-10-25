@@ -3288,8 +3288,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
           </TabsContent>
 
           {/* Preview Tab */}
-          <TabsContent value="preview" className="space-y-6">
-            <div className="relative">
+          <TabsContent value="preview" className="h-[calc(100vh-200px)]">
+            <div className="relative h-full flex flex-col">
               {/* Header with Script Selector, Audio File, and Mapped Count */}
               <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
                 <div className="flex items-center gap-4">
@@ -3389,14 +3389,13 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               </div>
 
               {/* Content Display Card */}
-              <Card>
-                <CardHeader>
+              <Card className="flex-1 min-h-0 flex flex-col">
+                <CardHeader className="flex-shrink-0">
                   <CardTitle className="text-base">
                     Content ({contentScript === 'te' ? 'Telugu' : contentScript === 'hi' ? 'Hindi' : 'English'})
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="max-h-[500px] overflow-auto">
+                <CardContent className="flex-1 min-h-0 overflow-auto">
                     {chapterContent[contentScript] ? (
                       <SegmentedTextDisplay
                         content={chapterContent}
@@ -3413,7 +3412,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                         <p>No content available for this script</p>
                       </div>
                     )}
-                  </div>
                 </CardContent>
               </Card>
 
