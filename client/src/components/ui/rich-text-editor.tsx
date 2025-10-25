@@ -375,7 +375,7 @@ export function RichTextEditor({
             onValueChange={setFontFamily}
             disabled={disabled}
           >
-            <SelectTrigger className="w-[140px] h-8 text-xs">
+            <SelectTrigger className="w-[140px] h-8 text-xs px-2">
               <SelectValue placeholder="Font" />
             </SelectTrigger>
             <SelectContent>
