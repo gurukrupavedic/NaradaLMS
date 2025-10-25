@@ -196,12 +196,12 @@ const educationalVariants = {
   // Content status
   published: "green",
   draft: "yellow",
-  archived: "light-purple",
+  archived: "purple",
   
   // Learning progress
   completed: "green",
   "in-progress": "blue", 
-  locked: "light-purple",
+  locked: "purple",
   mastered: "emerald",
   
   // User roles
@@ -217,7 +217,7 @@ const educationalVariants = {
   
   // System status
   active: "green",
-  inactive: "light-purple",
+  inactive: "purple",
   new: "cyan",
   featured: "yellow"
 } as const;
