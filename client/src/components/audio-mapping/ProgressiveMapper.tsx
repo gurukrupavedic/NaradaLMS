@@ -1,23 +1,54 @@
 /**
  * Progressive Mapper Component
  * 
- * Musixmatch-inspired audio mapping interface with restructured sub-components
- * for better maintainability and intuitive click-when-heard workflow.
+ * Provides state management and handlers for audio-text mapping workflow.
+ * Uses render props pattern to allow parent component to control layout.
  * 
  * Created: January 2025
- * Purpose: Audio-text mapping with interactive session management
+ * Purpose: Audio-text mapping session logic and state management
  */
 
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { AudioPlayerPanel } from './AudioPlayerPanel';
-import { SegmentMappingGrid } from './SegmentMappingGrid';
 import { MappingWarningDialog } from '@/components/ui/mapping-warning-dialog';
 import { useMappingControls } from '@shared/hooks/useMappingControls';
 import { useAudioPlayer } from '@shared/hooks/useAudioPlayer';
 import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
-import { getSegmentsForScript } from '@shared/utils/text-segmentation';
 
+export interface MappingState {
+  // Audio player state
+  audioRef: React.RefObject<HTMLAudioElement>;
+  audioUrl: string;
+  isPlaying: boolean;
+  currentTime: number;
+  duration: number;
+  
+  // Mapping session state
+  mappingSession: 'idle' | 'active' | 'paused';
+  activeSegmentId: number | null;
+  progressPercentage: number;
+  mappedCount: number;
+  totalCount: number;
+  
+  // Data needed by child components
+  segments: TextSegment[];
+  currentScript: Script;
+  content: ContentMap;
+  mappings: AudioMapping[];
+  
+  // Handlers
+  togglePlayPause: () => void;
+  seekTo: (time: number) => void;
+  startMappingSession: () => void;
+  pauseMappingSession: () => void;
+  stopMappingSession: () => void;
+  resetMappingSession: () => void;
+  handleSegmentClick: (segmentId: number) => void;
+  handlePlaySegment: (mapping: AudioMapping, event: React.MouseEvent) => void;
+  onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
+  onMappingDelete: (segmentId: number) => void;
+  onMappingCreate: (mapping: AudioMapping) => void;
+}
 
 interface ProgressiveMapperProps {
   audioUrl: string;
@@ -29,6 +60,7 @@ interface ProgressiveMapperProps {
   onMappingCreate: (mapping: AudioMapping) => void;
   onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
   onMappingDelete: (segmentId: number) => void;
+  children: (state: MappingState) => React.ReactNode;
 }
 
 export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
@@ -152,48 +184,39 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     );
   }
 
+  // Prepare state object for render props
+  const mappingState: MappingState = {
+    audioRef,
+    audioUrl,
+    isPlaying,
+    currentTime,
+    duration,
+    mappingSession,
+    activeSegmentId,
+    progressPercentage,
+    mappedCount: mappedSegments.length,
+    totalCount: currentScriptSegments.length,
+    segments: currentScriptSegments,
+    currentScript,
+    content,
+    mappings,
+    togglePlayPause,
+    seekTo,
+    startMappingSession,
+    pauseMappingSession,
+    stopMappingSession,
+    resetMappingSession,
+    handleSegmentClick,
+    handlePlaySegment,
+    onMappingUpdate,
+    onMappingDelete,
+    onMappingCreate
+  };
+
   return (
-    <div className="grid grid-cols-12 gap-4 h-full">
-      {/* Left Column: Audio Player Panel */}
-      <div className="col-span-4 h-full">
-        <AudioPlayerPanel
-          audioRef={audioRef}
-          audioUrl={audioUrl}
-          isPlaying={isPlaying}
-          currentTime={currentTime}
-          duration={duration}
-          mappingSession={mappingSession}
-          progressPercentage={progressPercentage}
-          mappedCount={mappedSegments.length}
-          totalCount={currentScriptSegments.length}
-          togglePlayPause={togglePlayPause}
-          seekTo={seekTo}
-          startMappingSession={startMappingSession}
-          pauseMappingSession={pauseMappingSession}
-          stopMappingSession={stopMappingSession}
-          resetMappingSession={resetMappingSession}
-        />
-      </div>
-
-      {/* Right Column: Segment Mapping Grid */}
-      <div className="col-span-8 h-full">
-        <SegmentMappingGrid
-          segments={currentScriptSegments}
-          currentScript={currentScript}
-          content={content}
-          mappings={mappings}
-          mappingSession={mappingSession}
-          activeSegmentId={activeSegmentId}
-          duration={duration}
-          onSegmentClick={handleSegmentClick}
-          onPlaySegment={handlePlaySegment}
-          onMappingUpdate={onMappingUpdate}
-          onMappingDelete={onMappingDelete}
-          onMappingCreate={onMappingCreate}
-          onEndSession={stopMappingSession}
-        />
-      </div>
-
+    <>
+      {children(mappingState)}
+      
       {/* Warning Dialog */}
       <MappingWarningDialog
         isOpen={showWarningDialog}
@@ -202,6 +225,6 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
         existingMappingsCount={pendingMappingCount}
         audioFileName={selectedAudioFile?.displayName || selectedAudioFile?.filename || 'Unknown'}
       />
-    </div>
+    </>
   );
 };
