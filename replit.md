@@ -33,6 +33,15 @@ The application features a full-stack architecture:
 -   Font files location: `client/public/fonts/` (see README.md in that directory for installation instructions)
 -   Automatic font application based on selected script in editor, segmentation, mapping, and preview tabs
 
+**Layout Architecture:**
+-   **Consistent Tab Pattern**: All tabs follow a strict layout structure: TabsContent (viewport constraint) → wrapper (h-full flex flex-col) → header (flex-shrink-0) → content (flex-1 min-h-0 overflow-auto)
+-   **Resizable Panels**: Text Segmentation and Audio Mapping tabs use PanelGroup pattern with resizable panels for optimal workspace management
+-   **Height Constraints**: Custom div components used instead of shadcn Card components for height-constrained layouts to prevent layout issues
+-   **Component Patterns**: 
+    -   ProgressiveMapper uses render-props pattern (logic component that accepts children function, returns state object)
+    -   Separation of concerns: Layout in parent components, business logic in specialized components
+-   **Design Goal**: All tabs dynamically fill to browser window edge with internal scrollbars when content exceeds available space, preventing infinite vertical expansion
+
 ## External Dependencies
 
 **Frontend:**
