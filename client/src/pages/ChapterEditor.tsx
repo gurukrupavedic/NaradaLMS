@@ -2357,16 +2357,21 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                     />
                   </div>
                 </div>
-                <Badge variant="secondary" className="text-xs">
-                  {textSegments
-                    .filter(s => s.script === contentScript)
-                    .filter(segment => 
-                      allChapterMappings.some(mapping => 
-                        mapping.segmentId === segment.id && 
-                        mapping.audioFileId === selectedAudioFile?.id
-                      )
-                    ).length}/{textSegments.filter(s => s.script === contentScript).length} mapped
-                </Badge>
+                <div className="flex gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {textSegments.filter(s => s.script === contentScript).length} segments
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    {textSegments
+                      .filter(s => s.script === contentScript)
+                      .filter(segment => 
+                        allChapterMappings.some(mapping => 
+                          mapping.segmentId === segment.id && 
+                          mapping.audioFileId === selectedAudioFile?.id
+                        )
+                      ).length} mapped
+                  </Badge>
+                </div>
               </div>
 
               {selectedAudioFile && textSegments.length > 0 ? (
@@ -2491,6 +2496,13 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               <div className="flex gap-2">
                 <Badge variant="secondary" className="text-xs">
                   {textSegments.filter(s => s.script === contentScript).length} segments
+                </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {textSegments
+                    .filter(s => s.script === contentScript)
+                    .filter(segment => 
+                      allChapterMappings.some(mapping => mapping.segmentId === segment.id)
+                    ).length} mapped
                 </Badge>
               </div>
             </div>
