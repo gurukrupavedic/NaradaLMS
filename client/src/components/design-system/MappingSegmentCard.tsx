@@ -29,7 +29,7 @@ const mappingSegmentCardVariants = cva(
     variants: {
       status: {
         ready: "border-gray-200 hover:border-gray-300 hover:bg-gray-50",
-        recording: "border-blue-500 bg-blue-50 shadow-md animate-subtle-pulse",
+        recording: "border-orange-500 bg-orange-50 shadow-md animate-subtle-pulse",
         mapped: "border-gray-200 bg-white hover:bg-gray-50"
       }
     },
