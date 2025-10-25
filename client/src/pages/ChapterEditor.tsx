@@ -369,6 +369,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Preview tab state variables
   const [selectedTextSegmentPreview, setSelectedTextSegmentPreview] = useState<number | undefined>(undefined);
   const [previewAudioRef] = useState<HTMLAudioElement>(() => new Audio());
+  const previewTimeUpdateCleanupRef = useRef<(() => void) | null>(null);
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
   const [previewCurrentTime, setPreviewCurrentTime] = useState(0);
   const [previewDuration, setPreviewDuration] = useState(0);
@@ -604,6 +605,11 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   const handlePreviewSegmentClick = useCallback((segmentId: number | undefined) => {
     if (!segmentId) {
       setSelectedTextSegmentPreview(undefined);
+      // Clean up any existing listener
+      if (previewTimeUpdateCleanupRef.current) {
+        previewTimeUpdateCleanupRef.current();
+        previewTimeUpdateCleanupRef.current = null;
+      }
       return;
     }
 
@@ -618,6 +624,44 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
       return;
     }
 
+    // Clean up any existing timeupdate listener before setting up a new one
+    if (previewTimeUpdateCleanupRef.current) {
+      previewTimeUpdateCleanupRef.current();
+      previewTimeUpdateCleanupRef.current = null;
+    }
+
+    // Helper function to start playback with auto-stop at endTime
+    const playSegment = () => {
+      // Seek to start time
+      previewAudioRef.currentTime = mapping.startTime;
+      setPreviewCurrentTime(mapping.startTime);
+      
+      // Set up timeupdate listener to auto-stop at endTime
+      const handleTimeUpdate = () => {
+        if (previewAudioRef.currentTime >= mapping.endTime) {
+          previewAudioRef.pause();
+          setIsPreviewPlaying(false);
+          // Clean up this listener
+          previewAudioRef.removeEventListener('timeupdate', handleTimeUpdate);
+          previewTimeUpdateCleanupRef.current = null;
+        }
+      };
+      
+      previewAudioRef.addEventListener('timeupdate', handleTimeUpdate);
+      
+      // Store cleanup function
+      previewTimeUpdateCleanupRef.current = () => {
+        previewAudioRef.removeEventListener('timeupdate', handleTimeUpdate);
+      };
+      
+      // Start playback
+      previewAudioRef.play().catch((error) => {
+        console.error('Failed to play audio:', error);
+        setIsPreviewPlaying(false);
+      });
+      setIsPreviewPlaying(true);
+    };
+
     // If the audio file is different from the currently loaded one, load it
     if (selectedAudioFilePreview !== mapping.audioFileId) {
       const audioFile = audioFiles?.find((f: any) => f.id === mapping.audioFileId);
@@ -625,16 +669,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
         previewAudioRef.src = `/uploads/${audioFile.filename}`;
         setSelectedAudioFilePreview(mapping.audioFileId);
         
-        // Wait for audio to load before seeking
+        // Wait for audio to load before playing segment
         previewAudioRef.addEventListener('loadedmetadata', () => {
-          previewAudioRef.currentTime = mapping.startTime;
-          setPreviewCurrentTime(mapping.startTime);
+          playSegment();
         }, { once: true });
       }
     } else {
-      // Same audio file, just seek
-      previewAudioRef.currentTime = mapping.startTime;
-      setPreviewCurrentTime(mapping.startTime);
+      // Same audio file, just play the segment
+      playSegment();
     }
   }, [allChapterMappings?.length, selectedAudioFilePreview, audioFiles?.length]);
 
