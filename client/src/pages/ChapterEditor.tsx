@@ -2235,13 +2235,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   <Badge variant="secondary" className="text-xs">
                     {textSegments.filter(s => s.script === contentScript).length} segments
                   </Badge>
-                  <Badge variant="secondary" className="text-xs">
-                    {textSegments
-                      .filter(s => s.script === contentScript)
-                      .filter(segment => 
-                        allChapterMappings.some(mapping => mapping.segmentId === segment.id)
-                      ).length} mapped
-                  </Badge>
                 </div>
               </div>
 
@@ -3372,7 +3365,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       .filter(segment => 
                         allChapterMappings?.some(mapping => 
                           mapping.segmentId === segment.id && 
-                          (!selectedAudioFilePreview || mapping.audioFileId === selectedAudioFilePreview)
+                          mapping.audioFileId === selectedAudioFilePreview
                         )
                       ).length} mapped
                   </Badge>
