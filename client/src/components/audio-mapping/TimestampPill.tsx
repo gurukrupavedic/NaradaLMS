@@ -102,7 +102,7 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
   return (
     <div 
       ref={pillRef}
-      className="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium min-w-[85px] shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
+      className="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium w-32 h-10 shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
     >
       {/* End timestamp display */}
       <div className="flex-1 flex items-center justify-center text-gray-700">

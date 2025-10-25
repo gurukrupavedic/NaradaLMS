@@ -132,7 +132,7 @@ const MappingSegmentCard = React.forwardRef<HTMLDivElement, MappingSegmentCardPr
               </Badge>
             ) : status === 'mapped' ? (
               <Badge variant="default" className="text-xs bg-green-100 text-green-700 pointer-events-none">
-                <Zap className="h-4 w-4 mr-1" />
+                <Zap className="h-3 w-3 mr-1" />
                 Mapped
               </Badge>
             ) : (

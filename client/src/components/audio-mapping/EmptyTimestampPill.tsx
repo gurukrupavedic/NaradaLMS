@@ -124,7 +124,7 @@ export const EmptyTimestampPill: React.FC<EmptyTimestampPillProps> = ({
   return (
     <div 
       ref={pillRef}
-      className="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium min-w-[85px] shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
+      className="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium w-32 h-10 shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
     >
       {isEditing ? (
         <div className="flex items-center gap-1 w-full justify-center">
