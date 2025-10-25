@@ -2010,9 +2010,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
           </TabsContent>
 
           {/* Media Content Tab */}
-          <TabsContent value="media" className="space-y-6">
-            <Card>
-              <CardContent className="pt-6">
+          <TabsContent value="media" className="h-[calc(100vh-200px)]">
+            <Card className="h-full flex flex-col">
+              <CardContent className="pt-6 flex-1 min-h-0 overflow-auto">
                 <div className="space-y-4 relative">
                   {/* Upload Controls - Always Show */}
                   <div
