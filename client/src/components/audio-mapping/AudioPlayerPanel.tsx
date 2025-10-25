@@ -52,7 +52,7 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
   resetMappingSession
 }) => {
   return (
-    <Card className="h-full">
+    <Card>
       <CardHeader className="py-3 px-6">
         <CardTitle className="text-base font-medium">Audio Controls</CardTitle>
       </CardHeader>
