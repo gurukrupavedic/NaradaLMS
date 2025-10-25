@@ -128,7 +128,7 @@ const MappingSegmentCard = React.forwardRef<HTMLDivElement, MappingSegmentCardPr
               </Badge>
             ) : (
               <Badge 
-                variant="cyan" 
+                variant="gray" 
                 badgeStyle="classic"
                 icon={<Zap className="h-3 w-3" />}
                 className="w-[96px] flex justify-start pointer-events-none"
