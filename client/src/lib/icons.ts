@@ -41,6 +41,7 @@ export {
   Link2Off,
   Clock,
   CheckCircle,
+  Zap,
   
   // Additional Common Icons
   Bold,
