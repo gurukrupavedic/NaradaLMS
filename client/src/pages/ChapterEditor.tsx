@@ -39,7 +39,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { Switch } from "@/components/design-system/Switch";
 
 // Business Components
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -3407,34 +3407,20 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs font-medium">Learn Mode:</label>
-                    <Switch
-                      checked={learnMode}
-                      onCheckedChange={setLearnMode}
-                      data-testid="toggle-learn-mode"
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      {learnMode ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {textSegments.filter(s => s.script === contentScript).length} segments
-                    </Badge>
-                    <Badge variant="secondary" className="text-xs">
-                      {textSegments
-                        .filter(s => s.script === contentScript)
-                        .filter(segment => 
-                          allChapterMappings?.some(mapping => 
-                            mapping.segmentId === segment.id && 
-                            mapping.audioFileId === selectedAudioFilePreview
-                          )
-                        ).length} mapped
-                    </Badge>
-                  </div>
+                <div className="flex gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {textSegments.filter(s => s.script === contentScript).length} segments
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    {textSegments
+                      .filter(s => s.script === contentScript)
+                      .filter(segment => 
+                        allChapterMappings?.some(mapping => 
+                          mapping.segmentId === segment.id && 
+                          mapping.audioFileId === selectedAudioFilePreview
+                        )
+                      ).length} mapped
+                  </Badge>
                 </div>
               </div>
 
@@ -3490,10 +3476,24 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
               {/* Content Display */}
               <div className="flex-1 min-h-0 flex flex-col border rounded-lg bg-white overflow-hidden">
-                <div className="flex-shrink-0 p-4 border-b bg-gray-50">
+                <div className="flex-shrink-0 p-4 border-b bg-gray-50 flex justify-between items-center">
                   <h3 className="text-sm font-semibold text-gray-700">
                     {activeChapter?.title || 'Chapter'} ({contentScript === 'te' ? 'Telugu' : contentScript === 'hi' ? 'Hindi' : 'English'})
                   </h3>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-gray-600">Learn Mode:</span>
+                    <Switch
+                      checked={learnMode}
+                      onCheckedChange={setLearnMode}
+                      variant="orange"
+                      size="sm"
+                      showStatusText
+                      onText="ON"
+                      offText="OFF"
+                      data-testid="toggle-learn-mode"
+                    />
+                  </div>
                 </div>
                 <div className="flex-1 min-h-0 overflow-auto p-6">
                     {chapterContent[contentScript] ? (
