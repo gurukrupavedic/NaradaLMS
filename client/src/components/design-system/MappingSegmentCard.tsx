@@ -21,25 +21,7 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { Clock, Zap } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-
-// Connected circles icon for "Mapped" status
-const ConnectedCirclesIcon = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round"
-    className={className}
-  >
-    <circle cx="6" cy="12" r="3" />
-    <circle cx="18" cy="12" r="3" />
-    <line x1="9" y1="12" x2="15" y2="12" />
-  </svg>
-);
+import { Badge } from "@/components/design-system/Badge";
 
 const mappingSegmentCardVariants = cva(
   "relative bg-white border rounded-lg transition-all duration-200 cursor-pointer",
@@ -126,18 +108,31 @@ const MappingSegmentCard = React.forwardRef<HTMLDivElement, MappingSegmentCardPr
           {/* Status Badge */}
           <div className="flex-shrink-0">
             {status === 'recording' ? (
-              <Badge variant="default" className="w-26 justify-start text-xs bg-blue-100 text-blue-700 pointer-events-none">
-                <Clock className="h-3 w-3 mr-1 animate-strong-pulse" />
+              <Badge 
+                variant="blue" 
+                style="classic"
+                pulse
+                icon={<Clock className="h-3 w-3" />}
+                className="w-26 flex justify-start pointer-events-none"
+              >
                 Recording
               </Badge>
             ) : status === 'mapped' ? (
-              <Badge variant="default" className="w-26 justify-start text-xs bg-green-100 text-green-700 pointer-events-none">
-                <Zap className="h-3 w-3 mr-1" />
+              <Badge 
+                variant="green" 
+                style="classic"
+                icon={<Zap className="h-3 w-3" />}
+                className="w-26 flex justify-start pointer-events-none"
+              >
                 Mapped
               </Badge>
             ) : (
-              <Badge variant="outline" className="w-26 justify-start text-xs pointer-events-none">
-                <Zap className="h-3 w-3 mr-1 text-gray-400" />
+              <Badge 
+                variant="outline" 
+                style="classic"
+                icon={<Zap className="h-3 w-3 text-gray-400" />}
+                className="w-26 flex justify-start pointer-events-none"
+              >
                 Ready
               </Badge>
             )}
