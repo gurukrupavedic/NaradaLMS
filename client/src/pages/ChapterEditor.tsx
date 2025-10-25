@@ -2347,7 +2347,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   {textSegments
                     .filter(s => s.script === contentScript)
                     .filter(segment => 
-                      allChapterMappings.some(mapping => mapping.segmentId === segment.id)
+                      allChapterMappings.some(mapping => 
+                        mapping.segmentId === segment.id && 
+                        mapping.audioFileId === selectedAudioFile?.id
+                      )
                     ).length} mapped
                 </Badge>
               </div>
