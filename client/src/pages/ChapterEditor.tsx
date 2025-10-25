@@ -2245,8 +2245,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 </div>
               </div>
 
-              <PanelGroup direction="horizontal" className="flex-1 min-h-0">
-                {/* Left Panel: Content Area */}
+              <PanelGroup id="text-segmentation-panels" direction="horizontal" className="flex-1 min-h-0">
+                {/* Left Panel: Content Area */}}
                 <Panel defaultSize={50} minSize={30}>
                   <AnnotationLayer
                     content={chapterContent}
@@ -2403,7 +2403,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   }}
                 >
                   {(state) => (
-                    <PanelGroup direction="horizontal" className="flex-1 min-h-0">
+                    <PanelGroup id="audio-mapping-panels" direction="horizontal" className="flex-1 min-h-0">
                       {isMappingLoading && (
                         <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
                           <div className="text-center">
