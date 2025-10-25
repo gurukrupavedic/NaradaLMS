@@ -59,6 +59,16 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [currentSegmentId, onSegmentSelect]);
 
+  // Auto-scroll to selected segment
+  useEffect(() => {
+    if (currentSegmentId) {
+      const element = document.querySelector(`[data-segment-id="${currentSegmentId}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [currentSegmentId]);
+
   // Filter segments for current script
   const currentScriptSegments = segments; // Already script-specific from API
 
@@ -201,6 +211,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                 return (
                   <div
                     key={segment.id}
+                    data-segment-id={segment.id}
                     draggable
                     onDragStart={(e) => handleDragStart(e, index)}
                     onDragOver={(e) => handleDragOver(e, index)}
