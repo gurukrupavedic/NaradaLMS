@@ -101,8 +101,6 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
         
         {/* Mapping Session Controls Section */}
         <div className="space-y-3 pt-2 border-t">
-          <h3 className="text-sm font-medium text-muted-foreground">Mapping Session Controls</h3>
-          
           {mappingSession === 'idle' ? (
             <Button onClick={startMappingSession} className="w-full">
               Start Mapping Session
