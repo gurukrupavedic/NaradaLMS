@@ -55,6 +55,8 @@ import { AnnotationLayer } from "@/components/text-segmentation/AnnotationLayer"
 import { SegmentPanel } from "@/components/text-segmentation/SegmentPanel";
 import { SegmentedTextDisplay } from "@/components/text-segmentation/SegmentedTextDisplay";
 import { ProgressiveMapper } from "@/components/audio-mapping/ProgressiveMapper";
+import { AudioPlayerPanel } from "@/components/audio-mapping/AudioPlayerPanel";
+import { SegmentMappingGrid } from "@/components/audio-mapping/SegmentMappingGrid";
 import { ConnectedCirclesIcon } from "@shared/components/icons";
 import { LinkStatusIcon } from "@shared/components/LinkStatusIcon";
 import { getMappingStatus } from "@shared/utils/mapping-status";
@@ -2370,48 +2372,93 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
               </div>
 
               {selectedAudioFile && textSegments.length > 0 ? (
-                <div className="flex-1 min-h-0">
-                  {isMappingLoading && (
-                    <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                        <p className="text-sm text-muted-foreground">Loading mappings for audio file...</p>
-                      </div>
-                    </div>
+                <ProgressiveMapper
+                  audioUrl={`/uploads/${selectedAudioFile.filename}`}
+                  segments={textSegments}
+                  currentScript={contentScript}
+                  content={chapterContent}
+                  mappings={audioFileMappings.map(convertDatabaseMapping)}
+                  selectedAudioFile={selectedAudioFile}
+                  onMappingCreate={(mapping) => {
+                    createMappingMutation.mutate({
+                      segmentId: mapping.segmentId,
+                      audioFileId: selectedAudioFile.id,
+                      startTime: mapping.startTime,
+                      endTime: mapping.endTime,
+                      createdBy: "system"
+                    });
+                  }}
+                  onMappingUpdate={(segmentId, updates) => {
+                    updateMappingMutation.mutate({
+                      segmentId: segmentId,
+                      updates: {
+                        startTime: updates.startTime,
+                        endTime: updates.endTime
+                      }
+                    });
+                  }}
+                  onMappingDelete={(segmentId) => {
+                    deleteMappingMutation.mutate({
+                      audioFileId: selectedAudioFile.id,
+                      segmentId: segmentId
+                    });
+                  }}
+                >
+                  {(state) => (
+                    <PanelGroup direction="horizontal" className="flex-1 min-h-0">
+                      {isMappingLoading && (
+                        <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                            <p className="text-sm text-muted-foreground">Loading mappings for audio file...</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Left Panel: Audio Player */}
+                      <Panel defaultSize={33} minSize={25}>
+                        <AudioPlayerPanel
+                          audioRef={state.audioRef}
+                          audioUrl={state.audioUrl}
+                          isPlaying={state.isPlaying}
+                          currentTime={state.currentTime}
+                          duration={state.duration}
+                          mappingSession={state.mappingSession}
+                          progressPercentage={state.progressPercentage}
+                          mappedCount={state.mappedCount}
+                          totalCount={state.totalCount}
+                          togglePlayPause={state.togglePlayPause}
+                          seekTo={state.seekTo}
+                          startMappingSession={state.startMappingSession}
+                          pauseMappingSession={state.pauseMappingSession}
+                          stopMappingSession={state.stopMappingSession}
+                          resetMappingSession={state.resetMappingSession}
+                        />
+                      </Panel>
+
+                      <PanelResizeHandle className="w-2 bg-gray-200 hover:bg-blue-400 transition-colors" />
+
+                      {/* Right Panel: Segment Mapping Grid */}
+                      <Panel defaultSize={67} minSize={40}>
+                        <SegmentMappingGrid
+                          segments={state.segments}
+                          currentScript={state.currentScript}
+                          content={state.content}
+                          mappings={state.mappings}
+                          mappingSession={state.mappingSession}
+                          activeSegmentId={state.activeSegmentId}
+                          duration={state.duration}
+                          onSegmentClick={state.handleSegmentClick}
+                          onPlaySegment={state.handlePlaySegment}
+                          onMappingUpdate={state.onMappingUpdate}
+                          onMappingDelete={state.onMappingDelete}
+                          onMappingCreate={state.onMappingCreate}
+                          onEndSession={state.stopMappingSession}
+                        />
+                      </Panel>
+                    </PanelGroup>
                   )}
-                  <ProgressiveMapper
-                    audioUrl={`/uploads/${selectedAudioFile.filename}`}
-                    segments={textSegments}
-                    currentScript={contentScript}
-                    content={chapterContent}
-                    mappings={audioFileMappings.map(convertDatabaseMapping)}
-                    selectedAudioFile={selectedAudioFile}
-                    onMappingCreate={(mapping) => {
-                      createMappingMutation.mutate({
-                        segmentId: mapping.segmentId,
-                        audioFileId: selectedAudioFile.id,
-                        startTime: mapping.startTime,
-                        endTime: mapping.endTime,
-                        createdBy: "system"
-                      });
-                    }}
-                    onMappingUpdate={(segmentId, updates) => {
-                      updateMappingMutation.mutate({
-                        segmentId: segmentId,
-                        updates: {
-                          startTime: updates.startTime,
-                          endTime: updates.endTime
-                        }
-                      });
-                    }}
-                    onMappingDelete={(segmentId) => {
-                      deleteMappingMutation.mutate({
-                        audioFileId: selectedAudioFile.id,
-                        segmentId: segmentId
-                      });
-                    }}
-                  />
-                </div>
+                </ProgressiveMapper>
               ) : (
                 <Card className="h-full flex items-center justify-center">
                   <CardContent>
