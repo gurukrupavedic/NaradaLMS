@@ -282,9 +282,9 @@ export function RichTextEditor({
   };
 
   return (
-    <div className={cn("border rounded-md overflow-hidden", className)}>
+    <div className={cn("border rounded-md overflow-hidden h-full flex flex-col", className)}>
       {/* Reorganized Toolbar */}
-      <div className="border-b p-2 bg-white">
+      <div className="border-b p-2 bg-white flex-shrink-0">
         {/* Compact Single Row Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Essential Formatting */}
@@ -553,7 +553,7 @@ export function RichTextEditor({
 
       {/* Editor Content */}
       <div 
-        className="h-full overflow-auto bg-white cursor-text"
+        className="flex-1 overflow-auto bg-white cursor-text"
         onClick={() => editor?.commands.focus()}
       >
         <EditorContent 
