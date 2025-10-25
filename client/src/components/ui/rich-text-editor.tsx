@@ -92,7 +92,9 @@ import {
   Triangle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { extractPlainText } from '@/lib/html-utils'
 
 // Text marker functionality removed temporarily to fix editor issues
 
@@ -113,6 +115,17 @@ export function RichTextEditor({
   language,
   className
 }: RichTextEditorProps) {
+  // Editor mode state with localStorage persistence
+  const [editorMode, setEditorMode] = useState<'html' | 'text'>(() => {
+    const saved = localStorage.getItem('richTextEditorMode');
+    return (saved === 'html' || saved === 'text') ? saved : 'html';
+  });
+
+  // Persist editor mode preference
+  useEffect(() => {
+    localStorage.setItem('richTextEditorMode', editorMode);
+  }, [editorMode]);
+
   // Get default font based on language
   const getDefaultFont = () => {
     switch (language) {
@@ -548,38 +561,73 @@ export function RichTextEditor({
               <Minus className="h-3.5 w-3.5" />
             </Button>
           </div>
+
+          {/* Spacer to push mode toggle to the right */}
+          <div className="flex-1" />
+
+          {/* HTML/Plain Text Mode Toggle */}
+          <ToggleGroup 
+            type="single" 
+            value={editorMode} 
+            onValueChange={(value) => value && setEditorMode(value as 'html' | 'text')}
+            className="border rounded h-8"
+          >
+            <ToggleGroupItem value="html" className="h-7 px-3 text-xs" data-testid="toggle-html-mode">
+              HTML
+            </ToggleGroupItem>
+            <ToggleGroupItem value="text" className="h-7 px-3 text-xs" data-testid="toggle-text-mode">
+              Plain Text
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
       </div>
 
       {/* Editor Content */}
-      <div 
-        className="flex-1 overflow-auto bg-white cursor-text"
-        onClick={() => editor?.commands.focus()}
-      >
-        <EditorContent 
-          editor={editor} 
-          className={cn(
-            "text-xl leading-normal w-full h-full",
-            "[&_.ProseMirror]:h-full [&_.ProseMirror]:outline-none [&_.ProseMirror]:cursor-text",
-            "[&_.ProseMirror]:p-4 [&_.ProseMirror]:w-full [&_.ProseMirror]:box-border",
-            "[&_.ProseMirror]:max-w-none",
-            "[&_.ProseMirror>*:first-child]:mt-0 [&_.ProseMirror>*:last-child]:mb-0",
-            "[&_.ProseMirror-focused]:outline-none",
-            "[&_.ProseMirror_h1]:font-semibold [&_.ProseMirror_h1]:text-xl [&_.ProseMirror_h1]:mb-2 [&_.ProseMirror_h1]:mt-2",
-            "[&_.ProseMirror_h2]:font-semibold [&_.ProseMirror_h2]:text-lg [&_.ProseMirror_h2]:mb-2 [&_.ProseMirror_h2]:mt-2",
-            "[&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:text-base [&_.ProseMirror_h3]:mb-1 [&_.ProseMirror_h3]:mt-1",
-            "[&_.ProseMirror_p]:mb-1 [&_.ProseMirror_p]:mt-0",
-            "[&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:ml-6",
-            "[&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:ml-6",
-            "[&_.ProseMirror_li]:mb-0",
-            "[&_.ProseMirror_strong]:font-semibold",
-            "[&_.ProseMirror_em]:italic",
-            "[&_.ProseMirror_a]:text-blue-600 [&_.ProseMirror_a]:underline",
-            getFontClass(),
-            disabled && "opacity-50 cursor-not-allowed"
-          )}
-        />
-      </div>
+      {editorMode === 'html' ? (
+        <div 
+          className="flex-1 overflow-auto bg-white cursor-text"
+          onClick={() => editor?.commands.focus()}
+        >
+          <EditorContent 
+            editor={editor} 
+            className={cn(
+              "text-xl leading-normal w-full h-full",
+              "[&_.ProseMirror]:h-full [&_.ProseMirror]:outline-none [&_.ProseMirror]:cursor-text",
+              "[&_.ProseMirror]:p-4 [&_.ProseMirror]:w-full [&_.ProseMirror]:box-border",
+              "[&_.ProseMirror]:max-w-none",
+              "[&_.ProseMirror>*:first-child]:mt-0 [&_.ProseMirror>*:last-child]:mb-0",
+              "[&_.ProseMirror-focused]:outline-none",
+              "[&_.ProseMirror_h1]:font-semibold [&_.ProseMirror_h1]:text-xl [&_.ProseMirror_h1]:mb-2 [&_.ProseMirror_h1]:mt-2",
+              "[&_.ProseMirror_h2]:font-semibold [&_.ProseMirror_h2]:text-lg [&_.ProseMirror_h2]:mb-2 [&_.ProseMirror_h2]:mt-2",
+              "[&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:text-base [&_.ProseMirror_h3]:mb-1 [&_.ProseMirror_h3]:mt-1",
+              "[&_.ProseMirror_p]:mb-1 [&_.ProseMirror_p]:mt-0",
+              "[&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:ml-6",
+              "[&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:ml-6",
+              "[&_.ProseMirror_li]:mb-0",
+              "[&_.ProseMirror_strong]:font-semibold",
+              "[&_.ProseMirror_em]:italic",
+              "[&_.ProseMirror_a]:text-blue-600 [&_.ProseMirror_a]:underline",
+              getFontClass(),
+              disabled && "opacity-50 cursor-not-allowed"
+            )}
+          />
+        </div>
+      ) : (
+        <div 
+          className="flex-1 overflow-auto bg-white p-4"
+          data-testid="text-preview-mode"
+        >
+          <div 
+            className={cn(
+              "whitespace-pre-wrap leading-relaxed",
+              "text-[28px]",
+              getFontClass()
+            )}
+          >
+            {extractPlainText(value) || placeholder}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
