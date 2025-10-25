@@ -4,6 +4,34 @@
 
 The Vedic Learning Management System is a full-stack application for managing and delivering Vedic educational content. It supports multilingual content (Telugu, Hindi/Devanagari, English/IAST) with advanced audio-text synchronization. Key functionalities include text segmentation, audio mapping, and visual status indicators. The system aims to provide a comprehensive platform for Vedic education, with a focus on modern, elegant design.
 
+## Recent Changes
+
+### October 25, 2025 - Content Management MVP Milestone
+**Status:** MVP Ready for User Feedback
+
+The content management system has reached MVP completion with the following achievements:
+
+**Visual Design System:**
+- Implemented sticky note aesthetic for text segment highlighting (amber-50 idle, amber-100 hover)
+- Established indigo as consistent accent color throughout the app
+- Unified selection highlighting across all panels (indigo-200 background, indigo-400 border)
+- Dynamic number pill colors (gray for idle, indigo-500 for selected segments)
+- Design system Tabs component (indigo variant) for HTML/Text mode toggle in rich-text editor
+
+**User Experience Enhancements:**
+- Auto-scroll functionality using scrollIntoView API for segment selection across panels
+- Visual coherence between left text display and right segment panel
+- Refined color hierarchy: Gray (ready), Orange (recording), Green (mapped), Indigo (selected)
+- Improved readability for extended Vedic text study with softer highlight tones
+
+**Technical Implementation:**
+- SegmentedTextDisplay component with amber/indigo color scheme
+- TextSegment design system component with dynamic pill variants
+- MappingSegmentCard with CVA-based status colors
+- Consistent auto-scroll behavior across segmentation and mapping workflows
+
+**Next Phase:** Collecting feedback from early users before implementing student-facing features and additional refinements.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
