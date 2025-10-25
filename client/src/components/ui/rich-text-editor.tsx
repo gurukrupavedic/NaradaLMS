@@ -93,7 +93,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCallback, useEffect, useState } from 'react'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Tabs, TabsList, TabsTrigger } from '@/components/design-system/Tabs'
 import { htmlToPlainText } from '@shared/utils/text-segmentation'
 
 // Text marker functionality removed temporarily to fix editor issues
@@ -565,20 +565,20 @@ export function RichTextEditor({
           {/* Spacer to push mode toggle to the right */}
           <div className="flex-1" />
 
-          {/* HTML/Plain Text Mode Toggle */}
-          <ToggleGroup 
-            type="single" 
+          {/* HTML/Text Mode Toggle */}
+          <Tabs 
             value={editorMode} 
-            onValueChange={(value) => value && setEditorMode(value as 'html' | 'text')}
-            className="border rounded h-8"
+            onValueChange={(value) => setEditorMode(value as 'html' | 'text')}
           >
-            <ToggleGroupItem value="html" className="h-7 px-3 text-xs" data-testid="toggle-html-mode">
-              HTML
-            </ToggleGroupItem>
-            <ToggleGroupItem value="text" className="h-7 px-3 text-xs" data-testid="toggle-text-mode">
-              Plain Text
-            </ToggleGroupItem>
-          </ToggleGroup>
+            <TabsList variant="indigo" size="sm">
+              <TabsTrigger value="html" data-testid="toggle-html-mode">
+                HTML
+              </TabsTrigger>
+              <TabsTrigger value="text" data-testid="toggle-text-mode">
+                Text
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
       </div>
 
