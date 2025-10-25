@@ -81,7 +81,7 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
           <Button
             variant="outline"
             onClick={togglePlayPause}
-            className="w-full"
+            className="w-full flex items-center justify-center"
           >
             {isPlaying ? (
               <>
@@ -100,7 +100,7 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
         {/* Mapping Session Controls Section */}
         <div className="space-y-3 pt-2 border-t">
           {mappingSession === 'idle' ? (
-            <Button onClick={startMappingSession} className="w-full">
+            <Button onClick={startMappingSession} className="w-full flex items-center justify-center">
               Start Mapping Session
             </Button>
           ) : (
@@ -108,7 +108,7 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
               <Button 
                 variant="outline" 
                 onClick={pauseMappingSession}
-                className="w-full"
+                className="w-full flex items-center justify-center"
               >
                 {mappingSession === 'paused' ? (
                   <>
@@ -125,7 +125,7 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
               <Button 
                 variant="outline" 
                 onClick={stopMappingSession}
-                className="w-full"
+                className="w-full flex items-center justify-center"
               >
                 <Square className="h-4 w-4 mr-2" />
                 End Session
@@ -133,7 +133,7 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
               <Button 
                 variant="outline" 
                 onClick={resetMappingSession}
-                className="w-full"
+                className="w-full flex items-center justify-center"
               >
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Reset Session
