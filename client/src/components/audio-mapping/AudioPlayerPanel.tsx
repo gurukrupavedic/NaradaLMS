@@ -52,11 +52,11 @@ export const AudioPlayerPanel: React.FC<AudioPlayerPanelProps> = ({
   resetMappingSession
 }) => {
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader className="py-3 px-6">
         <CardTitle className="text-base font-medium">Audio Controls</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 flex-1 overflow-auto">
         {/* Audio element */}
         <audio ref={audioRef} src={audioUrl} preload="metadata" />
         
