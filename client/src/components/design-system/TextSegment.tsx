@@ -23,7 +23,25 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { Trash2, Link2, Link2Off } from "lucide-react";
+import { Trash2, Link2Off } from "lucide-react";
+
+// Connected circles icon for "Mapped" status
+const ConnectedCirclesIcon = ({ className }: { className?: string }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    className={className}
+  >
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="12" r="3" />
+    <line x1="9" y1="12" x2="15" y2="12" />
+  </svg>
+);
 
 const textSegmentVariants = cva(
   "relative bg-white border rounded-lg transition-all duration-200 cursor-grab active:cursor-grabbing group",
@@ -206,7 +224,7 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
               )}
               title={isMapped ? "Mapped to audio" : "Not mapped"}
             >
-              {isMapped ? <Link2 className="h-3 w-3" /> : <Link2Off className="h-3 w-3" />}
+              {isMapped ? <ConnectedCirclesIcon className="h-3 w-3" /> : <Link2Off className="h-3 w-3" />}
             </button>
 
             {/* Delete Icon - Hover only */}
