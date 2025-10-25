@@ -2309,7 +2309,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   />
                   {audioFiles && audioFiles.length > 0 ? (
                     <div className="flex items-center gap-2">
-                      <label className="text-sm font-medium">Audio File:</label>
+                      <label className="text-xs font-medium">Audio File:</label>
                       <Select
                         value={selectedAudioFile?.id?.toString() || ''}
                         onValueChange={(value) => {
@@ -2317,7 +2317,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                           setSelectedAudioFile(file || null);
                         }}
                       >
-                        <SelectTrigger className="w-80">
+                        <SelectTrigger className="w-80 h-9 text-xs">
                           <SelectValue placeholder="Select audio file" />
                         </SelectTrigger>
                         <SelectContent>
@@ -2332,7 +2332,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   ) : (
                     <div className="flex items-center gap-2">
                       <Music className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-500">No audio files uploaded</span>
+                      <span className="text-xs text-gray-500">No audio files uploaded</span>
                     </div>
                   )}
                 </div>
@@ -3336,7 +3336,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   />
                   
                   <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium">Audio File:</label>
+                    <label className="text-xs font-medium">Audio File:</label>
                     <Select
                       value={selectedAudioFilePreview?.toString() || ""}
                       onValueChange={(value) => {
@@ -3348,7 +3348,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                         }
                       }}
                     >
-                      <SelectTrigger className="w-80">
+                      <SelectTrigger className="w-80 h-9 text-xs">
                         <SelectValue placeholder="Select audio file" />
                       </SelectTrigger>
                       <SelectContent>
