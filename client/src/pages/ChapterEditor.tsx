@@ -2414,7 +2414,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       )}
                       
                       {/* Left Panel: Audio Player */}
-                      <Panel defaultSize={33} minSize={20}>
+                      <Panel defaultSize={20} minSize={20}>
                         <AudioPlayerPanel
                           audioRef={state.audioRef}
                           audioUrl={state.audioUrl}
@@ -2437,7 +2437,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       <PanelResizeHandle className="w-1 bg-gray-400 hover:bg-gray-600 transition-colors" />
 
                       {/* Right Panel: Segment Mapping Grid */}
-                      <Panel defaultSize={67} minSize={40}>
+                      <Panel defaultSize={80} minSize={40}>
                         <SegmentMappingGrid
                           segments={state.segments}
                           currentScript={state.currentScript}
