@@ -9,13 +9,12 @@
  */
 
 import React, { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Link2Off, Square } from 'lucide-react';
+import { Square } from 'lucide-react';
 import { TimestampPill } from './TimestampPill';
 import { EmptyTimestampPill } from './EmptyTimestampPill';
-import { ConnectedCirclesIcon } from '@shared/components/icons';
+import { MappingSegmentCard } from '@/components/design-system/MappingSegmentCard';
 import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
 import { getSegmentText } from '@shared/utils/text-segmentation';
 
@@ -57,10 +56,10 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
     return mappings.find(m => m.segmentId === segmentId);
   };
 
-  const getSegmentStatus = (segmentId: number) => {
-    if (activeSegmentId === segmentId) return 'active';
-    if (getSegmentMapping(segmentId)) return 'completed';
-    return 'inactive';
+  const getSegmentStatus = (segmentId: number): 'ready' | 'recording' | 'mapped' => {
+    if (activeSegmentId === segmentId) return 'recording';
+    if (getSegmentMapping(segmentId)) return 'mapped';
+    return 'ready';
   };
 
   return (
@@ -119,56 +118,14 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
 
                     {/* Right: Segment card */}
                     <div className="flex-1">
-                      <div
-                        onClick={() => onSegmentClick(segment.id)}
-                        className={`border rounded-lg transition-all cursor-pointer ${
-                          status === 'active' 
-                            ? 'border-blue-500 bg-blue-50 shadow-md' 
-                            : mappingSession === 'active'
-                            ? 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                            : 'border-gray-200 bg-white hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex items-center px-4 py-3 gap-4">
-                          {/* Left: Number and status */}
-                          <div className="flex items-center gap-3 flex-shrink-0">
-                            <Badge variant="secondary" className="text-xs px-2 py-0.5 min-w-6 justify-center">
-                              {index + 1}
-                            </Badge>
-                            {status === 'active' ? (
-                              <Badge variant="default" className="text-xs bg-blue-100 text-blue-700">
-                                <Clock className="h-3 w-3 mr-1 animate-strong-pulse" />
-                                Recording
-                              </Badge>
-                            ) : status === 'completed' ? (
-                              <Badge variant="default" className="text-xs bg-green-100 text-green-700">
-                                <ConnectedCirclesIcon className="h-4 w-4 mr-1" />
-                                Mapped
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-xs">
-                                <Link2Off className="h-3 w-3 mr-1" />
-                                Ready
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          {/* Right: Content */}
-                          <div className="flex-1 min-w-0">
-                            <div 
-                              className="text-gray-700 leading-relaxed"
-                              style={{
-                                fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
-                                            currentScript === 'hi' ? "'Adishila San', 'Noto Sans Devanagari', serif" :
-                                            "'JIMS', 'Noto Sans Telugu', sans-serif",
-                                fontSize: '28px'
-                              }}
-                            >
-                              {segmentText}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <MappingSegmentCard
+                        content={segmentText}
+                        segmentNumber={index + 1}
+                        status={status}
+                        script={currentScript}
+                        fontSize="28px"
+                        onSegmentClick={() => onSegmentClick(segment.id)}
+                      />
                     </div>
                   </div>
                 );
