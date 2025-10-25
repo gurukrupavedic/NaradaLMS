@@ -10,7 +10,6 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Square } from 'lucide-react';
 import { TimestampPill } from './TimestampPill';
 import { EmptyTimestampPill } from './EmptyTimestampPill';
@@ -63,13 +62,16 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
   };
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="py-3 px-6">
-        <CardTitle className="text-base font-medium">Segment Mapping</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 relative overflow-auto">
-          <div className="px-6 py-4">
+    <div className="h-full">
+      <div className="bg-white border rounded-lg h-full overflow-hidden shadow-sm flex flex-col">
+        {/* Header */}
+        <div className="px-6 py-3 bg-gray-50 border-b flex-shrink-0">
+          <h2 className="text-base font-medium text-gray-700">Segment Mapping</h2>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="p-6">
             <div className="space-y-3 min-w-[800px]">
               {segments.map((segment, index) => {
                 const mapping = getSegmentMapping(segment.id);
@@ -152,7 +154,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
