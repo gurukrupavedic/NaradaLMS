@@ -2225,7 +2225,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
           <TabsContent value="text-segmentation" className="h-[calc(100vh-200px)]">
             <div className="relative h-full flex flex-col">
               {/* Language Selection & Stats */}
-              <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg h-16">
+              <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
                 <ScriptSelector
                   currentScript={contentScript}
                   availableScripts={['te', 'hi', 'en']}
@@ -2300,7 +2300,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
           <TabsContent value="audio-mapping" className="h-[calc(100vh-200px)]">
             <div className="relative h-full flex flex-col">
               {/* Audio Controls */}
-              <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg h-16">
+              <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
                 <div className="flex gap-4">
                   <ScriptSelector
                     currentScript={contentScript}
@@ -3327,7 +3327,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
           <TabsContent value="preview" className="h-[calc(100vh-200px)]">
             <div className="relative h-full flex flex-col">
               {/* Header with Script Selector, Audio File, and Mapped Count */}
-              <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg h-16">
+              <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
                 <div className="flex items-center gap-4">
                   <ScriptSelector
                     currentScript={contentScript}
