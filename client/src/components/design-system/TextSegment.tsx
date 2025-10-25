@@ -67,7 +67,7 @@ const textSegmentVariants = cva(
       state: {
         static: "",
         dragging: "shadow-lg scale-[0.98] opacity-75 rotate-1 cursor-grabbing z-10",
-        selected: "shadow-lg shadow-blue-200/40 bg-gradient-to-r from-blue-50/80 to-white border-blue-300/60 scale-[1.01]"
+        selected: "shadow-lg shadow-indigo-200/40 bg-gradient-to-r from-indigo-50/80 to-white border-indigo-300/60 scale-[1.01]"
       },
       size: {
         sm: "p-3 text-sm",
