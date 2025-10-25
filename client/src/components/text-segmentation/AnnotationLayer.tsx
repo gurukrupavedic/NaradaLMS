@@ -169,7 +169,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   return (
     <div className="h-full">
       {/* Content Area */}
-      <div className="pb-4 h-full">
+      <div className="h-full">
         {/* White Container with integrated header */}
         <div className="bg-white border rounded-lg h-full overflow-hidden shadow-sm flex flex-col">
           {/* Header - fixed at top */}
