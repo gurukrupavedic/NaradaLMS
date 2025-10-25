@@ -94,7 +94,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useCallback, useEffect, useState } from 'react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { extractPlainText } from '@/lib/html-utils'
+import { htmlToPlainText } from '@shared/utils/text-segmentation'
 
 // Text marker functionality removed temporarily to fix editor issues
 
@@ -624,7 +624,7 @@ export function RichTextEditor({
               getFontClass()
             )}
           >
-            {extractPlainText(value) || placeholder}
+            {htmlToPlainText(value) || placeholder}
           </div>
         </div>
       )}
