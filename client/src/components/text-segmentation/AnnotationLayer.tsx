@@ -171,16 +171,16 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
       {/* Content Area */}
       <div className="pb-4 h-full">
         {/* White Container with integrated header */}
-        <div className="bg-white border rounded-lg h-[600px] overflow-hidden shadow-sm">
+        <div className="bg-white border rounded-lg h-full overflow-hidden shadow-sm flex flex-col">
           {/* Header - fixed at top */}
-          <div className="px-6 py-3 bg-gray-50 border-b">
+          <div className="px-6 py-3 bg-gray-50 border-b flex-shrink-0">
             <h2 className="text-base font-semibold text-gray-700">Content ({currentScript === 'te' ? 'Telugu' : currentScript === 'hi' ? 'Hindi' : 'English'})</h2>
           </div>
 
           {/* Scrollable Content Wrapper */}
           <div 
             ref={scrollContainerRef}
-            className="h-[calc(100%-60px)] overflow-y-auto"
+            className="flex-1 min-h-0 overflow-y-auto"
           >
             {/* Text Content with Highlighting */}
             <div
