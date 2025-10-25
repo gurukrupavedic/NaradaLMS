@@ -3464,14 +3464,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 )}
               </div>
 
-              {/* Content Display Card */}
-              <Card className="flex-1 min-h-0 flex flex-col">
-                <CardHeader className="flex-shrink-0">
-                  <CardTitle className="text-base">
+              {/* Content Display */}
+              <div className="flex-1 min-h-0 flex flex-col border rounded-lg bg-white overflow-hidden">
+                <div className="flex-shrink-0 p-4 border-b bg-gray-50">
+                  <h3 className="text-sm font-semibold text-gray-700">
                     Content ({contentScript === 'te' ? 'Telugu' : contentScript === 'hi' ? 'Hindi' : 'English'})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 min-h-0 overflow-auto">
+                  </h3>
+                </div>
+                <div className="flex-1 min-h-0 overflow-auto p-6">
                     {chapterContent[contentScript] ? (
                       <SegmentedTextDisplay
                         content={chapterContent}
@@ -3488,8 +3488,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                         <p>No content available for this script</p>
                       </div>
                     )}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
               {/* Blocking Overlay for Published Chapters */}
               {isPublished && (
