@@ -3383,16 +3383,21 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   </div>
                 </div>
                 
-                <Badge variant="secondary" className="text-xs">
-                  {textSegments
-                    .filter(s => s.script === contentScript)
-                    .filter(segment => 
-                      allChapterMappings?.some(mapping => 
-                        mapping.segmentId === segment.id && 
-                        (!selectedAudioFilePreview || mapping.audioFileId === selectedAudioFilePreview)
-                      )
-                    ).length}/{textSegments.filter(s => s.script === contentScript).length} mapped
-                </Badge>
+                <div className="flex gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {textSegments.filter(s => s.script === contentScript).length} segments
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    {textSegments
+                      .filter(s => s.script === contentScript)
+                      .filter(segment => 
+                        allChapterMappings?.some(mapping => 
+                          mapping.segmentId === segment.id && 
+                          (!selectedAudioFilePreview || mapping.audioFileId === selectedAudioFilePreview)
+                        )
+                      ).length} mapped
+                  </Badge>
+                </div>
               </div>
 
               {/* Audio Controls */}
