@@ -619,10 +619,15 @@ export function RichTextEditor({
         >
           <div 
             className={cn(
-              "whitespace-pre-wrap leading-relaxed",
-              "text-[28px]",
+              "whitespace-pre-wrap",
               getFontClass()
             )}
+            style={{
+              fontSize: '28px',
+              lineHeight: '1.8',
+              letterSpacing: '0.02em',
+              wordSpacing: '0.05em'
+            }}
           >
             {htmlToPlainText(value) || placeholder}
           </div>
