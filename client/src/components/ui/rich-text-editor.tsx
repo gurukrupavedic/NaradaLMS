@@ -130,9 +130,9 @@ export function RichTextEditor({
   const getDefaultFont = () => {
     switch (language) {
       case "te": return "'JIMS', 'Noto Sans Telugu', sans-serif";
-      case "hi": return "'Adishila San', 'Noto Sans Devanagari', serif";
-      case "en": return "'JIMS', 'Noto Sans Telugu', sans-serif";
-      default: return "'JIMS', 'Noto Sans Telugu', sans-serif";
+      case "hi": return "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif";
+      case "en": return "'AdishilaSan', 'Noto Sans', sans-serif";
+      default: return "'AdishilaSan', 'Noto Sans', sans-serif";
     }
   };
 
@@ -288,8 +288,8 @@ export function RichTextEditor({
   const getFontClass = () => {
     switch (language) {
       case "te": return "font-['JIMS','Noto_Sans_Telugu',sans-serif]";
-      case "hi": return "font-['Adishila_San','Noto_Sans_Devanagari',serif]";
-      case "en": return "font-['JIMS','Noto_Sans_Telugu',sans-serif]";
+      case "hi": return "font-['AdishilaSanVedic','Noto_Sans_Devanagari',sans-serif]";
+      case "en": return "font-['AdishilaSan','Noto_Sans',sans-serif]";
       default: return "";
     }
   };
