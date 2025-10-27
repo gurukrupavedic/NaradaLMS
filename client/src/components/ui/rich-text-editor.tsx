@@ -369,30 +369,6 @@ export function RichTextEditor({
             </SelectContent>
           </Select>
 
-          {/* Font Selector */}
-          <Select
-            value={editor?.getAttributes('textStyle')?.fontFamily || "'JIMS', 'Noto Sans Telugu', sans-serif"}
-            onValueChange={setFontFamily}
-            disabled={disabled}
-          >
-            <SelectTrigger className="w-[140px] h-8 text-xs px-2 text-left">
-              <SelectValue placeholder="Font" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="'JIMS', 'Noto Sans Telugu', sans-serif">JIMS (Telugu/IAST)</SelectItem>
-              <SelectItem value="'Adishila San', 'Noto Sans Devanagari', serif">Adishila San (Devanagari)</SelectItem>
-              <SelectItem value="'Noto Sans Telugu', sans-serif">Noto Telugu</SelectItem>
-              <SelectItem value="'Noto Sans Devanagari', sans-serif">Noto Devanagari</SelectItem>
-              <SelectItem value="'Sanskrit 2003', serif">Sanskrit 2003</SelectItem>
-              <SelectItem value="Arial, sans-serif">Arial</SelectItem>
-              <SelectItem value="Times New Roman, serif">Times New Roman</SelectItem>
-              <SelectItem value="Georgia, serif">Georgia</SelectItem>
-              <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
-              <SelectItem value="'Noto Sans', sans-serif">Noto Sans</SelectItem>
-              <SelectItem value="Courier New, monospace">Courier New</SelectItem>
-            </SelectContent>
-          </Select>
-
           {/* Font Size Selector */}
           <Select
             value={editor?.getAttributes('textStyle')?.fontSize || '28px'}
