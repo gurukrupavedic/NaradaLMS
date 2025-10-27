@@ -459,7 +459,7 @@ export function ChapterView() {
               prose prose-lg max-w-none leading-relaxed
               ${currentLanguage === 'te' ? 'font-telugu text-2xl' : ''}
               ${currentLanguage === 'hi' ? 'font-devanagari text-2xl' : ''}
-              ${currentLanguage === 'en' ? 'font-vedic text-xl' : ''}
+              ${currentLanguage === 'en' ? 'font-iast text-xl' : ''}
             `}
             style={{
               lineHeight: '2.5',
