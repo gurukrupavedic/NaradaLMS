@@ -166,40 +166,21 @@
 }
 
 @layer utilities {
-  /* JIMS font for Telugu and IAST/English scripts */
-  .font-jims {
-    font-family: 'JIMS', 'Noto Sans Telugu', sans-serif;
-  }
-
-  /* Adishila San for Devanagari script */
-  .font-adishila-san {
-    font-family: 'Adishila San', 'Noto Sans Devanagari', serif;
-  }
-
-  /* Primary font classes for scripts */
+  /* Script-specific font classes */
   .font-telugu {
     font-family: 'JIMS', 'Noto Sans Telugu', sans-serif;
   }
 
-  .font-devanagari {
-    font-family: 'Adishila San', 'Noto Sans Devanagari', serif;
+  .font-iast {
+    font-family: 'AdishilaSan', 'Noto Sans', sans-serif;
   }
 
-  .font-vedic {
-    font-family: 'JIMS', 'Noto Sans Telugu', sans-serif;
+  .font-devanagari {
+    font-family: 'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif;
   }
 
   .font-inter {
     font-family: 'Inter', sans-serif;
-  }
-
-  /* Legacy font classes - kept for backward compatibility */
-  .font-tiro-telugu {
-    font-family: 'JIMS', 'Noto Sans Telugu', 'Tiro Telugu', sans-serif;
-  }
-
-  .font-tiro-devanagari {
-    font-family: 'Adishila San', 'Noto Sans Devanagari', 'Tiro Devanagari Sanskrit', serif;
   }
 
   .text-vedic-brown {
