@@ -6,35 +6,79 @@
 @import './styles/design-system/components.css';
 
 /* Custom Fonts for Vedic Content */
+
+/* Telugu Script - JIMS */
 @font-face {
   font-family: 'JIMS';
-  src: url('/fonts/JIMS-Regular.ttf') format('truetype');
-  font-weight: normal;
+  src: url('/fonts/JIMS-Regular.otf') format('opentype');
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
+/* English/IAST Script - AdishilaSan */
 @font-face {
-  font-family: 'Adishila San';
-  src: url('/fonts/AdishilaSan-Regular.otf') format('opentype');
+  font-family: 'AdishilaSan';
+  src: url('/fonts/AdishilaSan-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Adishila San';
-  src: url('/fonts/AdishilaSan-Medium.otf') format('opentype');
-  font-weight: 500;
+  font-family: 'AdishilaSan';
+  src: url('/fonts/AdishilaSan-Bold.ttf') format('truetype');
+  font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Adishila San';
-  src: url('/fonts/AdishilaSan-Bold.otf') format('opentype');
+  font-family: 'AdishilaSan';
+  src: url('/fonts/AdishilaSan-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'AdishilaSan';
+  src: url('/fonts/AdishilaSan-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Devanagari/Hindi Script - AdishilaSanVedic */
+@font-face {
+  font-family: 'AdishilaSanVedic';
+  src: url('/fonts/AdishilaSanVedic-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'AdishilaSanVedic';
+  src: url('/fonts/AdishilaSanVedic-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'AdishilaSanVedic';
+  src: url('/fonts/AdishilaSanVedic-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'AdishilaSanVedic';
+  src: url('/fonts/AdishilaSanVedic-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
   font-display: swap;
 }
 
