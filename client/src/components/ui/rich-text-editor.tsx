@@ -288,10 +288,14 @@ export function RichTextEditor({
   const getFontClass = () => {
     switch (language) {
       case "te": return "font-['JIMS','Noto_Sans_Telugu',sans-serif]";
-      case "hi": return "font-['AdishilaSanVedic','Noto_Sans_Devanagari',sans-serif]";
+      case "hi": return "font-['AdishilaSanVedic','Noto_Sans_Devanagari',sans-serif] font-semibold";
       case "en": return "font-['AdishilaSan','Noto_Sans',sans-serif]";
       default: return "";
     }
+  };
+
+  const getFontSize = () => {
+    return language === "hi" ? "30px" : "28px";
   };
 
   return (
@@ -586,6 +590,9 @@ export function RichTextEditor({
               getFontClass(),
               disabled && "opacity-50 cursor-not-allowed"
             )}
+            style={{
+              fontSize: getFontSize()
+            }}
           />
         </div>
       ) : (
@@ -599,7 +606,7 @@ export function RichTextEditor({
               getFontClass()
             )}
             style={{
-              fontSize: '28px',
+              fontSize: getFontSize(),
               lineHeight: '1.8',
               letterSpacing: '0.02em',
               wordSpacing: '0.05em'
