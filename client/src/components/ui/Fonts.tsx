@@ -20,8 +20,8 @@ export function FontLoader() {
 // Font classes for different scripts
 export const fontClasses = {
   telugu: "font-['JIMS','Noto_Sans_Telugu',sans-serif]",
-  devanagari: "font-['Adishila_San','Noto_Sans_Devanagari',serif]",
-  english: "font-['JIMS','Noto_Sans_Telugu',sans-serif]", // IAST uses JIMS font
+  devanagari: "font-['AdishilaSanVedic','Noto_Sans_Devanagari',sans-serif]",
+  english: "font-['AdishilaSan','Noto_Sans',sans-serif]", // IAST uses AdishilaSan
   interface: "font-['Inter',sans-serif]",
 };
 

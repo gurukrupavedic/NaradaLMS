@@ -3496,10 +3496,9 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                         <div 
                           className={`
                             prose max-w-none
-                            ${contentScript === 'te' ? 'font-jims' : contentScript === 'hi' ? 'font-adishila' : 'font-jims'}
+                            ${contentScript === 'te' ? 'font-telugu' : contentScript === 'hi' ? 'font-devanagari' : 'font-iast'}
                           `}
                           style={{
-                            fontSize: '28px',
                             lineHeight: '1.6'
                           }}
                           dangerouslySetInnerHTML={{ __html: chapterContent[contentScript] }}
