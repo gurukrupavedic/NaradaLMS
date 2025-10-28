@@ -127,6 +127,10 @@
   --vedic-gold: 43 74% 56%; /* #DAA520 */
   --vedic-orange: 14 100% 60%; /* #FF6B35 */
   --vedic-cream: 60 56% 97%; /* #FFF8DC */
+  
+  /* Font standards for Vedic content */
+  --font-size-standard: 30px;
+  --font-weight-devanagari: 600;
 }
 
 .dark {
@@ -268,10 +272,5 @@
 
   .completeness-indicator.incomplete {
     @apply text-red-500;
-  }
-
-  /* Force 28px font size for Vedic content text - overrides inline styles */
-  .ProseMirror * {
-    font-size: 28px !important;
   }
 }
