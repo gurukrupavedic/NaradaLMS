@@ -7,7 +7,7 @@
  * Purpose: Reusable mapping session logic
  */
 
-import { useEffect } from 'react';
+import { useCallback } from 'react';
 import type { TextSegment, AudioMapping } from '../types/text-segmentation';
 
 interface MappingControlsProps {
