@@ -223,7 +223,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                     <TextSegmentCard
                       content={segmentText}
                       script={currentScript}
-                      fontSize="30px"
+                      fontSize={currentScript === 'en' ? '28px' : '30px'}
                       segmentNumber={index + 1}
                       isSelected={isSelected}
                       isDragging={isDragging}

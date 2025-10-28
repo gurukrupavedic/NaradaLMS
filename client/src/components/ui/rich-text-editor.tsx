@@ -295,7 +295,7 @@ export function RichTextEditor({
   };
 
   const getFontSize = () => {
-    return "30px";
+    return language === 'en' ? '28px' : '30px';
   };
 
   return (
