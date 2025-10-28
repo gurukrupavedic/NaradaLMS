@@ -188,7 +188,7 @@ export function RichTextEditor({
         },
       }),
       TextAlign.configure({
-        types: ['heading', 'paragraph'],
+        types: ['heading', 'paragraph', 'listItem'],
       }),
       FontFamily.configure({
         types: ['textStyle'],
