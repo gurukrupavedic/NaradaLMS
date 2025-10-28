@@ -295,7 +295,7 @@ export function RichTextEditor({
   };
 
   const getFontSize = () => {
-    return language === "hi" ? "30px" : "28px";
+    return "30px";
   };
 
   return (
@@ -375,7 +375,7 @@ export function RichTextEditor({
 
           {/* Font Size Selector */}
           <Select
-            value={editor?.getAttributes('textStyle')?.fontSize || '28px'}
+            value={editor?.getAttributes('textStyle')?.fontSize || '30px'}
             onValueChange={setFontSize}
             disabled={disabled}
           >
@@ -390,6 +390,7 @@ export function RichTextEditor({
               <SelectItem value="20px">20px</SelectItem>
               <SelectItem value="24px">24px</SelectItem>
               <SelectItem value="28px">28px</SelectItem>
+              <SelectItem value="30px">30px</SelectItem>
               <SelectItem value="32px">32px</SelectItem>
               <SelectItem value="36px">36px</SelectItem>
               <SelectItem value="48px">48px</SelectItem>

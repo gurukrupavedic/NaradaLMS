@@ -48,9 +48,10 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
           className="whitespace-pre-wrap leading-relaxed"
           style={{
             fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
-                        currentScript === 'hi' ? "'Adishila San', 'Noto Sans Devanagari', serif" :
-                        "'JIMS', 'Noto Sans Telugu', sans-serif",
-            fontSize: '28px'
+                        currentScript === 'hi' ? "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif" :
+                        "'AdishilaSan', 'Noto Sans', sans-serif",
+            fontSize: 'var(--font-size-standard)',
+            fontWeight: currentScript === 'hi' ? 'var(--font-weight-devanagari)' : 400
           }}
         >
           {normalizedText}
@@ -108,9 +109,10 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
         className="leading-relaxed"
         style={{
           fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
-                      currentScript === 'hi' ? "'Adishila San', 'Noto Sans Devanagari', serif" :
-                      "'JIMS', 'Noto Sans Telugu', sans-serif",
-          fontSize: '28px'
+                      currentScript === 'hi' ? "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif" :
+                      "'AdishilaSan', 'Noto Sans', sans-serif",
+          fontSize: 'var(--font-size-standard)',
+          fontWeight: currentScript === 'hi' ? 'var(--font-weight-devanagari)' : 400
         }}
       >
         {parts}
