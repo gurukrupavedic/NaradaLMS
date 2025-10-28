@@ -396,6 +396,7 @@ export function RichTextEditor({
               {/* Bold, Italic, Underline */}
               <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant={editor?.isActive('bold') ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => editor?.chain().focus().toggleBold().run()}
@@ -406,6 +407,7 @@ export function RichTextEditor({
                   <Bold className="h-3.5 w-3.5" />
                 </Button>
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant={editor?.isActive('italic') ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => editor?.chain().focus().toggleItalic().run()}
@@ -416,6 +418,7 @@ export function RichTextEditor({
                   <Italic className="h-3.5 w-3.5" />
                 </Button>
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant={editor?.isActive('underline') ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => editor?.chain().focus().toggleUnderline().run()}
@@ -430,6 +433,7 @@ export function RichTextEditor({
               {/* Text Colors */}
               <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant="ghost"
                   size="sm"
                   onClick={() => setColor('#000000')}
@@ -440,6 +444,7 @@ export function RichTextEditor({
                   <div className="w-3 h-3 bg-black dark:bg-white rounded-sm"></div>
                 </Button>
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant="ghost"
                   size="sm"
                   onClick={() => setColor('#ef4444')}
@@ -450,6 +455,7 @@ export function RichTextEditor({
                   <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
                 </Button>
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant="ghost"
                   size="sm"
                   onClick={() => setColor('#3b82f6')}
@@ -460,6 +466,7 @@ export function RichTextEditor({
                   <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
                 </Button>
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant="ghost"
                   size="sm"
                   onClick={() => setColor('#22c55e')}
@@ -474,6 +481,7 @@ export function RichTextEditor({
               {/* Lists */}
               <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant={editor?.isActive('orderedList') ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => editor?.chain().focus().toggleOrderedList().run()}
@@ -484,6 +492,7 @@ export function RichTextEditor({
                   <ListOrdered className="h-3.5 w-3.5" />
                 </Button>
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant={editor?.isActive('bulletList') ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => editor?.chain().focus().toggleBulletList().run()}
@@ -498,6 +507,7 @@ export function RichTextEditor({
               {/* Alignment */}
               <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant={editor?.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setAlignment('left')}
@@ -508,6 +518,7 @@ export function RichTextEditor({
                   <AlignLeft className="h-3.5 w-3.5" />
                 </Button>
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant={editor?.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setAlignment('center')}
@@ -518,6 +529,7 @@ export function RichTextEditor({
                   <AlignCenter className="h-3.5 w-3.5" />
                 </Button>
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant={editor?.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setAlignment('right')}
@@ -528,6 +540,7 @@ export function RichTextEditor({
                   <AlignRight className="h-3.5 w-3.5" />
                 </Button>
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant={editor?.isActive({ textAlign: 'justify' }) ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setAlignment('justify')}
@@ -542,6 +555,7 @@ export function RichTextEditor({
               {/* Content Insertion */}
               <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant={editor?.isActive('link') ? 'default' : 'ghost'}
                   size="sm"
                   onClick={addLink}
@@ -552,6 +566,7 @@ export function RichTextEditor({
                   <LinkIcon className="h-3.5 w-3.5" />
                 </Button>
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant="ghost"
                   size="sm"
                   onClick={addImage}
@@ -562,6 +577,7 @@ export function RichTextEditor({
                   <ImageIcon className="h-3.5 w-3.5" />
                 </Button>
                 <Button
+                  onMouseDown={(e) => e.preventDefault()}
                   variant="ghost"
                   size="sm"
                   onClick={() => editor?.chain().focus().setHorizontalRule().run()}
