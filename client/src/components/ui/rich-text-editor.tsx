@@ -304,42 +304,45 @@ export function RichTextEditor({
       <div className="border-b p-2 bg-white flex-shrink-0">
         {/* Compact Single Row Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Essential Formatting */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
-            <Button
-              variant={editor?.isActive('bold') ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => editor?.chain().focus().toggleBold().run()}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Bold (Ctrl+B)"
-            >
-              <Bold className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant={editor?.isActive('italic') ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => editor?.chain().focus().toggleItalic().run()}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Italic (Ctrl+I)"
-            >
-              <Italic className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant={editor?.isActive('underline') ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => editor?.chain().focus().toggleUnderline().run()}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Underline (Ctrl+U)"
-            >
-              <UnderlineIcon className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+          {/* Show formatting controls only in HTML mode */}
+          {editorMode === 'html' && (
+            <>
+              {/* Essential Formatting */}
+              <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
+                <Button
+                  variant={editor?.isActive('bold') ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => editor?.chain().focus().toggleBold().run()}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Bold (Ctrl+B)"
+                >
+                  <Bold className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant={editor?.isActive('italic') ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => editor?.chain().focus().toggleItalic().run()}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Italic (Ctrl+I)"
+                >
+                  <Italic className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant={editor?.isActive('underline') ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => editor?.chain().focus().toggleUnderline().run()}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Underline (Ctrl+U)"
+                >
+                  <UnderlineIcon className="h-3.5 w-3.5" />
+                </Button>
+              </div>
 
-          {/* Heading Selector */}
-          <Select
+              {/* Heading Selector */}
+              <Select
             value={
               editor?.isActive('heading', { level: 1 }) ? 'h1' :
               editor?.isActive('heading', { level: 2 }) ? 'h2' :
@@ -541,10 +544,12 @@ export function RichTextEditor({
             >
               <Minus className="h-3.5 w-3.5" />
             </Button>
-          </div>
+              </div>
 
-          {/* Spacer to push mode toggle to the right */}
-          <div className="flex-1" />
+              {/* Spacer to push mode toggle to the right */}
+              <div className="flex-1" />
+            </>
+          )}
 
           {/* HTML/Text Mode Toggle */}
           <Tabs 
