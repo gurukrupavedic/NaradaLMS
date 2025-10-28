@@ -155,6 +155,14 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   };
 
   const stopMappingSession = () => {
+    // Diagnostic logging for END button
+    console.log('🔍 END BUTTON - ProgressiveMapper stopMappingSession:');
+    console.log('  - Audio Element currentTime:', audioRef.current?.currentTime);
+    console.log('  - React State currentTime:', currentTime);
+    console.log('  - Time Mismatch?', audioRef.current?.currentTime !== currentTime);
+    console.log('  - Active Segment ID:', activeSegmentId);
+    console.log('  - Session Start Time:', sessionStartTime);
+    
     baseMappingStop();
     if (isPlaying) {
       togglePlayPause();
