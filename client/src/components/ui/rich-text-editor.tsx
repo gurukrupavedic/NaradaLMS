@@ -329,12 +329,16 @@ export function RichTextEditor({
                   'paragraph'
                 }
                 onValueChange={(value) => {
+                  const { from, to } = editor?.state.selection || { from: 0, to: 0 };
                   if (value === 'paragraph') {
                     editor?.chain().focus().setParagraph().run();
                   } else {
                     const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5 | 6;
                     editor?.chain().focus().toggleHeading({ level }).run();
                   }
+                  setTimeout(() => {
+                    editor?.commands.setTextSelection({ from, to });
+                  }, 0);
                 }}
                 disabled={disabled}
               >
@@ -355,7 +359,13 @@ export function RichTextEditor({
               {/* Font Family Selector */}
               <Select
                 value={editor?.getAttributes('textStyle')?.fontFamily || 'AdishilaSan'}
-                onValueChange={setFontFamily}
+                onValueChange={(value) => {
+                  const { from, to } = editor?.state.selection || { from: 0, to: 0 };
+                  setFontFamily(value);
+                  setTimeout(() => {
+                    editor?.commands.setTextSelection({ from, to });
+                  }, 0);
+                }}
                 disabled={disabled}
               >
                 <SelectTrigger className="w-[140px] h-8 text-xs">
@@ -372,7 +382,13 @@ export function RichTextEditor({
               {/* Font Size Selector */}
               <Select
                 value={editor?.getAttributes('textStyle')?.fontSize || '30px'}
-                onValueChange={setFontSize}
+                onValueChange={(value) => {
+                  const { from, to } = editor?.state.selection || { from: 0, to: 0 };
+                  setFontSize(value);
+                  setTimeout(() => {
+                    editor?.commands.setTextSelection({ from, to });
+                  }, 0);
+                }}
                 disabled={disabled}
               >
                 <SelectTrigger className="w-[80px] h-8 text-xs">
