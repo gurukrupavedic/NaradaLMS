@@ -125,7 +125,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                         segmentNumber={index + 1}
                         status={status}
                         script={currentScript}
-                        fontSize={currentScript === 'en' ? '28px' : '30px'}
+                        fontSize="28px"
                         onSegmentClick={() => onSegmentClick(segment.id)}
                       />
                     </div>
