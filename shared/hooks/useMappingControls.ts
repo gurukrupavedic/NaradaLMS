@@ -68,7 +68,7 @@ export const useMappingControls = ({
     onActiveSegmentChange(null);
   }, [activeSegmentId, sessionStartTime, currentTime, onMappingCreate, onActiveSegmentChange]);
 
-  const startMappingSession = () => {
+  const startMappingSession = useCallback(() => {
     if (!selectedAudioFileId) {
       console.warn('Cannot start mapping session without selected audio file');
       return;
@@ -89,9 +89,9 @@ export const useMappingControls = ({
 
     // Proceed with session start
     proceedWithSessionStart();
-  };
+  }, [selectedAudioFileId, segments, mappings, onSessionStartRequest, proceedWithSessionStart]);
 
-  const proceedWithSessionStart = () => {
+  const proceedWithSessionStart = useCallback(() => {
     onSessionChange('active');
     onActiveSegmentChange(null);
     onSessionStartTimeChange(currentTime);
@@ -102,17 +102,17 @@ export const useMappingControls = ({
         onMappingDelete(segment.id);
       }
     });
-  };
+  }, [currentTime, segments, mappings, onSessionChange, onActiveSegmentChange, onSessionStartTimeChange, onMappingDelete]);
 
-  const pauseMappingSession = () => {
+  const pauseMappingSession = useCallback(() => {
     if (mappingSession === 'active') {
       onSessionChange('paused');
     } else if (mappingSession === 'paused') {
       onSessionChange('active');
     }
-  };
+  }, [mappingSession, onSessionChange]);
 
-  const stopMappingSession = () => {
+  const stopMappingSession = useCallback(() => {
     // End active segment if exists
     if (activeSegmentId) {
       handleSegmentEnd();
@@ -120,9 +120,9 @@ export const useMappingControls = ({
     
     onSessionChange('idle');
     onActiveSegmentChange(null);
-  };
+  }, [activeSegmentId, handleSegmentEnd, onSessionChange, onActiveSegmentChange]);
 
-  const resetMappingSession = () => {
+  const resetMappingSession = useCallback(() => {
     onSessionChange('idle');
     onActiveSegmentChange(null);
     
@@ -132,7 +132,7 @@ export const useMappingControls = ({
         onMappingDelete(segment.id);
       }
     });
-  };
+  }, [segments, mappings, onSessionChange, onActiveSegmentChange, onMappingDelete]);
 
   return {
     handleSegmentClick,
