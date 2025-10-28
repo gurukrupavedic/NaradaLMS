@@ -597,7 +597,8 @@ export function RichTextEditor({
               disabled && "opacity-50 cursor-not-allowed"
             )}
             style={{
-              fontSize: getFontSize()
+              fontSize: getFontSize(),
+              lineHeight: '1.6'
             }}
           />
         </div>

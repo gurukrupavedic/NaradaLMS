@@ -112,7 +112,8 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
                       currentScript === 'hi' ? "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif" :
                       "'AdishilaSan', 'Noto Sans', sans-serif",
           fontSize: 'var(--font-size-standard)',
-          fontWeight: currentScript === 'hi' ? 'var(--font-weight-devanagari)' : 400
+          fontWeight: currentScript === 'hi' ? 'var(--font-weight-devanagari)' : 400,
+          lineHeight: '1.6'
         }}
       >
         {parts}

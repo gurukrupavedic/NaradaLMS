@@ -253,6 +253,7 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
           style={{
             fontFamily: fontFamily,
             fontSize: fontSize,
+            lineHeight: '1.6',
             ...style
           }}
         >

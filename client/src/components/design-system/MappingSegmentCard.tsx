@@ -145,6 +145,7 @@ const MappingSegmentCard = React.forwardRef<HTMLDivElement, MappingSegmentCardPr
               style={{
                 fontFamily: fontFamily,
                 fontSize: fontSize,
+                lineHeight: '1.6',
                 ...style
               }}
             >
