@@ -89,10 +89,11 @@ import {
   Link as LinkIcon,
   ImageIcon,
   MapPin,
-  Triangle
+  Triangle,
+  Info
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useReducer } from 'react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/design-system/Tabs'
 import { htmlToPlainText } from '@shared/utils/text-segmentation'
 
@@ -120,6 +121,9 @@ export function RichTextEditor({
     const saved = localStorage.getItem('richTextEditorMode');
     return (saved === 'html' || saved === 'text') ? saved : 'html';
   });
+
+  // Force re-render when editor state changes for toolbar sync
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
 
   // Persist editor mode preference
   useEffect(() => {
