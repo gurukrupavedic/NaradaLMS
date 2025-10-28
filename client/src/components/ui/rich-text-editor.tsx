@@ -197,7 +197,7 @@ export function RichTextEditor({
     ],
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl mx-auto focus:outline-none',
+        class: 'focus:outline-none',
         spellcheck: 'false',
       },
       handleKeyDown: (view, event) => {
