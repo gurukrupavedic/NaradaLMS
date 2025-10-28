@@ -396,17 +396,15 @@ export function RichTextEditor({
                   <SelectValue placeholder="Size" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="12px">12px</SelectItem>
-                  <SelectItem value="14px">14px</SelectItem>
-                  <SelectItem value="16px">16px</SelectItem>
-                  <SelectItem value="18px">18px</SelectItem>
                   <SelectItem value="20px">20px</SelectItem>
                   <SelectItem value="24px">24px</SelectItem>
                   <SelectItem value="28px">28px</SelectItem>
                   <SelectItem value="30px">30px</SelectItem>
-                  <SelectItem value="32px">32px</SelectItem>
                   <SelectItem value="36px">36px</SelectItem>
+                  <SelectItem value="42px">42px</SelectItem>
                   <SelectItem value="48px">48px</SelectItem>
+                  <SelectItem value="54px">54px</SelectItem>
+                  <SelectItem value="60px">60px</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -453,10 +451,10 @@ export function RichTextEditor({
                   onMouseDown={(e) => e.preventDefault()}
                   variant="ghost"
                   size="sm"
-                  onClick={() => setColor('#000000')}
+                  onClick={() => editor?.chain().focus().unsetColor().run()}
                   disabled={disabled}
                   className="h-7 w-7 p-0"
-                  title="Black"
+                  title="Default Color"
                 >
                   <div className="w-3 h-3 bg-black dark:bg-white rounded-sm"></div>
                 </Button>
