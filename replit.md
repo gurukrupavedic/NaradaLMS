@@ -6,6 +6,44 @@ The Vedic Learning Management System is a full-stack application for managing an
 
 ## Recent Changes
 
+### October 28, 2025 - Font Standardization & Bug Fixes
+**Status:** Production Ready
+
+Completed comprehensive font standardization across all scenarios with hybrid approach:
+
+**CSS Infrastructure:**
+- Added CSS custom properties: `--font-size-standard: 30px`, `--font-weight-devanagari: 600`
+- Removed blocking `.ProseMirror * { font-size: 28px !important; }` rule that prevented customization
+- Font size dropdown now fully functional in HTML editor
+
+**Fixed Standard Display (Text mode, Segmentation, Mapping, Preview Learn Mode ON):**
+- Standardized font size: 28px → 30px for all scripts
+- Fixed Devanagari font: 'Adishila San' → 'AdishilaSanVedic' 
+- Fixed IAST font: 'JIMS' → 'AdishilaSan'
+- Added semi-bold weight (600) for Devanagari across all components
+- Uses CSS variables for consistent sizing
+
+**Fixed HTML Editor (TipTap):**
+- Default font size: 28px → 30px
+- Added 30px option to dropdown
+- Removed font size override that prevented customization
+- Font size dropdown now works correctly
+
+**Fixed Preview Tab (Learn Mode OFF):**
+- Removed forced fontSize override to preserve user's HTML formatting
+- Fixed undefined CSS classes: 'font-jims', 'font-adishila' → 'font-telugu', 'font-devanagari', 'font-iast'
+- Now correctly displays all custom formatting from HTML editor
+
+**Documentation:**
+- Created comprehensive `docs/features/font-requirements.md` specification
+- Documents three distinct scenarios with clear requirements
+- Includes implementation history and testing checklist
+
+**Technical Approach:**
+- Hybrid solution: CSS variables for repeated standards, inline styles for context-specific needs
+- Pragmatic balance between centralization and flexibility
+- Non-breaking changes, fully backward compatible
+
 ### October 25, 2025 - Content Management MVP Milestone
 **Status:** MVP Ready for User Feedback
 
@@ -50,20 +88,23 @@ The application features a full-stack architecture:
 -   **Content Management System**: Supports creation and management of tracks, chapters (multilingual), audio files, text segmentation, and audio-text mapping.
 -   **User Interface**: Provides CRUD operations for content, a visual Text Segmentation Studio, and an innovative "click-when-heard" audio mapping workflow. Multi-language switching is seamless.
 -   **Preview Tab Learn Mode**: Toggle switch for two distinct student experiences:
-    -   **Learn Mode ON**: Interactive segmented view with clickable audio-mapped segments (yellow highlights, auto-play from start to end timestamps)
-    -   **Learn Mode OFF**: Clean, distraction-free HTML article view for recitation (script-specific fonts, 28px text)
+    -   **Learn Mode ON**: Interactive segmented view with clickable audio-mapped segments (amber highlights, auto-play from start to end timestamps, standardized 30px fonts)
+    -   **Learn Mode OFF**: Rich HTML article view preserving all custom formatting from editor (fonts, sizes, colors, styles)
     -   State persists via localStorage for consistent user experience across sessions
 -   **Database Schema**: Includes tables for Users, Tracks, Chapters, Audio Files, Text Segments, and Audio Mappings to support hierarchical content organization and synchronization.
 -   **Content Creation Workflow**: Involves administrative track creation, chapter development, audio integration, text segmentation, and audio mapping.
 -   **UI/UX Decisions**: The design system emphasizes a modern, colorful, and elegant aesthetic, with vibrant colors, subtle hover effects, and a clean white background. It incorporates elements like multi-layered box-shadows for a luminous effect and a comprehensive 24-color palette. The "LMS Design System v1.0" with 26 components is the established standard.
 
 **Typography & Fonts:**
--   **Telugu & IAST Scripts**: Uses JIMS font as default (with Noto Sans Telugu fallback via Google Fonts)
--   **Devanagari Script**: Uses Adishila San font as default (with Noto Sans Devanagari fallback via Google Fonts)
+-   **Telugu Script**: Uses JIMS font (with Noto Sans Telugu fallback via Google Fonts)
+-   **Devanagari Script**: Uses AdishilaSanVedic font with semi-bold weight (600) for standard display (with Noto Sans Devanagari fallback)
+-   **IAST/English Script**: Uses AdishilaSan font (with Noto Sans fallback)
 -   **Interface Text**: Uses Inter font family
--   Custom fonts configured in `client/src/index.css` with @font-face declarations
+-   **Font Sizing**: Standard display at 30px across all scenarios; HTML editor allows custom sizes (12px-48px)
+-   Custom fonts configured in `client/src/index.css` with @font-face declarations and CSS custom properties
 -   Font files location: `client/public/fonts/` (see README.md in that directory for installation instructions)
 -   Automatic font application based on selected script in editor, segmentation, mapping, and preview tabs
+-   See `docs/features/font-requirements.md` for complete specifications
 
 **Layout Architecture:**
 -   **Consistent Tab Pattern**: All tabs follow a strict layout structure: TabsContent (viewport constraint) → wrapper (h-full flex flex-col) → header (flex-shrink-0) → content (flex-1 min-h-0 overflow-auto)
