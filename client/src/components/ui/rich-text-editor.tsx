@@ -307,7 +307,83 @@ export function RichTextEditor({
           {/* Show formatting controls only in HTML mode */}
           {editorMode === 'html' && (
             <>
-              {/* Essential Formatting */}
+              {/* Heading Selector */}
+              <Select
+                value={
+                  editor?.isActive('heading', { level: 1 }) ? 'h1' :
+                  editor?.isActive('heading', { level: 2 }) ? 'h2' :
+                  editor?.isActive('heading', { level: 3 }) ? 'h3' :
+                  editor?.isActive('heading', { level: 4 }) ? 'h4' :
+                  editor?.isActive('heading', { level: 5 }) ? 'h5' :
+                  editor?.isActive('heading', { level: 6 }) ? 'h6' :
+                  'paragraph'
+                }
+                onValueChange={(value) => {
+                  if (value === 'paragraph') {
+                    editor?.chain().focus().setParagraph().run();
+                  } else {
+                    const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5 | 6;
+                    editor?.chain().focus().toggleHeading({ level }).run();
+                  }
+                }}
+                disabled={disabled}
+              >
+                <SelectTrigger className="w-[102px] h-8 text-xs">
+                  <SelectValue placeholder="Style" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="paragraph">Paragraph</SelectItem>
+                  <SelectItem value="h1">Heading 1</SelectItem>
+                  <SelectItem value="h2">Heading 2</SelectItem>
+                  <SelectItem value="h3">Heading 3</SelectItem>
+                  <SelectItem value="h4">Heading 4</SelectItem>
+                  <SelectItem value="h5">Heading 5</SelectItem>
+                  <SelectItem value="h6">Heading 6</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Font Family Selector */}
+              <Select
+                value={editor?.getAttributes('textStyle')?.fontFamily || 'AdishilaSan'}
+                onValueChange={setFontFamily}
+                disabled={disabled}
+              >
+                <SelectTrigger className="w-[140px] h-8 text-xs">
+                  <SelectValue placeholder="Font" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="JIMS">JIMS</SelectItem>
+                  <SelectItem value="AdishilaSanVedic">AdishilaSanVedic</SelectItem>
+                  <SelectItem value="AdishilaSan">AdishilaSan</SelectItem>
+                  <SelectItem value="Inter">Inter</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Font Size Selector */}
+              <Select
+                value={editor?.getAttributes('textStyle')?.fontSize || '30px'}
+                onValueChange={setFontSize}
+                disabled={disabled}
+              >
+                <SelectTrigger className="w-[80px] h-8 text-xs">
+                  <SelectValue placeholder="Size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="12px">12px</SelectItem>
+                  <SelectItem value="14px">14px</SelectItem>
+                  <SelectItem value="16px">16px</SelectItem>
+                  <SelectItem value="18px">18px</SelectItem>
+                  <SelectItem value="20px">20px</SelectItem>
+                  <SelectItem value="24px">24px</SelectItem>
+                  <SelectItem value="28px">28px</SelectItem>
+                  <SelectItem value="30px">30px</SelectItem>
+                  <SelectItem value="32px">32px</SelectItem>
+                  <SelectItem value="36px">36px</SelectItem>
+                  <SelectItem value="48px">48px</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Bold, Italic, Underline */}
               <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
                 <Button
                   variant={editor?.isActive('bold') ? 'default' : 'ghost'}
@@ -341,209 +417,150 @@ export function RichTextEditor({
                 </Button>
               </div>
 
-              {/* Heading Selector */}
-              <Select
-            value={
-              editor?.isActive('heading', { level: 1 }) ? 'h1' :
-              editor?.isActive('heading', { level: 2 }) ? 'h2' :
-              editor?.isActive('heading', { level: 3 }) ? 'h3' :
-              editor?.isActive('heading', { level: 4 }) ? 'h4' :
-              editor?.isActive('heading', { level: 5 }) ? 'h5' :
-              editor?.isActive('heading', { level: 6 }) ? 'h6' :
-              'paragraph'
-            }
-            onValueChange={(value) => {
-              if (value === 'paragraph') {
-                editor?.chain().focus().setParagraph().run();
-              } else {
-                const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5 | 6;
-                editor?.chain().focus().toggleHeading({ level }).run();
-              }
-            }}
-            disabled={disabled}
-          >
-            <SelectTrigger className="w-[102px] h-8 text-xs">
-              <SelectValue placeholder="Style" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="paragraph">Paragraph</SelectItem>
-              <SelectItem value="h1">Heading 1</SelectItem>
-              <SelectItem value="h2">Heading 2</SelectItem>
-              <SelectItem value="h3">Heading 3</SelectItem>
-              <SelectItem value="h4">Heading 4</SelectItem>
-              <SelectItem value="h5">Heading 5</SelectItem>
-              <SelectItem value="h6">Heading 6</SelectItem>
-            </SelectContent>
-          </Select>
+              {/* Text Colors */}
+              <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setColor('#000000')}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Black"
+                >
+                  <div className="w-3 h-3 bg-black dark:bg-white rounded-sm"></div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setColor('#ef4444')}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Red"
+                >
+                  <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setColor('#3b82f6')}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Blue"
+                >
+                  <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setColor('#22c55e')}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Green"
+                >
+                  <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
+                </Button>
+              </div>
 
-          {/* Font Size Selector */}
-          <Select
-            value={editor?.getAttributes('textStyle')?.fontSize || '30px'}
-            onValueChange={setFontSize}
-            disabled={disabled}
-          >
-            <SelectTrigger className="w-[80px] h-8 text-xs">
-              <SelectValue placeholder="Size" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="12px">12px</SelectItem>
-              <SelectItem value="14px">14px</SelectItem>
-              <SelectItem value="16px">16px</SelectItem>
-              <SelectItem value="18px">18px</SelectItem>
-              <SelectItem value="20px">20px</SelectItem>
-              <SelectItem value="24px">24px</SelectItem>
-              <SelectItem value="28px">28px</SelectItem>
-              <SelectItem value="30px">30px</SelectItem>
-              <SelectItem value="32px">32px</SelectItem>
-              <SelectItem value="36px">36px</SelectItem>
-              <SelectItem value="48px">48px</SelectItem>
-            </SelectContent>
-          </Select>
+              {/* Lists */}
+              <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
+                <Button
+                  variant={editor?.isActive('orderedList') ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Numbered List"
+                >
+                  <ListOrdered className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant={editor?.isActive('bulletList') ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Bullet List"
+                >
+                  <List className="h-3.5 w-3.5" />
+                </Button>
+              </div>
 
-          {/* Lists */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
-            <Button
-              variant={editor?.isActive('orderedList') ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Numbered List"
-            >
-              <ListOrdered className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant={editor?.isActive('bulletList') ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => editor?.chain().focus().toggleBulletList().run()}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Bullet List"
-            >
-              <List className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+              {/* Alignment */}
+              <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
+                <Button
+                  variant={editor?.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setAlignment('left')}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Left Align"
+                >
+                  <AlignLeft className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant={editor?.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setAlignment('center')}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Center Align"
+                >
+                  <AlignCenter className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant={editor?.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setAlignment('right')}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Right Align"
+                >
+                  <AlignRight className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant={editor?.isActive({ textAlign: 'justify' }) ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setAlignment('justify')}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Justify"
+                >
+                  <AlignJustify className="h-3.5 w-3.5" />
+                </Button>
+              </div>
 
-          {/* Alignment */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
-            <Button
-              variant={editor?.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setAlignment('left')}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Left Align"
-            >
-              <AlignLeft className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant={editor?.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setAlignment('center')}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Center Align"
-            >
-              <AlignCenter className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant={editor?.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setAlignment('right')}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Right Align"
-            >
-              <AlignRight className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant={editor?.isActive({ textAlign: 'justify' }) ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setAlignment('justify')}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Justify"
-            >
-              <AlignJustify className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-
-          {/* Text Colors */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setColor('#000000')}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Black"
-            >
-              <div className="w-3 h-3 bg-black dark:bg-white rounded-sm"></div>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setColor('#ef4444')}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Red"
-            >
-              <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setColor('#3b82f6')}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Blue"
-            >
-              <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setColor('#22c55e')}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Green"
-            >
-              <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
-            </Button>
-          </div>
-
-          {/* Content Insertion */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
-            <Button
-              variant={editor?.isActive('link') ? 'default' : 'ghost'}
-              size="sm"
-              onClick={addLink}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Add Link"
-            >
-              <LinkIcon className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={addImage}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Add Image"
-            >
-              <ImageIcon className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor?.chain().focus().setHorizontalRule().run()}
-              disabled={disabled}
-              className="h-7 w-7 p-0"
-              title="Horizontal Rule"
-            >
-              <Minus className="h-3.5 w-3.5" />
-            </Button>
+              {/* Content Insertion */}
+              <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
+                <Button
+                  variant={editor?.isActive('link') ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={addLink}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Add Link"
+                >
+                  <LinkIcon className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={addImage}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Add Image"
+                >
+                  <ImageIcon className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => editor?.chain().focus().setHorizontalRule().run()}
+                  disabled={disabled}
+                  className="h-7 w-7 p-0"
+                  title="Horizontal Rule"
+                >
+                  <Minus className="h-3.5 w-3.5" />
+                </Button>
               </div>
             </>
           )}
