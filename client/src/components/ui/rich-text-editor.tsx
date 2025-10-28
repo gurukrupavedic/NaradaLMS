@@ -241,21 +241,27 @@ export function RichTextEditor({
     }
   }, [value, editor]);
 
-  // Apply default font when language changes
-  useEffect(() => {
-    if (editor && !editor.isDestroyed) {
-      const defaultFont = getDefaultFont();
-      // Apply default font to entire document if no font is set
-      editor.chain().focus().setFontFamily(defaultFont).run();
-    }
-  }, [language, editor]);
-
   // Ensure editor is editable when initialized or disabled state changes
   useEffect(() => {
     if (editor) {
       editor.setEditable(!disabled);
     }
   }, [editor, disabled]);
+
+  // Subscribe to editor updates for toolbar sync
+  useEffect(() => {
+    if (!editor) return;
+    
+    const handleUpdate = () => forceUpdate();
+    
+    editor.on('selectionUpdate', handleUpdate);
+    editor.on('transaction', handleUpdate);
+    
+    return () => {
+      editor.off('selectionUpdate', handleUpdate);
+      editor.off('transaction', handleUpdate);
+    };
+  }, [editor]);
 
   const setColor = useCallback((color: string) => {
     editor?.chain().focus().setColor(color).run();
