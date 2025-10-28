@@ -545,11 +545,11 @@ export function RichTextEditor({
               <Minus className="h-3.5 w-3.5" />
             </Button>
               </div>
-
-              {/* Spacer to push mode toggle to the right */}
-              <div className="flex-1" />
             </>
           )}
+
+          {/* Spacer to push mode toggle to the right */}
+          <div className="flex-1" />
 
           {/* HTML/Text Mode Toggle */}
           <Tabs 
