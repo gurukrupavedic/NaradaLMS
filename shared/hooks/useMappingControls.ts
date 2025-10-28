@@ -42,7 +42,7 @@ export const useMappingControls = ({
   onSessionStartRequest
 }: MappingControlsProps) => {
 
-  const handleSegmentClick = (segmentId: number) => {
+  const handleSegmentClick = useCallback((segmentId: number) => {
     if (mappingSession !== 'active') return;
 
     // End previous segment if exists
@@ -53,7 +53,7 @@ export const useMappingControls = ({
     // Start new segment
     onActiveSegmentChange(segmentId);
     onSessionStartTimeChange(currentTime);
-  };
+  }, [mappingSession, activeSegmentId, currentTime, handleSegmentEnd, onActiveSegmentChange, onSessionStartTimeChange]);
 
   const handleSegmentEnd = useCallback(() => {
     if (!activeSegmentId) return;
