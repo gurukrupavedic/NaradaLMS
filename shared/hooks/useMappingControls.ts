@@ -55,7 +55,7 @@ export const useMappingControls = ({
     onSessionStartTimeChange(currentTime);
   };
 
-  const handleSegmentEnd = () => {
+  const handleSegmentEnd = useCallback(() => {
     if (!activeSegmentId) return;
 
     const mapping: AudioMapping = {
@@ -66,7 +66,7 @@ export const useMappingControls = ({
 
     onMappingCreate(mapping);
     onActiveSegmentChange(null);
-  };
+  }, [activeSegmentId, sessionStartTime, currentTime, onMappingCreate, onActiveSegmentChange]);
 
   const startMappingSession = () => {
     if (!selectedAudioFileId) {
