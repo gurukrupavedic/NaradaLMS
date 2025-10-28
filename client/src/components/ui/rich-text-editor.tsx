@@ -203,10 +203,16 @@ export function RichTextEditor({
       handleKeyDown: (view, event) => {
         // Allow all normal typing and editing
         if (event.key === 'Enter') {
+          // Check if we're inside a list (bulletList or orderedList)
+          const { $from } = view.state.selection;
+          const isInList = $from.node(-1)?.type.name === 'listItem';
+          
           if (event.shiftKey) {
-            return false; // Shift+Enter: Create paragraph
+            return false; // Shift+Enter: Create paragraph (TipTap default)
+          } else if (isInList) {
+            return false; // Inside list: Let TipTap handle list item creation
           } else {
-            // Enter: Create hard break
+            // Outside list: Create hard break for mantra line breaks
             event.preventDefault();
             view.dispatch(view.state.tr.replaceSelectionWith(view.state.schema.nodes.hardBreak.create()));
             return true;
