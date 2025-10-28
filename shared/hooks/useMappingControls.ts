@@ -42,19 +42,7 @@ export const useMappingControls = ({
   onSessionStartRequest
 }: MappingControlsProps) => {
 
-  const handleSegmentClick = useCallback((segmentId: number) => {
-    if (mappingSession !== 'active') return;
-
-    // End previous segment if exists
-    if (activeSegmentId && activeSegmentId !== segmentId) {
-      handleSegmentEnd();
-    }
-
-    // Start new segment
-    onActiveSegmentChange(segmentId);
-    onSessionStartTimeChange(currentTime);
-  }, [mappingSession, activeSegmentId, currentTime, handleSegmentEnd, onActiveSegmentChange, onSessionStartTimeChange]);
-
+  // Define handleSegmentEnd first (no dependencies on other local functions)
   const handleSegmentEnd = useCallback(() => {
     if (!activeSegmentId) return;
 
@@ -68,6 +56,35 @@ export const useMappingControls = ({
     onActiveSegmentChange(null);
   }, [activeSegmentId, sessionStartTime, currentTime, onMappingCreate, onActiveSegmentChange]);
 
+  // Define handleSegmentClick second (depends on handleSegmentEnd)
+  const handleSegmentClick = useCallback((segmentId: number) => {
+    if (mappingSession !== 'active') return;
+
+    // End previous segment if exists
+    if (activeSegmentId && activeSegmentId !== segmentId) {
+      handleSegmentEnd();
+    }
+
+    // Start new segment
+    onActiveSegmentChange(segmentId);
+    onSessionStartTimeChange(currentTime);
+  }, [mappingSession, activeSegmentId, currentTime, handleSegmentEnd, onActiveSegmentChange, onSessionStartTimeChange]);
+
+  // Define proceedWithSessionStart first (no dependencies on other local functions)
+  const proceedWithSessionStart = useCallback(() => {
+    onSessionChange('active');
+    onActiveSegmentChange(null);
+    onSessionStartTimeChange(currentTime);
+    
+    // Clear existing mappings for current audio file only
+    segments.forEach(segment => {
+      if (mappings.some(m => m.segmentId === segment.id)) {
+        onMappingDelete(segment.id);
+      }
+    });
+  }, [currentTime, segments, mappings, onSessionChange, onActiveSegmentChange, onSessionStartTimeChange, onMappingDelete]);
+
+  // Define startMappingSession second (depends on proceedWithSessionStart)
   const startMappingSession = useCallback(() => {
     if (!selectedAudioFileId) {
       console.warn('Cannot start mapping session without selected audio file');
@@ -90,19 +107,6 @@ export const useMappingControls = ({
     // Proceed with session start
     proceedWithSessionStart();
   }, [selectedAudioFileId, segments, mappings, onSessionStartRequest, proceedWithSessionStart]);
-
-  const proceedWithSessionStart = useCallback(() => {
-    onSessionChange('active');
-    onActiveSegmentChange(null);
-    onSessionStartTimeChange(currentTime);
-    
-    // Clear existing mappings for current audio file only
-    segments.forEach(segment => {
-      if (mappings.some(m => m.segmentId === segment.id)) {
-        onMappingDelete(segment.id);
-      }
-    });
-  }, [currentTime, segments, mappings, onSessionChange, onActiveSegmentChange, onSessionStartTimeChange, onMappingDelete]);
 
   const pauseMappingSession = useCallback(() => {
     if (mappingSession === 'active') {
