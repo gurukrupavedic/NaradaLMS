@@ -161,9 +161,9 @@ const TextSegment = React.forwardRef<HTMLDivElement, TextSegmentProps>(
         case 'te':
           return "'JIMS', 'Noto Sans Telugu', sans-serif";
         case 'hi':
-          return "'Adishila San', 'Noto Sans Devanagari', serif";
+          return "'AdishilaSanVedic', 'Noto Sans Devanagari', serif";
         case 'en':
-          return "'JIMS', 'Noto Sans Telugu', sans-serif";
+          return "'AdishilaSan', 'Noto Sans', sans-serif";
         default:
           return undefined;
       }

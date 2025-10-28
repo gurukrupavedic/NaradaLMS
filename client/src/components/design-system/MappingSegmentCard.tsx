@@ -61,7 +61,7 @@ const MappingSegmentCard = React.forwardRef<HTMLDivElement, MappingSegmentCardPr
     segmentNumber,
     status = 'ready',
     script,
-    fontSize = '28px',
+    fontSize = '30px',
     onSegmentClick,
     onClick,
     style,
@@ -76,9 +76,9 @@ const MappingSegmentCard = React.forwardRef<HTMLDivElement, MappingSegmentCardPr
         case 'te':
           return "'JIMS', 'Noto Sans Telugu', sans-serif";
         case 'hi':
-          return "'Adishila San', 'Noto Sans Devanagari', serif";
+          return "'AdishilaSanVedic', 'Noto Sans Devanagari', serif";
         case 'en':
-          return "'JIMS', 'Noto Sans Telugu', sans-serif";
+          return "'AdishilaSan', 'Noto Sans', sans-serif";
         default:
           return undefined;
       }
