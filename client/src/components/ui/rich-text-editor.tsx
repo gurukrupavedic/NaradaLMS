@@ -598,7 +598,7 @@ export function RichTextEditor({
             )}
             style={{
               fontSize: getFontSize(),
-              lineHeight: '1.6'
+              lineHeight: '1.4'
             }}
           />
         </div>

@@ -131,7 +131,7 @@
   /* Font standards for Vedic content */
   --font-size-standard: 30px;
   --font-weight-devanagari: 600;
-  --line-height-standard: 1.6;
+  --line-height-standard: 1.4;
 }
 
 .dark {
