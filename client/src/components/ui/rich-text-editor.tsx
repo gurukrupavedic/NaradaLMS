@@ -75,6 +75,7 @@ const FontSize = Extension.create({
 })
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { 
   Bold, 
   Italic, 
@@ -624,6 +625,48 @@ export function RichTextEditor({
               </TabsTrigger>
             </TabsList>
           </Tabs>
+
+          {/* Keyboard Shortcuts Info */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                title="Keyboard Shortcuts"
+              >
+                <Info className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72" align="end">
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm">Keyboard Shortcuts</h4>
+                <div className="border-t pt-2 space-y-1.5 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Enter</span>
+                    <span>New line (for mantras)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Shift+Enter</span>
+                    <span>New paragraph</span>
+                  </div>
+                  <div className="border-t my-2"></div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Ctrl+B</span>
+                    <span>Bold</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Ctrl+I</span>
+                    <span>Italic</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Ctrl+U</span>
+                    <span>Underline</span>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
