@@ -50,7 +50,7 @@ const textSegmentVariants = cva(
       variant: {
         // 24-color system variants with enhanced visual feedback
         blue: "border-l-4 border-l-blue-500 border-gray-200 hover:border-l-blue-600 hover:bg-blue-50/30 hover:shadow-md",
-        green: "border-l-4 border-l-green-500 border-gray-200 hover:border-l-green-600 hover:bg-green-50/30 hover:shadow-md",
+        green: "border-l-4 border-l-green-500 border-green-200 bg-green-50/40 hover:shadow-md",
         purple: "border-l-4 border-l-purple-500 border-gray-200 hover:border-l-purple-600 hover:bg-purple-50/30 hover:shadow-md",
         orange: "border-l-4 border-l-orange-500 border-gray-200 hover:border-l-orange-600 hover:bg-orange-50/30 hover:shadow-md",
         pink: "border-l-4 border-l-pink-500 border-gray-200 hover:border-l-pink-600 hover:bg-pink-50/30 hover:shadow-md",
@@ -61,7 +61,7 @@ const textSegmentVariants = cva(
         lime: "border-l-4 border-l-lime-500 border-gray-200 hover:border-l-lime-600 hover:bg-lime-50/30 hover:shadow-md",
         rose: "border-l-4 border-l-rose-500 border-gray-200 hover:border-l-rose-600 hover:bg-rose-50/30 hover:shadow-md",
         emerald: "border-l-4 border-l-emerald-500 border-gray-200 hover:border-l-emerald-600 hover:bg-emerald-50/30 hover:shadow-md",
-        gray: "border-l-4 border-l-gray-400 border-gray-200 hover:border-l-gray-500 hover:bg-gray-50 hover:shadow-md"
+        gray: "border-l-4 border-l-gray-400 border-gray-200 hover:shadow-md"
       },
 
       state: {
