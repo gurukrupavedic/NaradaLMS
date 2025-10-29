@@ -40,7 +40,19 @@ const mappingSegmentCardVariants = cva(
 );
 
 const numberPillVariants = cva(
-  "absolute -top-2 -left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm z-10 bg-gray-500 pointer-events-none"
+  "absolute -top-2 -left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm z-10 pointer-events-none",
+  {
+    variants: {
+      status: {
+        ready: "bg-gray-500",
+        recording: "bg-orange-500",
+        mapped: "bg-green-500"
+      }
+    },
+    defaultVariants: {
+      status: "ready"
+    }
+  }
 );
 
 export interface MappingSegmentCardProps
@@ -99,7 +111,7 @@ const MappingSegmentCard = React.forwardRef<HTMLDivElement, MappingSegmentCardPr
         {...props}
       >
         {/* Numbering Pill */}
-        <div className={cn(numberPillVariants())}>
+        <div className={cn(numberPillVariants({ status }))}>
           {segmentNumber}
         </div>
 
