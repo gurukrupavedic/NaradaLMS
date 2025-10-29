@@ -61,23 +61,27 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   // Get normalized text content (same for both display and segmentation)
   const normalizedText = getDisplayText(content, currentScript);
 
-  // Simplified text position calculation with normalization
-  const getTextPosition = (selectedText: string): { start: number, end: number } => {
-    const trimmedSelection = selectedText.trim();
-    if (!trimmedSelection) return { start: 0, end: 0 };
+  // Calculate actual selection position using DOM Range API (works with repeated text)
+  const getTextPosition = (selection: Selection, container: HTMLElement): { start: number, end: number } | null => {
+    if (!selection.rangeCount) return null;
     
-    // Normalize both texts for consistent position calculation
-    const normalizedSelection = normalizeLineBreaks(trimmedSelection);
-    const startIndex = normalizedText.indexOf(normalizedSelection);
+    const range = selection.getRangeAt(0);
     
-    if (startIndex === -1) {
-      console.warn('Could not find selection in normalized text');
-      return { start: 0, end: 0 };
-    }
+    // Create a range from start of container to start of selection
+    const preSelectionRange = document.createRange();
+    preSelectionRange.selectNodeContents(container);
+    preSelectionRange.setEnd(range.startContainer, range.startOffset);
+    const startPosition = preSelectionRange.toString().length;
+    
+    // Create a range from start of container to end of selection
+    const fullRange = document.createRange();
+    fullRange.selectNodeContents(container);
+    fullRange.setEnd(range.endContainer, range.endOffset);
+    const endPosition = fullRange.toString().length;
     
     return {
-      start: startIndex,
-      end: startIndex + normalizedSelection.length
+      start: startPosition,
+      end: endPosition
     };
   };
 
@@ -118,7 +122,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     };
   }, []);
 
-  // Handle text selection with normalized line break matching
+  // Handle text selection using DOM Range API for accurate position detection
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) return;
@@ -126,24 +130,30 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     const selectedText = selection.toString().trim();
     if (!selectedText) return;
 
+    // Get the text container element
+    if (!textRef.current) {
+      console.warn('Text container ref not available');
+      return;
+    }
+
     console.log('Selection detected:', { 
       selectedText: selectedText.substring(0, 50) + '...', 
       length: selectedText.length,
       isMultiLine: selectedText.includes('\n')
     });
 
-    // Use the simplified position calculation
-    const range = getTextPosition(selectedText);
+    // Calculate actual position using DOM Range API (works with repeated text)
+    const range = getTextPosition(selection, textRef.current);
     
-    if (range.start >= 0) {
-      console.log('Match found at position:', range.start, 'to', range.end);
+    if (range && range.start >= 0 && range.end > range.start) {
+      console.log('Position calculated from DOM:', range.start, 'to', range.end);
       setSelectedRange(range);
       setShowFloatingToolbar(true);
       return;
     }
     
-    console.warn('Could not find selected text in content');
-  }, [normalizedText]);
+    console.warn('Could not calculate position from selection');
+  }, []);
 
   // Create new segment from selection
   const handleCreateSegment = useCallback(() => {
