@@ -46,20 +46,11 @@ export const useMappingControls = ({
   const handleSegmentEnd = useCallback(() => {
     if (!activeSegmentId) return;
 
-    console.log('🔍 END BUTTON - handleSegmentEnd called:');
-    console.log('  - Active Segment ID:', activeSegmentId);
-    console.log('  - React State sessionStartTime:', sessionStartTime);
-    console.log('  - React State currentTime:', currentTime);
-    console.log('  - Validation: endTime > startTime?', currentTime > sessionStartTime);
-    console.log('  - Difference (seconds):', currentTime - sessionStartTime);
-
     const mapping: AudioMapping = {
       segmentId: activeSegmentId,
       startTime: sessionStartTime,
       endTime: currentTime
     };
-
-    console.log('  - Mapping object being created:', mapping);
 
     onMappingCreate(mapping);
     onActiveSegmentChange(null);
