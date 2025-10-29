@@ -333,16 +333,12 @@ export function RichTextEditor({
                   editor?.isActive('heading', { level: 4 }) ? 'h4' :
                   editor?.isActive('heading', { level: 5 }) ? 'h5' :
                   editor?.isActive('heading', { level: 6 }) ? 'h6' :
-                  'paragraph'
+                  'h1'
                 }
                 onValueChange={(value) => {
                   const { from, to } = editor?.state.selection || { from: 0, to: 0 };
-                  if (value === 'paragraph') {
-                    editor?.chain().focus().setParagraph().run();
-                  } else {
-                    const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5 | 6;
-                    editor?.chain().focus().toggleHeading({ level }).run();
-                  }
+                  const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5 | 6;
+                  editor?.chain().focus().toggleHeading({ level }).run();
                   setTimeout(() => {
                     editor?.commands.setTextSelection({ from, to });
                   }, 0);
@@ -350,10 +346,9 @@ export function RichTextEditor({
                 disabled={disabled}
               >
                 <SelectTrigger className="w-[102px] h-8 text-xs">
-                  <SelectValue placeholder="Style" />
+                  <SelectValue placeholder="Heading" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="paragraph">Paragraph</SelectItem>
                   <SelectItem value="h1">Heading 1</SelectItem>
                   <SelectItem value="h2">Heading 2</SelectItem>
                   <SelectItem value="h3">Heading 3</SelectItem>
