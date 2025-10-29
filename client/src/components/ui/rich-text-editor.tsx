@@ -324,40 +324,6 @@ export function RichTextEditor({
           {/* Show formatting controls only in HTML mode */}
           {editorMode === 'html' && (
             <>
-              {/* Heading Selector */}
-              <Select
-                value={
-                  editor?.isActive('heading', { level: 1 }) ? 'h1' :
-                  editor?.isActive('heading', { level: 2 }) ? 'h2' :
-                  editor?.isActive('heading', { level: 3 }) ? 'h3' :
-                  editor?.isActive('heading', { level: 4 }) ? 'h4' :
-                  editor?.isActive('heading', { level: 5 }) ? 'h5' :
-                  editor?.isActive('heading', { level: 6 }) ? 'h6' :
-                  'h1'
-                }
-                onValueChange={(value) => {
-                  const { from, to } = editor?.state.selection || { from: 0, to: 0 };
-                  const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5 | 6;
-                  editor?.chain().focus().toggleHeading({ level }).run();
-                  setTimeout(() => {
-                    editor?.commands.setTextSelection({ from, to });
-                  }, 0);
-                }}
-                disabled={disabled}
-              >
-                <SelectTrigger className="w-[102px] h-8 text-xs">
-                  <SelectValue placeholder="Heading" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="h1">Heading 1</SelectItem>
-                  <SelectItem value="h2">Heading 2</SelectItem>
-                  <SelectItem value="h3">Heading 3</SelectItem>
-                  <SelectItem value="h4">Heading 4</SelectItem>
-                  <SelectItem value="h5">Heading 5</SelectItem>
-                  <SelectItem value="h6">Heading 6</SelectItem>
-                </SelectContent>
-              </Select>
-
               {/* Font Family Selector */}
               <Select
                 value={editor?.getAttributes('textStyle')?.fontFamily || 'AdishilaSan'}
