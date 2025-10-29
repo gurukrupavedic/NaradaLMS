@@ -37,6 +37,10 @@ export const useAudioPlayer = (audioUrl: string): UseAudioPlayerReturn => {
 
   const play = useCallback(() => {
     if (audioRef.current) {
+      // If audio ended, reset to beginning
+      if (audioRef.current.currentTime >= audioRef.current.duration) {
+        audioRef.current.currentTime = 0;
+      }
       audioRef.current.play();
       setIsPlaying(true);
     }
@@ -113,7 +117,8 @@ export const useAudioPlayer = (audioUrl: string): UseAudioPlayerReturn => {
 
     const handleEnded = () => {
       setIsPlaying(false);
-      setCurrentTime(0);
+      // Don't reset currentTime - keep it at actual audio position
+      // This prevents state mismatch when user clicks END button after audio finishes
     };
 
     const handleError = () => {
