@@ -600,7 +600,7 @@ export function RichTextEditor({
                 className="h-8 w-8 p-0"
                 title="Keyboard Shortcuts"
               >
-                <Info className="h-4 w-4" />
+                <Info className="h-4 w-4 text-indigo-500" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-72" align="end">
