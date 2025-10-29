@@ -225,6 +225,7 @@ export const SegmentPanel: React.FC<SegmentPanelProps> = ({
                       script={currentScript}
                       fontSize="30px"
                       segmentNumber={index + 1}
+                      variant={mappingStatus === 'mapped' ? 'green' : 'gray'}
                       isSelected={isSelected}
                       isDragging={isDragging}
                       isMapped={mappingStatus === 'mapped'}
