@@ -91,7 +91,7 @@ import {
   ImageIcon,
   MapPin,
   Triangle,
-  Info
+  HelpCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCallback, useEffect, useState, useReducer } from 'react'
@@ -600,10 +600,7 @@ export function RichTextEditor({
                 className="h-8 w-8 p-0"
                 title="Keyboard Shortcuts"
               >
-                <div className="relative">
-                  <div className="absolute inset-0 bg-indigo-500 rounded-full"></div>
-                  <Info className="h-4 w-4 text-white relative" fill="white" />
-                </div>
+                <HelpCircle className="h-4 w-4 text-indigo-500" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-72" align="end">
