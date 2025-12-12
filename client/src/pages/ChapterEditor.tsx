@@ -539,6 +539,39 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     },
   });
 
+  // Handle publish with force-save if there are unsaved changes
+  const handlePublishToggle = () => {
+    const newStatus = activeChapter?.status === "published" ? "draft" : "published";
+    
+    // If publishing and there are unsaved changes, save first
+    if (newStatus === "published" && saveStatus === 'dirty' && activeChapter?.content) {
+      setSaveStatus('saving');
+      updateContentMutation.mutate(
+        {
+          ...activeChapter.content,
+          [contentScript]: textContent[contentScript],
+        },
+        {
+          onSuccess: () => {
+            // After save completes, proceed with publish
+            toggleStatusMutation.mutate(newStatus);
+          },
+          onError: () => {
+            // Save failed - don't publish
+            toast({
+              title: "Save failed",
+              description: "Could not save changes before publishing. Please try again.",
+              variant: "destructive",
+            });
+          },
+        }
+      );
+    } else {
+      // No unsaved changes or unpublishing - proceed directly
+      toggleStatusMutation.mutate(newStatus);
+    }
+  };
+
   // Update chapter metadata mutation
   const updateChapterMetadataMutation = useMutation({
     mutationFn: async ({ title, description }: { title: string; description: string }) => {
@@ -1919,11 +1952,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                 <Button
                   size="sm"
                   variant={chapter?.status === "published" ? "destructive" : "default"}
-                  onClick={() => {
-                    const newStatus = chapter?.status === "published" ? "draft" : "published";
-                    toggleStatusMutation.mutate(newStatus);
-                  }}
-                  disabled={toggleStatusMutation.isPending}
+                  onClick={handlePublishToggle}
+                  disabled={toggleStatusMutation.isPending || updateContentMutation.isPending}
                   className="h-8"
                 >
                   {chapter?.status === "published" ? "Unpublish" : "Publish"}
