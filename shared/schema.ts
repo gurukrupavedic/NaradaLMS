@@ -118,17 +118,6 @@ export const segmentMappings = pgTable("segment_mappings", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Legacy audio mappings - keeping for backward compatibility
-export const audioMappings = pgTable("audio_mappings", {
-  id: serial("id").primaryKey(),
-  audioFileId: integer("audio_file_id").notNull().references(() => audioFiles.id, { onDelete: "cascade" }),
-  segmentId: integer("segment_id").notNull().references(() => textSegments.id, { onDelete: "cascade" }),
-  startTime: real("start_time").notNull(), // in seconds
-  endTime: real("end_time").notNull(), // in seconds
-  createdBy: varchar("created_by").notNull().references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 // Student progress tracking
 export const studentProgress = pgTable("student_progress", {
   id: serial("id").primaryKey(),
@@ -146,7 +135,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   createdChapters: many(chapters),
   uploadedAudioFiles: many(audioFiles),
   createdSegments: many(textSegments),
-  createdMappings: many(audioMappings),
+  createdMediaSegments: many(mediaSegments),
+  createdSegmentMappings: many(segmentMappings),
   studentProgress: many(studentProgress, { relationName: "studentProgress" }),
   updatedProgress: many(studentProgress, { relationName: "updatedProgress" }),
 }));
@@ -182,7 +172,6 @@ export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({
     fields: [audioFiles.uploadedBy],
     references: [users.id],
   }),
-  audioMappings: many(audioMappings),
   mediaSegments: many(mediaSegments),
 }));
 
@@ -195,7 +184,6 @@ export const textSegmentsRelations = relations(textSegments, ({ one, many }) => 
     fields: [textSegments.createdBy],
     references: [users.id],
   }),
-  audioMappings: many(audioMappings),
   segmentMappings: many(segmentMappings),
 }));
 
@@ -222,21 +210,6 @@ export const segmentMappingsRelations = relations(segmentMappings, ({ one }) => 
   }),
   createdBy: one(users, {
     fields: [segmentMappings.createdBy],
-    references: [users.id],
-  }),
-}));
-
-export const audioMappingsRelations = relations(audioMappings, ({ one }) => ({
-  audioFile: one(audioFiles, {
-    fields: [audioMappings.audioFileId],
-    references: [audioFiles.id],
-  }),
-  segment: one(textSegments, {
-    fields: [audioMappings.segmentId],
-    references: [textSegments.id],
-  }),
-  createdBy: one(users, {
-    fields: [audioMappings.createdBy],
     references: [users.id],
   }),
 }));
@@ -280,8 +253,6 @@ export const selectMediaSegmentSchema = createSelectSchema(mediaSegments);
 export const insertSegmentMappingSchema = createInsertSchema(segmentMappings).omit({ id: true, createdAt: true });
 export const selectSegmentMappingSchema = createSelectSchema(segmentMappings);
 
-export const insertAudioMappingSchema = createInsertSchema(audioMappings).omit({ id: true, createdAt: true });
-export const selectAudioMappingSchema = createSelectSchema(audioMappings);
 
 export const insertStudentProgressSchema = createInsertSchema(studentProgress).omit({ id: true, updatedAt: true });
 export const selectStudentProgressSchema = createSelectSchema(studentProgress);
@@ -308,8 +279,6 @@ export type MediaSegment = z.infer<typeof selectMediaSegmentSchema>;
 export type InsertSegmentMapping = z.infer<typeof insertSegmentMappingSchema>;
 export type SegmentMapping = z.infer<typeof selectSegmentMappingSchema>;
 
-export type InsertAudioMapping = z.infer<typeof insertAudioMappingSchema>;
-export type AudioMapping = z.infer<typeof selectAudioMappingSchema>;
 
 export type InsertStudentProgress = z.infer<typeof insertStudentProgressSchema>;
 export type StudentProgress = z.infer<typeof selectStudentProgressSchema>;

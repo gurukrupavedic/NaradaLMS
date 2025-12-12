@@ -43,32 +43,33 @@ export interface ChapterWithMetadata extends Chapter {
   publishedAt?: string;
 }
 
-// Audio and Text Mapping Types
-export interface AudioMapping {
-  id: number;
-  audioFileId: number;
-  segmentId: number;
-  startTime: number;
-  endTime?: number;
-  createdAt: Date;
-}
-
-export interface SegmentMapping {
-  id: number;
-  audioFileId: number;
-  segmentId: number;
-  startTimestamp: number;
-  endTimestamp?: number;
-  confidence?: number;
-}
-
+// Normalized Mapping Types (new system)
 export interface MediaSegment {
   id: number;
   audioFileId: number;
   startTimestamp: number;
   endTimestamp: number;
-  text?: string;
-  createdAt: Date;
+  segmentName?: string;
+  createdBy?: string;
+  createdAt?: Date;
+}
+
+export interface SegmentMapping {
+  id: number;
+  mediaSegmentId: number;
+  textSegmentId: number;
+  createdBy?: string;
+  createdAt?: Date;
+}
+
+export interface MappingWithTimestamps {
+  mappingId: number;
+  textSegmentId: number;
+  mediaSegmentId: number;
+  audioFileId: number;
+  startTime: number;
+  endTime: number;
+  segmentName?: string;
 }
 
 // Learning Progress Types

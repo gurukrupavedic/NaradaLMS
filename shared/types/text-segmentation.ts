@@ -2,21 +2,49 @@
  * Text Segmentation Type Definitions
  * 
  * TypeScript interfaces and types for text segmentation system components.
- * Provides type safety for text segments, audio mappings, and language operations.
+ * Uses normalized mapping system (mediaSegments + segmentMappings).
  * 
  * Created: January 2025
- * Purpose: Consolidate interfaces for text segmentation functionality
+ * Updated: December 2025 - Migrated to normalized mapping system
  */
 
 export interface TextSegment {
   id: number;
   chapterId: number;
-  script: Script; // Explicit script identity
-  startPosition: number; // Single position reference
-  endPosition: number; // Single position reference
+  script: Script;
+  startPosition: number;
+  endPosition: number;
   order: number;
   createdBy: string;
   createdAt: string;
+}
+
+export interface MediaSegment {
+  id: number;
+  audioFileId: number;
+  startTimestamp: number;
+  endTimestamp: number;
+  segmentName?: string;
+  createdBy?: string;
+  createdAt?: string;
+}
+
+export interface SegmentMapping {
+  id: number;
+  mediaSegmentId: number;
+  textSegmentId: number;
+  createdBy?: string;
+  createdAt?: string;
+}
+
+export interface MappingWithTimestamps {
+  mappingId: number;
+  textSegmentId: number;
+  mediaSegmentId: number;
+  audioFileId: number;
+  startTime: number;
+  endTime: number;
+  segmentName?: string;
 }
 
 export interface AudioMapping {
@@ -25,26 +53,21 @@ export interface AudioMapping {
   endTime: number;
 }
 
-// Database-compatible interface for backend operations
-export interface AudioMappingDatabase {
-  id?: number;
-  segmentId: number;        // Database format (integer)
-  audioFileId: number;
-  startTime: number;
-  endTime: number;
-  createdBy?: string;
-  createdAt?: string;
-}
+export type AudioMappingDatabase = MappingWithTimestamps;
 
-// Conversion utilities for type compatibility
-export const convertDatabaseMapping = (db: AudioMappingDatabase): AudioMapping => ({
-  segmentId: db.segmentId,
+export const convertDatabaseMapping = (db: MappingWithTimestamps): AudioMapping => ({
+  segmentId: db.textSegmentId,
   startTime: db.startTime,
   endTime: db.endTime
 });
 
-export const convertToDatabase = (mapping: AudioMapping, audioFileId: number): Omit<AudioMappingDatabase, 'id' | 'createdBy' | 'createdAt'> => ({
-  segmentId: mapping.segmentId,
+export const convertToDatabase = (mapping: AudioMapping, audioFileId: number): {
+  audioFileId: number;
+  textSegmentId: number;
+  startTime: number;
+  endTime: number;
+} => ({
+  textSegmentId: mapping.segmentId,
   audioFileId,
   startTime: mapping.startTime,
   endTime: mapping.endTime
@@ -70,15 +93,13 @@ export interface Chapter {
 
 export type Script = 'te' | 'hi' | 'en';
 
-// New content entry structure
 export interface ContentEntry {
   display: string;
   segmentation: string;
 }
 
-// Updated ContentMap with backward compatibility
 export interface ContentMap {
-  te?: ContentEntry | string;  // Support both old and new format
+  te?: ContentEntry | string;
   hi?: ContentEntry | string;
   en?: ContentEntry | string;
 }
@@ -88,7 +109,6 @@ export interface TextRange {
   end: number;
 }
 
-// Type guard to check if content is ContentEntry format
 export function isContentEntry(content: ContentEntry | string | undefined): content is ContentEntry {
   return typeof content === 'object' && content !== null && 'display' in content;
 }

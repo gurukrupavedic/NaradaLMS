@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { 
-  tracks, chapters, audioFiles, textSegments, mediaSegments, segmentMappings, audioMappings, users
+  tracks, chapters, audioFiles, textSegments, mediaSegments, segmentMappings, users
 } from "@shared/schema";
 import { eq, and, max, asc } from "drizzle-orm";
 import { sql } from "drizzle-orm";
@@ -161,16 +161,13 @@ export interface IStorage {
   updateMediaSegment(id: number, segment: any): Promise<any>;
   deleteMediaSegment(id: number): Promise<void>;
 
-  // Segment mapping operations
+  // Segment mapping operations (normalized system)
   getSegmentMappingsByChapter(chapterId: number): Promise<any[]>;
+  getSegmentMappingsByAudioFile(audioFileId: number): Promise<any[]>;
   createSegmentMapping(mapping: any): Promise<any>;
+  createMappingWithMediaSegment(data: { audioFileId: number; textSegmentId: number; startTime: number; endTime: number; createdBy: string }): Promise<any>;
   deleteSegmentMapping(id: number): Promise<void>;
-
-  // Audio mapping operations (legacy)
-  getMappingsByAudioFile(audioFileId: number): Promise<any[]>;
-  getMappingsBySegment(segmentId: number): Promise<any[]>;
-  createAudioMapping(mapping: any): Promise<any>;
-  deleteAudioMapping(audioFileId: number, segmentId: number): Promise<void>;
+  deleteSegmentMappingByTextSegment(textSegmentId: number, audioFileId: number): Promise<void>;
 
   // Student progress
   getStudentProgress(studentId: string): Promise<any[]>;
@@ -758,62 +755,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Audio mapping operations
-  async getMappingsByAudioFile(audioFileId: number): Promise<any[]> {
-    await this.ensureInitialized();
-    if (!this.initialized) return memStorage.getMappingsByAudioFile(audioFileId);
-    
-    try {
-      return await db.select().from(audioMappings).where(eq(audioMappings.audioFileId, audioFileId));
-    } catch (error) {
-      return memStorage.getMappingsByAudioFile(audioFileId);
-    }
-  }
-
-  async getMappingsBySegment(segmentId: number): Promise<any[]> {
-    await this.ensureInitialized();
-    if (!this.initialized) return memStorage.getMappingsBySegment(segmentId);
-    
-    try {
-      return await db.select().from(audioMappings).where(eq(audioMappings.segmentId, segmentId));
-    } catch (error) {
-      return memStorage.getMappingsBySegment(segmentId);
-    }
-  }
-
-  async createAudioMapping(mapping: any): Promise<any> {
-    await this.ensureInitialized();
-    if (!this.initialized) return memStorage.createAudioMapping(mapping);
-    
-    try {
-      const [newMapping] = await db.insert(audioMappings).values({
-        ...mapping,
-        createdAt: new Date()
-      }).returning();
-      console.log("Audio mapping created successfully:", newMapping);
-      return newMapping;
-    } catch (error) {
-      console.error("Database mapping creation failed:", error);
-      console.error("Mapping data:", mapping);
-      return memStorage.createAudioMapping(mapping);
-    }
-  }
-
-  async deleteAudioMapping(audioFileId: number, segmentId: number): Promise<void> {
-    await this.ensureInitialized();
-    if (!this.initialized) return memStorage.deleteAudioMapping(audioFileId, segmentId);
-    
-    try {
-      await db.delete(audioMappings)
-        .where(and(
-          eq(audioMappings.audioFileId, audioFileId),
-          eq(audioMappings.segmentId, segmentId)
-        ));
-    } catch (error) {
-      return memStorage.deleteAudioMapping(audioFileId, segmentId);
-    }
-  }
-
   // Media segment operations
   async getMediaSegmentsByAudioFile(audioFileId: number): Promise<any[]> {
     await this.ensureInitialized();
@@ -875,30 +816,20 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Segment mapping operations
+  // Segment mapping operations (normalized system)
   async getSegmentMappingsByChapter(chapterId: number): Promise<any[]> {
     await this.ensureInitialized();
     if (!this.initialized) return [];
     
     try {
       const mappings = await db.select({
-        id: segmentMappings.id,
-        mediaSegmentId: segmentMappings.mediaSegmentId,
+        mappingId: segmentMappings.id,
         textSegmentId: segmentMappings.textSegmentId,
-        createdBy: segmentMappings.createdBy,
-        createdAt: segmentMappings.createdAt,
-        mediaSegment: {
-          id: mediaSegments.id,
-          audioFileId: mediaSegments.audioFileId,
-          startTimestamp: mediaSegments.startTimestamp,
-          endTimestamp: mediaSegments.endTimestamp,
-          segmentName: mediaSegments.segmentName
-        },
-        textSegment: {
-          id: textSegments.id,
-          conceptualName: textSegments.conceptualName,
-          textReferences: textSegments.textReferences
-        }
+        mediaSegmentId: segmentMappings.mediaSegmentId,
+        audioFileId: mediaSegments.audioFileId,
+        startTime: mediaSegments.startTimestamp,
+        endTime: mediaSegments.endTimestamp,
+        segmentName: mediaSegments.segmentName
       })
       .from(segmentMappings)
       .leftJoin(mediaSegments, eq(segmentMappings.mediaSegmentId, mediaSegments.id))
@@ -907,7 +838,32 @@ export class DatabaseStorage implements IStorage {
       
       return mappings;
     } catch (error) {
-      console.error("Error fetching segment mappings:", error);
+      console.error("Error fetching segment mappings by chapter:", error);
+      return [];
+    }
+  }
+
+  async getSegmentMappingsByAudioFile(audioFileId: number): Promise<any[]> {
+    await this.ensureInitialized();
+    if (!this.initialized) return [];
+    
+    try {
+      const mappings = await db.select({
+        mappingId: segmentMappings.id,
+        textSegmentId: segmentMappings.textSegmentId,
+        mediaSegmentId: segmentMappings.mediaSegmentId,
+        audioFileId: mediaSegments.audioFileId,
+        startTime: mediaSegments.startTimestamp,
+        endTime: mediaSegments.endTimestamp,
+        segmentName: mediaSegments.segmentName
+      })
+      .from(segmentMappings)
+      .leftJoin(mediaSegments, eq(segmentMappings.mediaSegmentId, mediaSegments.id))
+      .where(eq(mediaSegments.audioFileId, audioFileId));
+      
+      return mappings;
+    } catch (error) {
+      console.error("Error fetching segment mappings by audio file:", error);
       return [];
     }
   }
@@ -928,15 +884,89 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async createMappingWithMediaSegment(data: { 
+    audioFileId: number; 
+    textSegmentId: number; 
+    startTime: number; 
+    endTime: number; 
+    createdBy: string 
+  }): Promise<any> {
+    await this.ensureInitialized();
+    if (!this.initialized) return null;
+    
+    try {
+      const [mediaSegment] = await db.insert(mediaSegments).values({
+        audioFileId: data.audioFileId,
+        startTimestamp: data.startTime,
+        endTimestamp: data.endTime,
+        createdBy: data.createdBy,
+        createdAt: new Date()
+      }).returning();
+
+      const [mapping] = await db.insert(segmentMappings).values({
+        mediaSegmentId: mediaSegment.id,
+        textSegmentId: data.textSegmentId,
+        createdBy: data.createdBy,
+        createdAt: new Date()
+      }).returning();
+
+      return {
+        mappingId: mapping.id,
+        textSegmentId: data.textSegmentId,
+        mediaSegmentId: mediaSegment.id,
+        audioFileId: data.audioFileId,
+        startTime: data.startTime,
+        endTime: data.endTime
+      };
+    } catch (error) {
+      console.error("Error creating mapping with media segment:", error);
+      return null;
+    }
+  }
+
   async deleteSegmentMapping(id: number): Promise<void> {
     await this.ensureInitialized();
     if (!this.initialized) return;
     
     try {
-      await db.delete(segmentMappings)
+      const [mapping] = await db.select({ mediaSegmentId: segmentMappings.mediaSegmentId })
+        .from(segmentMappings)
         .where(eq(segmentMappings.id, id));
+      
+      await db.delete(segmentMappings).where(eq(segmentMappings.id, id));
+      
+      if (mapping?.mediaSegmentId) {
+        await db.delete(mediaSegments).where(eq(mediaSegments.id, mapping.mediaSegmentId));
+      }
     } catch (error) {
       console.error("Error deleting segment mapping:", error);
+    }
+  }
+
+  async deleteSegmentMappingByTextSegment(textSegmentId: number, audioFileId: number): Promise<void> {
+    await this.ensureInitialized();
+    if (!this.initialized) return;
+    
+    try {
+      const mappingsToDelete = await db.select({
+        mappingId: segmentMappings.id,
+        mediaSegmentId: segmentMappings.mediaSegmentId
+      })
+      .from(segmentMappings)
+      .leftJoin(mediaSegments, eq(segmentMappings.mediaSegmentId, mediaSegments.id))
+      .where(and(
+        eq(segmentMappings.textSegmentId, textSegmentId),
+        eq(mediaSegments.audioFileId, audioFileId)
+      ));
+
+      for (const mapping of mappingsToDelete) {
+        await db.delete(segmentMappings).where(eq(segmentMappings.id, mapping.mappingId));
+        if (mapping.mediaSegmentId) {
+          await db.delete(mediaSegments).where(eq(mediaSegments.id, mapping.mediaSegmentId));
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting segment mapping by text segment:", error);
     }
   }
 

@@ -43,16 +43,13 @@ export interface IStorage {
   updateMediaSegment(id: number, segment: any): Promise<any>;
   deleteMediaSegment(id: number): Promise<void>;
 
-  // Segment mapping operations
+  // Segment mapping operations (normalized system)
   getSegmentMappingsByChapter(chapterId: number): Promise<any[]>;
+  getSegmentMappingsByAudioFile(audioFileId: number): Promise<any[]>;
   createSegmentMapping(mapping: any): Promise<any>;
+  createMappingWithMediaSegment(data: { audioFileId: number; textSegmentId: number; startTime: number; endTime: number; createdBy: string }): Promise<any>;
   deleteSegmentMapping(id: number): Promise<void>;
-
-  // Audio mapping operations (legacy)
-  getMappingsByAudioFile(audioFileId: number): Promise<any[]>;
-  getMappingsBySegment(segmentId: number): Promise<any[]>;
-  createAudioMapping(mapping: any): Promise<any>;
-  deleteAudioMapping(audioFileId: number, segmentId: number): Promise<void>;
+  deleteSegmentMappingByTextSegment(textSegmentId: number, audioFileId: number): Promise<void>;
 
   // Student progress
   getStudentProgress(studentId: string): Promise<any[]>;
@@ -534,33 +531,6 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`)
     this.segments.splice(index, 1);
   }
 
-  // Audio mapping operations
-  async getMappingsByAudioFile(audioFileId: number): Promise<any[]> {
-    return this.mappings.filter(mapping => mapping.audioFileId === audioFileId);
-  }
-
-  async getMappingsBySegment(segmentId: number): Promise<any[]> {
-    return this.mappings.filter(mapping => mapping.segmentId === segmentId);
-  }
-
-  async createAudioMapping(mapping: any): Promise<any> {
-    const newMapping = {
-      ...mapping,
-      id: this.nextId++,
-      createdAt: new Date()
-    };
-    this.mappings.push(newMapping);
-    return newMapping;
-  }
-
-  async deleteAudioMapping(audioFileId: number, segmentId: number): Promise<void> {
-    const index = this.mappings.findIndex(
-      m => m.audioFileId === audioFileId && m.segmentId === segmentId
-    );
-    if (index === -1) throw new Error("Mapping not found");
-    this.mappings.splice(index, 1);
-  }
-
   // Media segment operations
   async getMediaSegmentsByAudioFile(audioFileId: number): Promise<any[]> {
     return this.mediaSegments.filter(segment => segment.audioFileId === audioFileId);
@@ -589,9 +559,41 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`)
     this.mediaSegments.splice(index, 1);
   }
 
-  // Segment mapping operations
+  // Segment mapping operations (normalized system)
   async getSegmentMappingsByChapter(chapterId: number): Promise<any[]> {
-    return this.segmentMappings.filter(mapping => mapping.chapterId === chapterId);
+    const chapterSegments = this.segments.filter(s => s.chapterId === chapterId);
+    const segmentIds = chapterSegments.map(s => s.id);
+    return this.segmentMappings
+      .filter(mapping => segmentIds.includes(mapping.textSegmentId))
+      .map(mapping => {
+        const mediaSegment = this.mediaSegments.find(ms => ms.id === mapping.mediaSegmentId);
+        return {
+          mappingId: mapping.id,
+          textSegmentId: mapping.textSegmentId,
+          mediaSegmentId: mapping.mediaSegmentId,
+          audioFileId: mediaSegment?.audioFileId,
+          startTime: mediaSegment?.startTimestamp,
+          endTime: mediaSegment?.endTimestamp
+        };
+      });
+  }
+
+  async getSegmentMappingsByAudioFile(audioFileId: number): Promise<any[]> {
+    const audioMediaSegments = this.mediaSegments.filter(ms => ms.audioFileId === audioFileId);
+    const mediaSegmentIds = audioMediaSegments.map(ms => ms.id);
+    return this.segmentMappings
+      .filter(mapping => mediaSegmentIds.includes(mapping.mediaSegmentId))
+      .map(mapping => {
+        const mediaSegment = audioMediaSegments.find(ms => ms.id === mapping.mediaSegmentId);
+        return {
+          mappingId: mapping.id,
+          textSegmentId: mapping.textSegmentId,
+          mediaSegmentId: mapping.mediaSegmentId,
+          audioFileId: mediaSegment?.audioFileId,
+          startTime: mediaSegment?.startTimestamp,
+          endTime: mediaSegment?.endTimestamp
+        };
+      });
   }
 
   async createSegmentMapping(mapping: any): Promise<any> {
@@ -604,10 +606,76 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`)
     return newMapping;
   }
 
+  async createMappingWithMediaSegment(data: { 
+    audioFileId: number; 
+    textSegmentId: number; 
+    startTime: number; 
+    endTime: number; 
+    createdBy: string 
+  }): Promise<any> {
+    const mediaSegment = {
+      id: this.nextId++,
+      audioFileId: data.audioFileId,
+      startTimestamp: data.startTime,
+      endTimestamp: data.endTime,
+      createdBy: data.createdBy,
+      createdAt: new Date()
+    };
+    this.mediaSegments.push(mediaSegment);
+
+    const mapping = {
+      id: this.nextId++,
+      mediaSegmentId: mediaSegment.id,
+      textSegmentId: data.textSegmentId,
+      createdBy: data.createdBy,
+      createdAt: new Date()
+    };
+    this.segmentMappings.push(mapping);
+
+    return {
+      mappingId: mapping.id,
+      textSegmentId: data.textSegmentId,
+      mediaSegmentId: mediaSegment.id,
+      audioFileId: data.audioFileId,
+      startTime: data.startTime,
+      endTime: data.endTime
+    };
+  }
+
   async deleteSegmentMapping(id: number): Promise<void> {
     const index = this.segmentMappings.findIndex(m => m.id === id);
     if (index === -1) throw new Error("Segment mapping not found");
+    
+    const mapping = this.segmentMappings[index];
     this.segmentMappings.splice(index, 1);
+    
+    if (mapping.mediaSegmentId) {
+      const msIndex = this.mediaSegments.findIndex(ms => ms.id === mapping.mediaSegmentId);
+      if (msIndex !== -1) {
+        this.mediaSegments.splice(msIndex, 1);
+      }
+    }
+  }
+
+  async deleteSegmentMappingByTextSegment(textSegmentId: number, audioFileId: number): Promise<void> {
+    const audioMediaSegments = this.mediaSegments.filter(ms => ms.audioFileId === audioFileId);
+    const mediaSegmentIds = audioMediaSegments.map(ms => ms.id);
+    
+    const mappingsToDelete = this.segmentMappings.filter(
+      m => m.textSegmentId === textSegmentId && mediaSegmentIds.includes(m.mediaSegmentId)
+    );
+    
+    for (const mapping of mappingsToDelete) {
+      const mappingIndex = this.segmentMappings.findIndex(m => m.id === mapping.id);
+      if (mappingIndex !== -1) {
+        this.segmentMappings.splice(mappingIndex, 1);
+      }
+      
+      const msIndex = this.mediaSegments.findIndex(ms => ms.id === mapping.mediaSegmentId);
+      if (msIndex !== -1) {
+        this.mediaSegments.splice(msIndex, 1);
+      }
+    }
   }
 
   // Student progress operations

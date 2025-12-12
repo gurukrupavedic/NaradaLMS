@@ -3,35 +3,29 @@
  * 
  * Shared utilities for determining and converting mapping status
  * across different components and data formats.
+ * 
+ * Updated: December 2025 - Migrated to normalized mapping system
  */
 
-import type { AudioMappingDatabase } from '@shared/types/text-segmentation';
+import type { MappingWithTimestamps } from '@shared/types/text-segmentation';
 
 export type MappingStatus = 'mapped' | 'unmapped';
 
-/**
- * Determines if a segment has any audio mappings
- * Uses simple existence check for now (no validation)
- */
 export const getMappingStatus = (
   segmentId: number, 
-  mappings: AudioMappingDatabase[]
+  mappings: MappingWithTimestamps[]
 ): MappingStatus => {
-  return mappings.some(mapping => mapping.segmentId === segmentId) 
+  return mappings.some(mapping => mapping.textSegmentId === segmentId) 
     ? 'mapped' 
     : 'unmapped';
 };
 
-/**
- * Batch status calculation for multiple segments
- * Optimized for performance with large datasets
- */
 export const getBatchMappingStatus = (
   segmentIds: number[],
-  mappings: AudioMappingDatabase[]
+  mappings: MappingWithTimestamps[]
 ): Map<number, MappingStatus> => {
   const statusMap = new Map<number, MappingStatus>();
-  const mappedSegmentIds = new Set(mappings.map(m => m.segmentId));
+  const mappedSegmentIds = new Set(mappings.map(m => m.textSegmentId));
   
   segmentIds.forEach(segmentId => {
     statusMap.set(
