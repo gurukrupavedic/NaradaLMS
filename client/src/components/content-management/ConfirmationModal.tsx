@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/design-system";
 import { 
   Dialog, 
   DialogContent, 
@@ -39,7 +39,8 @@ export function ConfirmationModal({
             Cancel
           </Button>
           <Button 
-            variant="destructive" 
+            variant="solid" 
+            color="rose"
             onClick={onConfirm} 
             disabled={isLoading}
           >

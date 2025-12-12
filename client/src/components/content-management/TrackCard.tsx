@@ -1,5 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button, Card, CardContent } from "@/components/design-system";
 import { ChevronUp, ChevronDown, Edit, Trash2, FileText } from "lucide-react";
 
 interface Track {
