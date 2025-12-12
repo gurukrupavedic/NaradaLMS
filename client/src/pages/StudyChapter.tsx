@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -65,6 +65,7 @@ export function StudyChapter() {
   });
 
   const previewAudioRef = useRef<HTMLAudioElement>(new Audio());
+  const timeUpdateCleanupRef = useRef<(() => void) | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -120,20 +121,62 @@ export function StudyChapter() {
     };
   }, []);
 
-  const handleSegmentClick = (segmentId: number | undefined) => {
-    if (!segmentId) return;
-    setSelectedSegmentId(segmentId);
-    
-    const mapping = mappings.find(
-      (m) => m.textSegmentId === segmentId && m.audioFileId === selectedAudioFileId
-    );
-    
-    if (mapping) {
-      previewAudioRef.current.currentTime = mapping.startTime;
-      previewAudioRef.current.play().catch(console.error);
-      setIsPlaying(true);
+  const handleSegmentClick = useCallback((segmentId: number | undefined) => {
+    if (!segmentId) {
+      setSelectedSegmentId(undefined);
+      if (timeUpdateCleanupRef.current) {
+        timeUpdateCleanupRef.current();
+        timeUpdateCleanupRef.current = null;
+      }
+      return;
     }
-  };
+
+    setSelectedSegmentId(segmentId);
+
+    const mapping = mappings.find((m) => m.textSegmentId === segmentId);
+
+    if (!mapping) return;
+
+    if (timeUpdateCleanupRef.current) {
+      timeUpdateCleanupRef.current();
+      timeUpdateCleanupRef.current = null;
+    }
+
+    const audio = previewAudioRef.current;
+
+    const playSegment = () => {
+      audio.currentTime = mapping.startTime;
+      setCurrentTime(mapping.startTime);
+
+      const handleTimeUpdate = () => {
+        if (audio.currentTime >= mapping.endTime) {
+          audio.pause();
+          setIsPlaying(false);
+          audio.removeEventListener("timeupdate", handleTimeUpdate);
+          timeUpdateCleanupRef.current = null;
+        }
+      };
+
+      audio.addEventListener("timeupdate", handleTimeUpdate);
+      timeUpdateCleanupRef.current = () => {
+        audio.removeEventListener("timeupdate", handleTimeUpdate);
+      };
+
+      audio.play().catch(console.error);
+      setIsPlaying(true);
+    };
+
+    if (selectedAudioFileId !== mapping.audioFileId) {
+      const audioFile = audioFiles.find((f) => f.id === mapping.audioFileId);
+      if (audioFile) {
+        audio.src = `/uploads/${audioFile.filename}`;
+        setSelectedAudioFileId(mapping.audioFileId);
+        audio.addEventListener("loadedmetadata", () => playSegment(), { once: true });
+      }
+    } else {
+      playSegment();
+    }
+  }, [mappings, selectedAudioFileId, audioFiles]);
 
   const chapterContent = chapter?.content || {};
   const currentScriptSegments = textSegments.filter((s) => s.script === contentScript);
