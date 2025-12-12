@@ -40,8 +40,12 @@ export * from './Dialog';
 export * from './Slider';
 export * from './Breadcrumb';
 
-// Utility functions
+// Inspector utilities
+export * from './ComponentInspector';
 export * from './utils/componentMeta';
+
+// Showcase component
+export { DesignSystemShowcase } from './DesignSystemShowcase';
 
 // Type definitions
 export type { CardProps } from './Card';
