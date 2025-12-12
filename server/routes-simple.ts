@@ -418,29 +418,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const segments = await storage.getSegmentsByChapter(chapterId, script);
       
-      // Enrich segments with audio mapping data
-      const enrichedSegments = await Promise.all(
-        segments.map(async (segment) => {
-          const mappings = await storage.getMappingsBySegment(segment.id);
-          if (mappings.length > 0) {
-            const mapping = mappings[0]; // Use first mapping
-            return {
-              ...segment,
-              startTime: mapping.startTime,
-              endTime: mapping.endTime,
-              audioFileId: mapping.audioFileId
-            };
-          }
-          return segment;
-        })
-      );
-      
       // Prevent HTTP caching to ensure UI sees latest data after mutations
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
       
-      res.json(enrichedSegments);
+      res.json(segments);
     } catch (error) {
       console.error("Error fetching segments:", error);
       res.status(500).json({ message: "Failed to fetch segments" });
