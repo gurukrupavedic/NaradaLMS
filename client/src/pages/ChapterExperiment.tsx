@@ -47,7 +47,7 @@ interface ChapterData {
   proficiencyLevel?: number;
 }
 
-export function Chapter() {
+export function ChapterExperiment() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
   const { toast } = useToast();

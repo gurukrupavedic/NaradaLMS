@@ -11,7 +11,7 @@ import { TrackCard, ConfirmationModal } from "@/components/content-management";
 
 import type { Track } from '@shared/schema';
 
-export function ContentManagement() {
+export function ManageTracks() {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
   

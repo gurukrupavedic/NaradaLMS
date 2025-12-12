@@ -171,6 +171,76 @@ export function ExperimentsShowcase() {
           </div>
         </div>
 
+        {/* Legacy Experiments */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Legacy Experiments</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Legacy: Track View */}
+            <Card className="border-2 border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-200">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <Badge className="bg-gray-100 text-gray-800">LEGACY</Badge>
+                </div>
+                <CardTitle className="text-lg">Legacy: Track View</CardTitle>
+                <CardDescription>
+                  Old track view page - moved to experiments for reference.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/experiments/track-view/1">
+                  <Button className="w-full bg-gray-600 hover:bg-gray-700 text-white">
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Open Experiment
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Legacy: Chapter View */}
+            <Card className="border-2 border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-200">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <Badge className="bg-gray-100 text-gray-800">LEGACY</Badge>
+                </div>
+                <CardTitle className="text-lg">Legacy: Chapter View</CardTitle>
+                <CardDescription>
+                  Old chapter view page - moved to experiments for reference.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/experiments/chapter-view/1">
+                  <Button className="w-full bg-gray-600 hover:bg-gray-700 text-white">
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Open Experiment
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Legacy: Dashboard Old */}
+            <Card className="border-2 border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-200">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <Badge className="bg-gray-100 text-gray-800">LEGACY</Badge>
+                </div>
+                <CardTitle className="text-lg">Legacy: Dashboard Old</CardTitle>
+                <CardDescription>
+                  Old dashboard page - moved to experiments for reference.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/experiments/dashboard-old">
+                  <Button className="w-full bg-gray-600 hover:bg-gray-700 text-white">
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Open Experiment
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
         {/* Experiment Guidelines */}
         <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
           <h3 className="text-lg font-semibold text-blue-900 mb-3">Experiment Guidelines</h3>

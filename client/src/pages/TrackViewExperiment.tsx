@@ -20,7 +20,7 @@ interface Track {
   chapters: Chapter[];
 }
 
-export function TrackView() {
+export function TrackViewExperiment() {
   const [, setLocation] = useLocation();
   const { trackId } = useParams();
 

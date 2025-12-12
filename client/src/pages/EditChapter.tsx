@@ -109,7 +109,7 @@ interface TextSegment {
   audioFileId?: number;
 }
 
-export function ChapterEditor() {
+export function EditChapter() {
   const [, params] = useRoute("/manage/tracks/:trackId/chapters/:chapterId");
   const chapterId = params?.chapterId || "";
   const trackId = params?.trackId || "";

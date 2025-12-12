@@ -14,11 +14,12 @@ const Landing = lazy(() => import("@/pages/Landing").then(module => ({ default: 
 const SimpleDashboard = lazy(() => import("@/components/SimpleDashboard"));
 const NotFound = lazy(() => import("@/pages/NotFound").then(module => ({ default: module.NotFound })));
 
-const TrackView = lazy(() => import("@/pages/TrackView").then(module => ({ default: module.TrackView })));
-const ChapterView = lazy(() => import("@/pages/ChapterView").then(module => ({ default: module.ChapterView })));
-const ContentManagement = lazy(() => import("@/pages/ContentManagement").then(module => ({ default: module.ContentManagement })));
-const TrackChapters = lazy(() => import("@/pages/TrackChapters").then(module => ({ default: module.TrackChapters })));
-const ChapterEditor = lazy(() => import("@/pages/ChapterEditor").then(module => ({ default: module.ChapterEditor })));
+const ManageTracks = lazy(() => import("@/pages/ManageTracks").then(module => ({ default: module.ManageTracks })));
+const ManageChapters = lazy(() => import("@/pages/ManageChapters").then(module => ({ default: module.ManageChapters })));
+const EditChapter = lazy(() => import("@/pages/EditChapter").then(module => ({ default: module.EditChapter })));
+const LearnTracks = lazy(() => import("@/pages/LearnTracks").then(module => ({ default: module.LearnTracks })));
+const LearnChapters = lazy(() => import("@/pages/LearnChapters").then(module => ({ default: module.LearnChapters })));
+const StudyChapter = lazy(() => import("@/pages/StudyChapter").then(module => ({ default: module.StudyChapter })));
 const ExperimentsShowcase = lazy(() => import("@/pages/ExperimentsShowcase").then(module => ({ default: module.ExperimentsShowcase })));
 const DesignSystemExperiment = lazy(() => import("@/pages/DesignSystemExperiment"));
 const AdminPanelExperiment = lazy(() => import("@/pages/AdminPanelExperiment"));
@@ -26,6 +27,10 @@ const InstructorPanelExperiment = lazy(() => import("@/pages/InstructorPanelExpe
 const StudentDashboardExperiment = lazy(() => import("@/pages/StudentDashboardExperiment"));
 const DashboardExperiment = lazy(() => import("@/pages/DashboardExperiment"));
 const RoleTabsExperiment = lazy(() => import("@/pages/RoleTabsExperiment"));
+const TrackViewExperiment = lazy(() => import("@/pages/TrackViewExperiment").then(module => ({ default: module.TrackViewExperiment })));
+const ChapterViewExperiment = lazy(() => import("@/pages/ChapterViewExperiment").then(module => ({ default: module.ChapterViewExperiment })));
+const ChapterExperiment = lazy(() => import("@/pages/ChapterExperiment").then(module => ({ default: module.ChapterExperiment })));
+const DashboardOldExperiment = lazy(() => import("@/pages/DashboardOldExperiment").then(module => ({ default: module.DashboardOldExperiment })));
 
 
 
@@ -55,17 +60,20 @@ function Router() {
             <Route path="/" component={() => <SimpleDashboard user={user as any} />} />
             <Route path="/dashboard" component={() => <SimpleDashboard user={user as any} />} />
             {/* Content Management Routes */}
-            <Route path="/manage" component={() => <ContentManagement />} />
-            <Route path="/manage/tracks/:trackId" component={() => <TrackChapters />} />
-            <Route path="/manage/tracks/:trackId/chapters/:chapterId" component={() => <ChapterEditor />} />
+            <Route path="/manage" component={() => <ManageTracks />} />
+            <Route path="/manage/tracks/:trackId" component={() => <ManageChapters />} />
+            <Route path="/manage/tracks/:trackId/chapters/:chapterId" component={() => <EditChapter />} />
             
             {/* Legacy redirects for old content-management URLs */}
-            <Route path="/content-management" component={() => <ContentManagement />} />
-            <Route path="/content-management/tracks/:trackId" component={() => <TrackChapters />} />
-            <Route path="/content-management/tracks/:trackId/chapters/:chapterId" component={() => <ChapterEditor />} />
+            <Route path="/content-management" component={() => <ManageTracks />} />
+            <Route path="/content-management/tracks/:trackId" component={() => <ManageChapters />} />
+            <Route path="/content-management/tracks/:trackId/chapters/:chapterId" component={() => <EditChapter />} />
 
-            <Route path="/tracks/:trackId" component={TrackView} />
-            <Route path="/chapters/:id" component={ChapterView} />
+            {/* Learning Module Routes */}
+            <Route path="/tracks" component={() => <LearnTracks />} />
+            <Route path="/tracks/:trackId" component={() => <LearnChapters />} />
+            <Route path="/chapter/:chapterId" component={() => <StudyChapter />} />
+
             <Route path="/experiments" component={ExperimentsShowcase} />
             <Route path="/experiments/design-system" component={DesignSystemExperiment} />
             <Route path="/experiments/admin-panel" component={AdminPanelExperiment} />
@@ -73,6 +81,10 @@ function Router() {
             <Route path="/experiments/student-dashboard" component={StudentDashboardExperiment} />
             <Route path="/experiments/dashboard" component={DashboardExperiment} />
             <Route path="/experiments/role-tabs" component={RoleTabsExperiment} />
+            <Route path="/experiments/track-view/:trackId" component={TrackViewExperiment} />
+            <Route path="/experiments/chapter-view/:id" component={ChapterViewExperiment} />
+            <Route path="/experiments/chapter/:id" component={ChapterExperiment} />
+            <Route path="/experiments/dashboard-old" component={() => <DashboardOldExperiment onTrackSelect={() => {}} onChapterSelect={() => {}} />} />
 
 
 

@@ -9,7 +9,7 @@ import type { Track } from '@shared/schema';
 
 import { DashboardProps } from '@shared/types';
 
-export function Dashboard({ onTrackSelect, onChapterSelect }: DashboardProps) {
+export function DashboardOldExperiment({ onTrackSelect, onChapterSelect }: DashboardProps) {
   const { data: tracks, isLoading } = useQuery<Track[]>({
     queryKey: ['/api/tracks'],
   });
