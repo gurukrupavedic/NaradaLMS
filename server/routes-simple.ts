@@ -723,10 +723,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/mappings', async (req, res) => {
     try {
-      const { audioFileId, segmentId, startTime, endTime } = req.body;
+      const { audioFileId, textSegmentId, startTime, endTime } = req.body;
       const mapping = await storage.createMappingWithMediaSegment({
         audioFileId,
-        textSegmentId: segmentId,
+        textSegmentId,
         startTime,
         endTime,
         createdBy: "system"
