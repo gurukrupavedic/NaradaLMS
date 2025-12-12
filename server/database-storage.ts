@@ -78,6 +78,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   private async seedDatabase() {
+    // Create system user first (required for foreign key constraints)
+    await db.insert(users).values({
+      id: "system",
+      email: "system@vediclms.local",
+      roles: ["admin"],
+      status: "active",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).onConflictDoNothing();
+    
     const seedTracks = [
       {
         title: "Vaidika Nithya Karma",
