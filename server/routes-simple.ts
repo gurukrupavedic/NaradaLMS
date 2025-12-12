@@ -673,19 +673,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Legacy compatibility routes (redirect to normalized system)
+  // Mapping routes - return MappingWithTimestamps format
   app.get('/api/mappings/chapter/:chapterId', async (req, res) => {
     try {
       const chapterId = parseInt(req.params.chapterId);
       const mappings = await storage.getSegmentMappingsByChapter(chapterId);
-      const legacyFormat = mappings.map(m => ({
-        id: m.mappingId,
-        segmentId: m.textSegmentId,
-        audioFileId: m.audioFileId,
-        startTime: m.startTime,
-        endTime: m.endTime
-      }));
-      res.json(legacyFormat);
+      res.json(mappings);
     } catch (error) {
       console.error("Error fetching chapter mappings:", error);
       res.status(500).json({ message: "Failed to fetch chapter mappings" });
@@ -696,14 +689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const audioFileId = parseInt(req.params.audioFileId);
       const mappings = await storage.getSegmentMappingsByAudioFile(audioFileId);
-      const legacyFormat = mappings.map(m => ({
-        id: m.mappingId,
-        segmentId: m.textSegmentId,
-        audioFileId: m.audioFileId,
-        startTime: m.startTime,
-        endTime: m.endTime
-      }));
-      res.json(legacyFormat);
+      res.json(mappings);
     } catch (error) {
       console.error("Error fetching audio mappings:", error);
       res.status(500).json({ message: "Failed to fetch audio mappings" });
@@ -731,13 +717,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endTime,
         createdBy: "system"
       });
-      res.json({
-        id: mapping.mappingId,
-        segmentId: mapping.textSegmentId,
-        audioFileId: mapping.audioFileId,
-        startTime: mapping.startTime,
-        endTime: mapping.endTime
-      });
+      res.json(mapping);
     } catch (error) {
       console.error("Error creating audio mapping:", error);
       res.status(500).json({ message: "Failed to create audio mapping" });
