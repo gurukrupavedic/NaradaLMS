@@ -21,6 +21,11 @@ const TrackChapters = lazy(() => import("@/pages/TrackChapters").then(module => 
 const ChapterEditor = lazy(() => import("@/pages/ChapterEditor").then(module => ({ default: module.ChapterEditor })));
 const ExperimentsShowcase = lazy(() => import("@/pages/ExperimentsShowcase").then(module => ({ default: module.ExperimentsShowcase })));
 const DesignSystemExperiment = lazy(() => import("@/pages/DesignSystemExperiment"));
+const AdminPanelExperiment = lazy(() => import("@/pages/AdminPanelExperiment"));
+const InstructorPanelExperiment = lazy(() => import("@/pages/InstructorPanelExperiment"));
+const StudentDashboardExperiment = lazy(() => import("@/pages/StudentDashboardExperiment"));
+const DashboardExperiment = lazy(() => import("@/pages/DashboardExperiment"));
+const RoleTabsExperiment = lazy(() => import("@/pages/RoleTabsExperiment"));
 
 
 
@@ -63,6 +68,11 @@ function Router() {
             <Route path="/chapters/:id" component={ChapterView} />
             <Route path="/experiments" component={ExperimentsShowcase} />
             <Route path="/experiments/design-system" component={DesignSystemExperiment} />
+            <Route path="/experiments/admin-panel" component={AdminPanelExperiment} />
+            <Route path="/experiments/instructor-panel" component={InstructorPanelExperiment} />
+            <Route path="/experiments/student-dashboard" component={StudentDashboardExperiment} />
+            <Route path="/experiments/dashboard" component={DashboardExperiment} />
+            <Route path="/experiments/role-tabs" component={RoleTabsExperiment} />
 
 
 

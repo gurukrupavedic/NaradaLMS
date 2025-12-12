@@ -8,12 +8,11 @@
  * @since 2025-06-24
  */
 
-import React from "react";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Palette, Plus, CheckCircle } from "lucide-react";
+import { ArrowLeft, Palette, Shield, GraduationCap, BookOpen, LayoutDashboard, Layers } from "lucide-react";
 
 export function ExperimentsShowcase() {
   return (
@@ -49,49 +48,124 @@ export function ExperimentsShowcase() {
               <CardHeader>
                 <div className="flex items-center justify-between mb-2">
                   <Badge className="bg-blue-100 text-blue-800">PRODUCTION READY</Badge>
-                  <CheckCircle className="h-5 w-5 text-green-600" />
                 </div>
                 <CardTitle className="text-lg">Experiment 1: Design System</CardTitle>
                 <CardDescription>
-                  Complete 15-component modern colorful design system with educational semantics and vibrant color variants.
+                  Complete 15-component modern colorful design system with educational semantics.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-4 gap-1">
-                    {['blue', 'green', 'purple', 'orange'].map((color) => (
-                      <div key={color} className={`h-6 rounded bg-${color}-500`}></div>
-                    ))}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    ✓ 15 Components • ✓ 12 Colors • ✓ TypeScript
-                  </div>
-                  <Link href="/experiments/design-system">
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                      <Palette className="h-4 w-4 mr-2" />
-                      Open Experiment
-                    </Button>
-                  </Link>
-                </div>
+                <Link href="/experiments/design-system">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                    <Palette className="h-4 w-4 mr-2" />
+                    Open Experiment
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
-            {/* Future Experiment Placeholder */}
-            <Card className="border-2 border-dashed border-gray-300 hover:border-gray-400 transition-all duration-200">
+            {/* Experiment 2: Admin Panel */}
+            <Card className="border-2 border-red-200 hover:border-red-300 hover:shadow-lg transition-all duration-200">
               <CardHeader>
                 <div className="flex items-center justify-between mb-2">
-                  <Badge variant="outline" className="text-gray-500">PLACEHOLDER</Badge>
+                  <Badge className="bg-red-100 text-red-800">PROTOTYPE</Badge>
                 </div>
-                <CardTitle className="text-lg text-gray-600">Experiment 2: Coming Soon</CardTitle>
-                <CardDescription className="text-gray-500">
-                  Space for future design innovations and component explorations.
+                <CardTitle className="text-lg">Experiment 2: Admin Panel</CardTitle>
+                <CardDescription>
+                  User management, invitations, and role assignments for administrators.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" disabled className="w-full text-gray-400 border-gray-300">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Future Experiment
-                </Button>
+                <Link href="/experiments/admin-panel">
+                  <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Open Experiment
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Experiment 3: Instructor Panel */}
+            <Card className="border-2 border-purple-200 hover:border-purple-300 hover:shadow-lg transition-all duration-200">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <Badge className="bg-purple-100 text-purple-800">PROTOTYPE</Badge>
+                </div>
+                <CardTitle className="text-lg">Experiment 3: Instructor Panel</CardTitle>
+                <CardDescription>
+                  Student progress tracking and proficiency level management for instructors.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/experiments/instructor-panel">
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                    <GraduationCap className="h-4 w-4 mr-2" />
+                    Open Experiment
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Experiment 4: Student Dashboard */}
+            <Card className="border-2 border-green-200 hover:border-green-300 hover:shadow-lg transition-all duration-200">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <Badge className="bg-green-100 text-green-800">PROTOTYPE</Badge>
+                </div>
+                <CardTitle className="text-lg">Experiment 4: Student Dashboard</CardTitle>
+                <CardDescription>
+                  Learning progress, study statistics, and track overview for students.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/experiments/student-dashboard">
+                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Open Experiment
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Experiment 5: Dashboard */}
+            <Card className="border-2 border-amber-200 hover:border-amber-300 hover:shadow-lg transition-all duration-200">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <Badge className="bg-amber-100 text-amber-800">PROTOTYPE</Badge>
+                </div>
+                <CardTitle className="text-lg">Experiment 5: Dashboard</CardTitle>
+                <CardDescription>
+                  Alternative student view with learning tracks, activity feed, and statistics.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/experiments/dashboard">
+                  <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Open Experiment
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Experiment 6: Role Tabs */}
+            <Card className="border-2 border-cyan-200 hover:border-cyan-300 hover:shadow-lg transition-all duration-200">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <Badge className="bg-cyan-100 text-cyan-800">PROTOTYPE</Badge>
+                </div>
+                <CardTitle className="text-lg">Experiment 6: Role Tabs</CardTitle>
+                <CardDescription>
+                  Combined role-based navigation system with all panels in one view.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/experiments/role-tabs">
+                  <Button className="w-full bg-cyan-600 hover:bg-cyan-700 text-white">
+                    <Layers className="h-4 w-4 mr-2" />
+                    Open Experiment
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>
