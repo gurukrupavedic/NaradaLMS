@@ -47,31 +47,39 @@ export interface MappingWithTimestamps {
   segmentName?: string;
 }
 
-export interface AudioMapping {
+/**
+ * Simplified mapping interface for frontend components.
+ * Use this for UI display and playback control.
+ */
+export interface SimplifiedMapping {
   segmentId: number;
   startTime: number;
   endTime: number;
 }
 
+/**
+ * @deprecated Use MappingWithTimestamps directly instead
+ */
 export type AudioMappingDatabase = MappingWithTimestamps;
 
-export const convertDatabaseMapping = (db: MappingWithTimestamps): AudioMapping => ({
+/**
+ * @deprecated Use SimplifiedMapping instead
+ */
+export type AudioMapping = SimplifiedMapping;
+
+/**
+ * Convert database mapping to simplified frontend format
+ */
+export const toSimplifiedMapping = (db: MappingWithTimestamps): SimplifiedMapping => ({
   segmentId: db.textSegmentId,
   startTime: db.startTime,
   endTime: db.endTime
 });
 
-export const convertToDatabase = (mapping: AudioMapping, audioFileId: number): {
-  audioFileId: number;
-  textSegmentId: number;
-  startTime: number;
-  endTime: number;
-} => ({
-  textSegmentId: mapping.segmentId,
-  audioFileId,
-  startTime: mapping.startTime,
-  endTime: mapping.endTime
-});
+/**
+ * @deprecated Use toSimplifiedMapping instead
+ */
+export const convertDatabaseMapping = toSimplifiedMapping;
 
 export interface AudioFile {
   id: number;

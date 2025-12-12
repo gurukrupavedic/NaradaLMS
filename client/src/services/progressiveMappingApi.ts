@@ -9,13 +9,13 @@
  */
 
 import { apiRequest } from '@/lib/queryClient';
-import type { AudioMappingDatabase } from '@shared/types/text-segmentation';
+import type { MappingWithTimestamps } from '@shared/types/text-segmentation';
 
 export const progressiveMappingApi = {
   /**
    * Get all mappings for a specific chapter (legacy - for learning interface)
    */
-  async getMappingsByChapter(chapterId: number): Promise<AudioMappingDatabase[]> {
+  async getMappingsByChapter(chapterId: number): Promise<MappingWithTimestamps[]> {
     const response = await fetch(`/api/mappings/chapter/${chapterId}`, {
       credentials: 'include'
     });
@@ -28,7 +28,7 @@ export const progressiveMappingApi = {
   /**
    * Create a new audio mapping
    */
-  async createMapping(mapping: Omit<AudioMappingDatabase, 'id' | 'createdBy' | 'createdAt'>): Promise<AudioMappingDatabase> {
+  async createMapping(mapping: Omit<MappingWithTimestamps, 'mappingId' | 'mediaSegmentId'>): Promise<MappingWithTimestamps> {
     const response = await apiRequest('POST', '/api/mappings', mapping);
     return response.json();
   },
@@ -50,7 +50,7 @@ export const progressiveMappingApi = {
   /**
    * Get mappings by audio file (primary method for content management)
    */
-  async getMappingsByAudioFile(audioFileId: number): Promise<AudioMappingDatabase[]> {
+  async getMappingsByAudioFile(audioFileId: number): Promise<MappingWithTimestamps[]> {
     const response = await fetch(`/api/mappings/audio/${audioFileId}`, {
       credentials: 'include'
     });
@@ -76,7 +76,7 @@ export const progressiveMappingApi = {
   /**
    * Get mappings by segment (existing endpoint)
    */
-  async getMappingsBySegment(segmentId: number): Promise<AudioMappingDatabase[]> {
+  async getMappingsBySegment(segmentId: number): Promise<MappingWithTimestamps[]> {
     const response = await fetch(`/api/mappings/segment/${segmentId}`, {
       credentials: 'include'
     });

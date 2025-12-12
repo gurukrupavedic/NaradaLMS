@@ -1,11 +1,12 @@
-import type { Chapter, AudioFile, TextSegment, AudioMapping } from "@shared/schema";
+import type { Chapter, AudioFile, TextSegment } from "@shared/schema";
+import type { SimplifiedMapping } from "@shared/types/text-segmentation";
 
 export interface ChapterWithDetails extends Chapter {
   audioFiles: AudioFile[];
   segments: TextSegment[];
   audioMappings: Array<{
     audioFileId: number;
-    mappings: AudioMapping[];
+    mappings: SimplifiedMapping[];
   }>;
 }
 

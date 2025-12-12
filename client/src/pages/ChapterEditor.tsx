@@ -63,7 +63,7 @@ import { ConnectedCirclesIcon } from "@shared/components/icons";
 import { LinkStatusIcon } from "@shared/components/LinkStatusIcon";
 import { getMappingStatus } from "@shared/utils/mapping-status";
 import { progressiveMappingApi } from "@/services/progressiveMappingApi";
-import { AudioMappingDatabase, convertDatabaseMapping, convertToDatabase } from "@shared/types/text-segmentation";
+import { MappingWithTimestamps, toSimplifiedMapping } from "@shared/types/text-segmentation";
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { AudioControls } from "@/components/design-system/AudioControls";
 
@@ -692,7 +692,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   }, [allChapterMappings?.length, selectedAudioFilePreview, audioFiles?.length]);
 
   // Fetch mappings for the selected audio file
-  const { data: audioFileMappings = [], refetch: refetchMappings } = useQuery<AudioMappingDatabase[]>({
+  const { data: audioFileMappings = [], refetch: refetchMappings } = useQuery<MappingWithTimestamps[]>({
     queryKey: [`/api/mappings/audio/${selectedAudioFile?.id}`],
     enabled: !!selectedAudioFile?.id,
     queryFn: () => progressiveMappingApi.getMappingsByAudioFile(selectedAudioFile!.id)
@@ -1235,8 +1235,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // === MAPPING OPERATIONS SECTION ===
 
   // Mapping validation utility
-  const validateMapping = (mapping: Partial<AudioMappingDatabase>) => {
-    if (!mapping.segmentId || !mapping.audioFileId) {
+  const validateMapping = (mapping: { textSegmentId?: number; audioFileId?: number; startTime?: number; endTime?: number }) => {
+    if (!mapping.textSegmentId || !mapping.audioFileId) {
       throw new Error("Missing required mapping data");
     }
     if (mapping.startTime !== undefined && mapping.endTime !== undefined) {
@@ -1248,7 +1248,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
 
   // Create mapping mutation
   const createMappingMutation = useMutation({
-    mutationFn: async (mappingData: Omit<AudioMappingDatabase, 'id' | 'createdBy' | 'createdAt'>) => {
+    mutationFn: async (mappingData: { textSegmentId: number; audioFileId: number; startTime: number; endTime: number }) => {
       validateMapping(mappingData);
       return progressiveMappingApi.createMapping(mappingData);
     },
@@ -2392,15 +2392,14 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   segments={textSegments}
                   currentScript={contentScript}
                   content={chapterContent}
-                  mappings={audioFileMappings.map(convertDatabaseMapping)}
+                  mappings={audioFileMappings.map(toSimplifiedMapping)}
                   selectedAudioFile={selectedAudioFile}
                   onMappingCreate={(mapping) => {
                     createMappingMutation.mutate({
-                      segmentId: mapping.segmentId,
+                      textSegmentId: mapping.segmentId,
                       audioFileId: selectedAudioFile.id,
                       startTime: mapping.startTime,
-                      endTime: mapping.endTime,
-                      createdBy: "system"
+                      endTime: mapping.endTime
                     });
                   }}
                   onMappingUpdate={(segmentId, updates) => {

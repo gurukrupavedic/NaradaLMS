@@ -4,152 +4,37 @@ import {
 } from "@shared/schema";
 import { eq, and, max, asc } from "drizzle-orm";
 import { sql } from "drizzle-orm";
-import { MemStorage } from "./storage-simplified";
-const memStorage = new MemStorage();
 
 export interface IStorage {
   // User operations (required for Replit Auth)
-  /**
-   * Retrieve user by ID
-   * @param id - User identifier
-   * @returns Promise resolving to user object or null
-   */
   getUser(id: string): Promise<any>;
-  
-  /**
-   * Create or update user record
-   * @param user - User data object
-   * @returns Promise resolving to updated user
-   */
   upsertUser(user: any): Promise<any>;
-  
-  /**
-   * Get all users in the system
-   * @returns Promise resolving to array of user objects
-   */
   getAllUsers(): Promise<any[]>;
-  
-  /**
-   * Update user role assignments
-   * @param userId - User identifier
-   * @param roles - Array of role strings
-   * @returns Promise resolving to updated user
-   */
   updateUserRoles(userId: string, roles: string[]): Promise<any>;
-  
-  /**
-   * Update user status (active, inactive, etc.)
-   * @param userId - User identifier  
-   * @param status - New status string
-   * @returns Promise resolving to updated user
-   */
   updateUserStatus(userId: string, status: string): Promise<any>;
   
   // Track operations
-  /**
-   * Retrieve all tracks ordered by sequence
-   * @returns Promise resolving to array of track objects
-   */
   getAllTracks(): Promise<any[]>;
-  
-  /**
-   * Get specific track by ID
-   * @param id - Track identifier
-   * @returns Promise resolving to track or undefined if not found
-   */
   getTrack(id: number): Promise<any | undefined>;
-  
-  /**
-   * Create new learning track
-   * @param track - Track data object
-   * @returns Promise resolving to created track
-   */
   createTrack(track: any): Promise<any>;
-  
-  /**
-   * Update existing track
-   * @param id - Track identifier
-   * @param track - Updated track data
-   * @returns Promise resolving to updated track
-   */
   updateTrack(id: number, track: any): Promise<any>;
-  
-  /**
-   * Delete track and associated content
-   * @param id - Track identifier
-   * @returns Promise resolving when deletion complete
-   */
   deleteTrack(id: number): Promise<void>;
 
   // Chapter operations
-  /**
-   * Get all chapters for a specific track
-   * @param trackId - Track identifier
-   * @returns Promise resolving to array of chapter objects
-   */
   getChaptersByTrack(trackId: number): Promise<any[]>;
-  
-  /**
-   * Get specific chapter by ID
-   * @param id - Chapter identifier
-   * @returns Promise resolving to chapter or undefined if not found
-   */
   getChapter(id: number): Promise<any | undefined>;
-  
-  /**
-   * Create new chapter in a track
-   * @param chapter - Chapter data object
-   * @returns Promise resolving to created chapter
-   */
   createChapter(chapter: any): Promise<any>;
-  
-  /**
-   * Update existing chapter content
-   * @param id - Chapter identifier
-   * @param chapter - Updated chapter data
-   * @returns Promise resolving to updated chapter
-   */
   updateChapter(id: number, chapter: any): Promise<any>;
-  
-  /**
-   * Delete chapter and associated content
-   * @param id - Chapter identifier
-   * @returns Promise resolving when deletion complete
-   */
   deleteChapter(id: number): Promise<void>;
 
   // Audio file operations
-  /**
-   * Get all audio files for a specific chapter
-   * @param chapterId - Chapter identifier
-   * @returns Promise resolving to array of audio file objects
-   */
   getAudioFilesByChapter(chapterId: number): Promise<any[]>;
-  
-  /**
-   * Create new audio file record
-   * @param audioFile - Audio file data object
-   * @returns Promise resolving to created audio file
-   */
   createAudioFile(audioFile: any): Promise<any>;
-  
-  /**
-   * Update audio file metadata
-   * @param id - Audio file identifier
-   * @param audioFile - Updated audio file data
-   * @returns Promise resolving to updated audio file
-   */
   updateAudioFile(id: number, audioFile: any): Promise<any>;
-  
-  /**
-   * Delete audio file and associated mappings
-   * @param id - Audio file identifier
-   * @returns Promise resolving when deletion complete
-   */
   deleteAudioFile(id: number): Promise<void>;
 
   // Text segment operations
-  getSegmentsByChapter(chapterId: number): Promise<any[]>;
+  getSegmentsByChapter(chapterId: number, script?: string): Promise<any[]>;
   createTextSegment(segment: any): Promise<any>;
   updateTextSegment(id: number, segment: any): Promise<any>;
   updateSegmentOrder(chapterId: number, segmentOrders: { id: number; order: number }[]): Promise<void>;
@@ -180,25 +65,19 @@ export class DatabaseStorage implements IStorage {
   async ensureInitialized() {
     if (this.initialized) return;
     
-    try {
-      // Check if data exists
-      const existingTracks = await db.select().from(tracks).limit(1);
-      
-      if (existingTracks.length === 0) {
-        console.log("Initializing database with seed data...");
-        await this.seedDatabase();
-      }
-      
-      this.initialized = true;
-    } catch (error) {
-      console.error("Failed to initialize database:", error);
-      // Fall back to memory storage if database fails
-      this.initialized = false;
+    // Try to connect - throw error if fails (no silent fallback)
+    const existingTracks = await db.select().from(tracks).limit(1);
+    
+    if (existingTracks.length === 0) {
+      console.log("Initializing database with seed data...");
+      await this.seedDatabase();
     }
+    
+    this.initialized = true;
+    console.log("Database initialized successfully");
   }
 
   private async seedDatabase() {
-    // Seed tracks
     const seedTracks = [
       {
         title: "Vaidika Nithya Karma",
@@ -224,7 +103,6 @@ export class DatabaseStorage implements IStorage {
 
     const insertedTracks = await db.insert(tracks).values(seedTracks).returning();
 
-    // Seed chapters
     const seedChapters = [
       {
         trackId: insertedTracks[0].id,
@@ -241,9 +119,9 @@ export class DatabaseStorage implements IStorage {
         order: 2,
         status: "published" as const,
         content: {
-          te: "శ్రద్ధా సూక్తం",
-          hi: "श्रद्धा सूक्त",
-          en: "Shraddha Suktam"
+          te: "శ్ర॒ద్ధాయా॒ఽగ్నిః సమి॑ధ్యతే । శ్ర॒ద్ధయా॑ విందతే హ॒విః ।\nశ్ర॒ద్ధాం భగ॑స్య మూ॒ర్ధని॑ । వచ॒సాఽఽవే॑దయామసి ।\nప్రి॒యగ్గ్ శ్ర॑ద్ధే॒ దద॑తః । ప్రి॒యగ్గ్ శ్ర॑ద్ధే॒ దిదా॑సతః ।\nప్రి॒యం భో॒జేషు॒ యజ్వ॑సు ॥\nఇ॒దం మ॑ ఉది॒తం కృ॑ధి । యథా॑ దే॒వా అసు॑రేషు ।\nశ్ర॒ద్ధాము॒గ్రేషు॑ చక్రి॒రే । ఏ॒వం భో॒జేషు॒ యజ్వ॑సు ।\nఅ॒స్మాక॑ముది॒తం కృ॑ధి । శ్ర॒ద్ధాం దే॑వా॒ యజ॑మానాః ।\nవా॒యుగో॑పా॒ ఉపా॑సతే । శ్ర॒ద్ధాగ్ం హృ॑ద॒య్య॑యాఽఽకూ᳚త్యా ।\nశ్ర॒ద్ధయా॑ హూయతే హ॒విః । శ్ర॒ద్ధాం ప్రా॒తర్హ॑వామహే ॥\nశ్ర॒ద్ధాం మ॒ధ్యంది॑నం॒ పరి॑ । శ్ర॒ద్ధాగ్ం సూర్య॑స్య ని॒మృచి॑ ।\nశ్రద్ధే॒ శ్రద్ధా॑పయే॒హ మా᳚ । శ్ర॒ద్ధా దే॒వానధి॑వస్తే ।\nశ్ర॒ద్ధా విశ్వ॑మి॒దం జగ॑త్ । శ్ర॒ద్ధాం కామ॑స్య మా॒తరం᳚ ।\nహ॒విషా॑ వర్ధయామసి । ఓం శాంతిః॒ శాంతిః॒ శాంతిః॑ ॥",
+          hi: "श्र॒द्धाया॒-ऽग्नि-स्समि॑ध्यते । श्र॒द्धया॑ विन्दते ह॒विः ।\nश्र॒द्धा-म्भग॑स्य मू॒र्धनि॑ । वच॒सा-ऽऽवे॑दयामसि ।\nप्रि॒यग्ग् श्र॑द्धे॒ दद॑तः । प्रि॒यग्ग् श्र॑द्धे॒ दिदा॑सतः ।\nप्रि॒य-म्भो॒जेषु॒ यज्व॑सु ॥\nइ॒द-म्म॑ उदि॒त-ङ्कृ॑धि । यथा॑ दे॒वा असु॑रेषु ।\nश्र॒द्धामु॒ग्रेषु॑ चक्रि॒रे । ए॒व-म्भो॒जेषु॒ यज्व॑सु ।\nअ॒स्माक॑मुदि॒त-ङ्कृ॑धि । श्र॒द्धा-न्दे॑वा॒ यज॑मानाः ।\nवा॒युगो॑पा॒ उपा॑सते । श्र॒द्धाग्ं हृ॑द॒य्य॑या-ऽऽकू᳚त्या ।\nश्र॒द्धया॑ हूयते ह॒विः । श्र॒द्धा-म्प्रा॒तर्ह॑वामहे ॥\nश्र॒द्धा-म्म॒ध्यन्दि॑न॒-म्परि॑ ।श्र॒द्धाग्ं सूर्य॑स्य नि॒मृचि॑ ।\nश्रद्धे॒ श्रद्धा॑पये॒ह मा᳚ । श्र॒द्धा दे॒वानधि॑वस्ते ।\nश्र॒द्धा विश्व॑मि॒द-ञ्जग॑त् । श्र॒द्धा-ङ्काम॑स्य मा॒तरम्᳚ ।\nह॒विषा॑ वर्धयामसि । ॐ शान्ति॒-श्शान्ति॒-श्शान्तिः॑ ॥",
+          en: "śra̠ddhāyā̠-'gni-ssami̍dhyatē । śra̠ddhayā̍ vindatē ha̠viḥ ।\nśra̠ddhā-mbhaga̍sya mū̠rdhani̍ । vacha̠sā-''vē̍dayāmasi ।\npri̠yagg śra̍ddhē̠ dada̍taḥ । pri̠yagg śra̍ddhē̠ didā̍sataḥ ।\npri̠ya-mbhō̠jēṣu̠ yajva̍su ॥\ni̠da-mma̍ udi̠ta-ṅkṛ̍dhi । yathā̍ dē̠vā asu̍rēṣu ।\nśra̠ddhāmu̠grēṣu̍ chakri̠rē । ē̠va-mbhō̠jēṣu̠ yajva̍su ।\na̠smāka̍mudi̠ta-ṅkṛ̍dhi । śra̠ddhā-ndē̍vā̠ yaja̍mānāḥ ।\nvā̠yugō̍pā̠ upā̍satē । śra̠ddhāgṃ hṛ̍da̠yya̍yā-''kū̎tyā ।\nśra̠ddhayā̍ hūyatē ha̠viḥ । śra̠ddhā-mprā̠tarha̍vāmahē ॥\nśra̠ddhā-mma̠dhyandi̍na̠-mpari̍ । śra̠ddhāgṃ sūrya̍sya ni̠mṛchi̍ ।\nśraddhē̠ śraddhā̍payē̠ha mā̎ । śra̠ddhā dē̠vānadhi̍vastē ।\nśra̠ddhā viśva̍mi̠da-ñjaga̍t । śra̠ddhā-ṅkāma̍sya mā̠taram̎ ।\nha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥"
         },
         createdBy: "system",
         createdAt: new Date(),
@@ -258,630 +136,388 @@ export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.getUser(id);
-    
-    try {
-      const [user] = await db.select().from(users).where(eq(users.id, id));
-      return user;
-    } catch (error) {
-      return memStorage.getUser(id);
-    }
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async upsertUser(userData: any): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.upsertUser(userData);
-    
-    try {
-      const [user] = await db
-        .insert(users)
-        .values({
-          ...userData,
-          createdAt: new Date(),
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...userData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          username: userData.username,
+          displayName: userData.displayName,
+          email: userData.email,
+          profileImageUrl: userData.profileImageUrl,
           updatedAt: new Date()
-        })
-        .onConflictDoUpdate({
-          target: users.id,
-          set: {
-            username: userData.username,
-            displayName: userData.displayName,
-            email: userData.email,
-            profileImageUrl: userData.profileImageUrl,
-            updatedAt: new Date()
-          }
-        })
-        .returning();
-      return user;
-    } catch (error) {
-      return memStorage.upsertUser(userData);
-    }
+        }
+      })
+      .returning();
+    return user;
   }
 
   async getAllUsers(): Promise<any[]> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.getAllUsers();
-    
-    try {
-      return await db.select().from(users);
-    } catch (error) {
-      return memStorage.getAllUsers();
-    }
+    return await db.select().from(users);
   }
 
   async updateUserRoles(userId: string, roles: string[]): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.updateUserRoles(userId, roles);
-    
-    try {
-      const [user] = await db
-        .update(users)
-        .set({ roles, updatedAt: new Date() })
-        .where(eq(users.id, userId))
-        .returning();
-      return user;
-    } catch (error) {
-      return memStorage.updateUserRoles(userId, roles);
-    }
+    const [user] = await db
+      .update(users)
+      .set({ roles, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
   }
 
   async updateUserStatus(userId: string, status: string): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.updateUserStatus(userId, status);
-    
-    try {
-      const [user] = await db
-        .update(users)
-        .set({ status, updatedAt: new Date() })
-        .where(eq(users.id, userId))
-        .returning();
-      return user;
-    } catch (error) {
-      return memStorage.updateUserStatus(userId, status);
-    }
+    const [user] = await db
+      .update(users)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
   }
 
   // Track operations
   async getAllTracks(): Promise<any[]> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.getAllTracks();
+    const allTracks = await db.select().from(tracks).orderBy(tracks.order);
     
-    try {
-      // Get all tracks first
-      const allTracks = await db.select().from(tracks).orderBy(tracks.order);
-      
-      // For each track, count its chapters
-      const tracksWithCounts = await Promise.all(
-        allTracks.map(async (track) => {
-          const chapterCount = await db
-            .select({ count: sql<number>`count(*)` })
-            .from(chapters)
-            .where(eq(chapters.trackId, track.id));
-          
-          return {
-            ...track,
-            chapterCount: Number(chapterCount[0]?.count || 0)
-          };
-        })
-      );
-      
-      return tracksWithCounts;
-    } catch (error) {
-      console.error("Error fetching tracks with chapter counts:", error);
-      return memStorage.getAllTracks();
-    }
+    const tracksWithCounts = await Promise.all(
+      allTracks.map(async (track) => {
+        const chapterCount = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(chapters)
+          .where(eq(chapters.trackId, track.id));
+        
+        return {
+          ...track,
+          chapterCount: Number(chapterCount[0]?.count || 0)
+        };
+      })
+    );
+    
+    return tracksWithCounts;
   }
 
   async getTrack(id: number): Promise<any | undefined> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.getTrack(id);
-    
-    try {
-      const [track] = await db.select().from(tracks).where(eq(tracks.id, id));
-      return track;
-    } catch (error) {
-      return memStorage.getTrack(id);
-    }
+    const [track] = await db.select().from(tracks).where(eq(tracks.id, id));
+    return track;
   }
 
   async createTrack(track: any): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.createTrack(track);
+    const maxOrderResult = await db
+      .select({ maxOrder: sql<number>`COALESCE(MAX(${tracks.order}), 0)` })
+      .from(tracks);
     
-    try {
-      // Calculate the next order number by finding the maximum existing order
-      const maxOrderResult = await db
-        .select({ maxOrder: sql<number>`COALESCE(MAX(${tracks.order}), 0)` })
-        .from(tracks);
-      
-      const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
-      
-      const [newTrack] = await db.insert(tracks).values({
-        ...track,
-        order: nextOrder,
-        createdBy: "system",
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }).returning();
-      return newTrack;
-    } catch (error) {
-      return memStorage.createTrack(track);
-    }
+    const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
+    
+    const [newTrack] = await db.insert(tracks).values({
+      ...track,
+      order: nextOrder,
+      createdBy: "system",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return newTrack;
   }
 
   async updateTrack(id: number, trackUpdate: any): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.updateTrack(id, trackUpdate);
-    
-    try {
-      const [track] = await db
-        .update(tracks)
-        .set({ ...trackUpdate, updatedAt: new Date() })
-        .where(eq(tracks.id, id))
-        .returning();
-      return track;
-    } catch (error) {
-      return memStorage.updateTrack(id, trackUpdate);
-    }
+    const [track] = await db
+      .update(tracks)
+      .set({ ...trackUpdate, updatedAt: new Date() })
+      .where(eq(tracks.id, id))
+      .returning();
+    return track;
   }
 
   async deleteTrack(id: number): Promise<void> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.deleteTrack(id);
-    
-    try {
-      await db.delete(tracks).where(eq(tracks.id, id));
-    } catch (error) {
-      return memStorage.deleteTrack(id);
-    }
+    await db.delete(tracks).where(eq(tracks.id, id));
   }
 
   // Chapter operations
   async getChaptersByTrack(trackId: number): Promise<any[]> {
     await this.ensureInitialized();
-    if (!this.initialized) {
-      return memStorage.getChaptersByTrack(trackId);
-    }
+    const chapterList = await db.select().from(chapters).where(eq(chapters.trackId, trackId)).orderBy(chapters.order);
     
-    try {
-      // Get base chapters
-      const chapterList = await db.select().from(chapters).where(eq(chapters.trackId, trackId)).orderBy(chapters.order);
+    const enrichedChapters = await Promise.all(chapterList.map(async (chapter) => {
+      const hasContent = Boolean(
+        (chapter.content?.te && chapter.content.te.trim().length > 0) ||
+        (chapter.content?.hi && chapter.content.hi.trim().length > 0) ||
+        (chapter.content?.en && chapter.content.en.trim().length > 0)
+      );
       
-      // Enrich each chapter with counts
-      const enrichedChapters = await Promise.all(chapterList.map(async (chapter) => {
-        try {
-          // Check if content exists (any language has content)
-          const hasContent = Boolean(
-            (chapter.content?.te && chapter.content.te.trim().length > 0) ||
-            (chapter.content?.hi && chapter.content.hi.trim().length > 0) ||
-            (chapter.content?.en && chapter.content.en.trim().length > 0)
-          );
-          
-          // Count audio files
-          const audioFilesList = await db.select().from(audioFiles).where(eq(audioFiles.chapterId, chapter.id));
-          const audioFileCount = audioFilesList.length;
-          
-          // Count media segments across all audio files for this chapter
-          let segmentCount = 0;
-          for (const audioFile of audioFilesList) {
-            const mediaSegmentsList = await db.select().from(mediaSegments).where(eq(mediaSegments.audioFileId, audioFile.id));
-            segmentCount += mediaSegmentsList.length;
-          }
-          
-          return {
-            ...chapter,
-            hasContent,
-            audioFileCount,
-            segmentCount
-          };
-        } catch (chapterError) {
-          console.error(`Error enriching chapter ${chapter.id}:`, chapterError);
-          return {
-            ...chapter,
-            hasContent: false,
-            audioFileCount: 0,
-            segmentCount: 0
-          };
-        }
-      }));
+      const audioFilesList = await db.select().from(audioFiles).where(eq(audioFiles.chapterId, chapter.id));
+      const audioFileCount = audioFilesList.length;
       
-      return enrichedChapters;
-    } catch (error) {
-      console.error('Error fetching enriched chapters:', error);
-      return memStorage.getChaptersByTrack(trackId);
-    }
+      let segmentCount = 0;
+      for (const audioFile of audioFilesList) {
+        const mediaSegmentsList = await db.select().from(mediaSegments).where(eq(mediaSegments.audioFileId, audioFile.id));
+        segmentCount += mediaSegmentsList.length;
+      }
+      
+      return {
+        ...chapter,
+        hasContent,
+        audioFileCount,
+        segmentCount
+      };
+    }));
+    
+    return enrichedChapters;
   }
 
   async getChapter(id: number): Promise<any | undefined> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.getChapter(id);
+    const [chapter] = await db.select().from(chapters).where(eq(chapters.id, id));
     
-    try {
-      const [chapter] = await db.select().from(chapters).where(eq(chapters.id, id));
-      console.log('Storage: Raw chapter from DB:', JSON.stringify(chapter, null, 2));
-      
-      // Ensure content is properly parsed if it's a string
-      if (chapter && chapter.content && typeof chapter.content === 'string') {
-        try {
-          chapter.content = JSON.parse(chapter.content);
-          console.log('Storage: Parsed content:', JSON.stringify(chapter.content, null, 2));
-        } catch (parseError) {
-          console.error('Storage: Failed to parse content JSON:', parseError);
-        }
+    if (chapter && chapter.content && typeof chapter.content === 'string') {
+      try {
+        chapter.content = JSON.parse(chapter.content);
+      } catch (parseError) {
+        console.error('Storage: Failed to parse content JSON:', parseError);
       }
-      
-      return chapter;
-    } catch (error) {
-      return memStorage.getChapter(id);
     }
+    
+    return chapter;
   }
 
   async createChapter(chapter: any): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.createChapter(chapter);
+    const maxOrderResult = await db
+      .select({ maxOrder: sql<number>`COALESCE(MAX(${chapters.order}), 0)` })
+      .from(chapters)
+      .where(eq(chapters.trackId, chapter.trackId));
     
-    try {
-      // Calculate the next order number within the specific track
-      const maxOrderResult = await db
-        .select({ maxOrder: sql<number>`COALESCE(MAX(${chapters.order}), 0)` })
-        .from(chapters)
-        .where(eq(chapters.trackId, chapter.trackId));
-      
-      const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
-      
-      const [newChapter] = await db.insert(chapters).values({
-        ...chapter,
-        order: nextOrder,
-        createdBy: "system",
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }).returning();
-      
-      return newChapter;
-    } catch (error) {
-      return memStorage.createChapter(chapter);
-    }
+    const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
+    
+    const [newChapter] = await db.insert(chapters).values({
+      ...chapter,
+      order: nextOrder,
+      createdBy: "system",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    
+    return newChapter;
   }
 
   async updateChapter(id: number, chapterUpdate: any): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.updateChapter(id, chapterUpdate);
     
-    try {
-      console.log('Updating chapter:', id, 'with data:', JSON.stringify(chapterUpdate, null, 2));
-      
-      // If updating content, merge with existing content to preserve other languages
-      if (chapterUpdate.content) {
-        const [existingChapter] = await db.select().from(chapters).where(eq(chapters.id, id));
-        if (existingChapter && existingChapter.content) {
-          const existingContent = typeof existingChapter.content === 'string' 
-            ? JSON.parse(existingChapter.content) 
-            : existingChapter.content;
-          
-          console.log('Existing content:', JSON.stringify(existingContent, null, 2));
-          console.log('New content to merge:', JSON.stringify(chapterUpdate.content, null, 2));
-          
-          chapterUpdate.content = {
-            ...existingContent,
-            ...chapterUpdate.content
-          };
-          
-          console.log('Final merged content:', JSON.stringify(chapterUpdate.content, null, 2));
-        }
+    if (chapterUpdate.content) {
+      const [existingChapter] = await db.select().from(chapters).where(eq(chapters.id, id));
+      if (existingChapter && existingChapter.content) {
+        const existingContent = typeof existingChapter.content === 'string' 
+          ? JSON.parse(existingChapter.content) 
+          : existingChapter.content;
+        
+        chapterUpdate.content = {
+          ...existingContent,
+          ...chapterUpdate.content
+        };
       }
-      
-      const [chapter] = await db
-        .update(chapters)
-        .set({ ...chapterUpdate, updatedAt: new Date() })
-        .where(eq(chapters.id, id))
-        .returning();
-      
-      console.log('Updated chapter result:', JSON.stringify(chapter, null, 2));
-      return chapter;
-    } catch (error) {
-      console.error('Error updating chapter:', error);
-      return memStorage.updateChapter(id, chapterUpdate);
     }
+    
+    const [chapter] = await db
+      .update(chapters)
+      .set({ ...chapterUpdate, updatedAt: new Date() })
+      .where(eq(chapters.id, id))
+      .returning();
+    
+    return chapter;
   }
 
   async deleteChapter(id: number): Promise<void> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.deleteChapter(id);
-    
-    try {
-      await db.delete(chapters).where(eq(chapters.id, id));
-    } catch (error) {
-      return memStorage.deleteChapter(id);
-    }
+    await db.delete(chapters).where(eq(chapters.id, id));
   }
 
   // Audio file operations
   async getAudioFilesByChapter(chapterId: number): Promise<any[]> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.getAudioFilesByChapter(chapterId);
-    
-    try {
-      return await db.select().from(audioFiles).where(eq(audioFiles.chapterId, chapterId));
-    } catch (error) {
-      return memStorage.getAudioFilesByChapter(chapterId);
-    }
+    return await db.select().from(audioFiles).where(eq(audioFiles.chapterId, chapterId));
   }
 
   async createAudioFile(audioFile: any): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.createAudioFile(audioFile);
-    
-    try {
-      const [newAudioFile] = await db.insert(audioFiles).values({
-        ...audioFile,
-        createdAt: new Date()
-      }).returning();
-      return newAudioFile;
-    } catch (error) {
-      return memStorage.createAudioFile(audioFile);
-    }
+    const [newAudioFile] = await db.insert(audioFiles).values({
+      ...audioFile,
+      createdAt: new Date()
+    }).returning();
+    return newAudioFile;
   }
 
   async updateAudioFile(id: number, audioFileUpdate: any): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.updateAudioFile(id, audioFileUpdate);
-    
-    try {
-      const [audioFile] = await db
-        .update(audioFiles)
-        .set(audioFileUpdate)
-        .where(eq(audioFiles.id, id))
-        .returning();
-      return audioFile;
-    } catch (error) {
-      return memStorage.updateAudioFile(id, audioFileUpdate);
-    }
+    const [audioFile] = await db
+      .update(audioFiles)
+      .set(audioFileUpdate)
+      .where(eq(audioFiles.id, id))
+      .returning();
+    return audioFile;
   }
 
   async deleteAudioFile(id: number): Promise<void> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.deleteAudioFile(id);
-    
-    try {
-      await db.delete(audioFiles).where(eq(audioFiles.id, id));
-    } catch (error) {
-      return memStorage.deleteAudioFile(id);
-    }
+    await db.delete(audioFiles).where(eq(audioFiles.id, id));
   }
 
   // Text segment operations
   async getSegmentsByChapter(chapterId: number, script?: string): Promise<any[]> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.getSegmentsByChapter(chapterId, script);
+    const whereConditions = script 
+      ? and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script))
+      : eq(textSegments.chapterId, chapterId);
     
-    try {
-      const whereConditions = script 
-        ? and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script))
-        : eq(textSegments.chapterId, chapterId);
-      
-      const results = await db.select().from(textSegments).where(whereConditions).orderBy(asc(textSegments.order));
-      
-      return results;
-    } catch (error) {
-      return memStorage.getSegmentsByChapter(chapterId, script);
-    }
+    return await db.select().from(textSegments).where(whereConditions).orderBy(asc(textSegments.order));
   }
 
   async createTextSegment(segment: any): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.createTextSegment(segment);
     
-    try {
-      // Validate required fields
-      if (!segment.chapterId || !segment.script || 
-          segment.startPosition === undefined || segment.endPosition === undefined) {
-        throw new Error("Missing required fields: chapterId, script, startPosition, endPosition");
-      }
-      
-      // Get next order value for this chapter and script
-      const maxOrderResult = await db
-        .select({ maxOrder: max(textSegments.order) })
-        .from(textSegments)
-        .where(
-          and(
-            eq(textSegments.chapterId, segment.chapterId),
-            eq(textSegments.script, segment.script)
-          )
-        );
-      
-      const nextOrder = (maxOrderResult[0]?.maxOrder ?? -1) + 1;
-      
-      const [newSegment] = await db.insert(textSegments).values({
-        chapterId: segment.chapterId,
-        script: segment.script,
-        startPosition: segment.startPosition,
-        endPosition: segment.endPosition,
-        order: segment.order || nextOrder,
-        createdBy: segment.createdBy || "system",
-        createdAt: new Date()
-      }).returning();
-      return newSegment;
-    } catch (error) {
-      return memStorage.createTextSegment(segment);
+    if (!segment.chapterId || !segment.script || 
+        segment.startPosition === undefined || segment.endPosition === undefined) {
+      throw new Error("Missing required fields: chapterId, script, startPosition, endPosition");
     }
+    
+    const maxOrderResult = await db
+      .select({ maxOrder: max(textSegments.order) })
+      .from(textSegments)
+      .where(
+        and(
+          eq(textSegments.chapterId, segment.chapterId),
+          eq(textSegments.script, segment.script)
+        )
+      );
+    
+    const nextOrder = (maxOrderResult[0]?.maxOrder ?? -1) + 1;
+    
+    const [newSegment] = await db.insert(textSegments).values({
+      chapterId: segment.chapterId,
+      script: segment.script,
+      startPosition: segment.startPosition,
+      endPosition: segment.endPosition,
+      order: segment.order || nextOrder,
+      createdBy: segment.createdBy || "system",
+      createdAt: new Date()
+    }).returning();
+    return newSegment;
   }
 
   async updateTextSegment(id: number, segmentUpdate: any): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.updateTextSegment(id, segmentUpdate);
-    
-    try {
-      const [segment] = await db
-        .update(textSegments)
-        .set(segmentUpdate)
-        .where(eq(textSegments.id, id))
-        .returning();
-      return segment;
-    } catch (error) {
-      return memStorage.updateTextSegment(id, segmentUpdate);
-    }
+    const [segment] = await db
+      .update(textSegments)
+      .set(segmentUpdate)
+      .where(eq(textSegments.id, id))
+      .returning();
+    return segment;
   }
 
   async updateSegmentOrder(chapterId: number, segmentOrders: { id: number; order: number }[]): Promise<void> {
     await this.ensureInitialized();
-    
-    if (!this.initialized) {
-      return;
-    }
-    
-    try {
-      // Execute updates sequentially without transaction
-      // Note: Neon's poolQueryViaFetch=true mode does not properly support transactions
-      for (const { id, order } of segmentOrders) {
-        await db
-          .update(textSegments)
-          .set({ order })
-          .where(eq(textSegments.id, id))
-          .returning();
-      }
-    } catch (error) {
-      console.error('Error updating segment order:', error);
-      throw error;
+    for (const { id, order } of segmentOrders) {
+      await db
+        .update(textSegments)
+        .set({ order })
+        .where(eq(textSegments.id, id))
+        .returning();
     }
   }
 
   async deleteTextSegment(id: number): Promise<void> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.deleteTextSegment(id);
-    
-    try {
-      await db.delete(textSegments).where(eq(textSegments.id, id));
-    } catch (error) {
-      return memStorage.deleteTextSegment(id);
-    }
+    await db.delete(textSegments).where(eq(textSegments.id, id));
   }
 
   // Media segment operations
   async getMediaSegmentsByAudioFile(audioFileId: number): Promise<any[]> {
     await this.ensureInitialized();
-    if (!this.initialized) return [];
-    
-    try {
-      const segments = await db.select()
-        .from(mediaSegments)
-        .where(eq(mediaSegments.audioFileId, audioFileId))
-        .orderBy(mediaSegments.startTimestamp);
-      return segments;
-    } catch (error) {
-      console.error("Error fetching media segments:", error);
-      return [];
-    }
+    return await db.select()
+      .from(mediaSegments)
+      .where(eq(mediaSegments.audioFileId, audioFileId))
+      .orderBy(mediaSegments.startTimestamp);
   }
 
   async createMediaSegment(segment: any): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return null;
-    
-    try {
-      const [newSegment] = await db.insert(mediaSegments).values({
-        ...segment,
-        createdAt: new Date()
-      }).returning();
-      return newSegment;
-    } catch (error) {
-      console.error("Error creating media segment:", error);
-      return null;
-    }
+    const [newSegment] = await db.insert(mediaSegments).values({
+      ...segment,
+      createdAt: new Date()
+    }).returning();
+    return newSegment;
   }
 
   async updateMediaSegment(id: number, segmentUpdate: any): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return null;
-    
-    try {
-      const [updatedSegment] = await db.update(mediaSegments)
-        .set(segmentUpdate)
-        .where(eq(mediaSegments.id, id))
-        .returning();
-      return updatedSegment;
-    } catch (error) {
-      console.error("Error updating media segment:", error);
-      return null;
-    }
+    const [updatedSegment] = await db.update(mediaSegments)
+      .set(segmentUpdate)
+      .where(eq(mediaSegments.id, id))
+      .returning();
+    return updatedSegment;
   }
 
   async deleteMediaSegment(id: number): Promise<void> {
     await this.ensureInitialized();
-    if (!this.initialized) return;
-    
-    try {
-      await db.delete(mediaSegments)
-        .where(eq(mediaSegments.id, id));
-    } catch (error) {
-      console.error("Error deleting media segment:", error);
-    }
+    await db.delete(mediaSegments).where(eq(mediaSegments.id, id));
   }
 
   // Segment mapping operations (normalized system)
   async getSegmentMappingsByChapter(chapterId: number): Promise<any[]> {
     await this.ensureInitialized();
-    if (!this.initialized) return [];
-    
-    try {
-      const mappings = await db.select({
-        mappingId: segmentMappings.id,
-        textSegmentId: segmentMappings.textSegmentId,
-        mediaSegmentId: segmentMappings.mediaSegmentId,
-        audioFileId: mediaSegments.audioFileId,
-        startTime: mediaSegments.startTimestamp,
-        endTime: mediaSegments.endTimestamp,
-        segmentName: mediaSegments.segmentName
-      })
-      .from(segmentMappings)
-      .leftJoin(mediaSegments, eq(segmentMappings.mediaSegmentId, mediaSegments.id))
-      .leftJoin(textSegments, eq(segmentMappings.textSegmentId, textSegments.id))
-      .where(eq(textSegments.chapterId, chapterId));
-      
-      return mappings;
-    } catch (error) {
-      console.error("Error fetching segment mappings by chapter:", error);
-      return [];
-    }
+    return await db.select({
+      mappingId: segmentMappings.id,
+      textSegmentId: segmentMappings.textSegmentId,
+      mediaSegmentId: segmentMappings.mediaSegmentId,
+      audioFileId: mediaSegments.audioFileId,
+      startTime: mediaSegments.startTimestamp,
+      endTime: mediaSegments.endTimestamp,
+      segmentName: mediaSegments.segmentName
+    })
+    .from(segmentMappings)
+    .leftJoin(mediaSegments, eq(segmentMappings.mediaSegmentId, mediaSegments.id))
+    .leftJoin(textSegments, eq(segmentMappings.textSegmentId, textSegments.id))
+    .where(eq(textSegments.chapterId, chapterId));
   }
 
   async getSegmentMappingsByAudioFile(audioFileId: number): Promise<any[]> {
     await this.ensureInitialized();
-    if (!this.initialized) return [];
-    
-    try {
-      const mappings = await db.select({
-        mappingId: segmentMappings.id,
-        textSegmentId: segmentMappings.textSegmentId,
-        mediaSegmentId: segmentMappings.mediaSegmentId,
-        audioFileId: mediaSegments.audioFileId,
-        startTime: mediaSegments.startTimestamp,
-        endTime: mediaSegments.endTimestamp,
-        segmentName: mediaSegments.segmentName
-      })
-      .from(segmentMappings)
-      .leftJoin(mediaSegments, eq(segmentMappings.mediaSegmentId, mediaSegments.id))
-      .where(eq(mediaSegments.audioFileId, audioFileId));
-      
-      return mappings;
-    } catch (error) {
-      console.error("Error fetching segment mappings by audio file:", error);
-      return [];
-    }
+    return await db.select({
+      mappingId: segmentMappings.id,
+      textSegmentId: segmentMappings.textSegmentId,
+      mediaSegmentId: segmentMappings.mediaSegmentId,
+      audioFileId: mediaSegments.audioFileId,
+      startTime: mediaSegments.startTimestamp,
+      endTime: mediaSegments.endTimestamp,
+      segmentName: mediaSegments.segmentName
+    })
+    .from(segmentMappings)
+    .leftJoin(mediaSegments, eq(segmentMappings.mediaSegmentId, mediaSegments.id))
+    .where(eq(mediaSegments.audioFileId, audioFileId));
   }
 
   async createSegmentMapping(mapping: any): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return null;
-    
-    try {
-      const [newMapping] = await db.insert(segmentMappings).values({
-        ...mapping,
-        createdAt: new Date()
-      }).returning();
-      return newMapping;
-    } catch (error) {
-      console.error("Error creating segment mapping:", error);
-      return null;
-    }
+    const [newMapping] = await db.insert(segmentMappings).values({
+      ...mapping,
+      createdAt: new Date()
+    }).returning();
+    return newMapping;
   }
 
   async createMappingWithMediaSegment(data: { 
@@ -892,96 +528,76 @@ export class DatabaseStorage implements IStorage {
     createdBy: string 
   }): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return null;
     
-    try {
-      const [mediaSegment] = await db.insert(mediaSegments).values({
-        audioFileId: data.audioFileId,
-        startTimestamp: data.startTime,
-        endTimestamp: data.endTime,
-        createdBy: data.createdBy,
-        createdAt: new Date()
-      }).returning();
+    const [mediaSegment] = await db.insert(mediaSegments).values({
+      audioFileId: data.audioFileId,
+      startTimestamp: data.startTime,
+      endTimestamp: data.endTime,
+      createdBy: data.createdBy,
+      createdAt: new Date()
+    }).returning();
 
-      const [mapping] = await db.insert(segmentMappings).values({
-        mediaSegmentId: mediaSegment.id,
-        textSegmentId: data.textSegmentId,
-        createdBy: data.createdBy,
-        createdAt: new Date()
-      }).returning();
+    const [mapping] = await db.insert(segmentMappings).values({
+      mediaSegmentId: mediaSegment.id,
+      textSegmentId: data.textSegmentId,
+      createdBy: data.createdBy,
+      createdAt: new Date()
+    }).returning();
 
-      return {
-        mappingId: mapping.id,
-        textSegmentId: data.textSegmentId,
-        mediaSegmentId: mediaSegment.id,
-        audioFileId: data.audioFileId,
-        startTime: data.startTime,
-        endTime: data.endTime
-      };
-    } catch (error) {
-      console.error("Error creating mapping with media segment:", error);
-      return null;
-    }
+    return {
+      mappingId: mapping.id,
+      textSegmentId: data.textSegmentId,
+      mediaSegmentId: mediaSegment.id,
+      audioFileId: data.audioFileId,
+      startTime: data.startTime,
+      endTime: data.endTime
+    };
   }
 
   async deleteSegmentMapping(id: number): Promise<void> {
     await this.ensureInitialized();
-    if (!this.initialized) return;
     
-    try {
-      const [mapping] = await db.select({ mediaSegmentId: segmentMappings.mediaSegmentId })
-        .from(segmentMappings)
-        .where(eq(segmentMappings.id, id));
-      
-      await db.delete(segmentMappings).where(eq(segmentMappings.id, id));
-      
-      if (mapping?.mediaSegmentId) {
-        await db.delete(mediaSegments).where(eq(mediaSegments.id, mapping.mediaSegmentId));
-      }
-    } catch (error) {
-      console.error("Error deleting segment mapping:", error);
+    const [mapping] = await db.select({ mediaSegmentId: segmentMappings.mediaSegmentId })
+      .from(segmentMappings)
+      .where(eq(segmentMappings.id, id));
+    
+    await db.delete(segmentMappings).where(eq(segmentMappings.id, id));
+    
+    if (mapping?.mediaSegmentId) {
+      await db.delete(mediaSegments).where(eq(mediaSegments.id, mapping.mediaSegmentId));
     }
   }
 
   async deleteSegmentMappingByTextSegment(textSegmentId: number, audioFileId: number): Promise<void> {
     await this.ensureInitialized();
-    if (!this.initialized) return;
     
-    try {
-      const mappingsToDelete = await db.select({
-        mappingId: segmentMappings.id,
-        mediaSegmentId: segmentMappings.mediaSegmentId
-      })
-      .from(segmentMappings)
-      .leftJoin(mediaSegments, eq(segmentMappings.mediaSegmentId, mediaSegments.id))
-      .where(and(
-        eq(segmentMappings.textSegmentId, textSegmentId),
-        eq(mediaSegments.audioFileId, audioFileId)
-      ));
+    const mappingsToDelete = await db.select({
+      mappingId: segmentMappings.id,
+      mediaSegmentId: segmentMappings.mediaSegmentId
+    })
+    .from(segmentMappings)
+    .leftJoin(mediaSegments, eq(segmentMappings.mediaSegmentId, mediaSegments.id))
+    .where(and(
+      eq(segmentMappings.textSegmentId, textSegmentId),
+      eq(mediaSegments.audioFileId, audioFileId)
+    ));
 
-      for (const mapping of mappingsToDelete) {
-        await db.delete(segmentMappings).where(eq(segmentMappings.id, mapping.mappingId));
-        if (mapping.mediaSegmentId) {
-          await db.delete(mediaSegments).where(eq(mediaSegments.id, mapping.mediaSegmentId));
-        }
+    for (const mapping of mappingsToDelete) {
+      await db.delete(segmentMappings).where(eq(segmentMappings.id, mapping.mappingId));
+      if (mapping.mediaSegmentId) {
+        await db.delete(mediaSegments).where(eq(mediaSegments.id, mapping.mediaSegmentId));
       }
-    } catch (error) {
-      console.error("Error deleting segment mapping by text segment:", error);
     }
   }
 
   // Student progress
   async getStudentProgress(studentId: string): Promise<any[]> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.getStudentProgress(studentId);
-    
     return [];
   }
 
   async getStudentStats(studentId: string): Promise<any> {
     await this.ensureInitialized();
-    if (!this.initialized) return memStorage.getStudentStats(studentId);
-    
     return {
       totalStudyTime: 0,
       chaptersCompleted: 0,

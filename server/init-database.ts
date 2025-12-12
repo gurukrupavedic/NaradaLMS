@@ -1,4 +1,4 @@
-import { storage } from "./storage-database";
+import { storage } from "./database-storage";
 import { seedVedicData } from "./seed-vedic-data";
 
 export async function initializeDatabase(): Promise<void> {

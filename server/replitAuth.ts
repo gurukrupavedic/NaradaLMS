@@ -6,7 +6,7 @@ import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
-import { storage } from "./storage-simple";
+import { storage } from "./database-storage";
 import { SESSION_TTL_MS, SESSION_MAX_AGE_MS } from "@shared/constants";
 
 if (!process.env.REPLIT_DOMAINS) {
