@@ -1084,7 +1084,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
         ...activeChapter.content,
         [contentScript]: textContent[contentScript],
       });
-    }, 5000); // Auto-save after 5 seconds of no typing
+    }, 15000); // Auto-save after 15 seconds of no typing
 
     return () => clearTimeout(timeoutId);
   }, [textContent, activeChapter?.content, isPublished, contentScript, USE_EXTRACTED_HOOKS]);
