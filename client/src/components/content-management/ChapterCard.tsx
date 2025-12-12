@@ -1,4 +1,5 @@
-import { Button, Card, CardContent } from "@/components/design-system";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { ChevronUp, ChevronDown, Trash2, FileText, Eye, EyeOff } from "lucide-react";
 
 interface Chapter {
