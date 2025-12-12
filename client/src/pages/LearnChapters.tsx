@@ -1,6 +1,6 @@
 import { useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, Badge } from "@/components/design-system";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/design-system";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, BookOpen, ChevronRight, Play } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading";
@@ -93,7 +93,6 @@ export function LearnChapters() {
                       {chapter.description || "No description"}
                     </p>
                   </div>
-                  <Badge variant="green" className="mr-4" data-testid={`badge-chapter-status-${chapter.id}`}>Published</Badge>
                   <Button variant="outline" size="sm" data-testid={`button-study-chapter-${chapter.id}`}>
                     <Play className="h-4 w-4 mr-2" />
                     Study
