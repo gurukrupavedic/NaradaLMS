@@ -292,8 +292,8 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
   // Content editor script state (moved here to be available for queries)
   const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
   
-  // Auto-save status state
-  const [saveStatus, setSaveStatus] = useState<'clean' | 'saving' | 'saved'>('clean');
+  // Auto-save status state: dirty = unsaved changes, saving = in progress, saved = just saved, clean = no changes
+  const [saveStatus, setSaveStatus] = useState<'clean' | 'dirty' | 'saving' | 'saved'>('clean');
 
   // Fetch chapter details first (needed for activeChapter calculation)
   const { data: chapter, isLoading: chapterLoading } = useQuery<ChapterData>({
@@ -1067,7 +1067,16 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     const hasChanges = textContent[contentScript] !== (activeChapter.content?.[contentScript] || "");
 
     if (!hasChanges) {
+      // No changes - ensure we're in clean state (unless saving/saved)
+      if (saveStatus === 'dirty') {
+        setSaveStatus('clean');
+      }
       return;
+    }
+
+    // Mark as dirty immediately when changes are detected
+    if (saveStatus !== 'saving' && saveStatus !== 'saved') {
+      setSaveStatus('dirty');
     }
 
     const timeoutId = setTimeout(() => {
@@ -1075,7 +1084,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
         ...activeChapter.content,
         [contentScript]: textContent[contentScript],
       });
-    }, 2000); // Auto-save after 2 seconds of no typing
+    }, 5000); // Auto-save after 5 seconds of no typing
 
     return () => clearTimeout(timeoutId);
   }, [textContent, activeChapter?.content, isPublished, contentScript, USE_EXTRACTED_HOOKS]);
@@ -2001,6 +2010,12 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   onScriptChange={setContentScript}
                 />
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {saveStatus === 'dirty' && (
+                    <>
+                      <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                      <span className="text-amber-600">Unsaved changes</span>
+                    </>
+                  )}
                   {saveStatus === 'saving' && (
                     <>
                       <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
