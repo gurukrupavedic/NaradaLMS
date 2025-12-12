@@ -661,7 +661,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     setSelectedTextSegmentPreview(segmentId);
 
     // Find the audio mapping for this segment from all chapter mappings (backend data)
-    const mapping = allChapterMappings.find(m => m.segmentId === segmentId);
+    const mapping = allChapterMappings.find(m => m.textSegmentId === segmentId);
     
     if (!mapping) {
       console.log('No mapping found for segment:', segmentId);
@@ -2423,7 +2423,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       .filter(s => s.script === contentScript)
                       .filter(segment => 
                         allChapterMappings.some(mapping => 
-                          mapping.segmentId === segment.id && 
+                          mapping.textSegmentId === segment.id && 
                           mapping.audioFileId === selectedAudioFile?.id
                         )
                       ).length} mapped
@@ -2557,7 +2557,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                   {textSegments
                     .filter(s => s.script === contentScript)
                     .filter(segment => 
-                      allChapterMappings.some(mapping => mapping.segmentId === segment.id)
+                      allChapterMappings.some(mapping => mapping.textSegmentId === segment.id)
                     ).length} mapped
                 </Badge>
               </div>
@@ -3448,7 +3448,7 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
                       .filter(s => s.script === contentScript)
                       .filter(segment => 
                         allChapterMappings?.some(mapping => 
-                          mapping.segmentId === segment.id && 
+                          mapping.textSegmentId === segment.id && 
                           mapping.audioFileId === selectedAudioFilePreview
                         )
                       ).length} mapped
