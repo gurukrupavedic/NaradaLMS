@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, Badge } from "@/components/design-system";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/design-system";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, BookOpen, ChevronRight } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading";
@@ -12,8 +12,6 @@ export function LearnTracks() {
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
     queryKey: ["/api/tracks"],
   });
-
-  const publishedTracks = tracks.filter(track => (track as any).status === "published");
 
   if (isLoading) {
     return (
@@ -46,7 +44,7 @@ export function LearnTracks() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-8">
-        {publishedTracks.length === 0 ? (
+        {tracks.length === 0 ? (
           <Card className="p-8 text-center" data-testid="card-no-tracks">
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-700 mb-2">No Tracks Available</h3>
@@ -54,7 +52,7 @@ export function LearnTracks() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {publishedTracks.map((track) => (
+            {tracks.map((track) => (
               <Card
                 key={track.id}
                 className="hover:shadow-lg transition-shadow cursor-pointer"
@@ -62,9 +60,6 @@ export function LearnTracks() {
                 data-testid={`card-track-${track.id}`}
               >
                 <CardHeader>
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="green" data-testid={`badge-track-status-${track.id}`}>Published</Badge>
-                  </div>
                   <CardTitle className="text-lg" data-testid={`text-track-title-${track.id}`}>{track.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
