@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, Textarea, Label } from "@/components/ui";
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, Textarea } from "@/components/design-system";
+import { Label } from "@/components/ui/label";
 
 import { useToast } from "@/hooks/use-toast";
 import { Plus, FileText, ArrowLeft } from "lucide-react";
