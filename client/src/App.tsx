@@ -19,11 +19,6 @@ const ChapterView = lazy(() => import("@/pages/ChapterView").then(module => ({ d
 const ContentManagement = lazy(() => import("@/pages/ContentManagement").then(module => ({ default: module.ContentManagement })));
 const TrackChapters = lazy(() => import("@/pages/TrackChapters").then(module => ({ default: module.TrackChapters })));
 const ChapterEditor = lazy(() => import("@/pages/ChapterEditor").then(module => ({ default: module.ChapterEditor })));
-const DaisyUI5Showcase = lazy(() => import("@/pages/DaisyUI5Showcase").then(module => ({ default: module.DaisyUI5Showcase })));
-
-const ExperimentsShowcase = lazy(() => import("@/pages/ExperimentsShowcase").then(module => ({ default: module.ExperimentsShowcase })));
-const DesignSystemShowcase = lazy(() => import("@/components/design-system/DesignSystemShowcase").then(module => ({ default: module.DesignSystemShowcase })));
-const DesignSystemExperiment = lazy(() => import("@/pages/DesignSystemExperiment"));
 
 
 
@@ -64,10 +59,6 @@ function Router() {
 
             <Route path="/tracks/:trackId" component={TrackView} />
             <Route path="/chapters/:id" component={ChapterView} />
-            <Route path="/experiments" component={ExperimentsShowcase} />
-            <Route path="/experiments/design-system" component={DesignSystemExperiment} />
-            <Route path="/design-system-showcase" component={DesignSystemShowcase} />
-            <Route path="/experiments/daisyui-5" component={DaisyUI5Showcase} />
 
 
 
