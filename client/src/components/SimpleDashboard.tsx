@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { BookOpen, Edit, Beaker, User as UserIcon } from "lucide-react";
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/design-system/Card";
+import { Button } from "@/components/design-system/Button";
+import { BookOpen, Edit, Beaker } from "lucide-react";
 import type { User } from "@shared/schema";
 
 interface FeatureCard {
@@ -9,7 +9,7 @@ interface FeatureCard {
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   route: string;
-  color: string;
+  color: "blue" | "green" | "purple";
 }
 
 const FEATURES: FeatureCard[] = [
@@ -36,6 +36,12 @@ const FEATURES: FeatureCard[] = [
   }
 ];
 
+const iconColors = {
+  blue: "text-blue-600",
+  green: "text-green-600",
+  purple: "text-purple-600"
+};
+
 interface SimpleDashboardProps {
   user: User;
 }
@@ -45,32 +51,6 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
 
   const handleFeatureClick = (route: string) => {
     setLocation(route);
-  };
-
-  const getColorClasses = (color: string) => {
-    switch (color) {
-      case "blue":
-        return "border-blue-200 hover:border-blue-300 hover:shadow-blue-100";
-      case "green":
-        return "border-green-200 hover:border-green-300 hover:shadow-green-100";
-      case "purple":
-        return "border-purple-200 hover:border-purple-300 hover:shadow-purple-100";
-      default:
-        return "border-gray-200 hover:border-gray-300 hover:shadow-gray-100";
-    }
-  };
-
-  const getIconColor = (color: string) => {
-    switch (color) {
-      case "blue":
-        return "text-blue-600";
-      case "green":
-        return "text-green-600";
-      case "purple":
-        return "text-purple-600";
-      default:
-        return "text-gray-600";
-    }
   };
 
   return (
@@ -95,12 +75,13 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
             return (
               <Card 
                 key={feature.title}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${getColorClasses(feature.color)}`}
+                variant={feature.color}
+                interactive
                 onClick={() => handleFeatureClick(feature.route)}
               >
                 <CardHeader className="text-center">
                   <div className="mx-auto mb-4">
-                    <Icon className={`h-12 w-12 ${getIconColor(feature.color)}`} />
+                    <Icon className={`h-12 w-12 ${iconColors[feature.color]}`} />
                   </div>
                   <CardTitle className="text-lg">{feature.title}</CardTitle>
                   <CardDescription className="text-sm">
@@ -109,7 +90,8 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
                 </CardHeader>
                 <CardContent>
                   <Button 
-                    className="w-full" 
+                    className="w-full"
+                    color={feature.color}
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -123,10 +105,6 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
             );
           })}
         </div>
-
-
-
-
       </div>
     </div>
   );
