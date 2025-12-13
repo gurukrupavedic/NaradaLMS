@@ -52,7 +52,7 @@ export function LearnTracks() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tracks.map((track) => (
+            {tracks.map((track, index) => (
               <Card
                 key={track.id}
                 className="hover:shadow-lg transition-shadow cursor-pointer"
@@ -60,6 +60,11 @@ export function LearnTracks() {
                 data-testid={`card-track-${track.id}`}
               >
                 <CardHeader>
+                  <div className="flex items-center gap-3 mb-1 text-xs text-muted-foreground">
+                    <span className="font-medium" data-testid={`text-track-number-${track.id}`}>Track {index + 1}</span>
+                    <span>•</span>
+                    <span data-testid={`text-chapter-count-${track.id}`}>{(track as any).chapterCount || 0} chapters</span>
+                  </div>
                   <CardTitle className="text-lg" data-testid={`text-track-title-${track.id}`}>{track.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
