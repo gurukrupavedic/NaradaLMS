@@ -661,7 +661,10 @@ ha̠viṣā̍ vardhayāmasi । ōṃ śānti̠-śśānti̠-śśānti̍ḥ ॥`
     setSelectedTextSegmentPreview(segmentId);
 
     // Find the audio mapping for this segment from all chapter mappings (backend data)
-    const mapping = allChapterMappings.find(m => m.textSegmentId === segmentId);
+    // Priority: selected audio file first, then fallback to any other mapping
+    const mapping = allChapterMappings.find(m => 
+      m.textSegmentId === segmentId && m.audioFileId === selectedAudioFilePreview
+    ) || allChapterMappings.find(m => m.textSegmentId === segmentId);
     
     if (!mapping) {
       console.log('No mapping found for segment:', segmentId);

@@ -133,7 +133,10 @@ export function StudyChapter() {
 
     setSelectedSegmentId(segmentId);
 
-    const mapping = mappings.find((m) => m.textSegmentId === segmentId);
+    // Priority: selected audio file first, then fallback to any other mapping
+    const mapping = mappings.find((m) => 
+      m.textSegmentId === segmentId && m.audioFileId === selectedAudioFileId
+    ) || mappings.find((m) => m.textSegmentId === segmentId);
 
     if (!mapping) return;
 
