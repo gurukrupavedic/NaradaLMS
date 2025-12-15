@@ -1,5 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button, Card, CardContent } from "@/components/design-system";
 import { ChevronUp, ChevronDown, Trash2, FileText, Eye, EyeOff } from "lucide-react";
 
 interface Chapter {
@@ -75,11 +74,11 @@ export function ChapterCard({
 
             {/* Chapter Info */}
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm sm:text-base text-foreground truncate group-hover:text-primary transition-colors">
+                <h3 className="font-semibold text-sm sm:text-base text-foreground truncate group-hover:text-indigo-600 transition-colors">
                   Chapter {index + 1}: {chapter.title}
                 </h3>
                 <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">
