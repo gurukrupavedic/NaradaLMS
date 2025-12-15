@@ -1,9 +1,7 @@
 import { useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/design-system";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, Button, Spinner } from "@/components/design-system";
 import { ArrowLeft, BookOpen, ChevronRight, Play } from "lucide-react";
-import { LoadingSpinner } from "@/components/ui/loading";
 import type { Track } from "@shared/schema";
 
 interface Chapter {
@@ -38,7 +36,7 @@ export function LearnChapters() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" />
+        <Spinner variant="indigo" size="lg" />
       </div>
     );
   }
@@ -50,6 +48,7 @@ export function LearnChapters() {
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
+              color="gray"
               size="sm"
               onClick={() => setLocation("/tracks")}
               data-testid="button-back-tracks"
@@ -84,7 +83,7 @@ export function LearnChapters() {
                 data-testid={`card-chapter-${chapter.id}`}
               >
                 <CardContent className="flex items-center p-4">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 text-amber-700 font-bold mr-4" data-testid={`text-chapter-order-${chapter.id}`}>
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 font-bold mr-4" data-testid={`text-chapter-order-${chapter.id}`}>
                     {index + 1}
                   </div>
                   <div className="flex-1">
@@ -93,7 +92,7 @@ export function LearnChapters() {
                       {chapter.description || "No description"}
                     </p>
                   </div>
-                  <Button variant="outline" size="sm" data-testid={`button-study-chapter-${chapter.id}`}>
+                  <Button variant="outline" color="green" buttonStyle="card" size="sm" data-testid={`button-study-chapter-${chapter.id}`}>
                     <Play className="h-4 w-4 mr-2" />
                     Study
                     <ChevronRight className="h-4 w-4 ml-2" />

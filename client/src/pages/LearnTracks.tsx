@@ -1,9 +1,7 @@
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/design-system";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, BookOpen, ChevronRight } from "lucide-react";
-import { LoadingSpinner } from "@/components/ui/loading";
+import { Card, CardContent, CardHeader, CardTitle, Button, Spinner } from "@/components/design-system";
+import { ArrowLeft, BookOpen, ChevronRight, FileText } from "lucide-react";
 import type { Track } from "@shared/schema";
 
 export function LearnTracks() {
@@ -16,7 +14,7 @@ export function LearnTracks() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" />
+        <Spinner variant="indigo" size="lg" />
       </div>
     );
   }
@@ -28,6 +26,7 @@ export function LearnTracks() {
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
+              color="gray"
               size="sm"
               onClick={() => setLocation("/")}
               data-testid="button-back-dashboard"
@@ -60,12 +59,19 @@ export function LearnTracks() {
                 data-testid={`card-track-${track.id}`}
               >
                 <CardHeader>
-                  <div className="flex items-center gap-3 mb-1 text-xs text-muted-foreground">
-                    <span className="font-medium" data-testid={`text-track-number-${track.id}`}>Track {index + 1}</span>
-                    <span>•</span>
-                    <span data-testid={`text-chapter-count-${track.id}`}>{(track as any).chapterCount || 0} chapters</span>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-4 h-4 text-indigo-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="font-medium" data-testid={`text-track-number-${track.id}`}>Track {index + 1}</span>
+                        <span>•</span>
+                        <span data-testid={`text-chapter-count-${track.id}`}>{(track as any).chapterCount || 0} chapters</span>
+                      </div>
+                      <CardTitle className="text-lg" data-testid={`text-track-title-${track.id}`}>{track.title}</CardTitle>
+                    </div>
                   </div>
-                  <CardTitle className="text-lg" data-testid={`text-track-title-${track.id}`}>{track.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2" data-testid={`text-track-description-${track.id}`}>
@@ -74,6 +80,8 @@ export function LearnTracks() {
                   <Button
                     className="w-full"
                     variant="outline"
+                    color="indigo"
+                    buttonStyle="card"
                     data-testid={`button-view-track-${track.id}`}
                   >
                     <BookOpen className="h-4 w-4 mr-2" />
