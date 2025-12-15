@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, Textarea } from "@/components/design-system";
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, Textarea, Spinner } from "@/components/design-system";
 import { Label } from "@/components/ui/label";
 
 import { useToast } from "@/hooks/use-toast";
@@ -171,7 +171,7 @@ export function ManageTracks() {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading tracks...</div>;
+    return <div className="min-h-screen flex items-center justify-center"><Spinner variant="indigo" size="lg" /></div>;
   }
 
   return (
@@ -181,6 +181,7 @@ export function ManageTracks() {
           <div className="space-y-4 mb-6">
             <Button 
               variant="ghost" 
+              color="gray"
               onClick={() => setLocation("/")}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -192,7 +193,7 @@ export function ManageTracks() {
                 <h1 className="text-3xl font-bold">Content Management</h1>
                 <p className="text-muted-foreground">Manage learning tracks and chapters</p>
               </div>
-              <Button onClick={() => setCreateTrackModalOpen(true)}>
+              <Button color="indigo" onClick={() => setCreateTrackModalOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add New Track
               </Button>
@@ -223,7 +224,7 @@ export function ManageTracks() {
               <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-lg font-medium mb-2">No tracks yet</h3>
               <p className="text-muted-foreground mb-4">Create your first learning track to get started</p>
-              <Button onClick={() => setCreateTrackModalOpen(true)}>
+              <Button color="indigo" onClick={() => setCreateTrackModalOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create Track
               </Button>
@@ -259,13 +260,15 @@ export function ManageTracks() {
                 </div>
                 <div className="flex gap-2 pt-4">
                   <Button 
+                    color="indigo"
                     onClick={handleCreateTrack} 
                     disabled={createTrackMutation.isPending || !newTrack.title.trim() || !newTrack.description.trim()}
                   >
                     Create Track
                   </Button>
                   <Button 
-                    variant="outline" 
+                    variant="outline"
+                    color="gray"
                     onClick={() => {
                       setCreateTrackModalOpen(false);
                       setNewTrack({ title: "", description: "" });
@@ -307,13 +310,15 @@ export function ManageTracks() {
                 </div>
                 <div className="flex gap-2 pt-4">
                   <Button 
+                    color="indigo"
                     onClick={handleUpdateTrack} 
                     disabled={editTrackMutation.isPending || !editingTrack.title?.trim() || !editingTrack.description?.trim()}
                   >
                     Update Track
                   </Button>
                   <Button 
-                    variant="outline" 
+                    variant="outline"
+                    color="gray"
                     onClick={() => {
                       setEditTrackModalOpen(false);
                       setEditingTrack(null);

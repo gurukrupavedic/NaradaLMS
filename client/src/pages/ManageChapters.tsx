@@ -1,10 +1,7 @@
 import { useState, useMemo } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, Textarea, Spinner } from "@/components/design-system";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -12,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, FileText } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ChapterCard, ConfirmationModal } from "@/components/content-management";
-import { LoadingSkeleton, LoadingSpinner } from "@/components/ui/loading";
 
 interface Chapter {
   id: number;
@@ -151,11 +147,11 @@ export function ManageChapters() {
   };
 
   if (chaptersLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading chapters...</div>;
+    return <div className="min-h-screen flex items-center justify-center"><Spinner variant="indigo" size="lg" /></div>;
   }
 
   if (!match || !track) {
-    return <div className="flex items-center justify-center h-screen">Track not found</div>;
+    return <div className="min-h-screen flex items-center justify-center"><div className="text-lg text-gray-600">Track not found</div></div>;
   }
 
   return (
@@ -165,7 +161,8 @@ export function ManageChapters() {
         <div className="w-full sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto">
           <div className="space-y-4 mb-6">
             <Button 
-              variant="ghost" 
+              variant="ghost"
+              color="gray"
               onClick={() => setLocation("/manage")}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -177,7 +174,7 @@ export function ManageChapters() {
                 <h1 className="text-3xl font-bold">{track?.title}</h1>
                 <p className="text-muted-foreground">{track?.description}</p>
               </div>
-              <Button onClick={() => setCreateChapterModalOpen(true)}>
+              <Button color="indigo" onClick={() => setCreateChapterModalOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add New Chapter
               </Button>
@@ -249,13 +246,15 @@ export function ManageChapters() {
                 </div>
                 <div className="flex gap-2 pt-4">
                   <Button 
+                    color="indigo"
                     onClick={handleCreateChapter} 
                     disabled={createChapterMutation.isPending || !newChapter.title.trim()}
                   >
                     Create Chapter
                   </Button>
                   <Button 
-                    variant="outline" 
+                    variant="outline"
+                    color="gray"
                     onClick={() => {
                       setCreateChapterModalOpen(false);
                       setNewChapter({ title: "", description: "" });
