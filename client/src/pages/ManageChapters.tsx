@@ -162,7 +162,6 @@ export function ManageChapters() {
           <div className="space-y-4 mb-6">
             <Button 
               variant="ghost"
-              color="gray"
               onClick={() => setLocation("/manage")}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -254,7 +253,6 @@ export function ManageChapters() {
                   </Button>
                   <Button 
                     variant="outline"
-                    color="gray"
                     onClick={() => {
                       setCreateChapterModalOpen(false);
                       setNewChapter({ title: "", description: "" });

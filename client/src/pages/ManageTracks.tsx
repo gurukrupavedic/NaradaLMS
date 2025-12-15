@@ -181,7 +181,6 @@ export function ManageTracks() {
           <div className="space-y-4 mb-6">
             <Button 
               variant="ghost" 
-              color="gray"
               onClick={() => setLocation("/")}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -268,7 +267,6 @@ export function ManageTracks() {
                   </Button>
                   <Button 
                     variant="outline"
-                    color="gray"
                     onClick={() => {
                       setCreateTrackModalOpen(false);
                       setNewTrack({ title: "", description: "" });
@@ -318,7 +316,6 @@ export function ManageTracks() {
                   </Button>
                   <Button 
                     variant="outline"
-                    color="gray"
                     onClick={() => {
                       setEditTrackModalOpen(false);
                       setEditingTrack(null);
