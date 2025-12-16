@@ -305,12 +305,3 @@ npm run db:push      # Sync database schema
 @assets     → attached_assets/
 ```
 
----
-
-## Known Technical Debt
-
-1. **Dual Mapping System**: Two parallel audio mapping systems exist (`audioMappings` vs `mediaSegments` + `segmentMappings`). See `docs/implementation/dual-mapping-system-analysis.md`.
-
-2. **Unused Components**: Some dashboard and panel components remain unused. See `docs/implementation/frontend-cleanup-todo.md`.
-
-3. **Hardcoded User**: Authentication uses `createdBy: "system"` placeholder. See `docs/implementation/TODO-Authentication-Integration.md`.
