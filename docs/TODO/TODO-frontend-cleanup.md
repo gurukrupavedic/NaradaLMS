@@ -2,7 +2,7 @@
 
 **Created:** December 12, 2025  
 **Updated:** December 16, 2025  
-**Status:** Partially Complete  
+**Status:** Mostly Complete  
 **Priority:** High (clean slate before building new features)
 
 ---
@@ -16,7 +16,7 @@ This document outlines deprecated, experimental, and unused frontend code that s
 **Current Status:**
 - **Topic 1:** ✅ Completed - Showcase pages removed
 - **Topic 2:** ⚠️ Partially Complete - Dashboard components preserved as experiments with API stubs (documented for future cleanup)
-- **Topic 3:** 🔲 Pending - Hidden Media Segmentation panel removal
+- **Topic 3:** ✅ Completed - Hidden Media Segmentation panel removed
 
 ---
 
@@ -137,109 +137,75 @@ These components and stubs should be removed when:
 
 ---
 
-## Topic 3: Hidden Media Segmentation Panel
+## ~~Topic 3: Hidden Media Segmentation Panel~~ ✅ COMPLETED
 
-### Description
-In the **Segmentation tab** of ChapterEditor, there is a hidden "Media Segmentation" panel. This was an experimental workflow created before the Progressive Mapper was built. The panel is technically in the code but never renders because it requires "timeMarks" state that is never populated.
+### Completion Summary
+**Status:** ✅ COMPLETED  
+**Date:** December 16, 2025  
+**Branch:** `topic3-cleanup` (merged to main)  
+**Related PR:** #1
 
-This represents the abandoned **NEW mapping system** that uses:
-- `mediaSegments` table (database)
-- `segmentMappings` table (database)
-- Various frontend mutations and queries
+### What Was Done
 
-The **LEGACY system** (which the Progressive Mapper actually uses) is:
+Removed the deprecated "Media Segmentation" UI and related state/handlers from the Segmentation tab in the chapter editor (`client/src/pages/EditChapter.tsx`).
+
+**Deletions:**
+- Removed LEFT Media Segmentation panel UI (~800 lines: grid layout, Card component, and all nested controls)
+- Deleted unused state variables: `timeMarks`, `selectedMark`, `isDragging`, `editingTimestamp`
+- Removed dragging effect and event listeners for time-based segmentation
+- Removed handlers: `handleMarkTime`, `handleClearMark`, `handleClearAllMarks`, `createAudioSegmentsMutation`, `updateMarkTimestamp`
+- Removed duplicate `formatTime` function declaration
+- Cleaned up `hookData` references to removed state fields
+
+**Verification:**
+- Text Segmentation panel works perfectly (create, edit, delete segments)
+- Progressive Mapper works perfectly (map segments to audio timestamps, playback controls)
+- Preview tab works perfectly (click segment to play mapped audio)
+- No regressions detected
+
+### Why This Cleanup Mattered
+
+The panel was:
+- Hidden in the UI (never displayed)
+- Completely unused (timeMarks never populated)
+- Dead code taking up significant space (~800 lines)
+- Preventing type clarity in the component
+- Representing an abandoned mapping architecture
+
+The **LEGACY mapping system** (which works) is:
 - `audioMappings` table (database)
+- `progressiveMappingApi` (frontend)
+- Progressive Mapper component (interactive UI)
+- `segmentMappings` table (deprecated, kept for reference)
 
-### Current Behavior
-- User opens Segmentation tab
-- User only sees Text Segmentation panel (right side)
-- Left side "Media Segmentation" panel exists in code but never renders
-- The panel would show if `timeMarks.length > 0`, but timeMarks are never created
+### Type Safety Follow-Up
 
-### Files/Sections Affected
+After Topic 3 cleanup, a follow-up branch (`type-fixes-editchapter`) was created to fix TypeScript type warnings that surfaced. Changes included:
 
-#### ChapterEditor.tsx - Hidden UI Block
-**Location:** `client/src/pages/ChapterEditor.tsx`  
-**Lines:** Approximately 2524-3356 (large block)
+**Type Annotations Added:**
+- `textSegments` query typed as `TextSegment[]`
+- `allChapterMappings` query typed as `SimplifiedMapping[]`
+- `audioFiles` typed with proper interface: `Array<{ id, filename, duration, url }>`
+- Parameter types added to `.filter()`, `.map()`, `.forEach()` callbacks
+- Explicit type guards and casts to eliminate "unknown" type inference
 
-This section contains:
-- Audio file selection UI
-- Time marks timeline
-- Media segment creation buttons
-- Segment mapping grid (different from Progressive Mapper)
+**Result:** All defensive improvements with zero behavioral changes. Dev server verified running without regressions.
 
-**Identification markers in the code:**
-```typescript
-// Look for these patterns:
-<CardTitle className="flex items-center gap-2">
-  <Music className="h-5 w-5" />
-  Media Segmentation
-</CardTitle>
+### Remaining Items
 
-// And:
-handleCreateAudioSegments
-createAudioSegmentsMutation
-timeMarks
-setTimeMarks
-```
+**Backend tables (not deleted, kept for reference):**
+- `mediaSegments` table
+- `segmentMappings` table
+- Related API endpoints (dead code, can be removed later)
 
-#### Related State Variables (in ChapterEditor)
-These are used ONLY by the hidden panel and can be removed:
-
-```typescript
-// Time marks for audio segmentation (deprecated)
-const [timeMarks, setTimeMarks] = useState<number[]>([]);
-
-// Any mutations related to media segments
-const createAudioSegmentsMutation = useMutation({...});
-```
-
-#### Backend Endpoints Status
-The dual mapping system has been unified and cleaned up:
-
-**Active endpoints** (unified system):
-- `GET /api/segment-mappings/:chapterId` - Fetch mappings (used by StudyChapter.tsx)
-- `POST /api/mappings` - Create mapping (unified system via progressiveMappingApi)
-- `DELETE /api/mappings/:audioFileId/:segmentId` - Delete mapping
-
-**Removed endpoints** (Dec 16, 2025):
-- `POST /api/segment-mappings` - Removed (was dead code)
-- `DELETE /api/segment-mappings/:id` - Removed (was dead code)
-- `GET /api/segment-mappings/audio/:audioFileId` - Removed (was dead code)
-- `POST /api/segment-mappings/with-media-segment` - Removed (now via unified `/api/mappings`)
-- `DELETE /api/segment-mappings/by-text-segment/:textSegmentId/:audioFileId` - Removed (was dead code)
-
-### Cleanup Checklist (Frontend Only)
-
-- [ ] Locate the hidden Media Segmentation panel in ChapterEditor.tsx
-- [ ] Identify the exact line range (starts around line 2524)
-- [ ] Remove the entire `<Card>` block containing "Media Segmentation"
-- [ ] Remove `timeMarks` state variable and setter
-- [ ] Remove `createAudioSegmentsMutation` and related mutations
-- [ ] Remove any imports only used by this panel
-- [ ] Verify Segmentation tab still works correctly
-- [ ] Verify Text Segmentation panel is unaffected
-- [ ] Test creating/editing segments still works
-
-### What Remains After Cleanup
-
-**Segmentation Tab should only contain:**
-1. Language Selection & Stats header
-2. Two-Panel Layout:
-   - LEFT: SegmentedTextDisplay (text with highlights)
-   - RIGHT: SegmentPanel (list of created segments)
+**Future cleanup (deferred):**
+- Remove deprecated mapping endpoints from API
+- Audit `useSegmentData` hook for deprecated code paths
+- Remove `mediaSegments` and `segmentMappings` tables if/when you finalize mapping architecture
 
 ### Risk Assessment
-**Risk Level:** MEDIUM  
-**Reason:** Large code block removal in a complex component. Requires careful identification of boundaries. However, since the panel never rendered, actual functionality is unaffected.
-
-### Important Notes
-
-1. **Backend tables remain** - We're only cleaning frontend. The `mediaSegments` and `segmentMappings` tables stay until you decide on architecture.
-
-2. **Progressive Mapper is unaffected** - The Mapping tab uses completely different code paths (`audioMappings` table, `ProgressiveMapper` component).
-
-3. **useSegmentData hook** - May have code serving both systems. After frontend cleanup, audit this hook to remove deprecated code paths.
+**Risk Level:** ✅ LOW (completed)  
+**Reason:** Feature was completely hidden and unused; Progressive Mapper (active system) completely separate; tested with real data
 
 ---
 
