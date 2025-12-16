@@ -73,12 +73,46 @@ This is the central documentation hub for the Vedic LMS project. Use this guide 
 **Making architectural decisions?**
 → Create new ADR in `architecture/`
 
+## **Current Documentation Structure**
+
+```
+docs/
+├── README.md                                    (This file)
+├── architecture/                                (Architectural decision records)
+│   ├── ADR-001-Authentication-Integration-Strategy.md
+│   ├── ADR-002-Code-Cleanup-Roadmap.md
+│   └── ADR-003-URL-Structure-And-File-Naming.md
+├── features/                                    (Feature specifications)
+│   ├── font-requirements.md
+│   ├── link-status-error-detection.md
+│   └── rich-text-editor-requirements.md
+├── implementation/                              (Implementation guides & TODOs)
+│   ├── DOCUMENT_PLACEMENT_GUIDE.md
+│   ├── SCRIPT_CONTENT_ISSUES_TODO.md
+│   ├── dual-mapping-system-analysis.md
+│   ├── frontend-cleanup-todo.md
+│   └── TODO-Authentication-Integration.md
+├── troubleshooting/                             (Bug fixes & issues)
+│   └── text-segmentation-selection-time-normalization.md
+├── deprecated-ideas/                            (Historical reference)
+│   ├── README.md
+│   ├── restructuring-summary.md
+│   ├── segment-map-restoration-guide.md
+│   └── segment-map-tab-analysis.md
+└── rollback/                                    (Legacy rollback info)
+    └── README.md
+```
+
 ## **Documentation Cleanup History**
 
-**December 16, 2025:** Removed 27 outdated files
+**December 16, 2025:** Removed 27 outdated files & reorganized structure
 - Deleted 8 abandoned migration/design plans (DaisyUI, Bootstrap 5, design system)
 - Deleted 18 superseded rollback points (replaced by Git history and Replit checkpoints)
 - Deleted 1 superseded font specification (replaced by comprehensive font-requirements.md)
+- Deleted empty `docs/migration/` folder
+- Reorganized loose files into appropriate folders:
+  - `DOCUMENT_PLACEMENT_GUIDE.md` → `implementation/`
+  - `SCRIPT_CONTENT_ISSUES_TODO.md` → `implementation/`
 
 This cleanup reflects the project's current stable state and modern development practices.
 
