@@ -9,8 +9,7 @@ This is the central documentation hub for the Vedic LMS project.
 ```
 docs/
 ├── README.md              (This file - documentation index)
-├── ARCHITECTURE.md        (System architecture overview)
-├── Requirements.md        (Functional requirements specification)
+├── PRD.md                 (Complete Product Requirements Document)
 └── implementation/        (TODO items - features not yet implemented)
     ├── frontend-cleanup-todo.md
     ├── link-status-error-detection.md
@@ -21,12 +20,23 @@ docs/
 
 ## Quick Navigation
 
-### Core Documents
+### Core Document
 
-| Document | Purpose |
-|----------|---------|
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | System architecture, data model, technology stack |
-| [Requirements.md](./Requirements.md) | Complete functional requirements for all features |
+**[PRD.md](./PRD.md)** - Complete Product Requirements Document
+
+Contains everything about the system:
+- Executive summary and core capabilities
+- Technology stack (React, Express, PostgreSQL)
+- Data model and entity relationships
+- Typography system (3 scripts with custom fonts)
+- Rich text editor specification
+- Text segmentation workflow
+- Audio-text mapping system
+- Learning experience (Learn Mode toggle)
+- User interface and routes
+- API reference
+- Testing checklists
+- Component reference
 
 ### TODO Items (implementation/)
 
@@ -40,9 +50,9 @@ docs/
 
 ## Documentation Principles
 
-1. **Current State Only**: Documentation describes implemented features, not plans
-2. **Git for History**: Use Git history instead of manual rollback documents
-3. **Minimal Maintenance**: Keep docs lean to prevent staleness
+1. **Single Source of Truth**: All requirements in PRD.md
+2. **Current State Only**: Documentation describes implemented features, not plans
+3. **Git for History**: Use Git history instead of manual rollback documents
 4. **Actionable TODOs**: Implementation docs have clear checklists
 
 ---
@@ -51,6 +61,7 @@ docs/
 
 | Date | Change |
 |------|--------|
+| Dec 16, 2025 | Consolidated ARCHITECTURE.md + Requirements.md into PRD.md |
 | Dec 16, 2025 | Created Requirements.md, removed features/ folder |
 | Dec 16, 2025 | Major cleanup: removed 14 outdated files, created ARCHITECTURE.md |
 | Oct 28, 2025 | Font standardization documentation |
