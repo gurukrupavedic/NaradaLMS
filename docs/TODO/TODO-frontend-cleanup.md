@@ -9,9 +9,14 @@
 
 ## Overview
 
-This document outlines deprecated, experimental, and unused frontend code that should be removed to clean up the codebase. The cleanup is organized into 2 remaining topics, designed to be tackled one at a time.
+This document outlines deprecated, experimental, and unused frontend code that should be cleaned up. The cleanup is organized into 3 topics, designed to be tackled one at a time.
 
 **Background:** During development, several experimental UIs and components were created but later replaced by better implementations. Instead of being removed, they were left in the codebase or hidden. This document catalogs all such code for systematic removal.
+
+**Current Status:**
+- **Topic 1:** ✅ Completed - Showcase pages removed
+- **Topic 2:** ⚠️ Partially Complete - Dashboard components preserved as experiments with API stubs (documented for future cleanup)
+- **Topic 3:** 🔲 Pending - Hidden Media Segmentation panel removal
 
 ---
 
@@ -21,62 +26,114 @@ All experimental showcase pages have been removed (DaisyUI5Showcase, Experiments
 
 ---
 
-## Topic 2: Unused Dashboard Components
+## ~~Topic 2: Dashboard Components~~ ⚠️ PARTIALLY COMPLETED (Preserved as Experiments)
 
-### Description
-Multiple dashboard component iterations exist in the codebase. Only `SimpleDashboard.tsx` is actively used (imported in App.tsx for the root route). The others appear to be older iterations or role-based dashboard experiments that were never integrated.
+**Status:** Preserved under `/experiments` routes instead of deletion  
+**Date Completed:** December 16, 2025  
+**Decision:** Keep as ideation references for future role-based UI development
 
-### Files to Remove
+### What Was Done
 
-| File | Imported Anywhere? | Purpose |
-|------|--------------------|---------|
-| `client/src/components/AdminPanel.tsx` | ❌ No | Admin user management panel |
-| `client/src/components/InstructorPanel.tsx` | ❌ No | Instructor view of student progress |
-| `client/src/components/StudentDashboard.tsx` | ❌ No | Student learning progress dashboard |
-| `client/src/components/Dashboard.tsx` | ❌ No | Generic dashboard component |
-| `client/src/components/RoleTabs.tsx` | ❌ No | Tab switching based on user roles |
-| `client/src/components/RoleBasedTabs.tsx` | ❌ No | Another role-based tab implementation |
+Multiple dashboard component iterations were found in the codebase. Instead of deleting them, they were moved to experiment routes with API stubs to preserve them for future reference.
 
-### Active Dashboard (KEEP)
+### Components Preserved Under `/experiments`
+
+| Component File | Experiment Route | Purpose | Lines |
+|----------------|------------------|---------|-------|
+| `client/src/components/AdminPanel.tsx` | `/experiments/admin-panel` | User management (invite, edit, status) | 612 |
+| `client/src/components/InstructorPanel.tsx` | `/experiments/instructor-panel` | Student progress tracking | 312 |
+| `client/src/components/StudentDashboard.tsx` | `/experiments/student-dashboard` | Student learning dashboard | 277 |
+| `client/src/components/Dashboard.tsx` | `/experiments/dashboard` | Generic dashboard with stats | 303 |
+| `client/src/components/RoleTabs.tsx` | `/experiments/role-tabs` | Tab switching using above panels | - |
+| `client/src/components/RoleBasedTabs.tsx` | `/experiments/role-based-tabs` | Alternative role tab pattern | - |
+
+### Active Dashboard (Production - DO NOT REMOVE)
 
 | File | Imported In | Status |
 |------|-------------|--------|
-| `client/src/components/SimpleDashboard.tsx` | `App.tsx` (lines 14, 53-54) | ✅ KEEP - This is the production dashboard |
+| `client/src/components/SimpleDashboard.tsx` | `App.tsx` (lines 14, 53-54) | ✅ PRODUCTION - This is the active dashboard |
 
-### Verification Steps
+### API Stub Endpoints Added
 
-Before deleting, confirm no imports exist:
+To prevent 404 errors when visiting experiment routes, the following stub endpoints were added to `server/routes-simple.ts` (lines 673-725):
 
-```bash
-# Run these searches to confirm files are unused
-grep -r "AdminPanel" client/src --include="*.tsx" --include="*.ts"
-grep -r "InstructorPanel" client/src --include="*.tsx" --include="*.ts"
-grep -r "StudentDashboard" client/src --include="*.tsx" --include="*.ts"
-grep -r "from.*Dashboard" client/src --include="*.tsx" --include="*.ts"
-grep -r "RoleTabs" client/src --include="*.tsx" --include="*.ts"
-grep -r "RoleBasedTabs" client/src --include="*.tsx" --include="*.ts"
+#### User Management Endpoints (AdminPanel)
+```typescript
+GET    /api/users                  → Returns []
+POST   /api/invite-user            → Returns {success: true, message: "..."}
+PUT    /api/users/:id              → Returns {success: true, user: {...}}
+PUT    /api/users/:id/status       → Returns {success: true, user: {...}}
 ```
 
-### Cleanup Checklist
+#### Instructor Endpoints (InstructorPanel)
+```typescript
+GET    /api/instructor/student-progress   → Returns []
+PUT    /api/instructor/student-progress   → Returns {success: true}
+```
 
-- [ ] Verify `AdminPanel` has no imports (search codebase)
-- [ ] Verify `InstructorPanel` has no imports
-- [ ] Verify `StudentDashboard` has no imports
-- [ ] Verify `Dashboard` has no imports (excluding SimpleDashboard)
-- [ ] Verify `RoleTabs` has no imports
-- [ ] Verify `RoleBasedTabs` has no imports
-- [ ] Delete `client/src/components/AdminPanel.tsx`
-- [ ] Delete `client/src/components/InstructorPanel.tsx`
-- [ ] Delete `client/src/components/StudentDashboard.tsx`
-- [ ] Delete `client/src/components/Dashboard.tsx`
-- [ ] Delete `client/src/components/RoleTabs.tsx`
-- [ ] Delete `client/src/components/RoleBasedTabs.tsx`
-- [ ] Verify app compiles without errors
-- [ ] Test dashboard still displays correctly
+#### Student Dashboard Endpoints
+```typescript
+GET    /api/student-stats          → Returns {totalStudyTime: 0, chaptersCompleted: 0, currentStreak: 0, highestLevel: 1}
+GET    /api/student-progress       → Returns []
+```
+
+**⚠️ WARNING:** These are STUB endpoints only. They return mock data and have no database operations. Do NOT use them in production code.
+
+### Files Modified
+- `client/src/App.tsx` - Added lazy import and route for RoleBasedTabsExperiment
+- `client/src/pages/RoleBasedTabsExperiment.tsx` - Created new experiment page
+- `server/routes-simple.ts` - Added 11 stub endpoints (lines 673-725)
+
+### Git Commits
+- Commit: `7e13505` - "Add experiment routes for orphaned dashboard components with API stubs"
+
+### When to Clean This Up (Future TODO)
+
+These components and stubs should be removed when:
+1. **Role-based authentication is fully implemented** and you decide on final dashboard architecture
+2. **User roles are finalized** (currently: student/instructor/admin in schema, but no auth)
+3. **You've extracted any useful UI patterns** from these experiments into production components
+
+### Complete Cleanup Checklist (For Future)
+
+- [ ] Review each experiment component for reusable UI patterns
+- [ ] Extract any useful code into production components
+- [ ] Delete all experiment dashboard components:
+  - [ ] `client/src/components/AdminPanel.tsx`
+  - [ ] `client/src/components/InstructorPanel.tsx`
+  - [ ] `client/src/components/StudentDashboard.tsx`
+  - [ ] `client/src/components/Dashboard.tsx`
+  - [ ] `client/src/components/RoleTabs.tsx`
+  - [ ] `client/src/components/RoleBasedTabs.tsx`
+  - [ ] `client/src/pages/RoleBasedTabsExperiment.tsx`
+- [ ] Remove experiment routes from `client/src/App.tsx`:
+  - [ ] AdminPanelExperiment route
+  - [ ] InstructorPanelExperiment route
+  - [ ] StudentDashboardExperiment route
+  - [ ] DashboardExperiment route
+  - [ ] RoleTabsExperiment route
+  - [ ] RoleBasedTabsExperiment route
+- [ ] Remove ALL stub endpoints from `server/routes-simple.ts`:
+  - [ ] User management endpoints (GET/POST /api/users, etc.)
+  - [ ] Instructor endpoints (/api/instructor/student-progress)
+  - [ ] Student stats endpoints (/api/student-stats, /api/student-progress)
+- [ ] Search codebase for any remaining references
+- [ ] Test app compiles and runs
+- [ ] Verify SimpleDashboard still works (production dashboard)
 
 ### Risk Assessment
-**Risk Level:** LOW  
-**Reason:** Components are not imported anywhere. SimpleDashboard (the active one) remains untouched.
+**Risk Level:** LOW (for future cleanup)  
+**Reason:** All components are isolated under `/experiments` routes. SimpleDashboard (production) is completely separate and unaffected. Stub endpoints are clearly marked and don't interfere with real API routes.
+
+### Why Preserved Instead of Deleted
+
+1. **Ideation Value:** These components show different iterations of role-based UI patterns
+2. **Future Reference:** When implementing real auth system, these provide UI inspiration
+3. **User Management UI:** AdminPanel has sophisticated invite/edit/status workflows
+4. **Progress Tracking:** InstructorPanel has good patterns for student progress visualization
+5. **Dashboard Layouts:** Various card and stat layouts can be referenced
+
+**Note:** If you decide you'll never use these patterns, simply execute the "Complete Cleanup Checklist" above to fully remove them.
 
 ---
 
@@ -234,3 +291,4 @@ After frontend is clean, audit these files:
 |------|--------|
 | Dec 12, 2025 | Initial creation based on comprehensive frontend audit |
 | Dec 16, 2025 | Topic 1 marked complete - experimental showcase pages already removed |
+| Dec 16, 2025 | Topic 2 updated - Dashboard components preserved under `/experiments` with API stubs instead of deletion. Added comprehensive stub endpoint documentation. |
