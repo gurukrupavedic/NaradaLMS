@@ -4,11 +4,13 @@
 **Last Updated:** December 16, 2025  
 **Status:** Production
 
+> For technical architecture, see [ARCHITECTURE.md](./ARCHITECTURE.md)
+
 ---
 
 ## 1. Executive Summary
 
-The Vedic Learning Management System is a full-stack web application for managing and delivering Vedic educational content (mantras, shlokas, prayers) with multilingual support and synchronized audio-text playback.
+The Vedic Learning Management System enables content creators to organize Vedic educational materials (mantras, shlokas, prayers) with synchronized audio-text playback across three scripts.
 
 ### 1.1 Core Capabilities
 
@@ -34,174 +36,51 @@ The Vedic Learning Management System is a full-stack web application for managin
 
 ---
 
-## 2. Technology Stack
+## 2. Content Hierarchy
 
-### 2.1 Frontend
-
-| Technology | Purpose |
-|------------|---------|
-| React 18 + TypeScript | UI framework |
-| Vite | Build tool with hot reload |
-| Wouter | Lightweight routing |
-| TanStack Query v5 | Server state management |
-| Tailwind CSS | Styling |
-| Shadcn/ui | Component library |
-| TipTap | Rich text editor |
-| Lucide React | Icons |
-
-### 2.2 Backend
-
-| Technology | Purpose |
-|------------|---------|
-| Node.js + Express.js | API server |
-| TypeScript (tsx) | Server-side language |
-| Drizzle ORM | Database queries |
-| PostgreSQL (Neon) | Database with serverless connection pooling |
-| Multer | File uploads |
-| music-metadata | Audio file analysis |
-
-### 2.3 Shared
-
-| Technology | Purpose |
-|------------|---------|
-| Zod | Schema validation |
-| drizzle-zod | Type generation from schema |
-
----
-
-## 3. Application Structure
+### 2.1 Data Model
 
 ```
-vedic-lms/
-├── client/                    # Frontend React application
-│   ├── src/
-│   │   ├── components/        # Reusable UI components
-│   │   │   ├── ui/            # Shadcn base components
-│   │   │   ├── design-system/ # Custom design system (26 components)
-│   │   │   ├── audio-mapping/ # Progressive mapper components
-│   │   │   └── text-segmentation/ # Segmentation components
-│   │   ├── pages/             # Route-level page components
-│   │   ├── hooks/             # Custom React hooks
-│   │   ├── lib/               # Utilities (queryClient, etc.)
-│   │   └── App.tsx            # Root component with routing
-│   └── public/
-│       └── fonts/             # Custom Vedic script fonts
-├── server/                    # Backend Express application
-│   ├── index.ts               # Server entry point
-│   ├── routes-simple.ts       # API route definitions
-│   ├── database-storage.ts    # Database access layer
-│   └── vite.ts                # Vite dev server integration
-├── shared/                    # Shared code between frontend/backend
-│   └── schema.ts              # Database schema + types
-└── uploads/                   # Uploaded audio files
+Track (collection)
+  └── Chapter (lesson)
+        ├── HTML Content (3 scripts: te, hi, en)
+        ├── Audio Files (multiple per chapter)
+        ├── Text Segments (script-specific ranges)
+        └── Audio Mappings (segment ↔ audio timestamp)
 ```
 
-### 3.1 Path Aliases
+### 2.2 Track Requirements
 
-```typescript
-@/          → client/src/
-@shared     → shared/
-@assets     → attached_assets/
-```
+| Field | Required | Description |
+|-------|----------|-------------|
+| Name | yes | Display name |
+| Description | no | Track summary |
+| Image | no | Cover image URL |
 
----
+### 2.3 Chapter Requirements
 
-## 4. Data Model
+| Field | Required | Description |
+|-------|----------|-------------|
+| Title | yes | Chapter title |
+| Telugu Content | no | Telugu script HTML |
+| Hindi Content | no | Devanagari script HTML |
+| English Content | no | IAST script HTML |
+| Order | yes | Sort order within track |
 
-### 4.1 Entity Relationships
+### 2.4 Audio File Requirements
 
-```
-┌─────────────┐       ┌─────────────┐       ┌─────────────┐
-│   tracks    │──────<│  chapters   │──────<│ audio_files │
-│             │  1:N  │             │  1:N  │             │
-└─────────────┘       └─────────────┘       └─────────────┘
-                             │
-                             │ 1:N
-                             ▼
-                      ┌─────────────┐       ┌───────────────┐
-                      │text_segments│──────<│segment_mappings│
-                      │             │  1:N  │               │
-                      └─────────────┘       └───────────────┘
-                                                   │
-                                                   │ N:1
-                                                   ▼
-                                            ┌───────────────┐
-                                            │media_segments │
-                                            │               │
-                                            └───────────────┘
-```
-
-### 4.2 Table Definitions
-
-#### Tracks
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| id | auto | yes | Primary key |
-| name | string | yes | Display name |
-| description | string | no | Track summary |
-| imageUrl | string | no | Cover image URL |
-
-#### Chapters
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| id | auto | yes | Primary key |
-| trackId | ref | yes | Parent track |
-| title | string | yes | Chapter title |
-| teluguContent | html | no | Telugu script content |
-| hindiContent | html | no | Devanagari script content |
-| englishContent | html | no | IAST script content |
-| order | integer | yes | Sort order within track |
-
-#### Audio Files
-
-| Field | Type | Description |
-|-------|------|-------------|
-| id | auto | Primary key |
-| chapterId | ref | Parent chapter |
-| filename | string | Display name |
-| filePath | string | Server storage path |
-| duration | float | Length in seconds |
-| mimeType | string | audio/mpeg, audio/wav, etc. |
+| Field | Description |
+|-------|-------------|
+| Filename | Display name |
+| Duration | Length in seconds (auto-extracted) |
 
 **Supported Formats:** MP3, WAV, OGG, M4A
 
-#### Text Segments
-
-| Field | Type | Description |
-|-------|------|-------------|
-| id | auto | Primary key |
-| chapterId | ref | Parent chapter |
-| script | enum | te, hi, en |
-| startPosition | integer | Character index start |
-| endPosition | integer | Character index end |
-| conceptualName | string | User-defined label |
-| order | integer | Display order |
-
-#### Media Segments
-
-| Field | Type | Description |
-|-------|------|-------------|
-| id | auto | Primary key |
-| audioFileId | ref | Parent audio file |
-| startTime | float | Start timestamp (seconds) |
-| endTime | float | End timestamp (seconds) |
-
-#### Segment Mappings
-
-| Field | Type | Description |
-|-------|------|-------------|
-| id | auto | Primary key |
-| mediaSegmentId | ref | Audio time range |
-| textSegmentId | ref | Text segment |
-| createdBy | string | User who created |
-
 ---
 
-## 5. Typography System
+## 3. Typography System
 
-### 5.1 Supported Scripts
+### 3.1 Supported Scripts
 
 | Script Code | Script Name | Primary Font | Fallback Font |
 |-------------|-------------|--------------|---------------|
@@ -209,7 +88,7 @@ vedic-lms/
 | `hi` | Devanagari/Hindi | AdishilaSanVedic | Noto Sans Devanagari |
 | `en` | IAST/English | AdishilaSan | Noto Sans |
 
-### 5.2 Font Display Scenarios
+### 3.2 Font Display Scenarios
 
 #### Scenario A: Standard Display (Fixed Formatting)
 
@@ -248,27 +127,11 @@ vedic-lms/
 
 **Rationale:** Recitation/article mode should display formatted content as the creator intended.
 
-### 5.3 Font Files
-
-| Font | Format | Location |
-|------|--------|----------|
-| JIMS | OTF | `client/public/fonts/JIMS-Regular.otf` |
-| AdishilaSan | TTF | `client/public/fonts/AdishilaSan-*.ttf` |
-| AdishilaSanVedic | TTF | `client/public/fonts/AdishilaSanVedic-*.ttf` |
-
-### 5.4 CSS Classes
-
-```css
-.font-telugu { font-family: 'JIMS', 'Noto Sans Telugu', sans-serif; }
-.font-devanagari { font-family: 'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif; }
-.font-iast { font-family: 'AdishilaSan', 'Noto Sans', sans-serif; }
-```
-
 ---
 
-## 6. Rich Text Editor
+## 4. Rich Text Editor
 
-### 6.1 Editor Modes
+### 4.1 Editor Modes
 
 | Mode | Description | Toolbar |
 |------|-------------|---------|
@@ -277,7 +140,7 @@ vedic-lms/
 
 Mode preference persists via localStorage.
 
-### 6.2 Toolbar Controls
+### 4.2 Toolbar Controls
 
 #### Inline Formatting (applies to selected text)
 
@@ -307,7 +170,7 @@ Mode preference persists via localStorage.
 | Image | Insert image via URL prompt |
 | Horizontal Rule | Insert divider line |
 
-### 6.3 Keyboard Behavior (Non-Standard)
+### 4.3 Keyboard Behavior (Non-Standard)
 
 **Optimized for mantra/verse content:**
 
@@ -318,7 +181,7 @@ Mode preference persists via localStorage.
 
 This reverses standard word processor behavior because mantras require frequent line breaks without paragraph spacing.
 
-### 6.4 Bi-Directional Sync Requirement
+### 4.4 Bi-Directional Sync Requirement
 
 The toolbar must maintain perfect two-way synchronization:
 - **User → Document:** Toolbar actions apply formatting correctly
@@ -326,7 +189,7 @@ The toolbar must maintain perfect two-way synchronization:
 
 Example: Moving cursor to bold text highlights the Bold button.
 
-### 6.5 User Help System
+### 4.5 User Help System
 
 An info icon positioned adjacent to the HTML/Text mode toggle provides on-demand keyboard shortcut reference:
 
@@ -349,7 +212,7 @@ Ctrl+I            → Italic
 Ctrl+U            → Underline
 ```
 
-### 6.6 TipTap Extensions
+### 4.6 TipTap Extensions
 
 1. StarterKit (base functionality)
 2. TextStyle (inline style support)
@@ -372,7 +235,7 @@ Ctrl+U            → Underline
 - Storage: Inline style (`style="font-size: XXpx"`)
 - Commands: `setFontSize(size)`, `unsetFontSize()`
 
-### 6.7 Implementation Requirements
+### 4.7 Implementation Requirements
 
 **Focus Preservation:**
 All toolbar buttons must use `onMouseDown={(e) => e.preventDefault()}` to prevent editor blur when controls are clicked.
@@ -390,13 +253,23 @@ editor.on('transaction', handleUpdate);
 
 ---
 
-## 7. Text Segmentation
+## 5. Text Segmentation
 
-### 7.1 Purpose
+### 5.1 Purpose
 
 Break chapter text into segments that can be mapped to audio timestamps for synchronized playback.
 
-### 7.2 Segmentation Workflow
+### 5.2 Segment Requirements
+
+| Field | Description |
+|-------|-------------|
+| Script | te, hi, or en |
+| Start Position | Character index where segment begins |
+| End Position | Character index where segment ends |
+| Name | User-defined label (optional) |
+| Order | Display order |
+
+### 5.3 Segmentation Workflow
 
 1. Select script (te/hi/en)
 2. View chapter text with existing segment highlights
@@ -404,7 +277,7 @@ Break chapter text into segments that can be mapped to audio timestamps for sync
 4. Assign segment name (optional)
 5. Segments appear in right panel with status indicators
 
-### 7.3 Segment Status Colors
+### 5.4 Segment Status Colors
 
 | Status | Color | Meaning |
 |--------|-------|---------|
@@ -414,13 +287,22 @@ Break chapter text into segments that can be mapped to audio timestamps for sync
 
 ---
 
-## 8. Audio-Text Mapping System
+## 6. Audio-Text Mapping
 
-### 8.1 Purpose
+### 6.1 Purpose
 
 Link text segments to audio timestamps for synchronized playback during learning.
 
-### 8.2 Progressive Mapping Workflow
+### 6.2 Mapping Requirements
+
+| Field | Description |
+|-------|-------------|
+| Text Segment | Reference to text segment |
+| Audio File | Reference to audio file |
+| Start Time | Timestamp in seconds where segment begins |
+| End Time | Timestamp in seconds where segment ends |
+
+### 6.3 Progressive Mapping Workflow
 
 1. Select audio file
 2. Play audio
@@ -430,7 +312,7 @@ Link text segments to audio timestamps for synchronized playback during learning
 6. System records end timestamp and creates mapping
 7. Repeat for all segments
 
-### 8.3 Mapping Status Colors
+### 6.4 Mapping Status Colors
 
 | Status | Color | Meaning |
 |--------|-------|---------|
@@ -439,38 +321,15 @@ Link text segments to audio timestamps for synchronized playback during learning
 | Mapped | Green | Fully mapped with timestamps |
 | Selected | Indigo | Currently active |
 
-### 8.4 Unified API Pattern
-
-| Endpoint | Purpose |
-|----------|---------|
-| `GET /api/mappings/chapter/:chapterId` | Fetch all mappings for a chapter |
-| `GET /api/mappings/audio/:audioFileId` | Fetch mappings for an audio file |
-| `POST /api/mappings` | Create mapping (atomically creates media segment + mapping) |
-| `DELETE /api/mappings/:audioFileId/:segmentId` | Delete a mapping |
-
-### 8.5 Data Flow
-
-```
-ProgressiveMapper UI (drag/click to map)
-    ↓
-progressiveMappingApi.createMapping()
-    ↓
-POST /api/mappings
-    ↓
-storage.createMappingWithMediaSegment() (atomic insert)
-    ↓
-PostgreSQL (media_segments + segment_mappings)
-```
-
 ---
 
-## 9. Learning Experience
+## 7. Learning Experience
 
-### 9.1 Study Chapter Page
+### 7.1 Study Chapter Page
 
-Students access chapters via `/study/:chapterId` route.
+Students access chapters to study with synchronized audio.
 
-### 9.2 Learn Mode Toggle
+### 7.2 Learn Mode Toggle
 
 | Mode | Experience |
 |------|------------|
@@ -479,7 +338,7 @@ Students access chapters via `/study/:chapterId` route.
 
 Toggle state persists via localStorage.
 
-### 9.3 Learn Mode ON Features
+### 7.3 Learn Mode ON Features
 
 - Segments displayed as amber-highlighted clickable blocks
 - Click segment to play its audio (startTime to endTime)
@@ -487,7 +346,7 @@ Toggle state persists via localStorage.
 - 30px standardized font display
 - Script-appropriate fonts applied
 
-### 9.4 Learn Mode OFF Features
+### 7.4 Learn Mode OFF Features
 
 - Full HTML content displayed as authored
 - All formatting preserved (fonts, sizes, colors, alignments)
@@ -496,21 +355,11 @@ Toggle state persists via localStorage.
 
 ---
 
-## 10. User Interface
+## 8. User Interface Requirements
 
-### 10.1 Frontend Routes
+### 8.1 Chapter Editor Layout
 
-| Route | Component | Purpose |
-|-------|-----------|---------|
-| `/` | SimpleDashboard | Home dashboard with navigation |
-| `/manage/tracks` | ManageTracks | Track list management |
-| `/manage/tracks/:id` | ManageChapters | Chapter list for a track |
-| `/manage/tracks/:trackId/chapters/:chapterId` | EditChapter | Multi-tab chapter editor |
-| `/learn/tracks` | LearnTracks | Browse available tracks |
-| `/learn/tracks/:id` | LearnChapters | Browse chapters in a track |
-| `/study/:chapterId` | StudyChapter | Interactive learning view |
-
-### 10.2 Chapter Editor Tabs
+Five-tab interface:
 
 | Tab | Purpose |
 |-----|---------|
@@ -520,13 +369,13 @@ Toggle state persists via localStorage.
 | Audio Mapping | Map segments to audio |
 | Preview | Test learning experience |
 
-### 10.3 Resizable Panels
+### 8.2 Resizable Panels
 
 Segmentation and Mapping tabs use resizable two-panel layout:
 - Left: Text display with segment highlights
 - Right: Segment list with status indicators
 
-### 10.4 Design Aesthetics
+### 8.3 Design Aesthetics
 
 | Element | Specification |
 |---------|---------------|
@@ -538,69 +387,32 @@ Segmentation and Mapping tabs use resizable two-panel layout:
 
 ---
 
-## 11. API Reference
+## 9. User Flows
 
-### 11.1 RESTful Endpoints
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/tracks` | GET, POST | List/create tracks |
-| `/api/tracks/:id` | GET, PUT, DELETE | Single track operations |
-| `/api/chapters/:trackId` | GET, POST | List/create chapters in track |
-| `/api/chapters/:id/details` | GET, PUT | Single chapter with content |
-| `/api/audio-files/:chapterId` | GET | Audio files for chapter |
-| `/api/audio-files/:chapterId/upload` | POST | Upload audio file |
-| `/api/segments/:chapterId/:script` | GET, POST | Text segments for chapter/script |
-| `/api/segments/:id` | PUT, DELETE | Single segment operations |
-| `/api/mappings/chapter/:chapterId` | GET | Audio mappings for chapter |
-| `/api/mappings` | POST | Create audio-text mapping |
-| `/api/mappings/:audioFileId/:segmentId` | DELETE | Remove mapping |
-
-### 11.2 Data Flow Architecture
+### 9.1 Content Creation Flow (Admin)
 
 ```
-Frontend Component
-       │
-       │ useQuery / useMutation
-       ▼
- TanStack Query (queryClient)
-       │
-       │ fetch with apiRequest()
-       ▼
- Express API Routes (routes-simple.ts)
-       │
-       │ storage.methodName()
-       ▼
- Database Storage Layer (database-storage.ts)
-       │
-       │ Drizzle ORM
-       ▼
-   PostgreSQL Database
+1. Create Track
+2. Create Chapter within Track
+3. Edit Chapter Content (3 scripts via rich text editor)
+4. Upload Audio Files
+5. Create Text Segments (select text to define segment boundaries)
+6. Map Audio to Text (progressive mapper - click when heard)
+```
+
+### 9.2 Learning Flow (Student)
+
+```
+1. Browse Tracks
+2. Select Chapter
+3. Study Chapter
+   - Toggle Learn Mode ON: Click segments to hear audio
+   - Toggle Learn Mode OFF: Read formatted article
 ```
 
 ---
 
-## 12. State Management
-
-| State Type | Technology | Purpose |
-|------------|------------|---------|
-| Server State | TanStack Query | API data with caching |
-| Local UI State | React useState | Component-level state |
-| Form State | React Hook Form + Zod | Form validation |
-| Auth State | Context | Replit Auth integration |
-| Preferences | localStorage | Learn mode, editor mode persistence |
-
----
-
-## 13. Technical Constraints
-
-### 13.1 Browser Requirements
-
-- Modern browsers with ES2020+ support
-- Web Audio API for playback
-- localStorage for preference persistence
-
-### 13.2 Performance Targets
+## 10. Performance Requirements
 
 | Metric | Target |
 |--------|--------|
@@ -608,18 +420,11 @@ Frontend Component
 | Segment highlight response | < 50ms |
 | Audio seek accuracy | ± 100ms |
 
-### 13.3 Development Commands
-
-```bash
-npm run dev          # Start development server (port 5000)
-npm run db:push      # Sync database schema
-```
-
 ---
 
-## 14. Testing Checklists
+## 11. Testing Checklists
 
-### 14.1 Rich Text Editor
+### 11.1 Rich Text Editor
 
 #### Inline Formatting
 - [ ] Select text, apply bold - only selection becomes bold
@@ -642,23 +447,23 @@ npm run db:push      # Sync database schema
 - [ ] Move cursor to 24px text - size dropdown shows "24px"
 - [ ] Move cursor to centered paragraph - center align button highlights
 
----
+### 11.2 Text Segmentation
 
-## 15. Component Reference
+- [ ] Select text creates segment
+- [ ] Segment highlights appear correctly
+- [ ] Segment list shows all segments with status
+- [ ] Deleting segment removes highlight
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| RichTextEditor | `client/src/components/ui/rich-text-editor.tsx` | TipTap-based editor |
-| SegmentedTextDisplay | `client/src/components/text-segmentation/SegmentedTextDisplay.tsx` | Highlighted text view |
-| ProgressiveMapper | `client/src/components/audio-mapping/ProgressiveMapper.tsx` | Audio mapping workflow |
-| ChapterEditor | `client/src/pages/ChapterEditor.tsx` | Main editing interface |
-| StudyChapter | `client/src/pages/StudyChapter.tsx` | Student learning view |
+### 11.3 Audio Mapping
 
----
+- [ ] Progressive mapper records start time on first click
+- [ ] Second click records end time and creates mapping
+- [ ] Mapped segments show green status
+- [ ] Deleting mapping returns segment to gray status
 
-## Appendix: Related Documentation
+### 11.4 Learning Experience
 
-| Document | Purpose |
-|----------|---------|
-| `docs/implementation/*.md` | TODO items and future features |
-| `replit.md` | Project overview and recent changes |
+- [ ] Learn Mode ON shows clickable segments
+- [ ] Clicking segment plays audio from start to end time
+- [ ] Learn Mode OFF shows full HTML with formatting
+- [ ] Mode toggle persists across page reloads
