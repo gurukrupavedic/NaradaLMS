@@ -26,10 +26,10 @@ This is the central documentation hub for the Vedic LMS project. Use this guide 
 - Implementation plans and technical considerations
 - User experience and API design documentation
 
-**System Rollbacks** → `rollback/FEATURE_ROLLBACK_POINT.md`
-- Complete restoration procedures for major changes
-- File snapshots and verification checklists
-- Emergency recovery instructions
+**System Rollbacks** → Use Git history or Replit checkpoints
+- Git provides comprehensive version history for all changes
+- Replit checkpoints enable one-click rollback to any point in time
+- Manual rollback documents deprecated in favor of automated systems
 
 **Historical Reference** → `deprecated-ideas/feature-analysis.md`
 - Documentation of abandoned approaches
@@ -62,7 +62,7 @@ This is the central documentation hub for the Vedic LMS project. Use this guide 
 → `architecture/ADR-002-Code-Cleanup-Roadmap.md`
 
 **System broken or unstable?**
-→ `rollback/` (find appropriate rollback point)
+→ Use Replit checkpoint rollback or Git history to restore previous state
 
 **Experiencing text segmentation issues?**
 → `troubleshooting/text-segmentation-selection-time-normalization.md`
@@ -73,7 +73,16 @@ This is the central documentation hub for the Vedic LMS project. Use this guide 
 **Making architectural decisions?**
 → Create new ADR in `architecture/`
 
+## **Documentation Cleanup History**
+
+**December 16, 2025:** Removed 27 outdated files
+- Deleted 8 abandoned migration/design plans (DaisyUI, Bootstrap 5, design system)
+- Deleted 18 superseded rollback points (replaced by Git history and Replit checkpoints)
+- Deleted 1 superseded font specification (replaced by comprehensive font-requirements.md)
+
+This cleanup reflects the project's current stable state and modern development practices.
+
 ---
 
-**Last Updated:** December 23, 2024  
+**Last Updated:** December 16, 2025  
 **Maintainer:** Development Team
