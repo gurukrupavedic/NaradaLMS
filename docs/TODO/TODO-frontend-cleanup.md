@@ -26,17 +26,17 @@ All experimental showcase pages have been removed (DaisyUI5Showcase, Experiments
 
 ---
 
-## ~~Topic 2: Dashboard Components~~ ⚠️ PARTIALLY COMPLETED (Preserved as Experiments)
+## ~~Topic 2: Dashboard Components~~ ⚠️ PARTIALLY COMPLETED (Frontend Only)
 
-**Status:** Preserved under `/experiments` routes instead of deletion  
-**Date Completed:** December 16, 2025  
-**Decision:** Keep as ideation references for future role-based UI development
+**Status:** Frontend preserved; Backend cleaned up  
+**Date Completed:** December 16, 2025 (frontend), December 16, 2025 (backend)  
+**Decision:** Frontend ideation files preserved under `/experiments`; Backend API stubs removed for pristine codebase
 
 ### What Was Done
 
-Multiple dashboard component iterations were found in the codebase. Instead of deleting them, they were moved to experiment routes with API stubs to preserve them for future reference.
+Multiple dashboard component iterations were found in the codebase. **Frontend components** were moved to experiment routes to preserve them as ideation references. **Backend stub endpoints** were removed to keep the API pristine and avoid confusion during future development.
 
-### Components Preserved Under `/experiments`
+### Frontend Components Preserved Under `/experiments`
 
 | Component File | Experiment Route | Purpose | Lines |
 |----------------|------------------|---------|-------|
@@ -47,54 +47,45 @@ Multiple dashboard component iterations were found in the codebase. Instead of d
 | `client/src/components/RoleTabs.tsx` | `/experiments/role-tabs` | Tab switching using above panels | - |
 | `client/src/components/RoleBasedTabs.tsx` | `/experiments/role-based-tabs` | Alternative role tab pattern | - |
 
+### Backend Cleanup (December 16, 2025)
+
+**Removed from `server/routes-simple.ts`:** 8 stub endpoints
+- `GET /api/users`
+- `POST /api/invite-user`
+- `PUT /api/users/:id`
+- `PUT /api/users/:id/status`
+- `GET /api/instructor/student-progress`
+- `PUT /api/instructor/student-progress`
+- `GET /api/student-stats`
+- `GET /api/student-progress`
+
+**Rationale:**
+- Keep API pristine—no dead code or confusing mocks
+- Prevent accidental use of stubs by mistake during new API development
+- Clear signal that experiments need real implementation (404 response)
+- Clean foundation for future role-based auth implementation
+
 ### Active Dashboard (Production - DO NOT REMOVE)
 
 | File | Imported In | Status |
 |------|-------------|--------|
 | `client/src/components/SimpleDashboard.tsx` | `App.tsx` (lines 14, 53-54) | ✅ PRODUCTION - This is the active dashboard |
 
-### API Stub Endpoints Added
+### Why This Approach Works
 
-To prevent 404 errors when visiting experiment routes, the following stub endpoints were added to `server/routes-simple.ts` (lines 673-725):
+**Frontend (preserved):**
+- Ideation value: shows different UI patterns for role-based layouts
+- Future reference: when implementing real auth, these provide design inspiration
+- No risk: completely isolated under `/experiments` routes
+- No confusion: accessing them gives 404 (or loads experiment page), not fake data
 
-#### User Management Endpoints (AdminPanel)
-```typescript
-GET    /api/users                  → Returns []
-POST   /api/invite-user            → Returns {success: true, message: "..."}
-PUT    /api/users/:id              → Returns {success: true, user: {...}}
-PUT    /api/users/:id/status       → Returns {success: true, user: {...}}
-```
+**Backend (cleaned):**
+- Pristine codebase: no dead endpoints cluttering the API
+- No confusion: future developers won't accidentally call deprecated stubs
+- Clear intent: when experiments need real backing, build fresh endpoints
+- Safe: experiment routes 404 naturally, which is the correct signal
 
-#### Instructor Endpoints (InstructorPanel)
-```typescript
-GET    /api/instructor/student-progress   → Returns []
-PUT    /api/instructor/student-progress   → Returns {success: true}
-```
-
-#### Student Dashboard Endpoints
-```typescript
-GET    /api/student-stats          → Returns {totalStudyTime: 0, chaptersCompleted: 0, currentStreak: 0, highestLevel: 1}
-GET    /api/student-progress       → Returns []
-```
-
-**⚠️ WARNING:** These are STUB endpoints only. They return mock data and have no database operations. Do NOT use them in production code.
-
-### Files Modified
-- `client/src/App.tsx` - Added lazy import and route for RoleBasedTabsExperiment
-- `client/src/pages/RoleBasedTabsExperiment.tsx` - Created new experiment page
-- `server/routes-simple.ts` - Added 11 stub endpoints (lines 673-725)
-
-### Git Commits
-- Commit: `7e13505` - "Add experiment routes for orphaned dashboard components with API stubs"
-
-### When to Clean This Up (Future TODO)
-
-These components and stubs should be removed when:
-1. **Role-based authentication is fully implemented** and you decide on final dashboard architecture
-2. **User roles are finalized** (currently: student/instructor/admin in schema, but no auth)
-3. **You've extracted any useful UI patterns** from these experiments into production components
-
-### Complete Cleanup Checklist (For Future)
+### Complete Cleanup Checklist (For Future - When Real Auth Implemented)
 
 - [ ] Review each experiment component for reusable UI patterns
 - [ ] Extract any useful code into production components
@@ -113,27 +104,20 @@ These components and stubs should be removed when:
   - [ ] DashboardExperiment route
   - [ ] RoleTabsExperiment route
   - [ ] RoleBasedTabsExperiment route
-- [ ] Remove ALL stub endpoints from `server/routes-simple.ts`:
-  - [ ] User management endpoints (GET/POST /api/users, etc.)
-  - [ ] Instructor endpoints (/api/instructor/student-progress)
-  - [ ] Student stats endpoints (/api/student-stats, /api/student-progress)
-- [ ] Search codebase for any remaining references
+- [ ] Implement real role-based endpoints in `server/routes-simple.ts`
+- [ ] Search codebase for any remaining references to old components
 - [ ] Test app compiles and runs
 - [ ] Verify SimpleDashboard still works (production dashboard)
 
 ### Risk Assessment
-**Risk Level:** LOW (for future cleanup)  
-**Reason:** All components are isolated under `/experiments` routes. SimpleDashboard (production) is completely separate and unaffected. Stub endpoints are clearly marked and don't interfere with real API routes.
+**Risk Level:** ✅ LOW  
+**Reason:** 
+- Frontend components are completely isolated under `/experiments` routes
+- SimpleDashboard (production) is completely separate and unaffected
+- API is pristine—no dead stubs to confuse future development
+- 404 responses on experiment endpoints provide clear signal
 
-### Why Preserved Instead of Deleted
-
-1. **Ideation Value:** These components show different iterations of role-based UI patterns
-2. **Future Reference:** When implementing real auth system, these provide UI inspiration
-3. **User Management UI:** AdminPanel has sophisticated invite/edit/status workflows
-4. **Progress Tracking:** InstructorPanel has good patterns for student progress visualization
-5. **Dashboard Layouts:** Various card and stat layouts can be referenced
-
-**Note:** If you decide you'll never use these patterns, simply execute the "Complete Cleanup Checklist" above to fully remove them.
+---
 
 ---
 
