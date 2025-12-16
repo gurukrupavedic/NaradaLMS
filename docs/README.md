@@ -10,13 +10,10 @@ This is the central documentation hub for the Vedic LMS project.
 docs/
 ├── README.md              (This file - documentation index)
 ├── ARCHITECTURE.md        (System architecture overview)
-├── features/              (Feature specifications)
-│   ├── font-requirements.md
-│   ├── link-status-error-detection.md
-│   └── rich-text-editor-requirements.md
-└── implementation/        (Active TODOs and technical analysis)
+├── Requirements.md        (Functional requirements specification)
+└── implementation/        (TODO items - features not yet implemented)
     ├── frontend-cleanup-todo.md
-    ├── dual-mapping-system-analysis.md
+    ├── link-status-error-detection.md
     └── TODO-Authentication-Integration.md
 ```
 
@@ -24,25 +21,20 @@ docs/
 
 ## Quick Navigation
 
-### Understanding the System
-**Start here** → [ARCHITECTURE.md](./ARCHITECTURE.md)  
-Complete overview of the technology stack, data model, user flows, and key components.
+### Core Documents
 
-### Active Implementation Work
+| Document | Purpose |
+|----------|---------|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | System architecture, data model, technology stack |
+| [Requirements.md](./Requirements.md) | Complete functional requirements for all features |
+
+### TODO Items (implementation/)
 
 | Document | Description |
 |----------|-------------|
 | [frontend-cleanup-todo.md](./implementation/frontend-cleanup-todo.md) | Unused code to remove (Topics 2 & 3 remaining) |
-| [dual-mapping-system-analysis.md](./implementation/dual-mapping-system-analysis.md) | Technical debt: two parallel mapping systems |
+| [link-status-error-detection.md](./implementation/link-status-error-detection.md) | Future: broken link detection and repair |
 | [TODO-Authentication-Integration.md](./implementation/TODO-Authentication-Integration.md) | Future: replace `createdBy: "system"` with real users |
-
-### Feature Specifications
-
-| Document | Description |
-|----------|-------------|
-| [font-requirements.md](./features/font-requirements.md) | Typography system for Telugu, Devanagari, IAST scripts |
-| [rich-text-editor-requirements.md](./features/rich-text-editor-requirements.md) | TipTap editor configuration and behavior |
-| [link-status-error-detection.md](./features/link-status-error-detection.md) | Content validation and error detection |
 
 ---
 
@@ -59,6 +51,7 @@ Complete overview of the technology stack, data model, user flows, and key compo
 
 | Date | Change |
 |------|--------|
+| Dec 16, 2025 | Created Requirements.md, removed features/ folder |
 | Dec 16, 2025 | Major cleanup: removed 14 outdated files, created ARCHITECTURE.md |
 | Oct 28, 2025 | Font standardization documentation |
 
