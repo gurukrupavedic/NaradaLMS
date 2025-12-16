@@ -189,9 +189,9 @@ content: {
 The EditChapter page uses a tabbed interface:
 
 1. **Content Tab**: Rich text editor for each script (Telugu, Devanagari, IAST)
-2. **Audio Tab**: Upload and manage audio recordings
-3. **Segmentation Tab**: Select and define text segments
-4. **Mapping Tab**: Progressive audio-text mapping workflow
+2. **Media Tab**: Upload and manage audio recordings
+3. **Text Segmentation Tab**: Select and define text segments
+4. **Audio Mapping Tab**: Progressive audio-text mapping workflow
 5. **Preview Tab**: Preview the learning experience with Learn Mode toggle
 
 ---
