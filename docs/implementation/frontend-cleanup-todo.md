@@ -1,76 +1,23 @@
 # Frontend Cleanup TODO
 
 **Created:** December 12, 2025  
-**Status:** Ready for Implementation  
+**Updated:** December 16, 2025  
+**Status:** Partially Complete  
 **Priority:** High (clean slate before building new features)
 
 ---
 
 ## Overview
 
-This document outlines deprecated, experimental, and unused frontend code that should be removed to clean up the codebase. The cleanup is organized into 3 main topics, designed to be tackled one at a time.
+This document outlines deprecated, experimental, and unused frontend code that should be removed to clean up the codebase. The cleanup is organized into 2 remaining topics, designed to be tackled one at a time.
 
 **Background:** During development, several experimental UIs and components were created but later replaced by better implementations. Instead of being removed, they were left in the codebase or hidden. This document catalogs all such code for systematic removal.
 
 ---
 
-## Topic 1: Experimental Showcase Pages
+## ~~Topic 1: Experimental Showcase Pages~~ ✅ COMPLETED
 
-### Description
-Four experimental/showcase pages exist in the codebase. These were created for component testing and design experimentation during development. They are accessible via routes but serve no production purpose.
-
-### Files to Remove
-
-| File | Route | Purpose | Dependencies |
-|------|-------|---------|--------------|
-| `client/src/pages/DaisyUI5Showcase.tsx` | `/experiments/daisyui-5` | DaisyUI v5 component testing | None |
-| `client/src/pages/ExperimentsShowcase.tsx` | `/experiments` | Hub page linking to experiments | None |
-| `client/src/pages/DesignSystemExperiment.tsx` | `/experiments/design-system` | Wrapper for DesignSystemShowcase | DesignSystemShowcase |
-| `client/src/components/design-system/DesignSystemShowcase.tsx` | `/design-system-showcase` | Full design system component gallery | ComponentInspector |
-| `client/src/components/design-system/ComponentInspector.tsx` | - | Interactive component prop inspector | None |
-
-### Routes to Remove (in App.tsx)
-
-```typescript
-// Lines ~67-70 in client/src/App.tsx - REMOVE these routes:
-<Route path="/experiments" component={ExperimentsShowcase} />
-<Route path="/experiments/design-system" component={DesignSystemExperiment} />
-<Route path="/design-system-showcase" component={DesignSystemShowcase} />
-<Route path="/experiments/daisyui-5" component={DaisyUI5Showcase} />
-```
-
-### Lazy Imports to Remove (in App.tsx)
-
-```typescript
-// Lines ~22-26 in client/src/App.tsx - REMOVE these imports:
-const DaisyUI5Showcase = lazy(() => import("@/pages/DaisyUI5Showcase")...);
-const ExperimentsShowcase = lazy(() => import("@/pages/ExperimentsShowcase")...);
-const DesignSystemShowcase = lazy(() => import("@/components/design-system/DesignSystemShowcase")...);
-const DesignSystemExperiment = lazy(() => import("@/pages/DesignSystemExperiment"));
-```
-
-### Exports to Update
-
-**File:** `client/src/components/design-system/index.ts`
-- Remove: `export * from './ComponentInspector';`
-- Remove: `export { DesignSystemShowcase } from './DesignSystemShowcase';`
-
-### Cleanup Checklist
-
-- [ ] Delete `client/src/pages/DaisyUI5Showcase.tsx`
-- [ ] Delete `client/src/pages/ExperimentsShowcase.tsx`
-- [ ] Delete `client/src/pages/DesignSystemExperiment.tsx`
-- [ ] Delete `client/src/components/design-system/DesignSystemShowcase.tsx`
-- [ ] Delete `client/src/components/design-system/ComponentInspector.tsx`
-- [ ] Remove 4 routes from `client/src/App.tsx`
-- [ ] Remove 4 lazy imports from `client/src/App.tsx`
-- [ ] Update exports in `client/src/components/design-system/index.ts`
-- [ ] Verify app compiles without errors
-- [ ] Test navigation still works
-
-### Risk Assessment
-**Risk Level:** LOW  
-**Reason:** These are standalone pages with no dependencies from core application features. Pure development/testing tools.
+All experimental showcase pages have been removed (DaisyUI5Showcase, ExperimentsShowcase, DesignSystemExperiment, DesignSystemShowcase, ComponentInspector).
 
 ---
 
@@ -240,9 +187,9 @@ DELETE /api/segment-mappings/:id
 
 ## Execution Order Recommendation
 
-1. **Start with Topic 1** (Experimental Pages) - Lowest risk, quick wins, builds confidence
-2. **Then Topic 2** (Unused Dashboards) - Also low risk, straightforward deletions
-3. **Finally Topic 3** (Media Segmentation) - Most complex, requires careful code surgery
+1. ~~**Start with Topic 1** (Experimental Pages)~~ ✅ COMPLETED
+2. **Topic 2** (Unused Dashboards) - Low risk, straightforward deletions
+3. **Topic 3** (Media Segmentation) - Most complex, requires careful code surgery
 
 ---
 
@@ -285,3 +232,4 @@ After frontend is clean, audit these files:
 | Date | Change |
 |------|--------|
 | Dec 12, 2025 | Initial creation based on comprehensive frontend audit |
+| Dec 16, 2025 | Topic 1 marked complete - experimental showcase pages already removed |

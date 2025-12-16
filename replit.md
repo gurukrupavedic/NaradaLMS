@@ -6,22 +6,37 @@ The Vedic Learning Management System is a full-stack application for managing an
 
 ## Recent Changes
 
-### December 16, 2025 - Documentation Cleanup & Reorganization
+### December 16, 2025 - Comprehensive Documentation Overhaul
 **Status:** Completed
 
-Removed 27 outdated documentation files:
-- **8 abandoned migration plans** (DaisyUI, Bootstrap 5, design system) - migration paths never pursued
-- **18 superseded rollback documents** - replaced by Git history and Replit checkpoint system
-- **1 superseded font specification** (FONT_IMPLEMENTATION_SUMMARY.md) - replaced by comprehensive `docs/features/font-requirements.md`
+**Major Cleanup - Removed 14 outdated files and 6 folders:**
+- Deleted `docs/troubleshooting/` - resolved issues documented in Git history
+- Deleted `docs/deprecated-ideas/` (4 files) - 11-month old restoration guides with outdated line references
+- Deleted `docs/architecture/` (3 ADRs) - planning documents for unimplemented features
+- Deleted `docs/rollback/` - superseded by Git history and Replit checkpoints
+- Deleted `docs/implementation/DOCUMENT_PLACEMENT_GUIDE.md` - meta-doc no longer needed
+- Deleted `docs/implementation/SCRIPT_CONTENT_ISSUES_TODO.md` - issues mostly fixed in October
 
-Reorganized documentation structure:
-- Deleted empty `docs/migration/` folder
-- Moved `DOCUMENT_PLACEMENT_GUIDE.md` → `docs/implementation/`
-- Moved `SCRIPT_CONTENT_ISSUES_TODO.md` → `docs/implementation/`
+**New Documentation Created:**
+- Created `docs/ARCHITECTURE.md` - comprehensive current system architecture
+  - Technology stack, data model, user flows
+  - Key pages and components
+  - API patterns and state management
 
-**Rationale:** Project has been stable since October 2025. Modern development practices use Git history and automated checkpoints instead of manual rollback snapshots. Organized structure reflects current documentation categories.
+**Updated:**
+- `docs/README.md` - simplified index with clear navigation
+- `docs/implementation/frontend-cleanup-todo.md` - marked Topic 1 complete
 
-**Result:** Clean, organized docs structure with 18 active documentation files across 6 well-defined categories
+**Final Structure (7 files):**
+```
+docs/
+├── README.md              (Index)
+├── ARCHITECTURE.md        (System overview)
+├── features/              (3 specs)
+└── implementation/        (3 TODOs)
+```
+
+**Rationale:** Documentation now reflects current implemented state, not abandoned plans. Git history serves as the authoritative record for past decisions and rollback capability.
 
 ### October 28, 2025 - Font Standardization & Bug Fixes
 **Status:** Production Ready
