@@ -118,14 +118,74 @@ export const segmentMappings = pgTable("segment_mappings", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Batches - Track-specific cohorts (one batch per track per cycle)
+export const batches = pgTable("batches", {
+  id: serial("id").primaryKey(),
+  trackId: integer("track_id").notNull().references(() => tracks.id, { onDelete: "cascade" }),
+  batchName: text("batch_name").notNull(),
+  primaryInstructorId: varchar("primary_instructor_id").notNull().references(() => users.id),
+  status: varchar("status").default("active").notNull(), // 'active', 'completed', 'archived'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+});
+
+// Enrollments - Student enrollment in batches
+export const enrollments = pgTable("enrollments", {
+  id: serial("id").primaryKey(),
+  batchId: integer("batch_id").notNull().references(() => batches.id, { onDelete: "cascade" }),
+  studentId: varchar("student_id").notNull().references(() => users.id),
+  status: varchar("status").default("active").notNull(), // 'active', 'dropped', 'completed'
+  enrolledAt: timestamp("enrolled_at").defaultNow(),
+  enrolledBy: varchar("enrolled_by").notNull().references(() => users.id),
+  droppedAt: timestamp("dropped_at"),
+  droppedReason: text("dropped_reason"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Batch Co-Instructors - Additional instructors/TAs for a batch
+export const batchCoInstructors = pgTable("batch_co_instructors", {
+  id: serial("id").primaryKey(),
+  batchId: integer("batch_id").notNull().references(() => batches.id, { onDelete: "cascade" }),
+  instructorId: varchar("instructor_id").notNull().references(() => users.id),
+  role: varchar("role").default("co_instructor").notNull(), // 'co_instructor', 'ta'
+  assignedAt: timestamp("assigned_at").defaultNow(),
+  assignedBy: varchar("assigned_by").notNull().references(() => users.id),
+});
+
 // Student progress tracking
 export const studentProgress = pgTable("student_progress", {
   id: serial("id").primaryKey(),
   studentId: varchar("student_id").notNull().references(() => users.id),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
+  batchId: integer("batch_id").references(() => batches.id), // Which batch context
   proficiencyLevel: integer("proficiency_level").default(0).notNull(), // 0-4 (0=not started, 1-4=levels)
   lastAccessed: timestamp("last_accessed"),
-  updatedBy: varchar("updated_by").notNull().references(() => users.id), // instructor who updated
+  lastEvaluatedAt: timestamp("last_evaluated_at"),
+  evaluatedBy: varchar("evaluated_by").references(() => users.id),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Audit logs - Track all sensitive operations
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  action: text("action").notNull(), // 'CREATE_CHAPTER', 'PUBLISH_CHAPTER', 'ENROLL_STUDENT', etc.
+  resourceType: text("resource_type").notNull(), // 'chapter', 'batch', 'enrollment', etc.
+  resourceId: text("resource_id").notNull(),
+  changes: jsonb("changes"), // { before: {...}, after: {...} }
+  timestamp: timestamp("timestamp").defaultNow(),
+  requestId: text("request_id"), // for tracing
+});
+
+// System settings - Configuration key-value store
+export const systemSettings = pgTable("system_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  description: text("description"),
+  updatedBy: varchar("updated_by").references(() => users.id),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
@@ -138,7 +198,12 @@ export const usersRelations = relations(users, ({ many }) => ({
   createdMediaSegments: many(mediaSegments),
   createdSegmentMappings: many(segmentMappings),
   studentProgress: many(studentProgress, { relationName: "studentProgress" }),
-  updatedProgress: many(studentProgress, { relationName: "updatedProgress" }),
+  evaluatedProgress: many(studentProgress, { relationName: "evaluatedProgress" }),
+  createdBatches: many(batches),
+  primaryInstructorBatches: many(batches, { relationName: "primaryInstructor" }),
+  coInstructorAssignments: many(batchCoInstructors),
+  enrollments: many(enrollments),
+  auditLogs: many(auditLogs),
 }));
 
 export const tracksRelations = relations(tracks, ({ one, many }) => ({
@@ -224,10 +289,77 @@ export const studentProgressRelations = relations(studentProgress, ({ one }) => 
     fields: [studentProgress.chapterId],
     references: [chapters.id],
   }),
-  updatedBy: one(users, {
-    fields: [studentProgress.updatedBy],
+  batch: one(batches, {
+    fields: [studentProgress.batchId],
+    references: [batches.id],
+  }),
+  evaluatedBy: one(users, {
+    fields: [studentProgress.evaluatedBy],
     references: [users.id],
-    relationName: "updatedProgress",
+    relationName: "evaluatedProgress",
+  }),
+}));
+
+export const batchesRelations = relations(batches, ({ one, many }) => ({
+  track: one(tracks, {
+    fields: [batches.trackId],
+    references: [tracks.id],
+  }),
+  primaryInstructor: one(users, {
+    fields: [batches.primaryInstructorId],
+    references: [users.id],
+    relationName: "primaryInstructor",
+  }),
+  createdBy: one(users, {
+    fields: [batches.createdBy],
+    references: [users.id],
+  }),
+  enrollments: many(enrollments),
+  coInstructors: many(batchCoInstructors),
+  studentProgress: many(studentProgress),
+}));
+
+export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
+  batch: one(batches, {
+    fields: [enrollments.batchId],
+    references: [batches.id],
+  }),
+  student: one(users, {
+    fields: [enrollments.studentId],
+    references: [users.id],
+  }),
+  enrolledBy: one(users, {
+    fields: [enrollments.enrolledBy],
+    references: [users.id],
+  }),
+}));
+
+export const batchCoInstructorsRelations = relations(batchCoInstructors, ({ one }) => ({
+  batch: one(batches, {
+    fields: [batchCoInstructors.batchId],
+    references: [batches.id],
+  }),
+  instructor: one(users, {
+    fields: [batchCoInstructors.instructorId],
+    references: [users.id],
+  }),
+  assignedBy: one(users, {
+    fields: [batchCoInstructors.assignedBy],
+    references: [users.id],
+  }),
+}));
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [auditLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+export const systemSettingsRelations = relations(systemSettings, ({ one }) => ({
+  updatedBy: one(users, {
+    fields: [systemSettings.updatedBy],
+    references: [users.id],
   }),
 }));
 
@@ -253,9 +385,23 @@ export const selectMediaSegmentSchema = createSelectSchema(mediaSegments);
 export const insertSegmentMappingSchema = createInsertSchema(segmentMappings).omit({ id: true, createdAt: true });
 export const selectSegmentMappingSchema = createSelectSchema(segmentMappings);
 
-
-export const insertStudentProgressSchema = createInsertSchema(studentProgress).omit({ id: true, updatedAt: true });
+export const insertStudentProgressSchema = createInsertSchema(studentProgress).omit({ id: true, createdAt: true, updatedAt: true });
 export const selectStudentProgressSchema = createSelectSchema(studentProgress);
+
+export const insertBatchSchema = createInsertSchema(batches).omit({ id: true, createdAt: true, updatedAt: true });
+export const selectBatchSchema = createSelectSchema(batches);
+
+export const insertEnrollmentSchema = createInsertSchema(enrollments).omit({ id: true, enrolledAt: true, updatedAt: true });
+export const selectEnrollmentSchema = createSelectSchema(enrollments);
+
+export const insertBatchCoInstructorSchema = createInsertSchema(batchCoInstructors).omit({ id: true, assignedAt: true });
+export const selectBatchCoInstructorSchema = createSelectSchema(batchCoInstructors);
+
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: true, timestamp: true });
+export const selectAuditLogSchema = createSelectSchema(auditLogs);
+
+export const insertSystemSettingSchema = createInsertSchema(systemSettings).omit({ updatedAt: true });
+export const selectSystemSettingSchema = createSelectSchema(systemSettings);
 
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
@@ -279,6 +425,20 @@ export type MediaSegment = z.infer<typeof selectMediaSegmentSchema>;
 export type InsertSegmentMapping = z.infer<typeof insertSegmentMappingSchema>;
 export type SegmentMapping = z.infer<typeof selectSegmentMappingSchema>;
 
-
 export type InsertStudentProgress = z.infer<typeof insertStudentProgressSchema>;
 export type StudentProgress = z.infer<typeof selectStudentProgressSchema>;
+
+export type InsertBatch = z.infer<typeof insertBatchSchema>;
+export type Batch = z.infer<typeof selectBatchSchema>;
+
+export type InsertEnrollment = z.infer<typeof insertEnrollmentSchema>;
+export type Enrollment = z.infer<typeof selectEnrollmentSchema>;
+
+export type InsertBatchCoInstructor = z.infer<typeof insertBatchCoInstructorSchema>;
+export type BatchCoInstructor = z.infer<typeof selectBatchCoInstructorSchema>;
+
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type AuditLog = z.infer<typeof selectAuditLogSchema>;
+
+export type InsertSystemSetting = z.infer<typeof insertSystemSettingSchema>;
+export type SystemSetting = z.infer<typeof selectSystemSettingSchema>;
