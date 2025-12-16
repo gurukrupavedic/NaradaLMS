@@ -1,0 +1,201 @@
+{
+  "tracks": [
+    {
+      "title": "Vaidika Nithya Karma",
+      "description": "Essential daily Vedic practices and rituals for spiritual development",
+      "order": 1,
+      "status": "published",
+      "estimatedHours": 120
+    },
+    {
+      "title": "Sookta Paatham",
+      "description": "Sacred hymns and verses for devotional practice and spiritual elevation",
+      "order": 2,
+      "status": "published",
+      "estimatedHours": 100
+    },
+    {
+      "title": "Rudram, Shaakunadi, Ganapati Pooja, Punyaahavaachanam",
+      "description": "Advanced Vedic rituals including Rudram, deity worship protocols, and purification ceremonies",
+      "order": 3,
+      "status": "published",
+      "estimatedHours": 90
+    }
+  ],
+  "chapters": [
+    {
+      "trackOrder": 1,
+      "title": "vedādhyayana niyamamulu, veda svaraṁ, pañcāṅgaṁ, saṅkalpaṁ, yajñopavīta dhāraṇaṁ, avapośanaṁ",
+      "order": 1,
+      "status": "published"
+    },
+    {
+      "trackOrder": 1,
+      "title": "Śraddhā sūktaṃ",
+      "order": 2,
+      "status": "published"
+    },
+    {
+      "trackOrder": 1,
+      "title": "Medhā sūktaṃ",
+      "order": 3,
+      "status": "published"
+    },
+    {
+      "trackOrder": 1,
+      "title": "Durgā sūktaṃ",
+      "order": 4,
+      "status": "published"
+    },
+    {
+      "trackOrder": 1,
+      "title": "Śrī sūktaṃ",
+      "order": 5,
+      "status": "published"
+    },
+    {
+      "trackOrder": 1,
+      "title": "Puruṣa sūktaṃ",
+      "order": 6,
+      "status": "published"
+    },
+    {
+      "trackOrder": 1,
+      "title": "kr̥ṣṇa yajurveda sandhyāvaṁdanaṁ",
+      "order": 7,
+      "status": "published"
+    },
+    {
+      "trackOrder": 1,
+      "title": "ṛgveda sandhyāvandanaṃ",
+      "order": 8,
+      "status": "published"
+    },
+    {
+      "trackOrder": 1,
+      "title": "brahmayajña vidhiḥ, tarpaṇa vidhiḥ",
+      "order": 9,
+      "status": "published"
+    },
+    {
+      "trackOrder": 1,
+      "title": "agnikāryaṁ (brahmacāriṇa karaṇīyaṁ)",
+      "order": 10,
+      "status": "published"
+    },
+    {
+      "trackOrder": 2,
+      "title": "Gaṇapatyatharvaśīrṣopaniṣat",
+      "order": 1,
+      "status": "published"
+    },
+    {
+      "trackOrder": 2,
+      "title": "nārāyaṇa sūktaṃ",
+      "order": 2,
+      "status": "published"
+    },
+    {
+      "trackOrder": 2,
+      "title": "viṣṇu sūktaṃ",
+      "order": 3,
+      "status": "published"
+    },
+    {
+      "trackOrder": 2,
+      "title": "bhū sūktaṃ",
+      "order": 4,
+      "status": "published"
+    },
+    {
+      "trackOrder": 2,
+      "title": "nīḷā sūktaṃ",
+      "order": 5,
+      "status": "published"
+    },
+    {
+      "trackOrder": 2,
+      "title": "bhāgya sūktaṃ",
+      "order": 6,
+      "status": "published"
+    },
+    {
+      "trackOrder": 2,
+      "title": "brahma sūktaṃ",
+      "order": 7,
+      "status": "published"
+    },
+    {
+      "trackOrder": 2,
+      "title": "sarpa sūktaṃ",
+      "order": 8,
+      "status": "published"
+    },
+    {
+      "trackOrder": 2,
+      "title": "pavamāna sūktaṃ",
+      "order": 9,
+      "status": "published"
+    },
+    {
+      "trackOrder": 2,
+      "title": "mahā mantrapuṣpaṃ",
+      "order": 10,
+      "status": "published"
+    },
+    {
+      "trackOrder": 3,
+      "title": "śrīrudrapraśnaḥ (namakaṃ)",
+      "order": 1,
+      "status": "published"
+    },
+    {
+      "trackOrder": 3,
+      "title": "camakapraśnaḥ",
+      "order": 2,
+      "status": "published"
+    },
+    {
+      "trackOrder": 3,
+      "title": "dīpa prajvālana & nīrājana mantrāh",
+      "order": 3,
+      "status": "published"
+    },
+    {
+      "trackOrder": 3,
+      "title": "śākunādi mantrāḥ",
+      "order": 4,
+      "status": "published"
+    },
+    {
+      "trackOrder": 3,
+      "title": "trisuparṇa mantrāḥ",
+      "order": 5,
+      "status": "published"
+    },
+    {
+      "trackOrder": 3,
+      "title": "vighneśvara pūja",
+      "order": 6,
+      "status": "published"
+    },
+    {
+      "trackOrder": 3,
+      "title": "puṇyāhavācanaṃ",
+      "order": 7,
+      "status": "published"
+    },
+    {
+      "trackOrder": 3,
+      "title": "vighneśvara pūjā vidhānaṃ",
+      "order": 8,
+      "status": "published"
+    },
+    {
+      "trackOrder": 3,
+      "title": "puṇyāhavācana pūjā vidhānaṃ",
+      "order": 9,
+      "status": "published"
+    }
+  ]
+}
