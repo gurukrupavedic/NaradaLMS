@@ -674,56 +674,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ============================================================================
-  // EXPERIMENT ENDPOINTS - Stubs for dashboard ideation components
-  // These endpoints are used by experiment routes in /experiments/* paths
-  // ============================================================================
-
-  // Stub: GET /api/users - Returns empty list for AdminPanel experiment
-  app.get('/api/users', (req, res) => {
-    res.json([]);
-  });
-
-  // Stub: POST /api/invite-user - Mock user invitation for AdminPanel experiment
-  app.post('/api/invite-user', (req, res) => {
-    res.json({ success: true, message: "User invitation sent (experiment)" });
-  });
-
-  // Stub: PUT /api/users/:id - Mock user update for AdminPanel experiment
-  app.put('/api/users/:id', (req, res) => {
-    res.json({ success: true, message: "User updated (experiment)" });
-  });
-
-  // Stub: PUT /api/users/:id/status - Mock status update for AdminPanel experiment
-  app.put('/api/users/:id/status', (req, res) => {
-    res.json({ success: true, message: "User status updated (experiment)" });
-  });
-
-  // Stub: GET /api/instructor/student-progress - Returns empty list for InstructorPanel experiment
-  app.get('/api/instructor/student-progress', (req, res) => {
-    res.json([]);
-  });
-
-  // Stub: PUT /api/instructor/student-progress - Mock progress update for InstructorPanel experiment
-  app.put('/api/instructor/student-progress', (req, res) => {
-    res.json({ success: true, message: "Student progress updated (experiment)" });
-  });
-
-  // Stub: GET /api/student-stats - Returns mock stats for StudentDashboard/Dashboard experiments
-  app.get('/api/student-stats', (req, res) => {
-    res.json({
-      totalStudyTime: 0,
-      chaptersCompleted: 0,
-      currentStreak: 0,
-      highestLevel: 1
-    });
-  });
-
-  // Stub: GET /api/student-progress - Returns empty list for Dashboard experiment
-  app.get('/api/student-progress', (req, res) => {
-    res.json([]);
-  });
-
   const httpServer = createServer(app);
   // Add global error handling middleware at the end
   app.use(globalErrorHandler);
