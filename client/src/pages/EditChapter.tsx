@@ -63,7 +63,7 @@ import { ConnectedCirclesIcon } from "@shared/components/icons";
 import { LinkStatusIcon } from "@shared/components/LinkStatusIcon";
 import { getMappingStatus } from "@shared/utils/mapping-status";
 import { progressiveMappingApi } from "@/services/progressiveMappingApi";
-import { MappingWithTimestamps, toSimplifiedMapping } from "@shared/types/text-segmentation";
+import { MappingWithTimestamps, toSimplifiedMapping, SimplifiedMapping } from "@shared/types/text-segmentation";
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { AudioControls } from "@/components/design-system/AudioControls";
 
@@ -259,7 +259,7 @@ export function EditChapter() {
   });
 
   // Segments query for database integration - script-specific (original - preserve until hooks validated)
-  const { data: textSegments = [], refetch: refetchSegments, isLoading: segmentsLoading, error: segmentsError } = useQuery({
+  const { data: textSegments = [] as TextSegment[], refetch: refetchSegments, isLoading: segmentsLoading, error: segmentsError } = useQuery<TextSegment[]>({
     queryKey: [`/api/segments/${chapterId}/${contentScript || 'te'}`],
     enabled: !!chapterId && !!contentScript,
     staleTime: 0,
@@ -549,13 +549,15 @@ export function EditChapter() {
   const activeTextSegments = USE_EXTRACTED_HOOKS ? hookData?.textSegments || [] : textSegments;
 
   // Fetch audio files
-  const { data: audioFiles, refetch: refetchAudioFiles } = useQuery<any[]>({
-    queryKey: [`/api/audio-files/${chapterId}`],
-    enabled: !!chapterId,
-  });
+  const { data: audioFiles = [] } = useQuery<Array<{ id: number; filename: string; duration: number; url: string }>>(
+    { 
+      queryKey: [`/api/audio-files/${chapterId}`],
+      enabled: !!chapterId,
+    }
+  );
 
   // All mappings for the chapter (for counting mapped segments)
-  const { data: allChapterMappings = [] } = useQuery({
+  const { data: allChapterMappings = [] as SimplifiedMapping[] } = useQuery<SimplifiedMapping[]>({
     queryKey: [`/api/mappings/chapter/${chapterId}`],
     enabled: !!chapterId
   });
@@ -577,9 +579,9 @@ export function EditChapter() {
 
     // Find the audio mapping for this segment from all chapter mappings (backend data)
     // Priority: selected audio file first, then fallback to any other mapping
-    const mapping = allChapterMappings.find(m => 
+    const mapping = (allChapterMappings as SimplifiedMapping[]).find((m: SimplifiedMapping) =>
       m.textSegmentId === segmentId && m.audioFileId === selectedAudioFilePreview
-    ) || allChapterMappings.find(m => m.textSegmentId === segmentId);
+    ) || (allChapterMappings as SimplifiedMapping[]).find((m: SimplifiedMapping) => m.textSegmentId === segmentId);
     
     if (!mapping) {
       console.log('No mapping found for segment:', segmentId);
@@ -640,7 +642,7 @@ export function EditChapter() {
       // Same audio file, just play the segment
       playSegment();
     }
-  }, [allChapterMappings?.length, selectedAudioFilePreview, audioFiles?.length]);
+  }, [(allChapterMappings as SimplifiedMapping[])?.length || 0, selectedAudioFilePreview, (audioFiles as any[])?.length || 0]);
 
   // Fetch mappings for the selected audio file
   const { data: audioFileMappings = [], refetch: refetchMappings } = useQuery<MappingWithTimestamps[]>({
@@ -1536,7 +1538,8 @@ export function EditChapter() {
     text: string,
     language: "te" | "hi" | "en",
   ) => {
-    if (!textSegments || textSegments.length === 0) {
+    const segments = (textSegments as TextSegment[]) || [];
+    if (!segments || segments.length === 0) {
       return (
         <div
           data-segmentable
@@ -1548,8 +1551,8 @@ export function EditChapter() {
       );
     }
 
-    const segmentsForLang = textSegments.filter(
-      (seg) => seg.script === language,
+    const segmentsForLang = segments.filter(
+      (seg: TextSegment) => seg.script === language,
     );
     if (segmentsForLang.length === 0) {
       return (
@@ -1573,7 +1576,7 @@ export function EditChapter() {
     const parts = [];
     let lastEnd = 0;
 
-    sortedSegments.forEach((segment, index) => {
+    sortedSegments.forEach((segment: TextSegment, index: number) => {
       const ref = segment.textReferences[language];
       if (!ref) return;
 
