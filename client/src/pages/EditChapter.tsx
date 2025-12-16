@@ -286,11 +286,10 @@ export function EditChapter() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  // DEPRECATED: Media Segmentation panel state (commented out in Step 1 of Topic 3 cleanup)
-  // const [timeMarks, setTimeMarks] = useState<number[]>([]);
-  // const [selectedMark, setSelectedMark] = useState<number | null>(null);
-  // const [isDragging, setIsDragging] = useState(false);
-  // const [editingTimestamp, setEditingTimestamp] = useState<number | null>(null);
+  const [timeMarks, setTimeMarks] = useState<number[]>([]);
+  const [selectedMark, setSelectedMark] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [editingTimestamp, setEditingTimestamp] = useState<number | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const timelineRef = useRef<HTMLInputElement>(null);
   const [editingFileId, setEditingFileId] = useState<number | null>(null);
@@ -1127,9 +1126,6 @@ export function EditChapter() {
   }, [audioPlayer]);
 
   // Create audio segments from marks mutation
-  // DEPRECATED: createAudioSegmentsMutation (commented out in Step 1 of Topic 3 cleanup)
-  // This mutation was part of the abandoned Media Segmentation panel workflow
-  /*
   const createAudioSegmentsMutation = useMutation({
     mutationFn: async () => {
       if (!selectedAudioFile || timeMarks.length === 0) {
@@ -1181,7 +1177,6 @@ export function EditChapter() {
       });
     },
   });
-  */
 
   // Delete audio file mutation
   const deleteAudioMutation = useMutation({
@@ -2530,11 +2525,9 @@ export function EditChapter() {
 
             {/* Two-Panel Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* DEPRECATED: LEFT PANEL - Media Segmentation (commented out in Step 1 of Topic 3 cleanup) */}
-              {/* This panel was never functional as it required timeMarks that were never populated */}
-              {/* The Progressive Mapper in the Audio Mapping tab replaced this workflow */}
-              {/*
+              {/* LEFT PANEL: Audio Operations */}
               <div className="space-y-6">
+                {/* Consolidated Audio Panel */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -3188,8 +3181,6 @@ export function EditChapter() {
                   </CardContent>
                 </Card>
               </div>
-              */}
-              {/* END OF DEPRECATED Media Segmentation Panel */}
 
               {/* RIGHT PANEL: Text Segmentation & Mapping */}
               <div className="space-y-6">
