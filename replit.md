@@ -6,6 +6,18 @@ The Vedic Learning Management System is a full-stack application for managing an
 
 ## Recent Changes
 
+### December 16, 2025 - Documentation Cleanup
+**Status:** Completed
+
+Removed 27 outdated documentation files:
+- **8 abandoned migration plans** (DaisyUI, Bootstrap 5, design system) - these migration paths were never pursued
+- **18 superseded rollback documents** - replaced by Git history and Replit checkpoint system
+- **1 superseded font specification** (FONT_IMPLEMENTATION_SUMMARY.md) - replaced by comprehensive `docs/features/font-requirements.md`
+
+**Rationale:** Project has been stable since October 2025. Modern development practices use Git history and automated checkpoint system instead of manual rollback snapshots. This cleanup reflects current system maturity.
+
+**Updated:** `docs/README.md` to guide users to Git/Replit checkpoints for rollbacks
+
 ### October 28, 2025 - Font Standardization & Bug Fixes
 **Status:** Production Ready
 
