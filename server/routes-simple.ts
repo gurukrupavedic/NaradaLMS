@@ -611,68 +611,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/segment-mappings', async (req, res) => {
-    try {
-      const mapping = await storage.createSegmentMapping({
-        ...req.body,
-        createdBy: "system"
-      });
-      res.json(mapping);
-    } catch (error) {
-      console.error("Error creating segment mapping:", error);
-      res.status(500).json({ message: "Failed to create segment mapping" });
-    }
-  });
-
-  app.delete('/api/segment-mappings/:id', async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      await storage.deleteSegmentMapping(id);
-      res.json({ message: "Segment mapping deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting segment mapping:", error);
-      res.status(500).json({ message: "Failed to delete segment mapping" });
-    }
-  });
-
-  // Normalized mapping routes (using segment-mappings)
-  
-  app.get('/api/segment-mappings/audio/:audioFileId', async (req, res) => {
-    try {
-      const audioFileId = parseInt(req.params.audioFileId);
-      const mappings = await storage.getSegmentMappingsByAudioFile(audioFileId);
-      res.json(mappings);
-    } catch (error) {
-      console.error("Error fetching segment mappings by audio:", error);
-      res.status(500).json({ message: "Failed to fetch segment mappings" });
-    }
-  });
-
-  app.post('/api/segment-mappings/with-media-segment', async (req, res) => {
-    try {
-      const mapping = await storage.createMappingWithMediaSegment({
-        ...req.body,
-        createdBy: "system"
-      });
-      res.json(mapping);
-    } catch (error) {
-      console.error("Error creating mapping with media segment:", error);
-      res.status(500).json({ message: "Failed to create mapping" });
-    }
-  });
-
-  app.delete('/api/segment-mappings/by-text-segment/:textSegmentId/:audioFileId', async (req, res) => {
-    try {
-      const textSegmentId = parseInt(req.params.textSegmentId);
-      const audioFileId = parseInt(req.params.audioFileId);
-      await storage.deleteSegmentMappingByTextSegment(textSegmentId, audioFileId);
-      res.json({ message: "Segment mapping deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting segment mapping:", error);
-      res.status(500).json({ message: "Failed to delete segment mapping" });
-    }
-  });
-
   // Mapping routes - return MappingWithTimestamps format
   app.get('/api/mappings/chapter/:chapterId', async (req, res) => {
     try {

@@ -149,45 +149,6 @@ export function useSegmentData(chapterId: string, contentScript: string) {
     },
   });
 
-  // Segment mapping operations
-  const createSegmentMappingMutation = useMutation({
-    mutationFn: async (mapping: any) => {
-      await apiRequest("POST", "/api/segment-mappings", mapping);
-    },
-    onSuccess: () => {
-      toast({ title: "Segment mapping created successfully" });
-      queryClient.invalidateQueries({
-        queryKey: [`/api/mappings/${chapterId}`],
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to create mapping",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteSegmentMappingMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/segment-mappings/${id}`);
-    },
-    onSuccess: () => {
-      toast({ title: "Segment mapping deleted successfully" });
-      queryClient.invalidateQueries({
-        queryKey: [`/api/mappings/${chapterId}`],
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to delete mapping",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   // Handle segment creation from text selection
   const handleCreateSegment = useCallback((data: any) => {
     console.log('Creating segment with data:', data);
@@ -302,7 +263,5 @@ export function useSegmentData(chapterId: string, contentScript: string) {
     createSegmentMutation,
     updateSegmentMutation,
     deleteSegmentMutation,
-    createSegmentMappingMutation,
-    deleteSegmentMappingMutation,
   };
 }

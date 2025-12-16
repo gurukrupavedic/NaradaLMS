@@ -137,19 +137,20 @@ const [timeMarks, setTimeMarks] = useState<number[]>([]);
 const createAudioSegmentsMutation = useMutation({...});
 ```
 
-#### Backend Endpoints (Document Only - Don't Remove Yet)
-These support the hidden UI but are tied to backend architecture decision:
+#### Backend Endpoints Status
+The dual mapping system has been unified and cleaned up:
 
-```
-POST /api/chapters/:chapterId/media-segments
-GET /api/chapters/:chapterId/media-segments
-DELETE /api/media-segments/:id
-POST /api/segment-mappings
-GET /api/segment-mappings/chapter/:chapterId
-DELETE /api/segment-mappings/:id
-```
+**Active endpoints** (unified system):
+- `GET /api/segment-mappings/:chapterId` - Fetch mappings (used by StudyChapter.tsx)
+- `POST /api/mappings` - Create mapping (unified system via progressiveMappingApi)
+- `DELETE /api/mappings/:audioFileId/:segmentId` - Delete mapping
 
-**Note:** Backend cleanup is deferred until you decide on mapping system consolidation.
+**Removed endpoints** (Dec 16, 2025):
+- `POST /api/segment-mappings` - Removed (was dead code)
+- `DELETE /api/segment-mappings/:id` - Removed (was dead code)
+- `GET /api/segment-mappings/audio/:audioFileId` - Removed (was dead code)
+- `POST /api/segment-mappings/with-media-segment` - Removed (now via unified `/api/mappings`)
+- `DELETE /api/segment-mappings/by-text-segment/:textSegmentId/:audioFileId` - Removed (was dead code)
 
 ### Cleanup Checklist (Frontend Only)
 

@@ -196,6 +196,41 @@ The EditChapter page uses a tabbed interface:
 
 ---
 
+## Audio-Text Mapping System (Unified)
+
+The system uses a single unified data model for audio-text synchronization:
+
+**Tables:**
+- `media_segments` - Audio timestamp ranges (startTime, endTime in seconds)
+- `segment_mappings` - Links between media segments and text segments
+- `text_segments` - Defined text portions
+
+**API Endpoints** (unified `/api/mappings/*` pattern):
+- `GET /api/mappings/chapter/:chapterId` - Fetch all mappings for a chapter
+- `GET /api/mappings/audio/:audioFileId` - Fetch mappings for an audio file
+- `POST /api/mappings` - Create a new audio-text mapping (atomically creates media segment + mapping)
+- `DELETE /api/mappings/:audioFileId/:segmentId` - Delete a mapping
+
+**Frontend Integration:**
+- Handled by `progressiveMappingApi` service
+- Used by Progressive Mapper component in EditChapter (Audio Mapping tab)
+- Displayed in StudyChapter for interactive learning
+
+**Data Flow:**
+```
+ProgressiveMapper UI (drag/click to map)
+    ↓
+progressiveMappingApi.createMapping()
+    ↓
+POST /api/mappings
+    ↓
+storage.createMappingWithMediaSegment() (atomic: insert both tables)
+    ↓
+PostgreSQL (media_segments + segment_mappings)
+```
+
+---
+
 ## API Architecture
 
 ### Route Pattern

@@ -6,6 +6,32 @@ The Vedic Learning Management System is a full-stack application for managing an
 
 ## Recent Changes
 
+### December 16, 2025 - Final Cleanup: Dual Mapping System Removal
+**Status:** Completed
+
+Removed all traces of the abandoned dual mapping system:
+
+**Deletions:**
+- Deleted `docs/implementation/dual-mapping-system-analysis.md` - Problem is solved
+- Removed 5 dead routes from `server/routes-simple.ts`:
+  - `POST /api/segment-mappings` - Never called by frontend
+  - `DELETE /api/segment-mappings/:id` - Never called by frontend
+  - `GET /api/segment-mappings/audio/:audioFileId` - Dead endpoint
+  - `POST /api/segment-mappings/with-media-segment` - Replaced by unified `/api/mappings`
+  - `DELETE /api/segment-mappings/by-text-segment/:textSegmentId/:audioFileId` - Dead endpoint
+- Removed 2 unused mutations from `client/src/hooks/useSegmentData.ts`:
+  - `createSegmentMappingMutation` - Never invoked
+  - `deleteSegmentMappingMutation` - Never invoked
+
+**Updates:**
+- Updated `docs/implementation/frontend-cleanup-todo.md` to document cleanup
+- Updated `docs/ARCHITECTURE.md` with unified mapping system section
+- Verified regression: no active code was affected
+
+**Rationale:** Migration from dual system to unified system (media_segments + segment_mappings) is complete. All dead code cleaned up, only active endpoints remain.
+
+---
+
 ### December 16, 2025 - Comprehensive Documentation Overhaul
 **Status:** Completed
 
