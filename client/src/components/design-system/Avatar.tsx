@@ -124,7 +124,7 @@ export interface AvatarProps
   alt?: string;
   fallback?: string;
   name?: string;
-  variant?: keyof typeof educationalVariants | "default";
+  variant?: keyof typeof educationalVariants | "default" | "blue" | "green" | "purple" | "orange" | "pink" | "indigo" | "teal" | "cyan" | "yellow" | "lime" | "rose" | "emerald" | "gray";
   educational?: keyof typeof educationalVariants;
   status?: "online" | "away" | "busy" | "offline";
   showStatus?: boolean;
@@ -152,7 +152,10 @@ const Avatar = React.forwardRef<
   AvatarProps
 >(({ className, size = "default", src, alt, fallback, name, variant, educational, status, showStatus, ...props }, ref) => {
   // Determine final variant
-  const finalVariant = educational || variant || (name ? getVariantFromName(name) : "blue");
+  const normalizedEducational = educational ? educationalVariants[educational] : undefined;
+  const finalVariant = normalizedEducational || variant || (name ? getVariantFromName(name) : "blue");
+
+  const normalizedSize = size === "md" ? "default" : size;
   
   // Generate fallback text
   const fallbackText = fallback || (name ? getInitials(name) : "U");
@@ -165,11 +168,11 @@ const Avatar = React.forwardRef<
           // Base avatar styles
           "flex items-center justify-center rounded-full font-semibold text-white",
           // Size variants
-          size === "sm" && "h-8 w-8 text-xs",
-          size === "default" && "h-10 w-10 text-sm", 
-          size === "lg" && "h-12 w-12 text-base",
-          size === "xl" && "h-16 w-16 text-lg",
-          size === "2xl" && "h-20 w-20 text-xl",
+          normalizedSize === "sm" && "h-8 w-8 text-xs",
+          normalizedSize === "default" && "h-10 w-10 text-sm", 
+          normalizedSize === "lg" && "h-12 w-12 text-base",
+          normalizedSize === "xl" && "h-16 w-16 text-lg",
+          normalizedSize === "2xl" && "h-20 w-20 text-xl",
           // Color variants
           finalVariant === "blue" && "bg-blue-600",
           finalVariant === "green" && "bg-green-600",
@@ -183,6 +186,7 @@ const Avatar = React.forwardRef<
           finalVariant === "lime" && "bg-lime-600",
           finalVariant === "rose" && "bg-rose-600",
           finalVariant === "emerald" && "bg-emerald-600",
+          finalVariant === "gray" && "bg-gray-600",
           finalVariant === "admin" && "bg-purple-600",
           finalVariant === "instructor" && "bg-indigo-600",
           finalVariant === "student" && "bg-blue-600",
@@ -197,11 +201,11 @@ const Avatar = React.forwardRef<
         <div 
           className={cn(
             "absolute rounded-full border-2 border-white",
-            size === "sm" && "h-2 w-2 bottom-0 right-0",
-            size === "default" && "h-3 w-3 bottom-0 right-0",
-            size === "lg" && "h-3.5 w-3.5 bottom-0 right-0",
-            size === "xl" && "h-4 w-4 bottom-0.5 right-0.5",
-            size === "2xl" && "h-5 w-5 bottom-1 right-1",
+            normalizedSize === "sm" && "h-2 w-2 bottom-0 right-0",
+            normalizedSize === "default" && "h-3 w-3 bottom-0 right-0",
+            normalizedSize === "lg" && "h-3.5 w-3.5 bottom-0 right-0",
+            normalizedSize === "xl" && "h-4 w-4 bottom-0.5 right-0.5",
+            normalizedSize === "2xl" && "h-5 w-5 bottom-1 right-1",
             status === "online" && "bg-green-500",
             status === "away" && "bg-yellow-500",
             status === "busy" && "bg-red-500",

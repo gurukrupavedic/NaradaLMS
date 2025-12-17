@@ -1,11 +1,11 @@
-/**
- * Authentication and Authorization Middleware
- * 
- * These are placeholders that will be implemented in Phase 1
- * when the Identity & Access module is built
- */
-
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from "express";
+import {
+  authMiddleware,
+  requireRole,
+  requireAdmin,
+  requireInstructor,
+  requireContentManager,
+} from "./auth";
 
 // Match passport's Request.user typing by extending Express.User instead of Request
 declare global {
@@ -18,60 +18,30 @@ declare global {
   }
 }
 
-/**
- * Auth Middleware - Placeholder
- * Will verify Replit Auth session and attach user to request
- * 
- * To be implemented by Identity & Access module
- */
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  // TODO: Implement in Phase 1
-  // For now, just pass through
-  next();
-};
-
-/**
- * Require Role Middleware - Placeholder
- * Will check if user has required role(s)
- * 
- * Usage:
- *   app.get('/admin', requireRole('admin'), handler)
- *   app.post('/content', requireRole('content_manager', 'admin'), handler)
- */
-export const requireRole = (...roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    // TODO: Implement in Phase 1
-    // For now, just pass through
-    next();
-  };
-};
+// Re-export auth helpers
+export { authMiddleware, requireRole, requireAdmin, requireInstructor, requireContentManager };
 
 /**
  * Validate Request Middleware - Placeholder
- * Will validate request body/params against Zod schema
- * 
- * Usage:
- *   app.post('/chapters', validateRequest(insertChapterSchema), handler)
+ * Will validate request body/params against Zod schema in later phases.
  */
 export const validateRequest = (schema: any) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    // TODO: Implement in Phase 1
-    // For now, just pass through
+    // TODO: Implement when validation schemas are in place
     next();
   };
 };
 
 /**
  * Error Handler Middleware - Placeholder
- * Will catch and format errors consistently
+ * Will catch and format errors consistently in later phases.
  */
 export const errorHandler = (
   err: any,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
-  // TODO: Implement in Phase 1
-  console.error('Error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  console.error("Error:", err);
+  res.status(500).json({ error: "Internal server error" });
 };

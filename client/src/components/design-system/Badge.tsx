@@ -40,7 +40,8 @@ const badgeVariants = cva(
         yellow: "border-transparent bg-yellow-100/70 text-yellow-700 hover:bg-yellow-200/80 hover:text-yellow-800",
         lime: "border-transparent bg-lime-100/70 text-lime-700 hover:bg-lime-200/80 hover:text-lime-800",
         rose: "border-transparent bg-rose-100/70 text-rose-700 hover:bg-rose-200/80 hover:text-rose-800",
-        emerald: "border-transparent bg-emerald-100/70 text-emerald-700 hover:bg-emerald-200/80 hover:text-emerald-800"
+        emerald: "border-transparent bg-emerald-100/70 text-emerald-700 hover:bg-emerald-200/80 hover:text-emerald-800",
+        gray: "border-transparent bg-gray-100/70 text-gray-700 hover:bg-gray-200/80 hover:text-gray-800"
       },
       badgeStyle: {
         // Style 1: Classic rounded with subtle shadow

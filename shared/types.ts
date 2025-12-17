@@ -18,10 +18,13 @@ export interface UserWithRoles extends User {
   lastLoginAt?: Date;
 }
 
-export interface TrackWithChapters extends Track {
+export interface TrackWithChapters extends Omit<Track, 'createdBy'> {
   chapters: Chapter[];
   chapterCount: number;
   lastModified?: string;
+  createdBy?: string;
+  createdAt?: Date | null;
+  updatedAt?: Date | null;
 }
 
 export interface ChapterWithProgress extends Chapter {
@@ -31,7 +34,7 @@ export interface ChapterWithProgress extends Chapter {
   audioFiles?: AudioFile[];
 }
 
-export interface ChapterWithMetadata extends Chapter {
+export interface ChapterWithMetadata extends Omit<Chapter, 'publishedAt'> {
   trackId: number;
   textReferences: {
     te?: string[];
@@ -39,8 +42,8 @@ export interface ChapterWithMetadata extends Chapter {
     en?: string[];
   };
   estimatedDuration?: number;
-  lastEditedBy?: string;
-  publishedAt?: Date | string | null;
+  lastEditedBy?: string | null;
+  publishedAt?: Date | null;
 }
 
 // Normalized Mapping Types (new system)

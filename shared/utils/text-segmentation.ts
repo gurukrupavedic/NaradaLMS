@@ -65,7 +65,7 @@ export const getSegmentsAtPosition = (
   script: Script
 ): TextSegment[] => {
   return segments.filter(segment => {
-    const range = segment.textReferences[script];
+    const range = segment.textReferences?.[script];
     return range && position >= range.start && position <= range.end;
   });
 };
@@ -215,13 +215,13 @@ export const getSegmentationText = (content: ContentMap, script: Script): string
 export const segmentsOverlap = (
   segment1: TextSegment,
   segment2: TextSegment,
-  language?: Language
+  language?: Script
 ): boolean => {
-  const languagesToCheck = language ? [language] : (['te', 'hi', 'en'] as Language[]);
+  const languagesToCheck = language ? [language] : (['te', 'hi', 'en'] as Script[]);
   
   return languagesToCheck.some(lang => {
-    const range1 = segment1.textReferences[lang];
-    const range2 = segment2.textReferences[lang];
+    const range1 = segment1.textReferences?.[lang];
+    const range2 = segment2.textReferences?.[lang];
     
     if (!range1 || !range2) return false;
     
@@ -239,7 +239,7 @@ export const segmentsOverlap = (
 export const isValidTextRange = (
   range: { start: number; end: number },
   content: ContentMap,
-  language: Language
+  language: Script
 ): boolean => {
   const text = getDisplayText(content, language);
   return range.start >= 0 && 

@@ -62,7 +62,7 @@ const educationalVariants = {
 } as const;
 
 export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement>,
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">,
     VariantProps<typeof inputVariants> {
   educational?: keyof typeof educationalVariants;
 }

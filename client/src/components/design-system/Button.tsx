@@ -33,6 +33,9 @@ const sizeStyles = {
   }
 };
 
+type ButtonSize = keyof typeof sizeStyles;
+type IconSizeKey = keyof typeof sizeStyles.icon;
+
 // Enhanced color configuration for all styling approaches
 const colorConfig = {
   blue: { 
@@ -130,6 +133,14 @@ const colorConfig = {
     fluorescent: "hover:shadow-[0_4px_14px_rgba(209,250,229,0.8)]",
     gradient: "bg-gradient-to-r from-emerald-500 to-emerald-600",
     cardGlow: "hover:shadow-[0_8px_25px_rgba(0,0,0,0.08),0_0_0_1px_rgba(16,185,129,0.3),0_4px_20px_rgba(209,250,229,1),0_0_25px_rgba(209,250,229,0.6)]"
+  },
+  gray: {
+    primary: "bg-gray-500", hover: "hover:bg-gray-600",
+    text: "text-gray-700", border: "border-gray-300",
+    hoverBorder: "hover:border-gray-400", bgHover: "hover:bg-gray-50",
+    fluorescent: "hover:shadow-[0_4px_14px_rgba(229,231,235,0.8)]",
+    gradient: "bg-gradient-to-r from-gray-500 to-gray-600",
+    cardGlow: "hover:shadow-[0_8px_25px_rgba(0,0,0,0.06),0_0_0_1px_rgba(107,114,128,0.25),0_4px_20px_rgba(243,244,246,1),0_0_25px_rgba(243,244,246,0.6)]"
   }
 };
 
@@ -156,7 +167,7 @@ const getStyleApproach = (variant: string, color: string, styleApproach: string)
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "solid" | "outline" | "ghost";
   color?: keyof typeof colorConfig;
-  size?: keyof typeof sizeStyles;
+  size?: ButtonSize;
   styleApproach?: "fluorescent";
   loading?: boolean;
   icon?: React.ReactNode;
@@ -181,11 +192,16 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   }, ref) => {
     const isDisabled = disabled || loading;
     const isIconOnly = !children && icon;
-    
+
+    const resolveSize = (value: ButtonSize): Exclude<ButtonSize, "icon"> =>
+      value === "icon" ? "default" : value;
+    const resolveIconSize = (value: ButtonSize): IconSizeKey =>
+      value === "lg" ? "lg" : value === "sm" ? "sm" : "default";
+
     // Use icon-specific sizing for icon-only buttons
-    const sizeClass = isIconOnly ? 
-      (typeof sizeStyles.icon === 'object' ? sizeStyles.icon[size] : sizeStyles.icon) : 
-      sizeStyles[size];
+    const sizeClass = isIconOnly
+      ? sizeStyles.icon[resolveIconSize(size)]
+      : sizeStyles[resolveSize(size)];
     
     const buttonClasses = cn(
       baseStyles,

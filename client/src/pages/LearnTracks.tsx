@@ -81,7 +81,6 @@ export function LearnTracks() {
                     className="w-full"
                     variant="outline"
                     color="indigo"
-                    buttonStyle="card"
                     data-testid={`button-view-track-${track.id}`}
                   >
                     <BookOpen className="h-4 w-4 mr-2" />
