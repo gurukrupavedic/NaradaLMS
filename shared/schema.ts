@@ -9,13 +9,13 @@ import {
   integer,
   boolean,
   real,
-  primaryKey
+  primaryKey,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Session storage table for Replit Auth
+// Session storage table (used by express-session + connect-pg-simple)
 export const sessions = pgTable(
   "sessions",
   {
@@ -26,17 +26,28 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table with multi-role support and invitation system
+// User storage table with multi-role support and social login
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(),
-  email: varchar("email").unique().notNull(), // Email as username per Q9
+  id: varchar("id").primaryKey().notNull().default(sql`gen_random_uuid()`),
+  email: varchar("email").unique().notNull(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  roles: jsonb("roles").$type<string[]>().default(['student']).notNull(), // Multi-role support per Q8
-  status: varchar("status").default("pending").notNull(), // 'active', 'disabled', 'pending'
-  invitedBy: varchar("invited_by").references(() => users.id), // Admin invitation system per Q8
+
+  // Authentication
+  passwordHash: varchar("password_hash"), // Null for social-only users
+  provider: varchar("provider").notNull().default("local"), // 'local' | 'google' | 'facebook'
+  providerId: varchar("provider_id"), // Provider user ID
+
+  // Authorization
+  roles: text("roles").array().notNull().default(sql`ARRAY[]::text[]`),
+  status: varchar("status").notNull().default("pending_approval"), // 'pending_approval' | 'active' | 'inactive'
+
+  // Audit / invitations
+  invitedBy: varchar("invited_by").references(() => users.id),
   invitedAt: timestamp("invited_at"),
+  approvedAt: timestamp("approved_at"),
+  approvedBy: varchar("approved_by").references(() => users.id),
   lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -158,7 +169,6 @@ export const studentProgress = pgTable("student_progress", {
   id: serial("id").primaryKey(),
   studentId: varchar("student_id").notNull().references(() => users.id),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
-  batchId: integer("batch_id").references(() => batches.id), // Which batch context
   proficiencyLevel: integer("proficiency_level").default(0).notNull(), // 0-4 (0=not started, 1-4=levels)
   lastAccessed: timestamp("last_accessed"),
   lastEvaluatedAt: timestamp("last_evaluated_at"),
