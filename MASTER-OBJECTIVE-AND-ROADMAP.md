@@ -899,64 +899,40 @@ export const mediaService = new MediaService(db, contentService, eventBus);
 **Goal:** Set up audit logging and system settings
 
 **Key methods:**
-- Audit logging (event listeners), system settings management
-
-**Effort:** 8 hours
 
 ---
 
-## Phase 7: Cleanup & Finalization (Week 7)
 
 **Goal:** Delete old code, verify everything works
-
-**Work:**
 - Delete `routes-simple.ts` (all routes migrated)
 - Reorganize `database-storage.ts` → move methods to module storage files
 - Delete `database-storage.ts`
 - Update all imports throughout codebase
 - Final comprehensive testing
 
-**Effort:** 8 hours
-
 ---
 
-## Part 3: Risk Management & Rollback
-
-### Key Risks & Mitigation
 
 | Risk | Severity | Mitigation |
 |------|----------|-----------|
 | Database migration fails | HIGH | Backup DB before Phase 0.2, test migration locally first |
 | ChapterEditor breaks | HIGH | Test manually after each phase, keep old routes until new routes proven |
 | Routes missing | MEDIUM | Checklist of all old routes before deleting from old file |
-| Circular dependencies | MEDIUM | EventBus ensures loose coupling, code review for direct imports |
 | TypeScript errors | MEDIUM | Run `npm run check` after each phase, fix immediately |
 
 ### Rollback Procedure
-
 **At any point, if something breaks:**
 
 ```bash
 # Go back to last known-good phase
-git checkout refactor-phase-2  # (for example)
 git reset --hard
 
-# Restart that phase with better understanding
-npm run db:reset
-npm run dev
 ```
 
-**Database rollback:**
-```bash
-# Drizzle migrations are in drizzle/ folder
 # Can manually drop tables if needed
 DROP TABLE IF EXISTS batches, enrollments, batch_co_instructors, audit_logs, system_settings;
-# Then re-push schema without those tables
-```
 
 ---
-
-## Part 4: Execution Rules (No Deviations!)
 
 ### Rule 1: One Phase at a Time
 - **DO NOT** start Phase 2 until Phase 1 is completely done and tested

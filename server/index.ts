@@ -58,6 +58,10 @@ app.use(express.static('public'));
 // Identity & Access routes (Phase 1 module)
 app.use('/api/auth', identityRouter);
 
+// Content & Publishing routes (Phase 2 module)
+import { contentRouter } from "./routes/content.routes";
+app.use('/api', contentRouter);
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
