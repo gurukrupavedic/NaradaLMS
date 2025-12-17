@@ -8,7 +8,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { LOG_TRUNCATE_LENGTH, DEFAULT_ERROR_STATUS } from "@shared/constants";
 import path from "path";
 import { configurePassport } from "./auth/passport-config";
-import { authRouter } from "./routes/auth.routes";
+import { identityRouter } from "./routes/identity.routes";
 
 const app = express();
 app.use(express.json());
@@ -55,8 +55,8 @@ app.use('/experiments', express.static(experimentsPath, {
 // Serve static files from public directory (for audio files)
 app.use(express.static('public'));
 
-// Auth routes
-app.use('/api/auth', authRouter);
+// Identity & Access routes (Phase 1 module)
+app.use('/api/auth', identityRouter);
 
 app.use((req, res, next) => {
   const start = Date.now();
