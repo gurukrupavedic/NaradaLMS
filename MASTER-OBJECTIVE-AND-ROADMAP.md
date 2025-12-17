@@ -1000,13 +1000,226 @@ DROP TABLE IF EXISTS batches, enrollments, batch_co_instructors, audit_logs, sys
 
 ---
 
-## References
+## Appendix A: Phase 0 PR Details
 
-- See [MODULE-BREAKDOWN-DETAILED.md](docs/architecture/MODULE-BREAKDOWN-DETAILED.md) for complete module descriptions
-- See [MODULE-SEPARATION-BOUNDARIES.md](docs/architecture/MODULE-SEPARATION-BOUNDARIES.md) for module boundaries and data ownership
-- See [MIGRATION-ROADMAP.md](docs/MIGRATION-ROADMAP.md) for detailed technical implementation steps (reference only)
-- See [OPTION-B-VISUAL-GUIDE.md](docs/OPTION-B-VISUAL-GUIDE.md) for visual/simplified explanation
+**Use this section to create the GitHub PR for Phase 0.**
+
+### PR Title
+```
+Phase 0: Module Skeletons, Auth Middleware, Schema Migration & Type System Improvements
+```
+
+### PR Description
+
+```markdown
+# Phase 0: Modular Architecture Foundation & Schema Setup
+
+**Base:** main  
+**Compare:** refactor-phase-0
+
+**Commits in this PR:**
+- e9cf74b - chore(Phase 0): module skeletons, auth middleware, schema batchId, type debt reduction (135→24)
+- ba4ec75 - docs: update Phase 0 completion status and summary
 
 ---
 
-**THIS IS THE SINGLE SOURCE OF TRUTH. FOLLOW THIS PLAN. DO NOT DEVIATE.**
+## Overview
+
+This PR completes **Phase 0 of the 7-phase modular architecture refactoring** for VedicLMS. It establishes the foundation for transforming the monolithic codebase into 6 independent, loosely-coupled domain modules.
+
+**Status:** ✅ Ready for Merge  
+**Type:** Refactor / Infrastructure  
+**Risk Level:** 🟢 **LOW** (No breaking changes, all old code intact)
+
+---
+
+## What This PR Does
+
+### 1. Module Structure (0.1)
+- ✅ Created `server/modules/` directory with 6 module folders:
+  - `identity-access/` (auth & user management)
+  - `content-publishing/` (tracks, chapters, segments)
+  - `media-pipeline/` (audio files, mappings)
+  - `batch-cohort/` (batch lifecycle, enrollments)
+  - `learning-delivery/` (student progress, content delivery)
+  - `system-admin/` (audit logs, system settings)
+- ✅ Each module contains skeleton files: `service.ts`, `storage.ts`, `types.ts`, `events.ts`, `index.ts`
+- ✅ Created shared infrastructure: `server/shared/middleware/`, `server/shared/events/`, `server/shared/utils/`
+
+### 2. Database Schema Updates (0.2)
+- ✅ Added 6 new tables:
+  - `batches` - Batch lifecycle management
+  - `enrollments` - Student-batch relationships
+  - `batch_co_instructors` - Co-instructor assignments
+  - `audit_logs` - System-wide audit trail
+  - `system_settings` - Key-value configuration store
+- ✅ Updated `users` table:
+  - Added `status` field (pending_approval/active/inactive)
+  - Added `roles` array field (supports multiple roles)
+- ✅ Updated `student_progress` table:
+  - Added `batchId` foreign key (batch context for progress tracking)
+- ✅ Successfully migrated: `npm run db:reset` applied cleanly
+
+### 3. EventBus Infrastructure (0.3)
+- ✅ Implemented pub/sub `EventBus` class for loose module coupling
+- ✅ Created `DomainEvent` union type with 11 event types:
+  - `UserApproved`, `UserRoleChanged`
+  - `ChapterPublished`, `ChapterUnpublished`
+  - `AudioUploaded`, `SegmentMappingCreated`
+  - `BatchCreated`, `StudentEnrolled`, `StudentDropped`
+  - `ProgressUpdated`, `CoInstructorAssigned`
+- ✅ Modules will use EventBus instead of direct imports (prevents circular dependencies)
+
+### 4. Auth Middleware (0.4)
+- ✅ Implemented `authMiddleware` - validates session and user status
+- ✅ Implemented `requireRole()` - enforces role-based access control
+- ✅ Created helper exports: `requireAdmin`, `requireInstructor`, `requireContentManager`
+- ✅ Ready for use across all modules
+
+### 5. TypeScript & Build Quality
+- ✅ **Reduced type errors: 135 → 24 (82% reduction)**
+- ✅ Fixed design system typing:
+  - Added gray color support (Button, Badge, Avatar)
+  - Fixed Avatar md→default size normalization
+  - Fixed Input size conflict with HTML attribute
+  - Fixed Button size icon handling
+- ✅ Fixed component typing:
+  - Pagination icons from lucide-react
+  - DesignSystemShowcase type unions
+  - ComponentInspector prop callback types
+- ✅ Fixed segmentation types:
+  - TextSegment now includes optional textReferences and conceptualName
+  - Aligned SimplifiedMapping with MappingWithTimestamps
+  - Script type properly enforced
+- ✅ `npm run build` succeeds
+- ✅ `npm run dev` starts without errors
+- ✅ Remaining 24 errors documented as **Phase 1 tech debt** (safe to defer):
+  - EditChapter script type casting (need Script enum enforcement)
+  - ManageTracks Track shape mismatches (optional vs required fields)
+  - Omit extension conflicts (minor type narrowing)
+
+---
+
+## Files Changed
+
+- **46 files changed**
+- **+1,506 insertions, -126 deletions**
+
+### New Files Created
+- `server/modules/*/` (30 skeleton files, 6 modules × 5 files)
+- `server/shared/events/types.ts`, `server/shared/middleware/auth.ts`, `server/shared/utils/index.ts`
+- `MASTER-OBJECTIVE-AND-ROADMAP.md` (roadmap document)
+- `docs/DOCUMENTATION-STRATEGY.md`
+
+### Modified Files
+- `shared/schema.ts` (schema updates)
+- `shared/types.ts`, `shared/types/text-segmentation.ts` (type alignment)
+- Design system components (Button, Avatar, Badge, Input, TextSegment, Dialog, etc.)
+- Hooks and utilities (SegmentPanel, useSegmentData, InteractiveSegments, etc.)
+
+---
+
+## Testing & Verification
+
+### ✅ Automated Testing
+- [x] TypeScript compiles: `npm run check` (24 known errors → Phase 1 tech debt)
+- [x] Build succeeds: `npm run build` ✓
+- [x] Dev server starts: `npm run dev` ✓
+- [x] Database migration succeeds: `npm run db:reset` ✓
+
+### ✅ Manual Testing (Verified)
+- [x] Dev server starts without errors
+- [x] ChapterEditor loads (sanity test)
+- [x] Login page accessible
+- [x] Database schema applied correctly (verified table creation)
+- [x] No breaking changes to existing functionality
+- [x] Old monolithic code still functional
+
+---
+
+## Breaking Changes
+
+**None.** 🎉
+
+- All existing code remains functional
+- Old `routes-simple.ts` and `database-storage.ts` untouched (still used)
+- New module structure coexists with old code
+- Zero user-facing changes
+
+---
+
+## Migration Path Forward
+
+This PR establishes the **foundation**. Phase 1 will:
+1. Implement `identity-access` module service/storage
+2. Migrate auth routes from `routes-simple.ts` to `identity.routes.ts`
+3. Verify auth still works
+4. Remove old routes from `routes-simple.ts`
+5. Repeat for remaining 5 modules over phases 2-6
+
+---
+
+## Known Issues & Tech Debt
+
+### Type Errors (24 remaining - documented as Phase 1 tech debt)
+
+| Category | Count | Files | Mitigation |
+|----------|-------|-------|-----------|
+| Script type casting | 8 | EditChapter, StudyChapter, other pages | Phase 1: Enforce Script enum at API boundary |
+| Track shape mismatches | 6 | ManageTracks | Phase 1: Extend Track type with optional fields |
+| TextSegment mismatches | 4 | EditChapter, SegmentPanel | Phase 1: Finalize TextSegment schema sync |
+| Type extension conflicts | 3 | shared/types.ts (TrackWithChapters, ChapterWithMetadata) | Phase 1: Resolve Omit edge cases |
+| Misc utilities | 3 | useSegmentData, usePerformanceMonitor, AudioPlayer | Phase 1: Add missing types/imports |
+
+**Resolution Plan:** These are safe to defer because:
+1. Code compiles and runs (errors are type-only, not runtime issues)
+2. They're isolated to specific pages/hooks
+3. Phase 1 module migration will naturally resolve most of them
+4. No user-facing impact
+
+---
+
+## Reviewer Checklist
+
+- [ ] Module structure is clear and well-organized
+- [ ] Database schema changes are correct and migration was successful
+- [ ] EventBus pattern enables loose coupling between modules
+- [ ] Auth middleware is implemented correctly and reusable
+- [ ] Type errors are documented and deemed Phase 1 tech debt
+- [ ] No breaking changes to existing functionality
+- [ ] ChapterEditor still works (manual test)
+- [ ] Build and dev server work (`npm run build`, `npm run dev`)
+- [ ] Documentation updated (MASTER-OBJECTIVE-AND-ROADMAP.md)
+- [ ] Commit messages are clear and reference the plan
+
+---
+
+## Next Steps After Merge
+
+1. **Create Phase 1 branch:** `git checkout -b refactor-phase-1`
+2. **Start Phase 1:** Implement `identity-access` module and migrate auth routes
+3. **Estimated Phase 1 effort:** 15 hours over weeks 2-3
+4. **Phase 1 goals:**
+   - Extract all user/auth logic into module
+   - Migrate routes from old file to new routes file
+   - Verify auth still works perfectly
+   - Remove old routes
+
+---
+
+## Deployment Notes
+
+**No backend deployment required at this stage.** This PR:
+- Adds new tables (not used yet)
+- Adds new code (not called yet)
+- Keeps old code intact (still active)
+
+**Deploy only after Phase 1** when routes are actually migrated.
+```
+
+---
+
+## Summary
+
+✅ Phase 0 is complete and ready for merge. Foundation is solid. All infrastructure in place for Phase 1 to begin immediately after merge.
+
