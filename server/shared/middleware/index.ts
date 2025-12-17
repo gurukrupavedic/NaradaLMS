@@ -7,14 +7,13 @@
 
 import { Request, Response, NextFunction } from 'express';
 
+// Match passport's Request.user typing by extending Express.User instead of Request
 declare global {
   namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        email?: string;
-        roles?: string[];
-      };
+    interface User {
+      id: string;
+      email?: string;
+      roles?: string[];
     }
   }
 }

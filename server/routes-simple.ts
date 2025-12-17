@@ -18,7 +18,7 @@ if (!fs.existsSync(uploadsDir)) {
 const upload = multer({
   dest: uploadsDir,
   limits: {
-    fileSize: FILE_UPLOAD.MAX_SIZE_BYTES,
+    fileSize: FILE_UPLOAD.maxSize,
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('audio/')) {
@@ -483,7 +483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error creating segment:", error);
       res.status(500).json({ 
         message: "Failed to create segment",
-        error: error.message 
+        error: (error as any)?.message 
       });
     }
   });

@@ -1,12 +1,44 @@
+import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+import passport from "passport";
 import { registerRoutes } from "./routes-simple";
 import { setupVite, serveStatic, log } from "./vite";
 import { LOG_TRUNCATE_LENGTH, DEFAULT_ERROR_STATUS } from "@shared/constants";
 import path from "path";
+import { configurePassport } from "./auth/passport-config";
+import { authRouter } from "./routes/auth.routes";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Sessions (PostgreSQL store)
+const PgStore = connectPg(session);
+const sessionStore = new PgStore({
+  conString: process.env.DATABASE_URL,
+  tableName: "sessions",
+  createTableIfMissing: true,
+});
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || "change_me",
+  resave: false,
+  saveUninitialized: false,
+  store: sessionStore,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  },
+}));
+
+// Passport
+configurePassport();
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 
@@ -22,6 +54,9 @@ app.use('/experiments', express.static(experimentsPath, {
 
 // Serve static files from public directory (for audio files)
 app.use(express.static('public'));
+
+// Auth routes
+app.use('/api/auth', authRouter);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -77,7 +112,7 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
-  server.listen(port, "0.0.0.0", () => {
+  server.listen(port, "127.0.0.1", () => {
     log(`serving on port ${port}`);
   });
 })();

@@ -40,7 +40,7 @@ export interface ChapterWithMetadata extends Chapter {
   };
   estimatedDuration?: number;
   lastEditedBy?: string;
-  publishedAt?: string;
+  publishedAt?: Date | string | null;
 }
 
 // Normalized Mapping Types (new system)

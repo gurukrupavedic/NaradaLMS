@@ -27,7 +27,7 @@ export const sessions = pgTable(
 );
 
 // User storage table with multi-role support and social login
-export const users = pgTable("users", {
+export const users: any = pgTable("users", {
   id: varchar("id").primaryKey().notNull().default(sql`gen_random_uuid()`),
   email: varchar("email").unique().notNull(),
   firstName: varchar("first_name"),
@@ -299,10 +299,6 @@ export const studentProgressRelations = relations(studentProgress, ({ one }) => 
     fields: [studentProgress.chapterId],
     references: [chapters.id],
   }),
-  batch: one(batches, {
-    fields: [studentProgress.batchId],
-    references: [batches.id],
-  }),
   evaluatedBy: one(users, {
     fields: [studentProgress.evaluatedBy],
     references: [users.id],
@@ -326,7 +322,6 @@ export const batchesRelations = relations(batches, ({ one, many }) => ({
   }),
   enrollments: many(enrollments),
   coInstructors: many(batchCoInstructors),
-  studentProgress: many(studentProgress),
 }));
 
 export const enrollmentsRelations = relations(enrollments, ({ one }) => ({

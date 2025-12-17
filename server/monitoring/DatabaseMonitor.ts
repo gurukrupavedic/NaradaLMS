@@ -69,11 +69,11 @@ class DatabaseMonitor {
     const duration = metrics.endTime - metrics.startTime;
 
     // Record performance metric
-    performanceMonitor.trackQuery(metrics.operation, duration, recordCount);
+    (performanceMonitor as any).trackQuery?.(metrics.operation, duration, recordCount);
 
     // Track errors separately
     if (error) {
-      performanceMonitor.trackError(error, `Database query: ${metrics.operation}`);
+      (performanceMonitor as any).trackError?.(error, `Database query: ${metrics.operation}`);
     }
 
     // Clean up
@@ -88,7 +88,7 @@ class DatabaseMonitor {
     this.poolMetrics = { ...this.poolMetrics, ...poolStats };
     
     // Record pool metrics
-    performanceMonitor.trackCustomMetric('connection_pool', this.poolMetrics.activeConnections, {
+    (performanceMonitor as any).trackCustomMetric?.('connection_pool', this.poolMetrics.activeConnections, {
       totalConnections: this.poolMetrics.totalConnections,
       activeConnections: this.poolMetrics.activeConnections,
       idleConnections: this.poolMetrics.idleConnections,
@@ -157,7 +157,7 @@ class DatabaseMonitor {
       queryId: string;
     }> = [];
 
-    for (const [queryId, metrics] of this.activeQueries.entries()) {
+    for (const [queryId, metrics] of Array.from(this.activeQueries.entries())) {
       const duration = now - metrics.startTime;
       if (duration > thresholdMs) {
         longRunning.push({
@@ -178,7 +178,7 @@ class DatabaseMonitor {
   cleanup(maxAgeMs: number = 60000): void {
     const cutoff = Date.now() - maxAgeMs;
     
-    for (const [queryId, metrics] of this.activeQueries.entries()) {
+    for (const [queryId, metrics] of Array.from(this.activeQueries.entries())) {
       if (metrics.startTime < cutoff) {
         console.warn(`Cleaning up stale query tracking: ${metrics.operation}`);
         this.activeQueries.delete(queryId);

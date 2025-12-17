@@ -1,7 +1,33 @@
-At our veda pathasala we have 8 tracks/ semesters. This is not like traditional educational system, but a more flexible mechanism for house-hold men that work their jobs and yet pursue and learn Vedam as part of their bramhin dharma. 
-
-Each track contains multiple chapters. The enrollment happens through word of mouth and people sign up using a google survey document. Once we have at least 12-15 students that signed up, we start a new batch and assign instructor. Instructors are also students but currently learning in a much higher track. 
-
-Once the batch starts the instructor teaches each chapter. As the time progresses, students are constantly learning and being evaluated. As the student gains proficiency on a chapter by reciting it better and better, they are given different levels based on the evaluation by the instructor. There is level 0, level 1, level 2, level 3, level 4. It is not necessary for a student to move from one level to another in a sequence. It could be from any to any. level 0 represents that the teacher has completed the chapter recital at least once for that student. level 1 means that student has gained about 50% proficiency. level 2 means that student has gained about 70% proficiency, level 3 is 90% and level 4 is 95%. the student must be at least 2 on all the chapters before they can progress to next track. student must be level 3 on all the chapters to attend for a oral recitation exam with Mater guruvugaru, if they pass the oral recitation exam, the student will automatically get a level 4 on all the chapters and will get their certification. 
-
-As the student progresses through the learning, it is important to also reflect this progress. We dont need to track student's progress at the content level. Just the chapter level is sufficient. 
+User Management & Authentication Requirements Summary
+1. User Registration & Approval Workflow
+No self-enrollment: All accounts are admin-controlled
+External vetting: Students apply via Google Forms → admin reviews offline → admin approves
+Two-step LMS activation: Account created → Admin approves in LMS → Auto-assigns student role
+Flexible role assignment: Admin can assign any combination of roles (student, instructor, content_manager, admin) after approval
+Status tracking: Users have states: pending_approval → active → inactive
+2. Multi-Role Model (Independent Flags)
+No hierarchy: Roles are independent checkboxes, not hierarchical
+Four roles defined:
+student - View published content, track own progress
+instructor - View/update student progress in assigned batches
+content_manager - Create/edit/publish content
+admin - Full system access
+Any combination allowed: A user can be student + instructor simultaneously
+3. Batch Formation & Instructor Model
+Instructor assignment: Two types:
+Primary instructor (main teacher)
+Co-instructors (TAs with identical system privileges)
+Simple assignment: Any user with instructor role can be assigned to teach
+No capacity limits: Batches can have any number of students/instructors
+One track per batch: Each batch teaches exactly ONE track
+4. Progress & Proficiency (Trust-Based)
+Instructor-driven: Only instructors/admins set student proficiency levels
+5-level scale: 0 (not started) → 1-3 (proficiency) → 4 (mastery/certified)
+No enforcement: Levels can move in any direction (0→4, 4→1); no validation
+External certification: Level 4 typically after oral exam, but system doesn't enforce
+Soft prerequisites: Track sequencing recommended but not enforced by system
+5. Core Principles
+Trust-based over enforcement: Minimal validation, flexibility prioritized
+Admin-controlled: All critical assignments happen through admin actions
+Batch-centric context: Track/student/instructor relationships defined through batch assignments
+Preservation of history: Student progress preserved even if reassigned between batches

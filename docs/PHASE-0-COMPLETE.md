@@ -8,6 +8,15 @@
 
 ## What Was Done
 
+### 0.5 Authentication Groundwork (Passport) ✅
+
+- Added session-based auth plumbing with Passport (local + Google strategies) wired in [server/auth/passport-config.ts](server/auth/passport-config.ts) and mounted in [server/index.ts](server/index.ts).
+- Introduced auth routes [server/routes/auth.routes.ts](server/routes/auth.routes.ts) for register/login/google/me/logout.
+- Schema updated for auth providers/passwords/approval statuses in [shared/schema.ts](shared/schema.ts).
+- Session store configured via express-session + connect-pg-simple; session table defined in schema.
+- Pending-approval gating enforced in strategies and register response.
+- Google OAuth is optional; logs a warning when client secrets are absent.
+
 ### 1. Database Schema Updates ✅
 
 Updated [shared/schema.ts](shared/schema.ts) with 6 new tables:
@@ -110,6 +119,8 @@ Note: Existing codebase has 152 pre-existing TypeScript errors. These are from l
 ---
 
 ## Next Steps
+
+**Auth smoke test (manual):** Follow [docs/AUTH-SMOKE-TEST.md](docs/AUTH-SMOKE-TEST.md) to verify register/login/me/logout with session cookies; activate users manually until the admin UI exists.
 
 ### Before Merging to Main:
 

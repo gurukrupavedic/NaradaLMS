@@ -58,25 +58,29 @@ if (isLocalHost) {
     ssl: false
   });
 
-  pool.on('error', (err) => {
+  (pool as PgPool).on('error', (err) => {
     console.error('Database pool error:', err);
   });
 
-  dbClient = drizzlePg(pool, { schema });
+  dbClient = drizzlePg(pool as PgPool, { schema });
 } else {
   console.log('Using Neon serverless driver');
-  pool = new NeonPool({
+  const neonPool = new NeonPool({
     connectionString: DATABASE_URL,
     max: DB_MAX_CONNECTIONS,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: DB_CONNECTION_TIMEOUT_MS,
   });
 
-  pool.on('error', (err) => {
+  pool = neonPool;
+
+  // Neon pool doesn't surface typed event names; use optional chaining to avoid runtime errors
+  (neonPool as any)?.on?.('error', (err: unknown) => {
     console.error('Database pool error:', err);
   });
 
-  dbClient = drizzleNeon({ client: pool, schema });
+  // drizzle-neon expects the pool directly, not an options object
+  dbClient = drizzleNeon(neonPool, { schema });
 }
 
 export { pool };

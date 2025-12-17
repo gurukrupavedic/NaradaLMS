@@ -292,7 +292,7 @@ class MetricsCollector {
     const cutoff = Date.now() - maxAgeMs;
     
     // Clear old trend cache
-    for (const [key, trend] of this.trendCache.entries()) {
+    for (const [key, trend] of Array.from(this.trendCache.entries())) {
       if (trend.timeRange.end < cutoff) {
         this.trendCache.delete(key);
       }
@@ -332,7 +332,7 @@ class MetricsCollector {
   private analyzeMetric(metric: PerformanceMetric): void {
     try {
       // Check alerts
-      for (const alert of this.alerts.values()) {
+      for (const alert of Array.from(this.alerts.values())) {
         if (!alert.enabled || alert.metric !== metric.type) continue;
 
         let triggered = false;
@@ -380,7 +380,7 @@ class MetricsCollector {
   }
 
   private getThreshold(metricType: MetricType): number {
-    const thresholds = {
+    const thresholds: Record<string, number> = {
       component_load: 1000,
       api_response: 2000,
       database_query: 1000,
@@ -390,18 +390,18 @@ class MetricsCollector {
       audio_mapping: 30000,
       segmentation: 10000
     };
-    return thresholds[metricType] || 1000;
+    return thresholds[metricType] ?? 1000;
   }
 
   private getRecommendation(metricType: MetricType, value: number): string {
-    const recommendations = {
+    const recommendations: Record<string, string> = {
       component_load: `Consider code splitting or lazy loading for components taking > ${value}ms`,
       api_response: `Optimize database queries or add caching for APIs responding in > ${value}ms`,
       database_query: `Consider query optimization or indexing for queries taking > ${value}ms`,
       audio_load: `Compress audio files or implement progressive loading for files taking > ${value}ms`,
       route_change: `Optimize route components or prefetch data for navigation taking > ${value}ms`
     };
-    return recommendations[metricType] || `Investigate performance bottlenecks for ${metricType}`;
+    return recommendations[metricType] ?? `Investigate performance bottlenecks for ${metricType}`;
   }
 
   private generateId(): string {

@@ -1,13 +1,23 @@
 import { db } from "./db";
 import { 
-  tracks, chapters, audioFiles, textSegments, mediaSegments, segmentMappings, users
+  tracks,
+  chapters,
+  audioFiles,
+  textSegments,
+  mediaSegments,
+  segmentMappings,
+  studentProgress,
+  users
 } from "@shared/schema";
 import { eq, and, max, asc } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
 export interface IStorage {
-  // User operations (required for Replit Auth)
+  // User operations
   getUser(id: string): Promise<any>;
+  getUserByEmail(email: string): Promise<any | null>;
+  getUserByProviderId(provider: string, providerId: string): Promise<any | null>;
+  createUser(user: any): Promise<any>;
   upsertUser(user: any): Promise<any>;
   getAllUsers(): Promise<any[]>;
   updateUserRoles(userId: string, roles: string[]): Promise<any>;
@@ -85,6 +95,7 @@ export class DatabaseStorage implements IStorage {
       email: "system@vediclms.local",
       roles: ["admin"],
       status: "active",
+      provider: "local",
       createdAt: new Date(),
       updatedAt: new Date()
     }).onConflictDoNothing();
@@ -100,9 +111,35 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async upsertUser(userData: any): Promise<any> {
+  async getUserByEmail(email: string): Promise<any | null> {
+    await this.ensureInitialized();
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user ?? null;
+  }
+
+  async getUserByProviderId(provider: string, providerId: string): Promise<any | null> {
     await this.ensureInitialized();
     const [user] = await db
+      .select()
+      .from(users)
+      .where(and(eq(users.provider, provider), eq(users.providerId, providerId)));
+    return user ?? null;
+  }
+
+  async createUser(userData: any): Promise<any> {
+    await this.ensureInitialized();
+    const result = await db.insert(users).values({
+      ...userData,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    const user = Array.isArray(result) ? result[0] : (result as any)?.rows?.[0];
+    return user;
+  }
+
+  async upsertUser(userData: any): Promise<any> {
+    await this.ensureInitialized();
+    const result = await db
       .insert(users)
       .values({
         ...userData,
@@ -112,14 +149,20 @@ export class DatabaseStorage implements IStorage {
       .onConflictDoUpdate({
         target: users.id,
         set: {
-          username: userData.username,
-          displayName: userData.displayName,
           email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
           profileImageUrl: userData.profileImageUrl,
+          roles: userData.roles ?? sql`excluded.roles`,
+          status: userData.status ?? sql`excluded.status`,
+          provider: userData.provider ?? sql`excluded.provider`,
+          providerId: userData.providerId ?? sql`excluded.provider_id`,
+          passwordHash: userData.passwordHash ?? sql`excluded.password_hash`,
           updatedAt: new Date()
         }
       })
       .returning();
+    const user = Array.isArray(result) ? result[0] : (result as any)?.rows?.[0];
     return user;
   }
 
@@ -553,7 +596,12 @@ export class DatabaseStorage implements IStorage {
   // Student progress
   async getStudentProgress(studentId: string): Promise<any[]> {
     await this.ensureInitialized();
-    return [];
+    const progress = await db
+      .select()
+      .from(studentProgress)
+      .where(eq(studentProgress.studentId, studentId))
+      .orderBy(studentProgress.chapterId, studentProgress.lastEvaluatedAt);
+    return progress;
   }
 
   async getStudentStats(studentId: string): Promise<any> {

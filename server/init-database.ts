@@ -1,5 +1,6 @@
 import { storage } from "./database-storage";
-import { seedVedicData } from "./seed-vedic-data";
+// NOTE: Placeholder import removed because seed-vedic-data is not present in this repo.
+// Add back when the seed script is available.
 
 export async function initializeDatabase(): Promise<void> {
   console.log("Initializing database with authentic Vedic content...");
@@ -16,10 +17,8 @@ export async function initializeDatabase(): Promise<void> {
 
   console.log("System user created:", systemUser.id);
 
-  // Seed authentic Vedic data
-  await seedVedicData(systemUser.id);
-
-  console.log("Database initialization completed successfully!");
+  // Seed authentic Vedic data (stubbed until seed script is available)
+  console.log("Database initialization completed successfully (no seed script executed)");
 }
 
 // Run initialization if this file is executed directly
