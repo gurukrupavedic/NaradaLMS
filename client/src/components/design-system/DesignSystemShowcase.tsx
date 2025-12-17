@@ -36,6 +36,9 @@ import { ComponentCard, ComponentInspector } from "./ComponentInspector";
 import { colorVariants, componentConfigs, getComponentConfig } from "./utils/componentMeta";
 import { BookOpen, Edit, Music, Play, Save, Trash2, Search, User, Mail, FileText, Headphones, Layers, CheckCircle, AlertCircle, Info, XCircle, Star, Crown, Shield, HelpCircle, Settings, Upload, Type, Volume2, Zap, X } from "lucide-react";
 
+type DesignSystemColor = "blue" | "green" | "purple" | "orange" | "pink" | "indigo" | "teal" | "cyan" | "yellow" | "lime" | "rose" | "emerald" | "gray";
+type ButtonSizeOption = "sm" | "default" | "lg" | "icon";
+
 export function DesignSystemShowcase() {
 
   const [showDialog, setShowDialog] = useState(false);
@@ -49,9 +52,9 @@ export function DesignSystemShowcase() {
   // Table selection state removed
   
   // Enhanced state for component variants
-  const [featureCardVariant, setFeatureCardVariant] = useState("blue");
-  const [buttonVariant, setButtonVariant] = useState("blue");
-  const [buttonSize, setButtonSize] = useState("default");
+  const [featureCardVariant, setFeatureCardVariant] = useState<DesignSystemColor>("blue");
+  const [buttonVariant, setButtonVariant] = useState<DesignSystemColor>("blue");
+  const [buttonSize, setButtonSize] = useState<ButtonSizeOption>("default");
   // Table state removed - component will be redesigned
   const [sliderVariant, setSliderVariant] = useState("orange");
   const [sliderSize, setSliderSize] = useState("md");

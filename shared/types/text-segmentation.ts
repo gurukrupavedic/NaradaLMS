@@ -17,6 +17,8 @@ export interface TextSegment {
   order: number;
   createdBy: string;
   createdAt: string;
+  textReferences?: Record<Script, { start: number; end: number }>;
+  conceptualName?: string;
 }
 
 export interface MediaSegment {
@@ -38,7 +40,7 @@ export interface SegmentMapping {
 }
 
 export interface MappingWithTimestamps {
-  mappingId: number;
+  mappingId?: number;
   textSegmentId: number;
   mediaSegmentId: number;
   audioFileId: number;
@@ -55,6 +57,10 @@ export interface SimplifiedMapping {
   segmentId: number;
   startTime: number;
   endTime: number;
+  textSegmentId?: number;
+  mediaSegmentId?: number;
+  audioFileId?: number;
+  mappingId?: number;
 }
 
 /**
