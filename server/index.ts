@@ -61,6 +61,8 @@ app.use('/api/auth', identityRouter);
 // Content & Publishing routes (Phase 2 module)
 import { contentRouter } from "./routes/content.routes";
 app.use('/api', contentRouter);
+import { mediaRouter } from "./routes/media.routes";
+app.use('/api', mediaRouter);
 
 app.use((req, res, next) => {
   const start = Date.now();

@@ -1,4 +1,6 @@
-// Media Pipeline events (to be expanded in Phase 3)
-export const mediaEvents = {
-  // Example: AudioUploaded: 'AudioUploaded'
-};
+export const MEDIA_EVENTS = {
+  AUDIO_UPLOADED: 'AudioUploaded',
+  MEDIA_SEGMENT_CREATED: 'MediaSegmentCreated',
+  MAPPING_CREATED: 'MappingCreated',
+  MAPPING_DELETED: 'MappingDeleted',
+} as const;
