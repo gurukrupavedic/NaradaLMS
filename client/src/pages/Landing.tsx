@@ -1,6 +1,9 @@
 import { Button } from '@/components/ui/button';
+import { useLocation } from 'wouter';
 
 export function Landing() {
+  const [, navigate] = useLocation();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="flex items-center justify-center min-h-screen">
@@ -16,13 +19,23 @@ export function Landing() {
             Traditional Vedic learning with modern technology
           </p>
           
-          <Button 
-            size="lg"
-            onClick={() => window.location.reload()}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-          >
-            Enter Vedic LMS
-          </Button>
+          <div className="flex gap-4 justify-center">
+            <Button 
+              size="lg"
+              onClick={() => navigate("/login")}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              Sign In
+            </Button>
+            <Button 
+              size="lg"
+              onClick={() => navigate("/register")}
+              variant="outline"
+              className="px-8 py-4 text-lg border-blue-600 text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              Create Account
+            </Button>
+          </div>
         </div>
       </div>
     </div>

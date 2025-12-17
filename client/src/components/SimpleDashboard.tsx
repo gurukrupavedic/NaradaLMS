@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/design-system/Card";
 import { Button } from "@/components/design-system/Button";
-import { BookOpen, Edit, Beaker } from "lucide-react";
+import { BookOpen, Edit, Beaker, Users } from "lucide-react";
 import type { User } from "@shared/schema";
 
 interface FeatureCard {
@@ -9,7 +9,8 @@ interface FeatureCard {
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   route: string;
-  color: "blue" | "green" | "purple";
+  color: "blue" | "green" | "purple" | "indigo";
+  adminOnly?: boolean;
 }
 
 const FEATURES: FeatureCard[] = [
@@ -28,6 +29,14 @@ const FEATURES: FeatureCard[] = [
     color: "green"
   },
   {
+    title: "Manage Users",
+    description: "Review and approve user registrations",
+    icon: Users,
+    route: "/manage/users",
+    color: "indigo",
+    adminOnly: true,
+  },
+  {
     title: "Experiments",
     description: "Design system showcases and explorations",
     icon: Beaker,
@@ -39,7 +48,8 @@ const FEATURES: FeatureCard[] = [
 const iconColors = {
   blue: "text-blue-600",
   green: "text-green-600",
-  purple: "text-purple-600"
+  purple: "text-purple-600",
+  indigo: "text-indigo-600",
 };
 
 interface SimpleDashboardProps {
@@ -53,15 +63,36 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
     setLocation(route);
   };
 
+  const visibleFeatures = FEATURES.filter((feature) => {
+    if (feature.adminOnly) {
+      return (user as any).roles?.includes("admin");
+    }
+    return true;
+  });
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-center items-center py-4">
+          <div className="flex justify-between items-center py-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Vedic Learning Platform</h1>
+              <p className="text-sm text-gray-600 mt-1">Welcome, {user.email}</p>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                await fetch("/api/auth/logout", {
+                  method: "POST",
+                  credentials: "include",
+                });
+                window.location.href = "/";
+              }}
+            >
+              Sign Out
+            </Button>
           </div>
         </div>
       </div>
@@ -70,12 +101,12 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Feature Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {FEATURES.map((feature) => {
+          {visibleFeatures.map((feature) => {
             const Icon = feature.icon;
             return (
               <Card 
                 key={feature.title}
-                variant={feature.color}
+                variant={feature.color as any}
                 interactive
                 onClick={() => handleFeatureClick(feature.route)}
               >
@@ -91,7 +122,7 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
                 <CardContent>
                   <Button 
                     className="w-full"
-                    color={feature.color}
+                    color={feature.color as any}
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -109,3 +140,4 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
     </div>
   );
 }
+

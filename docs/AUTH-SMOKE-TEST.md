@@ -1,18 +1,18 @@
-# Auth Smoke Test (Phase 0)
+# Auth Smoke Test (Phase 1)
 
-Minimal manual verification for the new session-based auth routes. Run after setting environment variables.
+Verification for session-based auth with approval workflow and admin user management UI.
 
 ## Required env
 - `SESSION_SECRET` (strong random)
 - `DATABASE_URL` (or PG* vars in `.env`)
-- Optional: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` for Google OAuth (not needed for Phase 0)
+- `ADMIN_EMAIL` (email that auto-activates as admin on first registration)
 
-Tip: Phase 0 uses local-only auth. Make sure `.env` exists and contains:
-
+## .env example
 ```
 DATABASE_URL=postgresql://postgres:welcome@localhost:5432/vediclms_dev
 SESSION_SECRET=dev-secret-key-change-in-production
 NODE_ENV=development
+ADMIN_EMAIL=kashyap.kuchipudi@gmail.com
 PGHOST=localhost
 PGPORT=5432
 PGUSER=postgres
@@ -20,57 +20,119 @@ PGPASSWORD=welcome
 PGDATABASE=vediclms_dev
 ```
 
-## Reset dev database (optional but recommended)
-Run this when schema prompts appear or after major changes:
-
+## Reset dev database
 ```
 npm run db:reset
 ```
 
-## Start the server
-```
-npm run dev
-```
-
-## Local account flow (automated)
-Use the Node script that starts the server, registers a user, flips to `active`, logs in, hits `/me`, and logs out:
-
+## Automated testing
+Start server and run e2e tests:
 ```
 npm run auth:test
 ```
 
-## Local account flow (manual)
-1) Register (pending approval by design):
+## Manual testing flow (Phase 1)
 
-Windows PowerShell (recommended):
-```
-Invoke-RestMethod -Uri "http://localhost:5000/api/auth/register" -Method Post -ContentType 'application/json' -Body '{"email":"test@example.com","password":"Passw0rd!","firstName":"Test","lastName":"User"}'
-```
-Expect 200 with message "Account created. Awaiting admin approval.".
+### Step 1: Register as admin (auto-activates)
+```powershell
+$adminBody = @{
+  email = "kashyap.kuchipudi@gmail.com"
+  password = "adminpass123"
+  firstName = "Admin"
+  lastName = "User"
+} | ConvertTo-Json
 
-2) Mark user active (temporarily, until admin UI exists): update `users.status='active'` for the email above.
+Invoke-RestMethod -Uri "http://localhost:5000/api/auth/register" `
+  -Method POST -ContentType "application/json" -Body $adminBody -Credentials $null
+```
 
-3) Login:
-```
-Invoke-RestMethod -Uri "http://localhost:5000/api/auth/login" -Method Post -ContentType 'application/json' -Body '{"email":"test@example.com","password":"Passw0rd!"}'
-```
-Expect 200.
+Expected: `status: "active"` (auto-approved since email matches ADMIN_EMAIL)
 
-4) Me endpoint:
-```
-Invoke-RestMethod -Uri "http://localhost:5000/api/auth/me" -Method Get
-```
-Expect 200 with user payload when session cookie is present.
+### Step 2: Register as pending user
+```powershell
+$studentBody = @{
+  email = "student@example.com"
+  password = "studentpass123"
+  firstName = "Student"
+  lastName = "User"
+} | ConvertTo-Json
 
-5) Logout:
+Invoke-RestMethod -Uri "http://localhost:5000/api/auth/register" `
+  -Method POST -ContentType "application/json" -Body $studentBody
 ```
-Invoke-RestMethod -Uri "http://localhost:5000/api/auth/logout" -Method Post
-```
-Expect 200 with message "Logged out".
 
-## Google OAuth (optional)
-- Skip in Phase 0. Configure later when app is stable.
+Expected: `status: "pending_approval"`
+
+### Step 3: Admin logs in
+```powershell
+$loginBody = @{
+  email = "kashyap.kuchipudi@gmail.com"
+  password = "adminpass123"
+} | ConvertTo-Json
+
+$session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+$loginResp = Invoke-RestMethod -Uri "http://localhost:5000/api/auth/login" `
+  -Method POST -ContentType "application/json" -Body $loginBody `
+  -WebSession $session -SessionVariable "session"
+
+$session  # Save for next requests
+```
+
+Expected: Returns user object with `roles: ["admin"]`
+
+### Step 4: Admin views pending users
+```powershell
+Invoke-RestMethod -Uri "http://localhost:5000/api/admin/users" `
+  -Method GET -WebSession $session
+```
+
+Expected: List of all users with pending and active status
+
+### Step 5: Admin approves student
+```powershell
+# Get student ID from step 4 response
+$studentId = "..." # from previous response
+
+Invoke-RestMethod -Uri "http://localhost:5000/api/admin/users/$studentId/approve" `
+  -Method POST -WebSession $session
+```
+
+Expected: Student status changed to `"active"` with `roles: ["student"]`
+
+### Step 6: Student logs in (now active)
+```powershell
+$studentLoginBody = @{
+  email = "student@example.com"
+  password = "studentpass123"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://localhost:5000/api/auth/login" `
+  -Method POST -ContentType "application/json" -Body $studentLoginBody
+```
+
+Expected: 200 OK (now approved)
+
+### Step 7: Check /me endpoint
+```powershell
+Invoke-RestMethod -Uri "http://localhost:5000/api/auth/me" `
+  -Method GET
+```
+
+Expected: User payload with active status
+
+## UI Flow
+1. Unauthenticated user → Landing page (/login and /register buttons)
+2. Click "Create Account" → Register page
+3. Register with admin email → Auto-login possible, admin dashboard visible
+4. Register with other email → Redirected to PendingApproval page (hourglass, wait message)
+5. Admin logs in → SimpleDashboard shows "Manage Users" card
+6. Click "Manage Users" → Shows pending users table with Approve buttons
+7. Click Approve → User marked active, refetch list shows in active section
+8. Pending user logs in again → Redirected to PendingApproval (still waiting)
+9. After approval, user sees full dashboard
 
 ## Notes
-- Approval gating: new users start as `pending_approval`; activate manually until the admin UI is built.
-- For PowerShell, prefer `Invoke-RestMethod` over `curl` to avoid alias quirks.
+- Approval gating enforced: `pending_approval` users can't access /manage, /tracks, /chapter routes
+- Role-based admin access: `/manage/users` returns 403 unless user has `admin` role
+- Email uniqueness enforced: duplicate registrations rejected with 400
+

@@ -11,12 +11,16 @@ import { useWarmTrackCache } from "@/lib/query-prefetch";
 
 // Phase 5A: Bundle Optimization - Route-based code splitting
 const Landing = lazy(() => import("@/pages/Landing").then(module => ({ default: module.Landing })));
+const Login = lazy(() => import("@/pages/Login").then(module => ({ default: module.Login })));
+const Register = lazy(() => import("@/pages/Register").then(module => ({ default: module.Register })));
+const PendingApproval = lazy(() => import("@/pages/PendingApproval").then(module => ({ default: module.PendingApproval })));
 const SimpleDashboard = lazy(() => import("@/components/SimpleDashboard"));
 const NotFound = lazy(() => import("@/pages/NotFound").then(module => ({ default: module.NotFound })));
 
 const ManageTracks = lazy(() => import("@/pages/ManageTracks").then(module => ({ default: module.ManageTracks })));
 const ManageChapters = lazy(() => import("@/pages/ManageChapters").then(module => ({ default: module.ManageChapters })));
 const EditChapter = lazy(() => import("@/pages/EditChapter").then(module => ({ default: module.EditChapter })));
+const ManageUsers = lazy(() => import("@/pages/ManageUsers").then(module => ({ default: module.ManageUsers })));
 const LearnTracks = lazy(() => import("@/pages/LearnTracks").then(module => ({ default: module.LearnTracks })));
 const LearnChapters = lazy(() => import("@/pages/LearnChapters").then(module => ({ default: module.LearnChapters })));
 const StudyChapter = lazy(() => import("@/pages/StudyChapter").then(module => ({ default: module.StudyChapter })));
@@ -37,7 +41,7 @@ const DashboardOldExperiment = lazy(() => import("@/pages/DashboardOldExperiment
 
 
 function Router() {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user, isPendingApproval } = useAuth();
   const [location, navigate] = useLocation();
   
   // Phase 5C: Background cache warming
@@ -51,11 +55,26 @@ function Router() {
     );
   }
 
+  // Redirect to pending approval if user status is pending
+  if (isAuthenticated && isPendingApproval && location !== "/pending-approval") {
+    navigate("/pending-approval");
+  }
+
   return (
     <Suspense fallback={<LoadingScreen message="Loading application..." />}>
       <Switch>
         {!isAuthenticated ? (
-          <Route path="/" component={Landing} />
+          <>
+            <Route path="/" component={Landing} />
+            <Route path="/login" component={Login} />
+            <Route path="/register" component={Register} />
+            <Route component={NotFound} />
+          </>
+        ) : isPendingApproval ? (
+          <>
+            <Route path="/pending-approval" component={PendingApproval} />
+            <Route component={() => { navigate("/pending-approval"); return null; }} />
+          </>
         ) : (
           <>
             <Route path="/" component={() => <SimpleDashboard user={user as any} />} />
@@ -64,6 +83,7 @@ function Router() {
             <Route path="/manage" component={() => <ManageTracks />} />
             <Route path="/manage/tracks/:trackId" component={() => <ManageChapters />} />
             <Route path="/manage/tracks/:trackId/chapters/:chapterId" component={() => <EditChapter />} />
+            <Route path="/manage/users" component={() => <ManageUsers />} />
             
             {/* Legacy redirects for old content-management URLs */}
             <Route path="/content-management" component={() => <ManageTracks />} />
@@ -88,11 +108,9 @@ function Router() {
             <Route path="/experiments/chapter/:id" component={ChapterExperiment} />
             <Route path="/experiments/dashboard-old" component={() => <DashboardOldExperiment onTrackSelect={() => {}} onChapterSelect={() => {}} />} />
 
-
-
+            <Route component={NotFound} />
           </>
         )}
-        <Route component={NotFound} />
       </Switch>
     </Suspense>
   );
