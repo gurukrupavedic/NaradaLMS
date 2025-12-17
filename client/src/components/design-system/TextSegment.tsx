@@ -104,8 +104,7 @@ const numberPillVariants = cva(
       }
     },
     defaultVariants: {
-      variant: "gray",
-      size: "md"
+      variant: "gray"
     }
   }
 );

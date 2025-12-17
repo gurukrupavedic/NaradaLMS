@@ -169,6 +169,7 @@ export const studentProgress = pgTable("student_progress", {
   id: serial("id").primaryKey(),
   studentId: varchar("student_id").notNull().references(() => users.id),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
+  batchId: integer("batch_id").references(() => batches.id),
   proficiencyLevel: integer("proficiency_level").default(0).notNull(), // 0-4 (0=not started, 1-4=levels)
   lastAccessed: timestamp("last_accessed"),
   lastEvaluatedAt: timestamp("last_evaluated_at"),
@@ -298,6 +299,10 @@ export const studentProgressRelations = relations(studentProgress, ({ one }) => 
   chapter: one(chapters, {
     fields: [studentProgress.chapterId],
     references: [chapters.id],
+  }),
+  batch: one(batches, {
+    fields: [studentProgress.batchId],
+    references: [batches.id],
   }),
   evaluatedBy: one(users, {
     fields: [studentProgress.evaluatedBy],

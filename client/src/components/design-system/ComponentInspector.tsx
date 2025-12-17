@@ -23,7 +23,7 @@ export interface ComponentInspectorProps {
   onVariantChange?: (variant: string) => void;
   onSizeChange?: (size: string) => void;
   onIconChange?: (icon: string) => void;
-  onPropsChange?: (props: Record<string, any>) => void;
+  onPropsChange?: React.Dispatch<React.SetStateAction<any>> | ((props: Record<string, any>) => void);
   className?: string;
 }
 
@@ -38,7 +38,7 @@ export interface ComponentCardProps {
   allSizes?: string[];
   onVariantChange?: (variant: string) => void;
   onSizeChange?: (size: string) => void;
-  onPropsChange?: (props: Record<string, any>) => void;
+  onPropsChange?: React.Dispatch<React.SetStateAction<any>> | ((props: Record<string, any>) => void);
   showInspector?: boolean;
   children: React.ReactNode;
   className?: string;

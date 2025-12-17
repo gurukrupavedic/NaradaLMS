@@ -92,7 +92,7 @@ export function LearnChapters() {
                       {chapter.description || "No description"}
                     </p>
                   </div>
-                  <Button variant="outline" color="green" buttonStyle="card" size="sm" data-testid={`button-study-chapter-${chapter.id}`}>
+                  <Button variant="outline" color="green" size="sm" data-testid={`button-study-chapter-${chapter.id}`}>
                     <Play className="h-4 w-4 mr-2" />
                     Study
                     <ChevronRight className="h-4 w-4 ml-2" />

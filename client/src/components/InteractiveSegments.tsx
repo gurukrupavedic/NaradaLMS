@@ -1,10 +1,11 @@
 import React from 'react';
-import type { Segment, AudioSegmentMapping, AudioFile } from '@shared/schema';
+import type { AudioFile, SegmentMapping } from '@shared/schema';
+import type { TextSegment } from '@shared/types/text-segmentation';
 
 interface InteractiveSegmentsProps {
   content: string;
-  segments: (Segment & {
-    mappings: (AudioSegmentMapping & {
+  segments: (TextSegment & {
+    mappings: (SegmentMapping & {
       audioFile: AudioFile;
     })[];
   })[];
@@ -52,7 +53,7 @@ export function InteractiveSegments({
         
         // Check if this segment has audio mapping for the selected audio file
         const hasMapping = selectedAudioFile ? 
-          segment.mappings.some(m => m.audioFileId === selectedAudioFile.id) : 
+          segment.mappings.some((m: any) => m.audioFileId === selectedAudioFile.id) : 
           segment.mappings.length > 0;
 
         const isActive = activeSegment === segment.id;
