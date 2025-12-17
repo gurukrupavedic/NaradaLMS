@@ -84,32 +84,42 @@ vedic-lms/
 
 ```
 ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
-│   tracks    │──────<│  chapters   │──────<│ audio_files │
-│             │  1:N  │             │  1:N  │             │
-└─────────────┘       └─────────────┘       └─────────────┘
+│   users     │       │   tracks    │──────<│  chapters   │──────<│ audio_files │
+│             │       │             │  1:N  │             │  1:N  │             │
+└──────┬──────┘       └──────┬──────┘       └──────┬──────┘       └─────────────┘
+       │                     │                     │
+       │ M:N                 │ 1:N                 │ 1:N
+       │                     ▼                     ▼
+       │              ┌─────────────┐       ┌─────────────┐       ┌───────────────┐
+       └─────────────>│   batches   │       │text_segments│──────<│segment_mappings│
+                      │             │       │             │  1:N  │               │
+                      └──────┬──────┘       └─────────────┘       └───────┬───────┘
+                             │                                            │ N:1
+                             │ 1:N                                        ▼
+                             ▼                                     ┌───────────────┐
+                      ┌─────────────┐                             │media_segments │
+                      │ enrollments │                             │               │
+                      │             │                             └───────────────┘
+                      └──────┬──────┘
                              │
-                             │ 1:N
+                             │ authorization context
                              ▼
-                      ┌─────────────┐       ┌───────────────┐
-                      │text_segments│──────<│segment_mappings│
-                      │             │  1:N  │               │
-                      └─────────────┘       └───────────────┘
-                                                   │
-                                                   │ N:1
-                                                   ▼
-                                            ┌───────────────┐
-                                            │media_segments │
-                                            │               │
-                                            └───────────────┘
+                      ┌──────────────────┐
+                      │ student_progress │ (cumulative, not batch-scoped)
+                      │                  │
+                      └──────────────────┘
 ```
 
 ### Table Descriptions
 
 | Table | Purpose |
 |-------|---------|
-| `users` | User accounts with roles (admin, instructor, student) |
-| `tracks` | Learning tracks (e.g., "Vaidika Nithya Karma") |
+| `users` | User accounts with multi-role flags (student, instructor, content_manager, admin) |
+| `tracks` | 8 sequential learning tracks with progress-based gating |
 | `chapters` | Content units within tracks, with multilingual HTML content |
+| `batches` | Social/temporal groupings for instructor-led learning (one track per batch) |
+| `enrollments` | Student-batch assignments (fluid, admin-controlled) |
+| `student_progress` | Cumulative proficiency levels per student per chapter (0-4 scale) |
 | `audio_files` | Uploaded audio recordings per chapter |
 | `text_segments` | Defined text portions for audio mapping |
 | `media_segments` | Audio timestamp ranges (startTime, endTime) |
@@ -203,15 +213,18 @@ PostgreSQL (media_segments + segment_mappings)
 
 ## Frontend Routes
 
-| Route | Component | Purpose |
-|-------|-----------|---------|
-| `/` | SimpleDashboard | Home dashboard |
-| `/manage/tracks` | ManageTracks | Track list management |
-| `/manage/tracks/:id` | ManageChapters | Chapter list for a track |
-| `/manage/tracks/:trackId/chapters/:chapterId` | EditChapter | Multi-tab chapter editor |
-| `/learn/tracks` | LearnTracks | Browse available tracks |
-| `/learn/tracks/:id` | LearnChapters | Browse chapters in a track |
-| `/study/:chapterId` | StudyChapter | Interactive learning view |
+| Route | Component | Purpose | Auth Required |
+|-------|-----------|---------|---------------|
+| `/` | SimpleDashboard | Home dashboard | Yes (approved) |
+| `/manage/tracks` | ManageTracks | Track list management | Admin/Content Manager |
+| `/manage/tracks/:id` | ManageChapters | Chapter list for a track | Admin/Content Manager |
+| `/manage/tracks/:trackId/chapters/:chapterId` | EditChapter | Multi-tab chapter editor | Admin/Content Manager |
+| `/learn/tracks` | LearnTracks | Browse unlocked tracks (progress-gated) | Student (batch-assigned) |
+| `/learn/tracks/:id` | LearnChapters | Browse chapters in a track | Student (if track unlocked) |
+| `/study/:chapterId` | StudyChapter | Interactive learning view | Student |
+| `/admin/users` | UserManagement | Approve accounts, assign roles | Admin only |
+| `/admin/batches` | BatchManagement | Create batches, assign students/instructors | Admin only |
+| `/instructor/batches` | InstructorDashboard | View assigned batches, update progress | Instructor only |
 
 ---
 
@@ -238,6 +251,50 @@ Custom fonts for Vedic scripts:
 | IAST | AdishilaSan | `font-iast` |
 
 Font files location: `client/public/fonts/`
+
+---
+
+## User Management & Authentication
+
+### Registration & Approval Flow
+
+1. **Open Registration**: Users self-register via standard signup form
+2. **Approval Queue**: Admin sees pending accounts (status: `pending_approval`)
+3. **Vetting**: Admin approves only users vetted through external Google Forms process
+4. **Auto-Role Assignment**: Approval automatically assigns `student` role
+5. **Login Block**: Unapproved users cannot log in (auth blocked at login)
+6. **Rejection**: Admin can permanently delete unvetted accounts
+
+### Multi-Role Model
+
+Users can have any combination of roles:
+- **student**: View published content, track own progress (after batch assignment)
+- **instructor**: View/update progress for students in assigned batches
+- **content_manager**: Create/edit/publish tracks, chapters, audio, segments
+- **admin**: Full system access (users, batches, settings)
+
+### Batch System
+
+**Batches** = Social/temporal groupings for instructor-led learning
+- One track per batch (e.g., "Evening Batch - Track 1")
+- One primary instructor + multiple secondary instructors (identical privileges)
+- Students can switch batches for scheduling convenience
+- Batch assignment required before students can see content
+
+### Progress Tracking
+
+**Progress** = Individual achievement (cumulative, not batch-scoped)
+- Stored at student + chapter level (0-4 proficiency scale)
+- Preserved across batch changes
+- Only primary/secondary instructors can update (admin NOT involved)
+- Instructors can only evaluate students in their assigned batches
+
+### Track Gating
+
+**System-enforced progression**: Student can access Track N+1 only if all Track N chapters ≥ level 2
+- Track 1: Always accessible (after batch assignment)
+- Track 2-8: Unlocked by completing previous track
+- Progress-based visibility (not admin-controlled)
 
 ---
 

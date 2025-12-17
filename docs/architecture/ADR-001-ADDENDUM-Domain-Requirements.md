@@ -18,105 +18,179 @@
 
 ## Key Domain Requirements
 
-### 1. User Registration & Account Creation (External Process)
+### 1. User Registration & Account Creation (Open Registration + Approval)
 
 #### Current Process
-1. Students discover program via word-of-mouth
-2. Sign up using **Google Forms survey** (external to LMS)
+1. Students discover program via word-of-mouth/social channels
+2. Sign up using **Google Forms survey** (external to LMS) - vetting process
 3. Admin reviews applications offline
-4. Admin approves application → sends WhatsApp/message to student
-5. Student creates account in LMS
-6. Admin approves account in LMS → auto-assigns **'student'** role
-7. Admin can later assign additional roles as needed
+4. Admin approves application → requests student to create LMS account
+5. **Student self-registers** in LMS (open registration, like any standard app)
+6. Admin sees approval queue → approves only vetted users → auto-assigns **'student'** role
+7. Admin can reject/ignore unvetted users (permanently deleted)
+8. Admin can later assign additional roles as needed
 
 #### System Rules
-- **No Self-Enrollment:** All user creation is admin-controlled
+- **Open Registration:** Users can self-register accounts (standard signup flow)
+- **Approval Queue:** Admin sees all pending accounts waiting for approval
+- **Conditional Approval:** Admin approves only users who passed Google Forms vetting
+- **Rejection Flow:** Admin can permanently delete unvetted/rejected accounts
 - **Auto Role Assignment:** Account approval auto-assigns 'student' role
 - **Flexible Roles:** Admin can assign any combination of: student, instructor, content_manager, admin
-- **External Workflow:** Application review process stays in Google Forms/spreadsheets
-- **No System Enforcement:** Trust-based, flexibility prioritized
+- **Pre-Approval Security:** Unapproved users **cannot log in** (auth blocked at login)
+- **Batch-Gated Content:** Approved students can't see tracks/chapters until assigned to a batch
 
 **Impact on Identity Module:**
 ```typescript
 interface User {
   id: string;
   email: string;
+  passwordHash: string;       // For self-registration
   roles: ('student' | 'instructor' | 'content_manager' | 'admin')[];
-  status: 'pending_approval' | 'active' | 'inactive';  // Pending = approved account, needs admin activation
-  // No track context here - roles don't imply track level
+  status: 'pending_approval' | 'active' | 'inactive';
+  // pending_approval = registered but not vetted
+  // active = admin-approved, can log in
+  // inactive = suspended/disabled
+  createdAt: timestamp;
+  approvedAt?: timestamp;
+  approvedBy?: string;        // adminId
 }
 
-// Admin workflow
-async approveUserAccount(userId): Promise<User> {
-  // Approve account → auto-assign student role
-  const user = await updateUser(userId, {
-    roles: ['student'],
-    status: 'active'
+// Registration flow (open)
+async registerAccount(email, password): Promise<User> {
+  // Anyone can register
+  const user = await createUser({
+    email,
+    passwordHash: await hash(password),
+    roles: [],
+    status: 'pending_approval'
   });
-  eventBus.publish('UserAccountApproved', { userId, roles: ['student'] });
+  // Notify admin of new pending account
+  eventBus.publish('UserAccountCreated', { userId: user.id, email });
   return user;
 }
 
+// Login blocked for unapproved users
+async login(email, password): Promise<Session> {
+  const user = await authenticateCredentials(email, password);
+  
+  if (user.status === 'pending_approval') {
+    throw new AuthError(
+      'PENDING_APPROVAL',
+      'Your account is awaiting admin approval. You will receive an email when activated.'
+    );
+  }
+  
+  if (user.status === 'inactive') {
+    throw new AuthError('ACCOUNT_DISABLED', 'Your account has been disabled.');
+  }
+  
+  return createSession(user);
+}
+
+// Admin approval workflow
+async approveUserAccount(userId, adminId): Promise<User> {
+  const user = await updateUser(userId, {
+    roles: ['student'],
+    status: 'active',
+    approvedAt: new Date(),
+    approvedBy: adminId
+  });
+  // Send welcome email to user
+  eventBus.publish('UserAccountApproved', { userId, email: user.email });
+  return user;
+}
+
+// Admin rejection (permanent delete)
+async rejectUserAccount(userId, adminId): Promise<void> {
+  await deleteUser(userId);
+  eventBus.publish('UserAccountRejected', { userId, rejectedBy: adminId });
+}
+
 async assignRoleToUser(userId, role): Promise<User> {
-  // Admin can assign any role to existing user
   const user = await getUser(userId);
-  const updatedRoles = [...user.roles, role]; // Add new role
+  const updatedRoles = [...user.roles, role];
   return await updateUser(userId, { roles: updatedRoles });
 }
 ```
 
 ---
 
-### 2. Batch Formation & Lifecycle
+### 2. Batch Formation & Lifecycle (Social Grouping for Instruction)
 
 #### Current Process
 1. Admin creates batch for a track
 2. Admin assigns instructor(s) to batch
-   - **Primary Instructor:** Main teacher for the batch
-   - **Co-Instructors:** Teaching assistants (TAs) with same system privileges as instructor
+   - **Primary Instructor:** Main teacher (ONE per batch)
+   - **Secondary Instructors:** Additional teachers (NOT TAs) with identical privileges
 3. Admin assigns students to batch
 4. Batch begins instruction (no capacity constraints)
+5. Students can switch batches based on schedule/convenience
 
 #### System Rules
 - **No Capacity Limits:** Batch can start/run with any number of students
 - **Track-Specific:** Each batch teaches ONE track, not mixed curriculum
 - **Flexible Pacing:** No time limits; instructor-driven pace
-- **Flexible Assignment:** Students/instructors can be reassigned between batches
-- **Instructor Pool:** Any user with 'instructor' role can be assigned to teach
-- **Co-Instructor Model:** Users with 'instructor' role assigned to batch as co-instructors have same privileges (TAs)
+- **Fluid Assignment:** Students can move between batches freely (admin-controlled)
+- **Instructor Pool:** Any user with 'instructor' role can be assigned
+- **Primary/Secondary Model:** One primary + multiple secondary instructors per batch
+- **Identical Privileges:** Primary and secondary instructors have same system permissions
+- **Batch as Social Group:** Defines WHO and WHEN students learn together, not WHAT they've achieved
 
 **Impact on Batch Module:**
 ```typescript
 interface Batch {
   id: number;
-  trackId: number;              // REQUIRED - batch teaches one track
-  name: string;                 // e.g., "Fall 2025 Track 1 Batch A"
+  trackId: number;                  // REQUIRED - batch teaches one track
+  name: string;                     // e.g., "Evening Batch - Track 1"
   status: 'active' | 'completed' | 'archived';
-  //       ^^^^^^ Simple status - no formation constraints
-  instructorId: string;         // Primary instructor/teacher
-  coInstructorIds: string[];    // Co-instructors (TAs) - same privileges in code
+  primaryInstructorId: string;      // ONE primary instructor
+  secondaryInstructorIds: string[]; // Multiple secondary instructors (not TAs)
   createdBy: string;
   createdAt: timestamp;
   updatedAt: timestamp;
-  // No: minStudents, maxStudents, startedAt, completedAt, certifiedAt
 }
 
-// Business Logic
-canStartBatch(batchId): boolean {
-  // No constraints - admin can start batch anytime
-  return true;
+interface BatchEnrollment {
+  id: number;
+  batchId: number;
+  studentId: string;
+  status: 'active' | 'dropped' | 'completed';
+  enrolledAt: timestamp;
+  enrolledBy: string;  // adminId
 }
 
-// Simple assignment tracking
-async assignStudentToBatch(batchId, studentId, assignedBy): Promise<void> {
-  // Create enrollment record
-  // No duplicate check - admin can reassign as needed
+// Batch is fluid - students can be reassigned
+async assignStudentToBatch(batchId, studentId, adminId): Promise<void> {
+  // Remove from other batches for same track (if any)
+  await deactivateEnrollmentsForTrack(studentId, batch.trackId);
+  
+  // Create new enrollment
+  await createEnrollment({
+    batchId,
+    studentId,
+    status: 'active',
+    enrolledBy: adminId
+  });
 }
 
-async assignInstructorToBatch(batchId, instructorId, isPrimary, assignedBy): Promise<void> {
-  // If isPrimary=true, set as primary instructor
-  // If isPrimary=false, add to co-instructors
-  // Same system privileges for both
+// When student leaves batch, they disappear from instructor's view
+async transferStudentToBatch(studentId, fromBatchId, toBatchId, adminId): Promise<void> {
+  // Mark old enrollment as dropped
+  await updateEnrollment(fromBatchId, studentId, { status: 'dropped' });
+  
+  // Create new enrollment
+  await assignStudentToBatch(toBatchId, studentId, adminId);
+  
+  // Student's progress is preserved (cumulative across batches)
+}
+
+async assignInstructorToBatch(batchId, instructorId, isPrimary, adminId): Promise<void> {
+  if (isPrimary) {
+    await updateBatch(batchId, { primaryInstructorId: instructorId });
+  } else {
+    await addSecondaryInstructor(batchId, instructorId);
+  }
 }
 ```
 
@@ -175,138 +249,240 @@ canEditContent(userId): boolean {
 
 ---
 
-### 3. Proficiency Levels (0-4) - Instructor-Driven, No Enforcement
+### 3. Proficiency Levels (0-4) - Instructor-Driven, Cumulative Progress
 
 #### Level Definitions
 | Level | Meaning | Notes |
 |-------|---------|-------|
 | **0** | Not started | Initial state |
 | **1** | Basic proficiency | Instructor-assigned |
-| **2** | Working proficiency | Instructor-assigned |
+| **2** | Working proficiency | Gate for next track access |
 | **3** | Advanced proficiency | Instructor-assigned |
-| **4** | Mastery/Certified | Instructor-assigned (typically after oral exam, but system doesn't enforce) |
+| **4** | Mastery/Certified | Instructor-assigned (typically after oral exam, external process) |
 
-#### Critical Rules (Minimal Initially)
-- **Instructor Control:** Only instructors (or admin) can set levels for students in their batch
-- **No Validation:** Levels can be set in any order (0→4, 4→1, etc.) - no sequential enforcement
-- **Trust-Based:** Instructor has full discretion; system doesn't enforce prerequisites or gates
-- **Track Completion (Future):** Eventually may track "all chapters ≥ level 2" for next track eligibility, but not enforced now
-- **Certification (Outside System):** Level 4 is typically given after student passes oral exam, but this process is external
+#### Critical Rules
+- **Instructor-Only Control:** Only primary/secondary instructors can set levels (admins are NOT involved)
+- **Batch-Context Authorization:** Instructors can only update students in their assigned batches
+- **Cumulative Progress:** Progress is at **student + chapter** level, NOT batch-scoped
+- **Progress Preservation:** When student switches batches, their progress stays (doesn't reset)
+- **No Validation:** Levels can be set in any order (0→4, 4→1, etc.) - instructor discretion
+- **Trust-Based:** System doesn't enforce prerequisites or sequential level increases
+- **Track Gating:** Student can access Track N+1 only if all Track N chapters ≥ level 2
+- **Certification (External):** Level 4 typically after oral exam, but process is outside system
 
 **Impact on Progress Module:**
 ```typescript
 interface StudentProgress {
   id: number;
-  studentId: string;
-  chapterId: number;
-  batchId: number;              // Progress tied to batch context
+  studentId: string;            // PK component
+  chapterId: number;            // PK component
   proficiencyLevel: 0 | 1 | 2 | 3 | 4;
   lastEvaluatedAt: timestamp;
-  evaluatedBy: string;          // instructorId or admin
-  notes: string;                // Instructor feedback/observations
+  lastEvaluatedBy: string;      // instructorId who made last update
+  notes: string;                // Instructor feedback
   createdAt: timestamp;
   updatedAt: timestamp;
+  // NO batchId - progress is cumulative across batches
 }
 
-// Simple business logic - no enforcement
+// Authorization based on batch, but progress is student-level
 async updateStudentProgress(
-  batchId: string,
+  batchId: number,
   studentId: string,
   chapterId: number,
   proficiencyLevel: number,
   instructorId: string
 ): Promise<StudentProgress> {
-  // Validate:
-  // 1. Instructor is assigned to this batch (primary or co-instructor)
-  // 2. Student is assigned to this batch
-  // That's it - no other validation
-  
   const batch = await getBatch(batchId);
-  const isAuthorized = batch.instructorId === instructorId || 
-                       batch.coInstructorIds.includes(instructorId);
   
-  if (!isAuthorized) throw new Error('Not authorized');
+  // Verify instructor is assigned to batch (primary or secondary)
+  const isAuthorized = batch.primaryInstructorId === instructorId ||
+                       batch.secondaryInstructorIds.includes(instructorId);
+  if (!isAuthorized) throw new Error('Not authorized to update this batch');
   
-  // Update progress - any level to any level allowed
-  return await createOrUpdateProgress({
+  // Verify student is enrolled in this batch
+  const enrollment = await getEnrollment(batchId, studentId);
+  if (!enrollment || enrollment.status !== 'active') {
+    throw new Error('Student not in batch');
+  }
+  
+  // Update progress (upsert - creates or updates existing)
+  // Progress is NOT scoped to batch, but authorization uses batch context
+  return await upsertStudentProgress({
     studentId,
     chapterId,
-    batchId,
     proficiencyLevel,
-    evaluatedBy: instructorId,
-    lastEvaluatedAt: new Date()
+    lastEvaluatedBy: instructorId,
+    lastEvaluatedAt: new Date(),
+    notes: notes || ''
   });
 }
 
-// No gates/restrictions
-canProgressToNextTrack(studentId, currentTrackId): boolean {
-  // Return true - system doesn't enforce track progression yet
-  // Can be added later when stabilized
-  return true;
+// Track access gating - system-enforced
+async canAccessTrack(studentId: string, trackId: number): Promise<boolean> {
+  // Track 1 is always accessible
+  if (trackId === 1) return true;
+  
+  const previousTrackId = trackId - 1;
+  
+  // Get all chapters in previous track
+  const prevTrackChapters = await getChaptersForTrack(previousTrackId);
+  
+  // Check if student achieved level 2+ on ALL chapters
+  const progressRecords = await Promise.all(
+    prevTrackChapters.map(ch => getStudentProgressForChapter(studentId, ch.id))
+  );
+  
+  const allCompleted = progressRecords.every(p => p && p.proficiencyLevel >= 2);
+  
+  return allCompleted;
 }
 
-canTakeOralExam(studentId, trackId): boolean {
-  // Not implemented - exams are external
-  // Can be added later
-  return null;
+// Get student's visible tracks based on cumulative progress
+async getAccessibleTracks(studentId: string): Promise<Track[]> {
+  const allTracks = await getAllTracks();
+  
+  const accessibleTracks = [];
+  for (const track of allTracks) {
+    const canAccess = await canAccessTrack(studentId, track.id);
+    if (canAccess) {
+      accessibleTracks.push(track);
+    } else {
+      break; // Stop at first inaccessible track (sequential gating)
+    }
+  }
+  
+  return accessibleTracks;
 }
 ```
 
-**Future Business Rules (Add Later When Stabilized):**
-- Track completion gate: all chapters ≥ level 2
-- Exam eligibility gate: all chapters ≥ level 3
-- Auto-progression when all chapters reach certain levels
-- Progress reports for instructors
+**Admin Responsibilities (Limited):**
+- Create batches
+- Assign students to batches
+- Assign primary/secondary instructors to batches
+- **NOT involved in student progress updates** (only instructors)
 
 ---
 
-### 4. Track Progression Logic (Flexible, Not Enforced Initially)
+### 4. Track Progression Logic (System-Enforced Gating)
 
-#### Sequential Track Model
+#### Sequential Track Model with Progress-Based Access
 - 8 tracks total (Track 1 → Track 2 → ... → Track 8)
-- **Soft Prerequisite:** Students should complete Track N before moving to Track N+1 (not enforced by system)
-- **Flexible Assignments:** Admin can assign students to any batch regardless of previous completion
-- **Progress Preservation:** When students drop out and return later, their previous progress is preserved
-- **Batch-Based Learning:** Students learn in batches; admin moves them between batches as needed
+- **System-Enforced Gate:** Student can access Track N+1 only if all Track N chapters ≥ level 2
+- **Track Access ≠ Batch Assignment:** Track visibility is progress-based; batch assignment is schedule-based
+- **Progress Preservation:** All student progress is cumulative and persists across batch changes
+- **Batch Switching:** Students can move between batches (same track or different track) for scheduling convenience
 
-**Impact on Batch & Learning Modules:**
-```typescript
-// Soft prerequisite - informational only, not enforced
-async canEnrollInBatch(studentId, batchId): Promise<boolean> {
-  const batch = await getBatch(batchId);
+**Key Architectural Distinction:**
+```
+PROGRESS (What student has achieved)
+  ↓
+  Student-level, cumulative, gates track access
+  Stored in: student_progress (studentId, chapterId, proficiencyLevel)
   
-  // Check: Is student enrolled in another batch for same track?
-  const existingEnrollment = await getActiveEnrollmentForTrack(studentId, batch.trackId);
-  if (existingEnrollment) {
-    throw new Error('Already enrolled in a batch for this track');
+BATCH (Where/when student learns)
+  ↓
+  Social grouping, defines who can evaluate progress
+  Stored in: enrollments (batchId, studentId, status)
+```
+
+**Impact on Learning & Batch Modules:**
+```typescript
+// Track access based on INDIVIDUAL progress (not batch)
+async getVisibleTracksForStudent(studentId: string): Promise<Track[]> {
+  const allTracks = await getAllTracks();
+  const visibleTracks = [];
+  
+  for (const track of allTracks) {
+    const canAccess = await canAccessTrack(studentId, track.id);
+    if (canAccess) {
+      visibleTracks.push(track);
+    } else {
+      break; // Sequential gating - stop at first locked track
+    }
   }
   
-  // That's it - no prerequisite check
-  // Admin can assign to any track batch if needed (e.g., returning student)
-  return true;
+  return visibleTracks;
 }
 
-// Progress preservation when student returns
-async getStudentProgressSummary(studentId): Promise<ProgressSummary> {
-  // Returns all progress across all batches and tracks
-  // Used to help admin determine which batch to re-enroll student
+// Batch enrollment - admin can assign to any batch
+// (even if student hasn't unlocked that track - admin override for special cases)
+async enrollStudentInBatch(batchId: number, studentId: string, adminId: string): Promise<void> {
+  const batch = await getBatch(batchId);
+  
+  // Warn if student hasn't unlocked this track yet (but allow)
+  const canAccessTrack = await canAccessTrack(studentId, batch.trackId);
+  if (!canAccessTrack) {
+    console.warn(`Admin override: Enrolling student ${studentId} in Track ${batch.trackId} without prerequisite completion`);
+  }
+  
+  // Check: Student not already in another batch for same track
+  const existingEnrollment = await getActiveEnrollmentForTrack(studentId, batch.trackId);
+  if (existingEnrollment) {
+    throw new Error(`Student already enrolled in batch ${existingEnrollment.batchId} for this track`);
+  }
+  
+  // Create enrollment
+  await createEnrollment({
+    batchId,
+    studentId,
+    status: 'active',
+    enrolledBy: adminId
+  });
+}
+
+// Student view - shows only unlocked tracks
+async getStudentDashboard(studentId: string): Promise<Dashboard> {
+  const visibleTracks = await getVisibleTracksForStudent(studentId);
+  const currentBatch = await getCurrentBatchForStudent(studentId);
+  const progressSummary = await getProgressSummary(studentId);
+  
   return {
-    allProgress: await getAllProgressForStudent(studentId),
-    completedTracks: await getCompletedTracks(studentId),
-    currentBatch: await getCurrentBatchForStudent(studentId)
+    visibleTracks,      // Based on progress gating
+    currentBatch,       // Social context (where student attends classes)
+    progressSummary     // Overall achievement
   };
 }
+
+// Instructor view - sees only students in their assigned batches
+async getInstructorDashboard(instructorId: string): Promise<InstructorDashboard> {
+  const assignedBatches = await getBatchesForInstructor(instructorId);
+  
+  const batchesWithStudents = await Promise.all(
+    assignedBatches.map(async batch => {
+      const enrollments = await getActiveEnrollments(batch.id);
+      const studentsWithProgress = await Promise.all(
+        enrollments.map(async e => {
+          const student = await getUser(e.studentId);
+          const progress = await getProgressForTrack(e.studentId, batch.trackId);
+          return { student, progress };
+        })
+      );
+      return { batch, students: studentsWithProgress };
+    })
+  );
+  
+  return { batches: batchesWithStudents };
+}
 ```
 
-**Admin Workflow:**
+**Student Learning Flow:**
 ```
-1. Student returns to LMS after time away
-2. Admin checks student's progress summary
-3. Admin sees: "Completed Track 1 and 2, 70% through Track 3 in old batch"
-4. Admin can:
-   a) Enroll student in a new Track 3 batch (starting fresh)
-   b) Or create custom scenario if needed
-5. Previous progress preserved for records
+1. Student registers → approved → assigned to Batch A (Track 1)
+   ↓
+2. Student can see only Track 1 (Track 2-8 locked)
+   ↓
+3. Primary/Secondary instructors in Batch A evaluate chapters
+   ↓
+4. Once all Track 1 chapters ≥ level 2 → Track 2 unlocked
+   ↓
+5. Student wants to switch to Batch C (schedule conflict)
+   ↓
+6. Admin reassigns: Batch A → Batch C (same track or next track)
+   ↓
+7. Progress preserved; Batch C instructors can now evaluate
+   ↓
+8. When student leaves Batch A, they disappear from Batch A instructor view
 ```
 
 ---
@@ -667,102 +843,32 @@ CREATE INDEX idx_student_progress_evaluated_by ON student_progress(evaluated_by)
 
 ---
 
----
+## Key Takeaways
 
-## Key Takeaways (Revised)
-
-1. **User Registration is External:** Google Forms → Admin review → Admin account creation → Admin approval
-2. **Flexible Role Model:** Roles are independent flags (student, instructor, content_manager, admin)
-3. **No Role Hierarchy:** Any user can have any combination of roles; roles don't imply track levels
-4. **Batch = Track-Specific Learning Group:** Admin assigns students + instructor(s) + co-instructors
-5. **Primary + Co-Instructors:** Single primary instructor, multiple co-instructors as TAs (same system privileges)
-6. **No Batch Capacity Constraints:** Can start/run batches with any number of students
-7. **Instructor-Driven Pacing:** No time limits; instructor controls pace and progression
-8. **Simple Progress Tracking:** Instructors set chapter proficiency levels (0-4), no validation initially
-9. **Flexible Track Progression:** Admin can enroll students in any batch; soft prerequisites (not enforced)
-10. **Progress Preservation:** Dropout progress saved; when student returns, placed in appropriate batch
-11. **Certification is External:** Exams/certificates handled via Excel/WhatsApp (8 Saturday + 8 Sunday slots/week)
-12. **Trust-Based System:** Minimal enforcement initially; can add business rules as processes stabilize
-13. **Volunteer-Run Institution:** All roles (instructor, content_manager, admin) filled by volunteers
-14. **Small Scale (130 students):** Simple Excel-based processes work today; will add complexity when needed
+1. **Batches are Track-Specific:** Not flexible groupings - each batch teaches exactly one track
+2. **Multi-Role Users:** Students can be instructors; roles are not mutually exclusive
+3. **Sequential Track Progression:** Strict prerequisites - can't skip tracks
+4. **Proficiency Levels Have Meaning:** Not arbitrary - specific percentages and gates
+5. **Instructor = Advanced Student:** Teaching qualification based on current track
+6. **Certification is Separate Workflow:** Oral exam + bulk level update + certificate generation
+7. **Chapter-Level Progress Only:** Simpler than originally designed - no segment tracking needed
+8. **Capacity-Based Batch Formation:** Batches don't start until minimum enrollment met
 
 ---
 
-## Implementation Philosophy
-
-> **Start simple, add rules only when needed.**
-
-This architecture intentionally avoids complex enforcement because:
-- Your processes are still evolving
-- You have low volume (~130 students) - manual oversight works
-- Trust-based operation (volunteers running the institution)
-- Rules can be added incrementally as workload grows
-
-As you scale or processes stabilize, you can add:
-- Track prerequisite enforcement
-- Level sequencing validation
-- Batch capacity management
-- Certification workflow
-- Progress gates
+**Next Steps:**
+1. Review and validate these domain rules with stakeholders
+2. Update schema definitions in `shared/schema.ts`
+3. Create certification module structure
+4. Update existing progress tracking to match proficiency semantics
+5. Implement track progression logic
 
 ---
 
-## Next Steps
-
-1. **Review and approve** this revised addendum
-2. **Answer any clarification questions** (listed at end)
-3. **Create data schema** in Drizzle with new tables
-4. **Define DTO contracts** for each module (shared/types)
-5. **Implement auth middleware** as top priority
-6. **Create branch:** `feat/modular-architecture-phase1`
-7. **Start with Phase 1** (foundation + auth)
-
----
-
-## Clarification Questions (Updated)
-
-These are refinements based on the simplified model - feel free to clarify:
-
-1. **Account Approval:** When admin approves a pending account, should it automatically activate or should there be another step?
-
-2. **Role Assignment Timing:** When should instructors/content_managers be assigned their roles?
-   - At account approval?
-   - Later, in separate step?
-   - When assigning to first batch/content task?
-
-3. **Co-Instructor Privileges:** Should co-instructors be able to:
-   - Update student progress? (assumed yes, same as instructors)
-   - Create/delete students from batch? (assumed no, admin only)
-   - Create announcements for batch? (future feature)
-
-4. **Dropout Handling:** When student drops out:
-   - Should their enrollment status change to 'dropped'?
-   - Can they re-enroll in same batch or new batch?
-   - Is progress carried over if they re-enroll?
-
-5. **Content Manager Scope:** Can content_managers:
-   - Upload audio files and create segments?
-   - Publish/unpublish chapters?
-   - Only edit content but not publish? (workflow approval?)
-
-6. **Progress View:** For instructor batch roster:
-   - Show proficiency per chapter?
-   - Show last accessed date per student?
-   - Show instructor notes?
-   - Show aggregate track progress?
-
-7. **Batch Status Workflow:** Currently 'active' → 'completed' → 'archived'
-   - When should batch move to 'completed'? (admin decision? or auto when all students done?)
-   - Can completed batches be reopened?
-   - Can students be re-enrolled in archived batches?
-
-8. **Cross-Batch Progress:** If student enrolled in Track 1 batch, drops out, then re-enrolled in different Track 1 batch:
-   - Previous progress shows in roster?
-   - Start fresh or continue?
-
----
-
-**Related Documents:**  
-- [ADR-001-Modular-Monolith-Architecture.md](ADR-001-Modular-Monolith-Architecture.md) - Core architecture
-- [shared/schema.ts](../../shared/schema.ts) - Existing database schema (to be updated)
-- [PROJECT_DOCUMENTATION.md](../PROJECT_DOCUMENTATION.md) - Current system overview
+**Questions for Clarification:**
+1. Can a student be enrolled in multiple batches simultaneously (for different tracks)?
+2. What happens if a student fails the oral exam? Can they retake immediately?
+3. Can instructors give level 4 without oral exam, or is level 4 exclusively for certified students?
+4. Is there a time limit for completing a track, or purely proficiency-based?
+5. Can students drop out mid-batch? What happens to their progress?
+6. How are instructors selected/assigned to new batches? First-come-first-serve or admin picks best fit?
