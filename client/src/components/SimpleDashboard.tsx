@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/design-system/Card";
 import { Button } from "@/components/design-system/Button";
-import { BookOpen, Edit, Beaker, Users } from "lucide-react";
+import { BookOpen, Edit, Beaker, Users, Layers } from "lucide-react";
 import type { User } from "@shared/schema";
 
 interface FeatureCard {
@@ -27,6 +27,13 @@ const FEATURES: FeatureCard[] = [
     icon: Edit,
     route: "/manage",
     color: "green"
+  },
+  {
+    title: "Batches",
+    description: "Organize learners into cohorts",
+    icon: Layers,
+    route: "/manage/batches",
+    color: "purple"
   },
   {
     title: "Manage Users",
