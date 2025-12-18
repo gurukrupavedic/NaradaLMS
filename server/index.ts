@@ -59,7 +59,7 @@ app.use('/experiments', express.static(experimentsPath, {
   }
 }));
 
-// Serve static files from public directory (for audio files)
+// Serve static files from public directory
 app.use(express.static('public'));
 
 // Identity & Access routes (Phase 1 module)

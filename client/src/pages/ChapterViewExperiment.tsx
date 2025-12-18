@@ -134,9 +134,9 @@ export function ChapterViewExperiment() {
     const audio = audioRef.current;
     if (!audio) return;
 
-    // Set audio source if needed
-    if (audio.src !== `/audio/${audioFile.filename}`) {
-      audio.src = `/audio/${audioFile.filename}`;
+    // Set audio source if needed (served from uploads)
+    if (audio.src !== `/uploads/${audioFile.filename}`) {
+      audio.src = `/uploads/${audioFile.filename}`;
       audio.playbackRate = playbackSpeed;
     }
 
@@ -370,7 +370,7 @@ export function ChapterViewExperiment() {
                       setIsPlaying(false);
                     } else {
                       if (!audio.src) {
-                        audio.src = `/audio/${chapter.audioFiles[0].filename}`;
+                        audio.src = `/uploads/${chapter.audioFiles[0].filename}`;
                         audio.playbackRate = playbackSpeed;
                       }
                       audio.play().then(() => setIsPlaying(true));
