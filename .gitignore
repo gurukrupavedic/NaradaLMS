@@ -8,3 +8,6 @@ vite.config.ts.*
 # Environment variables (contains sensitive data like passwords)
 .env
 .env.local
+# Development logs
+dev.log
+dev.error.log
