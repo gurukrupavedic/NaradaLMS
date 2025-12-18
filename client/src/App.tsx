@@ -96,6 +96,10 @@ function Router() {
             <Route path="/tracks" component={() => <LearnTracks />} />
             <Route path="/tracks/:trackId" component={() => <LearnChapters />} />
             <Route path="/chapter/:chapterId" component={() => <StudyChapter />} />
+            {/* Learning aliases */}
+            <Route path="/learning/tracks" component={() => <LearnTracks />} />
+            <Route path="/learning/tracks/:trackId" component={() => <LearnChapters />} />
+            <Route path="/learning/chapter/:chapterId" component={() => <StudyChapter />} />
 
             <Route path="/experiments" component={ExperimentsShowcase} />
             <Route path="/experiments/design-system" component={DesignSystemExperiment} />

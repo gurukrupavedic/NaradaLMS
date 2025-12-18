@@ -4,6 +4,8 @@
  */
 
 import type { ProficiencyLevel } from '@shared/constants';
+import type { Chapter, TextSegment } from '../content-publishing/types';
+import type { AudioFile, MappingWithTimestamps } from '../media-pipeline/types';
 
 // DTOs for student progress queries
 export interface StudentProgressDTO {
@@ -51,4 +53,21 @@ export interface ProgressQueryFilters {
   trackId?: number;
   chapterId?: number;
   batchId?: number;
+}
+
+// -------- Chapter Facade DTOs --------
+
+export type ChapterInclude = 'chapter' | 'segments' | 'audio' | 'mappings' | 'progress';
+
+export interface ChapterBundleDTO {
+  chapter?: Chapter | null;
+  textSegments?: TextSegment[];
+  audioFiles?: AudioFile[];
+  segmentMappings?: MappingWithTimestamps[];
+  progress?: StudentProgressDTO | null;
+}
+
+export interface ChapterBundleQuery {
+  include?: ChapterInclude[]; // defaults applied at service-layer
+  script?: 'te' | 'hi' | 'en';
 }

@@ -19,13 +19,15 @@ export function LearnChapters() {
   const trackId = params?.trackId;
 
   const { data: tracks } = useQuery<Track[]>({
-    queryKey: ["/api/tracks"],
+    queryKey: ["/api/learning/tracks"],
   });
 
   const track = tracks?.find((t) => t.id.toString() === trackId);
+  const trackTitle = (track as any)?.title || (track as any)?.name || "Track Chapters";
+  const trackDescription = (track as any)?.description || "Browse available chapters";
 
   const { data: chapters = [], isLoading } = useQuery<Chapter[]>({
-    queryKey: [`/api/chapters/${trackId}`],
+    queryKey: [`/api/learning/tracks/${trackId}/chapters`],
     enabled: !!trackId,
   });
 
@@ -58,9 +60,9 @@ export function LearnChapters() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900" data-testid="text-track-title">
-                {track?.title || "Track Chapters"}
+                {trackTitle}
               </h1>
-              <p className="text-sm text-gray-600">{track?.description || "Browse available chapters"}</p>
+              <p className="text-sm text-gray-600">{trackDescription}</p>
             </div>
           </div>
         </div>

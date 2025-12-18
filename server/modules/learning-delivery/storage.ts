@@ -11,9 +11,10 @@ import type { StudentProgressDTO, ProgressQueryFilters, AvailableChapterDTO } fr
 export class LearningStorage {
   /**
    * Get student progress with optional filters
+   * Note: Returns progress records without joins to avoid Drizzle leftJoin bugs
    */
   async getStudentProgress(filters: ProgressQueryFilters): Promise<StudentProgressDTO[]> {
-    const conditions = [];
+    const conditions = [] as any[];
     
     if (filters.studentId) {
       conditions.push(eq(studentProgress.studentId, filters.studentId));
@@ -25,30 +26,34 @@ export class LearningStorage {
       conditions.push(eq(studentProgress.batchId, filters.batchId));
     }
 
-    const results = await db
-      .select({
-        id: studentProgress.id,
-        studentId: studentProgress.studentId,
-        chapterId: studentProgress.chapterId,
-        batchId: studentProgress.batchId,
-        proficiencyLevel: studentProgress.proficiencyLevel,
-        lastAccessed: studentProgress.lastAccessed,
-        lastEvaluatedAt: studentProgress.lastEvaluatedAt,
-        evaluatedBy: studentProgress.evaluatedBy,
-        notes: studentProgress.notes,
-        createdAt: studentProgress.createdAt,
-        updatedAt: studentProgress.updatedAt,
-        chapterTitle: chapters.title,
-        trackName: tracks.name,
-        batchName: batches.batchName,
-      })
-      .from(studentProgress)
-      .leftJoin(chapters, eq(studentProgress.chapterId, chapters.id))
-      .leftJoin(tracks, eq(chapters.trackId, tracks.id))
-      .leftJoin(batches, eq(studentProgress.batchId, batches.id))
-      .where(and(...conditions));
+    // Simplified query without joins (avoids Drizzle leftJoin + select bug)
+    const baseQuery = db
+      .select()
+      .from(studentProgress);
 
-    return results;
+    // Apply WHERE only if conditions exist
+    const results = conditions.length > 0 
+      ? await baseQuery.where(and(...conditions))
+      : await baseQuery;
+
+    // Map to DTO (without joined data for now)
+    return results.map(row => ({
+      id: row.id,
+      studentId: row.studentId,
+      chapterId: row.chapterId,
+      batchId: row.batchId,
+      proficiencyLevel: row.proficiencyLevel,
+      lastAccessed: row.lastAccessed,
+      lastEvaluatedAt: row.lastEvaluatedAt,
+      evaluatedBy: row.evaluatedBy,
+      notes: row.notes,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      // Joined fields removed - can be added back with separate queries if needed
+      chapterTitle: undefined,
+      trackName: undefined,
+      batchName: undefined,
+    }));
   }
 
   /**
@@ -81,7 +86,6 @@ export class LearningStorage {
         studentId,
         chapterId,
         batchId: batchId ?? null,
-        proficiencyLevel: null, // Not set yet
         lastAccessed: new Date(),
       });
     }

@@ -51,6 +51,20 @@ interface AudioTextMapping {
   endTime: number;
 }
 
+interface StudentProgressDTO {
+  id: number;
+  studentId: string;
+  chapterId: number;
+  batchId: number | null;
+  proficiencyLevel: number | null;
+  lastAccessed: string | null;
+  lastEvaluatedAt: string | null;
+  evaluatedBy: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export function StudyChapter() {
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/chapter/:chapterId");
@@ -95,6 +109,26 @@ export function StudyChapter() {
     queryKey: [`/api/segment-mappings/${chapterId}`],
     enabled: !!chapterId,
   });
+
+  // Fetch student's progress for this chapter (read-only view)
+  const { data: progress = [] } = useQuery<StudentProgressDTO[]>({
+    queryKey: [`/api/learning/progress?chapterId=${chapterId}`],
+    enabled: !!chapterId,
+  });
+
+  // Track chapter access once on mount (auto-updates lastAccessed)
+  const hasTrackedAccessRef = useRef(false);
+  useEffect(() => {
+    if (!chapterId || hasTrackedAccessRef.current) return;
+    hasTrackedAccessRef.current = true;
+    fetch(`/api/learning/chapters/${chapterId}/access`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    }).catch(() => {
+      // swallow errors to avoid interrupting UX
+    });
+  }, [chapterId]);
 
   useEffect(() => {
     if (audioFiles.length > 0 && !selectedAudioFileId) {
@@ -264,6 +298,16 @@ export function StudyChapter() {
             <Badge variant="green" badgeStyle="sharp" className="text-xs" icon={<Zap className="h-3 w-3" />}>
               {mappedSegments.length} mapped
             </Badge>
+            {(() => {
+              const p = progress[0];
+              const levelText = p?.proficiencyLevel ?? 'N/A';
+              const last = p?.lastAccessed ? new Date(p.lastAccessed).toLocaleDateString() : '—';
+              return (
+                <Badge variant="blue" badgeStyle="sharp" className="text-xs">
+                  Progress: {String(levelText)} • Last: {last}
+                </Badge>
+              );
+            })()}
           </div>
         </div>
 

@@ -4,8 +4,10 @@
  */
 
 import { learningStorage } from './storage';
-import type { StudentProgressDTO, ChapterAccessDTO, ProgressQueryFilters, AvailableChapterDTO } from './types';
+import type { StudentProgressDTO, ChapterAccessDTO, ProgressQueryFilters, AvailableChapterDTO, ChapterBundleDTO, ChapterBundleQuery, ChapterInclude } from './types';
 import { LEARNING_DELIVERY_EVENTS } from './events';
+import { contentService } from '../content-publishing';
+import { mediaService } from '../media-pipeline';
 
 export class LearningService {
   /**
@@ -60,6 +62,63 @@ export class LearningService {
    */
   async getAvailableChapters(studentId: string): Promise<AvailableChapterDTO[]> {
     return learningStorage.getAvailableChapters(studentId);
+  }
+
+  /**
+   * Facade: List tracks for learning (proxy to content module)
+   */
+  async listTracks() {
+    return contentService.listTracks();
+  }
+
+  /**
+   * Facade: List chapters by track (proxy to content module)
+   */
+  async listChaptersByTrack(trackId: number) {
+    return contentService.getChaptersByTrack(trackId);
+  }
+
+  /**
+   * Facade: Unified chapter bundle (opt-in sections)
+   * Defaults: include = ['chapter','progress'] to keep payload light
+   */
+  async getChapterBundle(
+    requestingUserId: string,
+    chapterId: number,
+    query: ChapterBundleQuery = {}
+  ): Promise<ChapterBundleDTO> {
+    const include: ChapterInclude[] = (query.include && query.include.length)
+      ? query.include
+      : ['chapter', 'progress'];
+
+    const script = query.script;
+
+    const result: ChapterBundleDTO = {};
+
+    if (include.includes('chapter')) {
+      result.chapter = await contentService.getChapter(chapterId);
+    }
+
+    if (include.includes('segments')) {
+      // If no script provided, default to 'te' to avoid tripling payload
+      const segScript = (script || 'te') as 'te' | 'hi' | 'en';
+      result.textSegments = await contentService.getSegmentsByChapter(chapterId, segScript);
+    }
+
+    if (include.includes('audio')) {
+      result.audioFiles = await mediaService.listAudioFilesByChapter(chapterId);
+    }
+
+    if (include.includes('mappings')) {
+      result.segmentMappings = await mediaService.listMappingsByChapter(chapterId);
+    }
+
+    if (include.includes('progress')) {
+      const rows = await learningStorage.getStudentProgress({ studentId: requestingUserId, chapterId });
+      result.progress = rows[0] || null;
+    }
+
+    return result;
   }
 }
 
