@@ -13,8 +13,7 @@ docs/
 ├── ARCHITECTURE.md        (Technical Architecture - how it's built)
 └── implementation/        (TODO items - features not yet implemented)
     ├── frontend-cleanup-todo.md
-    ├── link-status-error-detection.md
-    └── TODO-Authentication-Integration.md
+    └── link-status-error-detection.md
 ```
 
 ---
@@ -34,7 +33,7 @@ docs/
 |----------|-------------|
 | [frontend-cleanup-todo.md](./implementation/frontend-cleanup-todo.md) | Unused code to remove (Topics 2 & 3 remaining) |
 | [link-status-error-detection.md](./implementation/link-status-error-detection.md) | Future: broken link detection and repair |
-| [TODO-Authentication-Integration.md](./implementation/TODO-Authentication-Integration.md) | Future: replace `createdBy: "system"` with real users |
+| (removed) | Authentication integration doc removed after implementation was completed |
 
 ---
 
