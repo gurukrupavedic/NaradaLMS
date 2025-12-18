@@ -90,6 +90,157 @@ export class BatchStorage {
     const rows = await db.select({ id: tracks.id }).from(tracks).where(eq(tracks.id, trackId));
     return !!rows[0];
   }
+
+  // Phase 5: Evaluation methods
+  async getBatchProgress(batchId: number) {
+    const { studentProgress, chapters } = await import('@shared/schema');
+    const { and, inArray } = await import('drizzle-orm');
+
+    // Get batch info
+    const batchInfo = await this.getBatchById(batchId);
+    if (!batchInfo) return null;
+
+    // Get all active students in batch
+    const enrollmentsList = await db
+      .select({
+        studentId: enrollments.studentId,
+        studentName: users.username,
+        email: users.email,
+      })
+      .from(enrollments)
+      .innerJoin(users, eq(enrollments.studentId, users.id))
+      .where(and(
+        eq(enrollments.batchId, batchId),
+        eq(enrollments.status, 'active')
+      ));
+
+    if (enrollmentsList.length === 0) {
+      return {
+        batchId,
+        batchName: batchInfo.batchName,
+        trackId: batchInfo.trackId,
+        trackName: null,
+        students: [],
+      };
+    }
+
+    // Get track chapters if trackId exists
+    let chaptersList: any[] = [];
+    if (batchInfo.trackId) {
+      chaptersList = await db
+        .select({
+          chapterId: chapters.id,
+          chapterTitle: chapters.title,
+          chapterNumber: chapters.chapterNumber,
+        })
+        .from(chapters)
+        .where(eq(chapters.trackId, batchInfo.trackId))
+        .orderBy(chapters.chapterNumber);
+    }
+
+    // Get student IDs for progress query
+    const studentIds = enrollmentsList.map(e => e.studentId);
+    const chapterIds = chaptersList.map(c => c.chapterId);
+
+    // Get all progress records for these students/chapters
+    let progressRecords: any[] = [];
+    if (chapterIds.length > 0) {
+      progressRecords = await db
+        .select()
+        .from(studentProgress)
+        .where(and(
+          inArray(studentProgress.studentId, studentIds),
+          inArray(studentProgress.chapterId, chapterIds)
+        ));
+    }
+
+    // Build response structure
+    const students = enrollmentsList.map(enrollment => {
+      const chaptersProgress = chaptersList.map(chapter => {
+        const progress = progressRecords.find(
+          p => p.studentId === enrollment.studentId && p.chapterId === chapter.chapterId
+        );
+
+        return {
+          chapterId: chapter.chapterId,
+          chapterTitle: chapter.chapterTitle,
+          chapterNumber: chapter.chapterNumber,
+          proficiencyLevel: progress?.proficiencyLevel ?? null,
+          lastAccessed: progress?.lastAccessed ?? null,
+          lastEvaluatedAt: progress?.lastEvaluatedAt ?? null,
+          evaluatedBy: progress?.evaluatedBy ?? null,
+          notes: progress?.notes ?? null,
+        };
+      });
+
+      return {
+        studentId: enrollment.studentId,
+        studentName: enrollment.studentName,
+        email: enrollment.email,
+        chapters: chaptersProgress,
+      };
+    });
+
+    return {
+      batchId,
+      batchName: batchInfo.batchName,
+      trackId: batchInfo.trackId,
+      trackName: null, // Could join tracks if needed
+      students,
+    };
+  }
+
+  async evaluateStudent(input: { studentId: string; chapterId: number; proficiencyLevel: number; notes?: string; evaluatedBy: string; batchId?: number }) {
+    const { studentProgress } = await import('@shared/schema');
+    const { and } = await import('drizzle-orm');
+
+    // Check if progress record exists
+    const existing = await db
+      .select()
+      .from(studentProgress)
+      .where(and(
+        eq(studentProgress.studentId, input.studentId),
+        eq(studentProgress.chapterId, input.chapterId)
+      ))
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Update existing
+      const [updated] = await db
+        .update(studentProgress)
+        .set({
+          proficiencyLevel: input.proficiencyLevel,
+          notes: input.notes ?? null,
+          lastEvaluatedAt: new Date(),
+          evaluatedBy: input.evaluatedBy,
+          updatedAt: new Date(),
+        })
+        .where(eq(studentProgress.id, existing[0].id))
+        .returning();
+      return updated;
+    } else {
+      // Create new progress record
+      const [created] = await db
+        .insert(studentProgress)
+        .values({
+          studentId: input.studentId,
+          chapterId: input.chapterId,
+          batchId: input.batchId ?? null,
+          proficiencyLevel: input.proficiencyLevel,
+          notes: input.notes ?? null,
+          lastEvaluatedAt: new Date(),
+          evaluatedBy: input.evaluatedBy,
+        })
+        .returning();
+      return created;
+    }
+  }
+
+  async chapterExists(chapterId: number) {
+    const { chapters } = await import('@shared/schema');
+    const rows = await db.select({ id: chapters.id }).from(chapters).where(eq(chapters.id, chapterId));
+    return !!rows[0];
+  }
 }
 
 export const batchStorage = new BatchStorage();

@@ -1,7 +1,209 @@
-// Learning Delivery - data access layer (to be implemented in Phase 5)
+/**
+ * Learning Delivery Module - Data Access Layer
+ * Database operations for student progress and content delivery
+ */
+
+import { db } from '../../db';
+import { studentProgress, chapters, tracks, batches, enrollments } from '@shared/schema';
+import { eq, and, inArray } from 'drizzle-orm';
+import type { StudentProgressDTO, ProgressQueryFilters, AvailableChapterDTO } from './types';
+
 export class LearningStorage {
-  constructor() {
-    // Placeholder for future queries
+  /**
+   * Get student progress with optional filters
+   * Note: Returns progress records without joins to avoid Drizzle leftJoin bugs
+   */
+  async getStudentProgress(filters: ProgressQueryFilters): Promise<StudentProgressDTO[]> {
+    const conditions = [] as any[];
+    
+    if (filters.studentId) {
+      conditions.push(eq(studentProgress.studentId, filters.studentId));
+    }
+    if (filters.chapterId) {
+      conditions.push(eq(studentProgress.chapterId, filters.chapterId));
+    }
+    if (filters.batchId) {
+      conditions.push(eq(studentProgress.batchId, filters.batchId));
+    }
+
+    // Simplified query without joins (avoids Drizzle leftJoin + select bug)
+    const baseQuery = db
+      .select()
+      .from(studentProgress);
+
+    // Apply WHERE only if conditions exist
+    const results = conditions.length > 0 
+      ? await baseQuery.where(and(...conditions))
+      : await baseQuery;
+
+    // Map to DTO (without joined data for now)
+    return results.map(row => ({
+      id: row.id,
+      studentId: row.studentId,
+      chapterId: row.chapterId,
+      batchId: row.batchId,
+      proficiencyLevel: row.proficiencyLevel,
+      lastAccessed: row.lastAccessed,
+      lastEvaluatedAt: row.lastEvaluatedAt,
+      evaluatedBy: row.evaluatedBy,
+      notes: row.notes,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      // Joined fields removed - can be added back with separate queries if needed
+      chapterTitle: undefined,
+      trackName: undefined,
+      batchName: undefined,
+    }));
+  }
+
+  /**
+   * Track chapter access (upsert lastAccessed)
+   */
+  async trackChapterAccess(studentId: string, chapterId: number, batchId?: number): Promise<void> {
+    const existing = await db
+      .select()
+      .from(studentProgress)
+      .where(
+        and(
+          eq(studentProgress.studentId, studentId),
+          eq(studentProgress.chapterId, chapterId)
+        )
+      )
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Update lastAccessed
+      await db
+        .update(studentProgress)
+        .set({
+          lastAccessed: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(studentProgress.id, existing[0].id));
+    } else {
+      // Insert new progress record
+      await db.insert(studentProgress).values({
+        studentId,
+        chapterId,
+        batchId: batchId ?? null,
+        lastAccessed: new Date(),
+      });
+    }
+  }
+
+  /**
+   * Get available chapters for a student (based on enrollments)
+   */
+  async getAvailableChapters(studentId: string): Promise<AvailableChapterDTO[]> {
+    // Get student's enrolled batches
+    const studentEnrollments = await db
+      .select({
+        batchId: enrollments.batchId,
+        trackId: batches.trackId,
+        batchName: batches.batchName,
+      })
+      .from(enrollments)
+      .innerJoin(batches, eq(enrollments.batchId, batches.id))
+      .where(
+        and(
+          eq(enrollments.studentId, studentId),
+          eq(enrollments.status, 'active')
+        )
+      );
+
+    if (studentEnrollments.length === 0) {
+      return [];
+    }
+
+    // Get all chapters for enrolled tracks
+    const trackIds = studentEnrollments.map(e => e.trackId).filter((id): id is number => id !== null);
+    
+    const chaptersList = await db
+      .select({
+        chapterId: chapters.id,
+        chapterTitle: chapters.title,
+        chapterNumber: chapters.chapterNumber,
+        trackId: chapters.trackId,
+        trackName: tracks.name,
+        status: chapters.status,
+      })
+      .from(chapters)
+      .innerJoin(tracks, eq(chapters.trackId, tracks.id))
+      .where(inArray(chapters.trackId, trackIds));
+
+    // Get student's progress for these chapters
+    const chapterIds = chaptersList.map(c => c.chapterId);
+    const progressRecords = await db
+      .select()
+      .from(studentProgress)
+      .where(
+        and(
+          eq(studentProgress.studentId, studentId),
+          inArray(studentProgress.chapterId, chapterIds)
+        )
+      );
+
+    // Combine data
+    return chaptersList.map(chapter => {
+      const enrollment = studentEnrollments.find(e => e.trackId === chapter.trackId);
+      const progress = progressRecords.find(p => p.chapterId === chapter.chapterId);
+
+      return {
+        chapterId: chapter.chapterId,
+        chapterTitle: chapter.chapterTitle,
+        chapterNumber: chapter.chapterNumber,
+        trackId: chapter.trackId,
+        trackName: chapter.trackName,
+        batchId: enrollment?.batchId ?? 0,
+        batchName: enrollment?.batchName ?? '',
+        status: chapter.status as 'draft' | 'published',
+        progress: progress ? {
+          id: progress.id,
+          studentId: progress.studentId,
+          chapterId: progress.chapterId,
+          batchId: progress.batchId,
+          proficiencyLevel: progress.proficiencyLevel as any,
+          lastAccessed: progress.lastAccessed,
+          lastEvaluatedAt: progress.lastEvaluatedAt,
+          evaluatedBy: progress.evaluatedBy,
+          notes: progress.notes,
+          createdAt: progress.createdAt!,
+          updatedAt: progress.updatedAt!,
+        } : undefined,
+      };
+    });
+  }
+
+  /**
+   * Check if chapter exists
+   */
+  async chapterExists(chapterId: number): Promise<boolean> {
+    const result = await db
+      .select({ id: chapters.id })
+      .from(chapters)
+      .where(eq(chapters.id, chapterId))
+      .limit(1);
+    
+    return result.length > 0;
+  }
+
+  /**
+   * Check if student is enrolled in batch
+   */
+  async isStudentEnrolled(studentId: string, batchId: number): Promise<boolean> {
+    const result = await db
+      .select({ id: enrollments.id })
+      .from(enrollments)
+      .where(
+        and(
+          eq(enrollments.studentId, studentId),
+          eq(enrollments.batchId, batchId),
+          eq(enrollments.status, 'active')
+        )
+      )
+      .limit(1);
+    
+    return result.length > 0;
   }
 }
 

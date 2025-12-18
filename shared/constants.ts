@@ -38,3 +38,18 @@ export const SCRIPT_LABELS = {
   hi: 'Hindi',
   en: 'English'
 } as const;
+
+// Student Proficiency Levels
+// Based on instructor evaluation in batch context
+export const PROFICIENCY_LEVELS = {
+  0: { label: 'Started', description: 'Attended class, practicing', color: 'yellow' },
+  1: { label: '50% Proficiency', description: 'Basic understanding', color: 'light-green' },
+  2: { label: '70% Proficiency', description: 'Good understanding', color: 'dark-green' },
+  3: { label: '90% Proficiency', description: 'Ready for certification', color: 'light-purple' },
+  4: { label: '95% Proficiency', description: 'Certified/Mastered', color: 'dark-purple' },
+  8: { label: 'Absent', description: 'Student absent for class', color: 'gray' },
+  9: { label: 'Not Started', description: 'Chapter not yet taught', color: 'white' }
+} as const;
+
+export const VALID_PROFICIENCY_LEVELS = [0, 1, 2, 3, 4, 8, 9] as const;
+export type ProficiencyLevel = typeof VALID_PROFICIENCY_LEVELS[number];

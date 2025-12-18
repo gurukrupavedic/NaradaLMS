@@ -8,7 +8,7 @@ export function LearnTracks() {
   const [, setLocation] = useLocation();
 
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
-    queryKey: ["/api/tracks"],
+    queryKey: ["/api/learning/tracks"],
   });
 
   if (isLoading) {
@@ -51,7 +51,9 @@ export function LearnTracks() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tracks.map((track, index) => (
+            {tracks.map((track, index) => {
+              const trackTitle = (track as any).title || (track as any).name || "Untitled";
+              return (
               <Card
                 key={track.id}
                 className="hover:shadow-lg transition-shadow cursor-pointer"
@@ -69,7 +71,7 @@ export function LearnTracks() {
                         <span>•</span>
                         <span data-testid={`text-chapter-count-${track.id}`}>{(track as any).chapterCount || 0} chapters</span>
                       </div>
-                      <CardTitle className="text-lg" data-testid={`text-track-title-${track.id}`}>{track.title}</CardTitle>
+                      <CardTitle className="text-lg" data-testid={`text-track-title-${track.id}`}>{trackTitle}</CardTitle>
                     </div>
                   </div>
                 </CardHeader>
@@ -89,7 +91,8 @@ export function LearnTracks() {
                   </Button>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
