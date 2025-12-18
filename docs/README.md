@@ -11,13 +11,10 @@ docs/
 ├── README.md                    (This file - documentation index)
 ├── PRD.md                       (Product Requirements)
 ├── PROJECT_DOCUMENTATION.md     (Comprehensive feature docs)
-├── DOCUMENTATION-STRATEGY.md    (Documentation governance)
-├── braindump.md                 (Working notes)
+├── domain-requirements.md       (Living document of real-world workflows)
 │
-├── architecture/                (Technical architecture & ADRs)
-├── implementation/              (Implementation notes)
-├── rollback/                    (Rollback procedures)
-├── TODO/                        (Active backlog)
+├── architecture/                (Technical architecture)
+├── todo/                        (Active backlog)
 └── archive/                     (Completed work)
     └── modular-refactoring-2025/
 ```
@@ -32,9 +29,9 @@ docs/
 |----------|---------|
 | [PRD.md](./PRD.md) | **Product Requirements** - Functional specifications, user flows |
 | [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md) | **Feature Encyclopedia** - Comprehensive system documentation (1421 lines) |
+| [domain-requirements.md](./domain-requirements.md) | **Domain Requirements** - Real-world workflows, what's built, gaps |
 | [architecture/architecture.md](./architecture/architecture.md) | **Technical Architecture** - Front-door overview, stack, routes |
 | [architecture/module-contracts.md](./architecture/module-contracts.md) | **Module Contracts** - Boundaries, ownership, public APIs, events |
-| [DOCUMENTATION-STRATEGY.md](./DOCUMENTATION-STRATEGY.md) | **Documentation Governance** - How to document, when to create ADRs |
 
 ### Active Work
 
