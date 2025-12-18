@@ -21,6 +21,7 @@ const ManageTracks = lazy(() => import("@/pages/ManageTracks").then(module => ({
 const ManageChapters = lazy(() => import("@/pages/ManageChapters").then(module => ({ default: module.ManageChapters })));
 const EditChapter = lazy(() => import("@/pages/EditChapter").then(module => ({ default: module.EditChapter })));
 const ManageUsers = lazy(() => import("@/pages/ManageUsers").then(module => ({ default: module.ManageUsers })));
+const ManageBatches = lazy(() => import("@/pages/ManageBatches").then(module => ({ default: module.ManageBatches })));
 const LearnTracks = lazy(() => import("@/pages/LearnTracks").then(module => ({ default: module.LearnTracks })));
 const LearnChapters = lazy(() => import("@/pages/LearnChapters").then(module => ({ default: module.LearnChapters })));
 const StudyChapter = lazy(() => import("@/pages/StudyChapter").then(module => ({ default: module.StudyChapter })));
@@ -84,6 +85,7 @@ function Router() {
             <Route path="/manage/tracks/:trackId" component={() => <ManageChapters />} />
             <Route path="/manage/tracks/:trackId/chapters/:chapterId" component={() => <EditChapter />} />
             <Route path="/manage/users" component={() => <ManageUsers />} />
+            <Route path="/manage/batches" component={() => <ManageBatches />} />
             
             {/* Legacy redirects for old content-management URLs */}
             <Route path="/content-management" component={() => <ManageTracks />} />
