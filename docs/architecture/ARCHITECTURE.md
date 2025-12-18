@@ -14,7 +14,7 @@
 | Backend | Node + Express (TypeScript), Drizzle ORM, PostgreSQL (Neon), Multer, music-metadata |
 | Shared | Zod, drizzle-zod |
 
-Path aliases: `@/` → client/src, `@shared/` → shared, `@assets/` → attached_assets.
+Path aliases: `@/` → client/src, `@shared/` → shared.
 
 ---
 

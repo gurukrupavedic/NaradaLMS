@@ -30,7 +30,6 @@ docs/            # ADRs, implementation plans, rollback procedures
 ### Import Aliases (vite.config.ts)
 - `@/` → client/src/
 - `@shared/` → shared/
-- `@assets/` → attached_assets/
 
 ## Database Schema Patterns
 
