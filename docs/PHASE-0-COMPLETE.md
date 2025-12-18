@@ -120,7 +120,7 @@ Note: Existing codebase has 152 pre-existing TypeScript errors. These are from l
 
 ## Next Steps
 
-**Auth smoke test (manual):** Follow [docs/AUTH-SMOKE-TEST.md](docs/AUTH-SMOKE-TEST.md) to verify register/login/me/logout with session cookies; activate users manually until the admin UI exists.
+**Auth smoke test (manual):** Use the automated `npm run auth:test` flow or the inline steps in this phase summary; the standalone AUTH-SMOKE-TEST doc was retired after completion.
 
 ### Before Merging to Main:
 

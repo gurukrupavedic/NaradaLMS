@@ -22,15 +22,7 @@
 - [x] Suitable for CI/CD integration later
 
 ### 4. Documentation & Rollback
-- [x] Updated [docs/AUTH-SMOKE-TEST.md](docs/AUTH-SMOKE-TEST.md):
-  - Clear `.env` setup instructions
-  - DB reset guidance
-  - Local-only auth focus (Google OAuth deferred to Phase 1)
-  - Both automated (`npm run auth:test`) and manual (PowerShell) flows
-- [x] Created [docs/rollback/AUTH_MIGRATION.md](docs/rollback/AUTH_MIGRATION.md):
-  - Clear rollback steps if needed
-  - Dependency removal guide
-  - Recovery paths
+- [x] Auth smoke and rollback notes are now captured inline in Phase 0 deliverables; standalone docs were retired after completion
 
 ## ✅ Verified Outcomes
 
@@ -89,7 +81,7 @@ Phase 1 can now proceed without schema or env issues:
 - Configuration: [.env](.env), [drizzle.config.ts](drizzle.config.ts), [package.json](package.json)
 - Auth: [server/auth/passport-config.ts](server/auth/passport-config.ts), [server/routes/auth.routes.ts](server/routes/auth.routes.ts)
 - Database: [shared/schema.ts](shared/schema.ts)
-- Docs: [docs/AUTH-SMOKE-TEST.md](docs/AUTH-SMOKE-TEST.md), [docs/rollback/AUTH_MIGRATION.md](docs/rollback/AUTH_MIGRATION.md)
+- Docs: Auth smoke/rollback notes are now inline in Phase 0 deliverables; standalone docs retired
 - Scripts: [scripts/db-reset.ps1](scripts/db-reset.ps1), [scripts/auth-e2e.ts](scripts/auth-e2e.ts)
 
 ---

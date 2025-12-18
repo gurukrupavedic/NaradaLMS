@@ -123,7 +123,7 @@ docs/
 1. **Authentication** (Scattered across ADR-002, AUTH-SMOKE-TEST, etc.)
    - Create: `02-ARCHITECTURE/AUTHENTICATION.md`
    - Include: strategy, OAuth config, session management, approval workflow, testing steps
-   - Delete: `AUTH-SMOKE-TEST.md` → Move content to `05-TROUBLESHOOTING/TESTING-STRATEGY.md` or `03-IMPLEMENTATION-GUIDES/TESTING-STRATEGY.md`
+   - Delete: `AUTH-SMOKE-TEST.md` (already removed) → keep any remaining steps in `05-TROUBLESHOOTING/TESTING-STRATEGY.md` or `03-IMPLEMENTATION-GUIDES/TESTING-STRATEGY.md`
 
 2. **Architecture Docs** (ADR-001 + ADR-002 + MODULE-*.md + ARCHITECTURE.md)
    - Keep existing `ADR-*.md` files (they're good reference material)
@@ -133,7 +133,7 @@ docs/
 
 3. **Phase Docs** (PHASE-0, PHASE-1, PRD, braindump, etc.)
    - Consolidate `PHASE-0-COMPLETE-v2.md` + implementation notes → `04-PHASES/PHASE-0.md`
-   - Create `04-PHASES/PHASE-1.md` from Phase 1 commit message + AUTH-SMOKE-TEST.md
+   - Create `04-PHASES/PHASE-1.md` from Phase 1 commit message + current auth testing steps (AUTH-SMOKE-TEST doc removed)
    - Create `04-PHASES/PHASE-2-PLAN.md` from options offered to user
    - Archive old versions
 

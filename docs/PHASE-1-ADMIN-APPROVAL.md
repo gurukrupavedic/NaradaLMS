@@ -132,9 +132,7 @@
 - [ ] Login as student → Should see dashboard now
 
 #### 15. Update auth smoke test
-**File:** `docs/AUTH-SMOKE-TEST.md`
-- [ ] Add steps for: Register pending user → Admin approves → Student logs in
-- [ ] Add PowerShell examples
+- [ ] Ensure auth smoke coverage lives in automated `npm run auth:test` and inline release notes; the old `AUTH-SMOKE-TEST.md` doc was retired.
 
 ---
 
@@ -154,7 +152,6 @@ Modified Files:
   client/src/App.tsx                      (routes + redirect logic)
   server/routes/auth.routes.ts            (new endpoints + ADMIN_EMAIL check)
   .env                                    (add ADMIN_EMAIL)
-  docs/AUTH-SMOKE-TEST.md                 (update steps)
 ```
 
 ---
