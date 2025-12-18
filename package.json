@@ -11,8 +11,7 @@
     "db:push": "drizzle-kit push",
     "db:seed": "tsx server/seed-vedic-curriculum.ts",
     "db:reset": "powershell -ExecutionPolicy Bypass -File scripts/db-reset.ps1",
-    "auth:test": "tsx scripts/run-auth-smoke-with-server.ts",
-    "db:migrate:phase4": "node server/scripts/migrate-phase4-batches.cjs"
+    "auth:test": "tsx scripts/run-auth-smoke-with-server.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
