@@ -15,16 +15,18 @@ VedicLMS is a multilingual Learning Management System for Vedic education. The s
 ### Project Structure
 ```
 shared/          # Shared types, schema, constants (Drizzle ORM models)
-server/          # Express API, routes-simple.ts (main API), database-storage.ts
+server/
+  modules/       # 6 domain modules (identity-access, content-publishing, media-pipeline,
+                 #                   batch-cohort, learning-delivery, system-admin)
+  database-storage.ts # Centralized DB operations
+  index.ts       # Express setup, module mounting
 client/src/      # React app, pages/, components/, hooks/, services/
   components/ui/           # shadcn/ui base components
   components/design-system/ # Custom LMS components (26 variants)
-  components/chapter-editor/    # 5-tab editor interface
-  components/text-segmentation/ # Segment creation UI
-  components/audio-mapping/     # Audio timestamp mapping
+  pages/         # 25 route-level components (lazy-loaded)
 uploads/         # Audio files (served via /uploads static route)
 experiments/     # Design system prototypes (served via /experiments)
-docs/            # ADRs, implementation plans, rollback procedures
+docs/            # Product guide, architecture, domain requirements, todo
 ```
 
 ### Import Aliases (vite.config.ts)
@@ -63,18 +65,21 @@ npm run check     # TypeScript type checking
 3. Update `server/database-storage.ts` methods if needed
 4. Update TypeScript types in `shared/types.ts`
 
-### API Development (server/routes-simple.ts)
-- All routes prefixed with `/api`
+### API Development (server/modules/*/routes.ts)
+- Modular architecture: 6 domain modules with dedicated route files
+- All routes prefixed with `/api` and mounted in `server/index.ts`
 - Use `storage` methods from `database-storage.ts` (not direct DB queries)
 - Error handling: Use `createErrorResponse()` utility and `globalErrorHandler`
 - File uploads: Configured multer for audio files in `/uploads`
+- Module contract pattern: Each module owns specific tables with public service APIs
 
 ## Critical Project-Specific Conventions
 
-### Multilingual Content
-- **Always** use script keys: `te`, `hi`, `en` (never full names)
-- **Font rendering** (see PROJECT_DOCUMENTATION.md):
-  - Telugu/IAST: JIMS font (fallback: Noto Sans Telugu)
+### Multilingual Contentproduct-guide.md section 4.2):
+  - Telugu: JIMS font (fallback: Noto Sans Telugu), 30px
+  - Devanagari: AdishilaSanVedic font (fallback: Noto Sans Devanagari), 30px, semi-bold
+  - IAST: AdishilaSan font (fallback: Noto Sans), 30px
+  - Fonts served from `/client/public/fonts/`s Telugu)
   - Devanagari: Adishila San font (fallback: Noto Sans Devanagari)
   - Font size: 28px for Vedic text readability
 
@@ -132,23 +137,31 @@ npm run check     # TypeScript type checking
 
 ## Documentation Standards
 
-### When to Create Docs (see docs/README.md)
-- **Architecture decisions:** `docs/architecture/ADR-XXX-Title.md`
-- **Implementation plans:** `docs/implementation/TODO-Feature-Name.md`
-- **Bug fixes:** `docs/troubleshooting/issue-description.md`
-- **Rollback procedures:** `docs/rollback/FEATURE_ROLLBACK_POINT.md`
+### Product documentation:** Update [docs/product-guide.md](docs/product-guide.md) for new features
+- **Architecture decisions:** Document in [docs/architecture/](docs/architecture/) as markdown or ADRs
+- **Domain workflows:** Update [docs/domain-requirements.md](docs/domain-requirements.md) with real-world usage
+- **Active backlog:** Categorize work in [docs/todo/](docs/todo/) by feature area
+- **Historical records:** Archive completed work to [docs/archive/](docs/archive/)
 
-### Reference PROJECT_DOCUMENTATION.md
-- Comprehensive feature descriptions (1421 lines)
-- Design philosophy and color system rationale
-- Complete sitemap and navigation structure
+### Reference Product Guide
+- [docs/product-guide.md](docs/product-guide.md) - **Single source of truth** (10,500 words)
+  - Vision, problems solved, features, design philosophy
+  - Technical architecture, current state, roadmap
+  - Updated continuously as features are implementede
 - Outstanding architectural issues section
 
-## Key Files to Reference
+##**Product & Architecture:**
+  - [docs/product-guide.md](docs/product-guide.md) - Complete product specification
+  - [docs/architecture/architecture.md](docs/architecture/architecture.md) - Technical overview
+  - [docs/architecture/module-contracts.md](docs/architecture/module-contracts.md) - Module boundaries
+  - [docs/domain-requirements.md](docs/domain-requirements.md) - Real-world workflows
 
-- [shared/schema.ts](shared/schema.ts) - Database models and relations
-- [server/database-storage.ts](server/database-storage.ts) - All DB operations
-- [server/routes-simple.ts](server/routes-simple.ts) - API endpoint definitions
-- [PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md) - Full feature specifications
+- **Code:**
+  - [shared/schema.ts](shared/schema.ts) - Database models and relations (14 tables)
+  - [shared/constants.ts](shared/constants.ts) - Script keys, configuration values
+  - [server/database-storage.ts](server/database-storage.ts) - Centralized DB operations
+  - [server/modules/](server/modules/) - 6 domain modules with routes and services
+  - [client/src/App.tsx](client/src/App.tsx) - Route definitions, lazy loading
+  - [tailwind.config.ts](tailwind.config.ts) - Custom color tokens (12 semantic colors)re specifications
 - [tailwind.config.ts](tailwind.config.ts) - Custom color tokens
 - [shared/constants.ts](shared/constants.ts) - Configuration values
