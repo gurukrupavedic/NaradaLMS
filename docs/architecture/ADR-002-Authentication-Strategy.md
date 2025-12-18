@@ -366,7 +366,7 @@ If critical issues found:
 - [Passport.js Documentation](http://www.passportjs.org/)
 - [Google OAuth 2.0](https://developers.google.com/identity/protocols/oauth2)
 - [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
-- [ADR-001-ADDENDUM: Domain Requirements](./ADR-001-ADDENDUM-Domain-Requirements.md)
+- [Domain requirements](../domain-requirements.md)
 - [MIGRATION-ROADMAP.md](../MIGRATION-ROADMAP.md)
 
 ---
