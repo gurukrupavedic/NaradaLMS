@@ -21,7 +21,7 @@
    - `GIT-BRANCHING-STRATEGY.md` - After Phase 1 merge, workflow may have evolved
 
 3. **Unclear Hierarchy:**
-   - Architecture docs scattered: `ARCHITECTURE.md`, `ADR-*.md` in subfolder, `MODULE-*.md`
+   - Architecture docs were scattered: `ARCHITECTURE.md`, `ADR-*.md` in subfolder, `MODULE-*.md` (now consolidated into `architecture.md` + `module-contracts.md`, with the rest archived)
    - Phase docs at root level mixed with strategic docs
    - No clear "current state" reference document
 
@@ -125,11 +125,11 @@ docs/
    - Include: strategy, OAuth config, session management, approval workflow, testing steps
    - Delete: `AUTH-SMOKE-TEST.md` (already removed) → keep any remaining steps in `05-TROUBLESHOOTING/TESTING-STRATEGY.md` or `03-IMPLEMENTATION-GUIDES/TESTING-STRATEGY.md`
 
-2. **Architecture Docs** (ADR-001 + ADR-002 [archived] + MODULE-*.md + ARCHITECTURE.md)
+2. **Architecture Docs** (architecture.md + module-contracts.md; ADR-001/002 archived)
    - Keep existing `ADR-*.md` files (they're good reference material)
    - Create: `02-ARCHITECTURE/PROJECT-STRUCTURE.md` (explain folder layout, not duplicated elsewhere)
    - Create: `02-ARCHITECTURE/DESIGN-SYSTEM.md` (from PROJECT_DOCUMENTATION.md section)
-   - Rename: `ARCHITECTURE.md` → `02-ARCHITECTURE/TECH-STACK.md` (clarify scope)
+   - Consolidated into `architecture/architecture.md` (front door) + `architecture/module-contracts.md` (boundaries)
 
 3. **Phase Docs** (PHASE-0, PHASE-1, PRD, braindump, etc.)
    - Consolidate `PHASE-0-COMPLETE-v2.md` + implementation notes → `04-PHASES/PHASE-0.md`
@@ -182,7 +182,7 @@ docs/
 1. Flatten `architecture/` → `02-ARCHITECTURE/ADRs/`
 2. Create `02-ARCHITECTURE/PROJECT-STRUCTURE.md`
 3. Create `02-ARCHITECTURE/DESIGN-SYSTEM.md`
-4. Consolidate ARCHITECTURE.md → TECH-STACK.md
+4. Keep architecture/architecture.md as the front-door overview (no further rename needed)
 
 ### Priority 4: Consolidate Phases (1.5 hours)
 1. Create `04-PHASES/PHASE-0.md` (from v2 + v1)

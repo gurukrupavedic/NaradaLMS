@@ -235,11 +235,12 @@ Captured in [docs/TODO/TODO-Backend.md](../../TODO/TODO-Backend.md), [TODO-Front
 - [PR-Phase-5-Learning-Delivery.md](./PR-Phase-5-Learning-Delivery.md) - Facade PR description
 
 ### Current Architecture
-- [docs/architecture/ARCHITECTURE.md](../../architecture/ARCHITECTURE.md) - Living architecture doc
-- [docs/architecture/MODULE-BREAKDOWN-DETAILED.md](../../architecture/MODULE-BREAKDOWN-DETAILED.md) - Module responsibilities
-- [docs/architecture/MODULE-SEPARATION-BOUNDARIES.md](../../architecture/MODULE-SEPARATION-BOUNDARIES.md) - Boundary definitions
-- [docs/architecture/ADR-001-Monolith-to-Modular.md](../../architecture/ADR-001-Monolith-to-Modular.md) - Architecture decision record
-- [ADR-002-Authentication-Strategy.md](./ADR-002-Authentication-Strategy.md) - Auth decision record
+- [docs/architecture/architecture.md](../../architecture/architecture.md) - Front-door architecture overview
+- [docs/architecture/module-contracts.md](../../architecture/module-contracts.md) - Module boundaries and public APIs
+- [docs/archive/modular-refactoring-2025/adr-001-modular-monolith-architecture.md](./adr-001-modular-monolith-architecture.md) - Architecture decision record (archived)
+- [docs/archive/modular-refactoring-2025/module-breakdown-detailed.md](./module-breakdown-detailed.md) - Legacy module breakdown (archived)
+- [docs/archive/modular-refactoring-2025/module-separation-boundaries.md](./module-separation-boundaries.md) - Legacy boundaries doc (archived)
+- [ADR-002-Authentication-Strategy.md](./ADR-002-Authentication-Strategy.md) - Auth decision record (archived)
 
 ### Current Work (Active)
 - [docs/TODO/TODO-Backend.md](../../TODO/TODO-Backend.md) - Backend hardening/cleanup (14 items)

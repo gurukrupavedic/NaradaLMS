@@ -32,7 +32,8 @@ docs/
 |----------|---------|
 | [PRD.md](./PRD.md) | **Product Requirements** - Functional specifications, user flows |
 | [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md) | **Feature Encyclopedia** - Comprehensive system documentation (1421 lines) |
-| [architecture/ARCHITECTURE.md](./architecture/ARCHITECTURE.md) | **Technical Architecture** - Tech stack, data model, API patterns, modular structure |
+| [architecture/architecture.md](./architecture/architecture.md) | **Technical Architecture** - Front-door overview, stack, routes |
+| [architecture/module-contracts.md](./architecture/module-contracts.md) | **Module Contracts** - Boundaries, ownership, public APIs, events |
 | [DOCUMENTATION-STRATEGY.md](./DOCUMENTATION-STRATEGY.md) | **Documentation Governance** - How to document, when to create ADRs |
 
 ### Active Work
@@ -47,10 +48,8 @@ docs/
 
 | Document | Description |
 |----------|-------------|
-| [architecture/ARCHITECTURE.md](./architecture/ARCHITECTURE.md) | Living architecture document (modular structure) |
-| [architecture/MODULE-BREAKDOWN-DETAILED.md](./architecture/MODULE-BREAKDOWN-DETAILED.md) | 6 domain modules with responsibilities |
-| [architecture/MODULE-SEPARATION-BOUNDARIES.md](./architecture/MODULE-SEPARATION-BOUNDARIES.md) | Module boundary definitions |
-| [architecture/ADR-001-Monolith-to-Modular.md](./architecture/ADR-001-Monolith-to-Modular.md) | Decision to adopt modular architecture |
+| [architecture/architecture.md](./architecture/architecture.md) | Front-door architecture overview |
+| [architecture/module-contracts.md](./architecture/module-contracts.md) | Module boundaries, ownership, public APIs |
 
 ### Completed Work (Archived)
 

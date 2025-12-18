@@ -4,7 +4,7 @@
 **Last Updated:** December 16, 2025  
 **Status:** Production
 
-> For technical architecture, see [ARCHITECTURE.md](./ARCHITECTURE.md)
+> For technical architecture, see [architecture/architecture.md](./architecture/architecture.md)
 
 ---
 

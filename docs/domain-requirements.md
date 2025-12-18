@@ -480,7 +480,7 @@
 - [docs/TODO/TODO-Backend.md](./TODO/TODO-Backend.md) - Backend hardening and gaps
 - [docs/TODO/TODO-Frontend.md](./TODO/TODO-Frontend.md) - Frontend enhancements
 - [docs/TODO/TODO-Common.md](./TODO/TODO-Common.md) - Testing, security, infrastructure gaps
-- [docs/architecture/MODULE-BREAKDOWN-DETAILED.md](./architecture/MODULE-BREAKDOWN-DETAILED.md) - Module responsibilities
+- [docs/architecture/module-contracts.md](./architecture/module-contracts.md) - Module boundaries and responsibilities
 
 ---
 
