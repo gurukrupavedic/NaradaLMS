@@ -179,7 +179,7 @@ Phase 2  Content & Publishing Module   Weeks 3-4   (20 hours)  ✅ COMPLETE
 Phase 3  Media Pipeline Module         Weeks 4-5   (15 hours)  ✅ COMPLETE
 Phase 4  Batch & Cohort Module         Week 5      (12 hours)  ✅ COMPLETE (Backend + UI Scaffold)
 Phase 5  Learning Delivery Module      Week 6      (20 hours)  ✅ COMPLETE (Dec 18, 2025)
-Phase 6  System Admin Module           Week 6-7    (8 hours)   ⏳ PENDING
+Phase 6  System Admin Module           Week 7      (5 hours)   🚀 IN PROGRESS (started Dec 18)
 Phase 7  Cleanup & Finalization        Week 7      (8 hours)   ⏳ PENDING
                                                    ───────────
 Total Effort: ~108 hours (scope expanded in Phase 5)
@@ -989,21 +989,105 @@ export const mediaService = new MediaService(db, contentService, eventBus);
 
 ---
 
-## Phase 6: System Admin Module (Week 6-7)
+## Phase 6: System Admin Module (Week 7)
 
-**Goal:** Set up audit logging and system settings
+**Goal:** Minimal audit logging + system settings management
 
-**Key methods:**
+**Simple Scope:**
+1. **Audit Service** - Log user actions with context (who, what, when)
+2. **Event Handlers** - Auto-log domain events from all modules
+3. **Settings CRUD** - Store/retrieve system configuration (enrollment limits, approval policies)
+4. **Admin Routes** - 3 endpoints: list audit logs, get settings, update settings
+
+**Effort Estimate:** 4-5 hours (keep it simple)
+
+### 6.1 Implement AdminService
+
+**File:** `server/modules/system-admin/service.ts`
+
+Methods to implement:
+```typescript
+class AdminService {
+  // Audit logging
+  async logAction(userId: string, action: string, resourceType: string, resourceId: string, changes?: any)
+  async getAuditLogs(filters: { userId?, action?, resourceType?, startDate?, endDate? })
+  
+  // System settings
+  async getSetting(key: string): Promise<string | null>
+  async setSetting(key: string, value: string, updatedBy?: string)
+  async getAllSettings(): Promise<Record<string, string>>
+}
+```
+
+**Keys to store in settings:**
+- `max_enrollments_per_batch` - (default: 50)
+- `auto_approve_users` - (default: false)
+- `publish_requires_review` - (default: false)
+
+### 6.2 Implement AdminStorage
+
+**File:** `server/modules/system-admin/storage.ts`
+
+Methods:
+```typescript
+class AdminStorage {
+  async insertAuditLog(userId: string, action: string, resourceType: string, resourceId: string, changes?: any)
+  async getAuditLogs(filters: any) // with pagination
+  
+  async getSetting(key: string)
+  async setSetting(key: string, value: string, updatedBy?: string)
+  async getAllSettings()
+}
+```
+
+### 6.3 Event Handlers
+
+**File:** `server/modules/system-admin/event-handlers.ts`
+
+Subscribe to these 11 domain events and auto-log:
+- `UserApproved` → log "USER_APPROVED"
+- `UserRoleChanged` → log "ROLE_ASSIGNED"
+- `ChapterPublished` → log "CHAPTER_PUBLISHED"
+- `ChapterUnpublished` → log "CHAPTER_UNPUBLISHED"
+- `AudioUploaded` → log "AUDIO_UPLOADED"
+- `SegmentMappingCreated` → log "MAPPING_CREATED"
+- `BatchCreated` → log "BATCH_CREATED"
+- `StudentEnrolled` → log "STUDENT_ENROLLED"
+- `StudentDropped` → log "STUDENT_DROPPED"
+- `ProgressUpdated` → log "PROGRESS_UPDATED"
+- `CoInstructorAssigned` → log "INSTRUCTOR_ASSIGNED"
+
+### 6.4 Admin Routes
+
+**File:** `server/routes/admin.routes.ts`
+
+Three simple endpoints:
+```
+GET  /api/admin/audit-logs              → list all audit logs (paginated)
+GET  /api/admin/settings                → get all settings
+PUT  /api/admin/settings/:key           → update one setting
+```
+
+All require `requireAdmin` middleware.
+
+### 6.5 Wire Up in Server
+
+**File:** `server/index.ts`
+
+- Import and mount `adminRouter`
+- Call `initializeEventHandlers()` to subscribe to all events
 
 ---
 
+## Phase 7: Cleanup & Finalization (Week 7)
 
 **Goal:** Delete old code, verify everything works
 - Delete `routes-simple.ts` (all routes migrated)
-- Reorganize `database-storage.ts` → move methods to module storage files
-- Delete `database-storage.ts`
+- Delete `database-storage.ts` (all methods moved to modules)
 - Update all imports throughout codebase
 - Final comprehensive testing
+
+**Effort:** 3-4 hours
 
 ---
 

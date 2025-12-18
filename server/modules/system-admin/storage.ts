@@ -1,8 +1,128 @@
-// System Admin - data access layer (to be implemented in Phase 6)
-export class AdminStorage {
-  constructor() {
-    // Placeholder for future queries
-  }
+/**
+ * System Admin Module - Data Access Layer
+ * Database operations for audit logs and system settings
+ */
+
+import { db } from '../../db';
+import { auditLogs, systemSettings } from '@shared/schema';
+import { eq, gte, lte, and } from 'drizzle-orm';
+
+export interface AuditLogFilter {
+  userId?: string;
+  action?: string;
+  resourceType?: string;
+  startDate?: Date;
+  endDate?: Date;
+  limit: number;
+  offset: number;
 }
 
-export const adminStorage = new AdminStorage();
+export class AdminStorage {
+  /**
+   * Insert audit log entry
+   */
+  async insertAuditLog(
+    userId: string,
+    action: string,
+    resourceType: string,
+    resourceId: string,
+    changes?: any
+  ): Promise<void> {
+    await db.insert(auditLogs).values({
+      userId,
+      action,
+      resourceType,
+      resourceId,
+      changes: changes || null,
+      timestamp: new Date(),
+    });
+  }
+
+  /**
+   * Get audit logs with filters and pagination
+   */
+  async getAuditLogs(filters: AuditLogFilter) {
+    const conditions = [];
+
+    if (filters.userId) {
+      conditions.push(eq(auditLogs.userId, filters.userId));
+    }
+    if (filters.action) {
+      conditions.push(eq(auditLogs.action, filters.action));
+    }
+    if (filters.resourceType) {
+      conditions.push(eq(auditLogs.resourceType, filters.resourceType));
+    }
+    if (filters.startDate) {
+      conditions.push(gte(auditLogs.timestamp, filters.startDate));
+    }
+    if (filters.endDate) {
+      conditions.push(lte(auditLogs.timestamp, filters.endDate));
+    }
+
+    let query = db.select().from(auditLogs);
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    return await query
+      .orderBy(auditLogs.timestamp)
+      .limit(filters.limit)
+      .offset(filters.offset);
+  }
+
+  /**
+   * Get single system setting by key
+   */
+  async getSetting(key: string): Promise<string | null> {
+    const result = await db
+      .select()
+      .from(systemSettings)
+      .where(eq(systemSettings.key, key))
+      .limit(1);
+
+    return result.length > 0 ? result[0].value : null;
+  }
+
+  /**
+   * Get all system settings
+   */
+  async getAllSettings(): Promise<Record<string, string>> {
+    const results = await db.select().from(systemSettings);
+    const settings: Record<string, string> = {};
+
+    for (const row of results) {
+      settings[row.key] = row.value;
+    }
+
+    return settings;
+  }
+
+  /**
+   * Set system setting (insert or update)
+   */
+  async setSetting(key: string, value: string, updatedBy?: string): Promise<void> {
+    const existing = await this.getSetting(key);
+
+    if (existing) {
+      // Update
+      await db
+        .update(systemSettings)
+        .set({
+          value,
+          updatedBy: updatedBy || null,
+          updatedAt: new Date(),
+        })
+        .where(eq(systemSettings.key, key));
+    } else {
+      // Insert
+      await db.insert(systemSettings).values({
+        key,
+        value,
+        updatedBy: updatedBy || null,
+        updatedAt: new Date(),
+      });
+    }
+  }
+}
