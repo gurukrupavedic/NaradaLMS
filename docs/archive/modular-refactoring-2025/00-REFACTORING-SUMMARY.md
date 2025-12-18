@@ -239,7 +239,7 @@ Captured in [docs/TODO/TODO-Backend.md](../../TODO/TODO-Backend.md), [TODO-Front
 - [docs/architecture/MODULE-BREAKDOWN-DETAILED.md](../../architecture/MODULE-BREAKDOWN-DETAILED.md) - Module responsibilities
 - [docs/architecture/MODULE-SEPARATION-BOUNDARIES.md](../../architecture/MODULE-SEPARATION-BOUNDARIES.md) - Boundary definitions
 - [docs/architecture/ADR-001-Monolith-to-Modular.md](../../architecture/ADR-001-Monolith-to-Modular.md) - Architecture decision record
-- [docs/architecture/ADR-002-Authentication-Strategy.md](../../architecture/ADR-002-Authentication-Strategy.md) - Auth decision record
+- [ADR-002-Authentication-Strategy.md](./ADR-002-Authentication-Strategy.md) - Auth decision record
 
 ### Current Work (Active)
 - [docs/TODO/TODO-Backend.md](../../TODO/TODO-Backend.md) - Backend hardening/cleanup (14 items)

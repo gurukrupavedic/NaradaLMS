@@ -51,13 +51,13 @@ docs/
 | [architecture/MODULE-BREAKDOWN-DETAILED.md](./architecture/MODULE-BREAKDOWN-DETAILED.md) | 6 domain modules with responsibilities |
 | [architecture/MODULE-SEPARATION-BOUNDARIES.md](./architecture/MODULE-SEPARATION-BOUNDARIES.md) | Module boundary definitions |
 | [architecture/ADR-001-Monolith-to-Modular.md](./architecture/ADR-001-Monolith-to-Modular.md) | Decision to adopt modular architecture |
-| [architecture/ADR-002-Authentication-Strategy.md](./architecture/ADR-002-Authentication-Strategy.md) | Passport.js local + OAuth strategy |
 
 ### Completed Work (Archived)
 
 | Document | Description |
 |----------|-------------|
 | [archive/modular-refactoring-2025/00-REFACTORING-SUMMARY.md](./archive/modular-refactoring-2025/00-REFACTORING-SUMMARY.md) | **📜 Modular Refactoring Journey** (Nov 2024 - Dec 18, 2025) - Complete story of monolith → 6 modules transformation |
+| [archive/modular-refactoring-2025/ADR-002-Authentication-Strategy.md](./archive/modular-refactoring-2025/ADR-002-Authentication-Strategy.md) | Auth decision record (Passport.js local + Google) |
 
 ---
 

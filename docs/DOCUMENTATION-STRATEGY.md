@@ -52,7 +52,7 @@ docs/
 │   ├── DEVELOPMENT-WORKFLOW.md        # npm scripts, dev server, build process, debugging
 │   └── ADRs/                          # Architecture Decision Records (lightweight, dated)
 │       ├── ADR-001-Modular-Monolith.md
-│       ├── ADR-002-Auth-Strategy.md
+│       ├── ADR-002-Auth-Strategy.md (archived)
 │       └── ... (one file per decision, ~2-3 pages each)
 │
 ├── 03-IMPLEMENTATION-GUIDES/          # How to implement new features
@@ -120,12 +120,12 @@ docs/
 
 **Consolidate by Topic:**
 
-1. **Authentication** (Scattered across ADR-002, AUTH-SMOKE-TEST, etc.)
+1. **Authentication** (Scattered across ADR-002 [archived], AUTH-SMOKE-TEST, etc.)
    - Create: `02-ARCHITECTURE/AUTHENTICATION.md`
    - Include: strategy, OAuth config, session management, approval workflow, testing steps
    - Delete: `AUTH-SMOKE-TEST.md` (already removed) → keep any remaining steps in `05-TROUBLESHOOTING/TESTING-STRATEGY.md` or `03-IMPLEMENTATION-GUIDES/TESTING-STRATEGY.md`
 
-2. **Architecture Docs** (ADR-001 + ADR-002 + MODULE-*.md + ARCHITECTURE.md)
+2. **Architecture Docs** (ADR-001 + ADR-002 [archived] + MODULE-*.md + ARCHITECTURE.md)
    - Keep existing `ADR-*.md` files (they're good reference material)
    - Create: `02-ARCHITECTURE/PROJECT-STRUCTURE.md` (explain folder layout, not duplicated elsewhere)
    - Create: `02-ARCHITECTURE/DESIGN-SYSTEM.md` (from PROJECT_DOCUMENTATION.md section)
