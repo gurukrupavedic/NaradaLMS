@@ -129,12 +129,13 @@ export const segmentMappings = pgTable("segment_mappings", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Batches - Track-specific cohorts (one batch per track per cycle)
+// Batches - Flexible cohorts (track and instructor optional; assignable later)
 export const batches = pgTable("batches", {
   id: serial("id").primaryKey(),
-  trackId: integer("track_id").notNull().references(() => tracks.id, { onDelete: "cascade" }),
+  batchCode: text("batch_code").notNull(),
   batchName: text("batch_name").notNull(),
-  primaryInstructorId: varchar("primary_instructor_id").notNull().references(() => users.id),
+  trackId: integer("track_id").references(() => tracks.id, { onDelete: "set null" }),
+  primaryInstructorId: varchar("primary_instructor_id").references(() => users.id),
   status: varchar("status").default("active").notNull(), // 'active', 'completed', 'archived'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
