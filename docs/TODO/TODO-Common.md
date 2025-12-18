@@ -181,6 +181,17 @@ Cross-cutting concerns, testing, documentation, and infrastructure tasks that af
    - **Why it matters:** Clear version history; easier rollbacks.
    - **Priority:** Low (formalize when ready for first release)
 
+   **15. Verify `/fonts` assets in production**
+      - **Type:** Verification / Ops
+      - **Criticality:** Medium (ensures multilingual text renders correctly)
+      - **Risk:** Low (read-only asset check)
+      - **Estimated effort:** 15–30 minutes
+      - **Dependencies:** Build artifacts present; production server running
+      - **Current State:** Dev server confirmed `/fonts` reachable; production path relies on static `dist/public` serving
+      - **What needs fixing:** On a release candidate, run build, start prod server, and confirm `/fonts/*` assets serve. Validate font CSS usage and fallbacks across Telugu/Devanagari/IAST views.
+      - **Acceptance Criteria:** `/fonts/JIMS-Regular.otf` loads under production server; UI pages render with JIMS, AdishilaSanVedic (semi-bold), and AdishilaSan per script.
+      - **Priority:** Medium (before production deployment)
+
 ---
 
 ## Priority Matrix
