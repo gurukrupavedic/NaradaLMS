@@ -198,7 +198,7 @@ server/modules/
 
 ### Tech Debt Introduced
 
-Captured in [docs/TODO/TODO-Backend.md](../../TODO/TODO-Backend.md), [TODO-Frontend.md](../../TODO/TODO-Frontend.md), [TODO-Common.md](../../TODO/TODO-Common.md):
+Captured in [docs/todo/todo-backend.md](../../todo/todo-backend.md), [todo-frontend.md](../../todo/todo-frontend.md), [todo-common.md](../../todo/todo-common.md):
 
 **Backend:**
 - Published safety guards (item 4)
@@ -243,9 +243,9 @@ Captured in [docs/TODO/TODO-Backend.md](../../TODO/TODO-Backend.md), [TODO-Front
 - [ADR-002-Authentication-Strategy.md](./ADR-002-Authentication-Strategy.md) - Auth decision record (archived)
 
 ### Current Work (Active)
-- [docs/TODO/TODO-Backend.md](../../TODO/TODO-Backend.md) - Backend hardening/cleanup (14 items)
-- [docs/TODO/TODO-Frontend.md](../../TODO/TODO-Frontend.md) - Frontend enhancements (7 items)
-- [docs/TODO/TODO-Common.md](../../TODO/TODO-Common.md) - Testing/security/infra (14 items)
+- [docs/todo/todo-backend.md](../../todo/todo-backend.md) - Backend hardening/cleanup (14 items)
+- [docs/todo/todo-frontend.md](../../todo/todo-frontend.md) - Frontend enhancements (7 items)
+- [docs/todo/todo-common.md](../../todo/todo-common.md) - Testing/security/infra (14 items)
 
 ---
 

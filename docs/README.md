@@ -40,9 +40,9 @@ docs/
 
 | Document | Description |
 |----------|-------------|
-| [TODO/TODO-Backend.md](./TODO/TODO-Backend.md) | Backend hardening, cleanup, and enhancements (14 items) |
-| [TODO/TODO-Frontend.md](./TODO/TODO-Frontend.md) | Frontend cleanup and UX improvements (7 items) |
-| [TODO/TODO-Common.md](./TODO/TODO-Common.md) | Testing, security, infrastructure, and monitoring (14 items) |
+| [todo/todo-backend.md](./todo/todo-backend.md) | Backend hardening, cleanup, and enhancements (14 items) |
+| [todo/todo-frontend.md](./todo/todo-frontend.md) | Frontend cleanup and UX improvements (7 items) |
+| [todo/todo-common.md](./todo/todo-common.md) | Testing, security, infrastructure, and monitoring (14 items) |
 
 ### Architecture & ADRs
 

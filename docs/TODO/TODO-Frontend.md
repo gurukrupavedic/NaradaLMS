@@ -94,7 +94,7 @@ Frontend tasks organized by component area, criticality, and risk.
 
 ## Known Issues & Observations
 
-- Dashboard experiments are preserved; refer to `docs/TODO/TODO-frontend-cleanup.md` (Topic 2 section) for final cleanup checklist when real auth/role features are ready.
+- Dashboard experiments are preserved; refer to `docs/todo/todo-frontend-cleanup.md` (Topic 2 section) for final cleanup checklist when real auth/role features are ready.
 - RichTextEditor (TipTap) works well; no known issues.
 - Progressive mapper and text segmentation are stable.
 - SimpleDashboard (production) is active and unaffected by cleanup.

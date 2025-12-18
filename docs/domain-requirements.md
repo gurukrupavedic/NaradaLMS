@@ -477,9 +477,9 @@
 5. Keep bullets succinct (1-2 lines max) - details go in ADRs or implementation docs
 
 **Related Documents:**
-- [docs/TODO/TODO-Backend.md](./TODO/TODO-Backend.md) - Backend hardening and gaps
-- [docs/TODO/TODO-Frontend.md](./TODO/TODO-Frontend.md) - Frontend enhancements
-- [docs/TODO/TODO-Common.md](./TODO/TODO-Common.md) - Testing, security, infrastructure gaps
+- [docs/todo/todo-backend.md](./todo/todo-backend.md) - Backend hardening and gaps
+- [docs/todo/todo-frontend.md](./todo/todo-frontend.md) - Frontend enhancements
+- [docs/todo/todo-common.md](./todo/todo-common.md) - Testing, security, infrastructure gaps
 - [docs/architecture/module-contracts.md](./architecture/module-contracts.md) - Module boundaries and responsibilities
 
 ---
