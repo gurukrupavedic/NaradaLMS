@@ -63,6 +63,8 @@ import { contentRouter } from "./routes/content.routes";
 app.use('/api', contentRouter);
 import { mediaRouter } from "./routes/media.routes";
 app.use('/api', mediaRouter);
+import { batchRouter } from "./routes/batch.routes";
+app.use('/api', batchRouter);
 
 app.use((req, res, next) => {
   const start = Date.now();

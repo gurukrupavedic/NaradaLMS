@@ -872,11 +872,22 @@ export const mediaService = new MediaService(db, contentService, eventBus);
 
 ## Phase 4: Batch & Cohort Module (Week 5)
 
-**Goal:** Extract batch/enrollment logic into module
+**Goal:** Extract batch/enrollment logic into module (Backend complete)
 
-**Key methods:**
-- Create batch, manage enrollments, assign instructors
-- All new functionality (prerequisites for learning delivery)
+**Deliverables (Backend):**
+- Schema: Added `batch_code`; `track_id` and `primary_instructor_id` are nullable
+- Migration: `npm run db:migrate:phase4` performs safe ALTERs
+- Module: `server/modules/batch-cohort/*` (storage, service, types, events)
+- API: `server/routes/batch.routes.ts` mounted under `/api`
+
+**Endpoints:**
+- `GET /api/batches` | `GET /api/batches/:id`
+- `POST /api/batches` | `PATCH /api/batches/:id`
+- `POST /api/batches/:id/enrollments` | `PATCH /api/enrollments/:id/drop` | `GET /api/batches/:id/enrollments`
+- `POST /api/batches/:id/co-instructors` | `DELETE /api/co-instructors/:assignmentId` | `GET /api/batches/:id/co-instructors`
+
+**UI (Deferred):**
+- Add “Batches” tile to management dashboard with CRUD + enrollment/assignment panels
 
 **Effort:** 12 hours
 
@@ -1279,4 +1290,68 @@ This PR establishes the **foundation**. Phase 1 will:
 ## Summary
 
 ✅ Phase 0 is complete and ready for merge. Foundation is solid. All infrastructure in place for Phase 1 to begin immediately after merge.
+
+---
+
+## Phase 3: Media Pipeline Module (Weeks 4-5)
+
+**Goal:** Isolate audio files, media segments, and segment mappings into a dedicated module and router, preserving existing client behavior.
+
+**Outcome:** Media module created and mounted; legacy media routes removed from `routes-simple.ts`; parity validated via smoke tests.
+
+### 3.1 Implement Media Module (storage/service/types/events)
+
+**Work:**
+- Create `server/modules/media-pipeline/{storage.ts, service.ts, types.ts, events.ts, index.ts}`
+- Implement storage using Drizzle models: `audioFiles`, `mediaSegments`, `segmentMappings`, `textSegments`
+- Implement service methods with validation (chapter consistency, timestamp ranges)
+- Define event constants: `AudioUploaded`, `MediaSegmentCreated`, `MappingCreated`, `MappingDeleted`
+
+**Result:**
+- Storage: `getAudioFilesByChapter()`, `create/update/deleteAudioFile()`, `getMediaSegmentsByAudioFile()`, `create/update/deleteMediaSegment()`, `getSegmentMappingsByChapter()/ByAudioFile()`, `createMappingWithMediaSegment()`, `deleteSegmentMapping()/ByTextSegment()`
+- Service: `listAudioFilesByChapter()`, `upload/update/deleteAudioFile()`, `list/create/update/deleteMediaSegment()`, `listMappingsByChapter()/ByAudioFile()`, `createMapping()`, `deleteMappingById()/ByTextSegment()`
+
+### 3.2 Create Media Router (server/routes/media.routes.ts)
+
+**Work:**
+- Add router with parity-preserving endpoints:
+  - Audio Files: `GET /api/audio-files/:chapterId`, `POST /api/audio-files/:chapterId/upload`, `PATCH /api/audio-files/:audioFileId`, `DELETE /api/audio-files/:audioFileId`
+  - Media Segments: `GET /api/media-segments/:audioFileId`, `POST /api/media-segments/bulk`, `POST /api/media-segments`, `PATCH /api/media-segments/:id`, `DELETE /api/media-segments/:id`
+  - Mappings: `GET /api/segment-mappings/:chapterId`, `GET /api/mappings/chapter/:chapterId`, `GET /api/mappings/audio/:audioFileId`, `GET /api/mappings/audio/:audioFileId/count`, `POST /api/mappings`, `DELETE /api/mappings/:audioFileId/:segmentId`
+- Mount router under `/api` in `server/index.ts`
+- Remove legacy media/mapping endpoints from `server/routes-simple.ts`
+
+**Result:**
+- New router mounted alongside `content.routes.ts`
+- `routes-simple.ts` retains only global error handling and static `/uploads`
+
+### 3.3 Validation & Smoke Tests
+
+**Server:** Running at `http://localhost:5000` (if EADDRINUSE, reuse existing instance)
+
+**Tests Executed:**
+- Tracks: `GET /api/tracks` → 200 OK
+- Chapters: `GET /api/chapters/1` → 200 OK
+- Audio Files: `GET /api/audio-files/1` → 200 OK (returns one file)
+- Mappings: `GET /api/mappings/chapter/1` → 200 OK (returns 12 mappings)
+
+**Result:** Parity confirmed; client flows preserved (upload, segmentation, progressive mapping, segment-only playback).
+
+### 3.4 Branch & PR
+
+**Branch:** `feature/phase-3-media-module`
+
+**PR:** Create PR to `main` with summary of changes and smoke test results.
+
+**Merge Criteria:**
+- All endpoints respond as before
+- No duplication in `routes-simple.ts`
+- TypeScript compiles (server-side)
+- Manual UI checks pass for Chapter Editor + Audio Mapping (against port 5000)
+
+### 3.5 Next (Phase 4 Preview)
+
+- Scaffold `batch-cohort` module (batches, enrollments, co-instructors)
+- Migrate batch-related endpoints from `routes-simple.ts`
+- Implement basic admin views for batch creation and enrollment
 

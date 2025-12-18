@@ -1,4 +1,9 @@
-// Batch & Cohort events (to be expanded in Phase 4)
-export const batchEvents = {
-  // Example: BatchCreated: 'BatchCreated'
-};
+// Batch & Cohort domain events
+export const BATCH_EVENTS = {
+  created: 'batch.created',
+  updated: 'batch.updated',
+  enrollmentAdded: 'batch.enrollment.added',
+  enrollmentDropped: 'batch.enrollment.dropped',
+  coInstructorAssigned: 'batch.coinstructor.assigned',
+  coInstructorRemoved: 'batch.coinstructor.removed',
+} as const;
