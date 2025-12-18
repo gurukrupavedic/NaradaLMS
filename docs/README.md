@@ -25,7 +25,7 @@ docs/
 | Document | Purpose |
 |----------|---------|
 | [PRD.md](./PRD.md) | **Product Requirements** - Functional specifications, user flows, UI requirements |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | **Technical Architecture** - Tech stack, data model, API patterns, component structure |
+| [architecture/ARCHITECTURE.md](./architecture/ARCHITECTURE.md) | **Technical Architecture** - Tech stack, data model, API patterns, component structure |
 
 ### TODO Items (implementation/)
 
