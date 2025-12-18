@@ -4,17 +4,96 @@
  * Responsibilities:
  * - Audit log recording
  * - System settings management
- * - Event subscription and logging
- * 
- * Phase 6: This module will be fully implemented
  */
 
+import { AdminStorage } from './storage';
+
+export interface AuditFilter {
+  userId?: string;
+  action?: string;
+  resourceType?: string;
+  startDate?: Date;
+  endDate?: Date;
+  limit?: number;
+  offset?: number;
+}
+
 export class AdminService {
-  // TODO: Implement in Phase 6
-  
-  constructor() {
-    console.log('[System Admin Module] Skeleton created - to be implemented in Phase 6');
+  constructor(private storage: AdminStorage) {}
+
+  /**
+   * Log a user action to audit trail
+   */
+  async logAction(
+    userId: string,
+    action: string,
+    resourceType: string,
+    resourceId: string,
+    changes?: any
+  ): Promise<void> {
+    await this.storage.insertAuditLog(userId, action, resourceType, resourceId, changes);
+  }
+
+  /**
+   * Get audit logs with optional filters and pagination
+   */
+  async getAuditLogs(filters: AuditFilter = {}) {
+    const limit = filters.limit || 100;
+    const offset = filters.offset || 0;
+    
+    return await this.storage.getAuditLogs({
+      userId: filters.userId,
+      action: filters.action,
+      resourceType: filters.resourceType,
+      startDate: filters.startDate,
+      endDate: filters.endDate,
+      limit,
+      offset,
+    });
+  }
+
+  /**
+   * Get system setting by key
+   */
+  async getSetting(key: string): Promise<string | null> {
+    return await this.storage.getSetting(key);
+  }
+
+  /**
+   * Get all system settings
+   */
+  async getAllSettings(): Promise<Record<string, string>> {
+    return await this.storage.getAllSettings();
+  }
+
+  /**
+   * Set system setting
+   */
+  async setSetting(key: string, value: string, updatedBy?: string): Promise<void> {
+    await this.storage.setSetting(key, value, updatedBy);
+  }
+
+  /**
+   * Get setting with default fallback
+   */
+  async getSettingWithDefault(key: string, defaultValue: string): Promise<string> {
+    const value = await this.getSetting(key);
+    return value ?? defaultValue;
   }
 }
 
-export const adminService = new AdminService();
+// Singleton instance (initialized in server/index.ts)
+let adminServiceInstance: AdminService;
+
+export const initAdminService = (storage: AdminStorage) => {
+  adminServiceInstance = new AdminService(storage);
+  return adminServiceInstance;
+};
+
+export const getAdminService = (): AdminService => {
+  if (!adminServiceInstance) {
+    throw new Error('AdminService not initialized. Call initAdminService() first.');
+  }
+  return adminServiceInstance;
+};
+

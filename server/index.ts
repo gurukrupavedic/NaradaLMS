@@ -9,6 +9,10 @@ import { LOG_TRUNCATE_LENGTH, DEFAULT_ERROR_STATUS } from "@shared/constants";
 import path from "path";
 import { configurePassport } from "./auth/passport-config";
 import { identityRouter } from "./routes/identity.routes";
+import { adminRouter } from "./routes/admin.routes";
+import { initAdminService } from "./modules/system-admin/service";
+import { AdminStorage } from "./modules/system-admin/storage";
+import { initializeEventHandlers } from "./modules/system-admin/events";
 
 const app = express();
 app.use(express.json());
@@ -58,6 +62,9 @@ app.use(express.static('public'));
 // Identity & Access routes (Phase 1 module)
 app.use('/api/auth', identityRouter);
 
+// Admin routes (Phase 6 module)
+app.use('/api/admin', adminRouter);
+
 // Content & Publishing routes (Phase 2 module)
 import { contentRouter } from "./routes/content.routes";
 app.use('/api', contentRouter);
@@ -99,6 +106,11 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize System Admin module
+  const adminStorage = new AdminStorage();
+  initAdminService(adminStorage);
+  initializeEventHandlers();
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
