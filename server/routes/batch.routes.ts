@@ -142,4 +142,60 @@ router.get('/batches/:id/co-instructors', async (req: Request, res: Response, ne
   } catch (error) { next(error); }
 });
 
+// Phase 5: Evaluation endpoints
+
+// GET /api/batches/:id/progress - Get all student progress in batch (Excel-like grid)
+router.get('/batches/:id/progress', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = (req as any).user;
+    if (!user) {
+      return res.status(401).json(createErrorResponse('Unauthorized', 'UNAUTHORIZED'));
+    }
+
+    // Only instructors and admins can view batch progress
+    const isInstructorOrAdmin = user.roles?.includes('instructor') || user.roles?.includes('admin');
+    if (!isInstructorOrAdmin) {
+      return res.status(403).json(createErrorResponse('Forbidden: Instructors only', 'FORBIDDEN'));
+    }
+
+    const batchId = parseInt(req.params.id);
+    const progress = await batchService.getBatchProgress(batchId);
+    res.json(progress);
+  } catch (error) { next(error); }
+});
+
+// POST /api/batches/:batchId/students/:studentId/evaluate - Evaluate student for chapter
+router.post('/batches/:batchId/students/:studentId/evaluate', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = (req as any).user;
+    if (!user) {
+      return res.status(401).json(createErrorResponse('Unauthorized', 'UNAUTHORIZED'));
+    }
+
+    // Only instructors can evaluate
+    if (!user.roles?.includes('instructor')) {
+      return res.status(403).json(createErrorResponse('Forbidden: Instructors only', 'FORBIDDEN'));
+    }
+
+    const batchId = parseInt(req.params.batchId);
+    const studentId = req.params.studentId;
+    const { chapterId, proficiencyLevel, notes } = req.body;
+
+    if (!chapterId || proficiencyLevel === undefined) {
+      return res.status(400).json(createErrorResponse('chapterId and proficiencyLevel are required', 'VALIDATION_ERROR'));
+    }
+
+    const result = await batchService.evaluateStudent({
+      studentId,
+      chapterId: parseInt(chapterId),
+      proficiencyLevel: parseInt(proficiencyLevel),
+      notes,
+      evaluatedBy: user.id,
+      batchId,
+    });
+
+    res.json(result);
+  } catch (error) { next(error); }
+});
+
 export const batchRouter = router;

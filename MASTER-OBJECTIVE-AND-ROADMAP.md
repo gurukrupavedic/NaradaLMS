@@ -894,15 +894,80 @@ export const mediaService = new MediaService(db, contentService, eventBus);
 
 ---
 
-## Phase 5: Learning Delivery Module (Week 6)
+## Phase 5: Learning Delivery Module + Batch Evaluation (Week 6)
 
-**Goal:** Extract student progress logic and content delivery into module
+**Goal:** Student content delivery (read-only progress) + Instructor batch evaluation
 
-**Key methods:**
-- Get student progress, update progress, deliver chapter content to students
-- Orchestrates reads from Content + Media + Batch modules
+**Scope:**
+1. **Learning Delivery Module** (new) - Student-facing content consumption
+   - View own progress (read-only)
+   - Access chapters (auto-track lastAccessed)
+   - Query available chapters based on enrollments
 
-**Effort:** 12 hours
+2. **Batch Evaluation** (extend Phase 4 batch-cohort module) - Instructor-facing assessment
+   - View all student progress in a batch (Excel-like grid view)
+   - Evaluate student proficiency for chapters
+   - Record evaluator and timestamp for audit
+
+**Proficiency Scale (0-4, 8, 9):**
+```
+0 = Started (Yellow) - attended class, practicing
+1 = 50% proficiency (Light green)
+2 = 70% proficiency (Dark green)
+3 = 90% proficiency (Light purple) - ready for certification
+4 = 95% proficiency (Dark purple) - certified/mastered
+8 = Absent (Gray) - student absent for that class
+9 = Not started (White) - chapter not yet taught
+```
+
+**Deliverables:**
+
+**A. Constants & Schema:**
+- Add `PROFICIENCY_LEVELS` to `shared/constants.ts` with scale definitions
+- Update schema comments for clarity (no structural changes)
+
+**B. Learning Delivery Module:**
+- `server/modules/learning-delivery/types.ts` - Progress DTOs, chapter access types
+- `server/modules/learning-delivery/storage.ts` - DB queries for student progress (read-only)
+- `server/modules/learning-delivery/service.ts` - Business logic for content delivery
+- `server/modules/learning-delivery/events.ts` - CHAPTER_ACCESSED event stub
+- `server/modules/learning-delivery/index.ts` - Module exports
+- `server/routes/learning.routes.ts` - Student endpoints
+
+**C. Batch Evaluation Extension:**
+- Extend `server/modules/batch-cohort/storage.ts` - Add batch progress queries, evaluation update
+- Extend `server/modules/batch-cohort/service.ts` - Add evaluation business logic
+- Extend `server/modules/batch-cohort/types.ts` - Add evaluation DTOs
+- Extend `server/routes/batch.routes.ts` - Add evaluation endpoints
+
+**API Endpoints:**
+
+**Learning Routes (Student):**
+- `GET /api/learning/progress` - Get own progress (auto-filtered to authenticated student)
+- `GET /api/learning/chapters` - Get chapters available to student (via enrollments)
+- `POST /api/learning/chapters/:chapterId/access` - Track chapter access (updates lastAccessed)
+
+**Batch Evaluation Routes (Instructor only):**
+- `GET /api/batches/:batchId/progress` - Get all student progress in batch (grid view)
+- `POST /api/batches/:batchId/students/:studentId/evaluate` - Set proficiency level for student/chapter
+  - Body: `{ chapterId, proficiencyLevel (0-4,8,9), notes?, batchId }`
+  - Updates: proficiencyLevel, notes, evaluatedBy, lastEvaluatedAt
+
+**Auth Guards:**
+- Students: can only view own progress and access own enrolled chapters
+- Instructors: can evaluate any student in any batch (flexible teaching model)
+- Admins: read-only access to progress (cannot evaluate)
+
+**Testing Checklist:**
+- [ ] Student can view own progress
+- [ ] Student can access chapter (lastAccessed updates)
+- [ ] Student cannot evaluate self or others
+- [ ] Instructor can view batch progress grid
+- [ ] Instructor can set proficiency levels (0-4, 8, 9)
+- [ ] Proficiency changes are audited (evaluatedBy, timestamp)
+- [ ] Invalid proficiency levels rejected
+
+**Effort:** 14 hours (learning module 6h + batch evaluation 6h + testing 2h)
 
 ---
 

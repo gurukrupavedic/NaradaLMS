@@ -77,6 +77,42 @@ export class BatchService {
   async listCoInstructors(batchId: number) {
     return batchStorage.listCoInstructorsByBatch(batchId);
   }
+
+  // Phase 5: Evaluation methods
+  async getBatchProgress(batchId: number) {
+    const batch = await this.getBatch(batchId);
+    if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });
+
+    return batchStorage.getBatchProgress(batchId);
+  }
+
+  async evaluateStudent(input: { studentId: string; chapterId: number; proficiencyLevel: number; notes?: string; evaluatedBy: string; batchId?: number }) {
+    const { VALID_PROFICIENCY_LEVELS } = await import('@shared/constants');
+    
+    // Validate proficiency level
+    if (!VALID_PROFICIENCY_LEVELS.includes(input.proficiencyLevel as any)) {
+      throw Object.assign(
+        new Error(`Invalid proficiency level. Must be one of: ${VALID_PROFICIENCY_LEVELS.join(', ')}`),
+        { status: 400 }
+      );
+    }
+
+    // Validate student exists
+    const studentExists = await batchStorage.userExists(input.studentId);
+    if (!studentExists) throw Object.assign(new Error('Student not found'), { status: 400 });
+
+    // Validate chapter exists
+    const chapterExists = await batchStorage.chapterExists(input.chapterId);
+    if (!chapterExists) throw Object.assign(new Error('Chapter not found'), { status: 400 });
+
+    // If batchId provided, validate batch exists
+    if (input.batchId) {
+      const batch = await this.getBatch(input.batchId);
+      if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });
+    }
+
+    return batchStorage.evaluateStudent(input);
+  }
 }
 
 export const batchService = new BatchService();

@@ -65,6 +65,8 @@ import { mediaRouter } from "./routes/media.routes";
 app.use('/api', mediaRouter);
 import { batchRouter } from "./routes/batch.routes";
 app.use('/api', batchRouter);
+import { learningRouter } from "./routes/learning.routes";
+app.use('/api', learningRouter);
 
 app.use((req, res, next) => {
   const start = Date.now();
