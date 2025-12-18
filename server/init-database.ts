@@ -1,4 +1,4 @@
-import { storage } from "./database-storage";
+import { identityStorage } from "./modules/identity-access/storage";
 // NOTE: Placeholder import removed because seed-vedic-data is not present in this repo.
 // Add back when the seed script is available.
 
@@ -6,7 +6,7 @@ export async function initializeDatabase(): Promise<void> {
   console.log("Initializing database with authentic Vedic content...");
 
   // Create system user for seeding
-  const systemUser = await storage.upsertUser({
+  const systemUser = await identityStorage.upsertUser({
     id: "system",
     email: "system@vediclms.local",
     firstName: "System",

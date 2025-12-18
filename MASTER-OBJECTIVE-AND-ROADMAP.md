@@ -179,8 +179,8 @@ Phase 2  Content & Publishing Module   Weeks 3-4   (20 hours)  ✅ COMPLETE
 Phase 3  Media Pipeline Module         Weeks 4-5   (15 hours)  ✅ COMPLETE
 Phase 4  Batch & Cohort Module         Week 5      (12 hours)  ✅ COMPLETE (Backend + UI Scaffold)
 Phase 5  Learning Delivery Module      Week 6      (20 hours)  ✅ COMPLETE (Dec 18, 2025)
-Phase 6  System Admin Module           Week 7      (5 hours)   🚀 IN PROGRESS (started Dec 18)
-Phase 7  Cleanup & Finalization        Week 7      (8 hours)   ⏳ PENDING
+Phase 6  System Admin Module           Week 7      (5 hours)   ✅ COMPLETE (Dec 18, 2025)
+Phase 7  Cleanup & Finalization        Week 7      (4 hours)   🚀 STARTING
                                                    ───────────
 Total Effort: ~108 hours (scope expanded in Phase 5)
 Completed: 92 hours | Remaining: ~16 hours
@@ -1081,13 +1081,75 @@ All require `requireAdmin` middleware.
 
 ## Phase 7: Cleanup & Finalization (Week 7)
 
-**Goal:** Delete old code, verify everything works
-- Delete `routes-simple.ts` (all routes migrated)
-- Delete `database-storage.ts` (all methods moved to modules)
-- Update all imports throughout codebase
-- Final comprehensive testing
+**Goal:** Delete old monolithic code, verify modular system works end-to-end
 
-**Effort:** 3-4 hours
+**Simple Scope:**
+1. **Delete old routes file** - `server/routes-simple.ts` (no longer needed, all routes migrated)
+2. **Delete old storage file** - `server/database-storage.ts` (all methods moved to module storages)
+3. **Update imports** - Fix any remaining references to old files
+4. **Final testing** - Verify all features work with new modular structure
+5. **Documentation** - Document the refactoring completion
+
+**Effort Estimate:** 4 hours
+
+### 7.1 Pre-Deletion Checklist
+
+Before deleting old files, verify all routes migrated:
+
+**Old routes-simple.ts contained:**
+- Identity routes → ✅ Moved to identity.routes.ts
+- Content routes → ✅ Moved to content.routes.ts
+- Media routes → ✅ Moved to media.routes.ts
+- Batch routes → ✅ Moved to batch.routes.ts
+- Learning routes → ✅ Moved to learning.routes.ts
+- Admin routes → ✅ Moved to admin.routes.ts
+
+**Old database-storage.ts contained:**
+- Identity methods → ✅ Moved to identity-access/storage.ts
+- Content methods → ✅ Moved to content-publishing/storage.ts
+- Media methods → ✅ Moved to media-pipeline/storage.ts
+- Batch methods → ✅ Moved to batch-cohort/storage.ts
+- Learning methods → ✅ Moved to learning-delivery/storage.ts
+- Admin methods → ✅ Moved to system-admin/storage.ts
+
+### 7.2 Deletion Steps
+
+1. Delete `server/routes-simple.ts` (682 lines - no longer needed)
+2. Delete `server/database-storage.ts` (571 lines - fully migrated)
+3. Search codebase for any remaining imports from these files
+4. Update `server/index.ts` - remove import and registration of old routes
+5. Run `npm run check` - verify no TypeScript errors
+6. Run dev server - verify everything loads
+7. Manual testing - click through all major features
+
+### 7.3 Expected Result
+
+Modular architecture complete:
+```
+server/
+├── modules/
+│   ├── identity-access/     → handles all auth/user logic
+│   ├── content-publishing/  → handles all track/chapter logic
+│   ├── media-pipeline/      → handles all audio/segment logic
+│   ├── batch-cohort/        → handles all batch/enrollment logic
+│   ├── learning-delivery/   → handles all progress/learning logic
+│   └── system-admin/        → handles audit logs/settings
+│
+├── routes/
+│   ├── identity.routes.ts
+│   ├── content.routes.ts
+│   ├── media.routes.ts
+│   ├── batch.routes.ts
+│   ├── learning.routes.ts
+│   └── admin.routes.ts
+│
+└── shared/
+    ├── middleware/
+    ├── events/
+    └── utils/
+```
+
+**All code organized by domain, no monolithic files, fully testable and maintainable.**
 
 ---
 

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import passport from "passport";
 import bcrypt from "bcrypt";
-import { storage } from "../database-storage";
+import { identityStorage } from "../modules/identity-access/storage";
 
 export const authRouter = Router();
 
@@ -14,7 +14,7 @@ authRouter.post("/register", async (req, res) => {
     }
 
     const normalizedEmail = String(email).toLowerCase();
-    const existing = await storage.getUserByEmail(normalizedEmail);
+    const existing = await identityStorage.getUserByEmail(normalizedEmail);
     if (existing) {
       return res.status(400).json({ error: "Email already registered" });
     }
@@ -25,7 +25,7 @@ authRouter.post("/register", async (req, res) => {
     const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase();
     const isAdminEmail = adminEmail && normalizedEmail === adminEmail;
     
-    const user = await storage.createUser({
+    const user = await identityStorage.createUser({
       email: normalizedEmail,
       passwordHash,
       provider: "local",
@@ -100,7 +100,7 @@ authRouter.get("/admin/users", async (req, res) => {
       return res.status(403).json({ error: "Admin access required" });
     }
 
-    const users = await storage.getAllUsers();
+    const users = await identityStorage.getAllUsers();
     const sanitized = users.map((u: any) => ({
       id: u.id,
       email: u.email,
@@ -131,7 +131,7 @@ authRouter.post("/admin/users/:userId/approve", async (req, res) => {
     }
 
     const { userId } = req.params;
-    const targetUser = await storage.getUser(userId);
+    const targetUser = await identityStorage.getUser(userId);
     if (!targetUser) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -143,8 +143,8 @@ authRouter.post("/admin/users/:userId/approve", async (req, res) => {
     }
 
     // Update roles and status
-    await storage.updateUserRoles(userId, updatedRoles);
-    const approvedUser = await storage.updateUserStatus(userId, "active");
+    await identityStorage.updateUserRoles(userId, updatedRoles);
+    const approvedUser = await identityStorage.updateUserStatus(userId, "active");
 
     return res.json({ 
       message: "User approved", 

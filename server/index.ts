@@ -3,7 +3,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import passport from "passport";
-import { registerRoutes } from "./routes-simple";
+import { createServer } from "http";
 import { setupVite, serveStatic, log } from "./vite";
 import { LOG_TRUNCATE_LENGTH, DEFAULT_ERROR_STATUS } from "@shared/constants";
 import path from "path";
@@ -45,6 +45,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
+
+// Serve uploaded files (audio, etc.)
+app.use('/uploads', express.static('uploads'));
 
 // Serve experiment files FIRST (before Vite) - isolated, safe to delete
 const experimentsPath = path.join(process.cwd(), 'experiments');
@@ -111,7 +114,7 @@ app.use((req, res, next) => {
   initAdminService(adminStorage);
   initializeEventHandlers();
 
-  const server = await registerRoutes(app);
+  const server = createServer(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || DEFAULT_ERROR_STATUS;

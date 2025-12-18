@@ -2,7 +2,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy, type Profile as GoogleProfile } from "passport-google-oauth20";
 import bcrypt from "bcrypt";
-import { storage } from "../database-storage";
+import { identityStorage } from "../modules/identity-access/storage";
 
 // Configure all passport strategies
 export function configurePassport() {
@@ -10,7 +10,7 @@ export function configurePassport() {
   passport.use(
     new LocalStrategy({ usernameField: "email", passwordField: "password" }, async (email, password, done) => {
       try {
-        const user = await storage.getUserByEmail(email.toLowerCase());
+        const user = await identityStorage.getUserByEmail(email.toLowerCase());
         if (!user) {
           return done(null, false, { message: "User not found" });
         }
@@ -54,15 +54,15 @@ export function configurePassport() {
             const email = profile.emails?.[0]?.value?.toLowerCase();
 
             // Try provider match first
-            let user = await storage.getUserByProviderId(provider, providerId);
+            let user = await identityStorage.getUserByProviderId(provider, providerId);
 
             // If not found by provider, try by email to avoid duplicates
             if (!user && email) {
-              user = await storage.getUserByEmail(email);
+              user = await identityStorage.getUserByEmail(email);
             }
 
             if (!user) {
-              user = await storage.createUser({
+              user = await identityStorage.createUser({
                 email: email ?? `${providerId}@google-oauth.local`,
                 provider,
                 providerId,
@@ -99,7 +99,7 @@ export function configurePassport() {
 
   passport.deserializeUser(async (id: string, done) => {
     try {
-      const user = await storage.getUser(id);
+      const user = await identityStorage.getUser(id);
       done(null, user || false);
     } catch (err) {
       done(err as Error);
