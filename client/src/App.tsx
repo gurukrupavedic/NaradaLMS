@@ -14,7 +14,6 @@ const Landing = lazy(() => import("@/features/shared-features/pages/Landing").th
 const Login = lazy(() => import("@/features/shared-features/pages/Login").then(module => ({ default: module.Login })));
 const Register = lazy(() => import("@/features/shared-features/pages/Register").then(module => ({ default: module.Register })));
 const PendingApproval = lazy(() => import("@/features/shared-features/pages/PendingApproval").then(module => ({ default: module.PendingApproval })));
-const SimpleDashboard = lazy(() => import("@/features/shared-features/components/SimpleDashboard"));
 const NotFound = lazy(() => import("@/features/shared-features/pages/NotFound").then(module => ({ default: module.NotFound })));
 
 const ManageTracks = lazy(() => import("@/features/content-management/pages/ManageTracks").then(module => ({ default: module.ManageTracks })));
@@ -26,6 +25,9 @@ const LearnTracks = lazy(() => import("@/features/learning/pages/LearnTracks").t
 const LearnChapters = lazy(() => import("@/features/learning/pages/LearnChapters").then(module => ({ default: module.LearnChapters })));
 const StudyChapter = lazy(() => import("@/features/learning/pages/StudyChapter").then(module => ({ default: module.StudyChapter })));
 const DesignSystemExperiment = lazy(() => import("@/design-system/DesignSystemExperiment"));
+
+
+
 
 function Router() {
   const { isAuthenticated, isLoading, user, isPendingApproval } = useAuth();
@@ -64,8 +66,8 @@ function Router() {
           </>
         ) : (
           <>
-            <Route path="/" component={() => <SimpleDashboard user={user as any} />} />
-            <Route path="/dashboard" component={() => <SimpleDashboard user={user as any} />} />
+            <Route path="/" component={ManageTracks} />
+            <Route path="/dashboard" component={ManageTracks} />
             {/* Content Management Routes */}
             <Route path="/manage" component={() => <ManageTracks />} />
             <Route path="/manage/tracks/:trackId" component={() => <ManageChapters />} />
