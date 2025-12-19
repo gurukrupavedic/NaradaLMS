@@ -6,37 +6,37 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary, AppErrorFallback } from "@/components/ui/error-boundary";
 import { LoadingScreen } from "@/components/ui/loading-screen";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/features/shared-features/hooks/useAuth";
 import { useWarmTrackCache } from "@/lib/query-prefetch";
 
 // Phase 5A: Bundle Optimization - Route-based code splitting
-const Landing = lazy(() => import("@/pages/Landing").then(module => ({ default: module.Landing })));
-const Login = lazy(() => import("@/pages/Login").then(module => ({ default: module.Login })));
-const Register = lazy(() => import("@/pages/Register").then(module => ({ default: module.Register })));
-const PendingApproval = lazy(() => import("@/pages/PendingApproval").then(module => ({ default: module.PendingApproval })));
-const SimpleDashboard = lazy(() => import("@/components/SimpleDashboard"));
-const NotFound = lazy(() => import("@/pages/NotFound").then(module => ({ default: module.NotFound })));
+const Landing = lazy(() => import("@/features/shared-features/pages/Landing").then(module => ({ default: module.Landing })));
+const Login = lazy(() => import("@/features/shared-features/pages/Login").then(module => ({ default: module.Login })));
+const Register = lazy(() => import("@/features/shared-features/pages/Register").then(module => ({ default: module.Register })));
+const PendingApproval = lazy(() => import("@/features/shared-features/pages/PendingApproval").then(module => ({ default: module.PendingApproval })));
+const SimpleDashboard = lazy(() => import("@/features/shared-features/components/SimpleDashboard"));
+const NotFound = lazy(() => import("@/features/shared-features/pages/NotFound").then(module => ({ default: module.NotFound })));
 
-const ManageTracks = lazy(() => import("@/pages/ManageTracks").then(module => ({ default: module.ManageTracks })));
-const ManageChapters = lazy(() => import("@/pages/ManageChapters").then(module => ({ default: module.ManageChapters })));
-const EditChapter = lazy(() => import("@/pages/EditChapter").then(module => ({ default: module.EditChapter })));
-const ManageUsers = lazy(() => import("@/pages/ManageUsers").then(module => ({ default: module.ManageUsers })));
-const ManageBatches = lazy(() => import("@/pages/ManageBatches").then(module => ({ default: module.ManageBatches })));
-const LearnTracks = lazy(() => import("@/pages/LearnTracks").then(module => ({ default: module.LearnTracks })));
-const LearnChapters = lazy(() => import("@/pages/LearnChapters").then(module => ({ default: module.LearnChapters })));
-const StudyChapter = lazy(() => import("@/pages/StudyChapter").then(module => ({ default: module.StudyChapter })));
-const ExperimentsShowcase = lazy(() => import("@/pages/ExperimentsShowcase").then(module => ({ default: module.ExperimentsShowcase })));
-const DesignSystemExperiment = lazy(() => import("@/pages/DesignSystemExperiment"));
-const AdminPanelExperiment = lazy(() => import("@/pages/AdminPanelExperiment"));
-const InstructorPanelExperiment = lazy(() => import("@/pages/InstructorPanelExperiment"));
-const StudentDashboardExperiment = lazy(() => import("@/pages/StudentDashboardExperiment"));
-const DashboardExperiment = lazy(() => import("@/pages/DashboardExperiment"));
-const RoleTabsExperiment = lazy(() => import("@/pages/RoleTabsExperiment"));
-const RoleBasedTabsExperiment = lazy(() => import("@/pages/RoleBasedTabsExperiment"));
-const TrackViewExperiment = lazy(() => import("@/pages/TrackViewExperiment").then(module => ({ default: module.TrackViewExperiment })));
-const ChapterViewExperiment = lazy(() => import("@/pages/ChapterViewExperiment").then(module => ({ default: module.ChapterViewExperiment })));
-const ChapterExperiment = lazy(() => import("@/pages/ChapterExperiment").then(module => ({ default: module.ChapterExperiment })));
-const DashboardOldExperiment = lazy(() => import("@/pages/DashboardOldExperiment").then(module => ({ default: module.DashboardOldExperiment })));
+const ManageTracks = lazy(() => import("@/features/content-management/pages/ManageTracks").then(module => ({ default: module.ManageTracks })));
+const ManageChapters = lazy(() => import("@/features/content-management/pages/ManageChapters").then(module => ({ default: module.ManageChapters })));
+const EditChapter = lazy(() => import("@/features/content-management/pages/EditChapter").then(module => ({ default: module.EditChapter })));
+const ManageUsers = lazy(() => import("@/features/user-management/pages/ManageUsers").then(module => ({ default: module.ManageUsers })));
+const ManageBatches = lazy(() => import("@/features/batch-management/pages/ManageBatches").then(module => ({ default: module.ManageBatches })));
+const LearnTracks = lazy(() => import("@/features/learning/pages/LearnTracks").then(module => ({ default: module.LearnTracks })));
+const LearnChapters = lazy(() => import("@/features/learning/pages/LearnChapters").then(module => ({ default: module.LearnChapters })));
+const StudyChapter = lazy(() => import("@/features/learning/pages/StudyChapter").then(module => ({ default: module.StudyChapter })));
+const ExperimentsShowcase = lazy(() => import("@/legacy/ExperimentsShowcase").then(module => ({ default: module.ExperimentsShowcase })));
+const DesignSystemExperiment = lazy(() => import("@/design-system/DesignSystemExperiment"));
+const AdminPanelExperiment = lazy(() => import("@/legacy/AdminPanelExperiment"));
+const InstructorPanelExperiment = lazy(() => import("@/legacy/InstructorPanelExperiment"));
+const StudentDashboardExperiment = lazy(() => import("@/legacy/StudentDashboardExperiment"));
+const DashboardExperiment = lazy(() => import("@/legacy/DashboardExperiment"));
+const RoleTabsExperiment = lazy(() => import("@/legacy/RoleTabsExperiment"));
+const RoleBasedTabsExperiment = lazy(() => import("@/legacy/RoleBasedTabsExperiment"));
+const TrackViewExperiment = lazy(() => import("@/legacy/TrackViewExperiment").then(module => ({ default: module.TrackViewExperiment })));
+const ChapterViewExperiment = lazy(() => import("@/legacy/ChapterViewExperiment").then(module => ({ default: module.ChapterViewExperiment })));
+const ChapterExperiment = lazy(() => import("@/legacy/ChapterExperiment").then(module => ({ default: module.ChapterExperiment })));
+const DashboardOldExperiment = lazy(() => import("@/legacy/DashboardOldExperiment").then(module => ({ default: module.DashboardOldExperiment })));
 
 
 

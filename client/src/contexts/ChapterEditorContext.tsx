@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useMemo, ReactNode } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/features/shared-features/hooks/use-toast";
 
 // Types
 interface ChapterData {
