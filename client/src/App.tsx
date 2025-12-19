@@ -15,6 +15,7 @@ const Login = lazy(() => import("@/features/shared-features/pages/Login").then(m
 const Register = lazy(() => import("@/features/shared-features/pages/Register").then(module => ({ default: module.Register })));
 const PendingApproval = lazy(() => import("@/features/shared-features/pages/PendingApproval").then(module => ({ default: module.PendingApproval })));
 const NotFound = lazy(() => import("@/features/shared-features/pages/NotFound").then(module => ({ default: module.NotFound })));
+const SimpleDashboard = lazy(() => import("@/features/shared-features/components/SimpleDashboard"));
 
 const ManageTracks = lazy(() => import("@/features/content-management/pages/ManageTracks").then(module => ({ default: module.ManageTracks })));
 const ManageChapters = lazy(() => import("@/features/content-management/pages/ManageChapters").then(module => ({ default: module.ManageChapters })));
@@ -66,8 +67,8 @@ function Router() {
           </>
         ) : (
           <>
-            <Route path="/" component={ManageTracks} />
-            <Route path="/dashboard" component={ManageTracks} />
+            <Route path="/" component={() => <SimpleDashboard user={user as any} />} />
+            <Route path="/dashboard" component={() => <SimpleDashboard user={user as any} />} />
             {/* Content Management Routes */}
             <Route path="/manage" component={() => <ManageTracks />} />
             <Route path="/manage/tracks/:trackId" component={() => <ManageChapters />} />
