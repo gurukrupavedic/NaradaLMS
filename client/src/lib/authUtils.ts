@@ -1,8 +1,8 @@
 /**
  * Authentication utility functions
  * 
- * Provides authentication helpers for user session management,
- * role validation, and Replit Auth integration.
+ * Provides authentication helpers for user session management
+ * and role validation.
  * 
  * @author Vedic LMS Team
  * @since 2025-06-24
