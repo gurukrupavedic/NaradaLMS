@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/design-system/Card";
 import { Button } from "@/components/design-system/Button";
-import { BookOpen, Edit, Beaker, Users, Layers } from "lucide-react";
+import { BookOpen, Edit, Users, Layers } from "lucide-react";
 import type { User } from "@shared/schema";
 
 interface FeatureCard {
@@ -42,13 +42,6 @@ const FEATURES: FeatureCard[] = [
     route: "/manage/users",
     color: "indigo",
     adminOnly: true,
-  },
-  {
-    title: "Experiments",
-    description: "Design system showcases and explorations",
-    icon: Beaker,
-    route: "/experiments", 
-    color: "purple"
   }
 ];
 
