@@ -27,6 +27,26 @@ const LearnChapters = lazy(() => import("@/features/learning/pages/LearnChapters
 const StudyChapter = lazy(() => import("@/features/learning/pages/StudyChapter").then(module => ({ default: module.StudyChapter })));
 const DesignSystemExperiment = lazy(() => import("@/design-system/DesignSystemExperiment"));
 
+// Simple inline NotFound component
+const SimpleNotFound = () => {
+  const [, navigate] = useLocation();
+  
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <h1 className="text-6xl font-bold text-gray-900 mb-4">404</h1>
+        <p className="text-xl text-gray-600 mb-8">Page not found</p>
+        <button
+          onClick={() => navigate("/")}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Go Home
+        </button>
+      </div>
+    </div>
+  );
+};
+
 
 
 function Router() {
@@ -35,6 +55,13 @@ function Router() {
   
   // Phase 5C: Background cache warming
   useWarmTrackCache();
+
+  // SAFETY: If authenticated user lands on /login or /register, redirect to home
+  React.useEffect(() => {
+    if (isAuthenticated && (location === '/login' || location === '/register')) {
+      navigate('/');
+    }
+  }, [isAuthenticated, location, navigate]);
 
   if (isLoading) {
     return (
@@ -49,52 +76,64 @@ function Router() {
     navigate("/pending-approval");
   }
 
+  // Unauthenticated routes
+  if (!isAuthenticated) {
+    return (
+      <Suspense fallback={<LoadingScreen message="Loading..." />}>
+        <Switch>
+          <Route path="/" component={Landing} />
+          <Route path="/login" component={Login} />
+          <Route path="/register" component={Register} />
+          <Route component={SimpleNotFound} />
+        </Switch>
+      </Suspense>
+    );
+  }
+
+  // Pending approval routes
+  if (isPendingApproval) {
+    return (
+      <Suspense fallback={<LoadingScreen message="Loading..." />}>
+        <Switch>
+          <Route path="/pending-approval" component={PendingApproval} />
+          <Route component={SimpleNotFound} />
+        </Switch>
+      </Suspense>
+    );
+  }
+
+  // Authenticated routes
   return (
-    <Suspense fallback={<LoadingScreen message="Loading application..." />}>
+    <Suspense fallback={<LoadingScreen message="Loading..." />}>
       <Switch>
-        {!isAuthenticated ? (
-          <>
-            <Route path="/" component={Landing} />
-            <Route path="/login" component={Login} />
-            <Route path="/register" component={Register} />
-            <Route component={NotFound} />
-          </>
-        ) : isPendingApproval ? (
-          <>
-            <Route path="/pending-approval" component={PendingApproval} />
-            <Route component={() => { navigate("/pending-approval"); return null; }} />
-          </>
-        ) : (
-          <>
-            <Route path="/" component={() => <SimpleDashboard user={user as any} />} />
-            <Route path="/dashboard" component={() => <SimpleDashboard user={user as any} />} />
-            <Route path="/home" component={() => <SimpleDashboard user={user as any} />} />
-            {/* Content Management Routes */}
-            <Route path="/manage" component={() => <ManageTracks />} />
-            <Route path="/manage/tracks/:trackId" component={() => <ManageChapters />} />
-            <Route path="/manage/tracks/:trackId/chapters/:chapterId" component={() => <EditChapter />} />
-            <Route path="/manage/users" component={() => <ManageUsers />} />
-            <Route path="/manage/batches" component={() => <ManageBatches />} />
-            
-            {/* Legacy redirects for old content-management URLs */}
-            <Route path="/content-management" component={() => <ManageTracks />} />
-            <Route path="/content-management/tracks/:trackId" component={() => <ManageChapters />} />
-            <Route path="/content-management/tracks/:trackId/chapters/:chapterId" component={() => <EditChapter />} />
+        <Route path="/" component={() => <SimpleDashboard user={user as any} />} />
+        <Route path="/dashboard" component={() => <SimpleDashboard user={user as any} />} />
+        <Route path="/home" component={() => <SimpleDashboard user={user as any} />} />
+        
+        {/* Content Management Routes */}
+        <Route path="/manage" component={() => <ManageTracks />} />
+        <Route path="/manage/tracks/:trackId" component={() => <ManageChapters />} />
+        <Route path="/manage/tracks/:trackId/chapters/:chapterId" component={() => <EditChapter />} />
+        <Route path="/manage/users" component={() => <ManageUsers />} />
+        <Route path="/manage/batches" component={() => <ManageBatches />} />
+        
+        {/* Legacy redirects for old content-management URLs */}
+        <Route path="/content-management" component={() => <ManageTracks />} />
+        <Route path="/content-management/tracks/:trackId" component={() => <ManageChapters />} />
+        <Route path="/content-management/tracks/:trackId/chapters/:chapterId" component={() => <EditChapter />} />
 
-            {/* Learning Module Routes */}
-            <Route path="/tracks" component={() => <LearnTracks />} />
-            <Route path="/tracks/:trackId" component={() => <LearnChapters />} />
-            <Route path="/chapter/:chapterId" component={() => <StudyChapter />} />
-            {/* Learning aliases */}
-            <Route path="/learning/tracks" component={() => <LearnTracks />} />
-            <Route path="/learning/tracks/:trackId" component={() => <LearnChapters />} />
-            <Route path="/learning/chapter/:chapterId" component={() => <StudyChapter />} />
+        {/* Learning Module Routes */}
+        <Route path="/tracks" component={() => <LearnTracks />} />
+        <Route path="/tracks/:trackId" component={() => <LearnChapters />} />
+        <Route path="/chapter/:chapterId" component={() => <StudyChapter />} />
+        {/* Learning aliases */}
+        <Route path="/learning/tracks" component={() => <LearnTracks />} />
+        <Route path="/learning/tracks/:trackId" component={() => <LearnChapters />} />
+        <Route path="/learning/chapter/:chapterId" component={() => <StudyChapter />} />
 
-            <Route path="/experiments/design-system" component={DesignSystemExperiment} />
+        <Route path="/experiments/design-system" component={DesignSystemExperiment} />
 
-            <Route component={NotFound} />
-          </>
-        )}
+        <Route component={SimpleNotFound} />
       </Switch>
     </Suspense>
   );
