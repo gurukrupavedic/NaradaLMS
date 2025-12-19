@@ -25,21 +25,7 @@ const ManageBatches = lazy(() => import("@/features/batch-management/pages/Manag
 const LearnTracks = lazy(() => import("@/features/learning/pages/LearnTracks").then(module => ({ default: module.LearnTracks })));
 const LearnChapters = lazy(() => import("@/features/learning/pages/LearnChapters").then(module => ({ default: module.LearnChapters })));
 const StudyChapter = lazy(() => import("@/features/learning/pages/StudyChapter").then(module => ({ default: module.StudyChapter })));
-const ExperimentsShowcase = lazy(() => import("@/legacy/ExperimentsShowcase").then(module => ({ default: module.ExperimentsShowcase })));
 const DesignSystemExperiment = lazy(() => import("@/design-system/DesignSystemExperiment"));
-const AdminPanelExperiment = lazy(() => import("@/legacy/AdminPanelExperiment"));
-const InstructorPanelExperiment = lazy(() => import("@/legacy/InstructorPanelExperiment"));
-const StudentDashboardExperiment = lazy(() => import("@/legacy/StudentDashboardExperiment"));
-const DashboardExperiment = lazy(() => import("@/legacy/DashboardExperiment"));
-const RoleTabsExperiment = lazy(() => import("@/legacy/RoleTabsExperiment"));
-const RoleBasedTabsExperiment = lazy(() => import("@/legacy/RoleBasedTabsExperiment"));
-const TrackViewExperiment = lazy(() => import("@/legacy/TrackViewExperiment").then(module => ({ default: module.TrackViewExperiment })));
-const ChapterViewExperiment = lazy(() => import("@/legacy/ChapterViewExperiment").then(module => ({ default: module.ChapterViewExperiment })));
-const ChapterExperiment = lazy(() => import("@/legacy/ChapterExperiment").then(module => ({ default: module.ChapterExperiment })));
-const DashboardOldExperiment = lazy(() => import("@/legacy/DashboardOldExperiment").then(module => ({ default: module.DashboardOldExperiment })));
-
-
-
 
 function Router() {
   const { isAuthenticated, isLoading, user, isPendingApproval } = useAuth();
@@ -101,18 +87,7 @@ function Router() {
             <Route path="/learning/tracks/:trackId" component={() => <LearnChapters />} />
             <Route path="/learning/chapter/:chapterId" component={() => <StudyChapter />} />
 
-            <Route path="/experiments" component={ExperimentsShowcase} />
             <Route path="/experiments/design-system" component={DesignSystemExperiment} />
-            <Route path="/experiments/admin-panel" component={AdminPanelExperiment} />
-            <Route path="/experiments/instructor-panel" component={InstructorPanelExperiment} />
-            <Route path="/experiments/student-dashboard" component={StudentDashboardExperiment} />
-            <Route path="/experiments/dashboard" component={DashboardExperiment} />
-            <Route path="/experiments/role-tabs" component={RoleTabsExperiment} />
-            <Route path="/experiments/role-based-tabs" component={RoleBasedTabsExperiment} />
-            <Route path="/experiments/track-view/:trackId" component={TrackViewExperiment} />
-            <Route path="/experiments/chapter-view/:id" component={ChapterViewExperiment} />
-            <Route path="/experiments/chapter/:id" component={ChapterExperiment} />
-            <Route path="/experiments/dashboard-old" component={() => <DashboardOldExperiment onTrackSelect={() => {}} onChapterSelect={() => {}} />} />
 
             <Route component={NotFound} />
           </>

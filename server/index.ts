@@ -49,16 +49,6 @@ app.use(passport.session());
 // Serve uploaded files (audio, etc.)
 app.use('/uploads', express.static('uploads'));
 
-// Serve experiment files FIRST (before Vite) - isolated, safe to delete
-const experimentsPath = path.join(process.cwd(), 'experiments');
-app.use('/experiments', express.static(experimentsPath, {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.html')) {
-      res.setHeader('Content-Type', 'text/html');
-    }
-  }
-}));
-
 // Serve static files from public directory
 app.use(express.static('public'));
 
