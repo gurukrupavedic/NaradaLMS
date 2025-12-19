@@ -58,6 +58,54 @@ export const SCRIPT_LABELS = { te: 'Telugu', hi: 'Hindi', en: 'English' };
 
 ## Development Workflows
 
+### Git Branching Strategy
+**Daily Branch Pattern**: Work is organized by daily branches with feature sub-branches.
+
+**Branch Naming:**
+```
+daily/YYYY-MM-DD                    # Daily checkpoint branch
+daily/YYYY-MM-DD/fix-*              # Bug fix sub-branch
+daily/YYYY-MM-DD/feat-*             # Feature sub-branch
+daily/YYYY-MM-DD/refactor-*         # Refactor sub-branch
+```
+
+**Morning - Start of Day:**
+```bash
+git checkout main
+git pull origin main
+git checkout -b daily/2024-12-19
+git push -u origin daily/2024-12-19
+```
+
+**During Day - Feature Work:**
+```bash
+git checkout daily/2024-12-19
+git checkout -b daily/2024-12-19/feature-name
+# ... work on feature ...
+git add .
+git commit -m "feat: descriptive message"
+git checkout daily/2024-12-19
+git merge daily/2024-12-19/feature-name
+git push origin daily/2024-12-19
+```
+
+**End of Day - Merge to Main:**
+```bash
+git checkout main
+git pull origin main
+git merge --no-ff daily/2024-12-19  # Preserve branch history
+git push origin main
+# Optional: Delete daily branch
+git branch -d daily/2024-12-19
+git push origin --delete daily/2024-12-19
+```
+
+**Workflow Benefits:**
+- Daily checkpoints for easy rollback
+- Feature isolation with clean commit history
+- Main branch stays stable until end of day
+- Clear history grouped by day, then by feature
+
 ### Running the App
 ```bash
 npm run dev       # Starts Vite dev server + Express API on port 5000
