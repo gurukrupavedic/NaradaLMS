@@ -26,8 +26,6 @@ const LearnTracks = lazy(() => import("@/features/learning/pages/LearnTracks").t
 const LearnChapters = lazy(() => import("@/features/learning/pages/LearnChapters").then(module => ({ default: module.LearnChapters })));
 const StudyChapter = lazy(() => import("@/features/learning/pages/StudyChapter").then(module => ({ default: module.StudyChapter })));
 const DesignSystemExperiment = lazy(() => import("@/design-system/DesignSystemExperiment"));
-const SimpleDashboard = lazy(() => import("@/features/shared-features/components/SimpleDashboard"));
-
 
 
 
