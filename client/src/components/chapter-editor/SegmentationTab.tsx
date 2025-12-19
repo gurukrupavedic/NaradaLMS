@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScriptSelector } from "@/components/common/ScriptSelector";
 import { AnnotationLayer } from "@/components/text-segmentation/AnnotationLayer";
-import { LinkStatusIcon } from "@/components/ui/link-status-icon";
+import { LinkStatusIcon } from "@shared/components/LinkStatusIcon";
 import { FileText, Plus, Trash2, Type, Ruler } from "@/lib/icons";
 
 interface SegmentationTabProps {
