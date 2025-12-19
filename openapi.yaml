@@ -1,13 +1,25 @@
 openapi: 3.0.3
 info:
-  title: Vedic Learning Management System - Content Management API
+  title: VedicLMS API
   description: |
-    A comprehensive API for managing Vedic educational content including tracks, chapters, audio files, text segments, and their relationships.
+    Comprehensive API for VedicLMS - A multilingual Learning Management System for Vedic education.
     
-    This system supports multilingual content (Telugu, Hindi/Devanagari, English/IAST) and advanced audio-text synchronization features.
-  version: 1.0.0
+    **Architecture:** Modular backend with 6 domain modules:
+    - Identity & Access: User management, authentication, authorization
+    - Content Publishing: Tracks, chapters, text segmentation
+    - Media Pipeline: Audio files, media segments, segment mappings
+    - Batch & Cohort: Batches, enrollments, co-instructors, progress evaluation
+    - Learning Delivery: Student-facing learning APIs, progress tracking
+    - System Admin: Audit logs, system settings, monitoring
+    
+    **Multilingual Support:** Telugu (te), Hindi/Devanagari (hi), English/IAST (en)
+    
+    **Authentication:** Session-based auth with Passport.js (PostgreSQL-backed sessions)
+    
+    **Authorization:** Role-based access control (student, instructor, content_manager, admin)
+  version: 2.0.0
   contact:
-    name: API Support
+    name: VedicLMS Support
     email: support@vedic-lms.com
   license:
     name: MIT
@@ -19,30 +31,261 @@ servers:
   - url: https://your-domain.replit.app
     description: Production server
 
+security:
+  - sessionAuth: []
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Users
+    description: User management (admin only)
+  - name: Tracks
+    description: Learning track operations
+  - name: Chapters
+    description: Chapter content management
+  - name: Text Segments
+    description: Text segmentation for audio synchronization
+  - name: Audio Files
+    description: Audio file upload and management
+  - name: Media Segments
+    description: Audio timestamp segment management
+  - name: Segment Mappings
+    description: Text-to-audio mapping system
+  - name: Batches
+    description: Batch and enrollment management
+  - name: Progress
+    description: Student progress tracking and evaluation
+  - name: Learning
+    description: Student-facing learning APIs
+  - name: System Admin
+    description: Audit logs and system settings
+
 paths:
-  # Track Management
-  /api/tracks:
-    get:
-      summary: Get all tracks
-      description: Retrieve all published learning tracks
-      tags: [Tracks]
+  # =============================================================================
+  # AUTHENTICATION & IDENTITY (identity-access module)
+  # =============================================================================
+  
+  /api/auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register new user
+      description: Register a new user account (pending approval unless admin email)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, fullName]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                fullName:
+                  type: string
       responses:
-        '200':
-          description: List of tracks
+        '201':
+          description: User registered successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Track'
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/admin/tracks:
+  /api/auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login with email and password
+      description: Authenticate user with local strategy (Passport.js)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/google:
     get:
-      summary: Get all tracks (admin)
-      description: Retrieve all tracks including drafts (admin access)
-      tags: [Admin - Tracks]
+      tags: [Authentication]
+      summary: Initiate Google OAuth flow
+      description: Redirect to Google OAuth consent screen
+      security: []
+      responses:
+        '302':
+          description: Redirect to Google OAuth
+
+  /api/auth/google/callback:
+    get:
+      tags: [Authentication]
+      summary: Google OAuth callback
+      description: Handle Google OAuth callback and create session
+      security: []
+      responses:
+        '302':
+          description: Redirect to app after authentication
+
+  /api/auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Logout current user
+      description: Destroy session and logout user
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logged out successfully
+
+  /api/auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get current user
+      description: Retrieve current authenticated user details
+      responses:
+        '200':
+          description: Current user details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/auth/users:
+    get:
+      tags: [Users]
+      summary: List all users
+      description: Get all users (pending and active) - Admin only
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/auth/users/{userId}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      description: Retrieve specific user details - Admin only
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/auth/admin/users/{userId}/approve:
+    post:
+      tags: [Users]
+      summary: Approve pending user
+      description: Approve user registration and add student role - Admin only
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: User approved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/auth/admin/users/{userId}/roles:
+    post:
+      tags: [Users]
+      summary: Assign roles to user
+      description: Add roles to user account - Admin only
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [roles]
+              properties:
+                roles:
+                  type: array
+                  items:
+                    type: string
+                    enum: [student, instructor, content_manager, admin]
+      responses:
+        '200':
+          description: Roles assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /api/auth/admin/users/{userId}/disable:
+    post:
+      tags: [Users]
+      summary: Disable user account
+      description: Set user status to inactive - Admin only
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: User disabled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # =============================================================================
+  # CONTENT PUBLISHING (content-publishing module)
+  # =============================================================================
+
+  /api/tracks:
+    get:
+      tags: [Tracks]
+      summary: List all tracks
+      description: Get all published learning tracks (public access)
+      security: []
       responses:
         '200':
           description: List of tracks
@@ -52,13 +295,11 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Track'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
     
     post:
+      tags: [Tracks]
       summary: Create new track
-      description: Create a new learning track
-      tags: [Admin - Tracks]
+      description: Create a new learning track - Content managers/Admin only
       requestBody:
         required: true
         content:
@@ -66,22 +307,19 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateTrackRequest'
       responses:
-        '200':
+        '201':
           description: Track created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Track'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 
-  /api/admin/tracks/{id}:
+  /api/tracks/{id}:
     get:
+      tags: [Tracks]
       summary: Get track by ID
-      description: Retrieve a specific track by its ID
-      tags: [Admin - Tracks]
+      description: Retrieve specific track details
+      security: []
       parameters:
         - $ref: '#/components/parameters/TrackId'
       responses:
@@ -91,15 +329,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Track'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
     
     put:
+      tags: [Tracks]
       summary: Update track
-      description: Update an existing track
-      tags: [Admin - Tracks]
+      description: Update track details - Content managers/Admin only
       parameters:
         - $ref: '#/components/parameters/TrackId'
       requestBody:
@@ -115,34 +349,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Track'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
     
     delete:
+      tags: [Tracks]
       summary: Delete track
-      description: Delete a track and all associated content
-      tags: [Admin - Tracks]
+      description: Delete track and all chapters - Content managers/Admin only
       parameters:
         - $ref: '#/components/parameters/TrackId'
       responses:
         '200':
           description: Track deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessMessage'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 
-  /api/admin/tracks/{id}/move:
+  /api/tracks/{id}/move:
     post:
-      summary: Move track order
-      description: Move a track up or down in the ordering
-      tags: [Admin - Tracks]
+      tags: [Tracks]
+      summary: Reorder track
+      description: Move track up or down - Content managers/Admin only
       parameters:
         - $ref: '#/components/parameters/TrackId'
       requestBody:
@@ -156,29 +378,22 @@ paths:
                 direction:
                   type: string
                   enum: [up, down]
-                  description: Direction to move the track
       responses:
         '200':
-          description: Track order updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessMessage'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+          description: Track order updated
 
-  # Chapter Management
-  /api/admin/chapters/{trackId}:
+  /api/chapters:
     get:
-      summary: Get chapters by track
-      description: Retrieve all chapters for a specific track
-      tags: [Admin - Chapters]
+      tags: [Chapters]
+      summary: List chapters by track
+      description: Get all chapters for a track (specify trackId in query)
+      security: []
       parameters:
-        - $ref: '#/components/parameters/TrackId'
+        - name: trackId
+          in: query
+          required: true
+          schema:
+            type: integer
       responses:
         '200':
           description: List of chapters
@@ -188,14 +403,31 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Chapter'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+    
+    post:
+      tags: [Chapters]
+      summary: Create new chapter
+      description: Create a new chapter - Content managers/Admin only
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChapterRequest'
+      responses:
+        '201':
+          description: Chapter created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chapter'
 
-  /api/admin/chapters/{chapterId}/details:
+  /api/chapters/{chapterId}:
     get:
+      tags: [Chapters]
       summary: Get chapter details
-      description: Retrieve detailed information about a specific chapter
-      tags: [Admin - Chapters]
+      description: Retrieve specific chapter
+      security: []
       parameters:
         - $ref: '#/components/parameters/ChapterId'
       responses:
@@ -205,39 +437,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Chapter'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/admin/chapters:
-    post:
-      summary: Create new chapter
-      description: Create a new chapter in a track
-      tags: [Admin - Chapters]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateChapterRequest'
-      responses:
-        '200':
-          description: Chapter created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Chapter'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/admin/chapters/{chapterId}:
+    
     patch:
+      tags: [Chapters]
       summary: Update chapter
-      description: Update chapter content or metadata
-      tags: [Admin - Chapters]
+      description: Update chapter content or metadata - Content managers/Admin only
       parameters:
         - $ref: '#/components/parameters/ChapterId'
       requestBody:
@@ -253,34 +457,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Chapter'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
     
     delete:
+      tags: [Chapters]
       summary: Delete chapter
-      description: Delete a chapter and all associated content
-      tags: [Admin - Chapters]
+      description: Delete chapter (cannot delete if status=published) - Content managers/Admin only
       parameters:
         - $ref: '#/components/parameters/ChapterId'
       responses:
         '200':
           description: Chapter deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessMessage'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        '400':
+          description: Cannot delete published chapter
 
-  /api/admin/chapters/{chapterId}/status:
+  /api/chapters/{chapterId}/status:
     patch:
-      summary: Update chapter status
-      description: Toggle chapter between draft and published status
-      tags: [Admin - Chapters]
+      tags: [Chapters]
+      summary: Publish/unpublish chapter
+      description: Toggle chapter status (draft/published) - Content managers/Admin only
       parameters:
         - $ref: '#/components/parameters/ChapterId'
       requestBody:
@@ -294,26 +488,19 @@ paths:
                 status:
                   type: string
                   enum: [draft, published]
-                  description: New status for the chapter
       responses:
         '200':
-          description: Chapter status updated successfully
+          description: Status updated successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Chapter'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 
-  /api/admin/chapters/{chapterId}/move:
+  /api/chapters/{chapterId}/move:
     post:
-      summary: Move chapter order
-      description: Move a chapter up or down within its track
-      tags: [Admin - Chapters]
+      tags: [Chapters]
+      summary: Reorder chapter
+      description: Move chapter up or down within track - Content managers/Admin only
       parameters:
         - $ref: '#/components/parameters/ChapterId'
       requestBody:
@@ -327,140 +514,41 @@ paths:
                 direction:
                   type: string
                   enum: [up, down]
-                  description: Direction to move the chapter
       responses:
         '200':
-          description: Chapter order updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessMessage'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+          description: Chapter order updated
 
-  # Audio File Management
-  /api/admin/audio-files/{chapterId}:
+  /api/segments:
     get:
-      summary: Get audio files by chapter
-      description: Retrieve all audio files for a specific chapter
-      tags: [Admin - Audio Files]
+      tags: [Text Segments]
+      summary: Get text segments for chapter
+      description: Retrieve all segments for a chapter (filter by chapterId and optionally script)
+      security: []
       parameters:
-        - $ref: '#/components/parameters/ChapterId'
+        - name: chapterId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: script
+          in: query
+          schema:
+            type: string
+            enum: [te, hi, en]
       responses:
         '200':
-          description: List of audio files
+          description: List of text segments
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AudioFile'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/admin/audio-files/{chapterId}/upload:
-    post:
-      summary: Upload audio file
-      description: Upload an audio file for a chapter
-      tags: [Admin - Audio Files]
-      parameters:
-        - $ref: '#/components/parameters/ChapterId'
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required: [audio]
-              properties:
-                audio:
-                  type: string
-                  format: binary
-                  description: Audio file (max 100MB)
-      responses:
-        '200':
-          description: Audio file uploaded successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AudioFile'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/admin/audio-files/{audioFileId}:
-    patch:
-      summary: Update audio file
-      description: Update audio file metadata
-      tags: [Admin - Audio Files]
-      parameters:
-        - $ref: '#/components/parameters/AudioFileId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateAudioFileRequest'
-      responses:
-        '200':
-          description: Audio file updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AudioFile'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                  $ref: '#/components/schemas/TextSegment'
     
-    delete:
-      summary: Delete audio file
-      description: Delete an audio file and all associated mappings
-      tags: [Admin - Audio Files]
-      parameters:
-        - $ref: '#/components/parameters/AudioFileId'
-      responses:
-        '200':
-          description: Audio file deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessMessage'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  # Text Segment Management
-  /api/admin/segments/{chapterId}:
-    get:
-      summary: Get text segments by chapter
-      description: Retrieve all text segments for a specific chapter with audio mapping data
-      tags: [Admin - Text Segments]
-      parameters:
-        - $ref: '#/components/parameters/ChapterId'
-      responses:
-        '200':
-          description: List of text segments with audio mappings
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/EnrichedTextSegment'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/admin/segments:
     post:
+      tags: [Text Segments]
       summary: Create text segment
-      description: Create a new text segment
-      tags: [Admin - Text Segments]
+      description: Create new text segment with position boundaries - Content managers/Admin only
       requestBody:
         required: true
         content:
@@ -468,22 +556,18 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateTextSegmentRequest'
       responses:
-        '200':
-          description: Text segment created successfully
+        '201':
+          description: Segment created successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TextSegment'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 
-  /api/admin/segments/{segmentId}:
+  /api/segments/{segmentId}:
     patch:
+      tags: [Text Segments]
       summary: Update text segment
-      description: Update text segment content or references
-      tags: [Admin - Text Segments]
+      description: Update segment boundaries - Content managers/Admin only
       parameters:
         - $ref: '#/components/parameters/SegmentId'
       requestBody:
@@ -494,151 +578,947 @@ paths:
               $ref: '#/components/schemas/UpdateTextSegmentRequest'
       responses:
         '200':
-          description: Text segment updated successfully
+          description: Segment updated successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TextSegment'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
     
     delete:
+      tags: [Text Segments]
       summary: Delete text segment
-      description: Delete a text segment and all associated mappings
-      tags: [Admin - Text Segments]
+      description: Delete segment and all mappings - Content managers/Admin only
       parameters:
         - $ref: '#/components/parameters/SegmentId'
       responses:
         '200':
-          description: Text segment deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessMessage'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+          description: Segment deleted successfully
 
-  # Audio Mapping Management (Legacy)
-  /api/admin/mappings/audio/{audioFileId}:
-    get:
-      summary: Get audio mappings by audio file
-      description: Retrieve all audio mappings for a specific audio file
-      tags: [Admin - Audio Mappings]
+  /api/segments/{chapterId}/reorder:
+    patch:
+      tags: [Text Segments]
+      summary: Reorder segments
+      description: Bulk reorder segments within chapter - Content managers/Admin only
       parameters:
-        - $ref: '#/components/parameters/AudioFileId'
-      responses:
-        '200':
-          description: List of audio mappings
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AudioMapping'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/admin/mappings/segment/{segmentId}:
-    get:
-      summary: Get audio mappings by segment
-      description: Retrieve all audio mappings for a specific text segment
-      tags: [Admin - Audio Mappings]
-      parameters:
-        - $ref: '#/components/parameters/SegmentId'
-      responses:
-        '200':
-          description: List of audio mappings
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AudioMapping'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/admin/mappings:
-    post:
-      summary: Create audio mapping
-      description: Create a new audio-to-text mapping
-      tags: [Admin - Audio Mappings]
+        - $ref: '#/components/parameters/ChapterId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateAudioMappingRequest'
+              type: object
+              required: [segmentIds]
+              properties:
+                segmentIds:
+                  type: array
+                  items:
+                    type: integer
+                  description: Ordered array of segment IDs
       responses:
         '200':
-          description: Audio mapping created successfully
+          description: Segments reordered successfully
+
+  # =============================================================================
+  # MEDIA PIPELINE (media-pipeline module)
+  # =============================================================================
+
+  /api/audio-files:
+    get:
+      tags: [Audio Files]
+      summary: List audio files for chapter
+      description: Get all audio files for a chapter (filter by chapterId)
+      security: []
+      parameters:
+        - name: chapterId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of audio files
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AudioMapping'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: array
+                items:
+                  $ref: '#/components/schemas/AudioFile'
+    
+    post:
+      tags: [Audio Files]
+      summary: Upload audio file
+      description: Upload audio file with automatic metadata extraction - Content managers/Admin only
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [audio, chapterId]
+              properties:
+                audio:
+                  type: string
+                  format: binary
+                  description: Audio file (max 50MB)
+                chapterId:
+                  type: integer
+                reciter:
+                  type: string
+                displayName:
+                  type: string
+      responses:
+        '201':
+          description: Audio file uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AudioFile'
 
-  /api/admin/mappings/{audioFileId}/{segmentId}:
-    delete:
-      summary: Delete audio mapping
-      description: Delete a specific audio-to-text mapping
-      tags: [Admin - Audio Mappings]
+  /api/audio-files/{audioFileId}:
+    patch:
+      tags: [Audio Files]
+      summary: Update audio metadata
+      description: Update audio file metadata - Content managers/Admin only
       parameters:
         - $ref: '#/components/parameters/AudioFileId'
-        - $ref: '#/components/parameters/SegmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                reciter:
+                  type: string
       responses:
         '200':
-          description: Audio mapping deleted successfully
+          description: Audio file updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessMessage'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: '#/components/schemas/AudioFile'
+    
+    delete:
+      tags: [Audio Files]
+      summary: Delete audio file
+      description: Delete audio file and all mappings - Content managers/Admin only
+      parameters:
+        - $ref: '#/components/parameters/AudioFileId'
+      responses:
+        '200':
+          description: Audio file deleted successfully
+
+  /api/media-segments:
+    get:
+      tags: [Media Segments]
+      summary: List media segments for audio
+      description: Get all media segments for an audio file
+      security: []
+      parameters:
+        - name: audioFileId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of media segments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MediaSegment'
+    
+    post:
+      tags: [Media Segments]
+      summary: Create media segment
+      description: Create single media segment - Content managers/Admin only
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMediaSegmentRequest'
+      responses:
+        '201':
+          description: Media segment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaSegment'
+
+  /api/media-segments/bulk:
+    post:
+      tags: [Media Segments]
+      summary: Create media segments in bulk
+      description: Create multiple media segments at once - Content managers/Admin only
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [audioFileId, segments]
+              properties:
+                audioFileId:
+                  type: integer
+                segments:
+                  type: array
+                  items:
+                    type: object
+                    required: [startTime, endTime]
+                    properties:
+                      startTime:
+                        type: number
+                      endTime:
+                        type: number
+      responses:
+        '201':
+          description: Media segments created successfully
+
+  /api/media-segments/{mediaSegmentId}:
+    patch:
+      tags: [Media Segments]
+      summary: Update media segment
+      description: Update media segment timestamps - Content managers/Admin only
+      parameters:
+        - name: mediaSegmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                startTime:
+                  type: number
+                endTime:
+                  type: number
+      responses:
+        '200':
+          description: Media segment updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaSegment'
+    
+    delete:
+      tags: [Media Segments]
+      summary: Delete media segment
+      description: Delete media segment - Content managers/Admin only
+      parameters:
+        - name: mediaSegmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Media segment deleted successfully
+
+  /api/mappings:
+    get:
+      tags: [Segment Mappings]
+      summary: List segment mappings
+      description: Get mappings by chapter or audio file
+      security: []
+      parameters:
+        - name: chapterId
+          in: query
+          schema:
+            type: integer
+        - name: audioFileId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of segment mappings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SegmentMapping'
+    
+    post:
+      tags: [Segment Mappings]
+      summary: Create segment mapping
+      description: Map text segment to audio timestamps - Content managers/Admin only
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSegmentMappingRequest'
+      responses:
+        '201':
+          description: Mapping created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentMapping'
+
+  /api/mappings/count:
+    get:
+      tags: [Segment Mappings]
+      summary: Count mappings for audio file
+      description: Get mapping count for an audio file
+      security: []
+      parameters:
+        - name: audioFileId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Mapping count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+
+  /api/mappings/{textSegmentId}/{audioFileId}:
+    delete:
+      tags: [Segment Mappings]
+      summary: Delete mapping
+      description: Delete mapping by text segment and audio file - Content managers/Admin only
+      parameters:
+        - name: textSegmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: audioFileId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Mapping deleted successfully
+
+  # =============================================================================
+  # BATCH & COHORT (batch-cohort module)
+  # =============================================================================
+
+  /api/batches:
+    get:
+      tags: [Batches]
+      summary: List all batches
+      description: Get all batches (instructors see assigned batches, admins see all)
+      responses:
+        '200':
+          description: List of batches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Batch'
+    
+    post:
+      tags: [Batches]
+      summary: Create new batch
+      description: Create a new batch - Admin only
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBatchRequest'
+      responses:
+        '201':
+          description: Batch created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Batch'
+
+  /api/batches/{id}:
+    get:
+      tags: [Batches]
+      summary: Get batch details
+      description: Get batch by ID - Instructors/Admin only
+      parameters:
+        - $ref: '#/components/parameters/BatchId'
+      responses:
+        '200':
+          description: Batch details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Batch'
+    
+    patch:
+      tags: [Batches]
+      summary: Update batch
+      description: Update batch details - Instructors/Admin only
+      parameters:
+        - $ref: '#/components/parameters/BatchId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                trackId:
+                  type: integer
+      responses:
+        '200':
+          description: Batch updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Batch'
+
+  /api/batches/{id}/enrollments:
+    get:
+      tags: [Batches]
+      summary: List enrollments in batch
+      description: Get all students enrolled in batch - Instructors/Admin only
+      parameters:
+        - $ref: '#/components/parameters/BatchId'
+      responses:
+        '200':
+          description: List of enrollments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Enrollment'
+    
+    post:
+      tags: [Batches]
+      summary: Enroll student in batch
+      description: Add student to batch - Admin only
+      parameters:
+        - $ref: '#/components/parameters/BatchId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [studentId]
+              properties:
+                studentId:
+                  type: integer
+      responses:
+        '201':
+          description: Student enrolled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+
+  /api/enrollments/{enrollmentId}/drop:
+    patch:
+      tags: [Batches]
+      summary: Drop student enrollment
+      description: Mark enrollment as dropped with reason - Instructors/Admin only
+      parameters:
+        - name: enrollmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dropReason]
+              properties:
+                dropReason:
+                  type: string
+      responses:
+        '200':
+          description: Enrollment dropped successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+
+  /api/batches/{id}/co-instructors:
+    get:
+      tags: [Batches]
+      summary: List co-instructors
+      description: Get all co-instructors for batch - Instructors/Admin only
+      parameters:
+        - $ref: '#/components/parameters/BatchId'
+      responses:
+        '200':
+          description: List of co-instructors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    userId:
+                      type: integer
+                    fullName:
+                      type: string
+                    assignedAt:
+                      type: string
+                      format: date-time
+    
+    post:
+      tags: [Batches]
+      summary: Assign co-instructor
+      description: Add co-instructor to batch - Admin only
+      parameters:
+        - $ref: '#/components/parameters/BatchId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [instructorId]
+              properties:
+                instructorId:
+                  type: integer
+      responses:
+        '201':
+          description: Co-instructor assigned successfully
+
+  /api/batches/{batchId}/co-instructors/{instructorId}:
+    delete:
+      tags: [Batches]
+      summary: Remove co-instructor
+      description: Remove co-instructor from batch - Admin only
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: instructorId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Co-instructor removed successfully
+
+  /api/batches/{batchId}/progress:
+    get:
+      tags: [Progress]
+      summary: Get batch progress grid
+      description: Excel-like grid of all student progress in batch - Instructors/Admin only
+      parameters:
+        - $ref: '#/components/parameters/BatchId'
+      responses:
+        '200':
+          description: Student progress data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    studentId:
+                      type: integer
+                    studentName:
+                      type: string
+                    chapterProgress:
+                      type: object
+                      additionalProperties:
+                        type: object
+                        properties:
+                          proficiencyLevel:
+                            type: integer
+                            minimum: 0
+                            maximum: 4
+                          lastEvaluated:
+                            type: string
+                            format: date-time
+
+  /api/batches/{batchId}/students/{studentId}/evaluate:
+    post:
+      tags: [Progress]
+      summary: Evaluate student
+      description: Record student proficiency evaluation for chapter - Instructors only
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chapterId, proficiencyLevel]
+              properties:
+                chapterId:
+                  type: integer
+                proficiencyLevel:
+                  type: integer
+                  minimum: 0
+                  maximum: 4
+                  description: 0=Not Started, 1=Beginner, 2=Intermediate, 3=Advanced, 4=Mastered
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Evaluation recorded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentProgress'
+
+  # =============================================================================
+  # LEARNING DELIVERY (learning-delivery module)
+  # =============================================================================
+
+  /api/learning/progress:
+    get:
+      tags: [Learning]
+      summary: Get student progress
+      description: Students see own progress, instructors/admins can filter by studentId/trackId/chapterId/batchId
+      parameters:
+        - name: studentId
+          in: query
+          schema:
+            type: integer
+        - name: trackId
+          in: query
+          schema:
+            type: integer
+        - name: chapterId
+          in: query
+          schema:
+            type: integer
+        - name: batchId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Student progress data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudentProgress'
+
+  /api/learning/chapters:
+    get:
+      tags: [Learning]
+      summary: Get available chapters
+      description: Get chapters student has access to (based on batch enrollments) - Students only
+      responses:
+        '200':
+          description: List of accessible chapters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Chapter'
+
+  /api/learning/chapters/{chapterId}/access:
+    post:
+      tags: [Learning]
+      summary: Track chapter access
+      description: Update lastAccessed timestamp for chapter - Students only
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
+      responses:
+        '200':
+          description: Access tracked successfully
+
+  /api/learning/tracks:
+    get:
+      tags: [Learning]
+      summary: List tracks for learning
+      description: Facade API for student track browsing
+      responses:
+        '200':
+          description: List of tracks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Track'
+
+  /api/learning/tracks/{trackId}/chapters:
+    get:
+      tags: [Learning]
+      summary: List chapters in track
+      description: Facade API for student chapter browsing
+      parameters:
+        - $ref: '#/components/parameters/TrackId'
+      responses:
+        '200':
+          description: List of chapters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Chapter'
+
+  /api/learning/chapters/{chapterId}/bundle:
+    get:
+      tags: [Learning]
+      summary: Get unified chapter bundle
+      description: Retrieve chapter with opt-in includes (segments, audio, mappings, progress) and script filter
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
+        - name: include
+          in: query
+          schema:
+            type: string
+            description: Comma-separated list (chapter,segments,audio,mappings,progress)
+        - name: script
+          in: query
+          schema:
+            type: string
+            enum: [te, hi, en]
+      responses:
+        '200':
+          description: Chapter bundle with requested data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chapter:
+                    $ref: '#/components/schemas/Chapter'
+                  segments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TextSegment'
+                  audio:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AudioFile'
+                  mappings:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SegmentMapping'
+                  progress:
+                    $ref: '#/components/schemas/StudentProgress'
+
+  # =============================================================================
+  # SYSTEM ADMIN (system-admin module)
+  # =============================================================================
+
+  /api/admin/audit-logs:
+    get:
+      tags: [System Admin]
+      summary: List audit logs
+      description: Get audit logs with pagination and filters - Admin only
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: resourceType
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: perPage
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: List of audit logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLog'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /api/admin/settings:
+    get:
+      tags: [System Admin]
+      summary: Get all system settings
+      description: Retrieve all system configuration settings - Admin only
+      responses:
+        '200':
+          description: System settings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SystemSetting'
+
+  /api/admin/settings/{key}:
+    get:
+      tags: [System Admin]
+      summary: Get system setting
+      description: Retrieve single setting by key - Admin only
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: System setting
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemSetting'
+    
+    put:
+      tags: [System Admin]
+      summary: Update system setting
+      description: Update setting value - Admin only
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [value]
+              properties:
+                value:
+                  type: string
+      responses:
+        '200':
+          description: Setting updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemSetting'
+
+# =============================================================================
+# COMPONENTS
+# =============================================================================
 
 components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: connect.sid
+      description: PostgreSQL-backed session cookie (Passport.js)
+
   schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+            enum: [student, instructor, content_manager, admin]
+        status:
+          type: string
+          enum: [pending_approval, active, inactive]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
     Track:
       type: object
       properties:
         id:
           type: integer
-          description: Unique track identifier
         title:
           type: string
-          description: Track title
         description:
           type: string
-          description: Track description
         order:
           type: integer
-          description: Display order
         status:
           type: string
           enum: [draft, published]
-          description: Publication status
         estimatedHours:
           type: integer
-          description: Estimated completion time in hours
         createdBy:
-          type: string
-          description: User who created the track
+          type: integer
         createdAt:
           type: string
           format: date-time
-          description: Creation timestamp
         updatedAt:
           type: string
           format: date-time
-          description: Last update timestamp
 
     CreateTrackRequest:
       type: object
@@ -646,74 +1526,57 @@ components:
       properties:
         title:
           type: string
-          description: Track title
         description:
           type: string
-          description: Track description
         estimatedHours:
           type: integer
-          description: Estimated completion time in hours
 
     UpdateTrackRequest:
       type: object
       properties:
         title:
           type: string
-          description: Track title
         description:
           type: string
-          description: Track description
         status:
           type: string
           enum: [draft, published]
-          description: Publication status
         estimatedHours:
           type: integer
-          description: Estimated completion time in hours
 
     Chapter:
       type: object
       properties:
         id:
           type: integer
-          description: Unique chapter identifier
         trackId:
           type: integer
-          description: Parent track ID
         title:
           type: string
-          description: Chapter title
         order:
           type: integer
-          description: Display order within track
         status:
           type: string
           enum: [draft, published]
-          description: Publication status
         content:
           $ref: '#/components/schemas/MultilingualContent'
         publishedAt:
           type: string
           format: date-time
-          description: Publication timestamp
         lastEditedBy:
-          type: string
-          description: User who last edited the chapter
+          type: integer
         createdBy:
-          type: string
-          description: User who created the chapter
+          type: integer
         createdAt:
           type: string
           format: date-time
-          description: Creation timestamp
         updatedAt:
           type: string
           format: date-time
-          description: Last update timestamp
 
     MultilingualContent:
       type: object
-      description: Content in multiple languages/scripts
+      description: Content in three scripts (Telugu, Hindi/Devanagari, English/IAST)
       properties:
         te:
           type: string
@@ -731,10 +1594,8 @@ components:
       properties:
         trackId:
           type: integer
-          description: Parent track ID
         title:
           type: string
-          description: Chapter title
         content:
           $ref: '#/components/schemas/MultilingualContent'
 
@@ -743,32 +1604,72 @@ components:
       properties:
         title:
           type: string
-          description: Chapter title
         content:
           $ref: '#/components/schemas/MultilingualContent'
         status:
           type: string
           enum: [draft, published]
-          description: Publication status
+
+    TextSegment:
+      type: object
+      properties:
+        id:
+          type: integer
+        chapterId:
+          type: integer
+        script:
+          type: string
+          enum: [te, hi, en]
+          description: Script-specific segmentation
+        startPosition:
+          type: integer
+          description: Character offset start
+        endPosition:
+          type: integer
+          description: Character offset end
+        order:
+          type: integer
+        createdBy:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateTextSegmentRequest:
+      type: object
+      required: [chapterId, script, startPosition, endPosition]
+      properties:
+        chapterId:
+          type: integer
+        script:
+          type: string
+          enum: [te, hi, en]
+        startPosition:
+          type: integer
+        endPosition:
+          type: integer
+
+    UpdateTextSegmentRequest:
+      type: object
+      properties:
+        startPosition:
+          type: integer
+        endPosition:
+          type: integer
 
     AudioFile:
       type: object
       properties:
         id:
           type: integer
-          description: Unique audio file identifier
         chapterId:
           type: integer
-          description: Parent chapter ID
         filename:
           type: string
-          description: File system filename
         displayName:
           type: string
-          description: Human-readable name
         reciter:
           type: string
-          description: Name of the reciter
         duration:
           type: number
           description: Duration in seconds
@@ -777,168 +1678,212 @@ components:
           description: File size in bytes
         mimeType:
           type: string
-          description: MIME type of the audio file
         uploadedBy:
-          type: string
-          description: User who uploaded the file
+          type: integer
         createdAt:
           type: string
           format: date-time
-          description: Upload timestamp
 
-    UpdateAudioFileRequest:
-      type: object
-      properties:
-        displayName:
-          type: string
-          description: Human-readable name
-        reciter:
-          type: string
-          description: Name of the reciter
-
-    TextSegment:
+    MediaSegment:
       type: object
       properties:
         id:
           type: integer
-          description: Unique text segment identifier
-        chapterId:
+        audioFileId:
           type: integer
-          description: Parent chapter ID
-        conceptualName:
-          type: string
-          description: Human-readable segment identifier
-        textReferences:
-          $ref: '#/components/schemas/TextReferences'
-        createdBy:
-          type: string
-          description: User who created the segment
+        startTime:
+          type: number
+          description: Start timestamp in seconds
+        endTime:
+          type: number
+          description: End timestamp in seconds
         createdAt:
           type: string
           format: date-time
-          description: Creation timestamp
 
-    EnrichedTextSegment:
-      allOf:
-        - $ref: '#/components/schemas/TextSegment'
-        - type: object
-          properties:
-            startTime:
-              type: number
-              description: Audio start time in seconds
-            endTime:
-              type: number
-              description: Audio end time in seconds
-            audioFileId:
-              type: integer
-              description: Associated audio file ID
-
-    TextReferences:
+    CreateMediaSegmentRequest:
       type: object
-      description: Character offset references for text highlighting
+      required: [audioFileId, startTime, endTime]
       properties:
-        te:
-          $ref: '#/components/schemas/TextRange'
-        hi:
-          $ref: '#/components/schemas/TextRange'
-        en:
-          $ref: '#/components/schemas/TextRange'
-
-    TextRange:
-      type: object
-      properties:
-        start:
+        audioFileId:
           type: integer
-          description: Start character position
-        end:
-          type: integer
-          description: End character position
+        startTime:
+          type: number
+        endTime:
+          type: number
 
-    CreateTextSegmentRequest:
-      type: object
-      required: [chapterId, conceptualName]
-      properties:
-        chapterId:
-          type: integer
-          description: Parent chapter ID
-        conceptualName:
-          type: string
-          description: Human-readable segment identifier
-        textReferences:
-          $ref: '#/components/schemas/TextReferences'
-
-    UpdateTextSegmentRequest:
-      type: object
-      properties:
-        conceptualName:
-          type: string
-          description: Human-readable segment identifier
-        textReferences:
-          $ref: '#/components/schemas/TextReferences'
-
-    AudioMapping:
+    SegmentMapping:
       type: object
       properties:
         id:
           type: integer
-          description: Unique mapping identifier
+        textSegmentId:
+          type: integer
         audioFileId:
           type: integer
-          description: Audio file ID
-        segmentId:
-          type: integer
-          description: Text segment ID
         startTime:
           type: number
-          description: Start time in seconds
         endTime:
           type: number
-          description: End time in seconds
         createdBy:
-          type: string
-          description: User who created the mapping
+          type: integer
         createdAt:
           type: string
           format: date-time
-          description: Creation timestamp
 
-    CreateAudioMappingRequest:
+    CreateSegmentMappingRequest:
       type: object
-      required: [audioFileId, segmentId, startTime, endTime]
+      required: [textSegmentId, audioFileId, startTime, endTime]
       properties:
+        textSegmentId:
+          type: integer
         audioFileId:
           type: integer
-          description: Audio file ID
-        segmentId:
-          type: integer
-          description: Text segment ID
         startTime:
           type: number
-          description: Start time in seconds
         endTime:
           type: number
-          description: End time in seconds
 
-    SuccessMessage:
+    Batch:
       type: object
       properties:
-        message:
+        id:
+          type: integer
+        name:
           type: string
-          description: Success message
+        trackId:
+          type: integer
+        leadInstructorId:
+          type: integer
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
 
-    ErrorResponse:
+    CreateBatchRequest:
+      type: object
+      required: [name, trackId, leadInstructorId, startDate]
+      properties:
+        name:
+          type: string
+        trackId:
+          type: integer
+        leadInstructorId:
+          type: integer
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+
+    Enrollment:
       type: object
       properties:
-        message:
+        id:
+          type: integer
+        batchId:
+          type: integer
+        studentId:
+          type: integer
+        status:
           type: string
-          description: Error message
+          enum: [active, dropped]
+        enrolledAt:
+          type: string
+          format: date-time
+        droppedAt:
+          type: string
+          format: date-time
+        dropReason:
+          type: string
+
+    StudentProgress:
+      type: object
+      properties:
+        id:
+          type: integer
+        studentId:
+          type: integer
+        chapterId:
+          type: integer
+        batchId:
+          type: integer
+        proficiencyLevel:
+          type: integer
+          minimum: 0
+          maximum: 4
+          description: 0=Not Started, 1=Beginner, 2=Intermediate, 3=Advanced, 4=Mastered
+        lastAccessed:
+          type: string
+          format: date-time
+        evaluatedBy:
+          type: integer
+        evaluatedAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        action:
+          type: string
+        resourceType:
+          type: string
+        resourceId:
+          type: integer
+        metadata:
+          type: object
+        timestamp:
+          type: string
+          format: date-time
+
+    SystemSetting:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        perPage:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
 
   parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: integer
+
     TrackId:
       name: id
       in: path
       required: true
-      description: Track ID
       schema:
         type: integer
 
@@ -946,7 +1891,6 @@ components:
       name: chapterId
       in: path
       required: true
-      description: Chapter ID
       schema:
         type: integer
 
@@ -954,7 +1898,6 @@ components:
       name: audioFileId
       in: path
       required: true
-      description: Audio file ID
       schema:
         type: integer
 
@@ -962,42 +1905,63 @@ components:
       name: segmentId
       in: path
       required: true
-      description: Text segment ID
+      schema:
+        type: integer
+
+    BatchId:
+      name: id
+      in: path
+      required: true
       schema:
         type: integer
 
   responses:
     BadRequest:
-      description: Bad request
+      description: Bad request - Invalid parameters or request body
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            type: object
+            properties:
+              message:
+                type: string
+
+    Unauthorized:
+      description: Unauthorized - Authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
 
     NotFound:
       description: Resource not found
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            type: object
+            properties:
+              message:
+                type: string
 
     InternalServerError:
       description: Internal server error
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
-
-tags:
-  - name: Tracks
-    description: Public track operations
-  - name: Admin - Tracks
-    description: Administrative track management
-  - name: Admin - Chapters
-    description: Chapter content management
-  - name: Admin - Audio Files
-    description: Audio file upload and management
-  - name: Admin - Text Segments
-    description: Text segmentation for audio synchronization
-  - name: Admin - Audio Mappings
-    description: Audio-to-text mapping system
+            type: object
+            properties:
+              message:
+                type: string
