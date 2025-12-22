@@ -18,9 +18,14 @@ export default function AdminDashboard() {
             System health, approvals, batches, and recent activity. Live data — no placeholders.
           </p>
         </div>
-        <Link href="/app">
-          <a className="text-sm text-primary hover:opacity-80 transition-colors">Back to overview</a>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/app/admin/settings">
+            <a className="rounded-full border border-border px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors">System Settings</a>
+          </Link>
+          <Link href="/app">
+            <a className="text-sm text-primary hover:opacity-80 transition-colors">Back to overview</a>
+          </Link>
+        </div>
       </div>
 
       {isLoading && (

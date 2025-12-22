@@ -296,6 +296,7 @@ Main Content (adaptive 2-column or single)
 - Spec and add minimal backend endpoints (aggregated stats).
 - Wire frontend directly to real APIs (no placeholder state).
 - Iterate consciously; backend changes only for purposeful additions.
+ - Defer navigation and visual polish to Phase 7 (Global Polish).
 
 **Screens:**
 - Admin dashboard (overview cards + quick actions)
@@ -389,7 +390,7 @@ Main Content (adaptive 2-column or single)
 
 ---
 
-### Phase 7: Polish, A11y, Testing, & Cutover Decision (1–2 weeks)
+### Phase 7: Global Polish (Navigation + UI/UX), A11y, Testing, & Cutover Decision (1–2 weeks)
 **Goal:** Production-ready new UI. You decide when to cutover.
 
 **Tasks:**
@@ -419,6 +420,11 @@ Main Content (adaptive 2-column or single)
 - Clear decision on cutover timing
 
 **Tasks:**
+- [ ] Navigation refinement
+  - [ ] Sidebar taxonomy & grouping (Learning, Batches, Content, Admin)
+  - [ ] Admin sub-navigation (Overview, Users, Batches, Logs, Settings)
+  - [ ] Breadcrumbs & page headers with consistent actions
+  - [ ] Hover/active states, spacing, and focus consistency
 - [ ] Consolidate design system tokens (tailwind.config.ts)
   - [ ] Spacing scale (device-aware)
   - [ ] Typography scale (responsive)

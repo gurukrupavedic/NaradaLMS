@@ -160,10 +160,35 @@
 |-----|-------|-------------|-------|
 | ADMIN-B1 | Advanced Audit Logs | Complex filtering, search, export, role-based log visibility | Phase 8 |
 | ADMIN-B2 | System Health Dashboard | Server uptime, database performance, API response times, user metrics | Phase 8 |
-| ADMIN-B3 | Configurable System Settings | Email notifications, upload size limits, password policies, rate limiting | Phase 7 |
+| ADMIN-B3 | Configurable System Settings | Email notifications, upload size limits, password policies, rate limiting (see System Settings Catalog) | Phase 7 |
 | ADMIN-B4 | Bulk User Import | CSV import for users, batch role assignment | Phase 6 |
 | ADMIN-B5 | Analytics & Reporting | User engagement metrics, learning metrics, instructor performance reports | Phase 9 |
 | ADMIN-B6 | Data Backup & Export | System backup triggers, data export for compliance | Phase 9 |
+### SYSTEM SETTINGS (Backlog Catalog)
+| Key | Category | Description | Type | Default |
+|-----|----------|-------------|------|---------|
+| `allowSelfSignup` | Auth | Allow users to register without invite; still requires admin approval | boolean | `false` |
+| `defaultRolesOnApproval` | Auth | Roles assigned on approval if unspecified | string[] | `["student"]` |
+| `sessionTimeoutMinutes` | Auth | Auto-logout timeout for inactive sessions | number | `60` |
+| `passwordPolicy` | Auth | Min length, require number/symbol/uppercase | object | `{ minLength: 8, requireNumber: true, requireSymbol: true, requireUpper: true }` |
+| `oauthProvidersEnabled` | Auth | Enable/disable providers (google, github, etc.) | string[] | `[]` |
+| `maxUploadSizeMB` | Media | Maximum audio file upload size | number | `50` |
+| `allowedAudioMimeTypes` | Media | Whitelist of allowed MIME types | string[] | `["audio/mpeg","audio/wav"]` |
+| `audioTranscodeQuality` | Media | Target bitrate/quality for server-side processing | string | `"medium"` |
+| `maintenanceMode` | System | Put app in read-only mode with banner | boolean | `false` |
+| `featureFlags` | System | Toggle experimental features (e.g., new UI) | object | `{ VITE_NEW_UI_ENABLED: false }` |
+| `defaultLearnMode` | Learning | Default mode when opening chapter (interactive vs read-only) | string | `"interactive"` |
+| `preferredScriptDefault` | Learning | Default script for first-time users (te/hi/en) | string | `"en"` |
+| `proficiencyThresholds` | Learning | Cutoffs for levels 0–4, used for badges | number[] | `[0,1,2,3,4]` |
+| `maxStudentsPerBatch` | Batches | Hard cap to prevent overcrowded cohorts | number | `40` |
+| `batchDeprecationPolicy` | Batches | Behavior for deprecated batches (read-only, disallow changes) | object | `{ readOnly: true, disallowAssignments: true }` |
+| `auditLogRetentionDays` | Admin | How long to keep audit logs | number | `90` |
+| `notificationEmailFrom` | Admin | From address for system emails | string | `"no-reply@vediclms.org"` |
+| `supportLinks` | Admin | Links for help/FAQ/support | object | `{ faq: "/docs/faq", support: "mailto:support@vediclms.org" }` |
+
+Notes:
+- This catalog is a backlog reference; MVP will keep System Settings minimal/free-form.
+- Types and defaults are illustrative; finalize during Phase 7 Global Polish.
 
 ### AI FEATURES (Backlog - Major Feature Area)
 | Key | Title | Description | Phase |

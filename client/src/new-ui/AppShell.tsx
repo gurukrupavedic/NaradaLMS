@@ -7,6 +7,7 @@ import {
   Layers,
   FileText,
   ShieldCheck,
+  Settings,
   LucideIcon,
 } from "lucide-react";
 import { TopNav } from "./components/TopNav";
@@ -16,6 +17,7 @@ import UserManagement from "./admin/pages/UserManagement";
 import AuditLogs from "./admin/pages/AuditLogs";
 import BatchManagement from "./admin/pages/BatchManagement";
 import BatchDetailAdmin from "./admin/pages/BatchDetailAdmin";
+import SystemSettings from "./admin/pages/SystemSettings";
 
 export type NavItem = {
   key: string;
@@ -59,6 +61,7 @@ const NAV_ITEMS: NavItem[] = [
     accent: "accent",
     icon: ShieldCheck,
   },
+  // Admin Settings is accessible within Admin pages but not a top-level nav item
 ];
 
 export default function AppShell() {
@@ -80,8 +83,9 @@ export default function AppShell() {
                 <Route path="/app/admin" component={AdminDashboard} />
                 <Route path="/app/admin/users" component={UserManagement} />
                 <Route path="/app/admin/logs" component={AuditLogs} />
-                <Route path="/app/admin/batches" component={BatchManagement} />
+                <Route path="/app/admin/settings" component={SystemSettings} />
                 <Route path="/app/admin/batches/:id" component={BatchDetailAdmin} />
+                <Route path="/app/admin/batches" component={BatchManagement} />
                 <Route component={AppNotFound} />
               </Switch>
             </div>

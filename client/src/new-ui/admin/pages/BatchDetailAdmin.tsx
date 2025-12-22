@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useRoute } from "wouter";
 import { useCoInstructors, useAssignCoInstructor, useRemoveCoInstructor, useEnrollments, useEnrollStudent, useDropEnrollment } from "../hooks/useBatchRelations";
+import { useAdminUserSearch } from "../hooks/useAdminUserSearch";
 
 export default function BatchDetailAdmin() {
   const [, params] = useRoute("/app/admin/batches/:id");
@@ -14,8 +15,36 @@ export default function BatchDetailAdmin() {
   const enrollStudent = useEnrollStudent(batchId);
   const dropEnrollment = useDropEnrollment(batchId);
 
-  const [coForm, setCoForm] = useState({ instructorId: "", role: "co_instructor" });
-  const [enrollForm, setEnrollForm] = useState({ studentId: "" });
+  // Instructor assignment state
+  const [qInstructor, setQInstructor] = useState("");
+  const [selectedInstructor, setSelectedInstructor] = useState<any>(null);
+  const [instructorRole, setInstructorRole] = useState("secondary_instructor");
+
+  // Student enrollment state
+  const [qStudent, setQStudent] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+
+  // Search pickers
+  const instructorSearch = useAdminUserSearch({ role: "instructor", q: qInstructor, status: "active" });
+  const studentSearch = useAdminUserSearch({ role: "student", q: qStudent, status: "active" });
+
+  // Check if primary instructor already exists
+  const hasPrimaryInstructor = (coInstructors.data ?? []).some((ci: any) => ci.role === "primary_instructor");
+
+  const onAssignInstructor = () => {
+    if (!selectedInstructor) return;
+    assignCo.mutate({ instructorId: selectedInstructor.id, role: instructorRole });
+    setSelectedInstructor(null);
+    setQInstructor("");
+    setInstructorRole("secondary_instructor");
+  };
+
+  const onEnrollStudent = () => {
+    if (!selectedStudent) return;
+    enrollStudent.mutate({ studentId: selectedStudent.id });
+    setSelectedStudent(null);
+    setQStudent("");
+  };
 
   return (
     <div className="space-y-6">
@@ -23,7 +52,7 @@ export default function BatchDetailAdmin() {
         <div>
           <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Admin Center</p>
           <h1 className="mt-2 text-3xl font-semibold text-foreground">Batch Detail</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Manage co-instructors and enrollments for batch #{batchId}.</p>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Manage instructors and enrollments for batch #{batchId}.</p>
         </div>
         <Link href="/app/admin/batches">
           <a className="text-sm text-primary hover:opacity-80 transition-colors">Back to batches</a>
@@ -31,42 +60,111 @@ export default function BatchDetailAdmin() {
       </div>
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="text-base font-semibold text-foreground">Co-Instructors</h2>
-        <form onSubmit={(e) => { e.preventDefault(); assignCo.mutate(coForm); }} className="mt-3 grid gap-3 md:grid-cols-3">
-          <LabeledInput label="Instructor ID" value={coForm.instructorId} onChange={(v) => setCoForm(f => ({ ...f, instructorId: v }))} placeholder="user UUID" />
+        <h2 className="text-base font-semibold text-foreground">Assign Instructors</h2>
+        
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
           <label className="block">
-            <span className="text-xs text-muted-foreground">Role</span>
-            <select aria-label="Role" className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={coForm.role} onChange={(e) => setCoForm(f => ({ ...f, role: e.target.value }))}>
-              <option value="co_instructor">co_instructor</option>
-              <option value="ta">ta</option>
-            </select>
+            <span className="text-xs text-muted-foreground">Search Instructor</span>
+            <input 
+              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" 
+              value={qInstructor} 
+              onChange={(e) => {
+                setQInstructor(e.target.value);
+                setSelectedInstructor(null);
+              }} 
+              placeholder="Name or email" 
+            />
           </label>
-          <div className="flex items-end">
-            <button className="rounded-md bg-primary px-3 py-2 text-primary-foreground hover:opacity-90" disabled={assignCo.isPending}>Assign</button>
-          </div>
-        </form>
 
+          {selectedInstructor && (
+            <>
+              <label className="block">
+                <span className="text-xs text-muted-foreground">Role</span>
+                <select 
+                  aria-label="Instructor Role"
+                  className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  value={instructorRole}
+                  onChange={(e) => setInstructorRole(e.target.value)}
+                  disabled={instructorRole === "primary_instructor" && hasPrimaryInstructor}
+                >
+                  <option value="primary_instructor" disabled={hasPrimaryInstructor}>Primary Instructor {hasPrimaryInstructor ? "(already assigned)" : ""}</option>
+                  <option value="secondary_instructor">Secondary Instructor</option>
+                </select>
+              </label>
+
+              <div className="flex items-end gap-2">
+                <button 
+                  className="rounded-md bg-primary px-3 py-2 text-primary-foreground hover:opacity-90"
+                  onClick={onAssignInstructor}
+                  disabled={assignCo.isPending}
+                >
+                  Assign
+                </button>
+                <button 
+                  className="rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
+                  onClick={() => setSelectedInstructor(null)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Instructor search results */}
+        {qInstructor && !selectedInstructor && (
+          <div className="mt-3">
+            <div className="rounded-md border border-border">
+              <ul className="max-h-48 overflow-auto text-sm">
+                {(instructorSearch.results ?? []).length === 0 && (
+                  <li className="px-3 py-2 text-muted-foreground">No instructors found.</li>
+                )}
+                {instructorSearch.results.map(u => (
+                  <li key={u.id} className="flex items-center justify-between border-t border-border px-3 py-2 hover:bg-muted/50">
+                    <div>
+                      <div className="font-medium text-foreground">{u.email}</div>
+                      <div className="text-xs text-muted-foreground">{u.firstName} {u.lastName}</div>
+                    </div>
+                    <button 
+                      className="rounded-md border border-border px-2 py-1 text-xs hover:bg-muted"
+                      onClick={() => setSelectedInstructor(u)}
+                    >
+                      Select
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {/* Current instructors */}
         <div className="mt-4 rounded-2xl border border-border">
           <table className="w-full text-sm">
             <thead className="text-muted-foreground">
               <tr>
-                <th className="px-4 py-3 text-left">ID</th>
-                <th className="px-4 py-3 text-left">Instructor</th>
+                <th className="px-4 py-3 text-left">Email</th>
+                <th className="px-4 py-3 text-left">Name</th>
                 <th className="px-4 py-3 text-left">Role</th>
                 <th className="px-4 py-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
               {(coInstructors.data ?? []).length === 0 && (
-                <tr><td colSpan={4} className="px-4 py-5 text-muted-foreground">No co-instructors yet.</td></tr>
+                <tr><td colSpan={4} className="px-4 py-5 text-muted-foreground">No instructors assigned yet.</td></tr>
               )}
-              {(coInstructors.data ?? []).map(ci => (
+              {(coInstructors.data ?? []).map((ci: any) => (
                 <tr key={ci.id} className="border-t border-border">
-                  <td className="px-4 py-3">{ci.id}</td>
                   <td className="px-4 py-3">{ci.instructorId}</td>
-                  <td className="px-4 py-3">{ci.role}</td>
+                  <td className="px-4 py-3">—</td>
+                  <td className="px-4 py-3 font-medium">{ci.role === "primary_instructor" ? "Primary" : "Secondary"}</td>
                   <td className="px-4 py-3">
-                    <button className="rounded-md bg-destructive/20 px-3 py-1.5 text-destructive hover:bg-destructive/30" onClick={() => removeCo.mutate({ assignmentId: ci.id, batchId })}>Remove</button>
+                    <button 
+                      className="rounded-md bg-destructive/20 px-3 py-1.5 text-destructive hover:bg-destructive/30"
+                      onClick={() => removeCo.mutate({ assignmentId: ci.id, batchId })}
+                    >
+                      Remove
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -77,12 +175,66 @@ export default function BatchDetailAdmin() {
 
       <section className="rounded-2xl border border-border bg-card p-4">
         <h2 className="text-base font-semibold text-foreground">Enrollments</h2>
-        <form onSubmit={(e) => { e.preventDefault(); enrollStudent.mutate(enrollForm); }} className="mt-3 grid gap-3 md:grid-cols-3">
-          <LabeledInput label="Student ID" value={enrollForm.studentId} onChange={(v) => setEnrollForm(f => ({ ...f, studentId: v }))} placeholder="user UUID" />
-          <div className="flex items-end">
-            <button className="rounded-md bg-primary px-3 py-2 text-primary-foreground hover:opacity-90" disabled={enrollStudent.isPending}>Enroll</button>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <label className="block">
+            <span className="text-xs text-muted-foreground">Search Student</span>
+            <input 
+              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              value={qStudent} 
+              onChange={(e) => {
+                setQStudent(e.target.value);
+                setSelectedStudent(null);
+              }}
+              placeholder="Name or email"
+            />
+          </label>
+
+          {selectedStudent && (
+            <div className="flex items-end gap-2">
+              <button 
+                className="rounded-md bg-primary px-3 py-2 text-primary-foreground hover:opacity-90"
+                onClick={onEnrollStudent}
+                disabled={enrollStudent.isPending}
+              >
+                Enroll
+              </button>
+              <button 
+                className="rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
+                onClick={() => setSelectedStudent(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Student search results */}
+        {qStudent && !selectedStudent && (
+          <div className="mt-3">
+            <div className="rounded-md border border-border">
+              <ul className="max-h-48 overflow-auto text-sm">
+                {(studentSearch.results ?? []).length === 0 && (
+                  <li className="px-3 py-2 text-muted-foreground">No students found.</li>
+                )}
+                {studentSearch.results.map(u => (
+                  <li key={u.id} className="flex items-center justify-between border-t border-border px-3 py-2 hover:bg-muted/50">
+                    <div>
+                      <div className="font-medium text-foreground">{u.email}</div>
+                      <div className="text-xs text-muted-foreground">{u.firstName} {u.lastName}</div>
+                    </div>
+                    <button 
+                      className="rounded-md border border-border px-2 py-1 text-xs hover:bg-muted"
+                      onClick={() => setSelectedStudent(u)}
+                    >
+                      Select
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </form>
+        )}
 
         <div className="mt-4 rounded-2xl border border-border">
           <table className="w-full text-sm">
