@@ -152,12 +152,18 @@ const getStyleApproach = (variant: string, color: string, styleApproach: string)
   const approaches = {
     solid: {
       fluorescent: `${colorInfo.primary} ${colorInfo.hover} text-white shadow-sm hover:shadow-[0_2px_8px_rgba(59,130,246,0.15)] transition-all duration-150 ease-out`
+      ,
+      conventional: `bg-${color}-600 text-white hover:bg-${color}-700`
     },
     outline: {
       fluorescent: `border border-${color}-200 ${colorInfo.text} bg-white hover:border-${color}-300 hover:bg-${color}-25 hover:shadow-[inset_0_1px_0_rgba(59,130,246,0.1),0_4px_12px_rgba(59,130,246,0.2)] transition-all duration-150 ease-out`
+      ,
+      conventional: `border border-slate-300 bg-white text-slate-900 hover:bg-slate-50`
     },
     ghost: {
       fluorescent: `${colorInfo.text} hover:bg-${color}-50 hover:shadow-[0_2px_8px_rgba(59,130,246,0.08)] transition-all duration-150 ease-out`
+      ,
+      conventional: `bg-transparent text-slate-900 hover:bg-slate-50`
     }
   };
 

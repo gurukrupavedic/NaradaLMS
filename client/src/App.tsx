@@ -26,6 +26,7 @@ const LearnTracks = lazy(() => import("@/features/learning/pages/LearnTracks").t
 const LearnChapters = lazy(() => import("@/features/learning/pages/LearnChapters").then(module => ({ default: module.LearnChapters })));
 const StudyChapter = lazy(() => import("@/features/learning/pages/StudyChapter").then(module => ({ default: module.StudyChapter })));
 const DesignSystemExperiment = lazy(() => import("@/design-system/DesignSystemExperiment"));
+const ThemingPlayground = lazy(() => import("@/design-system/ThemingPlayground").then(module => ({ default: module.ThemingPlayground })));
 
 // Simple inline NotFound component
 const SimpleNotFound = () => {
@@ -132,6 +133,7 @@ function Router() {
         <Route path="/learning/chapter/:chapterId" component={() => <StudyChapter />} />
 
         <Route path="/experiments/design-system" component={DesignSystemExperiment} />
+        <Route path="/experiments/theming-playground" component={ThemingPlayground} />
 
         <Route component={SimpleNotFound} />
       </Switch>
