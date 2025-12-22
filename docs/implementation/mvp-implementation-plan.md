@@ -290,6 +290,13 @@ Main Content (adaptive 2-column or single)
 ### Phase 3: Feature Migration – Admin Center (1 week)
 **Goal:** Build fully functional new Admin Center using v0 components.
 
+**Approach (Clean, Backend-First Hybrid):**
+- Define frontend data needs and screens.
+- Inventory existing admin APIs; identify mismatches.
+- Spec and add minimal backend endpoints (aggregated stats).
+- Wire frontend directly to real APIs (no placeholder state).
+- Iterate consciously; backend changes only for purposeful additions.
+
 **Screens:**
 - Admin dashboard (overview cards + quick actions)
 - User Management (pending approvals + user list)
@@ -298,11 +305,14 @@ Main Content (adaptive 2-column or single)
 - System Settings (placeholder)
 
 **Tasks:**
-- [ ] Build `new-ui/admin/pages/AdminDashboard.tsx`
-- [ ] Build `new-ui/admin/pages/UserManagement.tsx` (v0 table + approval cards)
-- [ ] Build `new-ui/admin/pages/BatchManagement.tsx` (v0 forms)
-- [ ] Build `new-ui/admin/pages/AuditLogs.tsx` (v0 table)
-- [ ] Connect to existing APIs (`/api/users`, `/api/batches`, `/api/audit-logs`)
+- [ ] Define frontend data needs per screen (fields, filters, pagination)
+- [ ] Map needs → existing APIs; list gaps
+- [ ] Spec `GET /api/admin/stats` (counts + recent activity)
+- [ ] Implement `GET /api/admin/stats` in server
+- [ ] Build `new-ui/admin/pages/AdminDashboard.tsx` (wired to stats)
+- [ ] Build `new-ui/admin/pages/UserManagement.tsx` (wired to auth-admin users)
+- [ ] Build `new-ui/admin/pages/BatchManagement.tsx` (wired to batch routes)
+- [ ] Build `new-ui/admin/pages/AuditLogs.tsx` (wired to admin audit logs)
 - [ ] Test both old (`/manage/users`) and new (`/app/admin`) side-by-side
 - [ ] Responsive testing (mobile/tablet/desktop)
 

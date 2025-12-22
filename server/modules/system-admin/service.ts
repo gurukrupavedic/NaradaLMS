@@ -80,6 +80,13 @@ export class AdminService {
     const value = await this.getSetting(key);
     return value ?? defaultValue;
   }
+
+  /**
+   * Get aggregated dashboard stats for Admin Center
+   */
+  async getAdminStats(recentLimit: number = 10) {
+    return this.storage.getAdminStats(recentLimit);
+  }
 }
 
 // Singleton instance (initialized in server/index.ts)

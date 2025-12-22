@@ -4,8 +4,8 @@
  */
 
 import { db } from '../../db';
-import { auditLogs, systemSettings } from '@shared/schema';
-import { eq, gte, lte, and } from 'drizzle-orm';
+import { auditLogs, systemSettings, users, batches, tracks, chapters } from '@shared/schema';
+import { eq, gte, lte, and, sql, desc } from 'drizzle-orm';
 
 export interface AuditLogFilter {
   userId?: string;
@@ -124,5 +124,65 @@ export class AdminStorage {
         updatedAt: new Date(),
       });
     }
+  }
+
+  /**
+   * Get aggregated admin dashboard stats
+   */
+  async getAdminStats(recentLimit: number = 10) {
+    const [{ totalUsers }] = await db
+      .select({ totalUsers: sql<number>`count(*)` })
+      .from(users);
+
+    const [{ pendingApprovals }] = await db
+      .select({ pendingApprovals: sql<number>`count(*)` })
+      .from(users)
+      .where(eq(users.status, 'pending_approval'));
+
+    const [{ activeUsers }] = await db
+      .select({ activeUsers: sql<number>`count(*)` })
+      .from(users)
+      .where(eq(users.status, 'active'));
+
+    const [{ totalBatches }] = await db
+      .select({ totalBatches: sql<number>`count(*)` })
+      .from(batches);
+
+    const [{ activeBatches }] = await db
+      .select({ activeBatches: sql<number>`count(*)` })
+      .from(batches)
+      .where(eq(batches.status, 'active'));
+
+    const [{ totalTracks }] = await db
+      .select({ totalTracks: sql<number>`count(*)` })
+      .from(tracks);
+
+    const [{ totalChapters }] = await db
+      .select({ totalChapters: sql<number>`count(*)` })
+      .from(chapters);
+
+    const recentAudit = await db
+      .select({
+        id: auditLogs.id,
+        userId: auditLogs.userId,
+        action: auditLogs.action,
+        resourceType: auditLogs.resourceType,
+        resourceId: auditLogs.resourceId,
+        timestamp: auditLogs.timestamp,
+      })
+      .from(auditLogs)
+      .orderBy(desc(auditLogs.timestamp))
+      .limit(recentLimit);
+
+    return {
+      totalUsers,
+      pendingApprovals,
+      activeUsers,
+      totalBatches,
+      activeBatches,
+      totalTracks,
+      totalChapters,
+      recentAudit,
+    };
   }
 }

@@ -133,3 +133,26 @@ router.put('/settings/:key', requireAdmin, async (req: Request, res: Response) =
 });
 
 export const adminRouter = router;
+
+/**
+ * GET /api/admin/stats
+ * Aggregated metrics for Admin Dashboard
+ */
+router.get('/stats', requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const adminService = getAdminService();
+    const recentLimit = req.query.recentLimit ? parseInt(req.query.recentLimit as string) : 10;
+    const stats = await adminService.getAdminStats(recentLimit);
+
+    res.json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    console.error('Error fetching admin stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch admin stats',
+    });
+  }
+});
