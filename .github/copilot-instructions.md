@@ -201,6 +201,8 @@ npm run check     # TypeScript type checking
 
 ### When to Create Docs (see docs/README.md)
 - **Product features:** Update [docs/product-guide.md](docs/product-guide.md) for new features or implementation changes
+### Naming
+ - Use lowercase filenames for docs (avoid ALL-CAPS names like `MVP-SCOPE.md`); prefer `kebab-case`.
 - **Architecture decisions:** Document in [docs/architecture/](docs/architecture/) as markdown ADRs
 - **Domain workflows:** Update [docs/domain-requirements.md](docs/domain-requirements.md) with real-world usage patterns
 - **Active backlog:** Categorize work in [docs/todo/](docs/todo/) by feature area (backend/frontend/common)
