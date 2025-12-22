@@ -12,6 +12,7 @@ import {
 import { TopNav } from "./components/TopNav";
 import { Sidebar } from "./components/Sidebar";
 import AdminDashboard from "./admin/pages/AdminDashboard";
+import UserManagement from "./admin/pages/UserManagement";
 
 export type NavItem = {
   key: string;
@@ -74,6 +75,7 @@ export default function AppShell() {
                 <Route path="/app/batches" component={() => <SectionPage title="Batches" summary="Organize cohorts, co-instructors, and progression policies." />} />
                 <Route path="/app/content" component={() => <SectionPage title="Content" summary="Draft tracks, chapter HTML, segmentation, and audio mapping." />} />
                 <Route path="/app/admin" component={AdminDashboard} />
+                <Route path="/app/admin/users" component={UserManagement} />
                 <Route component={AppNotFound} />
               </Switch>
             </div>
