@@ -15,6 +15,7 @@ import AdminDashboard from "./admin/pages/AdminDashboard";
 import UserManagement from "./admin/pages/UserManagement";
 import AuditLogs from "./admin/pages/AuditLogs";
 import BatchManagement from "./admin/pages/BatchManagement";
+import BatchDetailAdmin from "./admin/pages/BatchDetailAdmin";
 
 export type NavItem = {
   key: string;
@@ -80,6 +81,7 @@ export default function AppShell() {
                 <Route path="/app/admin/users" component={UserManagement} />
                 <Route path="/app/admin/logs" component={AuditLogs} />
                 <Route path="/app/admin/batches" component={BatchManagement} />
+                <Route path="/app/admin/batches/:id" component={BatchDetailAdmin} />
                 <Route component={AppNotFound} />
               </Switch>
             </div>

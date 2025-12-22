@@ -131,7 +131,10 @@ function BatchRow({ batch, onUpdate }: { batch: Batch; onUpdate: (payload: Parti
             <button className="rounded-md border border-border px-3 py-1.5 text-foreground hover:bg-muted" onClick={() => { setValues({ batchName: batch.batchName, status: batch.status }); setEditing(false); }}>Cancel</button>
           </div>
         ) : (
-          <button className="rounded-md border border-border px-3 py-1.5 text-foreground hover:bg-muted" onClick={() => setEditing(true)}>Edit</button>
+          <div className="flex gap-2">
+            <button className="rounded-md border border-border px-3 py-1.5 text-foreground hover:bg-muted" onClick={() => setEditing(true)}>Edit</button>
+            <a href={`/app/admin/batches/${batch.id}`} className="rounded-md bg-accent/20 px-3 py-1.5 text-accent-foreground hover:bg-accent/30">Manage</a>
+          </div>
         )}
       </td>
     </tr>
