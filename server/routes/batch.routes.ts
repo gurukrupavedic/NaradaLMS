@@ -29,11 +29,17 @@ function createErrorResponse(message: string, code?: string, details?: any): Api
   };
 }
 
-// GET /api/batches - List batches
-router.get('/batches', async (_req: Request, res: Response, next: NextFunction) => {
+// GET /api/batches - List batches with pagination
+router.get('/batches', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const items = await batchService.listBatches();
-    res.json(items);
+    const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
+    const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+
+    const allItems = await batchService.listBatches();
+    const total = allItems.length;
+    const paginatedItems = allItems.slice(offset, offset + limit);
+
+    res.json({ items: paginatedItems, pagination: { limit, offset, total } });
   } catch (error) { next(error); }
 });
 

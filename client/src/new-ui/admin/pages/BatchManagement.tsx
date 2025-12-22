@@ -1,9 +1,15 @@
 import React, { useState } from "react";
 import { Link } from "wouter";
 import { useBatches, useCreateBatch, useUpdateBatch, Batch } from "../hooks/useBatches";
+import { useToast } from "@/features/shared-features/hooks/use-toast";
 
 export default function BatchManagement() {
-  const { data, isLoading, error } = useBatches();
+  const { toast } = useToast();
+  const [page, setPage] = useState(1);
+  const limit = 25;
+  const offset = (page - 1) * limit;
+
+  const { data, isLoading, error } = useBatches({ limit, offset });
   const createBatch = useCreateBatch();
   const updateBatch = useUpdateBatch();
 
@@ -11,8 +17,20 @@ export default function BatchManagement() {
 
   const submitCreate: React.FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
-    createBatch.mutate(form);
+    createBatch.mutate(form, {
+      onSuccess: () => {
+        toast({ title: "Batch created" });
+        setForm({ batchCode: "", batchName: "", status: "active" });
+      },
+      onError: (err: any) => {
+        toast({ title: "Failed to create batch", description: err.message, variant: "destructive" });
+      },
+    });
   };
+
+  const batches = data?.items ?? [];
+  const pagination = data?.pagination;
+  const totalPages = pagination ? Math.ceil(pagination.total / limit) : 1;
 
   return (
     <div className="space-y-6">
@@ -54,28 +72,68 @@ export default function BatchManagement() {
       )}
 
       {!isLoading && !error && (
-        <div className="rounded-2xl border border-border bg-card">
-          <table className="w-full text-sm">
-            <thead className="text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 text-left">Code</th>
-                <th className="px-4 py-3 text-left">Name</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(data ?? []).length === 0 && (
+        <>
+          <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages} ({pagination?.total ?? 0} total)
+            </span>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card">
+            <table className="w-full text-sm">
+              <thead className="text-muted-foreground">
                 <tr>
-                  <td colSpan={4} className="px-4 py-5 text-muted-foreground">No batches yet.</td>
+                  <th className="px-4 py-3 text-left">Code</th>
+                  <th className="px-4 py-3 text-left">Name</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">Actions</th>
                 </tr>
-              )}
-              {(data ?? []).map(b => (
-                <BatchRow key={b.id} batch={b} onUpdate={(payload) => updateBatch.mutate({ id: b.id, payload })} />
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {batches.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-5 text-muted-foreground">No batches yet.</td>
+                  </tr>
+                )}
+                {batches.map(b => (
+                  <BatchRow key={b.id} batch={b} onUpdate={(payload) => {
+                    updateBatch.mutate({ id: b.id, payload }, {
+                      onSuccess: () => toast({ title: "Batch updated" }),
+                      onError: (err: any) => toast({ title: "Failed to update", description: err.message, variant: "destructive" }),
+                    });
+                  }} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="rounded-md border border-border px-3 py-2 text-sm disabled:opacity-50">
+                ← Previous
+              </button>
+              <div className="flex gap-2">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const p = Math.max(1, page - 2) + i;
+                  if (p > totalPages) return null;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`rounded-md px-3 py-2 text-sm ${p === page ? 'bg-primary text-primary-foreground' : 'border border-border hover:bg-muted'}`}
+                    >
+                      {p}
+                    </button>
+                  );
+                }).filter(Boolean)}
+              </div>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="rounded-md border border-border px-3 py-2 text-sm disabled:opacity-50">
+                Next →
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

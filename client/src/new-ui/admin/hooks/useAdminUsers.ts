@@ -11,9 +11,19 @@ export type AdminUser = {
   createdAt?: string | null;
 };
 
-export function useAdminUsers() {
-  return useQuery<{ users: AdminUser[] }>({
-    queryKey: ["/api/auth/admin/users"],
+export type PaginationParams = {
+  limit?: number;
+  offset?: number;
+  status?: string;
+};
+
+export function useAdminUsers(params?: PaginationParams) {
+  const limit = params?.limit ?? 50;
+  const offset = params?.offset ?? 0;
+  const status = params?.status;
+
+  return useQuery<{ users: AdminUser[]; pagination: { limit: number; offset: number; total: number } }>({
+    queryKey: ["/api/auth/admin/users", limit, offset, status],
   });
 }
 
@@ -52,6 +62,18 @@ export function useDisableUser() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/auth/admin/users" ]});
+    },
+  });
+}
+export function useRejectUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await apiRequest("POST", `/api/auth/admin/users/${userId}/reject`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [/\/api\/auth\/admin\/users/] });
     },
   });
 }

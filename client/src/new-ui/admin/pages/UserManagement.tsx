@@ -1,18 +1,49 @@
 import React, { useMemo, useState } from "react";
-import { Link } from "wouter";
-import { useAdminUsers, useApproveUser, useAssignRoles, useDisableUser, AdminUser } from "../hooks/useAdminUsers";
+import { Link, useLocation } from "wouter";
+import { useAdminUsers, useApproveUser, useAssignRoles, useDisableUser, useRejectUser, AdminUser } from "../hooks/useAdminUsers";
+import { useToast } from "@/features/shared-features/hooks/use-toast";
 
 const ALL_ROLES = ["student", "instructor", "content_manager", "admin"] as const;
 
 export default function UserManagement() {
-  const { data, isLoading, error } = useAdminUsers();
+  const { toast } = useToast();
+  const [_location, setLocation] = useLocation();
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const pageParam = searchParams.get('page');
+  const statusParam = searchParams.get('status') || undefined;
+
+  const page = Math.max(1, parseInt(pageParam || '1'));
+  const limit = 25;
+  const offset = (page - 1) * limit;
+
+  const { data, isLoading, error } = useAdminUsers({ limit, offset, status: statusParam });
   const approve = useApproveUser();
+  const reject = useRejectUser();
   const assignRoles = useAssignRoles();
   const disableUser = useDisableUser();
 
   const users = data?.users ?? [];
+  const pagination = data?.pagination;
   const pending = useMemo(() => users.filter(u => u.status === "pending_approval"), [users]);
   const activeOrInactive = useMemo(() => users.filter(u => u.status !== "pending_approval"), [users]);
+
+  const handleApprove = (userId: string) => {
+    approve.mutate(userId, {
+      onSuccess: () => toast({ title: "User approved", description: "User is now active." }),
+      onError: (err: any) => toast({ title: "Failed to approve", description: err.message, variant: "destructive" }),
+    });
+  };
+
+  const handleReject = (userId: string) => {
+    if (!confirm("Are you sure? This will permanently delete the pending user.")) return;
+    reject.mutate(userId, {
+      onSuccess: () => toast({ title: "User rejected", description: "Pending user has been removed." }),
+      onError: (err: any) => toast({ title: "Failed to reject", description: err.message, variant: "destructive" }),
+    });
+  };
+
+  const totalPages = pagination ? Math.ceil(pagination.total / limit) : 1;
+  const goToPage = (p: number) => setLocation(`?page=${p}${statusParam ? `&status=${statusParam}` : ''}`);
 
   return (
     <div className="space-y-6">
@@ -61,13 +92,22 @@ export default function UserManagement() {
                       <td className="px-4 py-3">{formatName(u)}</td>
                       <td className="px-4 py-3">{formatDate(u.createdAt)}</td>
                       <td className="px-4 py-3">
-                        <button
-                          className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90"
-                          onClick={() => approve.mutate(u.id)}
-                          disabled={approve.isPending}
-                        >
-                          Approve
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                            onClick={() => handleApprove(u.id)}
+                            disabled={approve.isPending}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            className="rounded-md bg-destructive/20 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/30 disabled:opacity-50"
+                            onClick={() => handleReject(u.id)}
+                            disabled={reject.isPending}
+                          >
+                            Reject
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -77,7 +117,12 @@ export default function UserManagement() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-base font-semibold text-foreground">All Users</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-foreground">All Users</h2>
+              <div className="text-sm text-muted-foreground">
+                Page {page} of {totalPages} ({pagination?.total ?? 0} total)
+              </div>
+            </div>
             <div className="rounded-2xl border border-border bg-card">
               <table className="w-full text-sm">
                 <thead className="text-muted-foreground">
@@ -96,11 +141,48 @@ export default function UserManagement() {
                     </tr>
                   )}
                   {activeOrInactive.map(u => (
-                    <UserRow key={u.id} user={u} onAssignRoles={(roles) => assignRoles.mutate({ userId: u.id, roles })} onDisable={() => disableUser.mutate(u.id)} />
+                    <UserRow key={u.id} user={u} onAssignRoles={(roles) => {
+                      assignRoles.mutate({ userId: u.id, roles }, {
+                        onSuccess: () => toast({ title: "Roles updated" }),
+                        onError: (err: any) => toast({ title: "Failed to update roles", description: err.message, variant: "destructive" }),
+                      });
+                    }} onDisable={() => {
+                      disableUser.mutate(u.id, {
+                        onSuccess: () => toast({ title: "User disabled" }),
+                        onError: (err: any) => toast({ title: "Failed to disable user", description: err.message, variant: "destructive" }),
+                      });
+                    }} />
                   ))}
                 </tbody>
               </table>
             </div>
+            
+            {/* Pagination controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
+                <button onClick={() => goToPage(page - 1)} disabled={page === 1} className="rounded-md border border-border px-3 py-2 text-sm disabled:opacity-50">
+                  ← Previous
+                </button>
+                <div className="flex gap-2">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const p = Math.max(1, page - 2) + i;
+                    if (p > totalPages) return null;
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => goToPage(p)}
+                        className={`rounded-md px-3 py-2 text-sm ${p === page ? 'bg-primary text-primary-foreground' : 'border border-border hover:bg-muted'}`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  }).filter(Boolean)}
+                </div>
+                <button onClick={() => goToPage(page + 1)} disabled={page === totalPages} className="rounded-md border border-border px-3 py-2 text-sm disabled:opacity-50">
+                  Next →
+                </button>
+              </div>
+            )}
           </section>
         </>
       )}

@@ -1,12 +1,14 @@
 import React, { useMemo, useState } from "react";
 import { useSystemSettings, useUpdateSetting, SystemSetting } from "../hooks/useSystemSettings";
 import { Link } from "wouter";
+import { useToast } from "@/features/shared-features/hooks/use-toast";
 
 function normalize(settings: SystemSetting[]): { key: string; value: string }[] {
   return settings.map(s => ({ key: s.key, value: typeof s.value === "string" ? s.value : JSON.stringify(s.value ?? "") }));
 }
 
 export default function SystemSettings() {
+  const { toast } = useToast();
   const { data, isLoading, isError } = useSystemSettings();
   const mutation = useUpdateSetting();
 
@@ -23,7 +25,15 @@ export default function SystemSettings() {
     } catch {
       parsed = raw;
     }
-    mutation.mutate({ key, value: parsed });
+    mutation.mutate({ key, value: parsed }, {
+      onSuccess: () => {
+        toast({ title: "Setting saved" });
+        setDrafts(d => { const copy = { ...d }; delete copy[key]; return copy; });
+      },
+      onError: (err: any) => {
+        toast({ title: "Failed to save setting", description: err.message, variant: "destructive" });
+      },
+    });
   };
 
   return (

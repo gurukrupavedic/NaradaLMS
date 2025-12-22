@@ -12,9 +12,17 @@ export type Batch = {
   updatedAt?: string;
 };
 
-export function useBatches() {
-  return useQuery<Batch[]>({
-    queryKey: ["/api/batches"],
+export type BatchPaginationParams = {
+  limit?: number;
+  offset?: number;
+};
+
+export function useBatches(params?: BatchPaginationParams) {
+  const limit = params?.limit ?? 50;
+  const offset = params?.offset ?? 0;
+
+  return useQuery<{ items: Batch[]; pagination: { limit: number; offset: number; total: number } }>({
+    queryKey: ["/api/batches", limit, offset],
   });
 }
 
@@ -26,7 +34,7 @@ export function useCreateBatch() {
       return await res.json();
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["/api/batches"] });
+      qc.invalidateQueries({ queryKey: [/\/api\/batches/] });
     },
   });
 }
@@ -39,7 +47,7 @@ export function useUpdateBatch() {
       return await res.json();
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["/api/batches"] });
+      qc.invalidateQueries({ queryKey: [/\/api\/batches/] });
     },
   });
 }

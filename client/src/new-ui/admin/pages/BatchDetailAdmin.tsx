@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { Link, useRoute } from "wouter";
 import { useCoInstructors, useAssignCoInstructor, useRemoveCoInstructor, useEnrollments, useEnrollStudent, useDropEnrollment } from "../hooks/useBatchRelations";
 import { useAdminUserSearch } from "../hooks/useAdminUserSearch";
+import { useToast } from "@/features/shared-features/hooks/use-toast";
 
 export default function BatchDetailAdmin() {
+  const { toast } = useToast();
   const [, params] = useRoute("/app/admin/batches/:id");
   const batchId = Number(params?.id);
 
@@ -33,17 +35,31 @@ export default function BatchDetailAdmin() {
 
   const onAssignInstructor = () => {
     if (!selectedInstructor) return;
-    assignCo.mutate({ instructorId: selectedInstructor.id, role: instructorRole });
-    setSelectedInstructor(null);
-    setQInstructor("");
-    setInstructorRole("secondary_instructor");
+    assignCo.mutate({ instructorId: selectedInstructor.id, role: instructorRole }, {
+      onSuccess: () => {
+        toast({ title: "Instructor assigned" });
+        setSelectedInstructor(null);
+        setQInstructor("");
+        setInstructorRole("secondary_instructor");
+      },
+      onError: (err: any) => {
+        toast({ title: "Failed to assign instructor", description: err.message, variant: "destructive" });
+      },
+    });
   };
 
   const onEnrollStudent = () => {
     if (!selectedStudent) return;
-    enrollStudent.mutate({ studentId: selectedStudent.id });
-    setSelectedStudent(null);
-    setQStudent("");
+    enrollStudent.mutate({ studentId: selectedStudent.id }, {
+      onSuccess: () => {
+        toast({ title: "Student enrolled" });
+        setSelectedStudent(null);
+        setQStudent("");
+      },
+      onError: (err: any) => {
+        toast({ title: "Failed to enroll student", description: err.message, variant: "destructive" });
+      },
+    });
   };
 
   return (
@@ -160,8 +176,12 @@ export default function BatchDetailAdmin() {
                   <td className="px-4 py-3 font-medium">{ci.role === "primary_instructor" ? "Primary" : "Secondary"}</td>
                   <td className="px-4 py-3">
                     <button 
-                      className="rounded-md bg-destructive/20 px-3 py-1.5 text-destructive hover:bg-destructive/30"
-                      onClick={() => removeCo.mutate({ assignmentId: ci.id, batchId })}
+                      className="rounded-md bg-destructive/20 px-3 py-1.5 text-destructive hover:bg-destructive/30 disabled:opacity-50"
+                      onClick={() => removeCo.mutate({ assignmentId: ci.id, batchId }, {
+                        onSuccess: () => toast({ title: "Instructor removed" }),
+                        onError: (err: any) => toast({ title: "Failed to remove", description: err.message, variant: "destructive" }),
+                      })}
+                      disabled={removeCo.isPending}
                     >
                       Remove
                     </button>
@@ -257,7 +277,16 @@ export default function BatchDetailAdmin() {
                   <td className="px-4 py-3">{en.status}</td>
                   <td className="px-4 py-3">
                     {en.status === "active" ? (
-                      <button className="rounded-md bg-destructive/20 px-3 py-1.5 text-destructive hover:bg-destructive/30" onClick={() => dropEnrollment.mutate({ enrollmentId: en.id })}>Drop</button>
+                      <button 
+                        className="rounded-md bg-destructive/20 px-3 py-1.5 text-destructive hover:bg-destructive/30 disabled:opacity-50"
+                        onClick={() => dropEnrollment.mutate({ enrollmentId: en.id }, {
+                          onSuccess: () => toast({ title: "Student dropped" }),
+                          onError: (err: any) => toast({ title: "Failed to drop", description: err.message, variant: "destructive" }),
+                        })}
+                        disabled={dropEnrollment.isPending}
+                      >
+                        Drop
+                      </button>
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}

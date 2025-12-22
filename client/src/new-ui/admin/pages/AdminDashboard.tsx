@@ -41,13 +41,13 @@ export default function AdminDashboard() {
       {stats && (
         <>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <StatCard icon={Users2} label="Total Users" value={stats.totalUsers} />
-            <StatCard icon={ShieldCheck} label="Pending Approvals" value={stats.pendingApprovals} accent="warning" />
-            <StatCard icon={Users2} label="Active Users" value={stats.activeUsers} />
-            <StatCard icon={Layers} label="Batches" value={stats.totalBatches} />
-            <StatCard icon={Layers} label="Active Batches" value={stats.activeBatches} />
-            <StatCard icon={BookOpen} label="Tracks" value={stats.totalTracks} />
-            <StatCard icon={ClipboardList} label="Chapters" value={stats.totalChapters} />
+            <StatCardLink href="/app/admin/users" icon={Users2} label="Total Users" value={stats.totalUsers} />
+            <StatCardLink href="/app/admin/users?status=pending_approval" icon={ShieldCheck} label="Pending Approvals" value={stats.pendingApprovals} accent="warning" />
+            <StatCardLink href="/app/admin/users?status=active" icon={Users2} label="Active Users" value={stats.activeUsers} />
+            <StatCardLink href="/app/admin/batches" icon={Layers} label="Batches" value={stats.totalBatches} />
+            <StatCardLink href="/app/admin/batches" icon={Layers} label="Active Batches" value={stats.activeBatches} />
+            <StatCardLink href="" icon={BookOpen} label="Tracks" value={stats.totalTracks} />
+            <StatCardLink href="" icon={ClipboardList} label="Chapters" value={stats.totalChapters} />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -87,6 +87,52 @@ export default function AdminDashboard() {
         </>
       )}
     </div>
+  );
+}
+
+function StatCardLink({
+  href,
+  icon: Icon,
+  label,
+  value,
+  accent,
+}: {
+  href: string;
+  icon: React.ComponentType<any>;
+  label: string;
+  value: number | string;
+  accent?: "warning" | "normal";
+}) {
+  if (!href) {
+    return (
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground shadow">
+            <Icon className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+            <p className={"text-2xl font-semibold " + (accent === "warning" ? "text-orange-600 dark:text-orange-400" : "text-foreground")}>{value}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Link href={href}>
+      <a className="block rounded-2xl border border-border bg-card p-4 hover:border-primary/50 hover:bg-accent/5 transition-colors">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground shadow">
+            <Icon className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+            <p className={"text-2xl font-semibold " + (accent === "warning" ? "text-orange-600 dark:text-orange-400" : "text-foreground")}>{value}</p>
+          </div>
+        </div>
+      </a>
+    </Link>
   );
 }
 
