@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { TopNav } from "./components/TopNav";
 import { Sidebar } from "./components/Sidebar";
+import AdminDashboard from "./admin/pages/AdminDashboard";
 
 export type NavItem = {
   key: string;
@@ -72,7 +73,7 @@ export default function AppShell() {
                 <Route path="/app/learning" component={() => <SectionPage title="Learning" summary="Plan the learner experience and preview segment playback." />} />
                 <Route path="/app/batches" component={() => <SectionPage title="Batches" summary="Organize cohorts, co-instructors, and progression policies." />} />
                 <Route path="/app/content" component={() => <SectionPage title="Content" summary="Draft tracks, chapter HTML, segmentation, and audio mapping." />} />
-                <Route path="/app/admin" component={() => <SectionPage title="Admin" summary="Manage identities, approvals, audits, and guardrails." />} />
+                <Route path="/app/admin" component={AdminDashboard} />
                 <Route component={AppNotFound} />
               </Switch>
             </div>
