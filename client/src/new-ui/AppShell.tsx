@@ -13,6 +13,7 @@ import { TopNav } from "./components/TopNav";
 import { Sidebar } from "./components/Sidebar";
 import AdminDashboard from "./admin/pages/AdminDashboard";
 import UserManagement from "./admin/pages/UserManagement";
+import AuditLogs from "./admin/pages/AuditLogs";
 
 export type NavItem = {
   key: string;
@@ -76,6 +77,7 @@ export default function AppShell() {
                 <Route path="/app/content" component={() => <SectionPage title="Content" summary="Draft tracks, chapter HTML, segmentation, and audio mapping." />} />
                 <Route path="/app/admin" component={AdminDashboard} />
                 <Route path="/app/admin/users" component={UserManagement} />
+                <Route path="/app/admin/logs" component={AuditLogs} />
                 <Route component={AppNotFound} />
               </Switch>
             </div>
