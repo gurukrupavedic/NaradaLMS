@@ -8,6 +8,7 @@ import { ErrorBoundary, AppErrorFallback } from "@/components/ui/error-boundary"
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import { useAuth } from "@/features/shared-features/hooks/useAuth";
 import { useWarmTrackCache } from "@/lib/query-prefetch";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 // Phase 5A: Bundle Optimization - Route-based code splitting
 const Landing = lazy(() => import("@/features/shared-features/pages/Landing").then(module => ({ default: module.Landing })));
@@ -144,12 +145,14 @@ function Router() {
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="light" storageKey="vediclms-theme">
       <TooltipProvider>
         <Toaster />
         <ErrorBoundary fallback={<AppErrorFallback />}>
           <Router />
         </ErrorBoundary>
       </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

@@ -1,0 +1,291 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(222.2 84% 4.9%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(222.2 84% 4.9%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(222.2 84% 4.9%);
+  --primary: hsl(222.2 47.4% 11.2%);
+  --primary-foreground: hsl(210 40% 98%);
+  --secondary: hsl(210 40% 96%);
+  --secondary-foreground: hsl(222.2 84% 4.9%);
+  --muted: hsl(210 40% 96%);
+  --muted-foreground: hsl(215.4 16.3% 46.9%);
+  --accent: hsl(210 40% 96%);
+  --accent-foreground: hsl(222.2 84% 4.9%);
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(210 40% 98%);
+  --border: hsl(214.3 31.8% 91.4%);
+  --input: hsl(214.3 31.8% 91.4%);
+  --ring: hsl(222.2 84% 4.9%);
+  --radius: 0.5rem;
+  --chart-1: hsl(12 76% 61%);
+  --chart-2: hsl(173 58% 39%);
+  --chart-3: hsl(197 37% 24%);
+  --chart-4: hsl(43 74% 66%);
+  --chart-5: hsl(27 87% 67%);
+
+  /* Menu colors */
+  --menu-text: hsl(222.2 84% 4.9%);
+  --menu-text-hover: hsl(222.2 84% 4.9%);
+  --menu-icon: hsl(222.2 84% 4.9%);
+  --menu-icon-hover: hsl(222.2 84% 4.9%);
+  --menu-section-label: hsl(215.4 16.3% 35%);
+
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: hsl(240 10% 3.9%);
+  --foreground: hsl(0 0% 98%);
+  --card: hsl(240 10% 3.9%);
+  --card-foreground: hsl(0 0% 98%);
+  --popover: hsl(240 10% 3.9%);
+  --popover-foreground: hsl(0 0% 98%);
+  --primary: hsl(0 0% 98%);
+  --primary-foreground: hsl(240 5.9% 10%);
+  --secondary: hsl(240 3.7% 15.9%);
+  --secondary-foreground: hsl(0 0% 98%);
+  --muted: hsl(240 3.7% 15.9%);
+  --muted-foreground: hsl(240 5% 64.9%);
+  --accent: hsl(240 3.7% 15.9%);
+  --accent-foreground: hsl(0 0% 98%);
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(240 3.7% 15.9%);
+  --input: hsl(240 3.7% 15.9%);
+  --ring: hsl(240 4.9% 83.9%);
+  --chart-1: hsl(220 70% 50%);
+  --chart-2: hsl(160 60% 45%);
+  --chart-3: hsl(30 80% 55%);
+  --chart-4: hsl(280 65% 60%);
+  --chart-5: hsl(340 75% 55%);
+
+  /* Menu colors */
+  --menu-text: hsl(0 0% 98%);
+  --menu-text-hover: hsl(0 0% 98%);
+  --menu-icon: hsl(0 0% 98%);
+  --menu-icon-hover: hsl(0 0% 98%);
+  --menu-section-label: hsl(240 5% 75%);
+
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+@theme inline {
+  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Sidebar menu styling with CSS variables for theme customizer sync */
+.sidebar-menu-text {
+  color: var(--menu-text) !important;
+}
+
+.sidebar-menu-icon {
+  color: var(--menu-icon) !important;
+}
+
+.sidebar-menu-item:hover .sidebar-menu-text {
+  color: var(--menu-text-hover) !important;
+}
+
+.sidebar-menu-item:hover .sidebar-menu-icon {
+  color: var(--menu-icon-hover) !important;
+}
+
+.sidebar-section-label {
+  color: var(--menu-section-label) !important;
+}
+
+/* Force correct colors for common classes */
+.bg-gray-50 {
+  background-color: hsl(210 40% 96%) !important;
+}
+
+.bg-white {
+  background-color: hsl(0 0% 100%) !important;
+}
+
+.text-gray-900 {
+  color: hsl(222.2 84% 4.9%) !important;
+}
+
+.text-gray-600 {
+  color: hsl(215.4 16.3% 46.9%) !important;
+}
+
+.text-gray-500 {
+  color: hsl(215.4 16.3% 46.9%) !important;
+}
+
+.border-gray-200 {
+  border-color: hsl(214.3 31.8% 91.4%) !important;
+}
+
+.border-gray-300 {
+  border-color: hsl(214.3 31.8% 91.4%) !important;
+}
+
+/* Dark mode overrides */
+.dark .bg-gray-50 {
+  background-color: hsl(240 3.7% 15.9%) !important;
+}
+
+.dark .bg-white {
+  background-color: hsl(240 10% 3.9%) !important;
+}
+
+.dark .text-gray-900 {
+  color: hsl(0 0% 98%) !important;
+}
+
+.dark .text-gray-600 {
+  color: hsl(240 5% 64.9%) !important;
+}
+
+.dark .text-gray-500 {
+  color: hsl(240 5% 64.9%) !important;
+}
+
+.dark .border-gray-200 {
+  border-color: hsl(240 3.7% 15.9%) !important;
+}
+
+.dark .border-gray-300 {
+  border-color: hsl(240 3.7% 15.9%) !important;
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+[dir="rtl"] .ml-auto {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[dir="rtl"] .mr-auto {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+/* Disable transitions for theme switching */
+*,
+*::before,
+*::after {
+  transition-duration: 0s !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+}
+
+/* Re-enable specific transitions we want to keep */
+.transition-all,
+.transition-colors,
+.transition-opacity,
+.transition-transform,
+.hover\:scale-105:hover,
+.hover\:shadow-xl:hover {
+  transition-duration: 0.2s !important;
+}
+
+/* Fast theme switching */
+.theme-transition {
+  transition: background-color 0.1s ease, color 0.1s ease, border-color 0.1s ease !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
