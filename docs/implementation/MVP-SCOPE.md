@@ -1,65 +1,124 @@
-# VedicLMS MVP Scope & Backlog
+# VedicLMS MVP Scope & Feature Tracking
 
-## MVP Features (v1.0 - Production Release)
+**Purpose:** Living inventory of all MVP features. Check off features as [MVP-IMPLEMENTATION-PLAN](MVP-IMPLEMENTATION-PLAN.md) phases complete. Track what's done, pending, and backlog.
+
+**Status Legend:**
+- ✅ **Completed:** Feature implemented, tested, deployed
+- ⏳ **In Progress:** Currently being built in active phase
+- 📋 **Pending:** Scheduled for future phase
+- 🔄 **Backlog:** Post-MVP feature (see Backlog section below)
+
+---
+
+## MVP Features (v1.0 - Production Release) - Phase Mapping
 
 ### STUDENT PERSONA
-| Key | Title | Description | Priority |
-|-----|-------|-------------|----------|
-| STUDENT-1 | Learning Board Dashboard | Landing page after login showing: My Batch card (name, current track, instructors), Current Chapters quick access (proficiency 0-1 highlighted), Curriculum overview (8 tracks with chapter list + proficiency badges) | P0 |
-| STUDENT-2 | Study Chapter Interface | View chapter content with script switching (Telugu/Hindi/English), select audio file (multiple masters), toggle Learn Mode for interactive text segments | P0 |
-| STUDENT-3 | Interactive Text Segments | Click text segments in Learn Mode to play mapped audio (start/end timestamps), respects segment boundaries, auto-switches audio file if mapping references different file | P0 |
-| STUDENT-4 | Proficiency Tracking | View 0-4 proficiency level for all chapters across all tracks, visible everywhere (not batch-specific) | P0 |
-| STUDENT-5 | Responsive Study Interface | Mobile: larger segments (48px), bottom-sheet audio controls, 36px fonts. Tablet: hybrid layout. Desktop: current layout. All devices equally polished | P0 |
-| STUDENT-6 | Audio Controls | Play/pause/stop, seek timeline, volume adjustment, playback rate (1x, 1.25x, 1.5x, 2x), duration/current time display | P0 |
+| Status | Key | Title | Phase | Priority |
+|--------|-----|-------|-------|----------|
+| ⏳ | STUDENT-1 | Learning Board Dashboard | Phase 6 | P0 |
+| ⏳ | STUDENT-2 | Study Chapter Interface | Phase 6 | P0 |
+| ⏳ | STUDENT-3 | Interactive Text Segments | Phase 6 | P0 |
+| ⏳ | STUDENT-4 | Proficiency Tracking | Phase 6 | P0 |
+| ⏳ | STUDENT-5 | Responsive Study Interface | Phase 6 | P0 |
+| ⏳ | STUDENT-6 | Audio Controls | Phase 6 | P0 |
+
+**Feature Descriptions:**
+- **STUDENT-1:** Landing page after login showing: My Batch card (name, current track, instructors), Current Chapters quick access (proficiency 0-1 highlighted), Curriculum overview (8 tracks with chapter list + proficiency badges)
+- **STUDENT-2:** View chapter content with script switching (Telugu/Hindi/English), select audio file (multiple masters), toggle Learn Mode for interactive text segments
+- **STUDENT-3:** Click text segments in Learn Mode to play mapped audio (start/end timestamps), respects segment boundaries, auto-switches audio file if mapping references different file
+- **STUDENT-4:** View 0-4 proficiency level for all chapters across all tracks, visible everywhere (not batch-specific)
+- **STUDENT-5:** Mobile: larger segments (48px), bottom-sheet audio controls, 36px fonts. Tablet: hybrid layout. Desktop: current layout. All devices equally polished
+- **STUDENT-6:** Play/pause/stop, seek timeline, volume adjustment, playback rate (1x, 1.25x, 1.5x, 2x), duration/current time display
 
 ### INSTRUCTOR PERSONA
-| Key | Title | Description | Priority |
-|-----|-------|-------------|----------|
-| INSTR-1 | My Batches List | View all batches assigned as instructor (primary or secondary), indicator showing primary vs secondary role, click to open batch details | P0 |
-| INSTR-2 | Batch Detail View | See all students in batch, proficiency levels for every chapter (0-4 scale), set batch current track (only primary instructor or admin) | P0 |
-| INSTR-3 | Student Progress Table | View and update student proficiency per chapter. Mobile: expandable cards. Desktop: dense DataTable with inline dropdown edits | P0 |
-| INSTR-4 | Proficiency Editing | Only instructors can change student proficiency levels (0-4). No notes yet (future feature). Mobile: bottom sheet, Desktop: inline edit | P1 |
-| INSTR-5 | Batch Context Access | From Learning Board, link to "Batches & Progress" tab, switch between batches easily | P1 |
-| INSTR-6 | Responsive Instructor UI | Mobile: card-based list views, expandable student progress. Desktop: full tables. Tablet: hybrid. All equally polished | P0 |
+| Status | Key | Title | Phase | Priority |
+|--------|-----|-------|-------|----------|
+| ⏳ | INSTR-1 | My Batches List | Phase 4 | P0 |
+| ⏳ | INSTR-2 | Batch Detail View | Phase 4 | P0 |
+| ⏳ | INSTR-3 | Student Progress Table | Phase 4 | P0 |
+| ⏳ | INSTR-4 | Proficiency Editing | Phase 4 | P1 |
+| ⏳ | INSTR-5 | Batch Context Access | Phase 4 | P1 |
+| ⏳ | INSTR-6 | Responsive Instructor UI | Phase 4 | P0 |
+
+**Feature Descriptions:**
+- **INSTR-1:** View all batches assigned as instructor (primary or secondary), indicator showing primary vs secondary role, click to open batch details
+- **INSTR-2:** See all students in batch, proficiency levels for every chapter (0-4 scale), set batch current track (only primary instructor or admin)
+- **INSTR-3:** View and update student proficiency per chapter. Mobile: expandable cards. Desktop: dense DataTable with inline dropdown edits
+- **INSTR-4:** Only instructors can change student proficiency levels (0-4). No notes yet (future feature). Mobile: bottom sheet, Desktop: inline edit
+- **INSTR-5:** From Learning Board, link to "Batches & Progress" tab, switch between batches easily
+- **INSTR-6:** Mobile: card-based list views, expandable student progress. Desktop: full tables. Tablet: hybrid. All equally polished
 
 ### CONTENT MANAGER PERSONA
-| Key | Title | Description | Priority |
-|-----|-------|-------------|----------|
-| CM-1 | Track Management | Create, view, reorder, delete (only if empty) tracks with name and description | P0 |
-| CM-2 | Chapter Management | Create, view, reorder chapters under track. Delete chapter (only if draft). Publish/unpublish to control draft vs published status | P0 |
-| CM-3 | Five-Step Publishing Flow | Content Tab: HTML/text editor, script selector (te/hi/en), auto-save. Media Tab: upload audio files with reciter info. Segmentation Tab: create/delete/reorder text segments per script. Mapping Tab: Progressive Mapper (click-when-heard), visual state colors (amber/orange/green). Preview Tab: student view with toggle Learn Mode | P0 |
-| CM-4 | Progressive Mapping UX | Interactive mapping: click text segment → plays audio, segment highlights orange during recording, turns green when mapped. Timestamp display. State visibility throughout | P0 |
-| CM-5 | Audio File Management | Upload multiple audio files (masters), set display names, optional reciter attribution, playback preview, delete | P1 |
-| CM-6 | Text Segmentation | Drag-select or click-drag to create segments, reorder with drag handles, delete segments, recreate as needed. Per-script segmentation | P1 |
-| CM-7 | Chapter Preview | Preview chapter exactly as students see it, including interactive segments and Learn Mode toggle, before publishing | P0 |
-| CM-8 | Publish Protection | Published chapters cannot be deleted or unpublished (status cannot change back to draft) | P1 |
-| CM-9 | Responsive Content Studio | Mobile: step wizard for 5-step flow. Desktop: tabbed interface. Tablet: split views where applicable | P0 |
+| Status | Key | Title | Phase | Priority |
+|--------|-----|-------|-------|----------|
+| ⏳ | CM-1 | Track Management | Phase 5 | P0 |
+| ⏳ | CM-2 | Chapter Management | Phase 5 | P0 |
+| ⏳ | CM-3 | Five-Step Publishing Flow | Phase 5 | P0 |
+| ⏳ | CM-4 | Progressive Mapping UX | Phase 5 | P0 |
+| ⏳ | CM-5 | Audio File Management | Phase 5 | P1 |
+| ⏳ | CM-6 | Text Segmentation | Phase 5 | P1 |
+| ⏳ | CM-7 | Chapter Preview | Phase 5 | P0 |
+| ⏳ | CM-8 | Publish Protection | Phase 5 | P1 |
+| ⏳ | CM-9 | Responsive Content Studio | Phase 5 | P0 |
+
+**Feature Descriptions:**
+- **CM-1:** Create, view, reorder, delete (only if empty) tracks with name and description
+- **CM-2:** Create, view, reorder chapters under track. Delete chapter (only if draft). Publish/unpublish to control draft vs published status
+- **CM-3:** Content Tab: HTML/text editor, script selector (te/hi/en), auto-save. Media Tab: upload audio files with reciter info. Segmentation Tab: create/delete/reorder text segments per script. Mapping Tab: Progressive Mapper (click-when-heard), visual state colors (amber/orange/green). Preview Tab: student view with toggle Learn Mode
+- **CM-4:** Interactive mapping: click text segment → plays audio, segment highlights orange during recording, turns green when mapped. Timestamp display. State visibility throughout
+- **CM-5:** Upload multiple audio files (masters), set display names, optional reciter attribution, playback preview, delete
+- **CM-6:** Drag-select or click-drag to create segments, reorder with drag handles, delete segments, recreate as needed. Per-script segmentation
+- **CM-7:** Preview chapter exactly as students see it, including interactive segments and Learn Mode toggle, before publishing
+- **CM-8:** Published chapters cannot be deleted or unpublished (status cannot change back to draft)
+- **CM-9:** Mobile: step wizard for 5-step flow. Desktop: tabbed interface. Tablet: split views where applicable
 
 ### ADMIN PERSONA
-| Key | Title | Description | Priority |
-|-----|-------|-------------|----------|
-| ADMIN-1 | User Approvals | View pending user registrations, approve or reject with role assignment (student/instructor/content_manager) | P0 |
-| ADMIN-2 | User Management | View all users, edit roles, enable/disable user accounts | P1 |
-| ADMIN-3 | Batch CRUD | Create, edit, close, deprecate batches. Edit: name, description, current track | P0 |
-| ADMIN-4 | Batch Instructor Assignment | Assign/unassign primary and secondary instructors per batch | P1 |
-| ADMIN-5 | Batch Student Assignment | Assign/unassign students to batches | P1 |
-| ADMIN-6 | Deprecate Batches | Disable batches from interface, prevent changes, prevent new assignments. Only re-enable to allow editing | P1 |
-| ADMIN-7 | Audit Logs (Basic) | View recent system activity, minimal filtering (date range, user), read-only display | P2 |
-| ADMIN-8 | System Settings (Minimal) | Key-value store for system-wide settings. No specific settings required for MVP (placeholder for future) | P2 |
-| ADMIN-9 | Responsive Admin UI | Mobile: card/form-based lists. Desktop: tables with filters. Forms full-width on mobile, inline on desktop | P0 |
+| Status | Key | Title | Phase | Priority |
+|--------|-----|-------|-------|----------|
+| ⏳ | ADMIN-1 | User Approvals | Phase 3 | P0 |
+| ⏳ | ADMIN-2 | User Management | Phase 3 | P1 |
+| ⏳ | ADMIN-3 | Batch CRUD | Phase 4 | P0 |
+| ⏳ | ADMIN-4 | Batch Instructor Assignment | Phase 4 | P1 |
+| ⏳ | ADMIN-5 | Batch Student Assignment | Phase 4 | P1 |
+| ⏳ | ADMIN-6 | Deprecate Batches | Phase 4 | P1 |
+| ⏳ | ADMIN-7 | Audit Logs (Basic) | Phase 3 | P2 |
+| ⏳ | ADMIN-8 | System Settings (Minimal) | Phase 3 | P2 |
+| ⏳ | ADMIN-9 | Responsive Admin UI | Phase 3 | P0 |
+
+**Feature Descriptions:**
+- **ADMIN-1:** View pending user registrations, approve or reject with role assignment (student/instructor/content_manager)
+- **ADMIN-2:** View all users, edit roles, enable/disable user accounts
+- **ADMIN-3:** Create, edit, close, deprecate batches. Edit: name, description, current track
+- **ADMIN-4:** Assign/unassign primary and secondary instructors per batch
+- **ADMIN-5:** Assign/unassign students to batches
+- **ADMIN-6:** Disable batches from interface, prevent changes, prevent new assignments. Only re-enable to allow editing
+- **ADMIN-7:** View recent system activity, minimal filtering (date range, user), read-only display
+- **ADMIN-8:** Key-value store for system-wide settings. No specific settings required for MVP (placeholder for future)
+- **ADMIN-9:** Mobile: card/form-based lists. Desktop: tables with filters. Forms full-width on mobile, inline on desktop
 
 ### CROSS-CUTTING / INFRASTRUCTURE
-| Key | Title | Description | Priority |
-|-----|-------|-------------|----------|
-| CROSS-1 | Role-Based Navigation | Navigation tabs appear/hide based on role: all see "Learning", instructors see "Batches & Progress", CMs see "Content Studio", admins see "Admin Center" | P0 |
-| CROSS-2 | Responsive Navigation | Mobile: hamburger drawer, Tablet: collapsible sidebar, Desktop: persistent sidebar. Tab/button switching seamless | P0 |
-| CROSS-3 | Responsive Breakpoints | 44px minimum touch targets, responsive fonts (mobile 36px Telugu/Devanagari → desktop 30px), tailwind sm/md/lg breakpoints | P0 |
-| CROSS-4 | Authentication & Authorization | Login required, role-based route protection (requireAuth, requireRole middleware) | P0 |
-| CROSS-5 | Multilingual Fonts | Telugu (JIMS), Devanagari (AdishilaSanVedic), IAST (AdishilaSan) fonts applied via CSS classes, served from /fonts/ | P0 |
-| CROSS-6 | Design System Polish | Consistent use of shadcn/Radix components, custom edu-layer (Badge, Switch, SegmentedTextDisplay), Tailwind tokens for spacing/colors | P1 |
-| CROSS-7 | Performance Optimization | TanStack Query for caching, prefetch adjacent chapters, lazy-load routes, bundle optimization | P1 |
-| CROSS-8 | Error Handling | Graceful error states, toast notifications, error boundaries, 404/500 pages | P1 |
-| CROSS-9 | Accessibility (A11y) | WCAG AA compliant: keyboard navigation, screen reader support, focus indicators, color contrast (44px touch targets) | P1 |
+| Status | Key | Title | Phase | Priority |
+|--------|-----|-------|-------|----------|
+| ⏳ | CROSS-1 | Role-Based Navigation | Phase 2 | P0 |
+| ⏳ | CROSS-2 | Responsive Navigation | Phase 2 | P0 |
+| ⏳ | CROSS-3 | Responsive Breakpoints | Phase 2 | P0 |
+| ⏳ | CROSS-4 | Authentication & Authorization | Phase 1 | P0 |
+| ⏳ | CROSS-5 | Multilingual Fonts | Phase 1 | P0 |
+| ⏳ | CROSS-6 | Design System Polish | Phase 2 | P1 |
+| ⏳ | CROSS-7 | Performance Optimization | Phase 7 | P1 |
+| ⏳ | CROSS-8 | Error Handling | Phase 7 | P1 |
+| ⏳ | CROSS-9 | Accessibility (A11y) | Phase 7 | P1 |
+
+**Feature Descriptions:**
+- **CROSS-1:** Navigation tabs appear/hide based on role: all see "Learning", instructors see "Batches & Progress", CMs see "Content Studio", admins see "Admin Center"
+- **CROSS-2:** Mobile: hamburger drawer, Tablet: collapsible sidebar, Desktop: persistent sidebar. Tab/button switching seamless
+- **CROSS-3:** 44px minimum touch targets, responsive fonts (mobile 36px Telugu/Devanagari → desktop 30px), tailwind sm/md/lg breakpoints
+- **CROSS-4:** Login required, role-based route protection (requireAuth, requireRole middleware)
+- **CROSS-5:** Telugu (JIMS), Devanagari (AdishilaSanVedic), IAST (AdishilaSan) fonts applied via CSS classes, served from /fonts/
+- **CROSS-6:** Consistent use of shadcn/Radix components, custom edu-layer (Badge, Switch, SegmentedTextDisplay), Tailwind tokens for spacing/colors
+- **CROSS-7:** TanStack Query for caching, prefetch adjacent chapters, lazy-load routes, bundle optimization
+- **CROSS-8:** Graceful error states, toast notifications, error boundaries, 404/500 pages
+- **CROSS-9:** WCAG AA compliant: keyboard navigation, screen reader support, focus indicators, color contrast (44px touch targets)
 
 ---
 

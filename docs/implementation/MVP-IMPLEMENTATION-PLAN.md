@@ -236,120 +236,211 @@ Main Content (adaptive 2-column or single)
 - ✅ MVP scope defined ([MVP-SCOPE.md](MVP-SCOPE.md))
 - ✅ Navigation blueprint created (this document)
 - ✅ Persona journeys mapped
+- ✅ v0 shadcn theme selected for new UI
 - 🔜 **Next:** Phase 1 kickoff
 
-### Phase 1: Student Learning Board + Study (2.5 weeks)
-**Goal:** Students can browse curriculum and study chapters on any device.
+---
 
-**Components to Build:**
-- [ ] Navigation shell (role-based tabs/hamburger)
-- [ ] Learning Board dashboard
-  - [ ] My Batch card component
-  - [ ] Current Chapters (quick access cards)
-  - [ ] Curriculum accordion (tracks & chapters)
-- [ ] Responsive layout (mobile/tablet/desktop)
-- [ ] StudyChapter.tsx responsive polish
-  - [ ] Mobile: Bottom-sheet audio controls
-  - [ ] Larger touch targets (48px segments)
-  - [ ] Responsive fonts (36px mobile → 30px desktop)
+### Phase 1: Theme Infrastructure (3–4 days)
+**Goal:** Set up v0 theme colors and dark/light toggle. No breaking changes to existing UI.
 
-**Existing Code to Leverage:**
-- `StudyChapter.tsx` (student interface, mostly done)
-- `SegmentedTextDisplay` (interactive segments)
-- `AudioControls` (audio player UI)
-- `Badge` (proficiency display)
+**Key Decision:** We use the v0 theme's colors **as-is**. No custom palette creation. Later (Phase 7+), we can tweak specific colors if needed.
 
-**Routes:**
-- `/` → Learning Board
-- `/chapter/:chapterId` → Study Chapter
+**Tasks:**
+- [ ] Extract v0 theme CSS variables into `client/src/index.css`
+- [ ] Install `next-themes` (Vite-compatible)
+- [ ] Create `ThemeProvider` wrapper component
+- [ ] Add theme toggle button to header
+- [ ] Map v0 colors to Tailwind tokens in `tailwind.config.ts`
+- [ ] Test dark/light mode across entire app (old UI should work instantly)
 
-**Deliverable:** Demo-ready student experience on all devices.
+**Deliverables:**
+- Entire app respects v0 color palette (light & dark)
+- Theme toggle works globally
+- No breaking changes to existing routes (`/`, `/manage/*`, `/learning/*`)
+
+**Note:** This is infrastructure only. Visual changes appear next phase.
 
 ---
 
-### Phase 2: Instructor Batches & Progress (2 weeks)
-**Goal:** Instructors can view batches and update student proficiency on any device.
+### Phase 2: New Route Namespace (`/app/*`) – New UI Shell (5–7 days)
+**Goal:** Build parallel new UI under `/app/*` routes using v0 components + theme. Keep old UI untouched.
 
-**Components to Build:**
-- [ ] My Batches list (cards/grid)
-- [ ] Batch Detail screen
-  - [ ] Batch info section
-  - [ ] Student Progress:
-    - [ ] Mobile: Expandable student cards
-    - [ ] Desktop: shadcn DataTable
-  - [ ] Inline proficiency editing (bottom sheet mobile, inline desktop)
-- [ ] Responsive table/card toggling
+**New Routes (all using v0 theme):**
+```
+/app/learning              → New Learning Board
+/app/batches               → New My Batches
+/app/batches/:id           → New Batch Detail
+/app/content               → New Content Studio
+/app/content/tracks/:id    → New Track Detail
+/app/admin                 → New Admin Center
+/app/admin/users           → New User Management
+/app/admin/batches         → New Batch Management
+```
 
-**Existing Code to Leverage:**
-- None yet (new section of app)
+**Architecture:**
+```
+client/src/new-ui/
+├─ layouts/
+│  ├─ AppShell.tsx        (header + sidebar nav)
+│  ├─ TopNav.tsx          (v0 header component)
+│  └─ Sidebar.tsx         (v0 sidebar navigation)
+├─ learning/
+│  └─ pages/
+│     ├─ LearningBoard.tsx
+│     └─ StudyChapter.tsx (wrapper)
+├─ batches/
+│  └─ pages/
+│     ├─ MyBatchesList.tsx
+│     └─ BatchDetail.tsx
+├─ content/
+│  └─ pages/
+│     ├─ ContentStudio.tsx
+│     └─ TrackDetail.tsx
+└─ admin/
+   └─ pages/
+      ├─ AdminDashboard.tsx
+      ├─ UserManagement.tsx
+      ├─ BatchManagement.tsx
+      └─ AuditLogs.tsx
+```
 
-**Routes:**
-- `/batches` → My Batches
-- `/batches/:batchId` → Batch Detail
+**Tasks:**
+- [ ] Create `client/src/new-ui/` folder structure
+- [ ] Build `AppShell.tsx` (header + sidebar, responsive)
+- [ ] Copy v0 dashboard components (sidebar, top-nav, cards, tables)
+- [ ] Fix imports (v0 uses Next.js APIs; adapt to Wouter)
+- [ ] Wire routes into `App.tsx` under `/app/*` prefix
+- [ ] Test: Old routes (`/`) still work, new routes (`/app/`) display v0 theme
+- [ ] Add feature flag to conditionally show new UI (`NEW_UI_ENABLED`)
 
-**Deliverable:** Demo-ready instructor workflow on all devices.
-
----
-
-### Phase 3: Content Studio Responsive (2.5 weeks)
-**Goal:** Content managers can publish chapters on any device.
-
-**Components to Build:**
-- [ ] Track management (CRUD)
-- [ ] Chapter management (CRUD, publish/unpublish)
-- [ ] EditChapter.tsx responsive polish
-  - [ ] Mobile: Convert tabs → step wizard
-  - [ ] Desktop: Keep tabs, polish styling
-  - [ ] Progressive Mapper touch optimization
-- [ ] Responsive step wizard (mobile) vs tabs (desktop)
-
-**Existing Code to Leverage:**
-- `EditChapter.tsx` (5-step flow, mostly done)
-- `ProgressiveMapper` (mapping UX)
-- `RichTextEditor` (content editing)
-- `SegmentationTab`, `AudioMappingTab` (components)
-
-**Routes:**
-- `/content-studio` → Studio home
-- `/content-studio/tracks/:trackId/chapters/:chapterId` → Edit Chapter
-
-**Deliverable:** Demo-ready content creation workflow on all devices.
-
----
-
-### Phase 4: Admin Center Core (1.5 weeks)
-**Goal:** Admins can onboard users and manage batches on any device.
-
-**Components to Build:**
-- [ ] Admin dashboard overview
-- [ ] User Management
-  - [ ] Pending approvals (table/cards)
-  - [ ] All users (table/cards with role editor)
-- [ ] Batch Management
-  - [ ] Batch CRUD (cards/table)
-  - [ ] Create/edit batch form
-  - [ ] Instructor/student assignment (search + multi-select)
-- [ ] Audit Logs (basic)
-  - [ ] Table/cards with filters
-- [ ] System Settings (placeholder)
-
-**Existing Code to Leverage:**
-- shadcn components for tables, forms, dialogs
-- Existing auth/role infrastructure
-
-**Routes:**
-- `/admin` → Admin dashboard
-- `/admin/users` → User management
-- `/admin/batches` → Batch management
-- `/admin/audit-logs` → Audit logs
-- `/admin/settings` → System settings
-
-**Deliverable:** Demo-ready admin workflow on all devices.
+**Deliverables:**
+- `/app/learning` route renders with v0 theme (placeholder content)
+- Old UI (`/`) remains fully functional
+- Both UIs can coexist without conflicts
 
 ---
 
-### Phase 5: Design System + A11y + Polish (1.5 weeks)
-**Goal:** Production-ready, polished, accessible MVP v1.0.
+### Phase 3: Feature Migration – Admin Center (1 week)
+**Goal:** Build fully functional new Admin Center using v0 components.
+
+**Screens:**
+- Admin dashboard (overview cards + quick actions)
+- User Management (pending approvals + user list)
+- Batch Management (CRUD forms)
+- Audit Logs (basic table with filters)
+- System Settings (placeholder)
+
+**Tasks:**
+- [ ] Build `new-ui/admin/pages/AdminDashboard.tsx`
+- [ ] Build `new-ui/admin/pages/UserManagement.tsx` (v0 table + approval cards)
+- [ ] Build `new-ui/admin/pages/BatchManagement.tsx` (v0 forms)
+- [ ] Build `new-ui/admin/pages/AuditLogs.tsx` (v0 table)
+- [ ] Connect to existing APIs (`/api/users`, `/api/batches`, `/api/audit-logs`)
+- [ ] Test both old (`/manage/users`) and new (`/app/admin`) side-by-side
+- [ ] Responsive testing (mobile/tablet/desktop)
+
+**Deliverables:**
+- `/app/admin/*` fully functional with v0 styling
+- Old `/manage/users` still works
+- Feature flag lets admins toggle between old/new
+
+---
+
+### Phase 4: Feature Migration – Batches & Progress (1 week)
+**Goal:** Build instructor batch management using v0 components.
+
+**Screens:**
+- My Batches list (v0 card grid)
+- Batch Detail (v0 table for desktop, cards for mobile)
+
+**Tasks:**
+- [ ] Build `new-ui/batches/pages/MyBatchesList.tsx` (v0 card grid)
+- [ ] Build `new-ui/batches/pages/BatchDetail.tsx` (v0 table + mobile cards)
+- [ ] Implement inline proficiency editing (bottom sheet mobile, inline desktop)
+- [ ] Connect to APIs (`/api/batches`, `/api/students`, `/api/proficiency`)
+- [ ] Test both old and new side-by-side
+- [ ] Responsive testing (all devices)
+
+**Deliverables:**
+- `/app/batches/*` fully functional with v0 styling
+- Old `/manage/batches` still works
+
+---
+
+### Phase 5: Feature Migration – Content Studio (1 week)
+**Goal:** Polish content management for new UI using v0 components.
+
+**Screens:**
+- Content Studio home (v0 card grid for tracks)
+- Track Detail (v0 table/cards for chapters)
+- Edit Chapter (desktop tabs OR mobile step wizard, both v0 styled)
+
+**Tasks:**
+- [ ] Build `new-ui/content/pages/ContentStudio.tsx` (v0 card grid)
+- [ ] Build `new-ui/content/pages/TrackDetail.tsx` (v0 table/cards)
+- [ ] Adapt existing `EditChapter.tsx` to work in new UI (wrap with v0 styling)
+- [ ] Mobile: Convert tabs → step wizard (v0 styling)
+- [ ] Desktop: Keep tabs, apply v0 styling
+- [ ] Connect to APIs
+- [ ] Responsive testing
+
+**Deliverables:**
+- `/app/content/*` fully functional with v0 styling
+- Old `/manage/tracks` still works
+
+---
+
+### Phase 6: Feature Migration – Learning Board (1 week)
+**Goal:** Polish student learning experience using v0 components.
+
+**Screens:**
+- Learning Board (v0 card grid dashboard)
+- Study Chapter (interactive learning, reuse existing components)
+
+**Tasks:**
+- [ ] Build `new-ui/learning/pages/LearningBoard.tsx` (v0 card grid)
+- [ ] Wrap existing `StudyChapter.tsx` with new UI shell (v0 styling)
+- [ ] Reuse `SegmentedTextDisplay`, `AudioControls`, `ProgressiveMapper` (no changes)
+- [ ] Mobile: Bottom-sheet audio controls
+- [ ] Desktop: Sidebar layout
+- [ ] Connect to APIs
+- [ ] Responsive testing
+
+**Deliverables:**
+- `/app/learning/*` fully functional with v0 styling
+- Old `/learning/*` still works
+
+---
+
+### Phase 7: Polish, A11y, Testing, & Cutover Decision (1–2 weeks)
+**Goal:** Production-ready new UI. You decide when to cutover.
+
+**Tasks:**
+- [ ] A11y audit (keyboard nav, screen reader, focus, contrast)
+- [ ] Responsive testing (all breakpoints, all devices)
+- [ ] Dark/light mode testing (v0 theme)
+- [ ] Performance optimization (code splitting, prefetch, images)
+- [ ] Error states & edge cases
+- [ ] Bug fixes & refinements
+
+**Then You Decide:**
+
+**Option A: Keep Both UIs (Recommended for now)**
+- Both `/` and `/app/*` routes continue working
+- Feature flag lets users toggle between old/new
+- Gradual deprecation of old UI later
+
+**Option B: Cutover to New UI (Future)**
+- Delete old routes (`/`, `/manage/*`)
+- Rename `/app/*` → `/` (simple folder rename)
+- Deprecate old UI completely
+- This becomes a separate implementation task
+
+**Deliverables:**
+- **MVP v2.0 – New UI Production Release** (v0 theme)
+- Both UIs stable, tested, A11y compliant
+- Clear decision on cutover timing
 
 **Tasks:**
 - [ ] Consolidate design system tokens (tailwind.config.ts)
@@ -382,50 +473,62 @@ Main Content (adaptive 2-column or single)
 
 ## Component Inventory
 
-### Reuse from Existing Codebase
+### Strategy: Reuse Existing + Build New UI Parallel
 
-| Component | Location | Status | Notes |
-|-----------|----------|--------|-------|
-| `SegmentedTextDisplay` | `client/src/components/text-segmentation/` | ✅ Ready | Core learning UX |
-| `ProgressiveMapper` | `client/src/components/audio-mapping/` | ✅ Ready | Innovative mapping UX |
-| `AudioControls` | `client/src/components/design-system/` | ✅ Ready | Audio player |
-| `ScriptSelector` | `client/src/components/common/` | ✅ Ready | Script switcher |
+**Existing Core Components (Keep Unchanged):**
+- Learning, content management, and audio components work in both old UI and new UI
+- `/app/*` routes wrap these components with new v0 theme styling
+- No API changes, no business logic changes—just visual refresh
+
+### Reuse from Existing Codebase (Shared Across Both UIs)
+
+| Component | Location | Status | New UI Usage |
+|-----------|----------|--------|--------------|
+| `SegmentedTextDisplay` | `client/src/components/text-segmentation/` | ✅ Ready | Study Chapter |
+| `ProgressiveMapper` | `client/src/components/audio-mapping/` | ✅ Ready | Content Studio Edit |
+| `AudioControls` | `client/src/components/design-system/` | ✅ Ready | Study Chapter |
+| `ScriptSelector` | `client/src/components/common/` | ✅ Ready | Study + Content |
 | `Badge` | `client/src/components/design-system/` | ✅ Ready | Proficiency display |
 | `Switch` | `client/src/components/design-system/` | ✅ Ready | Learn mode toggle |
 | `RichTextEditor` | `client/src/components/ui/` | ✅ Ready | Content editor |
-| `EditChapter.tsx` | `client/src/features/content-management/pages/` | ✅ Ready | 5-step publishing |
-| `StudyChapter.tsx` | `client/src/features/learning/pages/` | ✅ Ready | Student interface |
+| `EditChapter.tsx` | `client/src/features/content-management/pages/` | ✅ Ready | Wrapped in new UI |
+| `StudyChapter.tsx` | `client/src/features/learning/pages/` | ✅ Ready | Wrapped in new UI |
 
-### New Components to Build
+### New Components for New UI (`client/src/new-ui/`)
 
-| Component | Purpose | Complexity | Phase | Notes |
-|-----------|---------|-----------|-------|-------|
-| `LearningBoard` | Student dashboard | Medium | 1 | Batch card + curriculum accordion |
-| `MyBatchesList` | Instructor list view | Low | 2 | Card grid with filters |
-| `BatchDetail` | Batch overview + progress | High | 2 | Dual UI (mobile cards, desktop table) |
-| `StudentProgressTable` | Dense proficiency grid | High | 2 | shadcn DataTable with inline edits |
-| `RoleBasedNav` | Navigation shell | Low | 1 | Hamburger (mobile), tabs (tablet), sidebar (desktop) |
-| `AdminDashboard` | Admin overview | Low | 4 | Card grid + quick actions |
-| `UserApprovalQueue` | Pending user reviews | Medium | 4 | Table/cards with actions |
-| `BatchCRUDForm` | Create/edit batch | Medium | 4 | Form with multi-select (instructors/students) |
-| `AuditLogTable` | Activity log viewer | Medium | 4 | Filterable table/cards |
-| `StepWizard` | Mobile content editor | Medium | 3 | Step indicator + full-screen steps |
+| Component | Purpose | Phase | UI Style |
+|-----------|---------|-------|----------|
+| `AppShell.tsx` | Header + Sidebar layout | 2 | v0 theme |
+| `TopNav.tsx` | Header navigation | 2 | v0 theme |
+| `Sidebar.tsx` | Sidebar navigation | 2 | v0 theme |
+| `LearningBoard.tsx` | Student dashboard | 6 | v0 card grid |
+| `MyBatchesList.tsx` | Instructor batch list | 4 | v0 card grid |
+| `BatchDetail.tsx` | Batch overview + student progress | 4 | v0 table + mobile cards |
+| `StudentProgressTable.tsx` | Proficiency grid (desktop) | 4 | v0 DataTable |
+| `StudentProgressCards.tsx` | Proficiency cards (mobile) | 4 | v0 expandable cards |
+| `AdminDashboard.tsx` | Admin overview | 3 | v0 card grid |
+| `UserApprovalQueue.tsx` | Pending user reviews | 3 | v0 table/cards |
+| `UserManagement.tsx` | User list + role editor | 3 | v0 table |
+| `BatchCRUDForm.tsx` | Create/edit batch | 3 | v0 form |
+| `ContentStudio.tsx` | Track management | 5 | v0 card grid |
+| `TrackDetail.tsx` | Chapter list | 5 | v0 table/cards |
+| `AuditLogTable.tsx` | Activity log viewer | 3 | v0 table |
 
-### Design System Components (shadcn/Radix)
+### Design System Components (shadcn/Radix – Already in Codebase)
 
-| Component | Usage | Status |
-|-----------|-------|--------|
-| `Button` | All actions | ✅ Existing |
-| `Card` | Container, layout | ✅ Existing |
-| `Tabs` | Desktop navigation, step selector | ✅ Existing |
-| `Dropdown` | Select, filters | ✅ Existing |
-| `Table` | Dense data display | ✅ Existing |
-| `Form` | Input fields, validation | ✅ Existing |
-| `Dialog/Modal` | Confirmations, forms | ✅ Existing |
-| `Input` | Text entry | ✅ Existing |
-| `Textarea` | Multi-line text | ✅ Existing |
-| `Badge` | Status, tags | ✅ Custom variant |
-| `Accordion` | Expandable sections | ✅ Existing |
+| Component | Usage | Status | Notes |
+|-----------|-------|--------|-------|
+| `Button` | All actions | ✅ Existing | v0 theme colors |
+| `Card` | Container, layout | ✅ Existing | v0 theme colors |
+| `Tabs` | Desktop navigation, step selector | ✅ Existing | v0 styling |
+| `Dropdown` | Select, filters | ✅ Existing | v0 styling |
+| `Table` | Dense data display | ✅ Existing | v0 styling |
+| `Form` | Input fields, validation | ✅ Existing | v0 styling |
+| `Dialog/Modal` | Confirmations, forms | ✅ Existing | v0 styling |
+| `Input` | Text entry | ✅ Existing | v0 styling |
+| `Textarea` | Multi-line text | ✅ Existing | v0 styling |
+| `Badge` | Status, tags | ✅ Custom variant | v0 colors |
+| `Accordion` | Expandable sections | ✅ Existing | v0 styling |
 
 ---
 
@@ -480,32 +583,67 @@ xl:  32px
 2xl: 48px
 ```
 
-### Color Palette
+## Color Palette & Design Tokens
 
-**Proficiency Badges (0-4):**
-```
-0: Red/Pink       (#EF4444)
-1: Orange         (#F97316)
-2: Amber          (#EAB308)
-3: Indigo/Blue    (#4F46E5)
-4: Green          (#22C55E)
+### v0 Theme Colors (Used As-Is)
+
+We extract the v0 shadcn theme's color palette directly into our CSS variables. **No custom palette creation.** The v0 theme already has:
+- Light mode colors
+- Dark mode colors
+- Semantic colors (primary, secondary, accent, destructive, etc.)
+
+**If we need adjustments later (Phase 7+):**
+- Tweak specific hues/shades in `tailwind.config.ts`
+- Or extend v0 tokens with custom additions
+- But we start with v0 unchanged
+
+### CSS Variables (Extracted from v0)
+
+All colors in `client/src/index.css`:
+```css
+:root {
+  --background: /* v0 light background */
+  --foreground: /* v0 light foreground */
+  --primary: /* v0 primary */
+  --primary-foreground: /* v0 primary foreground */
+  --secondary: /* v0 secondary */
+  --accent: /* v0 accent */
+  --destructive: /* v0 destructive */
+  --border: /* v0 border */
+  --ring: /* v0 ring */
+  --chart-1 through --chart-5: /* v0 chart colors */
+  /* ... etc */
+}
+
+.dark {
+  /* v0 dark mode overrides */
+}
 ```
 
-**Segment State Colors:**
-```
-Idle:      Amber-50   (#FFFBEB)
-Hover:     Amber-100  (#FEF3C7)
-Recording: Orange     (#FB923C)
-Mapped:    Green      (#10B981)
-Selected:  Indigo-200 (#C7D2FE) + border Indigo-400 (#818CF8)
-```
+### Design Tokens (Responsive)
 
-**Fonts:**
-```
-Telugu:      JIMS font, fallback Noto Sans Telugu
-Devanagari:  AdishilaSanVedic, fallback Noto Sans Devanagari
-English:     AdishilaSan, fallback Noto Sans
-```
+#### Breakpoints
+- Mobile: < 640px
+- Tablet: 640–1024px
+- Desktop: 1024px+
+
+#### Touch Targets
+- Minimum: 44px × 44px
+- Ideal: 48px × 48px
+- Large (primary actions): 56px × 56px
+
+#### Typography (Responsive Scale)
+- **Mobile:** Telugu/Devanagari 36px, English 18px, headers 28px
+- **Tablet:** Telugu/Devanagari 32px, English 16px, headers 24px
+- **Desktop:** Telugu/Devanagari 30px, English 16px, headers 24px
+
+#### Spacing
+- xs: 4px, sm: 8px, md: 16px, lg: 24px, xl: 32px, 2xl: 48px
+
+#### Fonts (Existing)
+- Telugu: JIMS font, fallback Noto Sans Telugu
+- Devanagari: AdishilaSanVedic, fallback Noto Sans Devanagari
+- English: AdishilaSan, fallback Noto Sans
 
 ---
 
