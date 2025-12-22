@@ -2,7 +2,7 @@
 
 **Last Updated:** December 22, 2025  
 **Status:** In Progress  
-**Current Phase:** Phase 2 – New UI Shell (/app/*)
+**Current Phase:** Ready for Phase 3 – Admin Center
 
 ---
 
@@ -263,61 +263,27 @@ Main Content (adaptive 2-column or single)
 
 ---
 
-### Phase 2: New Route Namespace (`/app/*`) – New UI Shell (5–7 days)
-**Goal:** Build parallel new UI under `/app/*` routes using v0 components + theme. Keep old UI untouched.
+### Phase 2: New Route Namespace (`/app/*`) – Shell Scaffolding (Done)
+**Goal:** Build a parallel `/app/*` shell using the v0 theme behind a feature flag, leaving legacy routes unchanged.
 
-**New Routes (all using v0 theme):**
-```
-/app/learning              → New Learning Board
-/app/batches               → New My Batches
-/app/batches/:id           → New Batch Detail
-/app/content               → New Content Studio
-/app/content/tracks/:id    → New Track Detail
-/app/admin                 → New Admin Center
-/app/admin/users           → New User Management
-/app/admin/batches         → New Batch Management
-```
-
-**Architecture:**
-```
-client/src/new-ui/
-├─ layouts/
-│  ├─ AppShell.tsx        (header + sidebar nav)
-│  ├─ TopNav.tsx          (v0 header component)
-│  └─ Sidebar.tsx         (v0 sidebar navigation)
-├─ learning/
-│  └─ pages/
-│     ├─ LearningBoard.tsx
-│     └─ StudyChapter.tsx (wrapper)
-├─ batches/
-│  └─ pages/
-│     ├─ MyBatchesList.tsx
-│     └─ BatchDetail.tsx
-├─ content/
-│  └─ pages/
-│     ├─ ContentStudio.tsx
-│     └─ TrackDetail.tsx
-└─ admin/
-   └─ pages/
-      ├─ AdminDashboard.tsx
-      ├─ UserManagement.tsx
-      ├─ BatchManagement.tsx
-      └─ AuditLogs.tsx
-```
+**What shipped:**
+- `/app` shell with TopNav + Sidebar + section placeholders (Learning, Batches, Content, Admin)
+- Feature flag `VITE_NEW_UI_ENABLED` documented in `.env.example`; defaults off
+- v0 theme tokens applied; light/dark toggle works in the shell
+- Legacy routes remain untouched
 
 **Tasks:**
-- [ ] Create `client/src/new-ui/` folder structure
-- [ ] Build `AppShell.tsx` (header + sidebar, responsive)
-- [ ] Copy v0 dashboard components (sidebar, top-nav, cards, tables)
-- [ ] Fix imports (v0 uses Next.js APIs; adapt to Wouter)
-- [ ] Wire routes into `App.tsx` under `/app/*` prefix
-- [ ] Test: Old routes (`/`) still work, new routes (`/app/`) display v0 theme
-- [ ] Add feature flag to conditionally show new UI (`NEW_UI_ENABLED`)
+- [x] Create `client/src/new-ui/` structure (AppShell, TopNav, Sidebar)
+- [x] Build `AppShell.tsx` with section placeholders and Wouter routing
+- [x] Adapt imports for Vite + Wouter (no Next.js APIs)
+- [x] Wire `/app/*` routes into `App.tsx` under a feature flag
+- [x] Add `VITE_NEW_UI_ENABLED` flag + document in `.env.example`
+- [x] Test coexistence: `/app/*` (flag on) and legacy routes (always)
 
 **Deliverables:**
-- `/app/learning` route renders with v0 theme (placeholder content)
-- Old UI (`/`) remains fully functional
-- Both UIs can coexist without conflicts
+- `/app/*` preview shell available when the flag is true
+- Legacy UI unaffected when the flag is false
+- Ready to start Phase 3 feature migration inside the shell
 
 ---
 
