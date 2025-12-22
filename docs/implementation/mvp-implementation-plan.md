@@ -2,14 +2,14 @@
 
 **Last Updated:** December 22, 2025  
 **Status:** In Progress  
-**Current Phase:** Planning (Phase 0)
+**Current Phase:** Phase 2 – New UI Shell (/app/*)
 
 ---
 
 ## Document Purpose
 
 This is a **living implementation guide** for VedicLMS MVP v1.0. It combines:
-- Scope definition (see [MVP-SCOPE.md](MVP-SCOPE.md))
+- Scope definition (see [mvp-scope](mvp-scope.md))
 - Navigation & layout architecture
 - Phase-by-phase breakdown
 - Component inventory
@@ -21,7 +21,7 @@ This is a **living implementation guide** for VedicLMS MVP v1.0. It combines:
 
 ## Quick Links
 
-- **Scope & Features:** [MVP-SCOPE.md](MVP-SCOPE.md)
+- **Scope & Features:** [mvp-scope](mvp-scope.md)
 - **Domain Requirements:** [../domain-requirements.md](../domain-requirements.md)
 - **Product Guide:** [../product-guide.md](../product-guide.md)
 - **Architecture:** [../architecture/architecture.md](../architecture/architecture.md)
@@ -233,33 +233,33 @@ Main Content (adaptive 2-column or single)
 ## Phase Breakdown
 
 ### Phase 0: Planning & Setup (Done)
-- ✅ MVP scope defined ([MVP-SCOPE.md](MVP-SCOPE.md))
+- ✅ MVP scope defined ([mvp-scope](mvp-scope.md))
 - ✅ Navigation blueprint created (this document)
 - ✅ Persona journeys mapped
 - ✅ v0 shadcn theme selected for new UI
-- 🔜 **Next:** Phase 1 kickoff
+- ✅ Phase 1 kickoff completed
 
 ---
 
-### Phase 1: Theme Infrastructure (3–4 days)
+### Phase 1: Theme Infrastructure (Done)
 **Goal:** Set up v0 theme colors and dark/light toggle. No breaking changes to existing UI.
 
 **Key Decision:** We use the v0 theme's colors **as-is**. No custom palette creation. Later (Phase 7+), we can tweak specific colors if needed.
 
 **Tasks:**
-- [ ] Extract v0 theme CSS variables into `client/src/index.css`
-- [ ] Install `next-themes` (Vite-compatible)
-- [ ] Create `ThemeProvider` wrapper component
-- [ ] Add theme toggle button to header
-- [ ] Map v0 colors to Tailwind tokens in `tailwind.config.ts`
-- [ ] Test dark/light mode across entire app (old UI should work instantly)
+- [x] Extract v0 theme CSS variables into `client/src/index.css`
+- [x] Install `next-themes` (Vite-compatible)
+- [x] Create `ThemeProvider` wrapper component
+- [x] Add theme toggle button to header (SimpleDashboard)
+- [x] Map v0 colors to Tailwind tokens in `tailwind.config.ts`
+- [x] Test dark/light mode across entire app (old UI should work instantly)
 
 **Deliverables:**
 - Entire app respects v0 color palette (light & dark)
 - Theme toggle works globally
 - No breaking changes to existing routes (`/`, `/manage/*`, `/learning/*`)
 
-**Note:** This is infrastructure only. Visual changes appear next phase.
+**Note:** Completed on branch `phase-1-theme-infrastructure` and merged into `daily/2025-12-22`.
 
 ---
 
@@ -801,7 +801,7 @@ All colors in `client/src/index.css`:
 
 ## References
 
-- **Scope:** [MVP-SCOPE.md](MVP-SCOPE.md)
+- **Scope:** [mvp-scope](mvp-scope.md)
 - **Domain:** [../domain-requirements.md](../domain-requirements.md)
 - **Product:** [../product-guide.md](../product-guide.md)
 - **Architecture:** [../architecture/architecture.md](../architecture/architecture.md)

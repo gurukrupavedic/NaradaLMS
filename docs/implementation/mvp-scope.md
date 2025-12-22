@@ -1,6 +1,6 @@
 # VedicLMS MVP Scope & Feature Tracking
 
-**Purpose:** Living inventory of all MVP features. Check off features as [MVP-IMPLEMENTATION-PLAN](MVP-IMPLEMENTATION-PLAN.md) phases complete. Track what's done, pending, and backlog.
+**Purpose:** Living inventory of all MVP features. Check off features as [mvp-implementation-plan](mvp-implementation-plan.md) phases complete. Track what's done, pending, and backlog.
 
 **Status Legend:**
 - ✅ **Completed:** Feature implemented, tested, deployed
