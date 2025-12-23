@@ -2,7 +2,7 @@
 
 **Last Updated:** December 22, 2025  
 **Status:** In Progress  
-**Current Phase:** Ready for Phase 3 – Admin Center
+**Current Phase:** Phase 3 – Admin Center (Complete) → Phase 4 – Batches & Progress
 
 ---
 
@@ -287,7 +287,39 @@ Main Content (adaptive 2-column or single)
 
 ---
 
-### Phase 3: Feature Migration – Admin Center (1 week)
+### Phase 3: Feature Migration – Admin Center ✅ COMPLETE (Dec 22, 2025)
+**Goal:** Build fully functional new Admin Center using v0 components.
+
+**Completed Work:**
+- ✅ Admin dashboard with stats cards and quick navigation
+- ✅ User Management with pending approvals, role assignment, and disable/enable toggle
+- ✅ Batch Management with CRUD, track selector, and pagination
+- ✅ Audit Logs with filters and pagination
+- ✅ System Settings placeholder
+- ✅ Deep links from dashboard to detail pages
+- ✅ Unified toast notifications
+- ✅ Compact UI refinements (small uppercase headers, normalized button sizes)
+- ✅ Design system alignment with shadcn/studio
+- ✅ Responsive testing completed
+
+**Backend Additions:**
+- ✅ `GET /api/admin/stats` (aggregated counts)
+- ✅ `POST /api/auth/admin/users/:userId/enable` (toggle user status)
+- ✅ `POST /api/auth/admin/users/:userId/reject` (delete pending user)
+- ✅ Pagination support across admin endpoints
+
+**Branch:** `phase-3-admin-center` (pushed to origin)  
+**Status:** Ready to merge to main
+
+**Future Refinements (deferred):**
+- Inline validation for duplicate batch codes
+- Filter batches by track
+- Advanced audit log search
+- System settings implementation
+
+---
+
+### Phase 4: Feature Migration – Batches & Progress (1 week) 🔜 NEXT
 **Goal:** Build fully functional new Admin Center using v0 components.
 
 **Approach (Clean, Backend-First Hybrid):**
@@ -324,7 +356,7 @@ Main Content (adaptive 2-column or single)
 
 ---
 
-### Phase 4: Feature Migration – Batches & Progress (1 week)
+### Phase 4: Feature Migration – Batches & Progress (1 week) 🔜 NEXT
 **Goal:** Build instructor batch management using v0 components.
 
 **Screens:**
