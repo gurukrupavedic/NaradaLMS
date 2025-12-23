@@ -115,6 +115,7 @@ function Router() {
             <Route path="/app" component={AppShell} />
             <Route path="/app/:section" component={AppShell} />
             <Route path="/app/:section/:subsection" component={AppShell} />
+            <Route path="/app/:section/:subsection/:detail" component={AppShell} />
           </>
         )}
         <Route path="/" component={() => <SimpleDashboard user={user as any} />} />

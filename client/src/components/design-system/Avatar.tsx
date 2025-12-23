@@ -155,7 +155,7 @@ const Avatar = React.forwardRef<
   const normalizedEducational = educational ? educationalVariants[educational] : undefined;
   const finalVariant = normalizedEducational || variant || (name ? getVariantFromName(name) : "blue");
 
-  const normalizedSize = size === "md" ? "default" : size;
+  const normalizedSize = size ?? "default";
   
   // Generate fallback text
   const fallbackText = fallback || (name ? getInitials(name) : "U");

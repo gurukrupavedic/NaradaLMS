@@ -2,7 +2,7 @@
 
 **Last Updated:** December 22, 2025  
 **Status:** In Progress  
-**Current Phase:** Ready for Phase 3 – Admin Center
+**Current Phase:** Phase 3 – Admin Center (Complete) → Phase 4 – Batches & Progress
 
 ---
 
@@ -287,8 +287,48 @@ Main Content (adaptive 2-column or single)
 
 ---
 
-### Phase 3: Feature Migration – Admin Center (1 week)
+### Phase 3: Feature Migration – Admin Center ✅ COMPLETE (Dec 22, 2025)
 **Goal:** Build fully functional new Admin Center using v0 components.
+
+**Completed Work:**
+- ✅ Admin dashboard with stats cards and quick navigation
+- ✅ User Management with pending approvals, role assignment, and disable/enable toggle
+- ✅ Batch Management with CRUD, track selector, and pagination
+- ✅ Audit Logs with filters and pagination
+- ✅ System Settings placeholder
+- ✅ Deep links from dashboard to detail pages
+- ✅ Unified toast notifications
+- ✅ Compact UI refinements (small uppercase headers, normalized button sizes)
+- ✅ Design system alignment with shadcn/studio
+- ✅ Responsive testing completed
+
+**Backend Additions:**
+- ✅ `GET /api/admin/stats` (aggregated counts)
+- ✅ `POST /api/auth/admin/users/:userId/enable` (toggle user status)
+- ✅ `POST /api/auth/admin/users/:userId/reject` (delete pending user)
+- ✅ Pagination support across admin endpoints
+
+**Branch:** `phase-3-admin-center` (pushed to origin)  
+**Status:** Ready to merge to main
+
+**Future Refinements (deferred):**
+- Inline validation for duplicate batch codes
+- Filter batches by track
+- Advanced audit log search
+- System settings implementation
+
+---
+
+### Phase 4: Feature Migration – Batches & Progress (1 week) 🔜 NEXT
+**Goal:** Build fully functional new Admin Center using v0 components.
+
+**Approach (Clean, Backend-First Hybrid):**
+- Define frontend data needs and screens.
+- Inventory existing admin APIs; identify mismatches.
+- Spec and add minimal backend endpoints (aggregated stats).
+- Wire frontend directly to real APIs (no placeholder state).
+- Iterate consciously; backend changes only for purposeful additions.
+ - Defer navigation and visual polish to Phase 7 (Global Polish).
 
 **Screens:**
 - Admin dashboard (overview cards + quick actions)
@@ -298,11 +338,14 @@ Main Content (adaptive 2-column or single)
 - System Settings (placeholder)
 
 **Tasks:**
-- [ ] Build `new-ui/admin/pages/AdminDashboard.tsx`
-- [ ] Build `new-ui/admin/pages/UserManagement.tsx` (v0 table + approval cards)
-- [ ] Build `new-ui/admin/pages/BatchManagement.tsx` (v0 forms)
-- [ ] Build `new-ui/admin/pages/AuditLogs.tsx` (v0 table)
-- [ ] Connect to existing APIs (`/api/users`, `/api/batches`, `/api/audit-logs`)
+- [ ] Define frontend data needs per screen (fields, filters, pagination)
+- [ ] Map needs → existing APIs; list gaps
+- [ ] Spec `GET /api/admin/stats` (counts + recent activity)
+- [ ] Implement `GET /api/admin/stats` in server
+- [ ] Build `new-ui/admin/pages/AdminDashboard.tsx` (wired to stats)
+- [ ] Build `new-ui/admin/pages/UserManagement.tsx` (wired to auth-admin users)
+- [ ] Build `new-ui/admin/pages/BatchManagement.tsx` (wired to batch routes)
+- [ ] Build `new-ui/admin/pages/AuditLogs.tsx` (wired to admin audit logs)
 - [ ] Test both old (`/manage/users`) and new (`/app/admin`) side-by-side
 - [ ] Responsive testing (mobile/tablet/desktop)
 
@@ -313,7 +356,7 @@ Main Content (adaptive 2-column or single)
 
 ---
 
-### Phase 4: Feature Migration – Batches & Progress (1 week)
+### Phase 4: Feature Migration – Batches & Progress (1 week) 🔜 NEXT
 **Goal:** Build instructor batch management using v0 components.
 
 **Screens:**
@@ -379,7 +422,7 @@ Main Content (adaptive 2-column or single)
 
 ---
 
-### Phase 7: Polish, A11y, Testing, & Cutover Decision (1–2 weeks)
+### Phase 7: Global Polish (Navigation + UI/UX), A11y, Testing, & Cutover Decision (1–2 weeks)
 **Goal:** Production-ready new UI. You decide when to cutover.
 
 **Tasks:**
@@ -409,6 +452,11 @@ Main Content (adaptive 2-column or single)
 - Clear decision on cutover timing
 
 **Tasks:**
+- [ ] Navigation refinement
+  - [ ] Sidebar taxonomy & grouping (Learning, Batches, Content, Admin)
+  - [ ] Admin sub-navigation (Overview, Users, Batches, Logs, Settings)
+  - [ ] Breadcrumbs & page headers with consistent actions
+  - [ ] Hover/active states, spacing, and focus consistency
 - [ ] Consolidate design system tokens (tailwind.config.ts)
   - [ ] Spacing scale (device-aware)
   - [ ] Typography scale (responsive)

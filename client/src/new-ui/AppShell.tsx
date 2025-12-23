@@ -7,10 +7,17 @@ import {
   Layers,
   FileText,
   ShieldCheck,
+  Settings,
   LucideIcon,
 } from "lucide-react";
 import { TopNav } from "./components/TopNav";
 import { Sidebar } from "./components/Sidebar";
+import AdminDashboard from "./admin/pages/AdminDashboard";
+import UserManagement from "./admin/pages/UserManagement";
+import AuditLogs from "./admin/pages/AuditLogs";
+import BatchManagement from "./admin/pages/BatchManagement";
+import BatchDetailAdmin from "./admin/pages/BatchDetailAdmin";
+import SystemSettings from "./admin/pages/SystemSettings";
 
 export type NavItem = {
   key: string;
@@ -54,6 +61,7 @@ const NAV_ITEMS: NavItem[] = [
     accent: "accent",
     icon: ShieldCheck,
   },
+  // Admin Settings is accessible within Admin pages but not a top-level nav item
 ];
 
 export default function AppShell() {
@@ -72,7 +80,12 @@ export default function AppShell() {
                 <Route path="/app/learning" component={() => <SectionPage title="Learning" summary="Plan the learner experience and preview segment playback." />} />
                 <Route path="/app/batches" component={() => <SectionPage title="Batches" summary="Organize cohorts, co-instructors, and progression policies." />} />
                 <Route path="/app/content" component={() => <SectionPage title="Content" summary="Draft tracks, chapter HTML, segmentation, and audio mapping." />} />
-                <Route path="/app/admin" component={() => <SectionPage title="Admin" summary="Manage identities, approvals, audits, and guardrails." />} />
+                <Route path="/app/admin" component={AdminDashboard} />
+                <Route path="/app/admin/users" component={UserManagement} />
+                <Route path="/app/admin/logs" component={AuditLogs} />
+                <Route path="/app/admin/settings" component={SystemSettings} />
+                <Route path="/app/admin/batches/:id" component={BatchDetailAdmin} />
+                <Route path="/app/admin/batches" component={BatchManagement} />
                 <Route component={AppNotFound} />
               </Switch>
             </div>

@@ -110,17 +110,17 @@ export function ThemingPlayground() {
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-slate-800">Conventional (standard web UI)</p>
                   <div className="flex flex-wrap items-center gap-3">
-                    <Button color="indigo" variant="solid" styleApproach="conventional">Primary CTA</Button>
-                    <Button color="teal" variant="outline" styleApproach="conventional">Secondary CTA</Button>
-                    <Button color="purple" variant="ghost" styleApproach="conventional">Quiet action</Button>
+                    <Button color="indigo" variant="solid">Primary CTA</Button>
+                    <Button color="teal" variant="outline">Secondary CTA</Button>
+                    <Button color="purple" variant="ghost">Quiet action</Button>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-slate-800">Fluorescent (experimental/dashboard)</p>
                   <div className="flex flex-wrap items-center gap-3">
-                    <Button color="indigo" variant="solid" styleApproach="fluorescent">Primary CTA</Button>
-                    <Button color="teal" variant="outline" styleApproach="fluorescent">Secondary CTA</Button>
-                    <Button color="purple" variant="ghost" styleApproach="fluorescent">Quiet action</Button>
+                    <Button color="indigo" variant="solid">Primary CTA</Button>
+                    <Button color="teal" variant="outline">Secondary CTA</Button>
+                    <Button color="purple" variant="ghost">Quiet action</Button>
                   </div>
                 </div>
                 <p className="text-sm text-slate-700">

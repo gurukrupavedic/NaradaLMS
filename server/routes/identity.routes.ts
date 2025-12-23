@@ -106,7 +106,8 @@ identityRouter.get("/me", (req: Request, res: Response) => {
 
 /**
  * GET /api/auth/admin/users
- * Get all users (pending + active)
+ * Get all users (pending + active) with pagination and filtering
+ * Query params: limit, offset, status (optional)
  * Requires: Admin role
  */
 identityRouter.get(
@@ -115,8 +116,22 @@ identityRouter.get(
   requireAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const users = await identityService.getAllUsers();
-      const sanitized = users.map((u: any) => ({
+      const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      const statusFilter = req.query.status as string | undefined;
+
+      const allUsers = await identityService.getAllUsers();
+
+      // Filter by status if provided
+      let filteredUsers = allUsers;
+      if (statusFilter && ["pending_approval", "active", "inactive"].includes(statusFilter)) {
+        filteredUsers = allUsers.filter((u: any) => u.status === statusFilter);
+      }
+
+      const total = filteredUsers.length;
+      const paginatedUsers = filteredUsers.slice(offset, offset + limit);
+
+      const sanitized = paginatedUsers.map((u: any) => ({
         id: u.id,
         email: u.email,
         status: u.status,
@@ -126,7 +141,7 @@ identityRouter.get(
         createdAt: u.createdAt,
       }));
 
-      return res.json({ users: sanitized });
+      return res.json({ users: sanitized, pagination: { limit, offset, total } });
     } catch (err: any) {
       console.error("Get users error:", err);
       return res
@@ -232,6 +247,61 @@ identityRouter.post(
       return res
         .status(err.message === "User not found" ? 404 : 500)
         .json({ error: err.message || "Failed to disable user" });
+    }
+  }
+);
+
+/**
+ * POST /api/auth/admin/users/:userId/enable
+ * Enable a user account (set status to active)
+ * Requires: Admin role
+ */
+identityRouter.post(
+  "/admin/users/:userId/enable",
+  authMiddleware,
+  requireAdmin,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = req.params;
+
+      const enabledUser = await identityService.enableUser(userId);
+
+      return res.json({
+        message: "User enabled",
+        user: {
+          id: enabledUser.id,
+          email: enabledUser.email,
+          status: enabledUser.status,
+        },
+      });
+    } catch (err: any) {
+      console.error("Enable user error:", err);
+      return res
+        .status(err.message === "User not found" ? 404 : 500)
+        .json({ error: err.message || "Failed to enable user" });
+    }
+  }
+);
+
+/**
+ * POST /api/auth/admin/users/:userId/reject
+ * Reject a pending user (delete from database)
+ * Requires: Admin role
+ */
+identityRouter.post(
+  "/admin/users/:userId/reject",
+  authMiddleware,
+  requireAdmin,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = req.params;
+      const result = await identityService.rejectUser(userId);
+      return res.json({ success: true, message: "User rejected", user: result });
+    } catch (err: any) {
+      console.error("Reject user error:", err);
+      return res
+        .status(err.message === "User not found" ? 404 : 500)
+        .json({ error: err.message || "Failed to reject user" });
     }
   }
 );
