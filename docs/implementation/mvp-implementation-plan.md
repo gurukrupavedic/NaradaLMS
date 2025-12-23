@@ -443,19 +443,36 @@ Main Content (adaptive 2-column or single)
 ### Phase 7.3: Workflow Refinement (page-by-page) 🔜 IN PROGRESS
 **Goal:** Refine one page at a time across Batches and Admin Center, focusing on loading, empty, and error states with consistent headers and toasts.
 
-**Branch:** feature-7.3-workflow-refinement
+**Branch:** feat-7.3-users-page-refinement (continuing from daily/2025-12-23)
 
 **Approach:** Page-by-page execution with quick reviews and incremental merges into the daily branch. Each page must meet acceptance criteria before moving on.
 
-**Targets (order of execution):**
+**Completed Pages (December 23, 2025):**
+
+#### ✅ AuditLogs (Complete)
+**Deliverables:**
+- ✅ Professional TanStack React Table with 6 columns (TIME, ACTION, USER, RESOURCE, RESOURCE ID, CHANGES)
+- ✅ Inline filter row: Action (dropdown), Resource (dropdown), User (searchable dropdown), Date range
+- ✅ Searchable user dropdown with client-side filtering by name/email
+- ✅ Smart changes display (inline for simple, popover for complex)
+- ✅ Pagination with rows-per-page selector (10, 25, 50, 100)
+- ✅ Loading state with skeleton cards
+- ✅ Empty state with helpful messaging
+- ✅ Error state with retry button
+- ✅ Theme-aware styling (light/dark mode ready)
+- ✅ Proper z-indexing for dropdowns (z-50 for dropdowns, z-10 for sticky header)
+- ✅ Standard header with breadcrumbs
+- ✅ Toast notifications for all interactions
+
+**Next Targets (order of execution):**
+- Users Page (now in progress)
 - Batches
   - MyBatchesList
   - BatchDetail
-- Admin Center
+- Admin Center (remaining)
   - AdminDashboard
   - UserManagement
   - BatchManagement
-  - AuditLogs
   - SystemSettings (placeholder polishing)
 
 **Acceptance Criteria (per page):**
@@ -465,7 +482,16 @@ Main Content (adaptive 2-column or single)
 - Header: Breadcrumbs + Title + Actions + optional Filters, consistent spacing
 - Toasts: Standardized success/error/info; no duplicate messages
 
-**Tasks:**
+**Remaining Tasks:**
+- [ ] Users Page
+  - [ ] Professional TanStack React Table (user list)
+  - [ ] Inline filters (role, status, approval state)
+  - [ ] Searchable user dropdown (for batch assignment, batch creation)
+  - [ ] Loading skeletons
+  - [ ] Empty states
+  - [ ] Error boundary with retry
+  - [ ] Standard header (breadcrumbs/actions)
+  - [ ] Toast audit
 - [ ] MyBatchesList
   - [ ] Add loading skeletons (card grid)
   - [ ] Empty state for no batches with CTA
@@ -495,12 +521,6 @@ Main Content (adaptive 2-column or single)
   - [ ] Empty state (no batches)
   - [ ] Error boundary with retry
   - [ ] Standard header
-  - [ ] Toast audit
-- [ ] AuditLogs
-  - [ ] Loading skeletons (table)
-  - [ ] Empty state (no logs for filters)
-  - [ ] Error boundary with retry
-  - [ ] Standard header (breadcrumbs/filters)
   - [ ] Toast audit
 - [ ] SystemSettings
   - [ ] Loading skeletons (settings list)
