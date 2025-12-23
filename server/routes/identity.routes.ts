@@ -252,6 +252,38 @@ identityRouter.post(
 );
 
 /**
+ * POST /api/auth/admin/users/:userId/enable
+ * Enable a user account (set status to active)
+ * Requires: Admin role
+ */
+identityRouter.post(
+  "/admin/users/:userId/enable",
+  authMiddleware,
+  requireAdmin,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = req.params;
+
+      const enabledUser = await identityService.enableUser(userId);
+
+      return res.json({
+        message: "User enabled",
+        user: {
+          id: enabledUser.id,
+          email: enabledUser.email,
+          status: enabledUser.status,
+        },
+      });
+    } catch (err: any) {
+      console.error("Enable user error:", err);
+      return res
+        .status(err.message === "User not found" ? 404 : 500)
+        .json({ error: err.message || "Failed to enable user" });
+    }
+  }
+);
+
+/**
  * POST /api/auth/admin/users/:userId/reject
  * Reject a pending user (delete from database)
  * Requires: Admin role

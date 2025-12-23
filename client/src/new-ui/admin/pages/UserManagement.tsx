@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useAdminUsers, useApproveUser, useAssignRoles, useDisableUser, useRejectUser, AdminUser } from "../hooks/useAdminUsers";
+import { useAdminUsers, useApproveUser, useAssignRoles, useDisableUser, useEnableUser, useRejectUser, AdminUser } from "../hooks/useAdminUsers";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
 
 const ALL_ROLES = ["student", "instructor", "content_manager", "admin"] as const;
@@ -21,6 +21,7 @@ export default function UserManagement() {
   const reject = useRejectUser();
   const assignRoles = useAssignRoles();
   const disableUser = useDisableUser();
+  const enableUser = useEnableUser();
 
   const users = data?.users ?? [];
   const pagination = data?.pagination;
@@ -74,10 +75,10 @@ export default function UserManagement() {
               <table className="w-full text-sm">
                 <thead className="text-muted-foreground">
                   <tr>
-                    <th className="px-3 py-2 text-left">Email</th>
-                    <th className="px-3 py-2 text-left">Name</th>
-                    <th className="px-3 py-2 text-left">Requested</th>
-                    <th className="px-3 py-2 text-left">Actions</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Email</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Name</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Requested</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -127,11 +128,11 @@ export default function UserManagement() {
               <table className="w-full text-sm">
                 <thead className="text-muted-foreground">
                   <tr>
-                    <th className="px-3 py-2 text-left">Email</th>
-                    <th className="px-3 py-2 text-left">Name</th>
-                    <th className="px-3 py-2 text-left">Status</th>
-                    <th className="px-3 py-2 text-left">Roles</th>
-                    <th className="px-3 py-2 text-left">Actions</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Email</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Name</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Status</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Roles</th>
+                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -146,11 +147,18 @@ export default function UserManagement() {
                         onSuccess: () => toast({ title: "Roles updated" }),
                         onError: (err: any) => toast({ title: "Failed to update roles", description: err.message, variant: "destructive" }),
                       });
-                    }} onDisable={() => {
-                      disableUser.mutate(u.id, {
-                        onSuccess: () => toast({ title: "User disabled" }),
-                        onError: (err: any) => toast({ title: "Failed to disable user", description: err.message, variant: "destructive" }),
-                      });
+                    }} onDisableOrEnable={() => {
+                      if (u.status === "inactive") {
+                        enableUser.mutate(u.id, {
+                          onSuccess: () => toast({ title: "User enabled" }),
+                          onError: (err: any) => toast({ title: "Failed to enable user", description: err.message, variant: "destructive" }),
+                        });
+                      } else {
+                        disableUser.mutate(u.id, {
+                          onSuccess: () => toast({ title: "User disabled" }),
+                          onError: (err: any) => toast({ title: "Failed to disable user", description: err.message, variant: "destructive" }),
+                        });
+                      }
                     }} />
                   ))}
                 </tbody>
@@ -160,7 +168,7 @@ export default function UserManagement() {
             {/* Pagination controls */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
-                <button onClick={() => goToPage(page - 1)} disabled={page === 1} className="rounded-md border border-border px-3 py-2 text-sm disabled:opacity-50">
+                <button onClick={() => goToPage(page - 1)} disabled={page === 1} className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50">
                   ← Previous
                 </button>
                 <div className="flex gap-2">
@@ -171,14 +179,14 @@ export default function UserManagement() {
                       <button
                         key={p}
                         onClick={() => goToPage(p)}
-                        className={`rounded-md px-3 py-2 text-sm ${p === page ? 'bg-primary text-primary-foreground' : 'border border-border hover:bg-muted'}`}
+                        className={`rounded-md px-3 py-1.5 text-sm ${p === page ? 'bg-primary text-primary-foreground' : 'border border-border hover:bg-muted'}`}
                       >
                         {p}
                       </button>
                     );
                   }).filter(Boolean)}
                 </div>
-                <button onClick={() => goToPage(page + 1)} disabled={page === totalPages} className="rounded-md border border-border px-3 py-2 text-sm disabled:opacity-50">
+                <button onClick={() => goToPage(page + 1)} disabled={page === totalPages} className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50">
                   Next →
                 </button>
               </div>
@@ -190,7 +198,7 @@ export default function UserManagement() {
   );
 }
 
-function UserRow({ user, onAssignRoles, onDisable }: { user: AdminUser; onAssignRoles: (roles: string[]) => void; onDisable: () => void }) {
+function UserRow({ user, onAssignRoles, onDisableOrEnable }: { user: AdminUser; onAssignRoles: (roles: string[]) => void; onDisableOrEnable: () => void }) {
   const [editing, setEditing] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<string[]>(user.roles ?? []);
 
@@ -237,9 +245,15 @@ function UserRow({ user, onAssignRoles, onDisable }: { user: AdminUser; onAssign
             <button className="rounded-md border border-border px-3 py-1.5 text-foreground hover:bg-muted" onClick={() => setEditing(true)}>
               Edit Roles
             </button>
-            <button className="rounded-md bg-destructive/20 px-3 py-1.5 text-destructive hover:bg-destructive/30" onClick={onDisable}>
-              Disable
-            </button>
+            {user.status === "inactive" ? (
+              <button className="rounded-md bg-green-500/20 px-3 py-1.5 text-green-600 hover:bg-green-500/30" onClick={onDisableOrEnable}>
+                Enable
+              </button>
+            ) : (
+              <button className="rounded-md bg-destructive/20 px-3 py-1.5 text-destructive hover:bg-destructive/30" onClick={onDisableOrEnable}>
+                Disable
+              </button>
+            )}
           </div>
         )}
       </td>

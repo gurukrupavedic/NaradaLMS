@@ -82,11 +82,11 @@ export default function AuditLogs() {
             <table className="w-full text-sm">
               <thead className="text-muted-foreground">
                 <tr>
-                  <th className="px-3 py-2 text-left">Time</th>
-                  <th className="px-3 py-2 text-left">User</th>
-                  <th className="px-3 py-2 text-left">Action</th>
-                  <th className="px-3 py-2 text-left">Resource</th>
-                  <th className="px-3 py-2 text-left">ID</th>
+                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Time</th>
+                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">User</th>
+                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Action</th>
+                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Resource</th>
+                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">ID</th>
                 </tr>
               </thead>
               <tbody>
@@ -111,7 +111,7 @@ export default function AuditLogs() {
           {/* Pagination controls */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-3">
-              <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="rounded-md border border-border px-3 py-2 text-sm disabled:opacity-50">
+              <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50">
                 ← Previous
               </button>
               <div className="flex gap-2">
@@ -122,14 +122,14 @@ export default function AuditLogs() {
                     <button
                       key={p}
                       onClick={() => goToPage(p)}
-                      className={`rounded-md px-3 py-2 text-sm ${p === currentPage ? 'bg-primary text-primary-foreground' : 'border border-border hover:bg-muted'}`}
+                      className={`rounded-md px-3 py-1.5 text-sm ${p === currentPage ? 'bg-primary text-primary-foreground' : 'border border-border hover:bg-muted'}`}
                     >
                       {p}
                     </button>
                   );
                 }).filter(Boolean)}
               </div>
-              <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="rounded-md border border-border px-3 py-2 text-sm disabled:opacity-50">
+              <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50">
                 Next →
               </button>
             </div>

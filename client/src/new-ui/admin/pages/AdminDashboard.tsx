@@ -20,7 +20,7 @@ export default function AdminDashboard() {
         </div>
         <div className="flex items-center gap-2">
           <Link href="/app/admin/settings">
-            <a className="rounded-full border border-border px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors">System Settings</a>
+              <a className="inline-flex items-center rounded-full border border-border px-3 py-1.5 text-sm text-foreground hover:bg-muted transition-colors whitespace-nowrap">System Settings</a>
           </Link>
           <Link href="/app">
             <a className="text-sm text-primary hover:opacity-80 transition-colors">Back to overview</a>
@@ -80,7 +80,7 @@ export default function AdminDashboard() {
                 <QuickLink href="/app/admin/users" label="User Management" />
                 <QuickLink href="/app/admin/batches" label="Batch Management" />
                 <QuickLink href="/app/admin/logs" label="Audit Logs" />
-                <QuickLink href="/app/admin/settings" label="System Settings" />
+                 <QuickLink href="/app/admin/settings" label="System Settings" />
               </div>
             </div>
           </div>
@@ -165,7 +165,7 @@ function StatCard({
 function QuickLink({ href, label }: { href: string; label: string }) {
   return (
     <Link href={href}>
-      <a className="inline-flex items-center justify-between rounded-xl border border-border bg-muted px-3 py-2 text-sm text-foreground hover:bg-muted/70 transition-colors">
+      <a className="inline-flex items-center justify-between rounded-xl border border-border bg-muted px-3 py-1.5 text-sm text-foreground hover:bg-muted/70 transition-colors">
         <span>{label}</span>
         <span>→</span>
       </a>

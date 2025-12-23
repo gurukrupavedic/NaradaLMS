@@ -65,6 +65,19 @@ export function useDisableUser() {
     },
   });
 }
+
+export function useEnableUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await apiRequest("POST", `/api/auth/admin/users/${userId}/enable`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/auth/admin/users" ]});
+    },
+  });
+}
 export function useRejectUser() {
   const qc = useQueryClient();
   return useMutation({

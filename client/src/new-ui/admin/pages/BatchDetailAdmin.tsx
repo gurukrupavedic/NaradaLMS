@@ -110,14 +110,14 @@ export default function BatchDetailAdmin() {
 
               <div className="flex items-end gap-2">
                 <button 
-                  className="rounded-md bg-primary px-3 py-2 text-primary-foreground hover:opacity-90"
+                  className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90"
                   onClick={onAssignInstructor}
                   disabled={assignCo.isPending}
                 >
                   Assign
                 </button>
                 <button 
-                  className="rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
+                  className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
                   onClick={() => setSelectedInstructor(null)}
                 >
                   Cancel
@@ -159,10 +159,10 @@ export default function BatchDetailAdmin() {
           <table className="w-full text-sm">
             <thead className="text-muted-foreground">
               <tr>
-                <th className="px-3 py-2 text-left">Email</th>
-                <th className="px-3 py-2 text-left">Name</th>
-                <th className="px-3 py-2 text-left">Role</th>
-                <th className="px-3 py-2 text-left">Actions</th>
+                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Email</th>
+                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Name</th>
+                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Role</th>
+                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -213,14 +213,14 @@ export default function BatchDetailAdmin() {
           {selectedStudent && (
             <div className="flex items-end gap-2">
               <button 
-                className="rounded-md bg-primary px-3 py-2 text-primary-foreground hover:opacity-90"
+                className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90"
                 onClick={onEnrollStudent}
                 disabled={enrollStudent.isPending}
               >
                 Enroll
               </button>
               <button 
-                className="rounded-md border border-border px-3 py-2 text-sm hover:bg-muted"
+                className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
                 onClick={() => setSelectedStudent(null)}
               >
                 Cancel
@@ -260,10 +260,10 @@ export default function BatchDetailAdmin() {
           <table className="w-full text-sm">
             <thead className="text-muted-foreground">
               <tr>
-                <th className="px-3 py-2 text-left">ID</th>
-                <th className="px-3 py-2 text-left">Student</th>
-                <th className="px-3 py-2 text-left">Status</th>
-                <th className="px-3 py-2 text-left">Actions</th>
+                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">ID</th>
+                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Student</th>
+                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Status</th>
+                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
             <tbody>

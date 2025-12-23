@@ -209,6 +209,13 @@ export class IdentityService {
   }
 
   /**
+   * Enable a user account (set status back to active)
+   */
+  async enableUser(userId: string) {
+    return await identityStorage.updateUserStatus(userId, "active");
+  }
+
+  /**
    * Reject a pending user (deletes the user)
    * Publishes UserRejected event
    */
