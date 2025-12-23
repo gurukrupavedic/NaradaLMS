@@ -440,33 +440,79 @@ Main Content (adaptive 2-column or single)
 
 ---
 
-### Phase 7.3: Workflow Refinement (3-4 days) 🔜 DEFERRED
-**Goal:** Polish existing pages (Batches, Admin) with loading, empty, and error states.
+### Phase 7.3: Workflow Refinement (page-by-page) 🔜 IN PROGRESS
+**Goal:** Refine one page at a time across Batches and Admin Center, focusing on loading, empty, and error states with consistent headers and toasts.
 
-**Scope:**
-- Refine `/app/batches/*` pages
-  - Loading skeletons for batch list and detail
-  - Empty states (no batches, no students, no progress)
-  - Error boundaries with retry actions
-- Refine `/app/admin/*` pages
-  - Loading skeletons for dashboard stats
-  - Empty states (no pending approvals, no users, no batches)
-  - Error boundaries with fallback UI
-- Standardize page headers (breadcrumbs + actions + filters)
-- Audit toast notification patterns (success, error, info)
+**Branch:** feature-7.3-workflow-refinement
+
+**Approach:** Page-by-page execution with quick reviews and incremental merges into the daily branch. Each page must meet acceptance criteria before moving on.
+
+**Targets (order of execution):**
+- Batches
+  - MyBatchesList
+  - BatchDetail
+- Admin Center
+  - AdminDashboard
+  - UserManagement
+  - BatchManagement
+  - AuditLogs
+  - SystemSettings (placeholder polishing)
+
+**Acceptance Criteria (per page):**
+- Loading: Skeletons for primary content blocks and tables
+- Empty: Clear messaging + helpful call-to-action where applicable
+- Error: Error boundary wrapper with retry and support link stub
+- Header: Breadcrumbs + Title + Actions + optional Filters, consistent spacing
+- Toasts: Standardized success/error/info; no duplicate messages
 
 **Tasks:**
-- [ ] Add skeleton loaders to MyBatchesList and BatchDetail
-- [ ] Build empty state components (EmptyBatches, EmptyStudents, EmptyProgress)
-- [ ] Wrap all pages in error boundaries with user-friendly fallback
-- [ ] Standardize page header pattern (Breadcrumb + Title + Actions)
-- [ ] Audit toast usage (ensure consistent messaging)
-- [ ] Test all error scenarios (network failure, 404, 500)
+- [ ] MyBatchesList
+  - [ ] Add loading skeletons (card grid)
+  - [ ] Empty state for no batches with CTA
+  - [ ] Error boundary with retry
+  - [ ] Standard header (breadcrumbs/actions)
+  - [ ] Toast audit
+- [ ] BatchDetail
+  - [ ] Loading skeletons (table + side cards)
+  - [ ] Empty states (no students, no progress)
+  - [ ] Error boundary with retry
+  - [ ] Standard header (breadcrumbs/actions/filters)
+  - [ ] Toast audit
+- [ ] AdminDashboard
+  - [ ] Loading skeletons (stats cards)
+  - [ ] Empty state copy for no data
+  - [ ] Error boundary with retry
+  - [ ] Standard header
+  - [ ] Toast audit
+- [ ] UserManagement
+  - [ ] Loading skeletons (table)
+  - [ ] Empty states (no pending approvals, no users)
+  - [ ] Error boundary with retry
+  - [ ] Standard header (breadcrumbs/actions/filters)
+  - [ ] Toast audit
+- [ ] BatchManagement
+  - [ ] Loading skeletons (table/form)
+  - [ ] Empty state (no batches)
+  - [ ] Error boundary with retry
+  - [ ] Standard header
+  - [ ] Toast audit
+- [ ] AuditLogs
+  - [ ] Loading skeletons (table)
+  - [ ] Empty state (no logs for filters)
+  - [ ] Error boundary with retry
+  - [ ] Standard header (breadcrumbs/filters)
+  - [ ] Toast audit
+- [ ] SystemSettings
+  - [ ] Loading skeletons (settings list)
+  - [ ] Empty state (no settings)
+  - [ ] Error boundary with retry
+  - [ ] Standard header
+  - [ ] Toast audit
 
 **Deliverables:**
-- Production-quality error handling across Batches and Admin sections
-- Consistent loading and empty states
-- Better UX for edge cases (offline, slow network, empty data)
+- Production-quality loading/empty/error behaviors per page
+- Standardized headers and toast patterns across Batches and Admin
+- Incremental commits, review after each page, merge to daily branch
 
 ---
 
