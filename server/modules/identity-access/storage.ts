@@ -118,6 +118,13 @@ export class IdentityStorage {
       .returning();
     return user;
   }
+
+  /**
+   * Delete user by ID
+   */
+  async deleteUser(userId: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, userId));
+  }
 }
 
 export const identityStorage = new IdentityStorage();

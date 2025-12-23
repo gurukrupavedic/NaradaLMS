@@ -209,6 +209,31 @@ export class IdentityService {
   }
 
   /**
+   * Reject a pending user (deletes the user)
+   * Publishes UserRejected event
+   */
+  async rejectUser(userId: string) {
+    const targetUser = await identityStorage.getUser(userId);
+    if (!targetUser) {
+      throw new Error("User not found");
+    }
+    if (targetUser.status !== "pending_approval") {
+      throw new Error("Only pending users can be rejected");
+    }
+
+    await identityStorage.deleteUser(userId);
+
+    // Publish event for audit logging
+    await eventBus.publish("UserRejected", {
+      type: "UserRejected",
+      userId,
+      timestamp: new Date(),
+    });
+
+    return { id: userId, status: "rejected" };
+  }
+
+  /**
    * Get user's roles
    */
   async getUserRoles(userId: string) {
