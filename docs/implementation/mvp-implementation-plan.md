@@ -320,60 +320,33 @@ Main Content (adaptive 2-column or single)
 ---
 
 ### Phase 4: Feature Migration – Batches & Progress (1 week) 🔜 NEXT
-**Goal:** Build fully functional new Admin Center using v0 components.
-
-**Approach (Clean, Backend-First Hybrid):**
-- Define frontend data needs and screens.
-- Inventory existing admin APIs; identify mismatches.
-- Spec and add minimal backend endpoints (aggregated stats).
-- Wire frontend directly to real APIs (no placeholder state).
-- Iterate consciously; backend changes only for purposeful additions.
- - Defer navigation and visual polish to Phase 7 (Global Polish).
-
-**Screens:**
-- Admin dashboard (overview cards + quick actions)
-- User Management (pending approvals + user list)
-- Batch Management (CRUD forms)
-- Audit Logs (basic table with filters)
-- System Settings (placeholder)
-
-**Tasks:**
-- [ ] Define frontend data needs per screen (fields, filters, pagination)
-- [ ] Map needs → existing APIs; list gaps
-- [ ] Spec `GET /api/admin/stats` (counts + recent activity)
-- [ ] Implement `GET /api/admin/stats` in server
-- [ ] Build `new-ui/admin/pages/AdminDashboard.tsx` (wired to stats)
-- [ ] Build `new-ui/admin/pages/UserManagement.tsx` (wired to auth-admin users)
-- [ ] Build `new-ui/admin/pages/BatchManagement.tsx` (wired to batch routes)
-- [ ] Build `new-ui/admin/pages/AuditLogs.tsx` (wired to admin audit logs)
-- [ ] Test both old (`/manage/users`) and new (`/app/admin`) side-by-side
-- [ ] Responsive testing (mobile/tablet/desktop)
-
-**Deliverables:**
-- `/app/admin/*` fully functional with v0 styling
-- Old `/manage/users` still works
-- Feature flag lets admins toggle between old/new
-
----
-
-### Phase 4: Feature Migration – Batches & Progress (1 week) 🔜 NEXT
 **Goal:** Build instructor batch management using v0 components.
+
+**Approach (Data-First, Backend-Light):**
+- Define frontend data needs for batches, students, and proficiency.
+- Map needs to existing batch/progress APIs; list gaps.
+- Add minimal backend endpoints only if necessary (e.g., aggregated progress).
+- Wire frontend directly to real APIs (no placeholder state).
+- Defer navigation/visual polish to Phase 7 (Global Polish).
 
 **Screens:**
 - My Batches list (v0 card grid)
 - Batch Detail (v0 table for desktop, cards for mobile)
 
 **Tasks:**
+- [ ] Define data needs (fields, filters, pagination) for instructor views
+- [ ] Map needs → existing APIs; document any gaps
 - [ ] Build `new-ui/batches/pages/MyBatchesList.tsx` (v0 card grid)
 - [ ] Build `new-ui/batches/pages/BatchDetail.tsx` (v0 table + mobile cards)
 - [ ] Implement inline proficiency editing (bottom sheet mobile, inline desktop)
 - [ ] Connect to APIs (`/api/batches`, `/api/students`, `/api/proficiency`)
-- [ ] Test both old and new side-by-side
-- [ ] Responsive testing (all devices)
+- [ ] Test both old (`/manage/batches`) and new (`/app/batches`) side-by-side
+- [ ] Responsive testing (mobile/tablet/desktop)
 
 **Deliverables:**
 - `/app/batches/*` fully functional with v0 styling
 - Old `/manage/batches` still works
+- Feature flag lets instructors toggle between old/new
 
 ---
 
