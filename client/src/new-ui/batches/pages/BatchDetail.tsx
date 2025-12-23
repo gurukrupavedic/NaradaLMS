@@ -8,6 +8,8 @@ import { useEvaluateStudent } from "../hooks/useEvaluateStudent";
 import { useEnrollments } from "../hooks/useEnrollments";
 import { useAddEnrollment } from "../hooks/useAddEnrollment";
 import { useDropEnrollment } from "../hooks/useDropEnrollment";
+import { useSearchStudents, type StudentSearchResult } from "../hooks/useSearchStudents";
+import { StudentCombobox } from "../components/StudentCombobox";
 
 export default function BatchDetail() {
   const [, params] = useRoute("/app/batches/:id");
@@ -19,7 +21,8 @@ export default function BatchDetail() {
   const { data: enrollments, isLoading: loadingEnrollments } = useEnrollments(batchId);
   const addEnroll = useAddEnrollment();
   const dropEnroll = useDropEnrollment();
-  const [newStudentId, setNewStudentId] = useState("");
+  const { data: searchResults, isLoading: searchLoading } = useSearchStudents("");
+  const [selectedStudent, setSelectedStudent] = useState<StudentSearchResult | null>(null);
 
   if (loadingBatch || loadingProgress) {
     return <div className="p-4 text-sm text-muted-foreground">Loading batch…</div>;
@@ -225,21 +228,23 @@ export default function BatchDetail() {
         
         {/* Add enrollment form */}
         <div className="mt-4 flex gap-2 flex-col sm:flex-row">
-          <input
-            type="text"
-            placeholder="Student ID"
-            value={newStudentId}
-            onChange={(e) => setNewStudentId(e.target.value)}
-            className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder-muted-foreground"
-          />
+          <div className="flex-1">
+            <StudentCombobox
+              students={searchResults?.users || []}
+              isLoading={searchLoading}
+              value={selectedStudent}
+              onSelect={(student) => setSelectedStudent(student)}
+              placeholder="Search students by name, email, or ID..."
+            />
+          </div>
           <button
             onClick={() => {
-              if (newStudentId.trim()) {
-                addEnroll.mutate({ batchId: batchId!, studentId: newStudentId });
-                setNewStudentId("");
+              if (selectedStudent) {
+                addEnroll.mutate({ batchId: batchId!, studentId: selectedStudent.id });
+                setSelectedStudent(null);
               }
             }}
-            disabled={addEnroll.isPending || !newStudentId.trim()}
+            disabled={addEnroll.isPending || !selectedStudent}
             className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             Add Student
