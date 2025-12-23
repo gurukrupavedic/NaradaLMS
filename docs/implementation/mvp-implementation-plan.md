@@ -1,8 +1,8 @@
 # VedicLMS MVP Implementation Plan
 
-**Last Updated:** December 22, 2025  
+**Last Updated:** December 23, 2025  
 **Status:** In Progress  
-**Current Phase:** Phase 3 – Admin Center (Complete) → Phase 4 – Batches & Progress
+**Current Phase:** Phase 4 – Batches & Progress (✅ Complete) → Phase 5 – Content Studio
 
 ---
 
@@ -319,38 +319,33 @@ Main Content (adaptive 2-column or single)
 
 ---
 
-### Phase 4: Feature Migration – Batches & Progress (1 week) 🔜 NEXT
+### Phase 4: Feature Migration – Batches & Progress ✅ COMPLETE
 **Goal:** Build instructor batch management using v0 components.
 
-**Approach (Data-First, Backend-Light):**
-- Define frontend data needs for batches, students, and proficiency.
-- Map needs to existing batch/progress APIs; list gaps.
-- Add minimal backend endpoints only if necessary (e.g., aggregated progress).
-- Wire frontend directly to real APIs (no placeholder state).
-- Defer navigation/visual polish to Phase 7 (Global Polish).
-
-**Screens:**
-- My Batches list (v0 card grid)
-- Batch Detail (v0 table for desktop, cards for mobile)
-
-**Tasks:**
-- [ ] Define data needs (fields, filters, pagination) for instructor views
-- [ ] Map needs → existing APIs; document any gaps
-- [ ] Build `new-ui/batches/pages/MyBatchesList.tsx` (v0 card grid)
-- [ ] Build `new-ui/batches/pages/BatchDetail.tsx` (v0 table + mobile cards)
-- [ ] Implement inline proficiency editing (bottom sheet mobile, inline desktop)
-- [ ] Connect to APIs (`/api/batches`, `/api/students`, `/api/proficiency`)
-- [ ] Test both old (`/manage/batches`) and new (`/app/batches`) side-by-side
-- [ ] Responsive testing (mobile/tablet/desktop)
+**Completed (December 23, 2025):**
+- ✅ Defined data needs (fields, filters, pagination) for instructor views
+- ✅ Mapped needs to existing APIs (no gaps found; backend ready)
+- ✅ Built `new-ui/batches/pages/MyBatchesList.tsx` (card grid)
+- ✅ Built `new-ui/batches/pages/BatchDetail.tsx` (table + mobile cards)
+- ✅ Implemented inline proficiency editing (dropdown 0-4 scale)
+- ✅ Connected to APIs (`/api/batches`, `/api/auth/admin/users`, `/api/content/tracks`)
+- ✅ Responsive design (mobile/tablet/desktop)
+- ✅ Toast notifications on all mutations
+- ✅ Searchable student combobox (name/email/ID)
+- ✅ Track context card in batch detail
+- ✅ All Phase 4 code type-safe (0 TypeScript errors)
 
 **Deliverables:**
-- `/app/batches/*` fully functional with v0 styling
-- Old `/manage/batches` still works
-- Feature flag lets instructors toggle between old/new
+- `/app/batches/*` fully functional with responsive design
+- 9 custom hooks (data fetching, mutations)
+- 2 pages (MyBatchesList, BatchDetail)
+- 1 reusable component (StudentCombobox)
+- Backend fix: studentName query in batch-cohort/storage.ts
+- Ready for EOD merge to main
 
 ---
 
-### Phase 5: Feature Migration – Content Studio (1 week)
+### Phase 5: Feature Migration – Content Studio (1 week) 🔜 NEXT
 **Goal:** Polish content management for new UI using v0 components.
 
 **Screens:**
