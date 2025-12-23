@@ -45,7 +45,7 @@ export default function BatchManagement() {
         </Link>
       </div>
 
-      <form onSubmit={submitCreate} className="rounded-2xl border border-border bg-card p-4">
+      <form onSubmit={submitCreate} className="rounded-2xl border border-border bg-card p-3">
         <h2 className="text-base font-semibold text-foreground">Create Batch</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           <LabeledInput label="Batch Code" value={form.batchCode || ""} onChange={(v) => setForm(f => ({ ...f, batchCode: v }))} />
@@ -83,10 +83,10 @@ export default function BatchManagement() {
             <table className="w-full text-sm">
               <thead className="text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 text-left">Code</th>
-                  <th className="px-4 py-3 text-left">Name</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Actions</th>
+                  <th className="px-3 py-2 text-left">Code</th>
+                  <th className="px-3 py-2 text-left">Name</th>
+                  <th className="px-3 py-2 text-left">Status</th>
+                  <th className="px-3 py-2 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -146,7 +146,7 @@ function BatchRow({ batch, onUpdate }: { batch: Batch; onUpdate: (payload: Parti
   return (
     <tr className="border-t border-border">
       <td className="px-4 py-3">{batch.batchCode}</td>
-      <td className="px-4 py-3">
+      <td className="px-3 py-2">
         {editing ? (
           <label className="block">
             <span className="sr-only">Batch Name</span>
@@ -162,7 +162,7 @@ function BatchRow({ batch, onUpdate }: { batch: Batch; onUpdate: (payload: Parti
           batch.batchName
         )}
       </td>
-      <td className="px-4 py-3">
+      <td className="px-3 py-2">
         {editing ? (
           <label className="block">
             <span className="sr-only">Status</span>
@@ -182,7 +182,7 @@ function BatchRow({ batch, onUpdate }: { batch: Batch; onUpdate: (payload: Parti
           batch.status
         )}
       </td>
-      <td className="px-4 py-3">
+      <td className="px-3 py-2">
         {editing ? (
           <div className="flex gap-2">
             <button className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90" onClick={() => { onUpdate(values); setEditing(false); }}>Save</button>

@@ -47,7 +47,7 @@ export default function UserManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Admin Center</p>
           <h1 className="mt-2 text-3xl font-semibold text-foreground">User Management</h1>
@@ -74,10 +74,10 @@ export default function UserManagement() {
               <table className="w-full text-sm">
                 <thead className="text-muted-foreground">
                   <tr>
-                    <th className="px-4 py-3 text-left">Email</th>
-                    <th className="px-4 py-3 text-left">Name</th>
-                    <th className="px-4 py-3 text-left">Requested</th>
-                    <th className="px-4 py-3 text-left">Actions</th>
+                    <th className="px-3 py-2 text-left">Email</th>
+                    <th className="px-3 py-2 text-left">Name</th>
+                    <th className="px-3 py-2 text-left">Requested</th>
+                    <th className="px-3 py-2 text-left">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -88,10 +88,10 @@ export default function UserManagement() {
                   )}
                   {pending.map(u => (
                     <tr key={u.id} className="border-t border-border">
-                      <td className="px-4 py-3">{u.email}</td>
-                      <td className="px-4 py-3">{formatName(u)}</td>
-                      <td className="px-4 py-3">{formatDate(u.createdAt)}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2">{u.email}</td>
+                      <td className="px-3 py-2">{formatName(u)}</td>
+                      <td className="px-3 py-2">{formatDate(u.createdAt)}</td>
+                      <td className="px-3 py-2">
                         <div className="flex gap-2">
                           <button
                             className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90 disabled:opacity-50"
@@ -127,11 +127,11 @@ export default function UserManagement() {
               <table className="w-full text-sm">
                 <thead className="text-muted-foreground">
                   <tr>
-                    <th className="px-4 py-3 text-left">Email</th>
-                    <th className="px-4 py-3 text-left">Name</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                    <th className="px-4 py-3 text-left">Roles</th>
-                    <th className="px-4 py-3 text-left">Actions</th>
+                    <th className="px-3 py-2 text-left">Email</th>
+                    <th className="px-3 py-2 text-left">Name</th>
+                    <th className="px-3 py-2 text-left">Status</th>
+                    <th className="px-3 py-2 text-left">Roles</th>
+                    <th className="px-3 py-2 text-left">Actions</th>
                   </tr>
                 </thead>
                 <tbody>

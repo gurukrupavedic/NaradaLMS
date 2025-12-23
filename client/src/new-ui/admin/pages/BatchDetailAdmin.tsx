@@ -159,10 +159,10 @@ export default function BatchDetailAdmin() {
           <table className="w-full text-sm">
             <thead className="text-muted-foreground">
               <tr>
-                <th className="px-4 py-3 text-left">Email</th>
-                <th className="px-4 py-3 text-left">Name</th>
-                <th className="px-4 py-3 text-left">Role</th>
-                <th className="px-4 py-3 text-left">Actions</th>
+                <th className="px-3 py-2 text-left">Email</th>
+                <th className="px-3 py-2 text-left">Name</th>
+                <th className="px-3 py-2 text-left">Role</th>
+                <th className="px-3 py-2 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -171,10 +171,10 @@ export default function BatchDetailAdmin() {
               )}
               {(coInstructors.data ?? []).map((ci: any) => (
                 <tr key={ci.id} className="border-t border-border">
-                  <td className="px-4 py-3">{ci.instructorId}</td>
-                  <td className="px-4 py-3">—</td>
-                  <td className="px-4 py-3 font-medium">{ci.role === "primary_instructor" ? "Primary" : "Secondary"}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2">{ci.instructorId}</td>
+                  <td className="px-3 py-2">—</td>
+                  <td className="px-3 py-2 font-medium">{ci.role === "primary_instructor" ? "Primary" : "Secondary"}</td>
+                  <td className="px-3 py-2">
                     <button 
                       className="rounded-md bg-destructive/20 px-3 py-1.5 text-destructive hover:bg-destructive/30 disabled:opacity-50"
                       onClick={() => removeCo.mutate({ assignmentId: ci.id, batchId }, {
@@ -260,10 +260,10 @@ export default function BatchDetailAdmin() {
           <table className="w-full text-sm">
             <thead className="text-muted-foreground">
               <tr>
-                <th className="px-4 py-3 text-left">ID</th>
-                <th className="px-4 py-3 text-left">Student</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Actions</th>
+                <th className="px-3 py-2 text-left">ID</th>
+                <th className="px-3 py-2 text-left">Student</th>
+                <th className="px-3 py-2 text-left">Status</th>
+                <th className="px-3 py-2 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -272,10 +272,10 @@ export default function BatchDetailAdmin() {
               )}
               {(enrollments.data ?? []).map(en => (
                 <tr key={en.id} className="border-t border-border">
-                  <td className="px-4 py-3">{en.id}</td>
-                  <td className="px-4 py-3">{en.studentId}</td>
-                  <td className="px-4 py-3">{en.status}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2">{en.id}</td>
+                  <td className="px-3 py-2">{en.studentId}</td>
+                  <td className="px-3 py-2">{en.status}</td>
+                  <td className="px-3 py-2">
                     {en.status === "active" ? (
                       <button 
                         className="rounded-md bg-destructive/20 px-3 py-1.5 text-destructive hover:bg-destructive/30 disabled:opacity-50"

@@ -48,7 +48,7 @@ export default function AuditLogs() {
         </Link>
       </div>
 
-      <form onSubmit={onSubmit} className="rounded-2xl border border-border bg-card p-4">
+      <form onSubmit={onSubmit} className="rounded-2xl border border-border bg-card p-3">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <Input name="userId" label="User ID" placeholder="uuid" />
           <Input name="action" label="Action" placeholder="CREATE_CHAPTER" />
@@ -72,7 +72,7 @@ export default function AuditLogs() {
 
       {!isLoading && !error && (
         <>
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-3">
             <span className="text-sm text-muted-foreground">
               Page {currentPage} of {totalPages} ({total} total)
             </span>
@@ -82,11 +82,11 @@ export default function AuditLogs() {
             <table className="w-full text-sm">
               <thead className="text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 text-left">Time</th>
-                  <th className="px-4 py-3 text-left">User</th>
-                  <th className="px-4 py-3 text-left">Action</th>
-                  <th className="px-4 py-3 text-left">Resource</th>
-                  <th className="px-4 py-3 text-left">ID</th>
+                  <th className="px-3 py-2 text-left">Time</th>
+                  <th className="px-3 py-2 text-left">User</th>
+                  <th className="px-3 py-2 text-left">Action</th>
+                  <th className="px-3 py-2 text-left">Resource</th>
+                  <th className="px-3 py-2 text-left">ID</th>
                 </tr>
               </thead>
               <tbody>
@@ -97,11 +97,11 @@ export default function AuditLogs() {
                 )}
                 {logs.map((log) => (
                   <tr key={log.id} className="border-t border-border">
-                    <td className="px-4 py-3">{new Date(log.timestamp).toLocaleString()}</td>
-                    <td className="px-4 py-3">{log.userId}</td>
-                    <td className="px-4 py-3">{log.action}</td>
-                    <td className="px-4 py-3">{log.resourceType}</td>
-                    <td className="px-4 py-3">{log.resourceId}</td>
+                    <td className="px-3 py-2">{new Date(log.timestamp).toLocaleString()}</td>
+                    <td className="px-3 py-2">{log.userId}</td>
+                    <td className="px-3 py-2">{log.action}</td>
+                    <td className="px-3 py-2">{log.resourceType}</td>
+                    <td className="px-3 py-2">{log.resourceId}</td>
                   </tr>
                 ))}
               </tbody>
@@ -110,7 +110,7 @@ export default function AuditLogs() {
 
           {/* Pagination controls */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-3">
               <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="rounded-md border border-border px-3 py-2 text-sm disabled:opacity-50">
                 ← Previous
               </button>

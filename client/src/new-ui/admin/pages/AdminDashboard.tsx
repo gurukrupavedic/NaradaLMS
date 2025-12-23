@@ -40,7 +40,7 @@ export default function AdminDashboard() {
 
       {stats && (
         <>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             <StatCardLink href="/app/admin/users" icon={Users2} label="Total Users" value={stats.totalUsers} />
             <StatCardLink href="/app/admin/users?status=pending_approval" icon={ShieldCheck} label="Pending Approvals" value={stats.pendingApprovals} accent="warning" />
             <StatCardLink href="/app/admin/users?status=active" icon={Users2} label="Active Users" value={stats.activeUsers} />
@@ -51,7 +51,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="rounded-2xl border border-border bg-card p-3">
               <div className="flex items-center gap-2">
                 <Activity className="h-5 w-5 text-muted-foreground" />
                 <h2 className="text-base font-semibold text-foreground">Recent Activity</h2>
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="rounded-2xl border border-border bg-card p-3">
               <h2 className="text-base font-semibold text-foreground">Quick Links</h2>
               <div className="mt-3 grid gap-2">
                 <QuickLink href="/app/admin/users" label="User Management" />
@@ -105,14 +105,14 @@ function StatCardLink({
 }) {
   if (!href) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground shadow">
-            <Icon className="h-5 w-5" />
+      <div className="rounded-2xl border border-border bg-card p-3 min-h-[92px]">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-accent-foreground shadow">
+            <Icon className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-            <p className={"text-2xl font-semibold " + (accent === "warning" ? "text-orange-600 dark:text-orange-400" : "text-foreground")}>{value}</p>
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+            <p className={"text-xl font-semibold " + (accent === "warning" ? "text-orange-600 dark:text-orange-400" : "text-foreground")}>{value}</p>
           </div>
         </div>
       </div>
@@ -121,14 +121,14 @@ function StatCardLink({
 
   return (
     <Link href={href}>
-      <a className="block rounded-2xl border border-border bg-card p-4 hover:border-primary/50 hover:bg-accent/5 transition-colors">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground shadow">
-            <Icon className="h-5 w-5" />
+      <a className="block rounded-2xl border border-border bg-card p-3 min-h-[92px] hover:border-primary/50 hover:bg-accent/5 transition-colors">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-accent-foreground shadow">
+            <Icon className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-            <p className={"text-2xl font-semibold " + (accent === "warning" ? "text-orange-600 dark:text-orange-400" : "text-foreground")}>{value}</p>
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+            <p className={"text-xl font-semibold " + (accent === "warning" ? "text-orange-600 dark:text-orange-400" : "text-foreground")}>{value}</p>
           </div>
         </div>
       </a>
