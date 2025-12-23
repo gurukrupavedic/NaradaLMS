@@ -10,8 +10,8 @@ export interface TrackDetails {
 
 export function useTrackDetails(trackId: number | null | undefined) {
   return useQuery<TrackDetails>({
-    queryKey: ["track", trackId],
-    queryFn: getQueryFn(`/api/content/tracks/${trackId}`),
+    queryKey: [`/api/content/tracks/${trackId}`],
+    queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!trackId,
   });
 }

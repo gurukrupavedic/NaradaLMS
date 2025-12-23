@@ -15,8 +15,8 @@ export function useSearchStudents(searchQuery: string) {
     users: StudentSearchResult[];
     pagination: { limit: number; offset: number; total: number };
   }>({
-    queryKey: ["students-search", searchQuery],
-    queryFn: getQueryFn(`/api/auth/admin/users?limit=100`),
+    queryKey: ["/api/auth/admin/users?limit=100"],
+    queryFn: getQueryFn({ on401: "throw" }),
     enabled: true, // Always fetch to have full list available
     select: (data) => {
       // Filter results based on search query
