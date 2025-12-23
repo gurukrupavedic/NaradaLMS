@@ -42,17 +42,6 @@ export default function BatchManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Admin Center</p>
-          <h1 className="mt-2 text-3xl font-semibold text-foreground">Batch Management</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Create and manage batches. Assign tracks and instructors later.</p>
-        </div>
-        <Link href="/app/admin">
-          <a className="text-sm text-primary hover:opacity-80 transition-colors">Back to dashboard</a>
-        </Link>
-      </div>
-
       <form onSubmit={submitCreate} className="rounded-2xl border border-border bg-card p-3">
         <h2 className="text-base font-semibold text-foreground">Create Batch</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-2">

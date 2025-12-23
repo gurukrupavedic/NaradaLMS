@@ -43,16 +43,6 @@ export default function BatchDetail() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Instructor</p>
-          <h1 className="mt-2 text-3xl font-semibold text-foreground">{batch.batchName}</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Code: {batch.batchCode} • Status: {batch.status}</p>
-        </div>
-        <Link href="/app/batches">
-          <a className="text-sm text-primary hover:opacity-80 transition-colors">Back to My Batches</a>
-        </Link>
-      </div>
 
       {/* Track Details Card */}
       {batch.trackId && (

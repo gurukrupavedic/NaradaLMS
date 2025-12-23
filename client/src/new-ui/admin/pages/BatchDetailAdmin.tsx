@@ -64,17 +64,6 @@ export default function BatchDetailAdmin() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Admin Center</p>
-          <h1 className="mt-2 text-3xl font-semibold text-foreground">Batch Detail</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Manage instructors and enrollments for batch #{batchId}.</p>
-        </div>
-        <Link href="/app/admin/batches">
-          <a className="text-sm text-primary hover:opacity-80 transition-colors">Back to batches</a>
-        </Link>
-      </div>
-
       <section className="rounded-2xl border border-border bg-card p-4">
         <h2 className="text-base font-semibold text-foreground">Assign Instructors</h2>
         

@@ -48,28 +48,7 @@ export default function UserManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Admin Center</p>
-          <h1 className="mt-2 text-3xl font-semibold text-foreground">User Management</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Approve new users, manage roles, and disable accounts.</p>
-        </div>
-        <Link href="/app/admin">
-          <a className="text-sm text-primary hover:opacity-80 transition-colors">Back to dashboard</a>
-        </Link>
-      </div>
-
-      {isLoading && (
-        <div className="rounded-2xl border border-border bg-card p-6 text-muted-foreground">Loading users…</div>
-      )}
-
-      {error && (
-        <div className="rounded-2xl border border-border bg-destructive/10 p-6 text-destructive">Failed to load users. Ensure you have admin access.</div>
-      )}
-
-      {!isLoading && !error && (
-        <>
-          <section className="space-y-3">
+      <section className="space-y-3">
             <h2 className="text-base font-semibold text-foreground">Pending Approvals</h2>
             <div className="rounded-2xl border border-border bg-card">
               <table className="w-full text-sm">
@@ -192,8 +171,6 @@ export default function UserManagement() {
               </div>
             )}
           </section>
-        </>
-      )}
     </div>
   );
 }

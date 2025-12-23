@@ -18,6 +18,9 @@ export type AuditLogItem = {
   resourceId: string;
   changes?: any;
   timestamp: string;
+  userFirstName?: string;
+  userLastName?: string;
+  userEmail?: string;
 };
 
 export function buildQueryString(filters: AuditLogFilters): string {

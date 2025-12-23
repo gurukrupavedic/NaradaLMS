@@ -49,19 +49,19 @@ function getBreadcrumbs(pathname: string): { section: string; page: string } | n
   // Admin
   if (pathname.includes('/app/admin')) {
     if (pathname === '/app/admin') {
-      return { section: 'Admin', page: 'Dashboard' };
+      return { section: 'Admin Center', page: 'Dashboard' };
     }
     if (pathname.includes('/users')) {
-      return { section: 'Admin', page: 'Users' };
+      return { section: 'Admin Center', page: 'User Management' };
     }
     if (pathname.includes('/logs')) {
-      return { section: 'Admin', page: 'Audit Logs' };
+      return { section: 'Admin Center', page: 'Audit Logs' };
     }
     if (pathname.includes('/batches')) {
-      return { section: 'Admin', page: 'Batches' };
+      return { section: 'Admin Center', page: 'Batch Management' };
     }
     if (pathname.includes('/settings')) {
-      return { section: 'Admin', page: 'Settings' };
+      return { section: 'Admin Center', page: 'System Settings' };
     }
   }
 

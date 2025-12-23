@@ -38,19 +38,6 @@ export default function SystemSettings() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Admin</p>
-          <h1 className="mt-2 text-3xl font-semibold text-foreground">System Settings</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Edit global configuration values. Use plain text or JSON for structured entries.
-          </p>
-        </div>
-        <Link href="/app/admin">
-          <a className="text-sm text-primary hover:opacity-80 transition-colors">Back to Admin</a>
-        </Link>
-      </div>
-
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         {isLoading && (
           <div className="p-6 text-sm text-muted-foreground">Loading settings…</div>

@@ -186,7 +186,7 @@ export function getSectionLabel(key: 'learn' | 'batches' | 'content' | 'admin'):
     learn: 'Learn',
     batches: 'Batches & Progress',
     content: 'Content Studio',
-    admin: 'Administration',
+    admin: 'Admin Center',
   };
   return labels[key] || '';
 }

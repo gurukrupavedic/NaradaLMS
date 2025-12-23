@@ -12,13 +12,6 @@ export default function MyBatchesList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Instructor</p>
-          <h1 className="mt-2 text-3xl font-semibold text-foreground">My Batches</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Cohort list with quick access to student progress.</p>
-        </div>
-      </div>
       <div className="grid gap-4 md:grid-cols-2">
         {items.map((b) => (
           <Link key={b.id} href={`/app/batches/${b.id}`}>
