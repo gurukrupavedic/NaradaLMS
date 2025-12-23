@@ -492,6 +492,13 @@ Main Content (adaptive 2-column or single)
   - [ ] Error boundary with retry
   - [ ] Standard header (breadcrumbs/actions)
   - [ ] Toast audit
+  
+  **Consolidated Checklist (Users Page):**
+  - Table: Sticky header, sortable columns, dense layout
+  - Filters: Search (name/email), `role` select, `status` select, Clear Filters
+  - States: Loading skeletons, Empty copy, Error with retry
+  - Role editor: Assign/remove roles; enable/disable toggle via dialog
+  - Toasts: Standard success/error/info, no duplicates
 - [ ] MyBatchesList
   - [ ] Add loading skeletons (card grid)
   - [ ] Empty state for no batches with CTA
