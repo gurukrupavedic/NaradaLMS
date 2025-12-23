@@ -9,6 +9,7 @@ import { useEnrollments } from "../hooks/useEnrollments";
 import { useAddEnrollment } from "../hooks/useAddEnrollment";
 import { useDropEnrollment } from "../hooks/useDropEnrollment";
 import { useSearchStudents, type StudentSearchResult } from "../hooks/useSearchStudents";
+import { useTrackDetails } from "../hooks/useTrackDetails";
 import { StudentCombobox } from "../components/StudentCombobox";
 
 export default function BatchDetail() {
@@ -17,6 +18,7 @@ export default function BatchDetail() {
   const { toast } = useToast();
   const { data: batch, isLoading: loadingBatch } = useBatchDetail(batchId);
   const { data: progress, isLoading: loadingProgress } = useBatchProgress(batchId);
+  const { data: track, isLoading: trackLoading } = useTrackDetails(batch?.trackId);
   const evaluate = useEvaluateStudent();
   const { data: enrollments, isLoading: loadingEnrollments } = useEnrollments(batchId);
   const addEnroll = useAddEnrollment();
@@ -51,6 +53,31 @@ export default function BatchDetail() {
           <a className="text-sm text-primary hover:opacity-80 transition-colors">Back to My Batches</a>
         </Link>
       </div>
+
+      {/* Track Details Card */}
+      {batch.trackId && (
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <p className="text-sm font-semibold mb-3">Track Details</p>
+          {trackLoading ? (
+            <p className="text-sm text-muted-foreground">Loading track…</p>
+          ) : track ? (
+            <div className="space-y-2">
+              <div>
+                <p className="text-xs text-muted-foreground">Track Name</p>
+                <p className="text-sm font-medium">{track.title}</p>
+              </div>
+              {track.description && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Description</p>
+                  <p className="text-sm text-foreground">{track.description}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-destructive">Track not found</p>
+          )}
+        </div>
+      )}
 
       {/* Simple progress preview; full table/cards in follow-up step */}
       <div className="rounded-2xl border border-border bg-card p-4">
