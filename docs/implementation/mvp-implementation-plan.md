@@ -2,7 +2,7 @@
 
 **Last Updated:** December 23, 2025  
 **Status:** In Progress  
-**Current Phase:** Phase 4 – Batches & Progress (✅ Complete) → Phase 5 – Content Studio
+**Current Phase:** Phase 7.1-7.2 Complete → Phase 5 or 7.3 Next (User to decide)
 
 ---
 
@@ -390,16 +390,114 @@ Main Content (adaptive 2-column or single)
 
 ---
 
-### Phase 7: Global Polish (Navigation + UI/UX), A11y, Testing, & Cutover Decision (1–2 weeks)
-**Goal:** Production-ready new UI. You decide when to cutover.
+### Phase 7.1: Navigation Architecture ✅ COMPLETE (Dec 23, 2025)
+**Goal:** Define role-based navigation taxonomy and implement foundational architecture.
+
+**Completed Work:**
+- ✅ Downloaded v0 shadcn sidebar block (free, from ui.shadcn.com/blocks)
+- ✅ Created `navigation-config.ts` with role-based taxonomy
+  - Learn section (All roles)
+  - Batches & Progress (Instructor)
+  - Content Studio (Content Manager)
+  - Admin (Admin)
+- ✅ Built `getNavigationForRole(role)` function with 4 role types
+- ✅ Added Course Content page under Learn section
+- ✅ Implemented breadcrumb mapping (`getBreadcrumbs(pathname)`)
+
+**Deliverables:**
+- Navigation configuration file with role-aware sections
+- Foundation for AppSidebar and TopNav components
+- Clear separation of concerns (student, instructor, content_manager, admin)
+
+---
+
+### Phase 7.2: Shell Overhaul ✅ COMPLETE (Dec 23, 2025)
+**Goal:** Replace basic AppShell with professional v0 sidebar layout.
+
+**Completed Work:**
+- ✅ Built 6 new components from v0 block:
+  - `app-sidebar.tsx` - Collapsible sidebar with role-based navigation
+  - `nav-main.tsx` - Renders nav groups with nested items
+  - `nav-user.tsx` - User profile dropdown (profile, settings, logout)
+  - `brand-header.tsx` - VedicLMS logo header
+  - `top-nav.tsx` - Top bar with breadcrumbs, notifications, theme toggle
+  - `app-layout.tsx` - SidebarProvider wrapper
+- ✅ Replaced `AppShell.tsx` completely with new SidebarProvider-based layout
+- ✅ Implemented simple breadcrumbs ("Section > Page" format)
+- ✅ Fixed user role extraction from `user.roles[0]` with fallback
+- ✅ Tested with admin role (all sections visible)
+- ✅ Mobile responsiveness via SidebarProvider (hamburger menu automatic)
+
+**Deliverables:**
+- Professional sidebar navigation matching v0 design patterns
+- Role-aware section visibility (navigation-config integration)
+- Breadcrumb navigation auto-updating based on route
+- Theme: v0 base (black/white, light/dark mode ready)
+- Responsive: Mobile hamburger, desktop persistent sidebar
+
+**Branch:** `daily/2025-12-23` (commit e02a73c)  
+**Next Step:** Phase 7.3 or Phase 5 (user to decide)
+
+---
+
+### Phase 7.3: Workflow Refinement (3-4 days) 🔜 DEFERRED
+**Goal:** Polish existing pages (Batches, Admin) with loading, empty, and error states.
+
+**Scope:**
+- Refine `/app/batches/*` pages
+  - Loading skeletons for batch list and detail
+  - Empty states (no batches, no students, no progress)
+  - Error boundaries with retry actions
+- Refine `/app/admin/*` pages
+  - Loading skeletons for dashboard stats
+  - Empty states (no pending approvals, no users, no batches)
+  - Error boundaries with fallback UI
+- Standardize page headers (breadcrumbs + actions + filters)
+- Audit toast notification patterns (success, error, info)
 
 **Tasks:**
-- [ ] A11y audit (keyboard nav, screen reader, focus, contrast)
+- [ ] Add skeleton loaders to MyBatchesList and BatchDetail
+- [ ] Build empty state components (EmptyBatches, EmptyStudents, EmptyProgress)
+- [ ] Wrap all pages in error boundaries with user-friendly fallback
+- [ ] Standardize page header pattern (Breadcrumb + Title + Actions)
+- [ ] Audit toast usage (ensure consistent messaging)
+- [ ] Test all error scenarios (network failure, 404, 500)
+
+**Deliverables:**
+- Production-quality error handling across Batches and Admin sections
+- Consistent loading and empty states
+- Better UX for edge cases (offline, slow network, empty data)
+
+---
+
+### Phase 7.4: Final Polish (After Phase 5-6) 🔜 DEFERRED
+**Goal:** Production-ready new UI with A11y, performance, and testing.
+
+**Scope:**
+- A11y audit (keyboard nav, screen reader, focus, contrast)
+- Responsive testing (all breakpoints, all devices)
+- Dark/light mode testing (v0 theme)
+- Performance optimization (code splitting, prefetch, images)
+- Global bug fixes and refinements
+
+**Tasks:**
+- [ ] A11y audit & fixes
+  - [ ] Keyboard navigation (all screens)
+  - [ ] Screen reader support (aria labels)
+  - [ ] Focus indicators (visible on all elements)
+  - [ ] Color contrast (WCAG AA)
+- [ ] Performance optimization
+  - [ ] Bundle analysis & code splitting
+  - [ ] Image optimization
+  - [ ] TanStack Query prefetching
+  - [ ] Lazy-load routes
 - [ ] Responsive testing (all breakpoints, all devices)
 - [ ] Dark/light mode testing (v0 theme)
-- [ ] Performance optimization (code splitting, prefetch, images)
-- [ ] Error states & edge cases
-- [ ] Bug fixes & refinements
+- [ ] Edge case testing (empty states, loading states, error boundaries)
+- [ ] Documentation
+  - [ ] Component library (Storybook, optional)
+  - [ ] API documentation (OpenAPI, optional)
+  - [ ] User guide (optional)
 
 **Then You Decide:**
 
@@ -414,42 +512,7 @@ Main Content (adaptive 2-column or single)
 - Deprecate old UI completely
 - This becomes a separate implementation task
 
-**Deliverables:**
-- **MVP v2.0 – New UI Production Release** (v0 theme)
-- Both UIs stable, tested, A11y compliant
-- Clear decision on cutover timing
-
-**Tasks:**
-- [ ] Navigation refinement
-  - [ ] Sidebar taxonomy & grouping (Learning, Batches, Content, Admin)
-  - [ ] Admin sub-navigation (Overview, Users, Batches, Logs, Settings)
-  - [ ] Breadcrumbs & page headers with consistent actions
-  - [ ] Hover/active states, spacing, and focus consistency
-- [ ] Consolidate design system tokens (tailwind.config.ts)
-  - [ ] Spacing scale (device-aware)
-  - [ ] Typography scale (responsive)
-  - [ ] Color palette (proficiency badges, segment states)
-  - [ ] Touch target sizes (44px, 48px, 56px)
-- [ ] A11y audit & fixes
-  - [ ] Keyboard navigation (all screens)
-  - [ ] Screen reader support (aria labels)
-  - [ ] Focus indicators (visible on all elements)
-  - [ ] Color contrast (WCAG AA)
-- [ ] Performance optimization
-  - [ ] Bundle analysis & code splitting
-  - [ ] Image optimization
-  - [ ] TanStack Query prefetching
-  - [ ] Lazy-load routes
-- [ ] Bug fixes & refinements
-  - [ ] Error state testing
-  - [ ] Edge cases (empty states, loading states, error boundaries)
-  - [ ] Responsive testing (all breakpoints, all devices)
-- [ ] Documentation
-  - [ ] Component library (Storybook, optional)
-  - [ ] API documentation (OpenAPI, optional)
-  - [ ] User guide (optional)
-
-**Deliverable:** **MVP v1.0 - Production Release**
+**Deliverable:** **MVP v1.0 - Production Release** (v0 theme, fully accessible, tested)
 
 ---
 
