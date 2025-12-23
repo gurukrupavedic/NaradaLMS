@@ -18,6 +18,8 @@ import AuditLogs from "./admin/pages/AuditLogs";
 import BatchManagement from "./admin/pages/BatchManagement";
 import BatchDetailAdmin from "./admin/pages/BatchDetailAdmin";
 import SystemSettings from "./admin/pages/SystemSettings";
+import MyBatchesList from "./batches/pages/MyBatchesList";
+import BatchDetail from "./batches/pages/BatchDetail";
 
 export type NavItem = {
   key: string;
@@ -78,7 +80,8 @@ export default function AppShell() {
               <Switch>
                 <Route path="/app" component={() => <Overview items={NAV_ITEMS} />} />
                 <Route path="/app/learning" component={() => <SectionPage title="Learning" summary="Plan the learner experience and preview segment playback." />} />
-                <Route path="/app/batches" component={() => <SectionPage title="Batches" summary="Organize cohorts, co-instructors, and progression policies." />} />
+                <Route path="/app/batches/:id" component={BatchDetail} />
+                <Route path="/app/batches" component={MyBatchesList} />
                 <Route path="/app/content" component={() => <SectionPage title="Content" summary="Draft tracks, chapter HTML, segmentation, and audio mapping." />} />
                 <Route path="/app/admin" component={AdminDashboard} />
                 <Route path="/app/admin/users" component={UserManagement} />
