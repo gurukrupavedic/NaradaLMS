@@ -5,6 +5,20 @@ Frontend tasks organized by component area, criticality, and risk.
 
 ---
 
+## Recently Completed (2025-12-22)
+
+**Phase 3 Admin Center - UI Polish & Functionality**
+   - ✅ Implemented user disable/enable toggle in User Management
+   - ✅ Added batch track selector for create and edit operations
+   - ✅ Removed status dropdown from batch creation (defaults to 'active')
+   - ✅ Applied compact UI refinements (small uppercase headers, normalized button padding)
+   - ✅ Fixed System Settings pill wrapping on Admin Dashboard
+   - ✅ Aligned design system with shadcn/studio (removed legacy props, corrected avatar sizes)
+   - **Branch:** `phase-3-admin-center` (pushed to origin)
+   - **Next:** Merge to main via PR or local merge
+
+---
+
 ## Active Backlog
 
 ### CLEANUP & REFACTORING

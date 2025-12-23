@@ -8,6 +8,8 @@ import { ErrorBoundary, AppErrorFallback } from "@/components/ui/error-boundary"
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import { useAuth } from "@/features/shared-features/hooks/useAuth";
 import { useWarmTrackCache } from "@/lib/query-prefetch";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { NEW_UI_ENABLED } from "@/lib/featureFlags";
 
 // Phase 5A: Bundle Optimization - Route-based code splitting
 const Landing = lazy(() => import("@/features/shared-features/pages/Landing").then(module => ({ default: module.Landing })));
@@ -26,6 +28,8 @@ const LearnTracks = lazy(() => import("@/features/learning/pages/LearnTracks").t
 const LearnChapters = lazy(() => import("@/features/learning/pages/LearnChapters").then(module => ({ default: module.LearnChapters })));
 const StudyChapter = lazy(() => import("@/features/learning/pages/StudyChapter").then(module => ({ default: module.StudyChapter })));
 const DesignSystemExperiment = lazy(() => import("@/design-system/DesignSystemExperiment"));
+const ThemingPlayground = lazy(() => import("@/design-system/ThemingPlayground").then(module => ({ default: module.ThemingPlayground })));
+const AppShell = lazy(() => import("@/new-ui/AppShell"));
 
 // Simple inline NotFound component
 const SimpleNotFound = () => {
@@ -106,6 +110,14 @@ function Router() {
   return (
     <Suspense fallback={<LoadingScreen message="Loading..." />}>
       <Switch>
+        {NEW_UI_ENABLED && (
+          <>
+            <Route path="/app" component={AppShell} />
+            <Route path="/app/:section" component={AppShell} />
+            <Route path="/app/:section/:subsection" component={AppShell} />
+            <Route path="/app/:section/:subsection/:detail" component={AppShell} />
+          </>
+        )}
         <Route path="/" component={() => <SimpleDashboard user={user as any} />} />
         <Route path="/dashboard" component={() => <SimpleDashboard user={user as any} />} />
         <Route path="/home" component={() => <SimpleDashboard user={user as any} />} />
@@ -132,6 +144,7 @@ function Router() {
         <Route path="/learning/chapter/:chapterId" component={() => <StudyChapter />} />
 
         <Route path="/experiments/design-system" component={DesignSystemExperiment} />
+        <Route path="/experiments/theming-playground" component={ThemingPlayground} />
 
         <Route component={SimpleNotFound} />
       </Switch>
@@ -142,12 +155,14 @@ function Router() {
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="light" storageKey="vediclms-theme">
       <TooltipProvider>
         <Toaster />
         <ErrorBoundary fallback={<AppErrorFallback />}>
           <Router />
         </ErrorBoundary>
       </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

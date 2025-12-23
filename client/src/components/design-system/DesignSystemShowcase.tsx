@@ -1324,7 +1324,7 @@ export function DesignSystemShowcase() {
                 
                 <div className="flex gap-3">
                   <Avatar variant="green" size="sm" name="Alice Smith" showStatus status="away" />
-                  <Avatar variant="purple" size="md" name="Bob Wilson" showStatus status="busy" />
+                  <Avatar variant="purple" size="default" name="Bob Wilson" showStatus status="busy" />
                   <Avatar variant="orange" size="lg" name="Carol Johnson" showStatus status="offline" />
                 </div>
               </div>

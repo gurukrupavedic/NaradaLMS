@@ -3,6 +3,7 @@ import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/design-system/Button";
 import { BookOpen, Edit, Users, Layers } from "lucide-react";
 import type { User } from "@shared/schema";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface FeatureCard {
   title: string;
@@ -80,6 +81,8 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
               <h1 className="text-2xl font-bold text-gray-900">Vedic Learning Platform</h1>
               <p className="text-sm text-gray-600 mt-1">Welcome, {user.email}</p>
             </div>
+                        <div className="flex items-center gap-2">
+                          <ThemeToggle />
             <Button
               variant="outline"
               size="sm"
@@ -93,6 +96,7 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
             >
               Sign Out
             </Button>
+                      </div>
           </div>
         </div>
       </div>
