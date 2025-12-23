@@ -3,12 +3,14 @@ import { useRoute } from "wouter";
 import { Link } from "wouter";
 import { useBatchDetail } from "../hooks/useBatchDetail";
 import { useBatchProgress } from "../hooks/useBatchProgress";
+import { useEvaluateStudent } from "../hooks/useEvaluateStudent";
 
 export default function BatchDetail() {
   const [, params] = useRoute("/app/batches/:id");
   const batchId = params?.id;
   const { data: batch, isLoading: loadingBatch } = useBatchDetail(batchId);
   const { data: progress, isLoading: loadingProgress } = useBatchProgress(batchId);
+  const evaluate = useEvaluateStudent();
 
   if (loadingBatch || loadingProgress) {
     return <div className="p-4 text-sm text-muted-foreground">Loading batch…</div>;
@@ -61,11 +63,29 @@ export default function BatchDetail() {
                     {progress.chapters.map((c) => {
                       const cell = row.cells.find((x) => x.chapterId === c.chapterId);
                       const level = cell?.proficiencyLevel ?? 0;
+                      const saving = evaluate.isPending;
                       return (
                         <td key={c.chapterId} className="p-2">
-                          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border text-xs">
-                            {level}
-                          </span>
+                          <label className="sr-only" htmlFor={`lvl-${row.studentId}-${c.chapterId}`}>Proficiency</label>
+                          <select
+                            id={`lvl-${row.studentId}-${c.chapterId}`}
+                            className="h-8 rounded-md border border-border bg-background px-2 text-foreground"
+                            value={level}
+                            disabled={saving}
+                            onChange={(e) => {
+                              const newLevel = parseInt(e.target.value, 10);
+                              evaluate.mutate({
+                                batchId: batchId!,
+                                studentId: row.studentId,
+                                chapterId: c.chapterId,
+                                proficiencyLevel: newLevel,
+                              });
+                            }}
+                          >
+                            {[0,1,2,3,4].map((n) => (
+                              <option key={n} value={n}>{n}</option>
+                            ))}
+                          </select>
                         </td>
                       );
                     })}
