@@ -17,3 +17,6 @@ dev.error.log
 # These should not be in version control - use cloud storage in production
 uploads/
 !uploads/.gitkeep
+
+# Prevent nested repo-in-repo from being re-added
+VedicLMS/
