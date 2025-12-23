@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useRoute } from "wouter";
 import { Link } from "wouter";
+import { useToast } from "@/features/shared-features/hooks/use-toast";
 import { useBatchDetail } from "../hooks/useBatchDetail";
 import { useBatchProgress } from "../hooks/useBatchProgress";
 import { useEvaluateStudent } from "../hooks/useEvaluateStudent";
@@ -11,6 +12,7 @@ import { useDropEnrollment } from "../hooks/useDropEnrollment";
 export default function BatchDetail() {
   const [, params] = useRoute("/app/batches/:id");
   const batchId = params?.id;
+  const { toast } = useToast();
   const { data: batch, isLoading: loadingBatch } = useBatchDetail(batchId);
   const { data: progress, isLoading: loadingProgress } = useBatchProgress(batchId);
   const evaluate = useEvaluateStudent();
@@ -53,30 +55,72 @@ export default function BatchDetail() {
         {!progress || progress.rows.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">No progress data available.</p>
         ) : (
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
-              <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th className="p-2">Student</th>
-                  {progress.chapters.map((c) => (
-                    <th key={c.chapterId} className="p-2 whitespace-nowrap">{c.title}</th>
+          <>
+            {/* Desktop: Table */}
+            <div className="hidden lg:block mt-3 overflow-x-auto">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground">
+                    <th className="p-2">Student</th>
+                    {progress.chapters.map((c) => (
+                      <th key={c.chapterId} className="p-2 whitespace-nowrap">{c.title}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {progress.rows.map((row) => (
+                    <tr key={row.studentId} className="border-t border-border">
+                      <td className="p-2 whitespace-nowrap">{row.studentName ?? row.studentId}</td>
+                      {progress.chapters.map((c) => {
+                        const cell = row.cells.find((x) => x.chapterId === c.chapterId);
+                        const level = cell?.proficiencyLevel ?? 0;
+                        const saving = evaluate.isPending;
+                        return (
+                          <td key={c.chapterId} className="p-2">
+                            <label className="sr-only" htmlFor={`lvl-${row.studentId}-${c.chapterId}`}>Proficiency</label>
+                            <select
+                              id={`lvl-${row.studentId}-${c.chapterId}`}
+                              className="h-8 rounded-md border border-border bg-background px-2 text-foreground"
+                              value={level}
+                              disabled={saving}
+                              onChange={(e) => {
+                                const newLevel = parseInt(e.target.value, 10);
+                                evaluate.mutate({
+                                  batchId: batchId!,
+                                  studentId: row.studentId,
+                                  chapterId: c.chapterId,
+                                  proficiencyLevel: newLevel,
+                                });
+                              }}
+                            >
+                              {[0,1,2,3,4].map((n) => (
+                                <option key={n} value={n}>{n}</option>
+                              ))}
+                            </select>
+                          </td>
+                        );
+                      })}
+                    </tr>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {progress.rows.map((row) => (
-                  <tr key={row.studentId} className="border-t border-border">
-                    <td className="p-2 whitespace-nowrap">{row.studentName ?? row.studentId}</td>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile: Expandable Cards */}
+            <div className="lg:hidden mt-3 space-y-3">
+              {progress.rows.map((row) => (
+                <div key={row.studentId} className="rounded-lg border border-border bg-muted p-3">
+                  <p className="font-semibold text-sm">{row.studentName ?? row.studentId}</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
                     {progress.chapters.map((c) => {
                       const cell = row.cells.find((x) => x.chapterId === c.chapterId);
                       const level = cell?.proficiencyLevel ?? 0;
                       const saving = evaluate.isPending;
                       return (
-                        <td key={c.chapterId} className="p-2">
-                          <label className="sr-only" htmlFor={`lvl-${row.studentId}-${c.chapterId}`}>Proficiency</label>
+                        <div key={c.chapterId} className="flex flex-col gap-1">
+                          <label className="text-xs text-muted-foreground">{c.title}</label>
                           <select
-                            id={`lvl-${row.studentId}-${c.chapterId}`}
-                            className="h-8 rounded-md border border-border bg-background px-2 text-foreground"
+                            className="h-8 rounded-md border border-border bg-background px-2 text-sm text-foreground"
                             value={level}
                             disabled={saving}
                             onChange={(e) => {
@@ -93,14 +137,14 @@ export default function BatchDetail() {
                               <option key={n} value={n}>{n}</option>
                             ))}
                           </select>
-                        </td>
+                        </div>
                       );
                     })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
@@ -112,46 +156,75 @@ export default function BatchDetail() {
         ) : !enrollments || enrollments.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">No students enrolled.</p>
         ) : (
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[400px] text-sm">
-              <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th className="p-2">Student ID</th>
-                  <th className="p-2">Status</th>
-                  <th className="p-2">Enrolled</th>
-                  <th className="p-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {enrollments.map((e) => (
-                  <tr key={e.id} className="border-t border-border">
-                    <td className="p-2">{e.studentId}</td>
-                    <td className="p-2">
-                      <span className={`text-xs px-2 py-1 rounded-full ${e.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {e.status}
-                      </span>
-                    </td>
-                    <td className="p-2 text-xs text-muted-foreground">{new Date(e.enrolledAt).toLocaleDateString()}</td>
-                    <td className="p-2">
-                      {e.status === 'active' && (
-                        <button
-                          onClick={() => dropEnroll.mutate({ enrollmentId: e.id, batchId: batchId!, droppedReason: 'Dropped by instructor' })}
-                          disabled={dropEnroll.isPending}
-                          className="text-xs text-destructive hover:opacity-80 transition-opacity"
-                        >
-                          Drop
-                        </button>
-                      )}
-                    </td>
+          <>
+            {/* Desktop: Table */}
+            <div className="hidden lg:block mt-3 overflow-x-auto">
+              <table className="w-full min-w-[400px] text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground">
+                    <th className="p-2">Student ID</th>
+                    <th className="p-2">Status</th>
+                    <th className="p-2">Enrolled</th>
+                    <th className="p-2">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {enrollments.map((e) => (
+                    <tr key={e.id} className="border-t border-border">
+                      <td className="p-2">{e.studentId}</td>
+                      <td className="p-2">
+                        <span className={`text-xs px-2 py-1 rounded-full ${e.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {e.status}
+                        </span>
+                      </td>
+                      <td className="p-2 text-xs text-muted-foreground">{new Date(e.enrolledAt).toLocaleDateString()}</td>
+                      <td className="p-2">
+                        {e.status === 'active' && (
+                          <button
+                            onClick={() => dropEnroll.mutate({ enrollmentId: e.id, batchId: batchId!, droppedReason: 'Dropped by instructor' })}
+                            disabled={dropEnroll.isPending}
+                            className="text-xs text-destructive hover:opacity-80 transition-opacity"
+                          >
+                            Drop
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile: Card List */}
+            <div className="lg:hidden mt-3 space-y-2">
+              {enrollments.map((e) => (
+                <div key={e.id} className="rounded-lg border border-border bg-muted p-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold">{e.studentId}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(e.enrolledAt).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs px-2 py-1 rounded-full ${e.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                      {e.status}
+                    </span>
+                    {e.status === 'active' && (
+                      <button
+                        onClick={() => dropEnroll.mutate({ enrollmentId: e.id, batchId: batchId!, droppedReason: 'Dropped by instructor' })}
+                        disabled={dropEnroll.isPending}
+                        className="text-xs text-destructive hover:opacity-80 transition-opacity"
+                      >
+                        Drop
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
         
         {/* Add enrollment form */}
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 flex gap-2 flex-col sm:flex-row">
           <input
             type="text"
             placeholder="Student ID"

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/features/shared-features/hooks/use-toast";
 
 interface AddEnrollmentPayload {
   batchId: number | string;
@@ -8,6 +9,7 @@ interface AddEnrollmentPayload {
 
 export function useAddEnrollment() {
   const qc = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (payload: AddEnrollmentPayload) => {
@@ -21,6 +23,10 @@ export function useAddEnrollment() {
     },
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: [`/api/batches/${variables.batchId}/enrollments`] });
+      toast({ title: "Student enrolled", description: `${variables.studentId} added to batch` });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed to enroll student", description: err.message, variant: "destructive" });
     },
   });
 }

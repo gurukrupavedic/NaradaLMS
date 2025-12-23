@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/features/shared-features/hooks/use-toast";
 
 interface EvaluatePayload {
   batchId: number | string;
@@ -11,6 +12,7 @@ interface EvaluatePayload {
 
 export function useEvaluateStudent() {
   const qc = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (payload: EvaluatePayload) => {
@@ -24,6 +26,10 @@ export function useEvaluateStudent() {
     },
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: [`/api/batches/${variables.batchId}/progress`] });
+      toast({ title: "Proficiency updated", description: `Level set to ${variables.proficiencyLevel}` });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed to update proficiency", description: err.message, variant: "destructive" });
     },
   });
 }
