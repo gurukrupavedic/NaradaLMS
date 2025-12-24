@@ -103,20 +103,6 @@ const adminSection: NavSection = {
       title: 'Users',
       url: '/app/admin/users',
       icon: Users,
-      items: [
-        {
-          title: 'Pending Approval',
-          url: '/app/admin/users',
-        },
-        {
-          title: 'Active Users',
-          url: '/app/admin/users?status=active',
-        },
-        {
-          title: 'Disabled Users',
-          url: '/app/admin/users?status=disabled',
-        },
-      ],
     },
     {
       title: 'Batches',

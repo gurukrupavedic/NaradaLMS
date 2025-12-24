@@ -464,8 +464,28 @@ Main Content (adaptive 2-column or single)
 - ✅ Standard header with breadcrumbs
 - ✅ Toast notifications for all interactions
 
+#### ✅ Users Page (Complete)
+**Deliverables:**
+- ✅ Professional TanStack React Table with 5 columns (Name, Email, Status, Roles, Created/Requested, Actions)
+- ✅ Tab-style status filters (All Users, Pending, Inactive, Active) with dynamic count badges
+- ✅ Removed traditional filter bar in favor of preset tab navigation
+- ✅ Separate Name and Email columns for better scannability
+- ✅ Simplified status and role display (plain text, no pills)
+- ✅ Friendly role labels (Admin, Instructor, Content Manager, Student)
+- ✅ Removed checkbox selection (no bulk actions needed for MVP)
+- ✅ Vertical kebab menu for row actions (approve/reject for pending; edit roles/enable/disable for active)
+- ✅ Inline role editing with friendly labels and clean checkbox styling
+- ✅ Auto-refetch on all mutations (approve, reject, assign roles, toggle status)
+- ✅ Dynamic navigation highlighting (active route in sidebar)
+- ✅ Consistent px-4 padding on all sides
+- ✅ Refresh icon aligned to right of tabs
+- ✅ Pagination matching v0 reference (rows-per-page Select, 4 nav buttons)
+- ✅ Professional table styling (muted sticky header, row borders, hover states)
+- ✅ Loading skeleton, empty state, error state with retry
+- ✅ Toast notifications for all interactions
+
 **Next Targets (order of execution):**
-- Users Page (now in progress)
+- MyBatchesList
 - Batches
   - MyBatchesList
   - BatchDetail
@@ -483,22 +503,6 @@ Main Content (adaptive 2-column or single)
 - Toasts: Standardized success/error/info; no duplicate messages
 
 **Remaining Tasks:**
-- [ ] Users Page
-  - [ ] Professional TanStack React Table (user list)
-  - [ ] Inline filters (role, status, approval state)
-  - [ ] Searchable user dropdown (for batch assignment, batch creation)
-  - [ ] Loading skeletons
-  - [ ] Empty states
-  - [ ] Error boundary with retry
-  - [ ] Standard header (breadcrumbs/actions)
-  - [ ] Toast audit
-  
-  **Consolidated Checklist (Users Page):**
-  - Table: Sticky header, sortable columns, dense layout
-  - Filters: Search (name/email), `role` select, `status` select, Clear Filters
-  - States: Loading skeletons, Empty copy, Error with retry
-  - Role editor: Assign/remove roles; enable/disable toggle via dialog
-  - Toasts: Standard success/error/info, no duplicates
 - [ ] MyBatchesList
   - [ ] Add loading skeletons (card grid)
   - [ ] Empty state for no batches with CTA
