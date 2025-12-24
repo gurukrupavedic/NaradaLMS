@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, AlertCircle, FolderPlus, Trash2 } from "lucide-react";
+import { MoreVertical, AlertCircle, FolderPlus, Trash2 } from "lucide-react";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 
 type Track = { id: number; title?: string; name?: string };
 
@@ -160,7 +161,7 @@ export default function BatchManagement() {
   });
 
   return (
-    <div className="space-y-6 px-4">
+    <div className="space-y-6 px-4 pt-4">
       {/* Create Batch Form */}
       <form onSubmit={submitCreate} className="rounded-lg border border-border bg-card p-4">
         <h2 className="text-base font-semibold text-foreground">Create Batch</h2>
@@ -249,60 +250,13 @@ export default function BatchManagement() {
 
       {/* Pagination */}
       {!isLoading && !error && batches.length > 0 && (
-        <div className="flex items-center justify-end gap-4 px-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Rows per page</span>
-            <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
-              <SelectTrigger className="w-[70px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-            <span className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(1)}
-              disabled={page === 1}
-            >
-              <ChevronsLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(totalPages)}
-              disabled={page === totalPages}
-            >
-              <ChevronsRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        <DataTablePagination
+          currentPage={page}
+          totalPages={totalPages}
+          pageSize={limit}
+          onPageChange={setPage}
+          onPageSizeChange={(newSize) => { setLimit(newSize); setPage(1); }}
+        />
       )}
     </div>
   );
