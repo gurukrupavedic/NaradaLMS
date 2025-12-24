@@ -124,21 +124,8 @@ export default function UserManagement() {
   const isLoadingState = isLoading || isRefetching;
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col gap-2">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">Admin / Users</p>
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Users</h1>
-            <p className="text-sm text-muted-foreground">Manage approvals, roles, and account status.</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoadingState}>
-            <RefreshCw className="mr-2 h-4 w-4" /> Refresh
-          </Button>
-        </div>
-      </header>
-
-      <section className="rounded-2xl border border-border bg-card p-4">
+    <div className="space-y-6 pb-10">
+      <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
           <Input
             value={search}
@@ -170,8 +157,11 @@ export default function UserManagement() {
           <Button variant="secondary" onClick={resetFilters} disabled={isLoadingState}>
             Clear filters
           </Button>
-          <div className="ml-auto text-sm text-muted-foreground">
-            Showing {filteredUsers.length} of {total} users
+          <div className="ml-auto flex items-center gap-3 text-sm text-muted-foreground">
+            <span>Showing {filteredUsers.length} of {total} users</span>
+            <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoadingState}>
+              <RefreshCw className="mr-2 h-4 w-4" /> Refresh
+            </Button>
           </div>
         </div>
       </section>
@@ -186,11 +176,11 @@ export default function UserManagement() {
       )}
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between px-1">
           <h2 className="text-base font-semibold text-foreground">Pending Approvals</h2>
           <p className="text-sm text-muted-foreground">{pending.length} pending</p>
         </div>
-        <div className="rounded-2xl border border-border bg-card">
+        <div className="rounded-2xl border border-border bg-card shadow-sm">
           {isLoadingState ? (
             <PendingSkeleton />
           ) : (
@@ -238,11 +228,11 @@ export default function UserManagement() {
       </section>
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between px-1">
           <h2 className="text-base font-semibold text-foreground">All Users</h2>
           <p className="text-sm text-muted-foreground">Page {page} of {totalPages}</p>
         </div>
-        <div className="rounded-2xl border border-border bg-card">
+        <div className="rounded-2xl border border-border bg-card shadow-sm">
           {isLoadingState ? (
             <TableSkeleton rows={5} cols={5} />
           ) : (
@@ -277,7 +267,7 @@ export default function UserManagement() {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 shadow-sm">
             <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
               ← Previous
             </Button>
