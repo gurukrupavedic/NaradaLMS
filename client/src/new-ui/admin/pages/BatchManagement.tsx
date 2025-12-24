@@ -1,18 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { ColumnDef, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 import { useBatches, useCreateBatch, useUpdateBatch, Batch } from "../hooks/useBatches";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { RefreshCw, MoreVertical, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, AlertCircle, FolderPlus } from "lucide-react";
 
 type Track = { id: number; title?: string; name?: string };
 
 export default function BatchManagement() {
   const { toast } = useToast();
   const [page, setPage] = useState(1);
-  const limit = 25;
+  const [limit, setLimit] = useState(25);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [trackFilter, setTrackFilter] = useState<string>("all");
+  const [sorting, setSorting] = useState<SortingState>([]);
+
   const offset = (page - 1) * limit;
 
-  const { data, isLoading, error } = useBatches({ limit, offset });
+  const { data, isLoading, error, refetch, isRefetching } = useBatches({ limit, offset });
   const createBatch = useCreateBatch();
   const updateBatch = useUpdateBatch();
 
@@ -27,8 +38,9 @@ export default function BatchManagement() {
     e.preventDefault();
     createBatch.mutate({ batchCode: form.batchCode, batchName: form.batchName, trackId: form.trackId ?? undefined }, {
       onSuccess: () => {
-        toast({ title: "Batch created" });
+        toast({ title: "Batch created", description: "New batch has been created successfully." });
         setForm({ batchCode: "", batchName: "", trackId: undefined });
+        refetch();
       },
       onError: (err: any) => {
         toast({ title: "Failed to create batch", description: err.message, variant: "destructive" });
@@ -38,17 +50,119 @@ export default function BatchManagement() {
 
   const batches = data?.items ?? [];
   const pagination = data?.pagination;
-  const totalPages = pagination ? Math.ceil(pagination.total / limit) : 1;
+  const total = pagination?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
+  // Apply client-side filters
+  const filteredBatches = useMemo(() => {
+    return batches.filter(batch => {
+      if (statusFilter !== "all" && batch.status !== statusFilter) return false;
+      if (trackFilter !== "all" && String(batch.trackId) !== trackFilter) return false;
+      return true;
+    });
+  }, [batches, statusFilter, trackFilter]);
+
+  // Get unique statuses and tracks for filters
+  const uniqueStatuses = useMemo(() => 
+    Array.from(new Set(batches.map(b => b.status))).sort(),
+    [batches]
+  );
+
+  const assignedTracks = useMemo(() => 
+    Array.from(new Set(batches.map(b => b.trackId).filter(id => id !== null && id !== undefined))),
+    [batches]
+  );
+
+  // Define columns for TanStack Table
+  const columns = useMemo<ColumnDef<Batch>[]>(() => [
+    {
+      accessorKey: "batchCode",
+      header: "CODE",
+      cell: ({ row }) => (
+        <span className="font-medium text-foreground">{row.original.batchCode}</span>
+      ),
+    },
+    {
+      accessorKey: "batchName",
+      header: "NAME",
+      cell: ({ row }) => (
+        <span className="text-foreground">{row.original.batchName}</span>
+      ),
+    },
+    {
+      accessorKey: "trackId",
+      header: "TRACK",
+      cell: ({ row }) => {
+        const trackId = row.original.trackId;
+        if (!trackId) return <span className="text-muted-foreground">—</span>;
+        const track = tracks.find(t => t.id === trackId);
+        const label = track ? (track.title || track.name || `Track ${trackId}`) : `Track ${trackId}`;
+        return <span className="text-foreground">{label}</span>;
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "STATUS",
+      cell: ({ row }) => (
+        <span className="text-foreground capitalize">{row.original.status}</span>
+      ),
+    },
+    {
+      id: "actions",
+      header: "ACTIONS",
+      cell: ({ row }) => {
+        const batch = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <MoreVertical className="h-4 w-4" />
+                <span className="sr-only">Actions</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleEdit(batch)}>
+                Edit Batch
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={`/app/admin/batches/${batch.id}`}>
+                  Manage Students
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ], [tracks]);
+
+  // Edit handler (for now just logs, will implement dialog later)
+  const handleEdit = (batch: Batch) => {
+    toast({ title: "Edit feature", description: "Edit dialog will be implemented next." });
+  };
+
+  // TanStack Table setup
+  const table = useReactTable({
+    data: filteredBatches,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    manualPagination: true,
+    pageCount: totalPages,
+  });
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={submitCreate} className="rounded-2xl border border-border bg-card p-3">
+    <div className="space-y-6 px-4">
+      {/* Create Batch Form */}
+      <form onSubmit={submitCreate} className="rounded-lg border border-border bg-card p-4">
         <h2 className="text-base font-semibold text-foreground">Create Batch</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           <LabeledInput label="Batch Code" value={form.batchCode || ""} onChange={(v) => setForm(f => ({ ...f, batchCode: v }))} />
           <LabeledInput label="Batch Name" value={form.batchName || ""} onChange={(v) => setForm(f => ({ ...f, batchName: v }))} />
           <label className="block">
-            <span className="text-xs text-muted-foreground">Current Track (optional)</span>
+            <span className="text-xs font-medium text-muted-foreground">Current Track (optional)</span>
             <select
               className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
               value={form.trackId ?? ""}
@@ -65,180 +179,187 @@ export default function BatchManagement() {
             </select>
           </label>
         </div>
-        <div className="mt-3">
-          <button className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90" disabled={createBatch.isPending}>Create</button>
+        <div className="mt-4">
+          <Button type="submit" disabled={createBatch.isPending || !form.batchCode || !form.batchName}>
+            {createBatch.isPending ? "Creating..." : "Create Batch"}
+          </Button>
         </div>
       </form>
 
-      {isLoading && (
-        <div className="rounded-2xl border border-border bg-card p-6 text-muted-foreground">Loading batches…</div>
-      )}
-      {error && (
-        <div className="rounded-2xl border border-border bg-destructive/10 p-6 text-destructive">Failed to load batches.</div>
-      )}
+      {/* Filters and Refresh */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          {/* Status Filter */}
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {uniqueStatuses.map(status => (
+                <SelectItem key={status} value={status} className="capitalize">
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-      {!isLoading && !error && (
-        <>
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
+          {/* Track Filter */}
+          <Select value={trackFilter} onValueChange={setTrackFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Filter by track" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tracks</SelectItem>
+              {assignedTracks.map(trackId => {
+                const track = tracks.find(t => t.id === trackId);
+                const label = track ? (track.title || track.name || `Track ${trackId}`) : `Track ${trackId}`;
+                return <SelectItem key={trackId} value={String(trackId)}>{label}</SelectItem>;
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Refresh Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isRefetching}
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
+        </Button>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-lg border border-border/60 bg-card overflow-hidden">
+        {isLoading ? (
+          <div className="p-4 space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center p-12 text-center">
+            <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">Failed to load batches</h3>
+            <p className="text-sm text-muted-foreground mb-4">There was an error loading the batch data.</p>
+            <Button onClick={() => refetch()} variant="outline">
+              Retry
+            </Button>
+          </div>
+        ) : filteredBatches.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-12 text-center">
+            <FolderPlus className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">No batches found</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {batches.length === 0 
+                ? "Get started by creating your first batch above."
+                : "No batches match the selected filters."}
+            </p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map(headerGroup => (
+                <TableRow key={headerGroup.id} className="bg-muted/50 hover:bg-muted/50">
+                  {headerGroup.headers.map(header => (
+                    <TableHead key={header.id} className="text-[11px] uppercase tracking-wide font-semibold">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.map(row => (
+                <TableRow key={row.id} className="border-t border-border">
+                  {row.getVisibleCells().map(cell => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {!isLoading && !error && filteredBatches.length > 0 && (
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Rows per page</span>
+            <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
+              <SelectTrigger className="w-[70px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
             <span className="text-sm text-muted-foreground">
-              Page {page} of {totalPages} ({pagination?.total ?? 0} total)
+              Page {page} of {totalPages}
             </span>
           </div>
 
-          <div className="rounded-2xl border border-border bg-card">
-            <table className="w-full text-sm">
-              <thead className="text-muted-foreground">
-                <tr>
-                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Code</th>
-                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Name</th>
-                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Track</th>
-                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Status</th>
-                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {batches.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-5 text-muted-foreground">No batches yet.</td>
-                  </tr>
-                )}
-                {batches.map(b => (
-                  <BatchRow key={b.id} batch={b} tracks={tracks} onUpdate={(payload) => {
-                    updateBatch.mutate({ id: b.id, payload }, {
-                      onSuccess: () => toast({ title: "Batch updated" }),
-                      onError: (err: any) => toast({ title: "Failed to update", description: err.message, variant: "destructive" }),
-                    });
-                  }} />
-                ))}
-              </tbody>
-            </table>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(1)}
+              disabled={page === 1}
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(totalPages)}
+              disabled={page === totalPages}
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
           </div>
-
-          {/* Pagination controls */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50">
-                ← Previous
-              </button>
-              <div className="flex gap-2">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const p = Math.max(1, page - 2) + i;
-                  if (p > totalPages) return null;
-                  return (
-                    <button
-                      key={p}
-                      onClick={() => setPage(p)}
-                      className={`rounded-md px-3 py-1.5 text-sm ${p === page ? 'bg-primary text-primary-foreground' : 'border border-border hover:bg-muted'}`}
-                    >
-                      {p}
-                    </button>
-                  );
-                }).filter(Boolean)}
-              </div>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50">
-                Next →
-              </button>
-            </div>
-          )}
-        </>
+        </div>
       )}
     </div>
-  );
-}
-
-function BatchRow({ batch, tracks, onUpdate }: { batch: Batch; tracks: { id: number; title?: string; name?: string }[]; onUpdate: (payload: Partial<Batch>) => void }) {
-  const [editing, setEditing] = useState(false);
-  const [values, setValues] = useState<Partial<Batch>>({ batchName: batch.batchName, status: batch.status, trackId: batch.trackId ?? undefined });
-
-  return (
-    <tr className="border-t border-border">
-      <td className="px-4 py-3">{batch.batchCode}</td>
-      <td className="px-3 py-2">
-        {editing ? (
-          <label className="block">
-            <span className="sr-only">Batch Name</span>
-            <input
-              aria-label="Batch Name"
-              className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm"
-              value={values.batchName || ""}
-              onChange={(e) => setValues(v => ({ ...v, batchName: e.target.value }))}
-              placeholder="Batch Name"
-            />
-          </label>
-        ) : (
-          batch.batchName
-        )}
-      </td>
-      <td className="px-3 py-2">
-        {editing ? (
-          <label className="block">
-            <span className="sr-only">Track</span>
-            <select
-              aria-label="Track"
-              className="rounded-md border border-border bg-background px-2 py-1 text-sm"
-              value={values.trackId ?? ''}
-              onChange={(e) => {
-                const v = e.target.value;
-                setValues(val => ({ ...val, trackId: v ? parseInt(v) : null }));
-              }}
-              title="Track"
-            >
-              <option value="">— None —</option>
-              {tracks.map(t => {
-                const label = t.title || t.name || `Track ${t.id}`;
-                return <option key={t.id} value={t.id}>{label}</option>;
-              })}
-            </select>
-          </label>
-        ) : (
-          (() => {
-            const t = tracks.find(t => t.id === (batch.trackId ?? -1));
-            return t ? (t.title || t.name || `Track ${t.id}`) : '—';
-          })()
-        )}
-      </td>
-      <td className="px-3 py-2">
-        {editing ? (
-          <label className="block">
-            <span className="sr-only">Status</span>
-            <select
-              aria-label="Status"
-              className="rounded-md border border-border bg-background px-2 py-1 text-sm"
-              value={values.status || "active"}
-              onChange={(e) => setValues(v => ({ ...v, status: e.target.value }))}
-              title="Status"
-            >
-              <option value="active">active</option>
-              <option value="completed">completed</option>
-              <option value="archived">archived</option>
-            </select>
-          </label>
-        ) : (
-          batch.status
-        )}
-      </td>
-      <td className="px-3 py-2">
-        {editing ? (
-          <div className="flex gap-2">
-            <button className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90" onClick={() => { onUpdate(values); setEditing(false); }}>Save</button>
-            <button className="rounded-md border border-border px-3 py-1.5 text-foreground hover:bg-muted" onClick={() => { setValues({ batchName: batch.batchName, status: batch.status }); setEditing(false); }}>Cancel</button>
-          </div>
-        ) : (
-          <div className="flex gap-2">
-            <button className="rounded-md border border-border px-3 py-1.5 text-foreground hover:bg-muted" onClick={() => setEditing(true)}>Edit</button>
-            <a href={`/app/admin/batches/${batch.id}`} className="rounded-md bg-accent/20 px-3 py-1.5 text-accent-foreground hover:bg-accent/30">Manage</a>
-          </div>
-        )}
-      </td>
-    </tr>
   );
 }
 
 function LabeledInput({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <label className="block">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <input className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={value} onChange={(e) => onChange(e.target.value)} />
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <input 
+        className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" 
+        value={value} 
+        onChange={(e) => onChange(e.target.value)} 
+      />
     </label>
   );
 }
