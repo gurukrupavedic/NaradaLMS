@@ -124,7 +124,7 @@ export default function UserManagement() {
   const isLoadingState = isLoading || isRefetching;
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-6 pb-10 px-3 sm:px-4 lg:px-6">
       <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
           <Input
