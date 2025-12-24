@@ -249,7 +249,7 @@ export default function BatchManagement() {
 
       {/* Pagination */}
       {!isLoading && !error && batches.length > 0 && (
-        <div className="flex items-center justify-between px-2">
+        <div className="flex items-center justify-end gap-4 px-2">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Rows per page</span>
             <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
