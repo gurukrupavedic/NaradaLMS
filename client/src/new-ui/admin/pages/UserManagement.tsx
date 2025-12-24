@@ -1,22 +1,56 @@
 import React, { useMemo, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { ColumnDef, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 import { useAdminUsers, useApproveUser, useAssignRoles, useDisableUser, useEnableUser, useRejectUser, AdminUser } from "../hooks/useAdminUsers";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/design-system/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RefreshCw, MoreVertical, Check, X, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
 
 const ALL_ROLES = ["student", "instructor", "content_manager", "admin"] as const;
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Admin",
+  instructor: "Instructor",
+  content_manager: "Content Manager",
+  student: "Student",
+};
+const STATUS_FILTERS = [
+  { value: "all", label: "All statuses" },
+  { value: "pending_approval", label: "Pending" },
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+];
 
 export default function UserManagement() {
   const { toast } = useToast();
-  const [_location, setLocation] = useLocation();
-  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-  const pageParam = searchParams.get('page');
-  const statusParam = searchParams.get('status') || undefined;
 
-  const page = Math.max(1, parseInt(pageParam || '1'));
-  const limit = 25;
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editingRoles, setEditingRoles] = useState<string[]>([]);
+
   const offset = (page - 1) * limit;
 
-  const { data, isLoading, error } = useAdminUsers({ limit, offset, status: statusParam });
+  const { data, isLoading, error, refetch, isRefetching } = useAdminUsers({
+    limit,
+    offset,
+    status: statusFilter === "all" ? undefined : statusFilter,
+  });
+
   const approve = useApproveUser();
   const reject = useRejectUser();
   const assignRoles = useAssignRoles();
@@ -25,12 +59,37 @@ export default function UserManagement() {
 
   const users = data?.users ?? [];
   const pagination = data?.pagination;
-  const pending = useMemo(() => users.filter(u => u.status === "pending_approval"), [users]);
-  const activeOrInactive = useMemo(() => users.filter(u => u.status !== "pending_approval"), [users]);
+  const total = pagination?.total ?? users.length;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
+  const filteredUsers = users;
+
+  // Compute status counts for all users (not filtered by server)
+  const statusCounts = useMemo(() => {
+    const allCount = total;
+    const pendingCount = users.filter(u => u.status === "pending_approval").length;
+    const activeCount = users.filter(u => u.status === "active").length;
+    const inactiveCount = users.filter(u => u.status === "inactive").length;
+    return { all: allCount, pending: pendingCount, active: activeCount, inactive: inactiveCount };
+  }, [users, total]);
+
+  const startRoleEdit = (user: AdminUser) => {
+    if (user.status === "pending_approval") return;
+    setEditingUserId(user.id);
+    setEditingRoles(user.roles ?? []);
+  };
+
+  const cancelRoleEdit = () => {
+    setEditingUserId(null);
+    setEditingRoles([]);
+  };
 
   const handleApprove = (userId: string) => {
     approve.mutate(userId, {
-      onSuccess: () => toast({ title: "User approved", description: "User is now active." }),
+      onSuccess: () => {
+        toast({ title: "User approved", description: "User is now active." });
+        refetch();
+      },
       onError: (err: any) => toast({ title: "Failed to approve", description: err.message, variant: "destructive" }),
     });
   };
@@ -38,203 +97,357 @@ export default function UserManagement() {
   const handleReject = (userId: string) => {
     if (!confirm("Are you sure? This will permanently delete the pending user.")) return;
     reject.mutate(userId, {
-      onSuccess: () => toast({ title: "User rejected", description: "Pending user has been removed." }),
+      onSuccess: () => {
+        toast({ title: "User rejected", description: "Pending user has been removed." });
+        refetch();
+      },
       onError: (err: any) => toast({ title: "Failed to reject", description: err.message, variant: "destructive" }),
     });
   };
 
-  const totalPages = pagination ? Math.ceil(pagination.total / limit) : 1;
-  const goToPage = (p: number) => setLocation(`?page=${p}${statusParam ? `&status=${statusParam}` : ''}`);
+  const handleAssignRoles = (userId: string, roles: string[], opts?: { onSuccess?: () => void }) => {
+    assignRoles.mutate(
+      { userId, roles },
+      {
+        onSuccess: () => {
+          toast({ title: "Roles updated" });
+          opts?.onSuccess?.();
+          refetch();
+        },
+        onError: (err: any) => toast({ title: "Failed to update roles", description: err.message, variant: "destructive" }),
+      }
+    );
+  };
+
+  const handleToggleStatus = (user: AdminUser) => {
+    if (user.status === "inactive") {
+      enableUser.mutate(user.id, {
+        onSuccess: () => {
+          toast({ title: "User enabled" });
+          refetch();
+        },
+        onError: (err: any) => toast({ title: "Failed to enable user", description: err.message, variant: "destructive" }),
+      });
+    } else {
+      disableUser.mutate(user.id, {
+        onSuccess: () => {
+          toast({ title: "User disabled" });
+          refetch();
+        },
+        onError: (err: any) => toast({ title: "Failed to disable user", description: err.message, variant: "destructive" }),
+      });
+    }
+  };
+
+  const isLoadingState = isLoading || isRefetching;
+
+  const columns: ColumnDef<AdminUser>[] = [
+    {
+      id: "name",
+      header: "Name",
+      cell: ({ row }) => (
+        <span className="text-sm font-medium text-foreground">{formatName(row.original)}</span>
+      ),
+      enableSorting: false,
+    },
+    {
+      id: "email",
+      header: "Email",
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">{row.original.email}</span>
+      ),
+      enableSorting: false,
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      enableSorting: false,
+      size: 120,
+    },
+    {
+      accessorKey: "roles",
+      header: "Roles",
+      cell: ({ row }) => {
+        const user = row.original;
+        const isPending = user.status === "pending_approval";
+        const isEditing = editingUserId === user.id && !isPending;
+
+        if (isPending) {
+          return <span className="text-sm text-muted-foreground">—</span>;
+        }
+
+        if (isEditing) {
+          return (
+            <div className="flex flex-wrap gap-2">
+              {ALL_ROLES.map((role) => (
+                <label key={role} className="inline-flex items-center gap-2 rounded px-1.5 py-1 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={editingRoles.includes(role)}
+                    onChange={() =>
+                      setEditingRoles((r) => (r.includes(role) ? r.filter((x) => x !== role) : [...r, role]))
+                    }
+                  />
+                  <span>{ROLE_LABELS[role] ?? role}</span>
+                </label>
+              ))}
+            </div>
+          );
+        }
+
+        const roles = user.roles ?? [];
+        if (roles.length === 0) return <span className="text-sm text-muted-foreground">—</span>;
+        const displayRoles = roles.map((r) => ROLE_LABELS[r] ?? r);
+        return <span className="text-sm text-foreground">{displayRoles.join(", ")}</span>;
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: "Created / Requested",
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{formatDate(row.original.createdAt)}</span>,
+      size: 140,
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const user = row.original;
+        const isPending = user.status === "pending_approval";
+        const isEditing = editingUserId === user.id && !isPending;
+
+        if (isEditing) {
+          return (
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" onClick={() => handleAssignRoles(user.id, editingRoles, { onSuccess: () => cancelRoleEdit() })} disabled={assignRoles.isPending}>
+                Save
+              </Button>
+              <Button size="sm" variant="outline" onClick={cancelRoleEdit}>
+                Cancel
+              </Button>
+            </div>
+          );
+        }
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="data-[state=open]:bg-muted">
+                <MoreVertical className="h-4 w-4" />
+                <span className="sr-only">Open row menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              {isPending ? (
+                <>
+                  <DropdownMenuItem onClick={() => handleApprove(user.id)} disabled={approve.isPending}>
+                    <Check className="mr-2 h-4 w-4" /> Approve
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleReject(user.id)} disabled={reject.isPending}>
+                    <X className="mr-2 h-4 w-4" /> Reject
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem onClick={() => startRoleEdit(user)}>
+                    Edit roles
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleToggleStatus(user)}>
+                    {user.status === "inactive" ? "Enable" : "Disable"}
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
+
+  const table = useReactTable({
+    data: filteredUsers,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    setPage(1);
+  };
 
   return (
-    <div className="space-y-6">
-      <section className="space-y-3">
-            <h2 className="text-base font-semibold text-foreground">Pending Approvals</h2>
-            <div className="rounded-2xl border border-border bg-card">
-              <table className="w-full text-sm">
-                <thead className="text-muted-foreground">
-                  <tr>
-                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Email</th>
-                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Name</th>
-                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Requested</th>
-                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pending.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="px-4 py-5 text-muted-foreground">No pending approvals.</td>
-                    </tr>
-                  )}
-                  {pending.map(u => (
-                    <tr key={u.id} className="border-t border-border">
-                      <td className="px-3 py-2">{u.email}</td>
-                      <td className="px-3 py-2">{formatName(u)}</td>
-                      <td className="px-3 py-2">{formatDate(u.createdAt)}</td>
-                      <td className="px-3 py-2">
-                        <div className="flex gap-2">
-                          <button
-                            className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90 disabled:opacity-50"
-                            onClick={() => handleApprove(u.id)}
-                            disabled={approve.isPending}
-                          >
-                            Approve
-                          </button>
-                          <button
-                            className="rounded-md bg-destructive/20 px-3 py-1.5 text-sm text-destructive hover:bg-destructive/30 disabled:opacity-50"
-                            onClick={() => handleReject(u.id)}
-                            disabled={reject.isPending}
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
+    <div className="space-y-6 pb-10 px-4 pt-4">
+      <Tabs value={statusFilter} onValueChange={handleStatusChange} className="w-full">
+        <div className="flex items-center justify-between">
+          <TabsList className="h-auto p-1">
+            <TabsTrigger value="all">
+              All Users
+            </TabsTrigger>
+            <TabsTrigger value="pending_approval">
+              Pending <Badge variant="secondary" className="ml-1.5">{statusCounts.pending}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="inactive">
+              Inactive <Badge variant="secondary" className="ml-1.5">{statusCounts.inactive}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="active">
+              Active <Badge variant="secondary" className="ml-1.5">{statusCounts.active}</Badge>
+            </TabsTrigger>
+          </TabsList>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => refetch()} 
+            disabled={isLoadingState}
+            className="h-8 w-8"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+      </Tabs>
 
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-foreground">All Users</h2>
-              <div className="text-sm text-muted-foreground">
-                Page {page} of {totalPages} ({pagination?.total ?? 0} total)
-              </div>
+      {error && (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium">Failed to load users.</p>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
+          </div>
+        </div>
+      )}
+
+      <section className="space-y-3">
+        <div className="rounded-lg border border-border/60 bg-card shadow-sm overflow-hidden">
+          {isLoadingState ? (
+            <TableSkeleton rows={5} cols={5} />
+          ) : (
+            <Table className="px-2 sm:px-4">
+              <TableHeader className="bg-muted/40 sticky top-0 z-10">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id} className="text-xs font-bold text-foreground/70 uppercase tracking-widest">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors">
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="py-6 text-sm text-muted-foreground text-center">No users to display.</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </div>
+
+        <div className="flex items-center justify-end gap-8 px-4 py-4 sm:pt-4 sm:pb-0">
+          <div className="flex items-center gap-8">
+            <div className="hidden items-center gap-2 sm:flex">
+              <span className="text-sm text-muted-foreground">Rows per page</span>
+              <Select
+                value={`${limit}`}
+                onValueChange={(value) => { setLimit(Number(value)); setPage(1); }}
+              >
+                <SelectTrigger size="sm" className="w-20">
+                  <SelectValue placeholder={limit} />
+                </SelectTrigger>
+                <SelectContent side="top">
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="25">25</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div className="rounded-2xl border border-border bg-card">
-              <table className="w-full text-sm">
-                <thead className="text-muted-foreground">
-                  <tr>
-                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Email</th>
-                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Name</th>
-                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Status</th>
-                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Roles</th>
-                    <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeOrInactive.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-5 text-muted-foreground">No users to display.</td>
-                    </tr>
-                  )}
-                  {activeOrInactive.map(u => (
-                    <UserRow key={u.id} user={u} onAssignRoles={(roles) => {
-                      assignRoles.mutate({ userId: u.id, roles }, {
-                        onSuccess: () => toast({ title: "Roles updated" }),
-                        onError: (err: any) => toast({ title: "Failed to update roles", description: err.message, variant: "destructive" }),
-                      });
-                    }} onDisableOrEnable={() => {
-                      if (u.status === "inactive") {
-                        enableUser.mutate(u.id, {
-                          onSuccess: () => toast({ title: "User enabled" }),
-                          onError: (err: any) => toast({ title: "Failed to enable user", description: err.message, variant: "destructive" }),
-                        });
-                      } else {
-                        disableUser.mutate(u.id, {
-                          onSuccess: () => toast({ title: "User disabled" }),
-                          onError: (err: any) => toast({ title: "Failed to disable user", description: err.message, variant: "destructive" }),
-                        });
-                      }
-                    }} />
-                  ))}
-                </tbody>
-              </table>
+
+            <span className="text-sm font-medium text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+
+            <div className="ml-auto flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setPage(1)}
+                disabled={page === 1}
+                className="h-8 w-8 bg-transparent"
+                aria-label="First page"
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="h-8 w-8 bg-transparent"
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="h-8 w-8 bg-transparent"
+                aria-label="Next page"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setPage(totalPages)}
+                disabled={page === totalPages}
+                className="h-8 w-8 bg-transparent"
+                aria-label="Last page"
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </Button>
             </div>
-            
-            {/* Pagination controls */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
-                <button onClick={() => goToPage(page - 1)} disabled={page === 1} className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50">
-                  ← Previous
-                </button>
-                <div className="flex gap-2">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const p = Math.max(1, page - 2) + i;
-                    if (p > totalPages) return null;
-                    return (
-                      <button
-                        key={p}
-                        onClick={() => goToPage(p)}
-                        className={`rounded-md px-3 py-1.5 text-sm ${p === page ? 'bg-primary text-primary-foreground' : 'border border-border hover:bg-muted'}`}
-                      >
-                        {p}
-                      </button>
-                    );
-                  }).filter(Boolean)}
-                </div>
-                <button onClick={() => goToPage(page + 1)} disabled={page === totalPages} className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50">
-                  Next →
-                </button>
-              </div>
-            )}
-          </section>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
 
-function UserRow({ user, onAssignRoles, onDisableOrEnable }: { user: AdminUser; onAssignRoles: (roles: string[]) => void; onDisableOrEnable: () => void }) {
-  const [editing, setEditing] = useState(false);
-  const [selectedRoles, setSelectedRoles] = useState<string[]>(user.roles ?? []);
+function StatusBadge({ status }: { status: AdminUser["status"] }) {
+  const label = status === "active" ? "Active" : status === "inactive" ? "Inactive" : "Pending";
+  return <span className="text-sm text-foreground">{label}</span>;
+}
 
-  const toggleRole = (role: string) => {
-    setSelectedRoles(r => r.includes(role) ? r.filter(x => x !== role) : [...r, role]);
-  };
-
+function TableSkeleton({ rows, cols }: { rows: number; cols: number }) {
   return (
-    <tr className="border-t border-border">
-      <td className="px-4 py-3">{user.email}</td>
-      <td className="px-4 py-3">{formatName(user)}</td>
-      <td className="px-4 py-3">{formatStatus(user.status)}</td>
-      <td className="px-4 py-3">
-        {editing ? (
-          <div className="flex flex-wrap gap-2">
-            {ALL_ROLES.map(role => (
-              <label key={role} className="inline-flex items-center gap-2 rounded-md border border-border bg-muted px-2 py-1">
-                <input type="checkbox" checked={selectedRoles.includes(role)} onChange={() => toggleRole(role)} />
-                <span className="text-xs">{role}</span>
-              </label>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-1">
-            {(user.roles ?? []).length === 0 && <span className="text-muted-foreground">—</span>}
-            {(user.roles ?? []).map(role => (
-              <span key={role} className="rounded-md bg-accent/20 px-2 py-1 text-xs text-accent-foreground">{role}</span>
-            ))}
-          </div>
-        )}
-      </td>
-      <td className="px-4 py-3">
-        {editing ? (
-          <div className="flex gap-2">
-            <button className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90" onClick={() => { onAssignRoles(selectedRoles); setEditing(false); }}>
-              Save
-            </button>
-            <button className="rounded-md border border-border px-3 py-1.5 text-foreground hover:bg-muted" onClick={() => { setSelectedRoles(user.roles ?? []); setEditing(false); }}>
-              Cancel
-            </button>
-          </div>
-        ) : (
-          <div className="flex gap-2">
-            <button className="rounded-md border border-border px-3 py-1.5 text-foreground hover:bg-muted" onClick={() => setEditing(true)}>
-              Edit Roles
-            </button>
-            {user.status === "inactive" ? (
-              <button className="rounded-md bg-green-500/20 px-3 py-1.5 text-green-600 hover:bg-green-500/30" onClick={onDisableOrEnable}>
-                Enable
-              </button>
-            ) : (
-              <button className="rounded-md bg-destructive/20 px-3 py-1.5 text-destructive hover:bg-destructive/30" onClick={onDisableOrEnable}>
-                Disable
-              </button>
-            )}
-          </div>
-        )}
-      </td>
-    </tr>
+    <div className="space-y-2 p-4">
+      {Array.from({ length: rows }).map((_, r) => (
+        <div
+          key={r}
+          className="grid gap-3"
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        >
+          {Array.from({ length: cols }).map((__, c) => (
+            <Skeleton key={c} className="h-4 w-full" />
+          ))}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -252,10 +465,4 @@ function formatDate(date?: string | null) {
   } catch {
     return "—";
   }
-}
-
-function formatStatus(status: AdminUser["status"]) {
-  if (status === "active") return "Active";
-  if (status === "inactive") return "Inactive";
-  return "Pending Approval";
 }
