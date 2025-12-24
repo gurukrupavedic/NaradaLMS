@@ -1,8 +1,8 @@
 # VedicLMS MVP Implementation Plan
 
-**Last Updated:** December 22, 2025  
+**Last Updated:** December 23, 2025  
 **Status:** In Progress  
-**Current Phase:** Phase 3 – Admin Center (Complete) → Phase 4 – Batches & Progress
+**Current Phase:** Phase 7.1-7.2 Complete → Phase 5 or 7.3 Next (User to decide)
 
 ---
 
@@ -319,65 +319,33 @@ Main Content (adaptive 2-column or single)
 
 ---
 
-### Phase 4: Feature Migration – Batches & Progress (1 week) 🔜 NEXT
-**Goal:** Build fully functional new Admin Center using v0 components.
-
-**Approach (Clean, Backend-First Hybrid):**
-- Define frontend data needs and screens.
-- Inventory existing admin APIs; identify mismatches.
-- Spec and add minimal backend endpoints (aggregated stats).
-- Wire frontend directly to real APIs (no placeholder state).
-- Iterate consciously; backend changes only for purposeful additions.
- - Defer navigation and visual polish to Phase 7 (Global Polish).
-
-**Screens:**
-- Admin dashboard (overview cards + quick actions)
-- User Management (pending approvals + user list)
-- Batch Management (CRUD forms)
-- Audit Logs (basic table with filters)
-- System Settings (placeholder)
-
-**Tasks:**
-- [ ] Define frontend data needs per screen (fields, filters, pagination)
-- [ ] Map needs → existing APIs; list gaps
-- [ ] Spec `GET /api/admin/stats` (counts + recent activity)
-- [ ] Implement `GET /api/admin/stats` in server
-- [ ] Build `new-ui/admin/pages/AdminDashboard.tsx` (wired to stats)
-- [ ] Build `new-ui/admin/pages/UserManagement.tsx` (wired to auth-admin users)
-- [ ] Build `new-ui/admin/pages/BatchManagement.tsx` (wired to batch routes)
-- [ ] Build `new-ui/admin/pages/AuditLogs.tsx` (wired to admin audit logs)
-- [ ] Test both old (`/manage/users`) and new (`/app/admin`) side-by-side
-- [ ] Responsive testing (mobile/tablet/desktop)
-
-**Deliverables:**
-- `/app/admin/*` fully functional with v0 styling
-- Old `/manage/users` still works
-- Feature flag lets admins toggle between old/new
-
----
-
-### Phase 4: Feature Migration – Batches & Progress (1 week) 🔜 NEXT
+### Phase 4: Feature Migration – Batches & Progress ✅ COMPLETE
 **Goal:** Build instructor batch management using v0 components.
 
-**Screens:**
-- My Batches list (v0 card grid)
-- Batch Detail (v0 table for desktop, cards for mobile)
-
-**Tasks:**
-- [ ] Build `new-ui/batches/pages/MyBatchesList.tsx` (v0 card grid)
-- [ ] Build `new-ui/batches/pages/BatchDetail.tsx` (v0 table + mobile cards)
-- [ ] Implement inline proficiency editing (bottom sheet mobile, inline desktop)
-- [ ] Connect to APIs (`/api/batches`, `/api/students`, `/api/proficiency`)
-- [ ] Test both old and new side-by-side
-- [ ] Responsive testing (all devices)
+**Completed (December 23, 2025):**
+- ✅ Defined data needs (fields, filters, pagination) for instructor views
+- ✅ Mapped needs to existing APIs (no gaps found; backend ready)
+- ✅ Built `new-ui/batches/pages/MyBatchesList.tsx` (card grid)
+- ✅ Built `new-ui/batches/pages/BatchDetail.tsx` (table + mobile cards)
+- ✅ Implemented inline proficiency editing (dropdown 0-4 scale)
+- ✅ Connected to APIs (`/api/batches`, `/api/auth/admin/users`, `/api/content/tracks`)
+- ✅ Responsive design (mobile/tablet/desktop)
+- ✅ Toast notifications on all mutations
+- ✅ Searchable student combobox (name/email/ID)
+- ✅ Track context card in batch detail
+- ✅ All Phase 4 code type-safe (0 TypeScript errors)
 
 **Deliverables:**
-- `/app/batches/*` fully functional with v0 styling
-- Old `/manage/batches` still works
+- `/app/batches/*` fully functional with responsive design
+- 9 custom hooks (data fetching, mutations)
+- 2 pages (MyBatchesList, BatchDetail)
+- 1 reusable component (StudentCombobox)
+- Backend fix: studentName query in batch-cohort/storage.ts
+- Ready for EOD merge to main
 
 ---
 
-### Phase 5: Feature Migration – Content Studio (1 week)
+### Phase 5: Feature Migration – Content Studio (1 week) 🔜 NEXT
 **Goal:** Polish content management for new UI using v0 components.
 
 **Screens:**
@@ -422,16 +390,191 @@ Main Content (adaptive 2-column or single)
 
 ---
 
-### Phase 7: Global Polish (Navigation + UI/UX), A11y, Testing, & Cutover Decision (1–2 weeks)
-**Goal:** Production-ready new UI. You decide when to cutover.
+### Phase 7.1: Navigation Architecture ✅ COMPLETE (Dec 23, 2025)
+**Goal:** Define role-based navigation taxonomy and implement foundational architecture.
+
+**Completed Work:**
+- ✅ Downloaded v0 shadcn sidebar block (free, from ui.shadcn.com/blocks)
+- ✅ Created `navigation-config.ts` with role-based taxonomy
+  - Learn section (All roles)
+  - Batches & Progress (Instructor)
+  - Content Studio (Content Manager)
+  - Admin (Admin)
+- ✅ Built `getNavigationForRole(role)` function with 4 role types
+- ✅ Added Course Content page under Learn section
+- ✅ Implemented breadcrumb mapping (`getBreadcrumbs(pathname)`)
+
+**Deliverables:**
+- Navigation configuration file with role-aware sections
+- Foundation for AppSidebar and TopNav components
+- Clear separation of concerns (student, instructor, content_manager, admin)
+
+---
+
+### Phase 7.2: Shell Overhaul ✅ COMPLETE (Dec 23, 2025)
+**Goal:** Replace basic AppShell with professional v0 sidebar layout.
+
+**Completed Work:**
+- ✅ Built 6 new components from v0 block:
+  - `app-sidebar.tsx` - Collapsible sidebar with role-based navigation
+  - `nav-main.tsx` - Renders nav groups with nested items
+  - `nav-user.tsx` - User profile dropdown (profile, settings, logout)
+  - `brand-header.tsx` - VedicLMS logo header
+  - `top-nav.tsx` - Top bar with breadcrumbs, notifications, theme toggle
+  - `app-layout.tsx` - SidebarProvider wrapper
+- ✅ Replaced `AppShell.tsx` completely with new SidebarProvider-based layout
+- ✅ Implemented simple breadcrumbs ("Section > Page" format)
+- ✅ Fixed user role extraction from `user.roles[0]` with fallback
+- ✅ Tested with admin role (all sections visible)
+- ✅ Mobile responsiveness via SidebarProvider (hamburger menu automatic)
+
+**Deliverables:**
+- Professional sidebar navigation matching v0 design patterns
+- Role-aware section visibility (navigation-config integration)
+- Breadcrumb navigation auto-updating based on route
+- Theme: v0 base (black/white, light/dark mode ready)
+- Responsive: Mobile hamburger, desktop persistent sidebar
+
+**Branch:** `daily/2025-12-23` (commit e02a73c)  
+**Next Step:** Phase 7.3 or Phase 5 (user to decide)
+
+---
+
+### Phase 7.3: Workflow Refinement (page-by-page) 🔜 IN PROGRESS
+**Goal:** Refine one page at a time across Batches and Admin Center, focusing on loading, empty, and error states with consistent headers and toasts.
+
+**Branch:** feat-7.3-users-page-refinement (continuing from daily/2025-12-23)
+
+**Approach:** Page-by-page execution with quick reviews and incremental merges into the daily branch. Each page must meet acceptance criteria before moving on.
+
+**Completed Pages (December 23, 2025):**
+
+#### ✅ AuditLogs (Complete)
+**Deliverables:**
+- ✅ Professional TanStack React Table with 6 columns (TIME, ACTION, USER, RESOURCE, RESOURCE ID, CHANGES)
+- ✅ Inline filter row: Action (dropdown), Resource (dropdown), User (searchable dropdown), Date range
+- ✅ Searchable user dropdown with client-side filtering by name/email
+- ✅ Smart changes display (inline for simple, popover for complex)
+- ✅ Pagination with rows-per-page selector (10, 25, 50, 100)
+- ✅ Loading state with skeleton cards
+- ✅ Empty state with helpful messaging
+- ✅ Error state with retry button
+- ✅ Theme-aware styling (light/dark mode ready)
+- ✅ Proper z-indexing for dropdowns (z-50 for dropdowns, z-10 for sticky header)
+- ✅ Standard header with breadcrumbs
+- ✅ Toast notifications for all interactions
+
+#### ✅ Users Page (Complete)
+**Deliverables:**
+- ✅ Professional TanStack React Table with 5 columns (Name, Email, Status, Roles, Created/Requested, Actions)
+- ✅ Tab-style status filters (All Users, Pending, Inactive, Active) with dynamic count badges
+- ✅ Removed traditional filter bar in favor of preset tab navigation
+- ✅ Separate Name and Email columns for better scannability
+- ✅ Simplified status and role display (plain text, no pills)
+- ✅ Friendly role labels (Admin, Instructor, Content Manager, Student)
+- ✅ Removed checkbox selection (no bulk actions needed for MVP)
+- ✅ Vertical kebab menu for row actions (approve/reject for pending; edit roles/enable/disable for active)
+- ✅ Inline role editing with friendly labels and clean checkbox styling
+- ✅ Auto-refetch on all mutations (approve, reject, assign roles, toggle status)
+- ✅ Dynamic navigation highlighting (active route in sidebar)
+- ✅ Consistent px-4 padding on all sides
+- ✅ Refresh icon aligned to right of tabs
+- ✅ Pagination matching v0 reference (rows-per-page Select, 4 nav buttons)
+- ✅ Professional table styling (muted sticky header, row borders, hover states)
+- ✅ Loading skeleton, empty state, error state with retry
+- ✅ Toast notifications for all interactions
+
+**Next Targets (order of execution):**
+- MyBatchesList
+- Batches
+  - MyBatchesList
+  - BatchDetail
+- Admin Center (remaining)
+  - AdminDashboard
+  - UserManagement
+  - BatchManagement
+  - SystemSettings (placeholder polishing)
+
+**Acceptance Criteria (per page):**
+- Loading: Skeletons for primary content blocks and tables
+- Empty: Clear messaging + helpful call-to-action where applicable
+- Error: Error boundary wrapper with retry and support link stub
+- Header: Breadcrumbs + Title + Actions + optional Filters, consistent spacing
+- Toasts: Standardized success/error/info; no duplicate messages
+
+**Remaining Tasks:**
+- [ ] MyBatchesList
+  - [ ] Add loading skeletons (card grid)
+  - [ ] Empty state for no batches with CTA
+  - [ ] Error boundary with retry
+  - [ ] Standard header (breadcrumbs/actions)
+  - [ ] Toast audit
+- [ ] BatchDetail
+  - [ ] Loading skeletons (table + side cards)
+  - [ ] Empty states (no students, no progress)
+  - [ ] Error boundary with retry
+  - [ ] Standard header (breadcrumbs/actions/filters)
+  - [ ] Toast audit
+- [ ] AdminDashboard
+  - [ ] Loading skeletons (stats cards)
+  - [ ] Empty state copy for no data
+  - [ ] Error boundary with retry
+  - [ ] Standard header
+  - [ ] Toast audit
+- [ ] UserManagement
+  - [ ] Loading skeletons (table)
+  - [ ] Empty states (no pending approvals, no users)
+  - [ ] Error boundary with retry
+  - [ ] Standard header (breadcrumbs/actions/filters)
+  - [ ] Toast audit
+- [ ] BatchManagement
+  - [ ] Loading skeletons (table/form)
+  - [ ] Empty state (no batches)
+  - [ ] Error boundary with retry
+  - [ ] Standard header
+  - [ ] Toast audit
+- [ ] SystemSettings
+  - [ ] Loading skeletons (settings list)
+  - [ ] Empty state (no settings)
+  - [ ] Error boundary with retry
+  - [ ] Standard header
+  - [ ] Toast audit
+
+**Deliverables:**
+- Production-quality loading/empty/error behaviors per page
+- Standardized headers and toast patterns across Batches and Admin
+- Incremental commits, review after each page, merge to daily branch
+
+---
+
+### Phase 7.4: Final Polish (After Phase 5-6) 🔜 DEFERRED
+**Goal:** Production-ready new UI with A11y, performance, and testing.
+
+**Scope:**
+- A11y audit (keyboard nav, screen reader, focus, contrast)
+- Responsive testing (all breakpoints, all devices)
+- Dark/light mode testing (v0 theme)
+- Performance optimization (code splitting, prefetch, images)
+- Global bug fixes and refinements
 
 **Tasks:**
-- [ ] A11y audit (keyboard nav, screen reader, focus, contrast)
+- [ ] A11y audit & fixes
+  - [ ] Keyboard navigation (all screens)
+  - [ ] Screen reader support (aria labels)
+  - [ ] Focus indicators (visible on all elements)
+  - [ ] Color contrast (WCAG AA)
+- [ ] Performance optimization
+  - [ ] Bundle analysis & code splitting
+  - [ ] Image optimization
+  - [ ] TanStack Query prefetching
+  - [ ] Lazy-load routes
 - [ ] Responsive testing (all breakpoints, all devices)
 - [ ] Dark/light mode testing (v0 theme)
-- [ ] Performance optimization (code splitting, prefetch, images)
-- [ ] Error states & edge cases
-- [ ] Bug fixes & refinements
+- [ ] Edge case testing (empty states, loading states, error boundaries)
+- [ ] Documentation
+  - [ ] Component library (Storybook, optional)
+  - [ ] API documentation (OpenAPI, optional)
+  - [ ] User guide (optional)
 
 **Then You Decide:**
 
@@ -446,42 +589,7 @@ Main Content (adaptive 2-column or single)
 - Deprecate old UI completely
 - This becomes a separate implementation task
 
-**Deliverables:**
-- **MVP v2.0 – New UI Production Release** (v0 theme)
-- Both UIs stable, tested, A11y compliant
-- Clear decision on cutover timing
-
-**Tasks:**
-- [ ] Navigation refinement
-  - [ ] Sidebar taxonomy & grouping (Learning, Batches, Content, Admin)
-  - [ ] Admin sub-navigation (Overview, Users, Batches, Logs, Settings)
-  - [ ] Breadcrumbs & page headers with consistent actions
-  - [ ] Hover/active states, spacing, and focus consistency
-- [ ] Consolidate design system tokens (tailwind.config.ts)
-  - [ ] Spacing scale (device-aware)
-  - [ ] Typography scale (responsive)
-  - [ ] Color palette (proficiency badges, segment states)
-  - [ ] Touch target sizes (44px, 48px, 56px)
-- [ ] A11y audit & fixes
-  - [ ] Keyboard navigation (all screens)
-  - [ ] Screen reader support (aria labels)
-  - [ ] Focus indicators (visible on all elements)
-  - [ ] Color contrast (WCAG AA)
-- [ ] Performance optimization
-  - [ ] Bundle analysis & code splitting
-  - [ ] Image optimization
-  - [ ] TanStack Query prefetching
-  - [ ] Lazy-load routes
-- [ ] Bug fixes & refinements
-  - [ ] Error state testing
-  - [ ] Edge cases (empty states, loading states, error boundaries)
-  - [ ] Responsive testing (all breakpoints, all devices)
-- [ ] Documentation
-  - [ ] Component library (Storybook, optional)
-  - [ ] API documentation (OpenAPI, optional)
-  - [ ] User guide (optional)
-
-**Deliverable:** **MVP v1.0 - Production Release**
+**Deliverable:** **MVP v1.0 - Production Release** (v0 theme, fully accessible, tested)
 
 ---
 

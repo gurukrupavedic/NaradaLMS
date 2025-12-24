@@ -7,10 +7,11 @@ VedicLMS is a multilingual Learning Management System for Vedic education. The s
 
 ### Tech Stack
 - **Frontend:** React 18 + TypeScript + Vite, Wouter routing, TanStack Query v5
-- **Backend:** Express.js with Drizzle ORM (PostgreSQL via @neondatabase/serverless)
+- **Backend:** Express.js (modular monolith architecture)
+- **Database:** Drizzle ORM with PostgreSQL (@neondatabase/serverless)
 - **UI:** Radix UI + Tailwind CSS + shadcn/ui components with custom colorful variants
 - **Text Editing:** TipTap rich text editor for multilingual content
-- **Auth:** Passport.js (local strategy, PostgreSQL-backed sessions) + optional social OAuth
+- **Auth:** Passport.js (local strategy) with PostgreSQL session store (connect-pg-simple)
 
 ### Project Structure
 ```
@@ -18,20 +19,29 @@ shared/          # Shared types, schema, constants (Drizzle ORM models)
 server/
   modules/       # 6 domain modules (identity-access, content-publishing, media-pipeline,
                  #                   batch-cohort, learning-delivery, system-admin)
-  database-storage.ts # Centralized DB operations
+  routes/        # Legacy route files (being migrated to modules)
+  shared/        # Shared middleware, utils, events
   index.ts       # Express setup, module mounting
-client/src/      # React app, pages/, components/, hooks/, services/
-  components/ui/           # shadcn/ui base components
-  components/design-system/ # Custom LMS components (26 variants)
-  pages/         # 25 route-level components (lazy-loaded)
+client/src/      # React app with feature-based organization
+  features/      # Feature modules (content-management, learning, batch-management, etc.)
+  components/    # Shared UI components
+    ui/          # shadcn/ui base components
+    design-system/ # Custom LMS components (26 variants)
 uploads/         # Audio files (served via /uploads static route)
-experiments/     # Design system prototypes (served via /experiments)
 docs/            # Product guide, architecture, domain requirements, todo
 ```
 
 ### Import Aliases (vite.config.ts)
 - `@/` → client/src/
 - `@shared/` → shared/
+
+### Module Architecture (Completed Dec 2025)
+**Modular Monolith Pattern**: 6 independent domain modules with clear boundaries:
+- Each module has: `index.ts` (public API), `service.ts` (business logic), `storage.ts` (DB access), `events.ts`, `types.ts`
+- **Only** the owning module writes to its tables; others consume via service APIs
+- Routes in `server/routes/` are legacy (being migrated); new routes belong in modules
+- Cross-module communication via events (see `server/shared/events/`)
+- Module contracts documented in [docs/architecture/module-contracts.md](docs/architecture/module-contracts.md)
 
 ## Database Schema Patterns
 
@@ -120,14 +130,22 @@ npm run check     # TypeScript type checking
 3. Update `server/database-storage.ts` methods if needed
 4. Update TypeScript types in `shared/types.ts`
 
-### API Development (server/modules/*/routes.ts)
-- Modular architecture: 6 domain modules with dedicated route files
+### API Development (server/modules/*/service.ts + routes in server/routes/*.routes.ts)
+- **Modular architecture**: 6 domain modules with dedicated storage and service layers
 - All routes prefixed with `/api` and mounted in `server/index.ts`
-- Use `storage` methods from `database-storage.ts` (not direct DB queries)
-- Error handling: Use `createErrorResponse()` utility and `globalErrorHandler`
+- Use service methods from modules (e.g., `contentService.listTracks()`) - never direct DB queries in routes
+- **Error handling pattern**: 
+  ```typescript
+  // Inline helper (being extracted to shared util - see TODO-Backend.md #2)
+  function createErrorResponse(message: string, code?: string, details?: any): ApiErrorResponse {
+    return { error: { message, code, details, timestamp: new Date().toISOString(), requestId: generateRequestId() }};
+  }
+  // Usage in routes:
+  return res.status(404).json(createErrorResponse("Chapter not found", "CHAPTER_NOT_FOUND"));
+  ```
 - File uploads: Configured multer for audio files in `/uploads` (50MB max)
-- Module contract pattern: Each module owns specific tables with public service APIs
-- Authentication middleware: `requireAuth`, `requireApproved`, `requireRole('role')`
+- Module contract pattern: Each module owns specific tables with public service APIs (see module-contracts.md)
+- Authentication middleware: `requireAuth`, `requireApproved`, `requireRole('role')` (in `server/shared/middleware/auth.ts`)
 
 ## Critical Project-Specific Conventions
 
@@ -184,7 +202,7 @@ npm run check     # TypeScript type checking
 - All API responses typed in `shared/types.ts`
 - Drizzle Zod schemas for validation (createInsertSchema/createSelectSchema)
 - Avoid `any` - use proper types from schema
-- No direct DB queries outside `database-storage.ts`
+- No direct DB queries outside module storage layers (`server/modules/*/storage.ts`)
 
 ## Common Pitfalls
 
@@ -192,17 +210,17 @@ npm run check     # TypeScript type checking
 2. **Published chapters:** Check `status === 'published'` before allowing deletion
 3. **Audio uploads:** Ensure multer config matches file size limits (50MB max)
 4. **Font rendering:** Always apply script-specific font classes (`font-telugu`, etc.)
-5. **Experiments folder:** Isolated from main app - served via static express route, safe to modify
-6. **Multi-role users:** Check role arrays with `requireRole()` middleware, not string equality
-7. **Progress tracking:** Proficiency is 0-4 scale, not binary pass/fail
-8. **Batch context:** Student progress evaluation requires batch assignment context
+5. **Multi-role users:** Check role arrays with `requireRole()` middleware, not string equality
+6. **Progress tracking:** Proficiency is 0-4 scale, not binary pass/fail
+7. **Batch context:** Student progress evaluation requires batch assignment context
+8. **Module boundaries:** Routes must call module services (e.g., `contentService.listTracks()`), never direct Drizzle queries
+9. **Error responses:** Use `createErrorResponse()` pattern for consistent API error shapes (currently duplicated, see TODO-Backend.md #2)
 
 ## Documentation Standards
 
 ### When to Create Docs (see docs/README.md)
 - **Product features:** Update [docs/product-guide.md](docs/product-guide.md) for new features or implementation changes
-### Naming
- - Use lowercase filenames for docs (avoid ALL-CAPS names like `MVP-SCOPE.md`); prefer `kebab-case`.
+- **Naming:** Use lowercase kebab-case filenames for docs (avoid ALL-CAPS like `MVP-SCOPE.md`)
 - **Architecture decisions:** Document in [docs/architecture/](docs/architecture/) as markdown ADRs
 - **Domain workflows:** Update [docs/domain-requirements.md](docs/domain-requirements.md) with real-world usage patterns
 - **Active backlog:** Categorize work in [docs/todo/](docs/todo/) by feature area (backend/frontend/common)
@@ -225,8 +243,7 @@ npm run check     # TypeScript type checking
 ### Code
 - [shared/schema.ts](shared/schema.ts) - Database models and relations (14 tables)
 - [shared/constants.ts](shared/constants.ts) - Script keys, configuration values
-- [server/database-storage.ts](server/database-storage.ts) - Centralized DB operations
-- [server/modules/](server/modules/) - 6 domain modules with routes and services
+- [server/modules/](server/modules/) - 6 domain modules with storage and services
 - [client/src/App.tsx](client/src/App.tsx) - Route definitions, lazy loading
 - [tailwind.config.ts](tailwind.config.ts) - Custom color tokens (12 semantic colors)
 - [openapi.yaml](openapi.yaml) - REST API contract (WIP)

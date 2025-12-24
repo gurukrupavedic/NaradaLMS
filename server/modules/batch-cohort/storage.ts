@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { batches, enrollments, batchCoInstructors, users, tracks } from "@shared/schema";
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput } from "./types";
 
@@ -104,7 +104,7 @@ export class BatchStorage {
     const enrollmentsList = await db
       .select({
         studentId: enrollments.studentId,
-        studentName: users.username,
+        studentName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
         email: users.email,
       })
       .from(enrollments)

@@ -10,23 +10,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Admin Center</p>
-          <h1 className="mt-2 text-3xl font-semibold text-foreground">Overview</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            System health, approvals, batches, and recent activity. Live data — no placeholders.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href="/app/admin/settings">
-              <a className="inline-flex items-center rounded-full border border-border px-3 py-1.5 text-sm text-foreground hover:bg-muted transition-colors whitespace-nowrap">System Settings</a>
-          </Link>
-          <Link href="/app">
-            <a className="text-sm text-primary hover:opacity-80 transition-colors">Back to overview</a>
-          </Link>
-        </div>
-      </div>
 
       {isLoading && (
         <div className="rounded-2xl border border-border bg-card p-6 text-muted-foreground">Loading dashboard…</div>

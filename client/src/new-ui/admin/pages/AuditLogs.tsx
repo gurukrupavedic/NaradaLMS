@@ -1,12 +1,141 @@
-import React, { useState } from "react";
-import { Link } from "wouter";
+import React, { useState, useMemo } from "react";
 import { useAuditLogs, AuditLogFilters } from "../hooks/useAuditLogs";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { CalendarIcon, Filter, AlertCircle, ChevronDown, RotateCcw, Copy, ChevronUp, ArrowUpDown, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+  SortingState,
+} from "@tanstack/react-table";
+import { Badge } from "@/components/design-system/badge";
+
+const ITEMS_PER_PAGE = 25;
+
+function TimestampCell({ timestamp }: { timestamp: string }) {
+  const date = new Date(timestamp);
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-sm font-medium text-foreground">
+        {format(date, "MMM dd, yyyy hh:mm:ss a")}
+      </span>
+    </div>
+  );
+}
+
+function UserCell({ firstName, lastName, email }: { firstName?: string; lastName?: string; email?: string }) {
+  if (!firstName && !lastName && !email) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+  
+  const displayName = firstName && lastName ? `${firstName} ${lastName}` : '—';
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-sm font-medium text-foreground">
+        {displayName}
+      </span>
+      {email && (
+        <span className="text-xs text-muted-foreground">
+          {email}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ChangesCell({ changes }: { changes: any }) {
+  if (!changes || Object.keys(changes).length === 0) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+
+  // Filter out redundant timestamp fields (we already have a Time column)
+  const filteredEntries = Object.entries(changes).filter(
+    ([key]) => !['timestamp', 'approvedAt', 'createdAt', 'updatedAt'].includes(key)
+  );
+
+  if (filteredEntries.length === 0) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+
+  const fieldCount = filteredEntries.length;
+
+  // For simple changes (1-2 fields with primitive values), show inline
+  if (fieldCount <= 2) {
+    const isSimple = filteredEntries.every(([_, value]) => 
+      typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
+    );
+    
+    if (isSimple) {
+      return (
+        <div className="flex flex-col gap-1">
+          {filteredEntries.map(([key, value]) => (
+            <div key={key} className="text-xs">
+              <span className="font-medium text-foreground/70">{key}:</span>{' '}
+              <span className="text-foreground">{String(value)}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+  }
+
+  // For complex changes, use popover
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline">
+          {fieldCount} field{fieldCount > 1 ? 's' : ''}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80" align="start">
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-foreground">Changes</p>
+          <div className="space-y-1.5">
+            {filteredEntries.map(([key, value]) => (
+              <div key={key} className="text-xs">
+                <span className="font-medium text-muted-foreground">{key}:</span>
+                <pre className="mt-0.5 rounded bg-muted p-1.5 overflow-auto max-h-32 text-xs">
+                  {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                </pre>
+              </div>
+            ))}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export default function AuditLogs() {
   const { toast } = useToast();
   const [filters, setFilters] = useState<AuditLogFilters>({ limit: 25, offset: 0 });
-  const { data, isLoading, error } = useAuditLogs(filters);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [actionFilter, setActionFilter] = useState<string>("all");
+  const [resourceTypeFilter, setResourceTypeFilter] = useState<string>("all");
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [userSearchInput, setUserSearchInput] = useState<string>("");
+  const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const { data, isLoading, error, refetch } = useAuditLogs(filters);
 
   const logs = data?.data ?? [];
   const pagination = data?.pagination;
@@ -16,19 +145,159 @@ export default function AuditLogs() {
   const totalPages = Math.ceil(total / limit);
   const currentPage = Math.floor(offset / limit) + 1;
 
-  const onSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    setFilters({
-      userId: (fd.get("userId") as string) || undefined,
-      action: (fd.get("action") as string) || undefined,
-      resourceType: (fd.get("resourceType") as string) || undefined,
-      startDate: (fd.get("startDate") as string) || undefined,
-      endDate: (fd.get("endDate") as string) || undefined,
-      limit: Number(fd.get("limit") || 25),
-      offset: 0,
+  // Get unique users from all logs (not filtered)
+  const allUsers = useMemo(() => 
+    Array.from(
+      new Map(
+        logs
+          .filter(log => log.userFirstName || log.userLastName || log.userEmail)
+          .map(log => [
+            log.userId,
+            {
+              id: log.userId,
+              name: `${log.userFirstName || ''} ${log.userLastName || ''}`.trim(),
+              email: log.userEmail || '',
+              firstName: log.userFirstName || '',
+              lastName: log.userLastName || '',
+            }
+          ])
+      ).values()
+    ),
+    [logs]
+  );
+
+  // Filter users based on search input
+  const matchingUsers = useMemo(() => {
+    if (!userSearchInput.trim()) return allUsers;
+    const searchLower = userSearchInput.toLowerCase();
+    return allUsers.filter(user =>
+      user.name.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower) ||
+      user.firstName.toLowerCase().includes(searchLower) ||
+      user.lastName.toLowerCase().includes(searchLower)
+    );
+  }, [userSearchInput, allUsers]);
+
+  // Apply filters to logs
+  const filteredLogs = useMemo(() => {
+    return logs.filter(log => {
+      if (selectedUserId && log.userId !== selectedUserId) return false;
+      return true;
     });
-    toast({ title: "Filters applied" });
+  }, [logs, selectedUserId]);
+
+  // Get unique actions and resource types from all logs
+  const uniqueActions = useMemo(() => 
+    Array.from(new Set(logs.map(log => log.action))).sort(),
+    [logs]
+  );
+
+  const uniqueResourceTypes = useMemo(() => 
+    Array.from(new Set(logs.map(log => log.resourceType))).sort(),
+    [logs]
+  );
+
+  // Define columns using TanStack React Table
+  const columns: ColumnDef<any>[] = [
+    {
+      accessorKey: "timestamp",
+      header: ({ column }) => (
+        <button
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center gap-2 hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+        >
+          TIME
+          {column.getIsSorted() ? (
+            column.getIsSorted() === "asc" ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )
+          ) : (
+            <ArrowUpDown className="h-4 w-4 opacity-50" />
+          )}
+        </button>
+      ),
+      cell: ({ row }) => <TimestampCell timestamp={row.original.timestamp} />,
+      size: 120,
+    },
+    {
+      accessorKey: "action",
+      header: "ACTION",
+      cell: ({ row }) => (
+        <span className="text-sm font-medium">
+          {row.original.action.replace(/_/g, " ")}
+        </span>
+      ),
+      size: 140,
+    },
+    {
+      accessorKey: "userId",
+      header: "USER",
+      cell: ({ row }) => (
+        <UserCell
+          firstName={row.original.userFirstName}
+          lastName={row.original.userLastName}
+          email={row.original.userEmail}
+        />
+      ),
+      size: 170,
+    },
+    {
+      accessorKey: "resourceType",
+      header: "RESOURCE",
+      cell: ({ row }) => <span className="text-sm font-medium">{row.original.resourceType}</span>,
+      size: 100,
+    },
+    {
+      accessorKey: "resourceId",
+      header: "RESOURCE ID",
+      cell: ({ row }) => (
+        <span className="text-sm font-mono text-muted-foreground">
+          {row.original.resourceId}
+        </span>
+      ),
+      size: 180,
+    },
+    {
+      accessorKey: "changes",
+      header: "CHANGES",
+      cell: ({ row }) => <ChangesCell changes={row.original.changes} />,
+      size: 280,
+    },
+  ];
+
+  // Initialize table
+  const table = useReactTable({
+    data: filteredLogs,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  const resetFilters = () => {
+    setFilters({ limit: 25, offset: 0 });
+    setStartDate("");
+    setEndDate("");
+    setActionFilter("all");
+    setResourceTypeFilter("all");
+    setSelectedUserId("");
+    setUserSearchInput("");
+    setUserDropdownOpen(false);
+    toast({ 
+      title: "Filters reset", 
+      description: "All filters have been cleared."
+    });
+  };
+
+  const handleRetry = () => {
+    refetch();
+    toast({ 
+      title: "Retrying...", 
+      description: "Attempting to reload audit logs."
+    });
   };
 
   const goToPage = (page: number) => {
@@ -36,121 +305,381 @@ export default function AuditLogs() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Admin Center</p>
-          <h1 className="mt-2 text-3xl font-semibold text-foreground">Audit Logs</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">Filter and inspect recent system activity.</p>
+    <div className="space-y-4 px-4 pt-4">
+      {/* Inline Filters */}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Filter className="h-4 w-4" />
+            <span>Filters:</span>
+          </div>
+
+          {/* Action Dropdown */}
+          <Select 
+            value={actionFilter} 
+            onValueChange={(value) => {
+              setActionFilter(value);
+              setFilters({ 
+                ...filters, 
+                action: value === "all" ? undefined : value,
+                offset: 0 
+              });
+            }}
+          >
+            <SelectTrigger className="w-fit min-w-32 h-8" size="sm">
+              <SelectValue placeholder="Action" />
+            </SelectTrigger>
+            <SelectContent className="z-50" portal={true}>
+              <SelectItem value="all">All Actions</SelectItem>
+              {uniqueActions.map((action) => (
+                <SelectItem key={action} value={action}>
+                  {action.replace(/_/g, " ")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Resource Type Dropdown */}
+          <Select 
+            value={resourceTypeFilter} 
+            onValueChange={(value) => {
+              setResourceTypeFilter(value);
+              setFilters({ 
+                ...filters, 
+                resourceType: value === "all" ? undefined : value,
+                offset: 0 
+              });
+            }}
+          >
+            <SelectTrigger className="w-fit min-w-32 h-8" size="sm">
+              <SelectValue placeholder="Resource Type" />
+            </SelectTrigger>
+            <SelectContent className="z-50" portal={true}>
+              <SelectItem value="all">All Resources</SelectItem>
+              {uniqueResourceTypes.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* User Search Dropdown */}
+          <Popover open={userDropdownOpen} onOpenChange={setUserDropdownOpen}>
+            <PopoverTrigger asChild>
+              <button 
+                className="h-8 w-fit min-w-40 rounded-md border border-input bg-background px-3 py-1 text-sm text-left flex items-center justify-between hover:bg-muted/50"
+                aria-label="Search user by name or email"
+              >
+                <span className={selectedUserId ? "text-foreground" : "text-muted-foreground"}>
+                  {selectedUserId ? allUsers.find(u => u.id === selectedUserId)?.name : "Search user..."}
+                </span>
+                <ChevronDown className="h-4 w-4 ml-1 opacity-50" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 p-2 z-50" align="start">
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={userSearchInput}
+                onChange={(e) => setUserSearchInput(e.target.value)}
+                className="w-full h-8 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                autoFocus
+              />
+              <div className="mt-2 max-h-64 overflow-y-auto space-y-1">
+                <button
+                  onClick={() => {
+                    setSelectedUserId("");
+                    setUserSearchInput("");
+                    setUserDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  All Users
+                </button>
+                {matchingUsers.length > 0 ? (
+                  matchingUsers.map((user) => (
+                    <button
+                      key={user.id}
+                      onClick={() => {
+                        setSelectedUserId(user.id);
+                        setUserSearchInput("");
+                        setUserDropdownOpen(false);
+                      }}
+                      className={cn(
+                        "w-full text-left px-2 py-1.5 text-sm rounded transition-colors",
+                        selectedUserId === user.id 
+                          ? "bg-primary/10 border border-primary/30 text-primary" 
+                          : "hover:bg-muted"
+                      )}
+                    >
+                      <div className="font-medium">{user.name}</div>
+                      <div className="text-xs text-muted-foreground">{user.email}</div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                    No users found
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Start Date */}
+          <div className="flex items-center gap-2">
+            <Label htmlFor="start-date" className="text-muted-foreground text-sm whitespace-nowrap">
+              From:
+            </Label>
+            <Input
+              id="start-date"
+              type="date"
+              value={startDate}
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                setFilters({ 
+                  ...filters, 
+                  startDate: e.target.value ? new Date(e.target.value).toISOString() : undefined,
+                  offset: 0 
+                });
+              }}
+              className="h-8 w-fit"
+            />
+          </div>
+
+          {/* End Date */}
+          <div className="flex items-center gap-2">
+            <Label htmlFor="end-date" className="text-muted-foreground text-sm whitespace-nowrap">
+              To:
+            </Label>
+            <Input
+              id="end-date"
+              type="date"
+              value={endDate}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                setFilters({ 
+                  ...filters, 
+                  endDate: e.target.value ? new Date(e.target.value).toISOString() : undefined,
+                  offset: 0 
+                });
+              }}
+              className="h-8 w-fit"
+            />
+          </div>
+
+          {/* Clear Filters Button */}
+          {(actionFilter !== "all" || selectedUserId || resourceTypeFilter !== "all" || startDate || endDate) && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={resetFilters}
+              className="h-8 px-2 text-sm"
+              aria-label="Clear all filters"
+            >
+              Clear filters
+            </Button>
+          )}
         </div>
-        <Link href="/app/admin">
-          <a className="text-sm text-primary hover:opacity-80 transition-colors">Back to dashboard</a>
-        </Link>
+
+        {/* Showing X of Y items */}
+        {(actionFilter !== "all" || selectedUserId || resourceTypeFilter !== "all" || startDate || endDate) && (
+          <div className="text-muted-foreground text-sm">
+            Showing {filteredLogs.length} of {total} items
+          </div>
+        )}
       </div>
 
-      <form onSubmit={onSubmit} className="rounded-2xl border border-border bg-card p-3">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <Input name="userId" label="User ID" placeholder="uuid" />
-          <Input name="action" label="Action" placeholder="CREATE_CHAPTER" />
-          <Input name="resourceType" label="Resource Type" placeholder="chapter|batch|enrollment" />
-          <Input name="startDate" label="Start Date" type="datetime-local" />
-          <Input name="endDate" label="End Date" type="datetime-local" />
-          <Input name="limit" label="Per Page" type="number" defaultValue={25} />
-        </div>
-        <div className="mt-3">
-          <button className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90">Apply Filters</button>
-        </div>
-      </form>
-
+      {/* Loading State */}
       {isLoading && (
-        <div className="rounded-2xl border border-border bg-card p-6 text-muted-foreground">Loading logs…</div>
+        <div className="space-y-3" role="status" aria-label="Loading audit logs">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card p-4">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-10 w-32" />
+                <Skeleton className="h-10 w-24" />
+                <Skeleton className="h-10 flex-1" />
+                <Skeleton className="h-10 w-28" />
+                <Skeleton className="h-10 w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
+      {/* Error State */}
       {error && (
-        <div className="rounded-2xl border border-border bg-destructive/10 p-6 text-destructive">Failed to load audit logs. Ensure admin access.</div>
+        <div 
+          className="rounded-2xl border border-destructive/50 bg-destructive/10 p-6" 
+          role="alert" 
+          aria-live="assertive"
+        >
+          <div className="flex items-start gap-4">
+            <div className="rounded-full bg-destructive/20 p-3">
+              <AlertCircle className="h-6 w-6 text-destructive" aria-hidden="true" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-destructive mb-1">Failed to Load Audit Logs</h3>
+              <p className="text-sm text-destructive/80">
+                Unable to fetch audit logs. Please ensure you have admin access and try again.
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={handleRetry}
+              className="border-destructive/50 hover:bg-destructive/10"
+              aria-label="Retry loading audit logs"
+            >
+              <RotateCcw className="mr-2 h-4 w-4" aria-hidden="true" />
+              Retry
+            </Button>
+          </div>
+        </div>
       )}
 
+      {/* Table Section */}
       {!isLoading && !error && (
         <>
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-3">
-            <span className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages} ({total} total)
-            </span>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card">
-            <table className="w-full text-sm">
-              <thead className="text-muted-foreground">
-                <tr>
-                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Time</th>
-                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">User</th>
-                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Action</th>
-                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Resource</th>
-                  <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">ID</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-5 text-muted-foreground">No logs for selected filters.</td>
-                  </tr>
-                )}
-                {logs.map((log) => (
-                  <tr key={log.id} className="border-t border-border">
-                    <td className="px-3 py-2">{new Date(log.timestamp).toLocaleString()}</td>
-                    <td className="px-3 py-2">{log.userId}</td>
-                    <td className="px-3 py-2">{log.action}</td>
-                    <td className="px-3 py-2">{log.resourceType}</td>
-                    <td className="px-3 py-2">{log.resourceId}</td>
-                  </tr>
+          {/* Main Table Card */}
+          <div className="rounded-lg border border-border/60 bg-card overflow-hidden shadow-sm">
+            <Table className="px-4">
+              <TableHeader className="bg-muted/40 sticky top-0 z-10">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
+                    {headerGroup.headers.map((header) => (
+                      <TableHead
+                        key={header.id}
+                        className="text-xs font-bold text-foreground/70 uppercase tracking-widest"
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                      className="hover:bg-muted/30 transition-colors"
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-32 text-center">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="rounded-full bg-muted/50 p-6">
+                          <FileSearch className="h-9 w-9 text-muted-foreground" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-semibold">No Audit Logs</h3>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            No logs match your filters. Try adjusting your search.
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={resetFilters}
+                          className="text-xs mt-2"
+                        >
+                          <RotateCcw className="mr-1.5 h-3 w-3" />
+                          Reset Filters
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
 
-          {/* Pagination controls */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-3">
-              <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50">
-                ← Previous
-              </button>
-              <div className="flex gap-2">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const p = Math.max(1, currentPage - 2) + i;
-                  if (p > totalPages) return null;
-                  return (
-                    <button
-                      key={p}
-                      onClick={() => goToPage(p)}
-                      className={`rounded-md px-3 py-1.5 text-sm ${p === currentPage ? 'bg-primary text-primary-foreground' : 'border border-border hover:bg-muted'}`}
-                    >
-                      {p}
-                    </button>
-                  );
-                }).filter(Boolean)}
-              </div>
-              <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="rounded-md border border-border px-3 py-1.5 text-sm disabled:opacity-50">
-                Next →
-              </button>
+          {/* Pagination Controls - No Border */}
+          <div className="flex items-center justify-end gap-6 px-4 py-4">
+            {/* Rows per page */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Rows per page</span>
+              <select
+                id="rows-per-page"
+                value={limit}
+                onChange={(e) => setFilters({ ...filters, limit: Number(e.target.value), offset: 0 })}
+                className="h-8 px-2 rounded-md border border-input bg-background text-sm font-medium"
+                aria-label="Rows per page"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
             </div>
-          )}
+
+            {/* Page info */}
+            <span className="text-sm font-medium text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+
+            {/* 4 Navigation buttons */}
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => goToPage(1)} 
+                disabled={currentPage === 1}
+                className="h-8 w-8"
+                aria-label="First page"
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => goToPage(currentPage - 1)} 
+                disabled={currentPage === 1}
+                className="h-8 w-8"
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => goToPage(currentPage + 1)} 
+                disabled={currentPage === totalPages}
+                className="h-8 w-8"
+                aria-label="Next page"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => goToPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="h-8 w-8"
+                aria-label="Last page"
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </>
       )}
     </div>
-  );
-}
-
-function Input({ name, label, placeholder, type = "text", defaultValue }: { name: string; label: string; placeholder?: string; type?: string; defaultValue?: any }) {
-  return (
-    <label className="block">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <input
-        name={name}
-        type={type}
-        defaultValue={defaultValue}
-        placeholder={placeholder}
-        className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-      />
-    </label>
   );
 }

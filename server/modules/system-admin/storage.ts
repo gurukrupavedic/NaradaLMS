@@ -60,14 +60,28 @@ export class AdminStorage {
       conditions.push(lte(auditLogs.timestamp, filters.endDate));
     }
 
-    let query = db.select().from(auditLogs);
+    let query = db
+      .select({
+        id: auditLogs.id,
+        userId: auditLogs.userId,
+        action: auditLogs.action,
+        resourceType: auditLogs.resourceType,
+        resourceId: auditLogs.resourceId,
+        changes: auditLogs.changes,
+        timestamp: auditLogs.timestamp,
+        userFirstName: users.firstName,
+        userLastName: users.lastName,
+        userEmail: users.email,
+      })
+      .from(auditLogs)
+      .leftJoin(users, eq(auditLogs.userId, users.id));
 
     if (conditions.length > 0) {
       query = query.where(and(...conditions)) as any;
     }
 
     return await query
-      .orderBy(auditLogs.timestamp)
+      .orderBy(desc(auditLogs.timestamp))
       .limit(filters.limit)
       .offset(filters.offset);
   }
