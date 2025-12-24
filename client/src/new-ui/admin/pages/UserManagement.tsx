@@ -65,16 +65,6 @@ export default function UserManagement() {
     });
   }, [users, search, roleFilter]);
 
-  const pending = useMemo(
-    () => filteredUsers.filter((u) => u.status === "pending_approval"),
-    [filteredUsers]
-  );
-
-  const activeOrInactive = useMemo(
-    () => filteredUsers.filter((u) => u.status !== "pending_approval"),
-    [filteredUsers]
-  );
-
   const handleApprove = (userId: string) => {
     approve.mutate(userId, {
       onSuccess: () => toast({ title: "User approved", description: "User is now active." }),
@@ -177,58 +167,6 @@ export default function UserManagement() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-base font-semibold text-foreground">Pending Approvals</h2>
-          <p className="text-sm text-muted-foreground">{pending.length} pending</p>
-        </div>
-        <div className="rounded-2xl border border-border bg-card shadow-sm">
-          {isLoadingState ? (
-            <PendingSkeleton />
-          ) : (
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-card">
-                <TableRow>
-                  <TableHead className="w-1/4">Email</TableHead>
-                  <TableHead className="w-1/4">Name</TableHead>
-                  <TableHead className="w-1/4">Requested</TableHead>
-                  <TableHead className="w-1/4">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pending.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="py-6 text-sm text-muted-foreground">No pending approvals.</TableCell>
-                  </TableRow>
-                )}
-                {pending.map((u) => (
-                  <TableRow key={u.id} className="border-t border-border">
-                    <TableCell className="align-middle text-sm font-medium">{u.email}</TableCell>
-                    <TableCell className="align-middle text-sm">{formatName(u)}</TableCell>
-                    <TableCell className="align-middle text-sm text-muted-foreground">{formatDate(u.createdAt)}</TableCell>
-                    <TableCell className="align-middle">
-                      <div className="flex flex-wrap gap-2">
-                        <Button size="sm" onClick={() => handleApprove(u.id)} disabled={approve.isPending}>
-                          <UserPlus className="mr-2 h-4 w-4" /> Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleReject(u.id)}
-                          disabled={reject.isPending}
-                        >
-                          <UserMinus className="mr-2 h-4 w-4" /> Reject
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
-      </section>
-
-      <section className="space-y-3">
-        <div className="flex items-center justify-between px-1">
           <h2 className="text-base font-semibold text-foreground">All Users</h2>
           <p className="text-sm text-muted-foreground">Page {page} of {totalPages}</p>
         </div>
@@ -242,22 +180,24 @@ export default function UserManagement() {
                   <TableHead className="w-1/4">User</TableHead>
                   <TableHead className="w-28">Status</TableHead>
                   <TableHead className="w-1/3">Roles</TableHead>
-                  <TableHead className="w-32">Created</TableHead>
+                  <TableHead className="w-32">Created / Requested</TableHead>
                   <TableHead className="w-44">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {activeOrInactive.length === 0 && (
+                {filteredUsers.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} className="py-6 text-sm text-muted-foreground">No users to display.</TableCell>
                   </TableRow>
                 )}
-                {activeOrInactive.map((user) => (
+                {filteredUsers.map((user) => (
                   <UserRow
                     key={user.id}
                     user={user}
                     onAssignRoles={(roles) => handleAssignRoles(user.id, roles)}
                     onDisableOrEnable={() => handleToggleStatus(user)}
+                    onApprove={() => handleApprove(user.id)}
+                    onReject={() => handleReject(user.id)}
                     isMutating={assignRoles.isPending || disableUser.isPending || enableUser.isPending}
                   />
                 ))}
@@ -282,9 +222,10 @@ export default function UserManagement() {
   );
 }
 
-function UserRow({ user, onAssignRoles, onDisableOrEnable, isMutating }: { user: AdminUser; onAssignRoles: (roles: string[]) => void; onDisableOrEnable: () => void; isMutating: boolean }) {
+function UserRow({ user, onAssignRoles, onDisableOrEnable, onApprove, onReject, isMutating }: { user: AdminUser; onAssignRoles: (roles: string[]) => void; onDisableOrEnable: () => void; onApprove: () => void; onReject: () => void; isMutating: boolean }) {
   const [editing, setEditing] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<string[]>(user.roles ?? []);
+  const isPending = user.status === "pending_approval";
 
   const toggleRole = (role: string) => {
     setSelectedRoles((r) => (r.includes(role) ? r.filter((x) => x !== role) : [...r, role]));
@@ -302,7 +243,9 @@ function UserRow({ user, onAssignRoles, onDisableOrEnable, isMutating }: { user:
         <StatusBadge status={user.status} />
       </TableCell>
       <TableCell className="align-middle">
-        {editing ? (
+        {isPending ? (
+          <span className="text-xs text-muted-foreground">—</span>
+        ) : editing ? (
           <div className="flex flex-wrap gap-2">
             {ALL_ROLES.map((role) => (
               <label key={role} className="inline-flex items-center gap-2 rounded-md border border-border bg-muted px-2 py-1 text-xs">
@@ -324,7 +267,16 @@ function UserRow({ user, onAssignRoles, onDisableOrEnable, isMutating }: { user:
       </TableCell>
       <TableCell className="align-middle text-sm text-muted-foreground">{formatDate(user.createdAt)}</TableCell>
       <TableCell className="align-middle">
-        {editing ? (
+        {isPending ? (
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={onApprove} disabled={isMutating}>
+              <UserPlus className="mr-2 h-4 w-4" /> Approve
+            </Button>
+            <Button size="sm" variant="destructive" onClick={onReject} disabled={isMutating}>
+              <UserMinus className="mr-2 h-4 w-4" /> Reject
+            </Button>
+          </div>
+        ) : editing ? (
           <div className="flex gap-2">
             <Button size="sm" onClick={() => { onAssignRoles(selectedRoles); setEditing(false); }} disabled={isMutating}>
               Save
