@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { RefreshCw, MoreVertical, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, AlertCircle, FolderPlus } from "lucide-react";
+import { MoreVertical, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, AlertCircle, FolderPlus, Trash2 } from "lucide-react";
 
 type Track = { id: number; title?: string; name?: string };
 
@@ -17,13 +17,11 @@ export default function BatchManagement() {
   const { toast } = useToast();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [trackFilter, setTrackFilter] = useState<string>("all");
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const offset = (page - 1) * limit;
 
-  const { data, isLoading, error, refetch, isRefetching } = useBatches({ limit, offset });
+  const { data, isLoading, error, refetch } = useBatches({ limit, offset });
   const createBatch = useCreateBatch();
   const updateBatch = useUpdateBatch();
 
@@ -53,27 +51,7 @@ export default function BatchManagement() {
   const total = pagination?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
-  // Apply client-side filters
-  const filteredBatches = useMemo(() => {
-    return batches.filter(batch => {
-      if (statusFilter !== "all" && batch.status !== statusFilter) return false;
-      if (trackFilter !== "all" && String(batch.trackId) !== trackFilter) return false;
-      return true;
-    });
-  }, [batches, statusFilter, trackFilter]);
-
-  // Get unique statuses and tracks for filters
-  const uniqueStatuses = useMemo(() => 
-    Array.from(new Set(batches.map(b => b.status))).sort(),
-    [batches]
-  );
-
-  const assignedTracks = useMemo(() => 
-    Array.from(new Set(batches.map(b => b.trackId).filter(id => id !== null && id !== undefined))),
-    [batches]
-  );
-
-  // Define columns for TanStack Table
+  // Define columns for TanStack Table (simplified: Code, Name, Track, Actions)
   const columns = useMemo<ColumnDef<Batch>[]>(() => [
     {
       accessorKey: "batchCode",
@@ -101,13 +79,6 @@ export default function BatchManagement() {
       },
     },
     {
-      accessorKey: "status",
-      header: "STATUS",
-      cell: ({ row }) => (
-        <span className="text-foreground capitalize">{row.original.status}</span>
-      ),
-    },
-    {
       id: "actions",
       header: "ACTIONS",
       cell: ({ row }) => {
@@ -129,6 +100,13 @@ export default function BatchManagement() {
                   Manage Students
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleDelete(batch)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -136,14 +114,42 @@ export default function BatchManagement() {
     },
   ], [tracks]);
 
-  // Edit handler (for now just logs, will implement dialog later)
+  // Edit handler (will implement dialog later)
   const handleEdit = (batch: Batch) => {
     toast({ title: "Edit feature", description: "Edit dialog will be implemented next." });
   };
 
+  // Delete handler with validation (throws error if batch has students)
+  const handleDelete = (batch: Batch) => {
+    if (!confirm(`Are you sure you want to delete batch "${batch.batchName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    // Attempt deletion - API will reject if batch has students
+    updateBatch.mutate(
+      { id: batch.id, payload: { deleted: true } },
+      {
+        onSuccess: () => {
+          toast({ 
+            title: "Batch deleted", 
+            description: `"${batch.batchName}" has been permanently deleted.` 
+          });
+          refetch();
+        },
+        onError: (err: any) => {
+          toast({ 
+            title: "Cannot delete batch", 
+            description: err.message || "Batch has enrolled students. Remove all students before deleting.",
+            variant: "destructive" 
+          });
+        },
+      }
+    );
+  };
+
   // TanStack Table setup
   const table = useReactTable({
-    data: filteredBatches,
+    data: batches,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -186,51 +192,6 @@ export default function BatchManagement() {
         </div>
       </form>
 
-      {/* Filters and Refresh */}
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
-          {/* Status Filter */}
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              {uniqueStatuses.map(status => (
-                <SelectItem key={status} value={status} className="capitalize">
-                  {status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Track Filter */}
-          <Select value={trackFilter} onValueChange={setTrackFilter}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filter by track" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Tracks</SelectItem>
-              {assignedTracks.map(trackId => {
-                const track = tracks.find(t => t.id === trackId);
-                const label = track ? (track.title || track.name || `Track ${trackId}`) : `Track ${trackId}`;
-                return <SelectItem key={trackId} value={String(trackId)}>{label}</SelectItem>;
-              })}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Refresh Button */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          disabled={isRefetching}
-        >
-          <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
-        </Button>
-      </div>
-
       {/* Table */}
       <div className="rounded-lg border border-border/60 bg-card overflow-hidden">
         {isLoading ? (
@@ -250,15 +211,11 @@ export default function BatchManagement() {
               Retry
             </Button>
           </div>
-        ) : filteredBatches.length === 0 ? (
+        ) : batches.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-12 text-center">
             <FolderPlus className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">No batches found</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {batches.length === 0 
-                ? "Get started by creating your first batch above."
-                : "No batches match the selected filters."}
-            </p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">No batches yet</h3>
+            <p className="text-sm text-muted-foreground mb-4">Get started by creating your first batch above.</p>
           </div>
         ) : (
           <Table>
@@ -291,7 +248,7 @@ export default function BatchManagement() {
       </div>
 
       {/* Pagination */}
-      {!isLoading && !error && filteredBatches.length > 0 && (
+      {!isLoading && !error && batches.length > 0 && (
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Rows per page</span>
