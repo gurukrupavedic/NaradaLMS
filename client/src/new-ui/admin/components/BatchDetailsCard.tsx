@@ -2,7 +2,7 @@ import React from "react";
 import { ChevronDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { BatchDetail } from "../hooks/useBatches";
-
+ 
 interface Batch {
   id: number;
   batchCode: string;
@@ -40,15 +40,28 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
     return "—";
   };
 
+  const formatCohortType = (value?: string | null) => {
+    if (!value) return "—";
+    const lower = value.toLowerCase();
+    if (lower === "grihasta") return "Grihasta";
+    if (lower === "bramhachari") return "Bramhachari";
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  };
+
+  const formatStudents = (count?: number | null) => {
+    const n = typeof count === "number" ? count : 0;
+    return `${n} ${n === 1 ? "Student" : "Students"}`;
+  };
+
   const coInstructorsList = batch.coInstructors?.length
     ? batch.coInstructors.map((ci) => formatInstructorName(ci.firstName, ci.lastName)).join(", ")
     : "—";
 
   return (
     <div className="rounded-lg border border-border bg-card p-6 space-y-6">
-      {/* 3-column layout matching the reference */}
+      {/* Grid ordered as requested */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {/* Column 1: Batch selector, Cohort Type, Active Enrollment */}
+        {/* Row 1: Batch, Current Track, Cohort Type */}
         <div className="space-y-4">
           <div className="space-y-1.5">
             <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Batch</div>
@@ -74,27 +87,24 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
               <span className="text-base text-muted-foreground">No batches</span>
             )}
           </div>
+        </div>
 
+        <div className="space-y-4">
           <div className="space-y-1.5">
-            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Cohort Type</div>
-            <div className="text-base font-medium text-foreground">{batch.cohortType || "—"}</div>
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Active Enrollment</div>
-            <div className="text-base font-medium text-foreground">{batch.studentCount || 0}</div>
+            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Current Track</div>
+            <div className="text-base font-medium text-foreground">{batch.track?.title || batch.track?.name || "—"}</div>
           </div>
         </div>
 
-        {/* Column 2: Batch display, Primary Instructor */}
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Batch</div>
-            <div className="text-base font-medium text-foreground">
-              {batch.batchCode} - {batch.batchName}
-            </div>
+            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Cohort Type</div>
+            <div className="text-base font-medium text-foreground">{formatCohortType(batch.cohortType)}</div>
           </div>
+        </div>
 
+        {/* Row 2: Primary Instructor, Co-Instructors, Active Enrollment */}
+        <div className="space-y-4">
           <div className="space-y-1.5">
             <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Primary Instructor</div>
             <div className="text-base font-medium text-foreground">
@@ -105,37 +115,42 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
           </div>
         </div>
 
-        {/* Column 3: Track, Co-Instructors */}
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Track</div>
-            <div className="text-base font-medium text-foreground">{batch.track?.title || batch.track?.name || "—"}</div>
-          </div>
-
           <div className="space-y-1.5">
             <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Co-Instructors</div>
             <div className="text-base font-medium text-foreground">{coInstructorsList}</div>
           </div>
         </div>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Active Enrollment</div>
+            <div className="text-base font-medium text-foreground">{formatStudents(batch.studentCount)}</div>
+          </div>
+        </div>
+
+        {/* Row 3: Created, Updated */}
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Created</div>
+            <div className="text-base font-medium text-foreground">{formatDate(batch.createdAt)}</div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Updated</div>
+            <div className="text-base font-medium text-foreground">{formatDate(batch.updatedAt)}</div>
+          </div>
+        </div>
       </div>
 
-      {/* Description section (full width) */}
+      {/* Description at end with single divider */}
       <div className="border-t border-border pt-6 space-y-1.5">
         <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Description</div>
         <div className="text-base text-foreground">{batch.description || "—"}</div>
       </div>
-
-      {/* Timestamps */}
-      <div className="border-t border-border pt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="space-y-1.5">
-          <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Created</div>
-          <div className="text-base font-medium text-foreground">{formatDate(batch.createdAt)}</div>
-        </div>
-        <div className="space-y-1.5">
-          <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Updated</div>
-          <div className="text-base font-medium text-foreground">{formatDate(batch.updatedAt)}</div>
-        </div>
-      </div>
     </div>
   );
 }
+
