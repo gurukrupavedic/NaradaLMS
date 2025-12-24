@@ -5,6 +5,8 @@ export interface BatchCreateInput {
 	batchName: string;
 	trackId?: number;
 	primaryInstructorId?: string;
+	cohortType?: string; // 'brahmacharya' | 'grihastha'
+	description?: string | null;
 	createdBy: string;
 }
 
@@ -13,7 +15,27 @@ export interface BatchUpdateInput {
 	batchName?: string;
 	trackId?: number | null;
 	primaryInstructorId?: string | null;
+	cohortType?: string | null; // 'brahmacharya' | 'grihastha'
+	description?: string | null;
 	status?: 'active' | 'completed' | 'archived';
+}
+
+export interface BatchDetail {
+	id: number;
+	batchCode: string;
+	batchName: string;
+	trackId: number | null;
+	primaryInstructorId: string | null;
+	cohortType: string | null;
+	description?: string | null;
+	status: string;
+	createdAt: Date | null;
+	updatedAt: Date | null;
+	createdBy: string;
+	studentCount?: number;
+	track?: { id: number; title: string | null; name: string | null } | null;
+	primaryInstructor?: { id: string; firstName: string | null; lastName: string | null; email: string } | null;
+	coInstructors: { id: number; instructorId: string; role: string; firstName: string | null; lastName: string | null; email: string | null }[];
 }
 
 export interface EnrollmentCreateInput {

@@ -5,12 +5,69 @@ import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, Enrollm
 
 export class BatchStorage {
   async listBatches() {
-    return db.select().from(batches).orderBy(batches.createdAt);
+    return db
+      .select({
+        ...batches,
+        studentCount: sql<number>`COALESCE(COUNT(*) FILTER (WHERE ${enrollments.status} = 'active'), 0)::int`,
+      })
+      .from(batches)
+      .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
+      .groupBy(batches.id)
+      .orderBy(batches.createdAt);
   }
 
   async getBatchById(id: number) {
-    const rows = await db.select().from(batches).where(eq(batches.id, id));
-    return rows[0] || null;
+    const baseRows = await db
+      .select({
+        ...batches,
+        studentCount: sql<number>`COALESCE(COUNT(*) FILTER (WHERE ${enrollments.status} = 'active'), 0)::int`,
+      })
+      .from(batches)
+      .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
+      .where(eq(batches.id, id))
+      .groupBy(batches.id);
+
+    const base = baseRows[0];
+    if (!base) return null;
+
+    const track = base.trackId
+      ? (await db
+          .select({ id: tracks.id, title: tracks.title, name: tracks.title })
+          .from(tracks)
+          .where(eq(tracks.id, base.trackId)))[0] || null
+      : null;
+
+    const primaryInstructor = base.primaryInstructorId
+      ? (await db
+          .select({
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+          })
+          .from(users)
+          .where(eq(users.id, base.primaryInstructorId)))[0] || null
+      : null;
+
+    const coInstructors = await db
+      .select({
+        id: batchCoInstructors.id,
+        instructorId: batchCoInstructors.instructorId,
+        role: batchCoInstructors.role,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+      })
+      .from(batchCoInstructors)
+      .leftJoin(users, eq(users.id, batchCoInstructors.instructorId))
+      .where(eq(batchCoInstructors.batchId, id));
+
+    return {
+      ...base,
+      track,
+      primaryInstructor,
+      coInstructors,
+    };
   }
 
   async createBatch(input: BatchCreateInput) {
@@ -19,6 +76,8 @@ export class BatchStorage {
       batchName: input.batchName,
       trackId: input.trackId ?? null,
       primaryInstructorId: input.primaryInstructorId ?? null,
+      cohortType: input.cohortType ?? null,
+      description: input.description ?? null,
       status: 'active',
       createdBy: input.createdBy,
     }).returning();
@@ -31,6 +90,8 @@ export class BatchStorage {
       batchName: input.batchName ?? undefined,
       trackId: input.trackId === undefined ? undefined : input.trackId,
       primaryInstructorId: input.primaryInstructorId === undefined ? undefined : input.primaryInstructorId,
+      cohortType: input.cohortType === undefined ? undefined : input.cohortType,
+      description: input.description === undefined ? undefined : input.description,
       status: input.status ?? undefined,
       updatedAt: new Date(),
     }).where(eq(batches.id, id)).returning();
@@ -58,7 +119,21 @@ export class BatchStorage {
   }
 
   async listEnrollmentsByBatch(batchId: number) {
-    return db.select().from(enrollments).where(eq(enrollments.batchId, batchId));
+    return db
+      .select({
+        id: enrollments.id,
+        batchId: enrollments.batchId,
+        studentId: enrollments.studentId,
+        status: enrollments.status,
+        enrolledAt: enrollments.enrolledAt,
+        droppedAt: enrollments.droppedAt,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+      })
+      .from(enrollments)
+      .leftJoin(users, eq(users.id, enrollments.studentId))
+      .where(eq(enrollments.batchId, batchId));
   }
 
   async assignCoInstructor(input: CoInstructorAssignInput) {

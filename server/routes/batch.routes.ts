@@ -55,20 +55,53 @@ router.get('/batches/:id', async (req: Request, res: Response, next: NextFunctio
 
 // POST /api/batches - Create batch
 router.post('/batches', async (req: Request, res: Response, next: NextFunction) => {
+      // Validate required fields
+      if (!req.body.batchCode || !req.body.batchName) {
+        return res.status(400).json(createErrorResponse('Batch code and name are required', 'MISSING_REQUIRED_FIELDS'));
+      }
+
+      if (!req.body.primaryInstructorId) {
+        return res.status(400).json(createErrorResponse('Primary instructor is required', 'MISSING_PRIMARY_INSTRUCTOR'));
+      }
+
+      // Validate cohortType if provided
+      if (req.body.cohortType && !['bramhachari', 'grihasta'].includes(req.body.cohortType)) {
+        return res.status(400).json(createErrorResponse('Invalid cohort type. Must be "bramhachari" or "grihasta".', 'INVALID_COHORT_TYPE'));
+      }
+
   try {
     const created = await batchService.createBatch({
       batchCode: req.body.batchCode,
       batchName: req.body.batchName,
       trackId: req.body.trackId ?? undefined,
       primaryInstructorId: req.body.primaryInstructorId ?? undefined,
+      cohortType: req.body.cohortType ?? undefined,
+      description: req.body.description ?? null,
       createdBy: req.body.createdBy || 'system',
     });
+
+    // Add secondary/co-instructors if provided
+    if (req.body.secondaryInstructorIds && Array.isArray(req.body.secondaryInstructorIds)) {
+      for (const instructorId of req.body.secondaryInstructorIds) {
+        await batchService.assignCoInstructor({
+          batchId: created.id,
+          instructorId,
+          assignedBy: req.body.createdBy || 'system',
+        });
+      }
+    }
+
     res.json(created);
   } catch (error) { next(error); }
 });
 
 // PATCH /api/batches/:id - Update batch
 router.patch('/batches/:id', async (req: Request, res: Response, next: NextFunction) => {
+      // Validate cohortType if provided
+      if (req.body.cohortType !== undefined && req.body.cohortType !== null && !['bramhachari', 'grihasta'].includes(req.body.cohortType)) {
+        return res.status(400).json(createErrorResponse('Invalid cohort type. Must be "bramhachari" or "grihasta".', 'INVALID_COHORT_TYPE'));
+      }
+
   try {
     const id = parseInt(req.params.id);
     const updated = await batchService.updateBatch(id, {
@@ -76,6 +109,8 @@ router.patch('/batches/:id', async (req: Request, res: Response, next: NextFunct
       batchName: req.body.batchName,
       trackId: req.body.trackId,
       primaryInstructorId: req.body.primaryInstructorId,
+      cohortType: req.body.cohortType,
+      description: req.body.description,
       status: req.body.status,
     });
     res.json(updated);

@@ -7,7 +7,6 @@ import { LoadingScreen } from '@/components/ui/loading-screen';
 import { AppLayout } from './components/app-layout';
 
 // Admin pages
-import AdminDashboard from './admin/pages/AdminDashboard';
 import UserManagement from './admin/pages/UserManagement';
 import AuditLogs from './admin/pages/AuditLogs';
 import BatchManagement from './admin/pages/BatchManagement';
@@ -50,7 +49,7 @@ export default function AppShell() {
           <Route path="/app/batches/:id" component={BatchDetail} />
           <Route path="/app/batches" component={MyBatchesList} />
           <Route path="/app/content" component={ContentPage} />
-          <Route path="/app/admin" component={AdminDashboard} />
+          <Route path="/app/admin" component={() => { window.location.href = '/app/admin/users'; return null; }} />
           <Route path="/app/admin/users" component={UserManagement} />
           <Route path="/app/admin/logs" component={AuditLogs} />
           <Route path="/app/admin/settings" component={SystemSettings} />

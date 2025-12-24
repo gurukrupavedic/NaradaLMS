@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { ColumnDef, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 import { useBatches, useCreateBatch, useUpdateBatch, Batch } from "../hooks/useBatches";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
@@ -8,17 +8,23 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, AlertCircle, FolderPlus, Trash2 } from "lucide-react";
+import { MoreVertical, AlertCircle, FolderPlus, Trash2, Plus, X } from "lucide-react";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 
 type Track = { id: number; title?: string; name?: string };
+type Instructor = { id: string; firstName?: string; lastName?: string; email: string };
 
 export default function BatchManagement() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
+  const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
 
   const offset = (page - 1) * limit;
 
@@ -26,25 +32,88 @@ export default function BatchManagement() {
   const createBatch = useCreateBatch();
   const updateBatch = useUpdateBatch();
 
-  const [form, setForm] = useState<Partial<Batch>>({ batchCode: "", batchName: "", trackId: undefined });
+  const [form, setForm] = useState<Partial<Batch>>({ batchCode: "", batchName: "", trackId: undefined, cohortType: undefined });
 
   // Fetch tracks to allow associating a batch with a current track
   const { data: tracks = [] } = useQuery<Track[]>({
     queryKey: ["/api/learning/tracks"],
   });
 
-  const submitCreate: React.FormEventHandler<HTMLFormElement> = (e) => {
+  // Fetch instructors for primary and secondary instructor selection
+  const { data: instructorsData } = useQuery<{ users: Instructor[] }>({
+    queryKey: ["/api/auth/admin/users"],
+    select: (data) => ({
+      users: data.users.filter((u: any) => u.roles && u.roles.includes('instructor'))
+    })
+  });
+  const instructors = instructorsData?.users ?? [];
+
+  const [secondaryInstructorIds, setSecondaryInstructorIds] = useState<string[]>([]);
+  const [instructorSearch, setInstructorSearch] = useState("");
+  const [showInstructorDropdown, setShowInstructorDropdown] = useState(false);
+  const [batchDescription, setBatchDescription] = useState("");
+
+  const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
-    createBatch.mutate({ batchCode: form.batchCode, batchName: form.batchName, trackId: form.trackId ?? undefined }, {
-      onSuccess: () => {
-        toast({ title: "Batch created", description: "New batch has been created successfully." });
-        setForm({ batchCode: "", batchName: "", trackId: undefined });
-        refetch();
-      },
-      onError: (err: any) => {
-        toast({ title: "Failed to create batch", description: err.message, variant: "destructive" });
-      },
-    });
+
+    if (dialogMode === 'create') {
+      createBatch.mutate({ 
+        batchCode: form.batchCode, 
+        batchName: form.batchName, 
+        trackId: form.trackId ?? undefined,
+        cohortType: form.cohortType ?? undefined,
+        primaryInstructorId: form.primaryInstructorId ?? undefined,
+        description: batchDescription || undefined,
+        secondaryInstructorIds: secondaryInstructorIds.length > 0 ? secondaryInstructorIds : undefined,
+      }, {
+        onSuccess: () => {
+          toast({ title: "Batch created", description: "New batch has been created successfully." });
+          setForm({ batchCode: "", batchName: "", trackId: undefined, cohortType: undefined, primaryInstructorId: undefined });
+          setSecondaryInstructorIds([]);
+          setBatchDescription("");
+          setInstructorSearch("");
+          setShowInstructorDropdown(false);
+          setDialogOpen(false);
+          setDialogMode('create');
+          setEditingBatch(null);
+          refetch();
+        },
+        onError: (err: any) => {
+          toast({ title: "Failed to create batch", description: err.message, variant: "destructive" });
+        },
+      });
+    } else if (dialogMode === 'edit' && editingBatch) {
+      updateBatch.mutate(
+        {
+          id: editingBatch.id,
+          payload: {
+            batchCode: form.batchCode,
+            batchName: form.batchName,
+            trackId: form.trackId ?? null,
+            cohortType: form.cohortType ?? null,
+            primaryInstructorId: form.primaryInstructorId ?? null,
+            description: batchDescription || null,
+          },
+        },
+        {
+          onSuccess: () => {
+            toast({ title: "Batch updated", description: "Batch details have been saved." });
+            setForm({ batchCode: "", batchName: "", trackId: undefined, cohortType: undefined, primaryInstructorId: undefined });
+            setSecondaryInstructorIds([]);
+            setBatchDescription("");
+            setInstructorSearch("");
+            setShowInstructorDropdown(false);
+            setDialogOpen(false);
+            setDialogMode('create');
+            setEditingBatch(null);
+            refetch();
+          },
+          onError: (err: any) => {
+            toast({ title: "Failed to update batch", description: err.message, variant: "destructive" });
+          },
+        }
+      );
+    }
   };
 
   const batches = data?.items ?? [];
@@ -69,8 +138,18 @@ export default function BatchManagement() {
       ),
     },
     {
+      accessorKey: "cohortType",
+      header: "COHORT TYPE",
+      cell: ({ row }) => {
+        const cohortType = row.original.cohortType;
+        if (!cohortType) return <span className="text-muted-foreground">—</span>;
+        const label = cohortType === 'bramhachari' ? 'Bramhachari' : 'Grihasta';
+        return <span className="text-foreground">{label}</span>;
+      },
+    },
+    {
       accessorKey: "trackId",
-      header: "TRACK",
+      header: "CURRENT TRACK",
       cell: ({ row }) => {
         const trackId = row.original.trackId;
         if (!trackId) return <span className="text-muted-foreground">—</span>;
@@ -78,6 +157,37 @@ export default function BatchManagement() {
         const label = track ? (track.title || track.name || `Track ${trackId}`) : `Track ${trackId}`;
         return <span className="text-foreground">{label}</span>;
       },
+    },
+    {
+      accessorKey: "primaryInstructorId",
+      header: "PRIMARY INSTRUCTOR",
+      cell: ({ row }) => {
+        const instructorId = row.original.primaryInstructorId;
+        if (!instructorId) return <span className="text-muted-foreground">—</span>;
+        const instructor = instructors.find(i => i.id === instructorId);
+        if (!instructor) return <span className="text-muted-foreground">—</span>;
+        const name = instructor.firstName && instructor.lastName 
+          ? `${instructor.firstName} ${instructor.lastName}`
+          : instructor.email;
+        return <span className="text-foreground">{name}</span>;
+      },
+    },
+    {
+      id: "secondaryInstructors",
+      header: "SECONDARY INSTRUCTOR(S)",
+      cell: ({ row }) => {
+        // TODO: Fetch co-instructors for this batch
+        return <span className="text-muted-foreground">—</span>;
+      },
+    },
+    {
+      accessorKey: "studentCount",
+      header: "STUDENTS",
+      cell: ({ row }) => {
+        const count = row.original.studentCount ?? 0;
+        return <span className="text-foreground">{count}</span>;
+      },
+      size: 90,
     },
     {
       id: "actions",
@@ -92,20 +202,22 @@ export default function BatchManagement() {
                 <span className="sr-only">Actions</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleEdit(batch)}>
-                Edit Batch
-              </DropdownMenuItem>
+            <DropdownMenuContent
+              align="end"
+              className="bg-white dark:bg-black border border-border shadow-lg min-w-[180px]"
+            >
               <DropdownMenuItem asChild>
                 <Link href={`/app/admin/batches/${batch.id}`}>
-                  Manage Students
+                  View
                 </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleEdit(batch)}>
+                Edit
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => handleDelete(batch)}
                 className="text-destructive focus:text-destructive"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -113,11 +225,23 @@ export default function BatchManagement() {
         );
       },
     },
-  ], [tracks]);
+  ], [tracks, instructors]);
 
-  // Edit handler (will implement dialog later)
   const handleEdit = (batch: Batch) => {
-    toast({ title: "Edit feature", description: "Edit dialog will be implemented next." });
+    setDialogMode('edit');
+    setEditingBatch(batch);
+    setForm({
+      batchCode: batch.batchCode || "",
+      batchName: batch.batchName || "",
+      trackId: batch.trackId ?? undefined,
+      cohortType: batch.cohortType ?? undefined,
+      primaryInstructorId: batch.primaryInstructorId ?? undefined,
+    });
+    setSecondaryInstructorIds([]);
+    setBatchDescription(batch.description || "");
+    setInstructorSearch("");
+    setShowInstructorDropdown(false);
+    setDialogOpen(true);
   };
 
   // Delete handler with validation (throws error if batch has students)
@@ -162,36 +286,60 @@ export default function BatchManagement() {
 
   return (
     <div className="space-y-6 px-4 pt-4">
-      {/* Create Batch Form */}
-      <form onSubmit={submitCreate} className="rounded-lg border border-border bg-card p-4">
-        <h2 className="text-base font-semibold text-foreground">Create Batch</h2>
-        <div className="mt-3 grid gap-3 md:grid-cols-2">
-          <LabeledInput label="Batch Code" value={form.batchCode || ""} onChange={(v) => setForm(f => ({ ...f, batchCode: v }))} />
-          <LabeledInput label="Batch Name" value={form.batchName || ""} onChange={(v) => setForm(f => ({ ...f, batchName: v }))} />
-          <label className="block">
-            <span className="text-xs font-medium text-muted-foreground">Current Track (optional)</span>
-            <select
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-              value={form.trackId ?? ""}
-              onChange={(e) => {
-                const v = e.target.value;
-                setForm(f => ({ ...f, trackId: v ? parseInt(v) : undefined }));
-              }}
-            >
-              <option value="">— Select track —</option>
-              {tracks.map(t => {
-                const label = t.title || t.name || `Track ${t.id}`;
-                return <option key={t.id} value={t.id}>{label}</option>;
-              })}
-            </select>
-          </label>
-        </div>
-        <div className="mt-4">
-          <Button type="submit" disabled={createBatch.isPending || !form.batchCode || !form.batchName}>
-            {createBatch.isPending ? "Creating..." : "Create Batch"}
-          </Button>
-        </div>
-      </form>
+      {/* Create Batch Button */}
+      <div className="flex items-center justify-end">
+        <Button
+          onClick={() => {
+            setDialogMode('create');
+            setEditingBatch(null);
+            setForm({ batchCode: "", batchName: "", trackId: undefined, cohortType: undefined, primaryInstructorId: undefined });
+            setSecondaryInstructorIds([]);
+            setBatchDescription("");
+            setInstructorSearch("");
+            setShowInstructorDropdown(false);
+            setDialogOpen(true);
+          }}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Create Batch
+        </Button>
+      </div>
+
+      {/* Create Batch Modal */}
+      <CreateBatchDialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) {
+            setDialogMode('create');
+            setEditingBatch(null);
+            setForm({ batchCode: "", batchName: "", trackId: undefined, cohortType: undefined, primaryInstructorId: undefined });
+            setSecondaryInstructorIds([]);
+            setBatchDescription("");
+            setInstructorSearch("");
+            setShowInstructorDropdown(false);
+          }
+        }}
+        title={dialogMode === 'create' ? 'Create New Batch' : 'Edit Batch'}
+        description={dialogMode === 'create'
+          ? 'Add a new batch to organize students and track their progress.'
+          : 'Update batch details.'}
+        submitLabel={dialogMode === 'create' ? 'Create Batch' : 'Save Changes'}
+        form={form}
+        setForm={setForm}
+        tracks={tracks}
+        instructors={instructors}
+        secondaryInstructorIds={secondaryInstructorIds}
+        setSecondaryInstructorIds={setSecondaryInstructorIds}
+        instructorSearch={instructorSearch}
+        setInstructorSearch={setInstructorSearch}
+        showInstructorDropdown={showInstructorDropdown}
+        setShowInstructorDropdown={setShowInstructorDropdown}
+        batchDescription={batchDescription}
+        setBatchDescription={setBatchDescription}
+        onSubmit={handleSubmit}
+        isPending={dialogMode === 'create' ? createBatch.isPending : updateBatch.isPending}
+      />
 
       {/* Table */}
       <div className="rounded-lg border border-border/60 bg-card overflow-hidden">
@@ -220,11 +368,14 @@ export default function BatchManagement() {
           </div>
         ) : (
           <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map(headerGroup => (
-                <TableRow key={headerGroup.id} className="bg-muted/50 hover:bg-muted/50">
-                  {headerGroup.headers.map(header => (
-                    <TableHead key={header.id} className="text-[11px] uppercase tracking-wide font-semibold">
+            <TableHeader className="bg-muted/40 sticky top-0 z-10">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      className="text-xs font-bold text-foreground/70 uppercase tracking-widest"
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(header.column.columnDef.header, header.getContext())}
@@ -235,7 +386,18 @@ export default function BatchManagement() {
             </TableHeader>
             <TableBody>
               {table.getRowModel().rows.map(row => (
-                <TableRow key={row.id} className="border-t border-border">
+                <TableRow 
+                  key={row.id} 
+                  className="border-t border-border cursor-pointer hover:bg-muted/50"
+                  onClick={(e) => {
+                    // Don't navigate if clicking on action buttons or dropdowns
+                    const target = e.target as HTMLElement;
+                    if (target.closest('button') || target.closest('[role="menuitem"]')) {
+                      return;
+                    }
+                    setLocation(`/app/admin/batches/${row.original.id}`);
+                  }}
+                >
                   {row.getVisibleCells().map(cell => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -267,10 +429,311 @@ function LabeledInput({ label, value, onChange }: { label: string; value: string
     <label className="block">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
       <input 
-        className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" 
+        className="mt-1 w-full rounded-md border border-input bg-white dark:bg-black text-foreground px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" 
         value={value} 
         onChange={(e) => onChange(e.target.value)} 
       />
     </label>
+  );
+}
+
+interface CreateBatchDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  submitLabel: string;
+  form: Partial<Batch>;
+  setForm: (form: Partial<Batch>) => void;
+  tracks: Track[];
+  instructors: Instructor[];
+  secondaryInstructorIds: string[];
+  setSecondaryInstructorIds: (ids: string[]) => void;
+  instructorSearch: string;
+  setInstructorSearch: (search: string) => void;
+  showInstructorDropdown: boolean;
+  setShowInstructorDropdown: (show: boolean) => void;
+  batchDescription: string;
+  setBatchDescription: (desc: string) => void;
+  onSubmit: React.FormEventHandler<HTMLFormElement>;
+  isPending: boolean;
+}
+
+function CreateBatchDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  submitLabel,
+  form,
+  setForm,
+  tracks,
+  instructors,
+  secondaryInstructorIds,
+  setSecondaryInstructorIds,
+  instructorSearch,
+  setInstructorSearch,
+  showInstructorDropdown,
+  setShowInstructorDropdown,
+  batchDescription,
+  setBatchDescription,
+  onSubmit,
+  isPending,
+}: CreateBatchDialogProps) {
+  const filteredInstructors = useMemo(() => {
+    if (!instructorSearch) return instructors;
+    const search = instructorSearch.toLowerCase();
+    return instructors.filter((i) =>
+      (i.firstName?.toLowerCase().includes(search) ||
+        i.lastName?.toLowerCase().includes(search) ||
+        i.email.toLowerCase().includes(search))
+    );
+  }, [instructors, instructorSearch]);
+
+  const getInstructorLabel = (id: string) => {
+    const instructor = instructors.find((i) => i.id === id);
+    return instructor
+      ? `${instructor.firstName || ""} ${instructor.lastName || ""}`.trim() || instructor.email
+      : "Unknown";
+  };
+
+  const addSecondaryInstructor = (instructorId: string) => {
+    if (!secondaryInstructorIds.includes(instructorId) && secondaryInstructorIds.length < 2) {
+      setSecondaryInstructorIds([...secondaryInstructorIds, instructorId]);
+    }
+  };
+
+  const removeSecondaryInstructor = (instructorId: string) => {
+    setSecondaryInstructorIds(secondaryInstructorIds.filter((id) => id !== instructorId));
+  };
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl border border-border bg-white dark:bg-black shadow-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-foreground">{title}</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
+            {description}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-4">
+              <LabeledInput
+                label="Batch Code"
+                value={form.batchCode || ""}
+                onChange={(v) => setForm({ ...form, batchCode: v })}
+              />
+              <LabeledInput
+                label="Batch Name"
+                value={form.batchName || ""}
+                onChange={(v) => setForm({ ...form, batchName: v })}
+              />
+
+              <div className="space-y-2">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Primary Instructor {instructors.length > 0 && `(${instructors.length} available)`}
+                </span>
+                
+                {form.primaryInstructorId ? (
+                  <div className="flex items-center justify-between p-2 bg-muted rounded text-sm text-foreground">
+                    <span>
+                      {getInstructorLabel(form.primaryInstructorId)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, primaryInstructorId: undefined })}
+                      className="text-destructive hover:text-destructive/80"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search by name or email..."
+                      className="w-full rounded-md border border-input bg-white dark:bg-black text-foreground px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      value={instructorSearch}
+                      onChange={(e) => setInstructorSearch(e.target.value)}
+                      onFocus={() => setShowInstructorDropdown(true)}
+                      onBlur={() => setTimeout(() => setShowInstructorDropdown(false), 200)}
+                    />
+                    
+                    {showInstructorDropdown && filteredInstructors.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-black border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+                        {filteredInstructors.map((instructor) => (
+                          <button
+                            key={instructor.id}
+                            type="button"
+                            onClick={() => {
+                              setForm({ ...form, primaryInstructorId: instructor.id });
+                              setInstructorSearch("");
+                              setShowInstructorDropdown(false);
+                            }}
+                            className="w-full px-3 py-2 text-left hover:bg-muted flex flex-col border-b border-border last:border-b-0"
+                          >
+                            <span className="text-sm font-medium text-foreground">
+                              {instructor.firstName && instructor.lastName 
+                                ? `${instructor.firstName} ${instructor.lastName}`
+                                : instructor.email}
+                            </span>
+                            {instructor.firstName && instructor.lastName && (
+                              <span className="text-xs text-muted-foreground">
+                                {instructor.email}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {showInstructorDropdown && instructorSearch && filteredInstructors.length === 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-black border border-border rounded-md shadow-lg p-3">
+                        <p className="text-sm text-muted-foreground">No instructors found</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <label className="block">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Secondary Instructors (up to 2)
+                </span>
+                {secondaryInstructorIds.length < 2 && (
+                  <div className="mt-1">
+                    <select
+                      className="w-full rounded-md border border-input bg-white dark:bg-black text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          addSecondaryInstructor(e.target.value);
+                          e.target.value = "";
+                        }
+                      }}
+                      value=""
+                    >
+                      <option value="">+ Add secondary instructor</option>
+                      {instructors
+                        .filter(
+                          (i) =>
+                            i.id !== form.primaryInstructorId &&
+                            !secondaryInstructorIds.includes(i.id)
+                        )
+                        .map((instructor) => (
+                          <option key={instructor.id} value={instructor.id}>
+                            {instructor.firstName || ""} {instructor.lastName || ""} ({instructor.email})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+                {secondaryInstructorIds.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {secondaryInstructorIds.map((id) => (
+                      <div
+                        key={id}
+                        className="flex items-center justify-between p-2 bg-muted rounded text-sm text-foreground"
+                      >
+                        <span>{getInstructorLabel(id)}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeSecondaryInstructor(id)}
+                          className="text-destructive hover:text-destructive/80"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Cohort Type (optional)
+                </span>
+                <select
+                  className="mt-1 w-full rounded-md border border-input bg-white dark:bg-black text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  value={form.cohortType ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setForm({ ...form, cohortType: v || undefined });
+                  }}
+                >
+                  <option value="">— Select cohort type —</option>
+                  <option value="bramhachari">Bramhachari</option>
+                  <option value="grihasta">Grihasta</option>
+                </select>
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Current Track (optional)
+                </span>
+                <select
+                  className="mt-1 w-full rounded-md border border-input bg-white dark:bg-black text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              value={form.trackId ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                setForm({ ...form, trackId: v ? parseInt(v) : undefined });
+              }}
+            >
+              <option value="">— Select track —</option>
+              {tracks.map((t) => {
+                const label = t.title || t.name || `Track ${t.id}`;
+                return (
+                  <option key={t.id} value={t.id}>
+                    {label}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+            </div>
+
+            {/* Right Column - Description */}
+            <div className="flex flex-col h-full relative">
+              <div className="absolute left-0 top-0 bottom-0 border-l border-border"></div>
+              <div className="pl-6 flex flex-col h-full">
+              <label className="block flex flex-col h-full">
+                <span className="text-xs font-medium text-muted-foreground mb-2">
+                  Batch Description (optional)
+                </span>
+                <textarea
+                  className="flex-1 w-full rounded-md border border-input bg-white dark:bg-black text-foreground px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none min-h-64"
+                  placeholder="Enter batch description..."
+                  value={batchDescription}
+                  onChange={(e) => setBatchDescription(e.target.value.slice(0, 1000))}
+                  maxLength={1000}
+                />
+                <div className="mt-2 text-xs text-muted-foreground text-right">
+                  {batchDescription.length} / 1000
+                </div>
+              </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-border">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isPending || !form.batchCode || !form.batchName || !form.primaryInstructorId}
+            >
+              {isPending ? "Saving..." : submitLabel}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

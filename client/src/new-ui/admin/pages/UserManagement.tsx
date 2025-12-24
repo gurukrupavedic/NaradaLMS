@@ -238,7 +238,10 @@ export default function UserManagement() {
                 <span className="sr-only">Open row menu</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuContent
+              align="end"
+              className="w-44 bg-white dark:bg-black border border-border shadow-lg"
+            >
               {isPending ? (
                 <>
                   <DropdownMenuItem onClick={() => handleApprove(user.id)} disabled={approve.isPending}>

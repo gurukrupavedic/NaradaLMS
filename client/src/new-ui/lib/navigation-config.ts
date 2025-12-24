@@ -94,12 +94,6 @@ const contentSection: NavSection = {
 const adminSection: NavSection = {
   items: [
     {
-      title: 'Dashboard',
-      url: '/app/admin',
-      icon: LayoutDashboard,
-      isActive: true,
-    },
-    {
       title: 'Users',
       url: '/app/admin/users',
       icon: Users,

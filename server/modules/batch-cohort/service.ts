@@ -1,12 +1,12 @@
 import { batchStorage } from "./storage";
-import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput } from "./types";
+import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput, BatchDetail } from "./types";
 
 export class BatchService {
   async listBatches() {
     return batchStorage.listBatches();
   }
 
-  async getBatch(id: number) {
+  async getBatch(id: number): Promise<BatchDetail | null> {
     return batchStorage.getBatchById(id);
   }
 
