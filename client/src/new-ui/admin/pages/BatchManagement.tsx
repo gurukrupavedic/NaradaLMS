@@ -558,7 +558,7 @@ function CreateBatchDialog({
                       value={instructorSearch}
                       onChange={(e) => setInstructorSearch(e.target.value)}
                       onFocus={() => setShowInstructorDropdown(true)}
-                      onBlur={() => setTimeout(() => setShowInstructorDropdown(false), 200)}
+                      onBlur={() => setTimeout(() => setShowInstructorDropdown(false), 300)}
                     />
                     
                     {showInstructorDropdown && filteredInstructors.length > 0 && (
@@ -567,7 +567,8 @@ function CreateBatchDialog({
                           <button
                             key={instructor.id}
                             type="button"
-                            onClick={() => {
+                            onMouseDown={(e) => {
+                              e.preventDefault();
                               setForm({ ...form, primaryInstructorId: instructor.id });
                               setInstructorSearch("");
                               setShowInstructorDropdown(false);

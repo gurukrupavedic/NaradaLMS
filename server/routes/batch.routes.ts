@@ -92,7 +92,10 @@ router.post('/batches', async (req: Request, res: Response, next: NextFunction) 
     }
 
     res.json(created);
-  } catch (error) { next(error); }
+  } catch (error) { 
+    console.error('Error creating batch:', error);
+    next(error); 
+  }
 });
 
 // PATCH /api/batches/:id - Update batch
