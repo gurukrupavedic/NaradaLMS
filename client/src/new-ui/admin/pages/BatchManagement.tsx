@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { ColumnDef, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
-import { useBatches, useCreateBatch, useUpdateBatch, Batch } from "../hooks/useBatches";
+import { useBatches, useCreateBatch, useUpdateBatch, useDeleteBatch, Batch } from "../hooks/useBatches";
 import { useCoInstructors } from "../hooks/useBatchRelations";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
 import { Button } from "@/components/ui/button";
