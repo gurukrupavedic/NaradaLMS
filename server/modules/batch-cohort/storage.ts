@@ -170,15 +170,31 @@ export class BatchStorage {
       .where(eq(enrollments.batchId, batchId));
   }
 
+  async getActiveEnrollmentForStudent(studentId: string) {
+    const [enrollment] = await db
+      .select({
+        id: enrollments.id,
+        batchId: enrollments.batchId,
+        studentId: enrollments.studentId,
+        status: enrollments.status,
+        enrolledAt: enrollments.enrolledAt,
+      })
+      .from(enrollments)
+      .where(and(
+        eq(enrollments.studentId, studentId),
+        eq(enrollments.status, 'active')
+      ))
+      .limit(1);
+    return enrollment || null;
+  }
+
   async listEligibleStudents(batchId: number, searchQuery?: string) {
-    // Get already enrolled student IDs for this batch
+    // ONE-TO-MANY CONSTRAINT: Get ALL students with active enrollments (in any batch)
+    // A student can only enroll in ONE batch, so exclude all currently enrolled students
     const enrolled = await db
       .select({ studentId: enrollments.studentId })
       .from(enrollments)
-      .where(and(
-        eq(enrollments.batchId, batchId),
-        eq(enrollments.status, 'active')
-      ));
+      .where(eq(enrollments.status, 'active')); // Removed batchId filter - exclude all enrolled students
     
     const enrolledIds = enrolled.map(e => e.studentId);
 

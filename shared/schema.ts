@@ -144,6 +144,7 @@ export const batches = pgTable("batches", {
 });
 
 // Enrollments - Student enrollment in batches
+// BUSINESS RULE: A student can only be enrolled in ONE batch at a time (one-to-many relationship)
 export const enrollments = pgTable("enrollments", {
   id: serial("id").primaryKey(),
   batchId: integer("batch_id").notNull().references(() => batches.id, { onDelete: "cascade" }),
@@ -154,7 +155,12 @@ export const enrollments = pgTable("enrollments", {
   droppedAt: timestamp("dropped_at"),
   droppedReason: text("dropped_reason"),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  // Partial unique index: Only one active enrollment per student
+  uniqueActiveEnrollment: index("unique_active_enrollment_idx")
+    .on(table.studentId)
+    .where(sql`status = 'active'`),
+}));
 
 // Batch Co-Instructors - Additional instructors/TAs for a batch
 export const batchCoInstructors = pgTable("batch_co_instructors", {

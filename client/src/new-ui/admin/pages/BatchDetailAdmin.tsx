@@ -84,6 +84,10 @@ export default function BatchDetailAdmin() {
 
   // Handle enrollment
   const handleEnroll = (student: EligibleStudent) => {
+    const displayName = student.firstName || student.lastName
+      ? `${student.firstName ?? ""} ${student.lastName ?? ""}`.trim()
+      : student.email;
+
     enrollStudent.mutate(
       { studentId: student.id },
       {
@@ -93,9 +97,17 @@ export default function BatchDetailAdmin() {
           setShowDropdown(false);
         },
         onError: (err: any) => {
+          // ONE-TO-MANY CONSTRAINT: Handle already-enrolled error
+          const isAlreadyEnrolled = err.message?.includes('already enrolled') || 
+                                   (err.code === 'ALREADY_ENROLLED');
+          
+          const errorMessage = isAlreadyEnrolled
+            ? `${displayName} is already enrolled in another batch. Students can only enroll in one batch at a time.`
+            : err.message || "Failed to enroll student";
+
           toast({
-            title: "Failed to enroll student",
-            description: err.message,
+            title: isAlreadyEnrolled ? "Already Enrolled" : "Failed to enroll student",
+            description: errorMessage,
             variant: "destructive",
           });
         },
@@ -289,12 +301,20 @@ export default function BatchDetailAdmin() {
                             <Input
                               ref={inputRef}
                               type="text"
+                              name="student-search"
+                              role="combobox"
+                              aria-autocomplete="list"
+                              aria-expanded={showDropdown}
                               placeholder="Type student name or email to enroll..."
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
                               onKeyDown={handleKeyDown}
                               className="w-full"
                               disabled={enrollStudent.isPending}
+                              autoComplete="off"
+                              data-1p-ignore
+                              data-lpignore="true"
+                              data-form-type="other"
                             />
                             {eligibleStudents.isFetching && (
                               <div className="absolute right-3 top-1/2 -translate-y-1/2">

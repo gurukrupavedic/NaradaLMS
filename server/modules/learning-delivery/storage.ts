@@ -93,10 +93,11 @@ export class LearningStorage {
 
   /**
    * Get available chapters for a student (based on enrollments)
+   * ONE-TO-MANY CONSTRAINT: Student can only have ONE active enrollment
    */
   async getAvailableChapters(studentId: string): Promise<AvailableChapterDTO[]> {
-    // Get student's enrolled batches
-    const studentEnrollments = await db
+    // Get student's enrolled batch (singular - one-to-many relationship)
+    const [studentEnrollment] = await db
       .select({
         batchId: enrollments.batchId,
         trackId: batches.trackId,
@@ -109,15 +110,14 @@ export class LearningStorage {
           eq(enrollments.studentId, studentId),
           eq(enrollments.status, 'active')
         )
-      );
+      )
+      .limit(1); // Only ONE enrollment possible
 
-    if (studentEnrollments.length === 0) {
-      return [];
+    if (!studentEnrollment || !studentEnrollment.trackId) {
+      return []; // No enrollment or no track assigned to batch
     }
 
-    // Get all chapters for enrolled tracks
-    const trackIds = studentEnrollments.map(e => e.trackId).filter((id): id is number => id !== null);
-    
+    // Get all chapters for the enrolled track (singular)
     const chaptersList = await db
       .select({
         chapterId: chapters.id,
@@ -129,23 +129,24 @@ export class LearningStorage {
       })
       .from(chapters)
       .innerJoin(tracks, eq(chapters.trackId, tracks.id))
-      .where(inArray(chapters.trackId, trackIds));
+      .where(eq(chapters.trackId, studentEnrollment.trackId));
 
     // Get student's progress for these chapters
     const chapterIds = chaptersList.map(c => c.chapterId);
-    const progressRecords = await db
-      .select()
-      .from(studentProgress)
-      .where(
-        and(
-          eq(studentProgress.studentId, studentId),
-          inArray(studentProgress.chapterId, chapterIds)
-        )
-      );
+    const progressRecords = chapterIds.length > 0 
+      ? await db
+          .select()
+          .from(studentProgress)
+          .where(
+            and(
+              eq(studentProgress.studentId, studentId),
+              inArray(studentProgress.chapterId, chapterIds)
+            )
+          )
+      : [];
 
     // Combine data
     return chaptersList.map(chapter => {
-      const enrollment = studentEnrollments.find(e => e.trackId === chapter.trackId);
       const progress = progressRecords.find(p => p.chapterId === chapter.chapterId);
 
       return {
@@ -154,8 +155,8 @@ export class LearningStorage {
         chapterNumber: chapter.chapterNumber,
         trackId: chapter.trackId,
         trackName: chapter.trackName,
-        batchId: enrollment?.batchId ?? 0,
-        batchName: enrollment?.batchName ?? '',
+        batchId: studentEnrollment.batchId,
+        batchName: studentEnrollment.batchName,
         status: chapter.status as 'draft' | 'published',
         progress: progress ? {
           id: progress.id,

@@ -66,6 +66,15 @@ export class BatchService {
   }
 
   async addEnrollment(input: EnrollmentCreateInput) {
+    // ONE-TO-MANY CONSTRAINT: Check if student already has an active enrollment
+    const existingEnrollment = await batchStorage.getActiveEnrollmentForStudent(input.studentId);
+    if (existingEnrollment) {
+      throw Object.assign(
+        new Error(`Student is already enrolled in batch ${existingEnrollment.batchId}`),
+        { status: 400, code: 'ALREADY_ENROLLED', details: { batchId: existingEnrollment.batchId } }
+      );
+    }
+
     const batch = await this.getBatch(input.batchId);
     if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });
 
