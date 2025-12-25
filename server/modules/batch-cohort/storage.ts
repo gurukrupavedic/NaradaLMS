@@ -167,7 +167,10 @@ export class BatchStorage {
       })
       .from(enrollments)
       .leftJoin(users, eq(users.id, enrollments.studentId))
-      .where(eq(enrollments.batchId, batchId));
+      .where(and(
+        eq(enrollments.batchId, batchId),
+        eq(enrollments.status, 'active') // Only show active enrollments, hide dropped students
+      ));
   }
 
   async getActiveEnrollmentForStudent(studentId: string) {
