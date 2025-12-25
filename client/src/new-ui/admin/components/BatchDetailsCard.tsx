@@ -96,6 +96,7 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
       </div>
 
       {!collapsed && (
+      <>
       {/* Grid ordered as requested */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {/* Row 1: Batch, Current Track, Cohort Type */}
@@ -187,6 +188,7 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
         <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Description</div>
         <div className="text-sm text-foreground">{batch.description || "—"}</div>
       </div>
+      </>
       )}
     </div>
   );
