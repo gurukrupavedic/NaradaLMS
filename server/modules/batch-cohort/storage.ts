@@ -167,7 +167,83 @@ export class BatchStorage {
       })
       .from(enrollments)
       .leftJoin(users, eq(users.id, enrollments.studentId))
-      .where(eq(enrollments.batchId, batchId));
+      .where(and(
+        eq(enrollments.batchId, batchId),
+        eq(enrollments.status, 'active') // Only show active enrollments, hide dropped students
+      ));
+  }
+
+  async getActiveEnrollmentForStudent(studentId: string) {
+    const [enrollment] = await db
+      .select({
+        id: enrollments.id,
+        batchId: enrollments.batchId,
+        studentId: enrollments.studentId,
+        status: enrollments.status,
+        enrolledAt: enrollments.enrolledAt,
+      })
+      .from(enrollments)
+      .where(and(
+        eq(enrollments.studentId, studentId),
+        eq(enrollments.status, 'active')
+      ))
+      .limit(1);
+    return enrollment || null;
+  }
+
+  async listEligibleStudents(batchId: number, searchQuery?: string) {
+    // Get the batch to check primary instructor
+    const batch = await this.getBatchById(batchId);
+    const primaryInstructorId = batch?.primaryInstructorId;
+
+    // ONE-TO-MANY CONSTRAINT: Get ALL students with active enrollments (in any batch)
+    // A student can only enroll in ONE batch, so exclude all currently enrolled students
+    const enrolled = await db
+      .select({ studentId: enrollments.studentId })
+      .from(enrollments)
+      .where(eq(enrollments.status, 'active')); // Removed batchId filter - exclude all enrolled students
+    
+    const enrolledIds = enrolled.map(e => e.studentId);
+
+    // Build query for eligible students
+    let query = db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        roles: users.roles,
+      })
+      .from(users)
+      .where(
+        and(
+          sql`${users.status} = 'active'`,
+          sql`'student' = ANY(${users.roles})`
+        )
+      );
+
+    // Execute and filter
+    const allEligible = await query;
+    
+    // Exclude already enrolled students
+    let filtered = allEligible.filter(u => !enrolledIds.includes(u.id));
+
+    // Exclude primary instructor (students can be co-instructors, but not primary instructor)
+    if (primaryInstructorId) {
+      filtered = filtered.filter(u => u.id !== primaryInstructorId);
+    }
+
+    // Apply search filter
+    if (searchQuery && searchQuery.trim()) {
+      const search = searchQuery.toLowerCase();
+      filtered = filtered.filter(u => {
+        const fullName = `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase();
+        const email = (u.email || '').toLowerCase();
+        return fullName.includes(search) || email.includes(search);
+      });
+    }
+
+    return filtered;
   }
 
   async assignCoInstructor(input: CoInstructorAssignInput) {

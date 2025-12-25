@@ -53,12 +53,6 @@ const batchesSection: NavSection = {
       title: 'My Batches',
       url: '/app/batches',
       icon: Users,
-      items: [
-        {
-          title: 'View All',
-          url: '/app/batches',
-        },
-      ],
     },
     {
       title: 'Student Progress',
@@ -75,12 +69,6 @@ const contentSection: NavSection = {
       title: 'Tracks',
       url: '/app/content',
       icon: BookOpen,
-      items: [
-        {
-          title: 'All Tracks',
-          url: '/app/content',
-        },
-      ],
     },
     {
       title: 'Media Library',

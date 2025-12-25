@@ -517,6 +517,16 @@ All imports have been updated. The old `pages/` and `hooks/` directories are emp
   - Add/update methods in `server/database-storage.ts`
   - Run `npm run db:push`
 
+- **Create a utility or test script**
+  - Never create standalone scripts in root folder
+  - Organize in `scripts/` folder by purpose:
+    - Database utilities → `scripts/db/` (e.g., reset-db.ts)
+    - Data seeding → `scripts/seed/` (e.g., create-sample-users.ts)
+    - Testing → `scripts/test/` (e.g., auth-test.ts, smoke tests)
+    - One-off utilities → `scripts/utils/` (e.g., list-users.ts)
+  - Run with `npx tsx scripts/folder/script-name.ts`
+  - Delete temporary scripts after use
+
 - **Add an API endpoint**
   - Create in appropriate module's routes.ts
   - Use storage layer for database

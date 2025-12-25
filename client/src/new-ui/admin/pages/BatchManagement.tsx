@@ -383,6 +383,7 @@ export default function BatchManagement() {
                     <TableHead
                       key={header.id}
                       className="text-xs font-bold text-foreground/70 uppercase tracking-widest"
+                      style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
                     >
                       {header.isPlaceholder
                         ? null
@@ -407,7 +408,10 @@ export default function BatchManagement() {
                   }}
                 >
                   {row.getVisibleCells().map(cell => (
-                    <TableCell key={cell.id}>
+                    <TableCell 
+                      key={cell.id}
+                      style={{ width: cell.column.getSize() !== 150 ? cell.column.getSize() : undefined }}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}

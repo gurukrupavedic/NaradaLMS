@@ -24,9 +24,11 @@ export interface NavMainItem {
   url: string;
   icon?: LucideIcon;
   isActive?: boolean;
+  isContextual?: boolean; // Sub-item that only appears when relevant (e.g., Batch Details)
   items?: {
     title: string;
     url: string;
+    isContextual?: boolean;
   }[];
 }
 
@@ -54,18 +56,34 @@ export function NavMain({
     return false;
   };
 
+  const shouldShowChevron = (item: NavMainItem) => {
+    // Only show chevron if item has sub-items AND we're on a descendant page
+    if (!item.items || item.items.length === 0) return false;
+    
+    // For contextual sub-items, only show chevron when we're actually on a descendant route
+    const hasContextualItems = item.items.some(sub => sub.isContextual);
+    if (hasContextualItems) {
+      return isItemActive(item) && location !== item.url;
+    }
+    
+    // For static sub-items, always show chevron
+    return true;
+  };
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
           const isActive = isItemActive(item);
+          const showChevron = shouldShowChevron(item);
+          const isOpen = isActive && item.items && item.items.length > 0;
           
           return (
             <Collapsible
               key={item.title}
               asChild
-              defaultOpen={isActive}
+              open={isOpen}
               className="group/collapsible"
             >
               <SidebarMenuItem>
@@ -74,7 +92,7 @@ export function NavMain({
                     <a href={item.url}>
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>
-                      {item.items && item.items.length > 0 && (
+                      {showChevron && (
                         <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                       )}
                     </a>

@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { BookOpen, Settings2 } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 import { NavMain } from './nav-main';
 import { NavUser } from './nav-user';
@@ -19,6 +20,7 @@ import {
   type UserRole,
   type NavSection,
 } from '@/new-ui/lib/navigation-config';
+import type { NavMainItem } from './nav-main';
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user?: {
@@ -38,7 +40,33 @@ export function AppSidebar({
   userRole = 'student',
   ...props
 }: AppSidebarProps) {
+  const [location] = useLocation();
   const navSections = getNavigationForRole(userRole);
+
+  // Helper: Inject contextual sub-items based on current route
+  const enhanceWithContextualItems = (items: NavMainItem[]): NavMainItem[] => {
+    return items.map(item => {
+      // Admin Batches page - add contextual "Batch Details" when viewing a specific batch
+      if (item.url === '/app/admin/batches') {
+        const batchDetailMatch = location.match(/^\/app\/admin\/batches\/(\d+)$/);
+        if (batchDetailMatch) {
+          const batchId = batchDetailMatch[1];
+          return {
+            ...item,
+            items: [
+              {
+                title: 'Batch Details',
+                url: `/app/admin/batches/${batchId}`,
+                isContextual: true,
+              },
+            ],
+          };
+        }
+      }
+
+      return item;
+    });
+  };
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -73,11 +101,11 @@ export function AppSidebar({
           />
         )}
 
-        {/* Admin Section (Admin only) */}
+        {/* Admin Section (Admin only) - Enhanced with contextual items */}
         {navSections.admin && (
           <NavMain
             label={getSectionLabel('admin')}
-            items={navSections.admin.items}
+            items={enhanceWithContextualItems(navSections.admin.items)}
           />
         )}
       </SidebarContent>
