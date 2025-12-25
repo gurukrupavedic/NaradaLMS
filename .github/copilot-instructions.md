@@ -27,6 +27,11 @@ client/src/      # React app with feature-based organization
   components/    # Shared UI components
     ui/          # shadcn/ui base components
     design-system/ # Custom LMS components (26 variants)
+scripts/         # Utility scripts (organized by purpose - see Scripts Organization below)
+  db/            # Database utilities (reset-db.ts)
+  seed/          # Data seeding scripts (sample users, batches, etc.)
+  test/          # Smoke tests and manual testing scripts
+  utils/         # One-off utilities (list-users.ts, update-user-role.ts)
 uploads/         # Audio files (served via /uploads static route)
 docs/            # Product guide, architecture, domain requirements, todo
 ```
@@ -129,6 +134,19 @@ npm run check     # TypeScript type checking
 2. Run `npm run db:push` to apply migrations
 3. Update `server/database-storage.ts` methods if needed
 4. Update TypeScript types in `shared/types.ts`
+
+### Scripts Organization
+**Keep the repository root clean** - all utility scripts belong in `scripts/` folder:
+- **scripts/db/** - Database utilities (reset-db.ts for development resets)
+- **scripts/seed/** - Data seeding and sample data generation (create users, batches, etc.)
+- **scripts/test/** - Manual smoke tests and testing utilities
+- **scripts/utils/** - One-off utilities (list users, update roles, etc.)
+
+**Rules:**
+- Never create standalone `.ts` scripts in root folder
+- Use Drizzle's `npm run db:push` for schema changes (not SQL migration files)
+- Temporary one-time scripts should be deleted after use or moved to appropriate subfolder
+- Test scripts use `npx tsx` for execution (e.g., `npx tsx scripts/seed/create-full-batches.ts`)
 
 ### API Development (server/modules/*/service.ts + routes in server/routes/*.routes.ts)
 - **Modular architecture**: 6 domain modules with dedicated storage and service layers
