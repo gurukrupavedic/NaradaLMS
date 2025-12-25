@@ -47,7 +47,8 @@ export function useCreateBatch() {
       return await res.json();
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [/\/api\/batches/] });
+      // Invalidate all batches list queries
+      qc.invalidateQueries({ queryKey: ["/api/batches"] });
     },
   });
 }
@@ -60,8 +61,13 @@ export function useUpdateBatch() {
       const res = await apiRequest("PATCH", `/api/batches/${id}`, payload);
       return await res.json();
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [/\/api\/batches/] });
+    onSuccess: (data, variables) => {
+      // Invalidate all batches list queries (with any limit/offset params)
+      qc.invalidateQueries({ queryKey: ["/api/batches"] });
+      // Invalidate individual batch detail
+      qc.invalidateQueries({ queryKey: [`/api/batches/${variables.id}`] });
+      // Invalidate co-instructors for this batch
+      qc.invalidateQueries({ queryKey: [`/api/batches/${variables.id}/co-instructors`] });
     },
   });
 }
