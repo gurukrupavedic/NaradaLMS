@@ -7,9 +7,17 @@ export type Batch = {
   batchName: string;
   trackId?: number | null;
   primaryInstructorId?: string | null;
-  status: string;
+  cohortType?: string | null;
+  description?: string | null;
+  studentCount?: number;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type BatchDetail = Batch & {
+  track?: { id: number; title?: string | null; name?: string | null } | null;
+  primaryInstructor?: { id: string; firstName?: string | null; lastName?: string | null; email: string } | null;
+  coInstructors?: { id: number; instructorId: string; role: string; firstName?: string | null; lastName?: string | null; email?: string | null }[];
 };
 
 export type BatchPaginationParams = {
@@ -23,18 +31,24 @@ export function useBatches(params?: BatchPaginationParams) {
 
   return useQuery<{ items: Batch[]; pagination: { limit: number; offset: number; total: number } }>({
     queryKey: ["/api/batches", limit, offset],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/batches?limit=${limit}&offset=${offset}`);
+      return await res.json();
+    },
   });
 }
 
 export function useCreateBatch() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: Partial<Batch>) => {
+    // Allow extra fields like secondaryInstructorIds in create payload
+    mutationFn: async (payload: Partial<Batch> & { secondaryInstructorIds?: string[]; [key: string]: any }) => {
       const res = await apiRequest("POST", "/api/batches", payload);
       return await res.json();
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [/\/api\/batches/] });
+      // Invalidate all batches list queries
+      qc.invalidateQueries({ queryKey: ["/api/batches"] });
     },
   });
 }
@@ -42,12 +56,31 @@ export function useCreateBatch() {
 export function useUpdateBatch() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, payload }: { id: number; payload: Partial<Batch> }) => {
+    // Be flexible with payload keys for partial updates
+    mutationFn: async ({ id, payload }: { id: number; payload: Partial<Batch> & { [key: string]: any } }) => {
       const res = await apiRequest("PATCH", `/api/batches/${id}`, payload);
       return await res.json();
     },
+    onSuccess: (data, variables) => {
+      // Invalidate all batches list queries (with any limit/offset params)
+      qc.invalidateQueries({ queryKey: ["/api/batches"] });
+      // Invalidate individual batch detail
+      qc.invalidateQueries({ queryKey: [`/api/batches/${variables.id}`] });
+      // Invalidate co-instructors for this batch
+      qc.invalidateQueries({ queryKey: [`/api/batches/${variables.id}/co-instructors`] });
+    },
+  });
+}
+
+export function useDeleteBatch() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/batches/${id}`);
+      return await res.json();
+    },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [/\/api\/batches/] });
+      qc.invalidateQueries({ queryKey: ["/api/batches"] });
     },
   });
 }

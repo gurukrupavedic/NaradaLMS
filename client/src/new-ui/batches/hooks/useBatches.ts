@@ -7,6 +7,7 @@ export interface BatchItem {
   batchName: string;
   trackId?: number | null;
   primaryInstructorId?: string | null;
+  studentCount?: number;
   status: string;
 }
 

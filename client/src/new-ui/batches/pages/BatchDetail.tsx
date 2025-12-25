@@ -44,6 +44,25 @@ export default function BatchDetail() {
   return (
     <div className="space-y-6">
 
+      {/* Batch summary */}
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm text-muted-foreground">Batch</p>
+            <p className="text-lg font-semibold text-foreground">{batch.batchName}</p>
+            <p className="text-sm text-muted-foreground">Code: {batch.batchCode}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {batch.cohortType && (
+              <span className="text-xs rounded-full border border-border px-2 py-0.5 text-muted-foreground">
+                {batch.cohortType === "bramhachari" ? "Bramhachari" : "Grihasta"}
+              </span>
+            )}
+            <span className="text-xs rounded-full border border-border px-2 py-0.5 text-muted-foreground">{batch.status}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Track Details Card */}
       {batch.trackId && (
         <div className="rounded-2xl border border-border bg-card p-4">

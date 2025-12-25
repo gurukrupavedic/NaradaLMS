@@ -136,7 +136,8 @@ export const batches = pgTable("batches", {
   batchName: text("batch_name").notNull(),
   trackId: integer("track_id").references(() => tracks.id, { onDelete: "set null" }),
   primaryInstructorId: varchar("primary_instructor_id").references(() => users.id),
-  status: varchar("status").default("active").notNull(), // 'active', 'completed', 'archived'
+  cohortType: varchar("cohort_type", { length: 20 }), // 'bramhachari', 'grihasta' - optional
+  description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   createdBy: varchar("created_by").notNull().references(() => users.id),

@@ -1,12 +1,12 @@
 import { batchStorage } from "./storage";
-import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput } from "./types";
+import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput, BatchDetail } from "./types";
 
 export class BatchService {
   async listBatches() {
     return batchStorage.listBatches();
   }
 
-  async getBatch(id: number) {
+  async getBatch(id: number): Promise<BatchDetail | null> {
     return batchStorage.getBatchById(id);
   }
 
@@ -25,6 +25,14 @@ export class BatchService {
       if (!exists) throw Object.assign(new Error('Primary instructor does not exist'), { status: 400 });
     }
 
+    // Validate secondary instructors if provided
+    if (input.secondaryInstructorIds && input.secondaryInstructorIds.length > 0) {
+      for (const instructorId of input.secondaryInstructorIds) {
+        const exists = await batchStorage.userExists(instructorId);
+        if (!exists) throw Object.assign(new Error(`Secondary instructor not found: ${instructorId}`), { status: 400 });
+      }
+    }
+
     return batchStorage.createBatch(input);
   }
 
@@ -40,6 +48,21 @@ export class BatchService {
     }
 
     return batchStorage.updateBatch(id, input);
+  }
+
+  async deleteBatch(id: number) {
+    const batch = await this.getBatch(id);
+    if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });
+    return batchStorage.deleteBatch(id);
+  }
+
+  async syncCoInstructors(batchId: number, instructorIds: string[], assignedBy: string) {
+    // Validate all instructor IDs exist
+    for (const instructorId of instructorIds) {
+      const exists = await batchStorage.userExists(instructorId);
+      if (!exists) throw Object.assign(new Error(`Instructor not found: ${instructorId}`), { status: 400 });
+    }
+    return batchStorage.syncCoInstructors(batchId, instructorIds, assignedBy);
   }
 
   async addEnrollment(input: EnrollmentCreateInput) {
