@@ -19,8 +19,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2 } from "lucide-react";
+import { Loader2, MoreVertical } from "lucide-react";
 
 type Enrollment = {
   id: number;
@@ -148,48 +149,54 @@ export default function BatchDetailAdmin() {
           const en = row.original;
           const displayName =
             en.firstName || en.lastName ? `${en.firstName ?? ""} ${en.lastName ?? ""}`.trim() : en.email || en.studentId;
-          return (
-            <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium text-foreground">{displayName}</span>
-              {en.email && <span className="text-xs text-muted-foreground">{en.email}</span>}
-            </div>
-          );
+          return <span className="text-sm font-medium text-foreground">{displayName}</span>;
         },
       },
       {
-        accessorKey: "status",
-        header: "STATUS",
-        cell: ({ row }) => <span className="text-sm text-foreground capitalize">{row.original.status}</span>,
+        accessorKey: "email",
+        header: "EMAIL",
+        cell: ({ row }) => <span className="text-sm text-foreground">{row.original.email || "—"}</span>,
       },
       {
         id: "actions",
         header: "ACTIONS",
+        size: 50,
         cell: ({ row }) => {
           const en = row.original;
-          return en.status === "active" ? (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() =>
-                dropEnrollment.mutate(
-                  { enrollmentId: en.id },
-                  {
-                    onSuccess: () => toast({ title: "Student dropped" }),
-                    onError: (err: any) =>
-                      toast({
-                        title: "Failed to drop",
-                        description: err.message,
-                        variant: "destructive",
-                      }),
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">Actions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="bg-white dark:bg-black border border-border shadow-lg min-w-[180px]"
+              >
+                <DropdownMenuItem
+                  onClick={() =>
+                    dropEnrollment.mutate(
+                      { enrollmentId: en.id },
+                      {
+                        onSuccess: () => toast({ title: "Student dropped" }),
+                        onError: (err: any) =>
+                          toast({
+                            title: "Failed to drop",
+                            description: err.message,
+                            variant: "destructive",
+                          }),
+                      }
+                    )
                   }
-                )
-              }
-              disabled={dropEnrollment.isPending}
-            >
-              Drop
-            </Button>
-          ) : (
-            <span className="text-muted-foreground">—</span>
+                  disabled={dropEnrollment.isPending}
+                  className="text-destructive focus:text-destructive"
+                >
+                  Drop
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           );
         },
       },
@@ -278,7 +285,11 @@ export default function BatchDetailAdmin() {
                     {table.getHeaderGroups().map((headerGroup) => (
                       <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
                         {headerGroup.headers.map((header) => (
-                          <TableHead key={header.id} className="text-xs font-bold text-foreground/70 uppercase tracking-widest">
+                          <TableHead 
+                            key={header.id} 
+                            className="text-xs font-bold text-foreground/70 uppercase tracking-widest"
+                            style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                          >
                             {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                           </TableHead>
                         ))}
@@ -298,7 +309,7 @@ export default function BatchDetailAdmin() {
                             role="combobox"
                             aria-autocomplete="list"
                             aria-expanded={showDropdown}
-                            placeholder="Type student name or email to enroll..."
+                            placeholder="Type student name to enroll..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={handleKeyDown}
@@ -353,7 +364,7 @@ export default function BatchDetailAdmin() {
                         </div>
                       </TableCell>
 
-                      {/* STATUS Column - Placeholder */}
+                      {/* EMAIL Column - Placeholder */}
                       <TableCell>
                         <div className="h-10 bg-muted rounded border border-dashed border-muted-foreground/40" />
                       </TableCell>
@@ -374,7 +385,12 @@ export default function BatchDetailAdmin() {
                       table.getRowModel().rows.map((row) => (
                         <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors">
                           {row.getVisibleCells().map((cell) => (
-                            <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                            <TableCell 
+                              key={cell.id}
+                              style={{ width: cell.column.getSize() !== 150 ? cell.column.getSize() : undefined }}
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
                           ))}
                         </TableRow>
                       ))

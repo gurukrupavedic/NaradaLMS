@@ -212,6 +212,7 @@ export default function UserManagement() {
     {
       id: "actions",
       header: "Actions",
+      size: 100,
       cell: ({ row }) => {
         const user = row.original;
         const isPending = user.status === "pending_approval";
@@ -330,7 +331,11 @@ export default function UserManagement() {
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
                     {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} className="text-xs font-bold text-foreground/70 uppercase tracking-widest">
+                      <TableHead 
+                        key={header.id} 
+                        className="text-xs font-bold text-foreground/70 uppercase tracking-widest"
+                        style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                      >
                         {header.isPlaceholder
                           ? null
                           : flexRender(header.column.columnDef.header, header.getContext())}
@@ -344,7 +349,12 @@ export default function UserManagement() {
                   table.getRowModel().rows.map((row) => (
                     <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors">
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                        <TableCell 
+                          key={cell.id}
+                          style={{ width: cell.column.getSize() !== 150 ? cell.column.getSize() : undefined }}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
                       ))}
                     </TableRow>
                   ))
