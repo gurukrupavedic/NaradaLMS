@@ -78,18 +78,8 @@ router.post('/batches', async (req: Request, res: Response, next: NextFunction) 
       cohortType: req.body.cohortType ?? undefined,
       description: req.body.description ?? null,
       createdBy: req.body.createdBy || 'system',
+      secondaryInstructorIds: Array.isArray(req.body.secondaryInstructorIds) ? req.body.secondaryInstructorIds : undefined,
     });
-
-    // Add secondary/co-instructors if provided
-    if (req.body.secondaryInstructorIds && Array.isArray(req.body.secondaryInstructorIds)) {
-      for (const instructorId of req.body.secondaryInstructorIds) {
-        await batchService.assignCoInstructor({
-          batchId: created.id,
-          instructorId,
-          assignedBy: req.body.createdBy || 'system',
-        });
-      }
-    }
 
     res.json(created);
   } catch (error) { 

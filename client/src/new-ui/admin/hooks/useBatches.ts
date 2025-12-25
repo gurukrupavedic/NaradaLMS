@@ -41,7 +41,8 @@ export function useBatches(params?: BatchPaginationParams) {
 export function useCreateBatch() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: Partial<Batch>) => {
+    // Allow extra fields like secondaryInstructorIds in create payload
+    mutationFn: async (payload: Partial<Batch> & { secondaryInstructorIds?: string[]; [key: string]: any }) => {
       const res = await apiRequest("POST", "/api/batches", payload);
       return await res.json();
     },
@@ -54,7 +55,8 @@ export function useCreateBatch() {
 export function useUpdateBatch() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, payload }: { id: number; payload: Partial<Batch> }) => {
+    // Be flexible with payload keys for partial updates
+    mutationFn: async ({ id, payload }: { id: number; payload: Partial<Batch> & { [key: string]: any } }) => {
       const res = await apiRequest("PATCH", `/api/batches/${id}`, payload);
       return await res.json();
     },

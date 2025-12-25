@@ -25,6 +25,14 @@ export class BatchService {
       if (!exists) throw Object.assign(new Error('Primary instructor does not exist'), { status: 400 });
     }
 
+    // Validate secondary instructors if provided
+    if (input.secondaryInstructorIds && input.secondaryInstructorIds.length > 0) {
+      for (const instructorId of input.secondaryInstructorIds) {
+        const exists = await batchStorage.userExists(instructorId);
+        if (!exists) throw Object.assign(new Error(`Secondary instructor not found: ${instructorId}`), { status: 400 });
+      }
+    }
+
     return batchStorage.createBatch(input);
   }
 

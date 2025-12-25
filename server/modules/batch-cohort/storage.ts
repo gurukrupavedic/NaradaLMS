@@ -71,17 +71,34 @@ export class BatchStorage {
   }
 
   async createBatch(input: BatchCreateInput) {
-    const [created] = await db.insert(batches).values({
-      batchCode: input.batchCode,
-      batchName: input.batchName,
-      trackId: input.trackId ?? null,
-      primaryInstructorId: input.primaryInstructorId ?? null,
-      cohortType: input.cohortType ?? null,
-      description: input.description ?? null,
-      status: 'active',
-      createdBy: input.createdBy,
-    }).returning();
-    return created;
+    // Persist batch and optional co-instructor assignments atomically
+    const result = await db.transaction(async (tx) => {
+      const [created] = await tx.insert(batches).values({
+        batchCode: input.batchCode,
+        batchName: input.batchName,
+        trackId: input.trackId ?? null,
+        primaryInstructorId: input.primaryInstructorId ?? null,
+        cohortType: input.cohortType ?? null,
+        description: input.description ?? null,
+        status: 'active',
+        createdBy: input.createdBy,
+      }).returning();
+
+      // If secondary instructors provided, assign them to the new batch
+      if (input.secondaryInstructorIds && input.secondaryInstructorIds.length > 0) {
+        for (const instructorId of input.secondaryInstructorIds) {
+          await tx.insert(batchCoInstructors).values({
+            batchId: created.id,
+            instructorId,
+            role: 'co_instructor',
+            assignedBy: input.createdBy,
+          });
+        }
+      }
+
+      return created;
+    });
+    return result;
   }
 
   async updateBatch(id: number, input: BatchUpdateInput) {

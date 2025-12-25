@@ -8,6 +8,7 @@ export interface BatchCreateInput {
 	cohortType?: string; // 'brahmacharya' | 'grihastha'
 	description?: string | null;
 	createdBy: string;
+	secondaryInstructorIds?: string[];
 }
 
 export interface BatchUpdateInput {
