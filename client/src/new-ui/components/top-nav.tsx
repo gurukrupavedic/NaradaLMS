@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { Bell, ChevronRight } from 'lucide-react';
 import { useLocation } from 'wouter';
 import {
@@ -18,59 +19,63 @@ interface TopNavProps {
 
 /**
  * Get breadcrumb from sidebar navigation structure
- * Maps routes to section > page (e.g., "Learn > Dashboard")
+ * Returns array of breadcrumb segments for flexible rendering
  */
-function getBreadcrumbs(pathname: string): { section: string; page: string } | null {
+function getBreadcrumbs(pathname: string): string[] {
   // Learn
   if (pathname === '/app' || pathname === '/app/learning') {
-    return { section: 'Learn', page: 'Dashboard' };
+    return ['Learn', 'Dashboard'];
   }
 
   if (pathname.includes('/app/learning/courses')) {
-    return { section: 'Learn', page: 'Course Content' };
+    return ['Learn', 'Course Content'];
   }
 
   // Batches & Progress
   if (pathname.includes('/app/batches')) {
     if (pathname === '/app/batches') {
-      return { section: 'Batches & Progress', page: 'My Batches' };
+      return ['Batches & Progress', 'My Batches'];
     }
-    return { section: 'Batches & Progress', page: 'Student Progress' };
+    // Batch detail pages
+    if (/\/app\/batches\/[0-9]+/.test(pathname)) {
+      return ['Batches & Progress', 'My Batches', 'Batch Details'];
+    }
+    return ['Batches & Progress', 'Student Progress'];
   }
 
   // Content Studio
   if (pathname.includes('/app/content')) {
     if (pathname === '/app/content') {
-      return { section: 'Content Studio', page: 'Tracks' };
+      return ['Content Studio', 'Tracks'];
     }
-    return { section: 'Content Studio', page: 'Media Library' };
+    return ['Content Studio', 'Media Library'];
   }
 
   // Admin
   if (pathname.includes('/app/admin')) {
-    if (pathname === '/app/admin') {
-      return { section: 'Admin Center', page: 'Dashboard' };
-    }
     if (pathname.includes('/users')) {
-      return { section: 'Admin Center', page: 'User Management' };
+      return ['Admin Center', 'User Management'];
     }
     if (pathname.includes('/logs')) {
-      return { section: 'Admin Center', page: 'Audit Logs' };
+      return ['Admin Center', 'Audit Logs'];
+    }
+    if (/\/app\/admin\/batches\/[0-9]+/.test(pathname)) {
+      return ['Admin Center', 'Batches', 'Batch Details'];
     }
     if (pathname.includes('/batches')) {
-      return { section: 'Admin Center', page: 'Batch Management' };
+      return ['Admin Center', 'Batches'];
     }
     if (pathname.includes('/settings')) {
-      return { section: 'Admin Center', page: 'System Settings' };
+      return ['Admin Center', 'System Settings'];
     }
   }
 
-  return null;
+  return [];
 }
 
 export function TopNav({ user }: TopNavProps) {
   const [pathname] = useLocation();
-  const breadcrumb = getBreadcrumbs(pathname);
+  const breadcrumbs = getBreadcrumbs(pathname);
 
   return (
     <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background px-4">
@@ -78,12 +83,17 @@ export function TopNav({ user }: TopNavProps) {
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <SidebarTrigger className="-ml-1" />
         
-        {/* Breadcrumbs - Simple section > page */}
-        {breadcrumb && (
-          <nav className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{breadcrumb.section}</span>
-            <ChevronRight className="h-4 w-4" />
-            <span>{breadcrumb.page}</span>
+        {/* Breadcrumbs - Flexible multi-level navigation */}
+        {breadcrumbs.length > 0 && (
+          <nav className="hidden sm:flex items-center gap-2 text-sm">
+            {breadcrumbs.map((crumb, index) => (
+              <React.Fragment key={index}>
+                {index > 0 && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                <span className={index === breadcrumbs.length - 1 ? 'text-foreground' : 'text-muted-foreground'}>
+                  {crumb}
+                </span>
+              </React.Fragment>
+            ))}
           </nav>
         )}
       </div>

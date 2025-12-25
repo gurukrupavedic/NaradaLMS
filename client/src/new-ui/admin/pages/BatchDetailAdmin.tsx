@@ -1,306 +1,258 @@
-import React, { useState } from "react";
-import { Link, useRoute } from "wouter";
-import { useCoInstructors, useAssignCoInstructor, useRemoveCoInstructor, useEnrollments, useEnrollStudent, useDropEnrollment } from "../hooks/useBatchRelations";
-import { useAdminUserSearch } from "../hooks/useAdminUserSearch";
+import React, { useState, useMemo, useEffect } from "react";
+import { useRoute, useLocation } from "wouter";
+import {
+  ColumnDef,
+  SortingState,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+  PaginationState,
+  getPaginationRowModel,
+} from "@tanstack/react-table";
+import { useEnrollments, useDropEnrollment } from "../hooks/useBatchRelations";
+import { useBatches } from "../hooks/useBatches";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
+import { BatchDetailsCard } from "../components/BatchDetailsCard";
+import { useBatch } from "../hooks/useBatch";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { Skeleton } from "@/components/ui/skeleton";
+
+type Enrollment = {
+  id: number;
+  studentId: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  status: string;
+};
 
 export default function BatchDetailAdmin() {
   const { toast } = useToast();
   const [, params] = useRoute("/app/admin/batches/:id");
+  const [, setLocation] = useLocation();
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  const { data: batchesData, isLoading: isBatchesLoading } = useBatches({ limit: 500, offset: 0 });
+  const batches = batchesData?.items ?? [];
   const batchId = Number(params?.id);
 
-  const coInstructors = useCoInstructors(batchId);
-  const assignCo = useAssignCoInstructor(batchId);
-  const removeCo = useRemoveCoInstructor();
-
+  const batchDetail = useBatch(isNaN(batchId) ? undefined : batchId);
   const enrollments = useEnrollments(batchId);
-  const enrollStudent = useEnrollStudent(batchId);
   const dropEnrollment = useDropEnrollment(batchId);
 
-  // Instructor assignment state
-  const [qInstructor, setQInstructor] = useState("");
-  const [selectedInstructor, setSelectedInstructor] = useState<any>(null);
-  const [instructorRole, setInstructorRole] = useState("secondary_instructor");
+  // If the route param is invalid (e.g., /i), redirect to first batch when available
+  useEffect(() => {
+    if (Number.isNaN(batchId) && batches.length > 0) {
+      setLocation(`/app/admin/batches/${batches[0].id}`);
+    }
+  }, [batchId, batches, setLocation]);
 
-  // Student enrollment state
-  const [qStudent, setQStudent] = useState("");
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  // Reset pagination when batch changes
+  useEffect(() => {
+    setPagination({ pageIndex: 0, pageSize: 10 });
+  }, [batchId]);
 
-  // Search pickers
-  const instructorSearch = useAdminUserSearch({ role: "instructor", q: qInstructor, status: "active" });
-  const studentSearch = useAdminUserSearch({ role: "student", q: qStudent, status: "active" });
+  // Define columns for enrollment table
+  const enrollmentData = enrollments.data ?? [];
+  const enrollmentCount = enrollmentData.length;
 
-  // Check if primary instructor already exists
-  const hasPrimaryInstructor = (coInstructors.data ?? []).some((ci: any) => ci.role === "primary_instructor");
-
-  const onAssignInstructor = () => {
-    if (!selectedInstructor) return;
-    assignCo.mutate({ instructorId: selectedInstructor.id, role: instructorRole }, {
-      onSuccess: () => {
-        toast({ title: "Instructor assigned" });
-        setSelectedInstructor(null);
-        setQInstructor("");
-        setInstructorRole("secondary_instructor");
-      },
-      onError: (err: any) => {
-        toast({ title: "Failed to assign instructor", description: err.message, variant: "destructive" });
-      },
-    });
-  };
-
-  const onEnrollStudent = () => {
-    if (!selectedStudent) return;
-    enrollStudent.mutate({ studentId: selectedStudent.id }, {
-      onSuccess: () => {
-        toast({ title: "Student enrolled" });
-        setSelectedStudent(null);
-        setQStudent("");
-      },
-      onError: (err: any) => {
-        toast({ title: "Failed to enroll student", description: err.message, variant: "destructive" });
-      },
-    });
-  };
-
-  return (
-    <div className="space-y-6">
-      <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="text-base font-semibold text-foreground">Assign Instructors</h2>
-        
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <label className="block">
-            <span className="text-xs text-muted-foreground">Search Instructor</span>
-            <input 
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" 
-              value={qInstructor} 
-              onChange={(e) => {
-                setQInstructor(e.target.value);
-                setSelectedInstructor(null);
-              }} 
-              placeholder="Name or email" 
-            />
-          </label>
-
-          {selectedInstructor && (
-            <>
-              <label className="block">
-                <span className="text-xs text-muted-foreground">Role</span>
-                <select 
-                  aria-label="Instructor Role"
-                  className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-                  value={instructorRole}
-                  onChange={(e) => setInstructorRole(e.target.value)}
-                  disabled={instructorRole === "primary_instructor" && hasPrimaryInstructor}
-                >
-                  <option value="primary_instructor" disabled={hasPrimaryInstructor}>Primary Instructor {hasPrimaryInstructor ? "(already assigned)" : ""}</option>
-                  <option value="secondary_instructor">Secondary Instructor</option>
-                </select>
-              </label>
-
-              <div className="flex items-end gap-2">
-                <button 
-                  className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90"
-                  onClick={onAssignInstructor}
-                  disabled={assignCo.isPending}
-                >
-                  Assign
-                </button>
-                <button 
-                  className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
-                  onClick={() => setSelectedInstructor(null)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Instructor search results */}
-        {qInstructor && !selectedInstructor && (
-          <div className="mt-3">
-            <div className="rounded-md border border-border">
-              <ul className="max-h-48 overflow-auto text-sm">
-                {(instructorSearch.results ?? []).length === 0 && (
-                  <li className="px-3 py-2 text-muted-foreground">No instructors found.</li>
-                )}
-                {instructorSearch.results.map(u => (
-                  <li key={u.id} className="flex items-center justify-between border-t border-border px-3 py-2 hover:bg-muted/50">
-                    <div>
-                      <div className="font-medium text-foreground">{u.email}</div>
-                      <div className="text-xs text-muted-foreground">{u.firstName} {u.lastName}</div>
-                    </div>
-                    <button 
-                      className="rounded-md border border-border px-2 py-1 text-xs hover:bg-muted"
-                      onClick={() => setSelectedInstructor(u)}
-                    >
-                      Select
-                    </button>
-                  </li>
-                ))}
-              </ul>
+  const columns = useMemo<ColumnDef<Enrollment>[]>(
+    () => [
+      {
+        accessorKey: "studentId",
+        header: "STUDENT",
+        cell: ({ row }) => {
+          const en = row.original;
+          const displayName =
+            en.firstName || en.lastName ? `${en.firstName ?? ""} ${en.lastName ?? ""}`.trim() : en.email || en.studentId;
+          return (
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium text-foreground">{displayName}</span>
+              {en.email && <span className="text-xs text-muted-foreground">{en.email}</span>}
             </div>
-          </div>
-        )}
-
-        {/* Current instructors */}
-        <div className="mt-4 rounded-2xl border border-border">
-          <table className="w-full text-sm">
-            <thead className="text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Email</th>
-                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Name</th>
-                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Role</th>
-                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(coInstructors.data ?? []).length === 0 && (
-                <tr><td colSpan={4} className="px-4 py-5 text-muted-foreground">No instructors assigned yet.</td></tr>
-              )}
-              {(coInstructors.data ?? []).map((ci: any) => (
-                <tr key={ci.id} className="border-t border-border">
-                  <td className="px-3 py-2">{ci.instructorId}</td>
-                  <td className="px-3 py-2">—</td>
-                  <td className="px-3 py-2 font-medium">{ci.role === "primary_instructor" ? "Primary" : "Secondary"}</td>
-                  <td className="px-3 py-2">
-                    <button 
-                      className="rounded-md bg-destructive/20 px-3 py-1.5 text-destructive hover:bg-destructive/30 disabled:opacity-50"
-                      onClick={() => removeCo.mutate({ assignmentId: ci.id, batchId }, {
-                        onSuccess: () => toast({ title: "Instructor removed" }),
-                        onError: (err: any) => toast({ title: "Failed to remove", description: err.message, variant: "destructive" }),
-                      })}
-                      disabled={removeCo.isPending}
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="text-base font-semibold text-foreground">Enrollments</h2>
-
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <label className="block">
-            <span className="text-xs text-muted-foreground">Search Student</span>
-            <input 
-              className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-              value={qStudent} 
-              onChange={(e) => {
-                setQStudent(e.target.value);
-                setSelectedStudent(null);
-              }}
-              placeholder="Name or email"
-            />
-          </label>
-
-          {selectedStudent && (
-            <div className="flex items-end gap-2">
-              <button 
-                className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground hover:opacity-90"
-                onClick={onEnrollStudent}
-                disabled={enrollStudent.isPending}
-              >
-                Enroll
-              </button>
-              <button 
-                className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
-                onClick={() => setSelectedStudent(null)}
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Student search results */}
-        {qStudent && !selectedStudent && (
-          <div className="mt-3">
-            <div className="rounded-md border border-border">
-              <ul className="max-h-48 overflow-auto text-sm">
-                {(studentSearch.results ?? []).length === 0 && (
-                  <li className="px-3 py-2 text-muted-foreground">No students found.</li>
-                )}
-                {studentSearch.results.map(u => (
-                  <li key={u.id} className="flex items-center justify-between border-t border-border px-3 py-2 hover:bg-muted/50">
-                    <div>
-                      <div className="font-medium text-foreground">{u.email}</div>
-                      <div className="text-xs text-muted-foreground">{u.firstName} {u.lastName}</div>
-                    </div>
-                    <button 
-                      className="rounded-md border border-border px-2 py-1 text-xs hover:bg-muted"
-                      onClick={() => setSelectedStudent(u)}
-                    >
-                      Select
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
-
-        <div className="mt-4 rounded-2xl border border-border">
-          <table className="w-full text-sm">
-            <thead className="text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">ID</th>
-                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Student</th>
-                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Status</th>
-                <th className="px-3 py-2 text-left text-[11px] uppercase tracking-wide">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(enrollments.data ?? []).length === 0 && (
-                <tr><td colSpan={4} className="px-4 py-5 text-muted-foreground">No enrollments yet.</td></tr>
-              )}
-              {(enrollments.data ?? []).map(en => (
-                <tr key={en.id} className="border-t border-border">
-                  <td className="px-3 py-2">{en.id}</td>
-                  <td className="px-3 py-2">{en.studentId}</td>
-                  <td className="px-3 py-2">{en.status}</td>
-                  <td className="px-3 py-2">
-                    {en.status === "active" ? (
-                      <button 
-                        className="rounded-md bg-destructive/20 px-3 py-1.5 text-destructive hover:bg-destructive/30 disabled:opacity-50"
-                        onClick={() => dropEnrollment.mutate({ enrollmentId: en.id }, {
-                          onSuccess: () => toast({ title: "Student dropped" }),
-                          onError: (err: any) => toast({ title: "Failed to drop", description: err.message, variant: "destructive" }),
-                        })}
-                        disabled={dropEnrollment.isPending}
-                      >
-                        Drop
-                      </button>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
+          );
+        },
+      },
+      {
+        accessorKey: "status",
+        header: "STATUS",
+        cell: ({ row }) => <span className="text-sm text-foreground capitalize">{row.original.status}</span>,
+      },
+      {
+        id: "actions",
+        header: "ACTIONS",
+        cell: ({ row }) => {
+          const en = row.original;
+          return en.status === "active" ? (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() =>
+                dropEnrollment.mutate(
+                  { enrollmentId: en.id },
+                  {
+                    onSuccess: () => toast({ title: "Student dropped" }),
+                    onError: (err: any) =>
+                      toast({
+                        title: "Failed to drop",
+                        description: err.message,
+                        variant: "destructive",
+                      }),
+                  }
+                )
+              }
+              disabled={dropEnrollment.isPending}
+            >
+              Drop
+            </Button>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          );
+        },
+      },
+    ],
+    [dropEnrollment, toast]
   );
-}
 
-function LabeledInput({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+  const table = useReactTable<Enrollment>({
+    data: enrollmentData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: { sorting, pagination },
+    onSortingChange: setSorting,
+    onPaginationChange: setPagination,
+    pageCount: Math.ceil(enrollmentData.length / pagination.pageSize),
+  });
+
+  const isBatchSelected = !Number.isNaN(batchId);
+
   return (
-    <label className="block">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <input
-        aria-label={label}
-        className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-      />
-    </label>
+    <div className="p-6 space-y-8">
+      {/* Batch Details */}
+      {isBatchSelected && (
+        batchDetail.isLoading ? (
+          <div className="rounded-lg border border-border p-4">
+            <div className="mb-4 flex items-center justify-between">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-9 w-56" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-5 w-40" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-5 w-52" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-5 w-28" />
+              </div>
+            </div>
+            <div className="mt-6 space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+        ) : batchDetail.isError ? (
+          <p className="text-sm text-destructive">Failed to load batch details.</p>
+        ) : batchDetail.data ? (
+          <BatchDetailsCard
+            batch={batchDetail.data}
+            batches={batches}
+            batchesLoading={isBatchesLoading}
+            onBatchChange={(id) => setLocation(`/app/admin/batches/${id}`)}
+          />
+        ) : null
+      )}
+
+      {!isBatchSelected ? (
+        <div className="text-sm text-muted-foreground">
+          {batches.length === 0
+            ? "No batches found. Create a batch to get started."
+            : "Select a batch to view details."}
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Enrollments Table */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-foreground">
+                Enrollments {enrollments.isLoading ? null : `(${enrollmentCount})`}
+              </h3>
+            </div>
+
+            <div className="rounded-md border border-border">
+              {enrollments.isLoading ? (
+                <div className="p-4 space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="grid grid-cols-3 gap-4">
+                      <Skeleton className="h-5 w-56 col-span-1" />
+                      <Skeleton className="h-5 w-24 col-span-1" />
+                      <Skeleton className="h-8 w-16 col-span-1 justify-self-end" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <TableRow key={headerGroup.id}>
+                        {headerGroup.headers.map((header) => (
+                          <TableHead key={header.id} className="text-xs font-medium uppercase tracking-wide">
+                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableHeader>
+                  <TableBody>
+                    {table.getRowModel().rows.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="py-6 text-center text-muted-foreground">
+                          No enrollments yet.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      table.getRowModel().rows.map((row) => (
+                        <TableRow key={row.id}>
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                          ))}
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+
+            {!enrollments.isLoading && (
+              <DataTablePagination
+                currentPage={table.getState().pagination.pageIndex + 1}
+                totalPages={table.getPageCount() || 1}
+                pageSize={table.getState().pagination.pageSize}
+                onPageChange={(page) =>
+                  table.setPageIndex(
+                    Math.max(0, Math.min(page - 1, Math.max(0, table.getPageCount() - 1)))
+                  )
+                }
+                onPageSizeChange={(size) => table.setPageSize(size)}
+              />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -55,20 +55,46 @@ router.get('/batches/:id', async (req: Request, res: Response, next: NextFunctio
 
 // POST /api/batches - Create batch
 router.post('/batches', async (req: Request, res: Response, next: NextFunction) => {
+      // Validate required fields
+      if (!req.body.batchCode || !req.body.batchName) {
+        return res.status(400).json(createErrorResponse('Batch code and name are required', 'MISSING_REQUIRED_FIELDS'));
+      }
+
+      if (!req.body.primaryInstructorId) {
+        return res.status(400).json(createErrorResponse('Primary instructor is required', 'MISSING_PRIMARY_INSTRUCTOR'));
+      }
+
+      // Validate cohortType if provided
+      if (req.body.cohortType && !['bramhachari', 'grihasta'].includes(req.body.cohortType)) {
+        return res.status(400).json(createErrorResponse('Invalid cohort type. Must be "bramhachari" or "grihasta".', 'INVALID_COHORT_TYPE'));
+      }
+
   try {
     const created = await batchService.createBatch({
       batchCode: req.body.batchCode,
       batchName: req.body.batchName,
       trackId: req.body.trackId ?? undefined,
       primaryInstructorId: req.body.primaryInstructorId ?? undefined,
+      cohortType: req.body.cohortType ?? undefined,
+      description: req.body.description ?? null,
       createdBy: req.body.createdBy || 'system',
+      secondaryInstructorIds: Array.isArray(req.body.secondaryInstructorIds) ? req.body.secondaryInstructorIds : undefined,
     });
+
     res.json(created);
-  } catch (error) { next(error); }
+  } catch (error) { 
+    console.error('Error creating batch:', error);
+    next(error); 
+  }
 });
 
 // PATCH /api/batches/:id - Update batch
 router.patch('/batches/:id', async (req: Request, res: Response, next: NextFunction) => {
+      // Validate cohortType if provided
+      if (req.body.cohortType !== undefined && req.body.cohortType !== null && !['bramhachari', 'grihasta'].includes(req.body.cohortType)) {
+        return res.status(400).json(createErrorResponse('Invalid cohort type. Must be "bramhachari" or "grihasta".', 'INVALID_COHORT_TYPE'));
+      }
+
   try {
     const id = parseInt(req.params.id);
     const updated = await batchService.updateBatch(id, {
@@ -76,9 +102,25 @@ router.patch('/batches/:id', async (req: Request, res: Response, next: NextFunct
       batchName: req.body.batchName,
       trackId: req.body.trackId,
       primaryInstructorId: req.body.primaryInstructorId,
-      status: req.body.status,
+      cohortType: req.body.cohortType,
+      description: req.body.description,
     });
+
+    // If secondaryInstructorIds provided, sync co-instructor assignments
+    if (Array.isArray(req.body.secondaryInstructorIds)) {
+      const assignedBy = req.body.assignedBy || (req as any).user?.id || 'system';
+      await batchService.syncCoInstructors(id, req.body.secondaryInstructorIds, assignedBy);
+    }
     res.json(updated);
+  } catch (error) { next(error); }
+});
+
+// DELETE /api/batches/:id - Delete batch
+router.delete('/batches/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = parseInt(req.params.id);
+    const deleted = await batchService.deleteBatch(id);
+    res.json(deleted);
   } catch (error) { next(error); }
 });
 

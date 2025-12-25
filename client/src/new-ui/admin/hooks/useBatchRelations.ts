@@ -8,6 +8,9 @@ export type CoInstructor = {
   role: string;
   assignedAt?: string;
   assignedBy?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
 };
 
 export type Enrollment = {
@@ -19,9 +22,10 @@ export type Enrollment = {
   droppedAt?: string | null;
 };
 
-export function useCoInstructors(batchId: number) {
+export function useCoInstructors(batchId: number, options?: { enabled?: boolean }) {
   return useQuery<CoInstructor[]>({
     queryKey: [`/api/batches/${batchId}/co-instructors`],
+    enabled: options?.enabled ?? true,
   });
 }
 

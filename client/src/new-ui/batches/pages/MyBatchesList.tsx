@@ -18,7 +18,14 @@ export default function MyBatchesList() {
             <a className="group block overflow-hidden rounded-2xl border border-border bg-card p-5 transition duration-200 hover:bg-muted">
               <div className="flex items-center justify-between">
                 <div className="text-lg font-semibold text-foreground">{b.batchName}</div>
-                <span className="text-xs rounded-full border border-border px-2 py-0.5 text-muted-foreground">{b.status}</span>
+                <div className="flex items-center gap-2">
+                  {b.cohortType && (
+                    <span className="text-[11px] rounded-full border border-border px-2 py-0.5 text-muted-foreground">
+                      {b.cohortType === "bramhachari" ? "Bramhachari" : "Grihasta"}
+                    </span>
+                  )}
+                  <span className="text-xs rounded-full border border-border px-2 py-0.5 text-muted-foreground">{b.status}</span>
+                </div>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">Code: {b.batchCode}</p>
               {b.trackId ? (

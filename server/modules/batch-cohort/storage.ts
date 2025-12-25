@@ -1,28 +1,103 @@
 import { db } from "../../db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, inArray } from "drizzle-orm";
 import { batches, enrollments, batchCoInstructors, users, tracks } from "@shared/schema";
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput } from "./types";
 
 export class BatchStorage {
   async listBatches() {
-    return db.select().from(batches).orderBy(batches.createdAt);
+    return db
+      .select({
+        ...batches,
+        studentCount: sql<number>`COALESCE(COUNT(*) FILTER (WHERE ${enrollments.status} = 'active'), 0)::int`,
+      })
+      .from(batches)
+      .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
+      .groupBy(batches.id)
+      .orderBy(batches.createdAt);
   }
 
   async getBatchById(id: number) {
-    const rows = await db.select().from(batches).where(eq(batches.id, id));
-    return rows[0] || null;
+    const baseRows = await db
+      .select({
+        ...batches,
+        studentCount: sql<number>`COALESCE(COUNT(*) FILTER (WHERE ${enrollments.status} = 'active'), 0)::int`,
+      })
+      .from(batches)
+      .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
+      .where(eq(batches.id, id))
+      .groupBy(batches.id);
+
+    const base = baseRows[0];
+    if (!base) return null;
+
+    const track = base.trackId
+      ? (await db
+          .select({ id: tracks.id, title: tracks.title, name: tracks.title })
+          .from(tracks)
+          .where(eq(tracks.id, base.trackId)))[0] || null
+      : null;
+
+    const primaryInstructor = base.primaryInstructorId
+      ? (await db
+          .select({
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+          })
+          .from(users)
+          .where(eq(users.id, base.primaryInstructorId)))[0] || null
+      : null;
+
+    const coInstructors = await db
+      .select({
+        id: batchCoInstructors.id,
+        instructorId: batchCoInstructors.instructorId,
+        role: batchCoInstructors.role,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+      })
+      .from(batchCoInstructors)
+      .leftJoin(users, eq(users.id, batchCoInstructors.instructorId))
+      .where(eq(batchCoInstructors.batchId, id));
+
+    return {
+      ...base,
+      track,
+      primaryInstructor,
+      coInstructors,
+    };
   }
 
   async createBatch(input: BatchCreateInput) {
-    const [created] = await db.insert(batches).values({
-      batchCode: input.batchCode,
-      batchName: input.batchName,
-      trackId: input.trackId ?? null,
-      primaryInstructorId: input.primaryInstructorId ?? null,
-      status: 'active',
-      createdBy: input.createdBy,
-    }).returning();
-    return created;
+    // Persist batch and optional co-instructor assignments atomically
+    const result = await db.transaction(async (tx) => {
+      const [created] = await tx.insert(batches).values({
+        batchCode: input.batchCode,
+        batchName: input.batchName,
+        trackId: input.trackId ?? null,
+        primaryInstructorId: input.primaryInstructorId ?? null,
+        cohortType: input.cohortType ?? null,
+        description: input.description ?? null,
+        createdBy: input.createdBy,
+      }).returning();
+
+      // If secondary instructors provided, assign them to the new batch
+      if (input.secondaryInstructorIds && input.secondaryInstructorIds.length > 0) {
+        for (const instructorId of input.secondaryInstructorIds) {
+          await tx.insert(batchCoInstructors).values({
+            batchId: created.id,
+            instructorId,
+            role: 'co_instructor',
+            assignedBy: input.createdBy,
+          });
+        }
+      }
+
+      return created;
+    });
+    return result;
   }
 
   async updateBatch(id: number, input: BatchUpdateInput) {
@@ -31,10 +106,30 @@ export class BatchStorage {
       batchName: input.batchName ?? undefined,
       trackId: input.trackId === undefined ? undefined : input.trackId,
       primaryInstructorId: input.primaryInstructorId === undefined ? undefined : input.primaryInstructorId,
-      status: input.status ?? undefined,
+      cohortType: input.cohortType === undefined ? undefined : input.cohortType,
+      description: input.description === undefined ? undefined : input.description,
       updatedAt: new Date(),
     }).where(eq(batches.id, id)).returning();
     return updated;
+  }
+
+  async deleteBatch(id: number) {
+    // Check for active enrollments
+    const activeEnrollments = await db
+      .select()
+      .from(enrollments)
+      .where(and(eq(enrollments.batchId, id), eq(enrollments.status, 'active')));
+
+    if (activeEnrollments.length > 0) {
+      throw Object.assign(
+        new Error(`Cannot delete batch with ${activeEnrollments.length} active student(s). Remove all students first.`),
+        { status: 400 }
+      );
+    }
+
+    // Delete the batch (cascade will handle co-instructors and dropped enrollments)
+    const [deleted] = await db.delete(batches).where(eq(batches.id, id)).returning();
+    return deleted;
   }
 
   async addEnrollment(input: EnrollmentCreateInput) {
@@ -58,7 +153,21 @@ export class BatchStorage {
   }
 
   async listEnrollmentsByBatch(batchId: number) {
-    return db.select().from(enrollments).where(eq(enrollments.batchId, batchId));
+    return db
+      .select({
+        id: enrollments.id,
+        batchId: enrollments.batchId,
+        studentId: enrollments.studentId,
+        status: enrollments.status,
+        enrolledAt: enrollments.enrolledAt,
+        droppedAt: enrollments.droppedAt,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+      })
+      .from(enrollments)
+      .leftJoin(users, eq(users.id, enrollments.studentId))
+      .where(eq(enrollments.batchId, batchId));
   }
 
   async assignCoInstructor(input: CoInstructorAssignInput) {
@@ -77,7 +186,66 @@ export class BatchStorage {
   }
 
   async listCoInstructorsByBatch(batchId: number) {
-    return db.select().from(batchCoInstructors).where(eq(batchCoInstructors.batchId, batchId));
+    // Include instructor name/email for display purposes
+    return db
+      .select({
+        id: batchCoInstructors.id,
+        batchId: batchCoInstructors.batchId,
+        instructorId: batchCoInstructors.instructorId,
+        role: batchCoInstructors.role,
+        assignedAt: batchCoInstructors.assignedAt,
+        assignedBy: batchCoInstructors.assignedBy,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+      })
+      .from(batchCoInstructors)
+      .leftJoin(users, eq(users.id, batchCoInstructors.instructorId))
+      .where(eq(batchCoInstructors.batchId, batchId));
+  }
+
+  async syncCoInstructors(batchId: number, instructorIds: string[], assignedBy: string) {
+    return db.transaction(async (tx) => {
+      const current = await tx
+        .select({ id: batchCoInstructors.id, instructorId: batchCoInstructors.instructorId })
+        .from(batchCoInstructors)
+        .where(eq(batchCoInstructors.batchId, batchId));
+
+      const existingIds = new Set(current.map(c => c.instructorId));
+      const nextIds = new Set(instructorIds);
+
+      const toAdd = [...nextIds].filter(id => !existingIds.has(id));
+      const toRemove = current.filter(c => !nextIds.has(c.instructorId)).map(c => c.id);
+
+      // Remove assignments no longer present
+      if (toRemove.length > 0) {
+        await tx
+          .delete(batchCoInstructors)
+          .where(and(eq(batchCoInstructors.batchId, batchId), inArray(batchCoInstructors.id, toRemove)));
+      }
+      // If next list is empty, ensure we remove any remaining (edge cases)
+      if (instructorIds.length === 0 && current.length > 0) {
+        await tx.delete(batchCoInstructors).where(eq(batchCoInstructors.batchId, batchId));
+      }
+
+      // Add new assignments
+      if (toAdd.length > 0) {
+        await tx.insert(batchCoInstructors).values(
+          toAdd.map(instructorId => ({
+            batchId,
+            instructorId,
+            role: 'co_instructor',
+            assignedBy,
+          }))
+        );
+      }
+
+      // Return the new list
+      return tx
+        .select()
+        .from(batchCoInstructors)
+        .where(eq(batchCoInstructors.batchId, batchId));
+    });
   }
 
   // Basic existence checks for foreign keys

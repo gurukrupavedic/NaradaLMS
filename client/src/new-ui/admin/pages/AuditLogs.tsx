@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarIcon, Filter, AlertCircle, ChevronDown, RotateCcw, Copy, ChevronUp, ArrowUpDown, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
+import { CalendarIcon, Filter, AlertCircle, ChevronDown, RotateCcw, Copy, ChevronUp, ArrowUpDown } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -27,6 +27,7 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import { Badge } from "@/components/design-system/badge";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 
 const ITEMS_PER_PAGE = 25;
 
@@ -305,7 +306,7 @@ export default function AuditLogs() {
   };
 
   return (
-    <div className="space-y-4 px-4 pt-4">
+    <div className="space-y-6 px-4 pt-4">
       {/* Inline Filters */}
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -542,7 +543,7 @@ export default function AuditLogs() {
         <>
           {/* Main Table Card */}
           <div className="rounded-lg border border-border/60 bg-card overflow-hidden shadow-sm">
-            <Table className="px-4">
+            <Table>
               <TableHeader className="bg-muted/40 sticky top-0 z-10">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
@@ -610,74 +611,14 @@ export default function AuditLogs() {
             </Table>
           </div>
 
-          {/* Pagination Controls - No Border */}
-          <div className="flex items-center justify-end gap-6 px-4 py-4">
-            {/* Rows per page */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Rows per page</span>
-              <select
-                id="rows-per-page"
-                value={limit}
-                onChange={(e) => setFilters({ ...filters, limit: Number(e.target.value), offset: 0 })}
-                className="h-8 px-2 rounded-md border border-input bg-background text-sm font-medium"
-                aria-label="Rows per page"
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-            </div>
-
-            {/* Page info */}
-            <span className="text-sm font-medium text-muted-foreground">
-              Page {currentPage} of {totalPages}
-            </span>
-
-            {/* 4 Navigation buttons */}
-            <div className="flex items-center gap-1">
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => goToPage(1)} 
-                disabled={currentPage === 1}
-                className="h-8 w-8"
-                aria-label="First page"
-              >
-                <ChevronsLeft className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => goToPage(currentPage - 1)} 
-                disabled={currentPage === 1}
-                className="h-8 w-8"
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => goToPage(currentPage + 1)} 
-                disabled={currentPage === totalPages}
-                className="h-8 w-8"
-                aria-label="Next page"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => goToPage(totalPages)}
-                disabled={currentPage === totalPages}
-                className="h-8 w-8"
-                aria-label="Last page"
-              >
-                <ChevronsRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          {/* Pagination Controls */}
+          <DataTablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={limit}
+            onPageChange={goToPage}
+            onPageSizeChange={(newSize) => setFilters({ ...filters, limit: newSize, offset: 0 })}
+          />
         </>
       )}
     </div>

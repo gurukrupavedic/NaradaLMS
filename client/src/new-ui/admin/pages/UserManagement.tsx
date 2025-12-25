@@ -17,7 +17,8 @@ import { Badge } from "@/components/design-system/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, MoreVertical, Check, X, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
+import { RefreshCw, MoreVertical, Check, X } from "lucide-react";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 
 const ALL_ROLES = ["student", "instructor", "content_manager", "admin"] as const;
 const ROLE_LABELS: Record<string, string> = {
@@ -237,7 +238,10 @@ export default function UserManagement() {
                 <span className="sr-only">Open row menu</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuContent
+              align="end"
+              className="w-44 bg-white dark:bg-black border border-border shadow-lg"
+            >
               {isPending ? (
                 <>
                   <DropdownMenuItem onClick={() => handleApprove(user.id)} disabled={approve.isPending}>
@@ -279,7 +283,7 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="space-y-6 pb-10 px-4 pt-4">
+    <div className="space-y-6 px-4 pt-4">
       <Tabs value={statusFilter} onValueChange={handleStatusChange} className="w-full">
         <div className="flex items-center justify-between">
           <TabsList className="h-auto p-1">
@@ -317,12 +321,11 @@ export default function UserManagement() {
         </div>
       )}
 
-      <section className="space-y-3">
-        <div className="rounded-lg border border-border/60 bg-card shadow-sm overflow-hidden">
+      <div className="rounded-lg border border-border/60 bg-card shadow-sm overflow-hidden">
           {isLoadingState ? (
             <TableSkeleton rows={5} cols={5} />
           ) : (
-            <Table className="px-2 sm:px-4">
+            <Table>
               <TableHeader className="bg-muted/40 sticky top-0 z-10">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
@@ -355,75 +358,13 @@ export default function UserManagement() {
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-8 px-4 py-4 sm:pt-4 sm:pb-0">
-          <div className="flex items-center gap-8">
-            <div className="hidden items-center gap-2 sm:flex">
-              <span className="text-sm text-muted-foreground">Rows per page</span>
-              <Select
-                value={`${limit}`}
-                onValueChange={(value) => { setLimit(Number(value)); setPage(1); }}
-              >
-                <SelectTrigger size="sm" className="w-20">
-                  <SelectValue placeholder={limit} />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <span className="text-sm font-medium text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-
-            <div className="ml-auto flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setPage(1)}
-                disabled={page === 1}
-                className="h-8 w-8 bg-transparent"
-                aria-label="First page"
-              >
-                <ChevronsLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="h-8 w-8 bg-transparent"
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="h-8 w-8 bg-transparent"
-                aria-label="Next page"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setPage(totalPages)}
-                disabled={page === totalPages}
-                className="h-8 w-8 bg-transparent"
-                aria-label="Last page"
-              >
-                <ChevronsRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <DataTablePagination
+        currentPage={page}
+        totalPages={totalPages}
+        pageSize={limit}
+        onPageChange={setPage}
+        onPageSizeChange={(newSize) => { setLimit(newSize); setPage(1); }}
+      />
     </div>
   );
 }
