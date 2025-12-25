@@ -86,7 +86,7 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
           type="button"
           onClick={() => setCollapsed((v) => !v)}
           className="h-7 rounded-md px-2 text-xs text-foreground/80 hover:bg-muted transition-colors"
-          aria-expanded={collapsed ? "false" : "true"}
+          aria-expanded={!collapsed}
           aria-label={collapsed ? "Expand batch details" : "Collapse batch details"}
         >
           {collapsed ? "Expand" : "Collapse"}
