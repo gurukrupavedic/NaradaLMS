@@ -24,6 +24,7 @@ interface BatchDetailsCardProps {
 }
 
 export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange }: BatchDetailsCardProps) {
+  const [collapsed, setCollapsed] = React.useState(false);
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const nextId = Number(e.target.value);
     if (nextId) onBatchChange(nextId);
@@ -59,6 +60,42 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
 
   return (
     <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+      {/* Header with collapse toggle */}
+      <div className="flex items-center justify-between">
+        {collapsed ? (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground">
+            <span className="font-medium">
+              {batch.batchCode} - {batch.batchName}
+            </span>
+            <span className="opacity-60">•</span>
+            <span>{batch.track?.title || batch.track?.name || "—"}</span>
+            <span className="opacity-60">•</span>
+            <span>{formatCohortType(batch.cohortType)}</span>
+            <span className="opacity-60">•</span>
+            <span>
+              {batch.primaryInstructor
+                ? formatInstructorName(batch.primaryInstructor.firstName, batch.primaryInstructor.lastName)
+                : "—"}
+            </span>
+            <span className="opacity-60">•</span>
+            <span>{formatStudents(batch.studentCount)}</span>
+          </div>
+        ) : (
+          <div className="text-sm font-semibold text-foreground">Batch Details</div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setCollapsed((v) => !v)}
+          className="h-7 rounded-md px-2 text-xs text-foreground/80 hover:bg-muted transition-colors"
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? "Expand batch details" : "Collapse batch details"}
+        >
+          {collapsed ? "Expand" : "Collapse"}
+        </button>
+      </div>
+
+      {!collapsed && (
       {/* Grid ordered as requested */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {/* Row 1: Batch, Current Track, Cohort Type */}
@@ -150,6 +187,7 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
         <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Description</div>
         <div className="text-sm text-foreground">{batch.description || "—"}</div>
       </div>
+      )}
     </div>
   );
 }
