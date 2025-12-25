@@ -262,11 +262,7 @@ export default function BatchDetailAdmin() {
         <div className="space-y-6">
           {/* Enrollments Table */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-foreground">
-                Enrollments {enrollments.isLoading ? null : `(${enrollmentCount})`}
-              </h3>
-            </div>
+            {/* Removed heading - Enrollments (count) */}
 
             <div className="rounded-md border border-border">
               {enrollments.isLoading ? (

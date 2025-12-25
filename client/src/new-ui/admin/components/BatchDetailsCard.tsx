@@ -80,15 +80,13 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
             <span className="opacity-60">•</span>
             <span>{formatStudents(batch.studentCount)}</span>
           </div>
-        ) : (
-          <div className="text-sm font-semibold text-foreground">Batch Details</div>
-        )}
+        ) : null}
 
         <button
           type="button"
           onClick={() => setCollapsed((v) => !v)}
           className="h-7 rounded-md px-2 text-xs text-foreground/80 hover:bg-muted transition-colors"
-          aria-expanded={!collapsed}
+          aria-expanded={collapsed ? "false" : "true"}
           aria-label={collapsed ? "Expand batch details" : "Collapse batch details"}
         >
           {collapsed ? "Expand" : "Collapse"}
