@@ -212,7 +212,7 @@ export default function BatchDetailAdmin() {
   const isBatchSelected = !Number.isNaN(batchId);
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="space-y-6 px-4 pt-4">
       {/* Batch Details */}
       {isBatchSelected && (
         batchDetail.isLoading ? (
@@ -259,12 +259,9 @@ export default function BatchDetailAdmin() {
             : "Select a batch to view details."}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div>
           {/* Enrollments Table */}
-          <div className="space-y-4">
-            {/* Removed heading - Enrollments (count) */}
-
-            <div className="rounded-md border border-border">
+          <div className="rounded-lg border border-border/60 bg-card shadow-sm overflow-hidden">
               {enrollments.isLoading ? (
                 <div className="p-4 space-y-3">
                   {[...Array(5)].map((_, i) => (
@@ -277,11 +274,11 @@ export default function BatchDetailAdmin() {
                 </div>
               ) : (
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="bg-muted/40 sticky top-0 z-10">
                     {table.getHeaderGroups().map((headerGroup) => (
-                      <TableRow key={headerGroup.id}>
+                      <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
                         {headerGroup.headers.map((header) => (
-                          <TableHead key={header.id} className="text-xs font-medium uppercase tracking-wide">
+                          <TableHead key={header.id} className="text-xs font-bold text-foreground/70 uppercase tracking-widest">
                             {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                           </TableHead>
                         ))}
@@ -290,7 +287,7 @@ export default function BatchDetailAdmin() {
                   </TableHeader>
                   <TableBody>
                     {/* Pinned Add Student Row */}
-                    <TableRow className="bg-muted/30 hover:bg-muted/50">
+                    <TableRow className="border-b border-border/60 bg-muted/20 hover:bg-muted/30 transition-colors">
                       {/* STUDENT Column - Active Input */}
                       <TableCell className="relative">
                         <div className="relative">
@@ -375,7 +372,7 @@ export default function BatchDetailAdmin() {
                       </TableRow>
                     ) : (
                       table.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id}>
+                        <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors">
                           {row.getVisibleCells().map((cell) => (
                             <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                           ))}
@@ -385,22 +382,21 @@ export default function BatchDetailAdmin() {
                   </TableBody>
                 </Table>
               )}
-            </div>
-
-            {!enrollments.isLoading && (
-              <DataTablePagination
-                currentPage={table.getState().pagination.pageIndex + 1}
-                totalPages={table.getPageCount() || 1}
-                pageSize={table.getState().pagination.pageSize}
-                onPageChange={(page) =>
-                  table.setPageIndex(
-                    Math.max(0, Math.min(page - 1, Math.max(0, table.getPageCount() - 1)))
-                  )
-                }
-                onPageSizeChange={(size) => table.setPageSize(size)}
-              />
-            )}
           </div>
+
+          {!enrollments.isLoading && (
+            <DataTablePagination
+              currentPage={table.getState().pagination.pageIndex + 1}
+              totalPages={table.getPageCount() || 1}
+              pageSize={table.getState().pagination.pageSize}
+              onPageChange={(page) =>
+                table.setPageIndex(
+                  Math.max(0, Math.min(page - 1, Math.max(0, table.getPageCount() - 1)))
+                )
+              }
+              onPageSizeChange={(size) => table.setPageSize(size)}
+            />
+          )}
         </div>
       )}
     </div>

@@ -59,11 +59,11 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
     : "—";
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4 space-y-4">
-      {/* Header with collapse toggle */}
-      <div className="flex items-center justify-between">
+    <div className="rounded-lg border border-border bg-card p-4 relative">
+      {/* Header with collapse toggle in top-right */}
+      <div className="flex items-center justify-between mb-3">
         {collapsed ? (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground pr-10">
             <span className="font-medium">
               {batch.batchCode} - {batch.batchName}
             </span>
@@ -85,18 +85,20 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
         <button
           type="button"
           onClick={() => setCollapsed((v) => !v)}
-          className="h-7 rounded-md px-2 text-xs text-foreground/80 hover:bg-muted transition-colors"
+          className="absolute top-4 right-4 p-1 rounded-md text-foreground/60 hover:bg-muted hover:text-foreground transition-all"
           aria-expanded={!collapsed}
           aria-label={collapsed ? "Expand batch details" : "Collapse batch details"}
         >
-          {collapsed ? "Expand" : "Collapse"}
+          <ChevronDown 
+            className={`w-5 h-5 transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`}
+          />
         </button>
       </div>
 
       {!collapsed && (
       <>
       {/* Grid ordered as requested */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 space-y-3">
         {/* Row 1: Batch, Current Track, Cohort Type */}
         <div className="space-y-2">
           <div className="space-y-1">
@@ -182,7 +184,7 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
       </div>
 
       {/* Description at end with single divider */}
-      <div className="border-t border-border pt-4 space-y-1">
+      <div className="border-t border-border mt-3 pt-3 space-y-1">
         <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Description</div>
         <div className="text-sm text-foreground">{batch.description || "—"}</div>
       </div>
