@@ -189,6 +189,10 @@ export class BatchStorage {
   }
 
   async listEligibleStudents(batchId: number, searchQuery?: string) {
+    // Get the batch to check primary instructor
+    const batch = await this.getBatchById(batchId);
+    const primaryInstructorId = batch?.primaryInstructorId;
+
     // ONE-TO-MANY CONSTRAINT: Get ALL students with active enrollments (in any batch)
     // A student can only enroll in ONE batch, so exclude all currently enrolled students
     const enrolled = await db
@@ -218,8 +222,13 @@ export class BatchStorage {
     // Execute and filter
     const allEligible = await query;
     
-    // Exclude already enrolled
+    // Exclude already enrolled students
     let filtered = allEligible.filter(u => !enrolledIds.includes(u.id));
+
+    // Exclude primary instructor (students can be co-instructors, but not primary instructor)
+    if (primaryInstructorId) {
+      filtered = filtered.filter(u => u.id !== primaryInstructorId);
+    }
 
     // Apply search filter
     if (searchQuery && searchQuery.trim()) {
