@@ -71,3 +71,16 @@ export function useUpdateBatch() {
     },
   });
 }
+
+export function useDeleteBatch() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/batches/${id}`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/batches"] });
+    },
+  });
+}

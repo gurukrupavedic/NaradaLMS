@@ -31,8 +31,7 @@ export default function BatchManagement() {
 
   const { data, isLoading, error, refetch } = useBatches({ limit, offset });
   const createBatch = useCreateBatch();
-  const updateBatch = useUpdateBatch();
-
+  const updateBatch = useUpdateBatch();  const deleteBatch = useDeleteBatch();
   const [form, setForm] = useState<Partial<Batch>>({ batchCode: "", batchName: "", trackId: undefined, cohortType: undefined });
 
   // Fetch tracks to allow associating a batch with a current track
@@ -53,6 +52,11 @@ export default function BatchManagement() {
   const [instructorSearch, setInstructorSearch] = useState("");
   const [showInstructorDropdown, setShowInstructorDropdown] = useState(false);
   const [batchDescription, setBatchDescription] = useState("");
+
+  const { data, isLoading, error } = useBatches({ limit, offset });
+  const createBatch = useCreateBatch();
+  const updateBatch = useUpdateBatch();
+  const deleteBatch = useDeleteBatch();
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
@@ -77,7 +81,6 @@ export default function BatchManagement() {
           setDialogOpen(false);
           setDialogMode('create');
           setEditingBatch(null);
-          refetch();
         },
         onError: (err: any) => {
           toast({ title: "Failed to create batch", description: err.message, variant: "destructive" });
@@ -108,7 +111,6 @@ export default function BatchManagement() {
             setDialogOpen(false);
             setDialogMode('create');
             setEditingBatch(null);
-            refetch();
           },
           onError: (err: any) => {
             toast({ title: "Failed to update batch", description: err.message, variant: "destructive" });
@@ -264,25 +266,21 @@ export default function BatchManagement() {
     }
 
     // Attempt deletion - API will reject if batch has students
-    updateBatch.mutate(
-      { id: batch.id, payload: { deleted: true } },
-      {
-        onSuccess: () => {
-          toast({ 
-            title: "Batch deleted", 
-            description: `"${batch.batchName}" has been permanently deleted.` 
-          });
-          refetch();
-        },
-        onError: (err: any) => {
-          toast({ 
-            title: "Cannot delete batch", 
-            description: err.message || "Batch has enrolled students. Remove all students before deleting.",
-            variant: "destructive" 
-          });
-        },
-      }
-    );
+    deleteBatch.mutate(batch.id, {
+      onSuccess: () => {
+        toast({ 
+          title: "Batch deleted", 
+          description: `"${batch.batchName}" has been permanently deleted.` 
+        });
+      },
+      onError: (err: any) => {
+        toast({ 
+          title: "Cannot delete batch", 
+          description: err.message || "Batch has enrolled students. Remove all students before deleting.",
+          variant: "destructive" 
+        });
+      },
+    });
   };
 
   // TanStack Table setup

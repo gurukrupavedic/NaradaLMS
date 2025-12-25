@@ -18,7 +18,6 @@ export interface BatchUpdateInput {
 	primaryInstructorId?: string | null;
 	cohortType?: string | null; // 'brahmacharya' | 'grihastha'
 	description?: string | null;
-	status?: 'active' | 'completed' | 'archived';
 }
 
 export interface BatchDetail {
@@ -29,7 +28,6 @@ export interface BatchDetail {
 	primaryInstructorId: string | null;
 	cohortType: string | null;
 	description?: string | null;
-	status: string;
 	createdAt: Date | null;
 	updatedAt: Date | null;
 	createdBy: string;

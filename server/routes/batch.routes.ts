@@ -104,7 +104,6 @@ router.patch('/batches/:id', async (req: Request, res: Response, next: NextFunct
       primaryInstructorId: req.body.primaryInstructorId,
       cohortType: req.body.cohortType,
       description: req.body.description,
-      status: req.body.status,
     });
 
     // If secondaryInstructorIds provided, sync co-instructor assignments
@@ -113,6 +112,15 @@ router.patch('/batches/:id', async (req: Request, res: Response, next: NextFunct
       await batchService.syncCoInstructors(id, req.body.secondaryInstructorIds, assignedBy);
     }
     res.json(updated);
+  } catch (error) { next(error); }
+});
+
+// DELETE /api/batches/:id - Delete batch
+router.delete('/batches/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = parseInt(req.params.id);
+    const deleted = await batchService.deleteBatch(id);
+    res.json(deleted);
   } catch (error) { next(error); }
 });
 

@@ -80,7 +80,6 @@ export class BatchStorage {
         primaryInstructorId: input.primaryInstructorId ?? null,
         cohortType: input.cohortType ?? null,
         description: input.description ?? null,
-        status: 'active',
         createdBy: input.createdBy,
       }).returning();
 
@@ -109,10 +108,28 @@ export class BatchStorage {
       primaryInstructorId: input.primaryInstructorId === undefined ? undefined : input.primaryInstructorId,
       cohortType: input.cohortType === undefined ? undefined : input.cohortType,
       description: input.description === undefined ? undefined : input.description,
-      status: input.status ?? undefined,
       updatedAt: new Date(),
     }).where(eq(batches.id, id)).returning();
     return updated;
+  }
+
+  async deleteBatch(id: number) {
+    // Check for active enrollments
+    const activeEnrollments = await db
+      .select()
+      .from(enrollments)
+      .where(and(eq(enrollments.batchId, id), eq(enrollments.status, 'active')));
+
+    if (activeEnrollments.length > 0) {
+      throw Object.assign(
+        new Error(`Cannot delete batch with ${activeEnrollments.length} active student(s). Remove all students first.`),
+        { status: 400 }
+      );
+    }
+
+    // Delete the batch (cascade will handle co-instructors and dropped enrollments)
+    const [deleted] = await db.delete(batches).where(eq(batches.id, id)).returning();
+    return deleted;
   }
 
   async addEnrollment(input: EnrollmentCreateInput) {

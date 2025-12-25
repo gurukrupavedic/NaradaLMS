@@ -50,6 +50,12 @@ export class BatchService {
     return batchStorage.updateBatch(id, input);
   }
 
+  async deleteBatch(id: number) {
+    const batch = await this.getBatch(id);
+    if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });
+    return batchStorage.deleteBatch(id);
+  }
+
   async syncCoInstructors(batchId: number, instructorIds: string[], assignedBy: string) {
     // Validate all instructor IDs exist
     for (const instructorId of instructorIds) {
