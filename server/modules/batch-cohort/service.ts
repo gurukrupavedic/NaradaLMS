@@ -50,6 +50,15 @@ export class BatchService {
     return batchStorage.updateBatch(id, input);
   }
 
+  async syncCoInstructors(batchId: number, instructorIds: string[], assignedBy: string) {
+    // Validate all instructor IDs exist
+    for (const instructorId of instructorIds) {
+      const exists = await batchStorage.userExists(instructorId);
+      if (!exists) throw Object.assign(new Error(`Instructor not found: ${instructorId}`), { status: 400 });
+    }
+    return batchStorage.syncCoInstructors(batchId, instructorIds, assignedBy);
+  }
+
   async addEnrollment(input: EnrollmentCreateInput) {
     const batch = await this.getBatch(input.batchId);
     if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });

@@ -106,6 +106,12 @@ router.patch('/batches/:id', async (req: Request, res: Response, next: NextFunct
       description: req.body.description,
       status: req.body.status,
     });
+
+    // If secondaryInstructorIds provided, sync co-instructor assignments
+    if (Array.isArray(req.body.secondaryInstructorIds)) {
+      const assignedBy = req.body.assignedBy || (req as any).user?.id || 'system';
+      await batchService.syncCoInstructors(id, req.body.secondaryInstructorIds, assignedBy);
+    }
     res.json(updated);
   } catch (error) { next(error); }
 });

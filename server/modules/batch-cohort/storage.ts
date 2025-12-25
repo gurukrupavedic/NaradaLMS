@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, inArray } from "drizzle-orm";
 import { batches, enrollments, batchCoInstructors, users, tracks } from "@shared/schema";
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput } from "./types";
 
@@ -185,6 +185,50 @@ export class BatchStorage {
       .from(batchCoInstructors)
       .leftJoin(users, eq(users.id, batchCoInstructors.instructorId))
       .where(eq(batchCoInstructors.batchId, batchId));
+  }
+
+  async syncCoInstructors(batchId: number, instructorIds: string[], assignedBy: string) {
+    return db.transaction(async (tx) => {
+      const current = await tx
+        .select({ id: batchCoInstructors.id, instructorId: batchCoInstructors.instructorId })
+        .from(batchCoInstructors)
+        .where(eq(batchCoInstructors.batchId, batchId));
+
+      const existingIds = new Set(current.map(c => c.instructorId));
+      const nextIds = new Set(instructorIds);
+
+      const toAdd = [...nextIds].filter(id => !existingIds.has(id));
+      const toRemove = current.filter(c => !nextIds.has(c.instructorId)).map(c => c.id);
+
+      // Remove assignments no longer present
+      if (toRemove.length > 0) {
+        await tx
+          .delete(batchCoInstructors)
+          .where(and(eq(batchCoInstructors.batchId, batchId), inArray(batchCoInstructors.id, toRemove)));
+      }
+      // If next list is empty, ensure we remove any remaining (edge cases)
+      if (instructorIds.length === 0 && current.length > 0) {
+        await tx.delete(batchCoInstructors).where(eq(batchCoInstructors.batchId, batchId));
+      }
+
+      // Add new assignments
+      if (toAdd.length > 0) {
+        await tx.insert(batchCoInstructors).values(
+          toAdd.map(instructorId => ({
+            batchId,
+            instructorId,
+            role: 'co_instructor',
+            assignedBy,
+          }))
+        );
+      }
+
+      // Return the new list
+      return tx
+        .select()
+        .from(batchCoInstructors)
+        .where(eq(batchCoInstructors.batchId, batchId));
+    });
   }
 
   // Basic existence checks for foreign keys

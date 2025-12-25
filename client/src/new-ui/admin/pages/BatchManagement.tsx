@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { ColumnDef, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 import { useBatches, useCreateBatch, useUpdateBatch, Batch } from "../hooks/useBatches";
-import { useCoInstructors } from "../hooks/useBatchRelations";
+import { useCoInstructors, useAssignCoInstructor, useRemoveCoInstructor } from "../hooks/useBatchRelations";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -94,10 +94,20 @@ export default function BatchManagement() {
             cohortType: form.cohortType ?? null,
             primaryInstructorId: form.primaryInstructorId ?? null,
             description: batchDescription || null,
+            secondaryInstructorIds: secondaryInstructorIds,
           },
         },
         {
           onSuccess: () => {
+            // Sync co-instructor assignments via dedicated endpoints
+            if (editingCoInstructors) {
+              const existingIds = new Set(editingCoInstructors.map(ci => ci.instructorId));
+              const nextIds = new Set(secondaryInstructorIds);
+              const toAdd = [...nextIds].filter(id => !existingIds.has(id));
+              const toRemove = editingCoInstructors.filter(ci => !nextIds.has(ci.instructorId)).map(ci => ci.id);
+              toAdd.forEach(id => assignCoInstructor.mutate({ instructorId: id }));
+              toRemove.forEach(assignmentId => removeCoInstructor.mutate({ assignmentId, batchId: editingBatchId }));
+            }
             toast({ title: "Batch updated", description: "Batch details have been saved." });
             setForm({ batchCode: "", batchName: "", trackId: undefined, cohortType: undefined, primaryInstructorId: undefined });
             setSecondaryInstructorIds([]);
@@ -247,6 +257,8 @@ export default function BatchManagement() {
   // When editing, fetch co-instructors to prefill chips
   const editingBatchId = editingBatch?.id ?? 0;
   const { data: editingCoInstructors } = useCoInstructors(editingBatchId, { enabled: dialogOpen && dialogMode === 'edit' && !!editingBatch });
+  const assignCoInstructor = useAssignCoInstructor(editingBatchId);
+  const removeCoInstructor = useRemoveCoInstructor();
 
   React.useEffect(() => {
     if (dialogOpen && dialogMode === 'edit' && editingBatch && editingCoInstructors) {
