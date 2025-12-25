@@ -158,6 +158,16 @@ router.get('/batches/:id/enrollments', async (req: Request, res: Response, next:
   } catch (error) { next(error); }
 });
 
+// GET /api/batches/:id/eligible-students - List students eligible for enrollment
+router.get('/batches/:id/eligible-students', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const batchId = parseInt(req.params.id);
+    const searchQuery = req.query.search as string | undefined;
+    const items = await batchService.listEligibleStudents(batchId, searchQuery);
+    res.json(items);
+  } catch (error) { next(error); }
+});
+
 // POST /api/batches/:id/co-instructors - Assign co-instructor
 router.post('/batches/:id/co-instructors', async (req: Request, res: Response, next: NextFunction) => {
   try {

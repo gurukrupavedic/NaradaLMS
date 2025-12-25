@@ -83,6 +83,10 @@ export class BatchService {
     return batchStorage.listEnrollmentsByBatch(batchId);
   }
 
+  async listEligibleStudents(batchId: number, searchQuery?: string) {
+    return batchStorage.listEligibleStudents(batchId, searchQuery);
+  }
+
   async assignCoInstructor(input: CoInstructorAssignInput) {
     const batch = await this.getBatch(input.batchId);
     if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });

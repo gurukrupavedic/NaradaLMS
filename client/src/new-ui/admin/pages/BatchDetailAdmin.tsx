@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import {
   ColumnDef,
@@ -10,15 +10,17 @@ import {
   PaginationState,
   getPaginationRowModel,
 } from "@tanstack/react-table";
-import { useEnrollments, useDropEnrollment } from "../hooks/useBatchRelations";
+import { useEnrollments, useDropEnrollment, useEligibleStudents, useEnrollStudent, type EligibleStudent } from "../hooks/useBatchRelations";
 import { useBatches } from "../hooks/useBatches";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
 import { BatchDetailsCard } from "../components/BatchDetailsCard";
 import { useBatch } from "../hooks/useBatch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 
 type Enrollment = {
   id: number;
@@ -39,6 +41,13 @@ export default function BatchDetailAdmin() {
     pageSize: 10,
   });
 
+  // Enrollment typeahead state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const { data: batchesData, isLoading: isBatchesLoading } = useBatches({ limit: 500, offset: 0 });
   const batches = batchesData?.items ?? [];
   const batchId = Number(params?.id);
@@ -46,6 +55,8 @@ export default function BatchDetailAdmin() {
   const batchDetail = useBatch(isNaN(batchId) ? undefined : batchId);
   const enrollments = useEnrollments(batchId);
   const dropEnrollment = useDropEnrollment(batchId);
+  const enrollStudent = useEnrollStudent(batchId);
+  const eligibleStudents = useEligibleStudents(batchId, searchQuery);
 
   // If the route param is invalid (e.g., /i), redirect to first batch when available
   useEffect(() => {
@@ -57,7 +68,60 @@ export default function BatchDetailAdmin() {
   // Reset pagination when batch changes
   useEffect(() => {
     setPagination({ pageIndex: 0, pageSize: 10 });
+    setSearchQuery("");
+    setShowDropdown(false);
   }, [batchId]);
+
+  // Handle dropdown visibility
+  useEffect(() => {
+    setShowDropdown(searchQuery.trim().length > 0 && eligibleStudents.data !== undefined);
+  }, [searchQuery, eligibleStudents.data]);
+
+  // Reset highlighted index when results change
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [eligibleStudents.data]);
+
+  // Handle enrollment
+  const handleEnroll = (student: EligibleStudent) => {
+    enrollStudent.mutate(
+      { studentId: student.id },
+      {
+        onSuccess: () => {
+          toast({ title: "Student enrolled successfully" });
+          setSearchQuery("");
+          setShowDropdown(false);
+        },
+        onError: (err: any) => {
+          toast({
+            title: "Failed to enroll student",
+            description: err.message,
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
+
+  // Keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const students = eligibleStudents.data ?? [];
+    
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.min(prev + 1, students.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+    } else if (e.key === "Enter" && students.length > 0 && highlightedIndex >= 0) {
+      e.preventDefault();
+      handleEnroll(students[highlightedIndex]);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setSearchQuery("");
+      setShowDropdown(false);
+    }
+  };
 
   // Define columns for enrollment table
   const enrollmentData = enrollments.data ?? [];
@@ -217,6 +281,73 @@ export default function BatchDetailAdmin() {
                     ))}
                   </TableHeader>
                   <TableBody>
+                    {/* Pinned Add Student Row */}
+                    <TableRow className="bg-muted/30 hover:bg-muted/50">
+                      <TableCell colSpan={3} className="relative">
+                        <div className="flex items-center gap-3">
+                          <div className="relative flex-1">
+                            <Input
+                              ref={inputRef}
+                              type="text"
+                              placeholder="Type student name or email to enroll..."
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              onKeyDown={handleKeyDown}
+                              className="w-full"
+                              disabled={enrollStudent.isPending}
+                            />
+                            {eligibleStudents.isFetching && (
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                              </div>
+                            )}
+                            
+                            {/* Typeahead Dropdown */}
+                            {showDropdown && (
+                              <div
+                                ref={dropdownRef}
+                                className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-64 overflow-y-auto"
+                              >
+                                {eligibleStudents.data && eligibleStudents.data.length > 0 ? (
+                                  eligibleStudents.data.map((student, idx) => {
+                                    const displayName = student.firstName || student.lastName
+                                      ? `${student.firstName ?? ""} ${student.lastName ?? ""}`.trim()
+                                      : student.email;
+                                    return (
+                                      <button
+                                        key={student.id}
+                                        type="button"
+                                        className={`w-full px-4 py-2 text-left text-sm hover:bg-accent transition-colors ${
+                                          idx === highlightedIndex ? "bg-accent" : ""
+                                        }`}
+                                        onClick={() => handleEnroll(student)}
+                                        disabled={enrollStudent.isPending}
+                                      >
+                                        <div className="flex flex-col gap-0.5">
+                                          <span className="font-medium text-foreground">{displayName}</span>
+                                          <span className="text-xs text-muted-foreground">{student.email}</span>
+                                        </div>
+                                      </button>
+                                    );
+                                  })
+                                ) : (
+                                  <div className="px-4 py-3 text-sm text-muted-foreground">
+                                    No eligible students found.
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          {enrollStudent.isPending && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>Enrolling...</span>
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+
                     {table.getRowModel().rows.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={3} className="py-6 text-center text-muted-foreground">

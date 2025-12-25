@@ -170,6 +170,54 @@ export class BatchStorage {
       .where(eq(enrollments.batchId, batchId));
   }
 
+  async listEligibleStudents(batchId: number, searchQuery?: string) {
+    // Get already enrolled student IDs for this batch
+    const enrolled = await db
+      .select({ studentId: enrollments.studentId })
+      .from(enrollments)
+      .where(and(
+        eq(enrollments.batchId, batchId),
+        eq(enrollments.status, 'active')
+      ));
+    
+    const enrolledIds = enrolled.map(e => e.studentId);
+
+    // Build query for eligible students
+    let query = db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        roles: users.roles,
+      })
+      .from(users)
+      .where(
+        and(
+          sql`${users.status} = 'active'`,
+          sql`'student' = ANY(${users.roles})`
+        )
+      );
+
+    // Execute and filter
+    const allEligible = await query;
+    
+    // Exclude already enrolled
+    let filtered = allEligible.filter(u => !enrolledIds.includes(u.id));
+
+    // Apply search filter
+    if (searchQuery && searchQuery.trim()) {
+      const search = searchQuery.toLowerCase();
+      filtered = filtered.filter(u => {
+        const fullName = `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase();
+        const email = (u.email || '').toLowerCase();
+        return fullName.includes(search) || email.includes(search);
+      });
+    }
+
+    return filtered;
+  }
+
   async assignCoInstructor(input: CoInstructorAssignInput) {
     const [created] = await db.insert(batchCoInstructors).values({
       batchId: input.batchId,

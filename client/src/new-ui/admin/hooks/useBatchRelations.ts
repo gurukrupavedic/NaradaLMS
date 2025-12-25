@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useState, useEffect } from "react";
 
 export type CoInstructor = {
   id: number;
@@ -20,6 +21,14 @@ export type Enrollment = {
   status: string; // active, dropped, completed
   enrolledAt?: string;
   droppedAt?: string | null;
+};
+
+export type EligibleStudent = {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  roles: string[];
 };
 
 export function useCoInstructors(batchId: number, options?: { enabled?: boolean }) {
@@ -85,5 +94,29 @@ export function useDropEnrollment(batchId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [`/api/batches/${batchId}/enrollments`] });
     },
+  });
+}
+
+export function useEligibleStudents(batchId: number, searchQuery: string) {
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+
+  // Debounce search query (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  return useQuery<EligibleStudent[]>({
+    queryKey: [`/api/batches/${batchId}/eligible-students`, debouncedSearch],
+    queryFn: async () => {
+      const url = debouncedSearch
+        ? `/api/batches/${batchId}/eligible-students?search=${encodeURIComponent(debouncedSearch)}`
+        : `/api/batches/${batchId}/eligible-students`;
+      const res = await apiRequest("GET", url);
+      return await res.json();
+    },
+    enabled: searchQuery.trim().length > 0, // Only fetch when there's a search query
   });
 }
