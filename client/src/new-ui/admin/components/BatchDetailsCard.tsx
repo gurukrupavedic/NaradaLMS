@@ -73,7 +73,7 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
                   value={batch.id}
                   onChange={handleSelectChange}
                   title="Select a batch"
-                  className="appearance-none bg-transparent pr-6 text-base font-medium text-foreground cursor-pointer focus:outline-none focus:ring-0 border-0"
+                  className="appearance-none bg-transparent pr-6 text-base font-medium text-foreground cursor-pointer focus:outline-none focus:ring-0 border-0 dark:[&>option]:bg-black dark:[&>option]:text-white [&>option]:bg-white [&>option]:text-black"
                 >
                   {batches.map((b) => (
                     <option key={b.id} value={b.id}>
