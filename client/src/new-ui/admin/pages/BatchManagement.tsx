@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { ColumnDef, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 import { useBatches, useCreateBatch, useUpdateBatch, Batch } from "../hooks/useBatches";
-import { useCoInstructors, useAssignCoInstructor, useRemoveCoInstructor } from "../hooks/useBatchRelations";
+import { useCoInstructors } from "../hooks/useBatchRelations";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -99,15 +99,6 @@ export default function BatchManagement() {
         },
         {
           onSuccess: () => {
-            // Sync co-instructor assignments via dedicated endpoints
-            if (editingCoInstructors) {
-              const existingIds = new Set(editingCoInstructors.map(ci => ci.instructorId));
-              const nextIds = new Set(secondaryInstructorIds);
-              const toAdd = [...nextIds].filter(id => !existingIds.has(id));
-              const toRemove = editingCoInstructors.filter(ci => !nextIds.has(ci.instructorId)).map(ci => ci.id);
-              toAdd.forEach(id => assignCoInstructor.mutate({ instructorId: id }));
-              toRemove.forEach(assignmentId => removeCoInstructor.mutate({ assignmentId, batchId: editingBatchId }));
-            }
             toast({ title: "Batch updated", description: "Batch details have been saved." });
             setForm({ batchCode: "", batchName: "", trackId: undefined, cohortType: undefined, primaryInstructorId: undefined });
             setSecondaryInstructorIds([]);
@@ -257,8 +248,6 @@ export default function BatchManagement() {
   // When editing, fetch co-instructors to prefill chips
   const editingBatchId = editingBatch?.id ?? 0;
   const { data: editingCoInstructors } = useCoInstructors(editingBatchId, { enabled: dialogOpen && dialogMode === 'edit' && !!editingBatch });
-  const assignCoInstructor = useAssignCoInstructor(editingBatchId);
-  const removeCoInstructor = useRemoveCoInstructor();
 
   React.useEffect(() => {
     if (dialogOpen && dialogMode === 'edit' && editingBatch && editingCoInstructors) {
@@ -454,8 +443,12 @@ function CoInstructorCell({ batchId, instructors }: { batchId: number; instructo
   if (error) return <span className="text-muted-foreground">—</span>;
   const items = data || [];
   if (items.length === 0) return <span className="text-muted-foreground">—</span>;
-  const labels = items.map(ci => {
-    // Prefer names from API; fall back to client instructors list
+  // Dedupe by instructorId to avoid duplicate display when multiple assignments exist
+  const unique = new Map<string, typeof items[number]>();
+  for (const ci of items) {
+    if (!unique.has(ci.instructorId)) unique.set(ci.instructorId, ci);
+  }
+  const labels = Array.from(unique.values()).map(ci => {
     const nameFromApi = (ci.firstName && ci.lastName) ? `${ci.firstName} ${ci.lastName}` : undefined;
     if (nameFromApi) return nameFromApi;
     const inst = instructors.find(i => i.id === ci.instructorId);
