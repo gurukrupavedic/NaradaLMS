@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { ColumnDef, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 import { useBatches, useCreateBatch, useUpdateBatch, Batch } from "../hooks/useBatches";
+import { useCoInstructors } from "../hooks/useBatchRelations";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -175,10 +176,9 @@ export default function BatchManagement() {
     {
       id: "secondaryInstructors",
       header: "SECONDARY INSTRUCTOR(S)",
-      cell: ({ row }) => {
-        // TODO: Fetch co-instructors for this batch
-        return <span className="text-muted-foreground">—</span>;
-      },
+      cell: ({ row }) => (
+        <CoInstructorCell batchId={row.original.id} instructors={instructors} />
+      ),
     },
     {
       accessorKey: "studentCount",
@@ -243,6 +243,18 @@ export default function BatchManagement() {
     setShowInstructorDropdown(false);
     setDialogOpen(true);
   };
+
+  // When editing, fetch co-instructors to prefill chips
+  const editingBatchId = editingBatch?.id ?? 0;
+  const { data: editingCoInstructors } = useCoInstructors(editingBatchId, { enabled: dialogOpen && dialogMode === 'edit' && !!editingBatch });
+
+  React.useEffect(() => {
+    if (dialogOpen && dialogMode === 'edit' && editingBatch && editingCoInstructors) {
+      const ids = editingCoInstructors.map(ci => ci.instructorId);
+      setSecondaryInstructorIds(ids);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dialogOpen, dialogMode, editingBatchId, editingCoInstructors]);
 
   // Delete handler with validation (throws error if batch has students)
   const handleDelete = (batch: Batch) => {
@@ -422,6 +434,22 @@ export default function BatchManagement() {
       )}
     </div>
   );
+}
+
+function CoInstructorCell({ batchId, instructors }: { batchId: number; instructors: Instructor[] }) {
+  const { data, isLoading, error } = useCoInstructors(batchId);
+  if (isLoading) return <span className="text-muted-foreground">Loading…</span>;
+  if (error) return <span className="text-muted-foreground">—</span>;
+  const items = data || [];
+  if (items.length === 0) return <span className="text-muted-foreground">—</span>;
+  const labels = items.map(ci => {
+    // Prefer names from API; fall back to client instructors list
+    const nameFromApi = (ci.firstName && ci.lastName) ? `${ci.firstName} ${ci.lastName}` : undefined;
+    if (nameFromApi) return nameFromApi;
+    const inst = instructors.find(i => i.id === ci.instructorId);
+    return inst ? ((inst.firstName && inst.lastName) ? `${inst.firstName} ${inst.lastName}` : inst.email) : ci.instructorId;
+  });
+  return <span className="text-foreground">{labels.join(", ")}</span>;
 }
 
 function LabeledInput({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {

@@ -169,7 +169,22 @@ export class BatchStorage {
   }
 
   async listCoInstructorsByBatch(batchId: number) {
-    return db.select().from(batchCoInstructors).where(eq(batchCoInstructors.batchId, batchId));
+    // Include instructor name/email for display purposes
+    return db
+      .select({
+        id: batchCoInstructors.id,
+        batchId: batchCoInstructors.batchId,
+        instructorId: batchCoInstructors.instructorId,
+        role: batchCoInstructors.role,
+        assignedAt: batchCoInstructors.assignedAt,
+        assignedBy: batchCoInstructors.assignedBy,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+      })
+      .from(batchCoInstructors)
+      .leftJoin(users, eq(users.id, batchCoInstructors.instructorId))
+      .where(eq(batchCoInstructors.batchId, batchId));
   }
 
   // Basic existence checks for foreign keys
