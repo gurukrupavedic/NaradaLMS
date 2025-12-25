@@ -295,76 +295,79 @@ export default function BatchDetailAdmin() {
                   <TableBody>
                     {/* Pinned Add Student Row */}
                     <TableRow className="bg-muted/30 hover:bg-muted/50">
-                      <TableCell colSpan={3} className="relative">
-                        <div className="flex items-center gap-3">
-                          <div className="relative flex-1">
-                            <Input
-                              ref={inputRef}
-                              type="text"
-                              name="student-search"
-                              role="combobox"
-                              aria-autocomplete="list"
-                              aria-expanded={showDropdown}
-                              placeholder="Type student name or email to enroll..."
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                              onKeyDown={handleKeyDown}
-                              className="w-full"
-                              disabled={enrollStudent.isPending}
-                              autoComplete="off"
-                              data-1p-ignore
-                              data-lpignore="true"
-                              data-form-type="other"
-                            />
-                            {eligibleStudents.isFetching && (
-                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                              </div>
-                            )}
-                            
-                            {/* Typeahead Dropdown */}
-                            {showDropdown && (
-                              <div
-                                ref={dropdownRef}
-                                className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-64 overflow-y-auto"
-                              >
-                                {eligibleStudents.data && eligibleStudents.data.length > 0 ? (
-                                  eligibleStudents.data.map((student, idx) => {
-                                    const displayName = student.firstName || student.lastName
-                                      ? `${student.firstName ?? ""} ${student.lastName ?? ""}`.trim()
-                                      : student.email;
-                                    return (
-                                      <button
-                                        key={student.id}
-                                        type="button"
-                                        className={`w-full px-4 py-2 text-left text-sm hover:bg-accent transition-colors ${
-                                          idx === highlightedIndex ? "bg-accent" : ""
-                                        }`}
-                                        onClick={() => handleEnroll(student)}
-                                        disabled={enrollStudent.isPending}
-                                      >
-                                        <div className="flex flex-col gap-0.5">
-                                          <span className="font-medium text-foreground">{displayName}</span>
-                                          <span className="text-xs text-muted-foreground">{student.email}</span>
-                                        </div>
-                                      </button>
-                                    );
-                                  })
-                                ) : (
-                                  <div className="px-4 py-3 text-sm text-muted-foreground">
-                                    No eligible students found.
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          {enrollStudent.isPending && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              <span>Enrolling...</span>
+                      {/* STUDENT Column - Active Input */}
+                      <TableCell className="relative">
+                        <div className="relative">
+                          <Input
+                            ref={inputRef}
+                            type="text"
+                            name="student-search"
+                            role="combobox"
+                            aria-autocomplete="list"
+                            aria-expanded={showDropdown}
+                            placeholder="Type student name or email to enroll..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            className="w-full"
+                            disabled={enrollStudent.isPending}
+                            autoComplete="off"
+                            data-1p-ignore
+                            data-lpignore="true"
+                            data-form-type="other"
+                          />
+                          {eligibleStudents.isFetching && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            </div>
+                          )}
+                          
+                          {/* Typeahead Dropdown */}
+                          {showDropdown && (
+                            <div
+                              ref={dropdownRef}
+                              className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-64 overflow-y-auto"
+                            >
+                              {eligibleStudents.data && eligibleStudents.data.length > 0 ? (
+                                eligibleStudents.data.map((student, idx) => {
+                                  const displayName = student.firstName || student.lastName
+                                    ? `${student.firstName ?? ""} ${student.lastName ?? ""}`.trim()
+                                    : student.email;
+                                  return (
+                                    <button
+                                      key={student.id}
+                                      type="button"
+                                      className={`w-full px-4 py-2 text-left text-sm hover:bg-accent transition-colors ${
+                                        idx === highlightedIndex ? "bg-accent" : ""
+                                      }`}
+                                      onClick={() => handleEnroll(student)}
+                                      disabled={enrollStudent.isPending}
+                                    >
+                                      <div className="flex flex-col gap-0.5">
+                                        <span className="font-medium text-foreground">{displayName}</span>
+                                        <span className="text-xs text-muted-foreground">{student.email}</span>
+                                      </div>
+                                    </button>
+                                  );
+                                })
+                              ) : (
+                                <div className="px-4 py-3 text-sm text-muted-foreground">
+                                  No eligible students found.
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
+                      </TableCell>
+
+                      {/* STATUS Column - Placeholder */}
+                      <TableCell>
+                        <div className="h-10 bg-muted rounded border border-dashed border-muted-foreground/40" />
+                      </TableCell>
+
+                      {/* ACTIONS Column - Placeholder */}
+                      <TableCell>
+                        <div className="h-10 bg-muted rounded border border-dashed border-muted-foreground/40" />
                       </TableCell>
                     </TableRow>
 
