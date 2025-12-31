@@ -8,10 +8,9 @@ import {
   useReactTable,
   Row,
 } from '@tanstack/react-table';
-import { ChevronDown, Loader, MoreVertical, Plus, Search, X } from 'lucide-react';
+import { ChevronDown, Loader, MoreVertical } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,12 +26,15 @@ import {
   UnifiedBatchMatrixProps,
   MatrixCell,
   ProficiencyLevel,
+  EligibleStudent,
 } from '../types/matrix';
 import { getCellColor, getProficiencyShortLabel } from '../utils/matrix-utils';
 import { MatrixEvaluationModal } from './MatrixEvaluationModal';
 
 /**
  * UnifiedBatchMatrix Component
+ * 
+ * Pure presentation component for the proficiency matrix.
  * 
  * Renders a matrix with:
  * - Rows: Students enrolled in the batch
@@ -41,12 +43,12 @@ import { MatrixEvaluationModal } from './MatrixEvaluationModal';
  * 
  * Features:
  * - Sticky student column (left)
- * - Kebab menu [⋮] inline with student names
+ * - Kebab menu [⋮] for dropping students
  * - Color-coded proficiency cells
- * - Pinned input row for adding new students
- * - Type-ahead search for student selection
  * - Modal for updating proficiency levels
  * - Loading and error states
+ * 
+ * Note: Enrollment controls are handled by the parent component (BatchDetails)
  */
 export function UnifiedBatchMatrix({
   students,
@@ -54,7 +56,6 @@ export function UnifiedBatchMatrix({
   progress,
   selectedBatchId,
   selectedTrackId,
-  onAddStudent,
   onDropStudent,
   onUpdateProficiency,
   isLoading = false,
@@ -68,12 +69,6 @@ export function UnifiedBatchMatrix({
     studentId: string;
     chapterId: string;
   } | null>(null);
-
-  // Typeahead state for adding students
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showTypeahead, setShowTypeahead] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [isAddingStudent, setIsAddingStudent] = useState(false);
 
   // Build progress lookup for O(1) access
   const progressMap = useMemo(() => {
@@ -106,26 +101,6 @@ export function UnifiedBatchMatrix({
       status: prog.status,
       isEmpty: false,
     };
-  };
-
-  // Handle add student with typeahead
-  const handleAddStudent = async (studentId: string) => {
-    setIsAddingStudent(true);
-    try {
-      await onAddStudent(studentId);
-      setSearchQuery('');
-      setShowTypeahead(false);
-      setHighlightedIndex(-1);
-      toast({ title: 'Student added to batch' });
-    } catch (error: any) {
-      toast({
-        title: 'Failed to add student',
-        description: error?.message || 'Check if student is already enrolled',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsAddingStudent(false);
-    }
   };
 
   // Handle drop student
@@ -323,76 +298,6 @@ export function UnifiedBatchMatrix({
 
   return (
     <div className="space-y-4">
-      {/* Add Student Input Row (Pinned) */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search and add student..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setShowTypeahead(true);
-                  setHighlightedIndex(-1);
-                }}
-                onFocus={() => setShowTypeahead(true)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    setShowTypeahead(false);
-                  }
-                  // Arrow navigation would go here (for future enhancement)
-                }}
-                className="pl-9"
-                disabled={isAddingStudent}
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setShowTypeahead(false);
-                  }}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                  title="Clear search"
-                  type="button"
-                >
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">Clear search</span>
-                </button>
-              )}
-            </div>
-
-            {/* Typeahead dropdown - would be populated with eligible students in Phase 3 */}
-            {showTypeahead && searchQuery && (
-              <div className="absolute top-full left-0 right-0 z-10 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
-                <div className="p-2 text-center text-sm text-gray-500">
-                  (Mock: eligible students would appear here)
-                </div>
-              </div>
-            )}
-          </div>
-
-          <Button
-            onClick={() => {
-              if (searchQuery.trim()) {
-                // In Phase 3, this would trigger actual enrollment
-                toast({ 
-                  title: 'In Phase 3: Implement enrollment with selected student',
-                  description: 'This is a placeholder for actual enrollment logic'
-                });
-              }
-            }}
-            disabled={!searchQuery.trim() || isAddingStudent}
-            size="sm"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Add
-          </Button>
-        </div>
-      </div>
-
       {/* Matrix Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 shadow-sm">
         <table className="w-full border-collapse">
@@ -471,7 +376,7 @@ export function UnifiedBatchMatrix({
 
       {/* Info text */}
       <div className="text-xs text-gray-600 italic px-2 pt-2">
-        💡 Click any colored cell to update proficiency. Use [⋮] menu to manage students. Colors: Gray=Absent, Amber=Practicing, Green=L1-L2, Blue=L3, Purple=L4
+        💡 Click any colored cell to update proficiency. Use [⋮] menu to drop students. Colors: Gray=Absent, Amber=Practicing, Green=L1-L2, Blue=L3, Purple=L4
       </div>
     </div>
   );

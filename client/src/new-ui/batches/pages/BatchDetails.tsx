@@ -14,16 +14,19 @@ import { useEnrollments, useDropEnrollment, useEligibleStudents, useEnrollStuden
 import { useBatches as useAdminBatches, type Batch as AdminBatch } from "../../admin/hooks/useBatches";
 import { useBatch as useAdminBatch } from "../../admin/hooks/useBatch";
 import { useBatches as useInstructorBatches, type BatchItem } from "../hooks/useBatches";
+import { useTracks } from "../hooks/useTracks";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
 import { BatchDetailsCard } from "../../admin/components/BatchDetailsCard";
 import { UnifiedBatchMatrix } from "../components/UnifiedBatchMatrix";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, MoreVertical, ChevronDown } from "lucide-react";
+import { Loader2, MoreVertical, ChevronDown, Search, X, Plus, Loader } from "lucide-react";
 import type {
   StudentMatrixRow,
   Chapter,
@@ -78,12 +81,21 @@ export default function BatchDetails() {
   const [selectedTrackId, setSelectedTrackId] = useState<string | undefined>(undefined);
   const [showMatrixView, setShowMatrixView] = useState(false); // Toggle between table and matrix views
 
-  // Enrollment typeahead state
+  // Enrollment typeahead state (for table view)
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Matrix search state (separate from table search)
+  const [matrixSearchQuery, setMatrixSearchQuery] = useState("");
+  
+  // Matrix enrollment state
+  const [matrixSelectedStudents, setMatrixSelectedStudents] = useState<EligibleStudent[]>([]);
+  const [matrixShowTypeahead, setMatrixShowTypeahead] = useState(false);
+  const [matrixHighlightedIndex, setMatrixHighlightedIndex] = useState(-1);
+  const [isAddingStudent, setIsAddingStudent] = useState(false);
 
   // Fetch batches based on context
   const adminBatches = useAdminBatches({ limit: 500, offset: 0 });
@@ -91,6 +103,9 @@ export default function BatchDetails() {
   
   const batchesData = context === 'admin' ? adminBatches.data : instructorBatches.data;
   const isBatchesLoading = context === 'admin' ? adminBatches.isLoading : instructorBatches.isLoading;
+  
+  // Fetch all tracks
+  const tracks = useTracks();
   
   // Convert batches to unified format for dropdown compatibility
   const batches: UnifiedBatch[] = useMemo(() => {
@@ -131,7 +146,8 @@ export default function BatchDetails() {
   const enrollments = useEnrollments(isNaN(batchId) ? 0 : batchId);
   const dropEnrollment = useDropEnrollment(isNaN(batchId) ? 0 : batchId);
   const enrollStudent = useEnrollStudent(isNaN(batchId) ? 0 : batchId);
-  const eligibleStudents = useEligibleStudents(isNaN(batchId) ? 0 : batchId, searchQuery);
+  const eligibleStudents = useEligibleStudents(isNaN(batchId) ? 0 : batchId, searchQuery); // For table view
+  const matrixEligibleStudents = useEligibleStudents(isNaN(batchId) ? 0 : batchId, matrixSearchQuery); // For matrix view
 
   // Auto-redirect to first batch if invalid ID
   useEffect(() => {
@@ -196,7 +212,76 @@ export default function BatchDetails() {
     );
   };
 
-  // Keyboard navigation
+  // Matrix enrollment handlers
+  const handleMatrixAddStudent = async () => {
+    if (matrixSelectedStudents.length === 0) return;
+    
+    setIsAddingStudent(true);
+    const successfulEnrollments: string[] = [];
+    const failedEnrollments: Array<{ name: string; error: string }> = [];
+    
+    try {
+      for (const student of matrixSelectedStudents) {
+        try {
+          await enrollStudent.mutateAsync({ studentId: student.id });
+          const displayName = student.firstName || student.lastName
+            ? `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim()
+            : student.email;
+          successfulEnrollments.push(displayName);
+        } catch (error: any) {
+          const displayName = student.firstName || student.lastName
+            ? `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim()
+            : student.email;
+          failedEnrollments.push({ 
+            name: displayName, 
+            error: error?.message || 'Unknown error' 
+          });
+        }
+      }
+      
+      setMatrixSelectedStudents([]);
+      setMatrixSearchQuery('');
+      setMatrixShowTypeahead(false);
+      setMatrixHighlightedIndex(-1);
+      
+      if (failedEnrollments.length === 0) {
+        toast({ 
+          title: successfulEnrollments.length === 1 
+            ? 'Student added to batch' 
+            : `${successfulEnrollments.length} students added to batch` 
+        });
+      } else if (successfulEnrollments.length === 0) {
+        toast({
+          title: 'Failed to add student(s)',
+          description: failedEnrollments.map(f => `${f.name}: ${f.error}`).join('\n'),
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Partial success',
+          description: `${successfulEnrollments.length} added, ${failedEnrollments.length} failed. Failed: ${failedEnrollments.map(f => f.name).join(', ')}`,
+          variant: 'default',
+        });
+      }
+    } finally {
+      setIsAddingStudent(false);
+    }
+  };
+
+  const handleMatrixSelectStudent = (student: EligibleStudent) => {
+    if (!matrixSelectedStudents.find(s => s.id === student.id)) {
+      setMatrixSelectedStudents(prev => [...prev, student]);
+    }
+    setMatrixSearchQuery('');
+    setMatrixShowTypeahead(false);
+    setMatrixHighlightedIndex(-1);
+  };
+
+  const handleMatrixRemoveStudent = (studentId: string) => {
+    setMatrixSelectedStudents(prev => prev.filter(s => s.id !== studentId));
+  };
+
+  // Keyboard navigation (table view)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const students = eligibleStudents.data ?? [];
     
@@ -318,40 +403,58 @@ export default function BatchDetails() {
       <div className="flex flex-wrap items-center gap-6">
         {/* Batch Selector */}
         <div className="flex items-center gap-3 flex-1 min-w-[300px]">
-          <label htmlFor="batch-select" className="text-sm font-medium text-foreground dark:text-gray-100 whitespace-nowrap">
+          <label className="text-sm font-medium text-foreground dark:text-gray-100 whitespace-nowrap">
             Batch:
           </label>
-          <select
-            id="batch-select"
-            value={batchId}
-            onChange={(e) => setLocation(`/app/${context}/batches/${Number(e.target.value)}`)}
-            className="flex-1 h-9 px-3 py-1 rounded-md border border-border dark:border-gray-600 bg-background dark:bg-gray-800 text-foreground dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          <Select
+            value={String(batchId)}
+            onValueChange={(value) => setLocation(`/app/${context}/batches/${Number(value)}`)}
+            disabled={isBatchesLoading}
           >
-            {batches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.batchCode} - {b.batchName}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="flex-1 h-9">
+              <SelectValue placeholder="-- Select Batch --" />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-gray-900">
+              {batches.map((b) => (
+                <SelectItem key={b.id} value={String(b.id)}>
+                  {b.batchCode} - {b.batchName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Track Selector (Independent) */}
         <div className="flex items-center gap-3 flex-1 min-w-[300px]">
-          <label htmlFor="track-select" className="text-sm font-medium text-foreground dark:text-gray-100 whitespace-nowrap">
+          <label className="text-sm font-medium text-foreground dark:text-gray-100 whitespace-nowrap">
             Track:
           </label>
-          <select
-            id="track-select"
-            value={selectedTrackId || ''}
-            onChange={(e) => setSelectedTrackId(e.target.value || undefined)}
-            className="flex-1 h-9 px-3 py-1 rounded-md border border-border dark:border-gray-600 bg-background dark:bg-gray-800 text-foreground dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          <Select
+            value={selectedTrackId}
+            onValueChange={(value) => setSelectedTrackId(value || undefined)}
+            disabled={tracks.isLoading}
           >
-            <option value="">-- Select Track --</option>
-            <option value="2">Track 2 - Brahma Sutras</option>
-            <option value="3">Track 3 - Bhagavad Gita</option>
-            <option value="4">Track 4 - Mandukya Upanishad</option>
-            <option value="5">Track 5 - Taittiriya Upanishad</option>
-          </select>
+            <SelectTrigger className="flex-1 h-9">
+              <SelectValue placeholder="-- Select Track --" />
+            </SelectTrigger>
+            <SelectContent className="bg-white dark:bg-gray-900">
+              {tracks.data?.map((track) => {
+                const isCurrentTrack = batchDetail.data?.trackId === track.id;
+                return (
+                  <SelectItem key={track.id} value={String(track.id)}>
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <span>Track {track.order} - {track.title}</span>
+                      {isCurrentTrack && (
+                        <Badge variant="secondary" className="ml-2 text-[10px] px-2 py-0">
+                          Current
+                        </Badge>
+                      )}
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* View Toggle */}
@@ -399,12 +502,7 @@ export default function BatchDetails() {
         ) : batchDetail.isError ? (
           <p className="text-sm text-destructive">Failed to load batch details.</p>
         ) : batchDetail.data ? (
-          <BatchDetailsCard
-            batch={batchDetail.data}
-            batches={batches}
-            batchesLoading={isBatchesLoading}
-            onBatchChange={(id) => setLocation(`/app/${context}/batches/${id}`)}
-          />
+          <BatchDetailsCard batch={batchDetail.data} />
         ) : null
       )}
 
@@ -419,7 +517,135 @@ export default function BatchDetails() {
           {/* Matrix View (Phase 1 - UI Only) */}
           {showMatrixView && (
             <div className="space-y-3">
-              <h2 className="text-lg font-semibold text-foreground">Proficiency Matrix</h2>
+              {/* Enrollment Controls */}
+              <div className="flex items-center gap-3 pb-4">
+                <div className="flex-1 relative">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search and add student..."
+                      value={matrixSearchQuery}
+                      onChange={(e) => {
+                        const newQuery = e.target.value;
+                        setMatrixSearchQuery(newQuery);
+                        setMatrixShowTypeahead(true);
+                        setMatrixHighlightedIndex(-1);
+                      }}
+                      onFocus={() => setMatrixShowTypeahead(true)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setMatrixShowTypeahead(false);
+                        }
+                      }}
+                      className="pl-9"
+                      disabled={isAddingStudent}
+                    />
+                    {matrixSearchQuery && (
+                      <button
+                        onClick={() => {
+                          setMatrixSearchQuery('');
+                          setMatrixShowTypeahead(false);
+                        }}
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                        title="Clear search"
+                        type="button"
+                      >
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Clear search</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Selected students pills */}
+                  {matrixSelectedStudents.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {matrixSelectedStudents.map(student => {
+                        const displayName = student.firstName || student.lastName
+                          ? `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim()
+                          : student.email;
+                        
+                        return (
+                          <Badge 
+                            key={student.id}
+                            variant="secondary"
+                            className="flex items-center gap-1 pl-2 pr-1 py-1"
+                          >
+                            <span className="text-sm">{displayName}</span>
+                            <button
+                              onClick={() => handleMatrixRemoveStudent(student.id)}
+                              className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
+                              type="button"
+                              title={`Remove ${displayName}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Typeahead dropdown with eligible students */}
+                  {matrixShowTypeahead && matrixSearchQuery && (
+                    <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white dark:bg-gray-900 shadow-lg">
+                      {matrixEligibleStudents.isFetching ? (
+                        <div className="p-3 text-center text-sm text-gray-500 dark:text-gray-400">
+                          <Loader className="h-4 w-4 inline-block animate-spin mr-2" />
+                          Searching...
+                        </div>
+                      ) : (matrixEligibleStudents.data?.length ?? 0) === 0 ? (
+                        <div className="p-3 text-center text-sm text-gray-500 dark:text-gray-400">
+                          No eligible students found
+                        </div>
+                      ) : (
+                        <div className="py-1">
+                          {matrixEligibleStudents.data?.map((student, idx) => {
+                            const displayName = student.firstName || student.lastName
+                              ? `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim()
+                              : student.email;
+                            
+                            return (
+                              <button
+                                key={student.id}
+                                type="button"
+                                onClick={() => handleMatrixSelectStudent(student)}
+                                onMouseEnter={() => setMatrixHighlightedIndex(idx)}
+                                className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+                                  idx === matrixHighlightedIndex ? 'bg-gray-100 dark:bg-gray-800' : ''
+                                }`}
+                                disabled={isAddingStudent}
+                              >
+                                <div className="font-medium text-gray-900 dark:text-gray-100">{displayName}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">{student.email}</div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <Button
+                  onClick={handleMatrixAddStudent}
+                  disabled={matrixSelectedStudents.length === 0 || isAddingStudent}
+                  size="sm"
+                >
+                  {isAddingStudent ? (
+                    <>
+                      <Loader className="h-4 w-4 mr-1 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add {matrixSelectedStudents.length > 0 && `(${matrixSelectedStudents.length})`}
+                    </>
+                  )}
+                </Button>
+              </div>
+              
               <UnifiedBatchMatrix
                 students={[
                   // Mock data for Phase 1 - showing all proficiency levels
@@ -626,10 +852,6 @@ export default function BatchDetails() {
                 ] as StudentProgress[]}
                 selectedBatchId={String(batchId)}
                 selectedTrackId={selectedTrackId || ''}
-                onAddStudent={async (studentId) => {
-                  // Phase 3: Actually enroll student
-                  console.log('Add student:', studentId);
-                }}
                 onDropStudent={async (enrollmentId) => {
                   // Phase 3: Actually drop student
                   console.log('Drop enrollment:', enrollmentId);

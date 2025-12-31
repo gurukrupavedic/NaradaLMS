@@ -94,7 +94,6 @@ export interface UnifiedBatchMatrixProps {
   selectedTrackId: string;
 
   // Callbacks
-  onAddStudent: (studentId: string) => Promise<void>;
   onDropStudent: (enrollmentId: number) => Promise<void>;
   onUpdateProficiency: (
     studentId: string,
@@ -105,6 +104,17 @@ export interface UnifiedBatchMatrixProps {
   // Loading states
   isLoading?: boolean;
   isUpdating?: boolean;
+}
+
+/**
+ * Eligible student for typeahead dropdown (matches API response)
+ */
+export interface EligibleStudent {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  roles: string[];
 }
 
 /**

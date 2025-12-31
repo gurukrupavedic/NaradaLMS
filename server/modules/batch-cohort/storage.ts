@@ -101,7 +101,7 @@ export class BatchStorage {
 
     const track = base.trackId
       ? (await db
-          .select({ id: tracks.id, title: tracks.title, name: tracks.title })
+          .select({ id: tracks.id, title: tracks.title, name: tracks.title, order: tracks.order })
           .from(tracks)
           .where(eq(tracks.id, base.trackId)))[0] || null
       : null;
