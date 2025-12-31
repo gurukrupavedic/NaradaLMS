@@ -10,11 +10,12 @@ import {
   PaginationState,
   getPaginationRowModel,
 } from "@tanstack/react-table";
-import { useEnrollments, useDropEnrollment, useEligibleStudents, useEnrollStudent, type EligibleStudent } from "../hooks/useBatchRelations";
-import { useBatches } from "../hooks/useBatches";
+import { useEnrollments, useDropEnrollment, useEligibleStudents, useEnrollStudent, type EligibleStudent } from "../../admin/hooks/useBatchRelations";
+import { useBatches as useAdminBatches, type Batch as AdminBatch } from "../../admin/hooks/useBatches";
+import { useBatch as useAdminBatch } from "../../admin/hooks/useBatch";
+import { useBatches as useInstructorBatches, type BatchItem } from "../hooks/useBatches";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
-import { BatchDetailsCard } from "../components/BatchDetailsCard";
-import { useBatch } from "../hooks/useBatch";
+import { BatchDetailsCard } from "../../admin/components/BatchDetailsCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,10 +33,33 @@ type Enrollment = {
   status: string;
 };
 
-export default function BatchDetailAdmin() {
+// Unified batch type for dropdown purposes
+type UnifiedBatch = {
+  id: number;
+  batchCode: string;
+  batchName: string;
+  trackId?: number | null;
+  primaryInstructorId?: string | null;
+  cohortType?: string | null;
+  description?: string | null;
+  studentCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export default function BatchDetails() {
   const { toast } = useToast();
-  const [, params] = useRoute("/app/admin/batches/:id");
+  
+  // Dual route detection
+  const [, adminParams] = useRoute("/app/admin/batches/:id");
+  const [, instructorParams] = useRoute("/app/instructor/batches/:id");
   const [, setLocation] = useLocation();
+  
+  // Determine context and batch ID
+  const context = adminParams ? 'admin' : 'instructor';
+  const batchId = Number(adminParams?.id || instructorParams?.id);
+  
+  // State management
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -49,22 +73,60 @@ export default function BatchDetailAdmin() {
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { data: batchesData, isLoading: isBatchesLoading } = useBatches({ limit: 500, offset: 0 });
-  const batches = batchesData?.items ?? [];
-  const batchId = Number(params?.id);
+  // Fetch batches based on context
+  const adminBatches = useAdminBatches({ limit: 500, offset: 0 });
+  const instructorBatches = useInstructorBatches({ limit: 500, offset: 0 });
+  
+  const batchesData = context === 'admin' ? adminBatches.data : instructorBatches.data;
+  const isBatchesLoading = context === 'admin' ? adminBatches.isLoading : instructorBatches.isLoading;
+  
+  // Convert batches to unified format for dropdown compatibility
+  const batches: UnifiedBatch[] = useMemo(() => {
+    const items = batchesData?.items ?? [];
+    if (context === 'admin') {
+      return (items as AdminBatch[]).map(b => ({
+        id: b.id,
+        batchCode: b.batchCode,
+        batchName: b.batchName,
+        trackId: b.trackId,
+        primaryInstructorId: b.primaryInstructorId,
+        cohortType: b.cohortType,
+        description: b.description,
+        studentCount: b.studentCount,
+        createdAt: b.createdAt,
+        updatedAt: b.updatedAt,
+      }));
+    } else {
+      return (items as BatchItem[]).map(b => ({
+        id: b.id,
+        batchCode: b.batchCode,
+        batchName: b.batchName,
+        trackId: b.trackId,
+        primaryInstructorId: b.primaryInstructorId,
+        cohortType: b.cohortType,
+        description: b.description,
+        studentCount: b.studentCount,
+        createdAt: typeof b.createdAt === 'string' ? b.createdAt : b.createdAt?.toISOString(),
+        updatedAt: typeof b.updatedAt === 'string' ? b.updatedAt : b.updatedAt?.toISOString(),
+      }));
+    }
+  }, [batchesData, context]);
 
-  const batchDetail = useBatch(isNaN(batchId) ? undefined : batchId);
-  const enrollments = useEnrollments(batchId);
-  const dropEnrollment = useDropEnrollment(batchId);
-  const enrollStudent = useEnrollStudent(batchId);
-  const eligibleStudents = useEligibleStudents(batchId, searchQuery);
+  // Fetch current batch details with full relations (used for both admin and instructor)
+  const batchDetail = useAdminBatch(isNaN(batchId) ? undefined : batchId);
+  
+  // Fetch enrollments - only when we have a valid batch ID
+  const enrollments = useEnrollments(isNaN(batchId) ? 0 : batchId);
+  const dropEnrollment = useDropEnrollment(isNaN(batchId) ? 0 : batchId);
+  const enrollStudent = useEnrollStudent(isNaN(batchId) ? 0 : batchId);
+  const eligibleStudents = useEligibleStudents(isNaN(batchId) ? 0 : batchId, searchQuery);
 
-  // If the route param is invalid (e.g., /i), redirect to first batch when available
+  // Auto-redirect to first batch if invalid ID
   useEffect(() => {
     if (Number.isNaN(batchId) && batches.length > 0) {
-      setLocation(`/app/admin/batches/${batches[0].id}`);
+      setLocation(`/app/${context}/batches/${batches[0].id}`);
     }
-  }, [batchId, batches, setLocation]);
+  }, [batchId, batches, setLocation, context]);
 
   // Reset pagination when batch changes
   useEffect(() => {
@@ -98,7 +160,6 @@ export default function BatchDetailAdmin() {
           setShowDropdown(false);
         },
         onError: (err: any) => {
-          // ONE-TO-MANY CONSTRAINT: Handle already-enrolled error
           const isAlreadyEnrolled = err.message?.includes('already enrolled') || 
                                    (err.code === 'ALREADY_ENROLLED');
           
@@ -138,7 +199,6 @@ export default function BatchDetailAdmin() {
 
   // Define columns for enrollment table
   const enrollmentData = enrollments.data ?? [];
-  const enrollmentCount = enrollmentData.length;
 
   const columns = useMemo<ColumnDef<Enrollment>[]>(
     () => [
@@ -220,7 +280,7 @@ export default function BatchDetailAdmin() {
 
   return (
     <div className="space-y-6 px-4 pt-4">
-      {/* Batch Details */}
+      {/* Batch Details Card - Same for both admin and instructor */}
       {isBatchSelected && (
         batchDetail.isLoading ? (
           <div className="rounded-lg border border-border p-4">
@@ -242,10 +302,6 @@ export default function BatchDetailAdmin() {
                 <Skeleton className="h-5 w-28" />
               </div>
             </div>
-            <div className="mt-6 space-y-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-10 w-full" />
-            </div>
           </div>
         ) : batchDetail.isError ? (
           <p className="text-sm text-destructive">Failed to load batch details.</p>
@@ -254,7 +310,7 @@ export default function BatchDetailAdmin() {
             batch={batchDetail.data}
             batches={batches}
             batchesLoading={isBatchesLoading}
-            onBatchChange={(id) => setLocation(`/app/admin/batches/${id}`)}
+            onBatchChange={(id) => setLocation(`/app/${context}/batches/${id}`)}
           />
         ) : null
       )}
@@ -266,9 +322,13 @@ export default function BatchDetailAdmin() {
             : "Select a batch to view details."}
         </div>
       ) : (
-        <div>
-          {/* Enrollments Table */}
-          <div className="rounded-lg border border-border/60 bg-card shadow-sm overflow-hidden">
+        <div className="space-y-6">
+          {/* Enrollments Section */}
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold text-foreground">Enrollments</h2>
+            
+            {/* Enrollments Table */}
+            <div className="rounded-lg border border-border/60 bg-card shadow-sm overflow-hidden">
               {enrollments.isLoading ? (
                 <div className="p-4 space-y-3">
                   {[...Array(5)].map((_, i) => (
@@ -413,6 +473,7 @@ export default function BatchDetailAdmin() {
               onPageSizeChange={(size) => table.setPageSize(size)}
             />
           )}
+          </div>
         </div>
       )}
     </div>

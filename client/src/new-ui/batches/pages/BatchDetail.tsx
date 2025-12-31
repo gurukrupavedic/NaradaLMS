@@ -13,7 +13,7 @@ import { useTrackDetails } from "../hooks/useTrackDetails";
 import { StudentCombobox } from "../components/StudentCombobox";
 
 export default function BatchDetail() {
-  const [, params] = useRoute("/app/batches/:id");
+  const [, params] = useRoute("/app/instructor/batches/:id");
   const batchId = params?.id;
   const { toast } = useToast();
   const { data: batch, isLoading: loadingBatch } = useBatchDetail(batchId);
@@ -34,7 +34,7 @@ export default function BatchDetail() {
     return (
       <div className="space-y-3">
         <p className="text-sm text-destructive">Batch not found.</p>
-        <Link href="/app/batches">
+        <Link href="/app/instructor/batches">
           <a className="text-sm text-primary">Back to My Batches</a>
         </Link>
       </div>

@@ -46,6 +46,24 @@ export function AppSidebar({
   // Helper: Inject contextual sub-items based on current route
   const enhanceWithContextualItems = (items: NavMainItem[]): NavMainItem[] => {
     return items.map(item => {
+      // Instructor Batches page - add contextual "Batch Details" when viewing a specific batch
+      if (item.url === '/app/instructor/batches') {
+        const instructorBatchDetailMatch = location.match(/^\/app\/instructor\/batches\/(\d+)$/);
+        if (instructorBatchDetailMatch) {
+          const batchId = instructorBatchDetailMatch[1];
+          return {
+            ...item,
+            items: [
+              {
+                title: 'Batch Details',
+                url: `/app/instructor/batches/${batchId}`,
+                isContextual: true,
+              },
+            ],
+          };
+        }
+      }
+
       // Admin Batches page - add contextual "Batch Details" when viewing a specific batch
       if (item.url === '/app/admin/batches') {
         const batchDetailMatch = location.match(/^\/app\/admin\/batches\/(\d+)$/);
@@ -85,11 +103,11 @@ export function AppSidebar({
           />
         )}
 
-        {/* Batches Section (Instructor & Admin) */}
+        {/* Batches Section (Instructor & Admin) - Enhanced with contextual items */}
         {navSections.batches && (
           <NavMain
             label={getSectionLabel('batches')}
-            items={navSections.batches.items}
+            items={enhanceWithContextualItems(navSections.batches.items)}
           />
         )}
 

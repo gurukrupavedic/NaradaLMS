@@ -7,8 +7,15 @@ export interface BatchItem {
   batchName: string;
   trackId?: number | null;
   primaryInstructorId?: string | null;
+  primaryInstructorName?: string | null;
+  coInstructorNames?: string | null;
+  cohortType?: string | null;
+  description?: string | null;
   studentCount?: number;
   status: string;
+  trackName?: string | null;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 interface PaginatedResponse<T> {

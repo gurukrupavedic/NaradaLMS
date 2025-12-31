@@ -31,13 +31,13 @@ function getBreadcrumbs(pathname: string): string[] {
     return ['Learn', 'Course Content'];
   }
 
-  // Batches & Progress
-  if (pathname.includes('/app/batches')) {
-    if (pathname === '/app/batches') {
+  // Batches & Progress (Instructor)
+  if (pathname.includes('/app/instructor/batches')) {
+    if (pathname === '/app/instructor/batches') {
       return ['Batches & Progress', 'My Batches'];
     }
     // Batch detail pages
-    if (/\/app\/batches\/[0-9]+/.test(pathname)) {
+    if (/\/app\/instructor\/batches\/[0-9]+/.test(pathname)) {
       return ['Batches & Progress', 'My Batches', 'Batch Details'];
     }
     return ['Batches & Progress', 'Student Progress'];

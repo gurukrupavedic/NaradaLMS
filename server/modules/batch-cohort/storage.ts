@@ -36,16 +36,53 @@ export class BatchStorage {
       whereCondition = eq(batches.primaryInstructorId, instructorId);
     }
 
-    return db
+    const batchRows = await db
       .select({
         ...batches,
         studentCount: sql<number>`COALESCE(COUNT(*) FILTER (WHERE ${enrollments.status} = 'active'), 0)::int`,
+        primaryInstructorFirstName: users.firstName,
+        primaryInstructorLastName: users.lastName,
+        trackName: tracks.title,
       })
       .from(batches)
       .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
+      .leftJoin(users, eq(users.id, batches.primaryInstructorId))
+      .leftJoin(tracks, eq(tracks.id, batches.trackId))
       .where(whereCondition)
-      .groupBy(batches.id)
+      .groupBy(batches.id, users.id, tracks.id)
       .orderBy(batches.createdAt);
+
+    // Enrich with instructor names and co-instructors
+    return Promise.all(
+      batchRows.map(async (batch) => {
+        const coInstructors = await db
+          .select({
+            firstName: users.firstName,
+            lastName: users.lastName,
+          })
+          .from(batchCoInstructors)
+          .leftJoin(users, eq(users.id, batchCoInstructors.instructorId))
+          .where(eq(batchCoInstructors.batchId, batch.id));
+
+        const coInstructorNames = coInstructors
+          .filter(ci => ci.firstName && ci.lastName)
+          .map(ci => `${ci.firstName} ${ci.lastName}`)
+          .join(", ");
+
+        const primaryInstructorName = batch.primaryInstructorFirstName && batch.primaryInstructorLastName
+          ? `${batch.primaryInstructorFirstName} ${batch.primaryInstructorLastName}`
+          : null;
+
+        // Remove the individual name fields and add the combined name
+        const { primaryInstructorFirstName, primaryInstructorLastName, ...rest } = batch;
+
+        return {
+          ...rest,
+          primaryInstructorName,
+          coInstructorNames: coInstructorNames || null,
+        };
+      })
+    );
   }
 
   async getBatchById(id: number) {

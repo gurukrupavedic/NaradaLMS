@@ -12,36 +12,34 @@ export default function MyBatchesList() {
   const isLoadingState = isLoading || isRefetching;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 pt-4 pb-8">
       {/* Loading State */}
       {isLoadingState && (
-        <div className="grid gap-4 md:grid-cols-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="rounded-2xl border border-border bg-card p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-6 w-40" />
-                <Skeleton className="h-5 w-20" />
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="rounded-lg border border-border bg-card p-6 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-6 w-40" />
+                  <Skeleton className="h-5 w-20" />
+                </div>
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-16 mt-4" />
               </div>
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-16 mt-4" />
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
       {/* Error State */}
       {!isLoadingState && error && (
-        <div className="flex flex-col items-center justify-center py-12 space-y-4">
-          <div className="rounded-full bg-destructive/10 p-3">
-            <AlertCircle className="h-6 w-6 text-destructive" />
-          </div>
-          <div className="text-center space-y-2">
-            <p className="font-medium">Failed to load batches</p>
-            <p className="text-sm text-muted-foreground">
-              {error instanceof Error ? error.message : "An error occurred"}
-            </p>
-          </div>
+        <div className="flex flex-col items-center justify-center p-12 text-center rounded-lg border border-border/30 bg-card">
+          <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">Failed to load batches</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            {error instanceof Error ? error.message : "An error occurred while loading your batches"}
+          </p>
           <Button onClick={() => refetch()} variant="outline" size="sm">
             Try Again
           </Button>
@@ -50,16 +48,12 @@ export default function MyBatchesList() {
 
       {/* Empty State */}
       {!isLoadingState && !error && items.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-12 space-y-4">
-          <div className="rounded-full bg-muted p-3">
-            <GraduationCap className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <div className="text-center space-y-2">
-            <p className="font-medium">No batches assigned</p>
-            <p className="text-sm text-muted-foreground">
-              You don't have any batches assigned yet. Contact your administrator.
-            </p>
-          </div>
+        <div className="flex flex-col items-center justify-center p-12 text-center rounded-lg border border-border/30 bg-card">
+          <GraduationCap className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">No batches assigned</h3>
+          <p className="text-sm text-muted-foreground">
+            You don't have any batches assigned yet. Contact your administrator.
+          </p>
         </div>
       )}
 
@@ -67,28 +61,86 @@ export default function MyBatchesList() {
       {!isLoadingState && !error && items.length > 0 && (
         <div className="grid gap-4 md:grid-cols-2">
           {items.map((b) => (
-            <Link key={b.id} href={`/app/batches/${b.id}`}>
-              <a className="group block overflow-hidden rounded-2xl border border-border bg-card p-5 transition duration-200 hover:bg-muted">
-                <div className="flex items-center justify-between">
-                  <div className="text-lg font-semibold text-foreground">{b.batchName}</div>
-                  <div className="flex items-center gap-2">
-                    {b.cohortType && (
-                      <span className="text-[11px] rounded-full border border-border px-2 py-0.5 text-muted-foreground">
-                        {b.cohortType === "bramhachari" ? "Bramhachari" : "Grihasta"}
-                      </span>
-                    )}
-                    <span className="text-xs rounded-full border border-border px-2 py-0.5 text-muted-foreground">{b.status}</span>
+            <Link key={b.id} href={`/app/instructor/batches/${b.id}`}>
+              <a className="group block rounded-lg border border-border bg-card p-5 transition duration-200 hover:shadow-md hover:border-border/80">
+                {/* Batch Name */}
+                <div className="mb-4 pb-3 border-b border-border/50 flex items-center justify-between gap-3">
+                  <h3 className="text-base font-semibold text-foreground">
+                    {b.batchCode} - {b.batchName}
+                  </h3>
+                  {b.trackName && (
+                    <p className="text-sm text-muted-foreground">
+                      {b.trackName}
+                    </p>
+                  )}
+                </div>
+
+                {/* Metadata Grid */}
+                <div className="grid grid-cols-3 gap-4 mb-4 text-xs">
+                  {/* Column 1 */}
+                  <div className="space-y-3">
+                    {/* Primary Instructor */}
+                    <div>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-tight">Primary Instructor</p>
+                      <p className="text-sm font-medium text-foreground mt-1">
+                        {b.primaryInstructorName || "—"}
+                      </p>
+                    </div>
+
+                    {/* Created */}
+                    <div>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-tight">Created</p>
+                      <p className="text-sm text-foreground mt-1">
+                        {b.createdAt ? new Date(b.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Column 2 */}
+                  <div className="space-y-3">
+                    {/* Co-Instructors */}
+                    <div>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-tight">Co-Instructors</p>
+                      <p className="text-sm text-foreground mt-1">
+                        {b.coInstructorNames || "—"}
+                      </p>
+                    </div>
+
+                    {/* Updated */}
+                    <div>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-tight">Updated</p>
+                      <p className="text-sm text-foreground mt-1">
+                        {b.updatedAt ? new Date(b.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Column 3 */}
+                  <div className="space-y-3">
+                    {/* Cohort Type */}
+                    <div>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-tight">Cohort Type</p>
+                      <p className="text-sm font-medium text-foreground mt-1">
+                        {b.cohortType === "bramhachari" ? "Brahmacharya" : b.cohortType === "grihasta" ? "Grihasta" : "—"}
+                      </p>
+                    </div>
+
+                    {/* Active Enrollment */}
+                    <div>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-tight">Active Enrollment</p>
+                      <p className="text-sm font-medium text-foreground mt-1">
+                        {b.studentCount} {b.studentCount === 1 ? "Student" : "Students"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">Code: {b.batchCode}</p>
-                {b.trackId ? (
-                  <p className="mt-1 text-xs text-muted-foreground">Track: #{b.trackId}</p>
-                ) : (
-                  <p className="mt-1 text-xs text-muted-foreground">No track assigned</p>
-                )}
-                <div className="mt-4 inline-flex items-center gap-2 text-sm text-primary">
-                  <span>Open</span>
-                  <span className="transition-transform duration-150 group-hover:translate-x-0.5">→</span>
+
+                {/* View Details */}
+                <div className="flex justify-end">
+                  <div className="inline-flex items-center gap-2 text-sm text-primary font-medium group-hover:gap-3 transition-all">
+                    <span>View Details</span>
+                    <span className="transition-transform duration-150 group-hover:translate-x-1">→</span>
+                  </div>
                 </div>
               </a>
             </Link>
