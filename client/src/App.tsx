@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary, AppErrorFallback } from "@/components/ui/error-boundary";
 import { LoadingScreen } from "@/components/ui/loading-screen";
+import InstructorMatrixPrototype from "@/temp-prototype/InstructorMatrixPrototype";
 import { useAuth } from "@/features/shared-features/hooks/useAuth";
 import { useWarmTrackCache } from "@/lib/query-prefetch";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -145,6 +146,9 @@ function Router() {
 
         <Route path="/experiments/design-system" component={DesignSystemExperiment} />
         <Route path="/experiments/theming-playground" component={ThemingPlayground} />
+
+        {/* TEMPORARY PROTOTYPE */}
+        <Route path="/prototype/matrix" component={InstructorMatrixPrototype} />
 
         <Route component={SimpleNotFound} />
       </Switch>
