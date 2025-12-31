@@ -397,13 +397,12 @@ export function UnifiedBatchMatrix({
                   // eslint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role
                   <th
                     key={header.id}
-                    className={`px-4 py-3 text-left text-sm font-semibold text-gray-800 ${
+                    className={`px-3 py-2 text-left text-sm font-semibold text-gray-800 ${
                       header.id === 'student' ? 'sticky left-0 z-10 bg-gray-50' : ''
                     }`}
                     // eslint-disable-next-line react/no-unknown-property, react/style-prop-object
                     style={{
-                      width: header.getSize() === 150 ? undefined : `${header.getSize()}px`,
-                      minWidth: header.id === 'student' ? '280px' : `${header.getSize()}px`,
+                      width: `${header.getSize()}px`,
                     } as any}
                   >
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -427,8 +426,7 @@ export function UnifiedBatchMatrix({
                     }`}
                     // eslint-disable-next-line react/no-unknown-property
                     style={{
-                      width: cell.column.getSize() === 150 ? undefined : `${cell.column.getSize()}px`,
-                      minWidth: cell.column.id === 'student' ? '280px' : `${cell.column.getSize()}px`,
+                      width: `${cell.column.getSize()}px`,
                     } as any}
                   >
                     {/* Sticky left column */}
