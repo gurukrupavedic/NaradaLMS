@@ -252,11 +252,11 @@ export function UnifiedBatchMatrix({
       columnHelper.accessor((row) => row.id, {
         id: `chapter-${chapter.id}`,
         header: () => (
-          <div className="text-center">
+          <div className="w-20 flex flex-col items-center justify-center gap-0.5">
             <div className="text-xs font-bold text-gray-900 whitespace-nowrap">
               {chapter.code}
             </div>
-            <div className="text-xs text-gray-600 whitespace-nowrap max-w-[80px] truncate">
+            <div className="text-xs text-gray-600 whitespace-nowrap line-clamp-2 text-center">
               {chapter.title}
             </div>
           </div>
