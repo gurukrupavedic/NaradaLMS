@@ -160,6 +160,12 @@ export function UnifiedBatchMatrix({
     }
   };
 
+  // Cell click handler - open modal for evaluation
+  const handleCellClick = (studentId: string, chapterId: string) => {
+    setSelectedCell({ studentId, chapterId });
+    setModalOpen(true);
+  };
+
   // Get initials from student name for badge
   const getInitials = (firstName: string, lastName: string): string => {
     const first = firstName?.charAt(0)?.toUpperCase() || '';
