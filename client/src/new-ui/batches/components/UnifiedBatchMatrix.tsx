@@ -160,10 +160,27 @@ export function UnifiedBatchMatrix({
     }
   };
 
-  // Cell click handler - open modal for evaluation
-  const handleCellClick = (studentId: string, chapterId: string) => {
-    setSelectedCell({ studentId, chapterId });
-    setModalOpen(true);
+  // Get initials from student name for badge
+  const getInitials = (firstName: string, lastName: string): string => {
+    const first = firstName?.charAt(0)?.toUpperCase() || '';
+    const last = lastName?.charAt(0)?.toUpperCase() || '';
+    return (first + last).slice(0, 2);
+  };
+
+  // Assign consistent colors to student initials based on hash
+  const getInitialBgColor = (studentId: string): string => {
+    const colors = [
+      'bg-blue-500',
+      'bg-green-500',
+      'bg-purple-500',
+      'bg-orange-500',
+      'bg-red-500',
+      'bg-indigo-500',
+      'bg-pink-500',
+      'bg-cyan-500',
+    ];
+    const hash = studentId.charCodeAt(0) + studentId.charCodeAt(studentId.length - 1);
+    return colors[hash % colors.length];
   };
 
   // TanStack Table setup
@@ -177,12 +194,25 @@ export function UnifiedBatchMatrix({
       cell: (info) => {
         const student = info.row.original;
         return (
-          <div className="flex items-center justify-between gap-3 pr-2">
-            <div className="min-w-0 flex-1">
-              <div className="truncate font-medium">
-                {student.firstName} {student.lastName}
+          <div className="flex items-center justify-between gap-2 pr-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              {/* Student Initials Badge */}
+              <div
+                className={`${getInitialBgColor(
+                  student.id
+                )} text-white font-bold rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 text-xs`}
+                title={`${student.firstName} ${student.lastName}`}
+              >
+                {getInitials(student.firstName, student.lastName)}
               </div>
-              <div className="truncate text-xs text-gray-500">{student.email}</div>
+              
+              {/* Student Info */}
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-medium text-sm">
+                  {student.firstName} {student.lastName}
+                </div>
+                <div className="truncate text-xs text-gray-500">{student.email}</div>
+              </div>
             </div>
 
             {/* Kebab menu [⋮] */}
@@ -191,7 +221,7 @@ export function UnifiedBatchMatrix({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-8 w-8 p-0"
+                  className="h-8 w-8 p-0 flex-shrink-0"
                   title="Student actions menu"
                 >
                   <MoreVertical className="h-4 w-4" />
@@ -212,7 +242,7 @@ export function UnifiedBatchMatrix({
           </div>
         );
       },
-      size: 200,
+      size: 280,
       enableSorting: false,
       enableHiding: false,
     }),
@@ -222,9 +252,13 @@ export function UnifiedBatchMatrix({
       columnHelper.accessor((row) => row.id, {
         id: `chapter-${chapter.id}`,
         header: () => (
-          <div className="max-w-[100px] text-center text-xs font-medium">
-            <div className="truncate">{chapter.code}</div>
-            <div className="truncate text-gray-600">{chapter.title}</div>
+          <div className="text-center">
+            <div className="text-xs font-bold text-gray-900 whitespace-nowrap">
+              {chapter.code}
+            </div>
+            <div className="text-xs text-gray-600 whitespace-nowrap max-w-[80px] truncate">
+              {chapter.title}
+            </div>
           </div>
         ),
         cell: (info) => {
@@ -237,10 +271,10 @@ export function UnifiedBatchMatrix({
               onClick={() => handleCellClick(studentId, chapter.id)}
               disabled={isUpdating}
               className={`
-                h-16 w-16 flex items-center justify-center rounded
-                border transition-colors cursor-pointer
+                h-14 w-20 flex items-center justify-center rounded-lg
+                border-2 transition-all cursor-pointer
                 ${colors.bgColor} ${colors.textColor} ${colors.borderColor}
-                hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50
+                hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50
                 font-semibold text-sm
               `}
               title={`${info.row.original.firstName} - ${chapter.code}`}
@@ -249,7 +283,7 @@ export function UnifiedBatchMatrix({
             </button>
           );
         },
-        size: 100,
+        size: 80,
         enableSorting: false,
       })
     ),
@@ -354,19 +388,22 @@ export function UnifiedBatchMatrix({
       </div>
 
       {/* Matrix Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
+      <div className="overflow-x-auto rounded-lg border border-gray-300 bg-white shadow-sm">
         <table className="w-full border-collapse">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="border-b border-gray-200 bg-gray-50">
+              <tr key={headerGroup.id} className="border-b-2 border-gray-300 bg-gray-50">
                 {headerGroup.headers.map((header) => (
                   // eslint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role
                   <th
                     key={header.id}
-                    className="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+                    className={`px-4 py-3 text-left text-sm font-semibold text-gray-800 ${
+                      header.id === 'student' ? 'sticky left-0 z-10 bg-gray-50' : ''
+                    }`}
                     // eslint-disable-next-line react/no-unknown-property, react/style-prop-object
                     style={{
                       width: header.getSize() === 150 ? undefined : `${header.getSize()}px`,
+                      minWidth: header.id === 'student' ? '280px' : `${header.getSize()}px`,
                     } as any}
                   >
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -380,15 +417,18 @@ export function UnifiedBatchMatrix({
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                className="border-b border-gray-200 hover:bg-gray-50/50 transition-colors"
               >
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
-                    className="px-4 py-3"
+                    className={`px-3 py-2 ${
+                      cell.column.id === 'student' ? 'sticky left-0 z-10 bg-white' : 'text-center'
+                    }`}
                     // eslint-disable-next-line react/no-unknown-property
                     style={{
                       width: cell.column.getSize() === 150 ? undefined : `${cell.column.getSize()}px`,
+                      minWidth: cell.column.id === 'student' ? '280px' : `${cell.column.getSize()}px`,
                     } as any}
                   >
                     {/* Sticky left column */}
@@ -397,9 +437,7 @@ export function UnifiedBatchMatrix({
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </div>
                     ) : (
-                      <div className="flex justify-center">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </div>
+                      flexRender(cell.column.columnDef.cell, cell.getContext())
                     )}
                   </td>
                 ))}
@@ -428,9 +466,8 @@ export function UnifiedBatchMatrix({
       )}
 
       {/* Info text */}
-      <div className="text-xs text-gray-500 italic">
-        Click any proficiency cell to update. Use kebab menu [⋮] to drop students.
-        Track shows chapters from selected track only.
+      <div className="text-xs text-gray-600 italic px-2 pt-2">
+        💡 Click any colored cell to update proficiency. Use [⋮] menu to manage students. Colors: Gray=Absent, Amber=Practicing, Green=L1-L2, Blue=L3, Purple=L4
       </div>
     </div>
   );
