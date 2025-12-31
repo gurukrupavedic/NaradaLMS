@@ -62,98 +62,124 @@ export function MatrixEvaluationModal({
     return null;
   }
 
-  const currentColors = getCellColor(currentProficiency || -1, 'practicing');
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-white shadow-xl rounded-lg border border-gray-200 z-50">
-        <DialogHeader className="mb-4">
-          <DialogTitle>Update Proficiency Level</DialogTitle>
-          <DialogDescription>
-            <div className="mt-2 space-y-1 text-sm">
-              <div>
-                <strong>Student:</strong> {student.firstName} {student.lastName}
-              </div>
-              <div>
-                <strong>Chapter:</strong> {chapter.code} - {chapter.title}
-              </div>
-              {currentProficiency !== undefined && (
-                <div>
-                  <strong>Current:</strong>{' '}
-                  <span
-                    className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                      currentColors.bgColor
-                    } ${currentColors.textColor}`}
-                  >
-                    {getProficiencyLabel(currentProficiency)}
-                  </span>
-                </div>
-              )}
-            </div>
-          </DialogDescription>
+      <DialogContent className="w-full max-w-md bg-white shadow-2xl rounded-xl border border-gray-200 z-50 p-0">
+        <DialogHeader className="px-5 pt-5 pb-3 border-b border-gray-100">
+          <DialogTitle className="text-base font-bold text-gray-900">Update Progress</DialogTitle>
+          <DialogDescription className="sr-only">Update student proficiency level</DialogDescription>
         </DialogHeader>
 
-        {/* Error message */}
-        {isError && (
-          <div className="flex items-center gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700">
-            <AlertCircle className="h-4 w-4 flex-shrink-0" />
-            <span>{errorMessage}</span>
+        <div className="px-5 py-4">
+          {/* Student and Chapter Info */}
+          <div className="space-y-1 mb-4 text-xs bg-gray-50 rounded-lg p-2.5">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 font-medium">Student:</span>
+              <span className="text-gray-900 font-semibold">{student.firstName} {student.lastName}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 font-medium">Chapter:</span>
+              <span className="text-gray-900 font-semibold">{chapter.code} - {chapter.title}</span>
+            </div>
           </div>
-        )}
 
-        {/* Proficiency level options */}
-        <div className="space-y-2 py-4">
-          <div className="text-sm font-medium text-gray-700">Select level:</div>
+          {/* Error message */}
+          {isError && (
+            <div className="flex items-center gap-2 rounded-lg bg-red-50 p-2.5 mb-4 text-xs text-red-700 border border-red-200">
+              <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
 
-          {PROFICIENCY_OPTIONS.map((option) => {
-            const isSelected = option.value === currentProficiency;
-            const colors = getCellColor(option.value, 'practicing');
+          {/* Proficiency level options */}
+          <div className="mb-4">
+            <div className="text-xs font-semibold text-gray-900 mb-2.5">Select Proficiency Level:</div>
 
-            return (
-              <button
-                key={option.value}
-                onClick={() => handleSelectLevel(option.value)}
-                disabled={isUpdating}
-                className={`
-                  w-full rounded-lg border-2 p-3 text-left transition-all
-                  ${
-                    isSelected
-                      ? `${colors.borderColor} ring-2 ${colors.bgColor}`
-                      : `border-gray-200 hover:border-gray-300`
-                  }
-                  disabled:cursor-not-allowed disabled:opacity-50
-                  flex items-center justify-between
-                `}
-              >
-                <div>
-                  <div className="font-medium text-gray-900">{option.label}</div>
-                  <div className="text-xs text-gray-600">{option.description}</div>
-                </div>
+            <div className="space-y-1.5">
+              {PROFICIENCY_OPTIONS.map((option) => {
+                const isSelected = option.value === currentProficiency;
+                const colors = getCellColor(option.value, 'practicing');
 
-                {isSelected && (
-                  <div className="ml-2 flex-shrink-0">
-                    {isUpdating ? (
-                      <Loader className="h-5 w-5 animate-spin text-blue-600" />
-                    ) : (
-                      <Check className="h-5 w-5 text-green-600" />
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => handleSelectLevel(option.value)}
+                    disabled={isUpdating}
+                    style={
+                      isSelected
+                        ? {
+                            backgroundColor: colors.bgHex,
+                            borderColor: colors.borderHex,
+                          }
+                        : {}
+                    }
+                    className={`
+                      w-full rounded-lg border-2 p-2.5 text-left transition-all
+                      disabled:cursor-not-allowed disabled:opacity-50
+                      flex items-center gap-2.5 group
+                      ${
+                        isSelected
+                          ? ''
+                          : `bg-white border-gray-200 hover:border-gray-300`
+                      }
+                    `}
+                  >
+                    {/* Color indicator circle - legend showing cell color */}
+                    <div
+                      className="flex-shrink-0 w-3.5 h-3.5 rounded-full"
+                      style={{ backgroundColor: colors.circleHex }}
+                    />
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div
+                        className="font-medium text-xs"
+                        style={{ color: isSelected ? colors.textHex : '#111827' }}
+                      >
+                        {option.label}
+                      </div>
+                      <div
+                        className="text-xs mt-0.5"
+                        style={{
+                          color: isSelected
+                            ? colors.textHex
+                            : '#4B5563',
+                        }}
+                      >
+                        {option.description}
+                      </div>
+                    </div>
+
+                    {/* Loading spinner */}
+                    {isSelected && isUpdating && (
+                      <div className="ml-1 flex-shrink-0">
+                        <Loader
+                          className="h-3.5 w-3.5 animate-spin"
+                          style={{ color: colors.textHex }}
+                        />
+                      </div>
                     )}
-                  </div>
-                )}
-              </button>
-            );
-          })}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Reset button */}
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <button
+              onClick={() => handleSelectLevel(-1)}
+              disabled={isUpdating}
+              className="text-red-600 hover:text-red-700 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Reset / Not Started
+            </button>
+          </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={onClose} disabled={isUpdating}>
-            Cancel
-          </Button>
-        </div>
-
-        {/* Info text */}
-        <div className="text-xs text-gray-500 italic px-2">
-          Click a level to update. Changes are saved immediately.
+        {/* Footer info */}
+        <div className="px-5 py-2.5 bg-gray-50 border-t border-gray-100 text-xs text-gray-500">
+          Changes save locally to this prototype
         </div>
       </DialogContent>
     </Dialog>

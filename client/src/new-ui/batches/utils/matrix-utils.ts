@@ -9,13 +9,13 @@ import { ProficiencyLevel } from '../types/matrix';
 /**
  * Get Tailwind CSS classes for a proficiency cell based on level and status
  * 
- * Color scheme:
- * - Absent: gray-100 / gray-400 text
- * - Practicing: yellow-50 / yellow-700 text
- * - L1 (50%): green-100 / green-700 text
- * - L2 (70%): green-200 / green-700 text
- * - L3 (90% Ready): blue-100 / blue-700 text
- * - L4 (95% Certified): purple-100 / purple-700 text
+ * Color scheme (custom hex codes):
+ * - Absent: #F3F4F6 / #6B7280 text
+ * - Practicing: #FEF3C7 / #92400E text
+ * - L1 (50%): #D1FAE5 / #065F46 text
+ * - L2 (70%): #86EFAC / #166534 text
+ * - L3 (90% Ready): #E9D5FF / #6B21A8 text
+ * - L4 (95% Certified): #D8B4FE / #581C87 text
  */
 export function getCellColor(
   level: ProficiencyLevel,
@@ -24,6 +24,10 @@ export function getCellColor(
   bgColor: string;
   textColor: string;
   borderColor: string;
+  bgHex: string;
+  borderHex: string;
+  circleHex: string;
+  textHex: string;
 } {
   // Absent takes priority
   if (level === -1 || status === 'absent') {
@@ -31,6 +35,10 @@ export function getCellColor(
       bgColor: 'bg-gray-100',
       textColor: 'text-gray-600',
       borderColor: 'border-gray-300',
+      bgHex: '#F3F4F6',
+      borderHex: '#D1D5DB',
+      circleHex: '#9CA3AF',
+      textHex: '#4B5563',
     };
   }
 
@@ -40,6 +48,10 @@ export function getCellColor(
       bgColor: 'bg-gray-50',
       textColor: 'text-gray-400',
       borderColor: 'border-gray-200',
+      bgHex: '#F9FAFB',
+      borderHex: '#E5E7EB',
+      circleHex: '#D1D5DB',
+      textHex: '#9CA3AF',
     };
   }
 
@@ -48,36 +60,56 @@ export function getCellColor(
     case 0: // Practicing
       return {
         bgColor: 'bg-amber-50',
-        textColor: 'text-amber-700',
-        borderColor: 'border-amber-200',
+        textColor: 'text-amber-900',
+        borderColor: 'border-amber-300',
+        bgHex: '#FEF3C7',
+        borderHex: '#FCD34D',
+        circleHex: '#F59E0B',
+        textHex: '#78350F',
       };
 
-    case 1: // 50%
+    case 1: // L1 (50%)
       return {
-        bgColor: 'bg-green-100',
-        textColor: 'text-green-700',
-        borderColor: 'border-green-300',
+        bgColor: 'bg-emerald-50',
+        textColor: 'text-emerald-800',
+        borderColor: 'border-emerald-300',
+        bgHex: '#F0FDF4',
+        borderHex: '#6EE7B7',
+        circleHex: '#059669',
+        textHex: '#065F46',
       };
 
-    case 2: // 70%
+    case 2: // L2 (70%)
       return {
-        bgColor: 'bg-green-200',
-        textColor: 'text-green-800',
-        borderColor: 'border-green-400',
+        bgColor: 'bg-green-500',
+        textColor: 'text-white',
+        borderColor: 'border-green-600',
+        bgHex: '#22C55E',
+        borderHex: '#16A34A',
+        circleHex: '#15803D',
+        textHex: '#FFFFFF',
       };
 
-    case 3: // 90% Ready
+    case 3: // L3 (90% Ready)
       return {
-        bgColor: 'bg-blue-100',
-        textColor: 'text-blue-700',
-        borderColor: 'border-blue-300',
+        bgColor: 'bg-violet-100',
+        textColor: 'text-violet-900',
+        borderColor: 'border-violet-300',
+        bgHex: '#EDE9FE',
+        borderHex: '#C4B5FD',
+        circleHex: '#7C3AED',
+        textHex: '#4C1D95',
       };
 
-    case 4: // 95% Certified
+    case 4: // L4 (95% Certified)
       return {
-        bgColor: 'bg-purple-100',
-        textColor: 'text-purple-700',
-        borderColor: 'border-purple-300',
+        bgColor: 'bg-purple-600',
+        textColor: 'text-white',
+        borderColor: 'border-purple-700',
+        bgHex: '#9333EA',
+        borderHex: '#7E22CE',
+        circleHex: '#6B21A8',
+        textHex: '#FFFFFF',
       };
 
     default:
@@ -85,6 +117,10 @@ export function getCellColor(
         bgColor: 'bg-gray-50',
         textColor: 'text-gray-600',
         borderColor: 'border-gray-200',
+        bgHex: '#F9FAFB',
+        borderHex: '#E5E7EB',
+        circleHex: '#D1D5DB',
+        textHex: '#4B5563',
       };
   }
 }
