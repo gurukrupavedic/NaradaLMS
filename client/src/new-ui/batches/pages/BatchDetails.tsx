@@ -214,8 +214,23 @@ export default function BatchDetails() {
       },
       {
         accessorKey: "email",
-        header: "EMAIL",
+        header: "CONTACT",
         cell: ({ row }) => <span className="text-sm text-foreground">{row.original.email || "—"}</span>,
+      },
+      {
+        id: "timezone",
+        header: "TIMEZONE",
+        cell: () => <span className="text-sm text-foreground">—</span>,
+      },
+      {
+        id: "lastActive",
+        header: "LAST ACTIVE",
+        cell: () => <span className="text-sm text-muted-foreground">—</span>,
+      },
+      {
+        id: "progress",
+        header: "PROGRESS",
+        cell: () => <span className="text-sm text-foreground">—</span>,
       },
       {
         id: "actions",
@@ -424,7 +439,22 @@ export default function BatchDetails() {
                         </div>
                       </TableCell>
 
-                      {/* EMAIL Column - Placeholder */}
+                      {/* CONTACT Column - Placeholder */}
+                      <TableCell>
+                        <div className="h-10 bg-muted rounded border border-dashed border-muted-foreground/40" />
+                      </TableCell>
+
+                      {/* TIMEZONE Column - Placeholder */}
+                      <TableCell>
+                        <div className="h-10 bg-muted rounded border border-dashed border-muted-foreground/40" />
+                      </TableCell>
+
+                      {/* LAST ACTIVE Column - Placeholder */}
+                      <TableCell>
+                        <div className="h-10 bg-muted rounded border border-dashed border-muted-foreground/40" />
+                      </TableCell>
+
+                      {/* PROGRESS Column - Placeholder */}
                       <TableCell>
                         <div className="h-10 bg-muted rounded border border-dashed border-muted-foreground/40" />
                       </TableCell>
@@ -437,7 +467,7 @@ export default function BatchDetails() {
 
                     {table.getRowModel().rows.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={3} className="py-6 text-center text-muted-foreground">
+                        <TableCell colSpan={7} className="py-6 text-center text-muted-foreground">
                           No enrollments yet.
                         </TableCell>
                       </TableRow>
