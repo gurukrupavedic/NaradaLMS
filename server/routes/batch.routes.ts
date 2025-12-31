@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { batchService } from "../modules/batch-cohort";
+import { authMiddleware, requireInstructor } from "../shared/middleware/auth";
 
 const router = Router();
 
@@ -36,6 +37,27 @@ router.get('/batches', async (req: Request, res: Response, next: NextFunction) =
     const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
 
     const allItems = await batchService.listBatches();
+    const total = allItems.length;
+    const paginatedItems = allItems.slice(offset, offset + limit);
+
+    res.json({ items: paginatedItems, pagination: { limit, offset, total } });
+  } catch (error) { next(error); }
+});
+
+// GET /api/batches/my-batches - List batches for current instructor (must come BEFORE :id route)
+router.get('/batches/my-batches', authMiddleware, requireInstructor, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = req.user as any;
+    const instructorId = user?.id;
+    
+    if (!instructorId) {
+      return res.status(401).json(createErrorResponse('User ID not found', 'NO_USER_ID'));
+    }
+    
+    const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
+    const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+
+    const allItems = await batchService.listInstructorBatches(instructorId);
     const total = allItems.length;
     const paginatedItems = allItems.slice(offset, offset + limit);
 

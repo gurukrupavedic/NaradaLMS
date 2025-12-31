@@ -6,6 +6,10 @@ export class BatchService {
     return batchStorage.listBatches();
   }
 
+  async listInstructorBatches(instructorId: string) {
+    return batchStorage.listInstructorBatches(instructorId);
+  }
+
   async getBatch(id: number): Promise<BatchDetail | null> {
     return batchStorage.getBatchById(id);
   }

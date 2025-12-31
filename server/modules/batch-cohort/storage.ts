@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { eq, sql, and, inArray } from "drizzle-orm";
+import { eq, sql, and, inArray, or } from "drizzle-orm";
 import { batches, enrollments, batchCoInstructors, users, tracks } from "@shared/schema";
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput } from "./types";
 
@@ -12,6 +12,38 @@ export class BatchStorage {
       })
       .from(batches)
       .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
+      .groupBy(batches.id)
+      .orderBy(batches.createdAt);
+  }
+
+  async listInstructorBatches(instructorId: string) {
+    // Get all co-instructor batch IDs for this user
+    const coInstructorBatches = await db
+      .select({ batchId: batchCoInstructors.batchId })
+      .from(batchCoInstructors)
+      .where(eq(batchCoInstructors.instructorId, instructorId));
+    
+    const coInstructorBatchIds = coInstructorBatches.map(row => row.batchId);
+
+    // Build the WHERE condition
+    let whereCondition: any;
+    if (coInstructorBatchIds.length > 0) {
+      whereCondition = or(
+        eq(batches.primaryInstructorId, instructorId),
+        inArray(batches.id, coInstructorBatchIds)
+      );
+    } else {
+      whereCondition = eq(batches.primaryInstructorId, instructorId);
+    }
+
+    return db
+      .select({
+        ...batches,
+        studentCount: sql<number>`COALESCE(COUNT(*) FILTER (WHERE ${enrollments.status} = 'active'), 0)::int`,
+      })
+      .from(batches)
+      .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
+      .where(whereCondition)
       .groupBy(batches.id)
       .orderBy(batches.createdAt);
   }

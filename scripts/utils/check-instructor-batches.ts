@@ -1,0 +1,59 @@
+import { db } from "../../server/db";
+import { users, batches, batchCoInstructors } from "@shared/schema";
+import { eq, or, inArray } from "drizzle-orm";
+
+async function checkInstructorBatches() {
+  try {
+    // Find the Kashyap user
+    const kashyapUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, "kashyap.kuchipudi@gmail.com"));
+
+    if (kashyapUser.length === 0) {
+      console.log("❌ User not found: kashyap.kuchipudi@gmail.com");
+      return;
+    }
+
+    const user = kashyapUser[0];
+    console.log(`\n✅ Found user: ${user.firstName} ${user.lastName} (ID: ${user.id})`);
+    console.log(`   Email: ${user.email}`);
+    console.log(`   Roles: ${user.roles?.join(", ")}`);
+
+    // Find batches where user is primary instructor
+    const primaryBatches = await db
+      .select()
+      .from(batches)
+      .where(eq(batches.primaryInstructorId, user.id));
+
+    console.log(`\n📚 Primary Instructor Batches: ${primaryBatches.length}`);
+    primaryBatches.forEach((b) => {
+      console.log(`   - ${b.batchCode}: ${b.batchName} (ID: ${b.id})`);
+    });
+
+    // Find batches where user is co-instructor
+    const coBatches = await db
+      .select()
+      .from(batchCoInstructors)
+      .where(eq(batchCoInstructors.instructorId, user.id));
+
+    console.log(`\n👥 Co-Instructor Batches: ${coBatches.length}`);
+    coBatches.forEach((cb) => {
+      console.log(`   - Batch ID: ${cb.batchId}`);
+    });
+
+    // Total batches for instructor
+    const totalBatchIds = new Set([
+      ...primaryBatches.map((b) => b.id),
+      ...coBatches.map((cb) => cb.batchId),
+    ]);
+    console.log(`\n✨ Total Batches for Instructor: ${totalBatchIds.size}`);
+
+    process.exit(0);
+  } catch (error) {
+    console.error("❌ Error:", error);
+    process.exit(1);
+  }
+}
+
+checkInstructorBatches();

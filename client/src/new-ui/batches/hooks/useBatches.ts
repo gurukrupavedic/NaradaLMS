@@ -20,7 +20,7 @@ export function useBatches(params?: { limit?: number; offset?: number }) {
   const limit = params?.limit ?? 50;
   const offset = params?.offset ?? 0;
   return useQuery<PaginatedResponse<BatchItem>>({
-    queryKey: [`/api/batches?limit=${limit}&offset=${offset}`],
+    queryKey: [`/api/batches/my-batches?limit=${limit}&offset=${offset}`],
     queryFn: getQueryFn({ on401: "throw" }),
   });
 }
