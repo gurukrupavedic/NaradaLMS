@@ -16,13 +16,21 @@ import { useBatch as useAdminBatch } from "../../admin/hooks/useBatch";
 import { useBatches as useInstructorBatches, type BatchItem } from "../hooks/useBatches";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
 import { BatchDetailsCard } from "../../admin/components/BatchDetailsCard";
+import { UnifiedBatchMatrix } from "../components/UnifiedBatchMatrix";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, MoreVertical } from "lucide-react";
+import { Loader2, MoreVertical, ChevronDown } from "lucide-react";
+import type {
+  StudentMatrixRow,
+  Chapter,
+  StudentProgress,
+  Track,
+  Batch as MatrixBatch,
+} from "../types/matrix";
 
 type Enrollment = {
   id: number;
@@ -65,6 +73,10 @@ export default function BatchDetails() {
     pageIndex: 0,
     pageSize: 10,
   });
+
+  // Track selection state (independent of batch)
+  const [selectedTrackId, setSelectedTrackId] = useState<string | undefined>(undefined);
+  const [showMatrixView, setShowMatrixView] = useState(false); // Toggle between table and matrix views
 
   // Enrollment typeahead state
   const [searchQuery, setSearchQuery] = useState("");
@@ -128,12 +140,19 @@ export default function BatchDetails() {
     }
   }, [batchId, batches, setLocation, context]);
 
-  // Reset pagination when batch changes
+  // Reset pagination and track when batch changes
   useEffect(() => {
     setPagination({ pageIndex: 0, pageSize: 10 });
     setSearchQuery("");
     setShowDropdown(false);
-  }, [batchId]);
+    
+    // Reset track to batch's current track (if available)
+    if (batchDetail.data?.trackId) {
+      setSelectedTrackId(String(batchDetail.data.trackId));
+    } else {
+      setSelectedTrackId(undefined);
+    }
+  }, [batchId, batchDetail.data?.trackId]);
 
   // Handle dropdown visibility
   useEffect(() => {
@@ -338,6 +357,171 @@ export default function BatchDetails() {
         </div>
       ) : (
         <div className="space-y-6">
+          {/* Page-Level Controls: Batch & Track Selection */}
+          <div className="flex flex-wrap items-center gap-4 bg-muted/30 rounded-lg p-4 border border-border/50">
+            {/* Batch Selector */}
+            <div className="flex items-center gap-3 flex-1 min-w-[300px]">
+              <label htmlFor="batch-select" className="text-sm font-medium text-foreground whitespace-nowrap">
+                Batch:
+              </label>
+              <select
+                id="batch-select"
+                value={batchId}
+                onChange={(e) => setLocation(`/app/${context}/batches/${Number(e.target.value)}`)}
+                className="flex-1 h-9 px-3 py-1 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {batches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.batchCode} - {b.batchName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Track Selector (Independent) */}
+            <div className="flex items-center gap-3 flex-1 min-w-[300px]">
+              <label htmlFor="track-select" className="text-sm font-medium text-foreground whitespace-nowrap">
+                Track:
+              </label>
+              <select
+                id="track-select"
+                value={selectedTrackId || ''}
+                onChange={(e) => setSelectedTrackId(e.target.value || undefined)}
+                className="flex-1 h-9 px-3 py-1 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">-- Select Track --</option>
+                {/* In Phase 3, this will be populated with actual tracks from API */}
+                <option value="1">Track 1 - Shankara's Upanishads</option>
+                <option value="2">Track 2 - Brahma Sutras</option>
+                <option value="3">Track 3 - Bhagavad Gita</option>
+                <option value="4">Track 4 - Mandukya Upanishad</option>
+                <option value="5">Track 5 - Taittiriya Upanishad</option>
+              </select>
+            </div>
+
+            {/* View Toggle */}
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant={showMatrixView ? 'default' : 'outline'}
+                onClick={() => setShowMatrixView(true)}
+              >
+                Matrix View
+              </Button>
+              <Button
+                size="sm"
+                variant={!showMatrixView ? 'default' : 'outline'}
+                onClick={() => setShowMatrixView(false)}
+              >
+                Table View
+              </Button>
+            </div>
+          </div>
+
+          {/* Matrix View (Phase 1 - UI Only) */}
+          {showMatrixView && (
+            <div className="space-y-3">
+              <h2 className="text-lg font-semibold text-foreground">Proficiency Matrix</h2>
+              <UnifiedBatchMatrix
+                students={[
+                  // Mock data for Phase 1
+                  {
+                    id: '1',
+                    firstName: 'Anya',
+                    lastName: 'Sharma',
+                    email: 'anya@vedic.com',
+                    enrollmentId: 101,
+                  },
+                  {
+                    id: '2',
+                    firstName: 'Bhavna',
+                    lastName: 'Patel',
+                    email: 'bhavna@vedic.com',
+                    enrollmentId: 102,
+                  },
+                  {
+                    id: '3',
+                    firstName: 'Chand',
+                    lastName: 'Kumar',
+                    email: 'chand@vedic.com',
+                    enrollmentId: 103,
+                  },
+                ] as StudentMatrixRow[]}
+                chapters={[
+                  // Mock chapters for selected track (Phase 1)
+                  {
+                    id: 'ch1',
+                    code: 'INTRO',
+                    title: 'Introduction',
+                    trackId: selectedTrackId || '1',
+                  },
+                  {
+                    id: 'ch2',
+                    code: 'MANTRA',
+                    title: 'Core Mantras',
+                    trackId: selectedTrackId || '1',
+                  },
+                  {
+                    id: 'ch3',
+                    code: 'MEANING',
+                    title: 'Meaning & Context',
+                    trackId: selectedTrackId || '1',
+                  },
+                ] as Chapter[]}
+                progress={[
+                  // Mock progress data (Phase 1)
+                  {
+                    studentId: '1',
+                    chapterId: 'ch1',
+                    proficiencyLevel: 3,
+                    status: 'completed',
+                    lastUpdated: new Date(),
+                  },
+                  {
+                    studentId: '1',
+                    chapterId: 'ch2',
+                    proficiencyLevel: 2,
+                    status: 'completed',
+                    lastUpdated: new Date(),
+                  },
+                  {
+                    studentId: '2',
+                    chapterId: 'ch1',
+                    proficiencyLevel: 1,
+                    status: 'practicing',
+                    lastUpdated: new Date(),
+                  },
+                  {
+                    studentId: '3',
+                    chapterId: 'ch1',
+                    proficiencyLevel: -1,
+                    status: 'absent',
+                    lastUpdated: new Date(),
+                  },
+                ] as StudentProgress[]}
+                selectedBatchId={String(batchId)}
+                selectedTrackId={selectedTrackId || ''}
+                onAddStudent={async (studentId) => {
+                  // Phase 3: Actually enroll student
+                  console.log('Add student:', studentId);
+                }}
+                onDropStudent={async (enrollmentId) => {
+                  // Phase 3: Actually drop student
+                  console.log('Drop enrollment:', enrollmentId);
+                }}
+                onUpdateProficiency={async (studentId, chapterId, level) => {
+                  // Phase 3: Actually update proficiency
+                  console.log('Update proficiency:', studentId, chapterId, level);
+                }}
+                isLoading={false}
+                isUpdating={false}
+              />
+            </div>
+          )}
+
+          {/* Table View (Original Enrollments Table) */}
+          {!showMatrixView && (
+            <>
           {/* Enrollments Section */}
           <div className="space-y-3">
             <h2 className="text-lg font-semibold text-foreground">Enrollments</h2>
@@ -504,6 +688,8 @@ export default function BatchDetails() {
             />
           )}
           </div>
+            </>
+          )}
         </div>
       )}
     </div>
