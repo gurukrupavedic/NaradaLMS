@@ -1,8 +1,8 @@
 # VedicLMS MVP Implementation Plan
 
-**Last Updated:** December 25, 2025  
-**Status:** Phase 7.3 Admin Center Complete → Batches & Progress, Content Studio, Learning Next  
-**Current Phase:** Phase 7.3 - Admin Center refinement complete
+**Last Updated:** December 30, 2025  
+**Status:** Admin Center Complete → Batches & Progress In Progress  
+**Current Phase:** Phase 7.4 - Batches & Progress refinement
 
 ---
 
@@ -573,23 +573,40 @@ All Admin Center pages have been refined with professional loading/empty/error s
 - ✅ Loading skeleton, empty state, error state with retry
 - ✅ Toast notifications for all interactions
 
-**Next Phase: Batches & Progress, Content Studio, Learning (Starting December 26, 2025)**
+**Next Phase: Batches & Progress, Content Studio, Learning (Started December 30, 2025)**
 
-Admin Center refinement is complete. The following modules are scheduled for the next phase of refinement:
+Admin Center refinement is complete. Batches & Progress is now in active development.
 
 **Batches & Progress:**
-- [ ] MyBatchesList
-  - [ ] Add loading skeletons (card grid)
-  - [ ] Empty state for no batches with CTA
-  - [ ] Error boundary with retry
-  - [ ] Standard header (breadcrumbs/actions)
-  - [ ] Toast audit
-- [ ] BatchDetail (instructor view)
-  - [ ] Loading skeletons (table + side cards)
-  - [ ] Empty states (no students, no progress)
-  - [ ] Error boundary with retry
-  - [ ] Standard header (breadcrumbs/actions/filters)
-  - [ ] Toast audit
+- ✅ MyBatchesList (Complete - December 30, 2025)
+  - ✅ Professional loading skeletons (4-card grid preview)
+  - ✅ Empty state with GraduationCap icon and helpful message
+  - ✅ Error boundary with retry button
+  - ✅ Card layout matching Admin Center quality
+  - ✅ 3-column metadata grid (Track, Instructors, Cohort Type, Enrollment, Dates)
+  - ✅ Backend: `/api/batches/my-batches` with instructor filtering (primary + co-instructor)
+- ✅ BatchDetails - Unified Component (Complete - December 30, 2025)
+  - ✅ Merged admin and instructor views into single component
+  - ✅ Dual route support: `/app/admin/batches/:id` AND `/app/instructor/batches/:id`
+  - ✅ Context-aware batch fetching (all batches for admin, instructor's batches only)
+  - ✅ Shared BatchDetailsCard with collapsible header
+  - ✅ Full enrollment table with TanStack Table (sorting, pagination)
+  - ✅ Typeahead student search with keyboard navigation
+  - ✅ Add/drop enrollment functionality
+  - ✅ Toast notifications for all mutations
+  - ✅ Loading skeletons and error states
+  - ✅ Professional table styling matching Admin Center patterns
+- [ ] Batch Progress Tracker (Next)
+  - [ ] View switcher: Individual Student vs. Batch Overview
+  - [ ] Student progress table with proficiency levels (0-4 scale)
+  - [ ] Batch heatmap visualization
+  - [ ] Progress update workflow
+  - [ ] Standard header with filters
+- [ ] Student Progress Tracker (Next)
+  - [ ] Student-specific progress view
+  - [ ] Chapter-level proficiency display
+  - [ ] Historical progress tracking
+  - [ ] Notes and evaluation interface
 
 **Content Studio:**
 - [ ] Content Studio Home
@@ -605,6 +622,11 @@ Admin Center refinement is complete. The following modules are scheduled for the
 - Standardized headers and toast patterns
 - Consistent UX across all sections
 - Incremental commits, review after each module
+
+**Architecture Notes (December 30, 2025):**
+- Unified batch details reduces duplication and ensures feature parity between admin and instructor
+- Both roles now share enrollment management, progress tracking, and batch overview capabilities
+- Next focus: Progress tracker interfaces for batch-level and student-level views
 
 ---
 
