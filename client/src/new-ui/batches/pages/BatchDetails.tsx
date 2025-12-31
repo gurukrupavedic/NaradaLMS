@@ -318,14 +318,14 @@ export default function BatchDetails() {
       <div className="flex flex-wrap items-center gap-6">
         {/* Batch Selector */}
         <div className="flex items-center gap-3 flex-1 min-w-[300px]">
-          <label htmlFor="batch-select" className="text-sm font-medium text-foreground whitespace-nowrap">
+          <label htmlFor="batch-select" className="text-sm font-medium text-foreground dark:text-gray-100 whitespace-nowrap">
             Batch:
           </label>
           <select
             id="batch-select"
             value={batchId}
             onChange={(e) => setLocation(`/app/${context}/batches/${Number(e.target.value)}`)}
-            className="flex-1 h-9 px-3 py-1 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1 h-9 px-3 py-1 rounded-md border border-border dark:border-gray-600 bg-background dark:bg-gray-800 text-foreground dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             {batches.map((b) => (
               <option key={b.id} value={b.id}>
@@ -337,18 +337,16 @@ export default function BatchDetails() {
 
         {/* Track Selector (Independent) */}
         <div className="flex items-center gap-3 flex-1 min-w-[300px]">
-          <label htmlFor="track-select" className="text-sm font-medium text-foreground whitespace-nowrap">
+          <label htmlFor="track-select" className="text-sm font-medium text-foreground dark:text-gray-100 whitespace-nowrap">
             Track:
           </label>
           <select
             id="track-select"
             value={selectedTrackId || ''}
             onChange={(e) => setSelectedTrackId(e.target.value || undefined)}
-            className="flex-1 h-9 px-3 py-1 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1 h-9 px-3 py-1 rounded-md border border-border dark:border-gray-600 bg-background dark:bg-gray-800 text-foreground dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">-- Select Track --</option>
-            {/* In Phase 3, this will be populated with actual tracks from API */}
-            <option value="1">Track 1 - Shankara's Upanishads</option>
             <option value="2">Track 2 - Brahma Sutras</option>
             <option value="3">Track 3 - Bhagavad Gita</option>
             <option value="4">Track 4 - Mandukya Upanishad</option>

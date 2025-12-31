@@ -24,6 +24,9 @@ export function getCellColor(
   bgColor: string;
   textColor: string;
   borderColor: string;
+  darkBgColor: string;
+  darkTextColor: string;
+  darkBorderColor: string;
   bgHex: string;
   borderHex: string;
   circleHex: string;
@@ -35,6 +38,9 @@ export function getCellColor(
       bgColor: 'bg-gray-100',
       textColor: 'text-gray-600',
       borderColor: 'border-gray-300',
+      darkBgColor: 'dark:bg-gray-800',
+      darkTextColor: 'dark:text-gray-400',
+      darkBorderColor: 'dark:border-gray-600',
       bgHex: '#F3F4F6',
       borderHex: '#D1D5DB',
       circleHex: '#9CA3AF',
@@ -48,6 +54,9 @@ export function getCellColor(
       bgColor: 'bg-gray-50',
       textColor: 'text-gray-400',
       borderColor: 'border-gray-200',
+      darkBgColor: 'dark:bg-gray-900',
+      darkTextColor: 'dark:text-gray-500',
+      darkBorderColor: 'dark:border-gray-700',
       bgHex: '#F9FAFB',
       borderHex: '#E5E7EB',
       circleHex: '#D1D5DB',
@@ -62,6 +71,9 @@ export function getCellColor(
         bgColor: 'bg-amber-50',
         textColor: 'text-amber-900',
         borderColor: 'border-amber-300',
+        darkBgColor: 'dark:bg-amber-900/30',
+        darkTextColor: 'dark:text-amber-200',
+        darkBorderColor: 'dark:border-amber-700',
         bgHex: '#FEF3C7',
         borderHex: '#FCD34D',
         circleHex: '#F59E0B',
@@ -73,6 +85,9 @@ export function getCellColor(
         bgColor: 'bg-emerald-50',
         textColor: 'text-emerald-800',
         borderColor: 'border-emerald-300',
+        darkBgColor: 'dark:bg-emerald-900/30',
+        darkTextColor: 'dark:text-emerald-200',
+        darkBorderColor: 'dark:border-emerald-700',
         bgHex: '#F0FDF4',
         borderHex: '#6EE7B7',
         circleHex: '#059669',
@@ -84,6 +99,9 @@ export function getCellColor(
         bgColor: 'bg-green-500',
         textColor: 'text-white',
         borderColor: 'border-green-600',
+        darkBgColor: 'dark:bg-green-700',
+        darkTextColor: 'dark:text-white',
+        darkBorderColor: 'dark:border-green-800',
         bgHex: '#22C55E',
         borderHex: '#16A34A',
         circleHex: '#15803D',
@@ -95,6 +113,9 @@ export function getCellColor(
         bgColor: 'bg-violet-100',
         textColor: 'text-violet-900',
         borderColor: 'border-violet-300',
+        darkBgColor: 'dark:bg-violet-900/30',
+        darkTextColor: 'dark:text-violet-200',
+        darkBorderColor: 'dark:border-violet-700',
         bgHex: '#EDE9FE',
         borderHex: '#C4B5FD',
         circleHex: '#7C3AED',
@@ -106,6 +127,9 @@ export function getCellColor(
         bgColor: 'bg-purple-600',
         textColor: 'text-white',
         borderColor: 'border-purple-700',
+        darkBgColor: 'dark:bg-purple-800',
+        darkTextColor: 'dark:text-white',
+        darkBorderColor: 'dark:border-purple-900',
         bgHex: '#9333EA',
         borderHex: '#7E22CE',
         circleHex: '#6B21A8',
@@ -117,6 +141,9 @@ export function getCellColor(
         bgColor: 'bg-gray-50',
         textColor: 'text-gray-600',
         borderColor: 'border-gray-200',
+        darkBgColor: 'dark:bg-gray-900',
+        darkTextColor: 'dark:text-gray-400',
+        darkBorderColor: 'dark:border-gray-700',
         bgHex: '#F9FAFB',
         borderHex: '#E5E7EB',
         circleHex: '#D1D5DB',

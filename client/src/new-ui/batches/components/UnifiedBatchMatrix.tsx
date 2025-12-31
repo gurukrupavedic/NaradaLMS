@@ -279,7 +279,7 @@ export function UnifiedBatchMatrix({
               className={`
                 h-14 w-20 flex items-center justify-center rounded-lg
                 border-2 transition-all cursor-pointer
-                ${colors.bgColor} ${colors.textColor} ${colors.borderColor}
+                ${colors.bgColor} ${colors.darkBgColor} ${colors.textColor} ${colors.darkTextColor} ${colors.borderColor} ${colors.darkBorderColor}
                 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50
                 font-semibold text-sm
               `}
@@ -394,17 +394,17 @@ export function UnifiedBatchMatrix({
       </div>
 
       {/* Matrix Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-300 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 shadow-sm">
         <table className="w-full border-collapse">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="border-b-2 border-gray-300 bg-gray-50">
+              <tr key={headerGroup.id} className="border-b-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900">
                 {headerGroup.headers.map((header) => (
                   // eslint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role
                   <th
                     key={header.id}
-                    className={`px-3 py-2 text-left text-sm font-semibold text-gray-800 ${
-                      header.id === 'student' ? 'sticky left-0 z-10 bg-gray-50' : ''
+                    className={`px-3 py-2 text-left text-sm font-semibold text-gray-800 dark:text-gray-200 ${
+                      header.id === 'student' ? 'sticky left-0 z-10 bg-gray-50 dark:bg-gray-900' : ''
                     }`}
                     // eslint-disable-next-line react/no-unknown-property, react/style-prop-object
                     style={{
@@ -422,13 +422,13 @@ export function UnifiedBatchMatrix({
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="border-b border-gray-200 hover:bg-gray-50/50 transition-colors"
+                className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors"
               >
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
                     className={`px-3 py-2 ${
-                      cell.column.id === 'student' ? 'sticky left-0 z-10 bg-white' : 'text-center'
+                      cell.column.id === 'student' ? 'sticky left-0 z-10 bg-white dark:bg-gray-950' : 'text-center'
                     }`}
                     // eslint-disable-next-line react/no-unknown-property
                     style={{
@@ -437,7 +437,7 @@ export function UnifiedBatchMatrix({
                   >
                     {/* Sticky left column */}
                     {cell.column.id === 'student' ? (
-                      <div className="sticky left-0 bg-white">
+                      <div className="sticky left-0 bg-white dark:bg-gray-950">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </div>
                     ) : (
