@@ -5,6 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Track } from '../types/matrix';
 
+const scrollbarHideStyles = `
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
 interface TrackTabsProps {
   tracks: Track[];
   selectedTrackId: string | undefined;
@@ -45,8 +55,10 @@ export function TrackTabs({
   }
 
   return (
-    <Tabs value={selectedTrackId} onValueChange={onSelectTrack} className="w-full">
-      <TabsList className="w-full justify-start overflow-x-auto bg-gray-100 dark:bg-gray-800 p-1">
+    <>
+      <style>{scrollbarHideStyles}</style>
+      <Tabs value={selectedTrackId} onValueChange={onSelectTrack} className="w-full">
+      <TabsList className="w-full justify-start overflow-x-auto bg-gray-100 dark:bg-gray-800 p-1 scrollbar-hide">
         {tracks.map((track) => {
           const isCurrentTrack = currentTrackId === String(track.id);
           return (
@@ -56,7 +68,7 @@ export function TrackTabs({
               className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-white dark:data-[state=active]:bg-gray-900"
             >
               <span className="text-sm font-medium">
-                Track {track.order} - {track.name}
+                Track {track.order}
               </span>
               {isCurrentTrack && (
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
@@ -74,5 +86,6 @@ export function TrackTabs({
         </TabsContent>
       ))}
     </Tabs>
+    </>
   );
 }

@@ -175,34 +175,46 @@ export function UnifiedBatchMatrix({
       cell: (info) => {
         const student = info.row.original;
         return (
-          <div className="flex items-center gap-2 pr-2">
-            <div className="flex items-center gap-2 min-w-0">
-              {/* Student Initials Badge */}
-              <div
-                className={`${getInitialBgColor(
-                  student.id
-                )} text-white font-bold rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 text-xs`}
-                title={`${student.firstName} ${student.lastName}`}
-              >
-                {getInitials(student.firstName, student.lastName)}
-              </div>
-              
-              {/* Student Info */}
-              <div className="min-w-0">
-                <div className="truncate font-medium text-sm">
-                  {student.firstName} {student.lastName}
-                </div>
-                <div className="truncate text-xs text-gray-500">{student.email}</div>
-              </div>
+          <div className="px-2 py-2 flex items-center gap-2 min-w-0">
+            {/* Student Initials Badge */}
+            <div
+              className={`${getInitialBgColor(
+                student.id
+              )} text-white font-bold rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 text-xs`}
+              title={`${student.firstName} ${student.lastName}`}
+            >
+              {getInitials(student.firstName, student.lastName)}
             </div>
+            
+            {/* Student Info */}
+            <div className="min-w-0">
+              <div className="truncate font-medium text-sm">
+                {student.firstName} {student.lastName}
+              </div>
+              <div className="truncate text-xs text-gray-500">{student.email}</div>
+            </div>
+          </div>
+        );
+      },
+      size: 220,
+      enableSorting: false,
+      enableHiding: false,
+    }),
 
-            {/* Kebab menu [⋮] */}
+    // Actions column (sticky)
+    columnHelper.display({
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => {
+        const student = row.original;
+        return (
+          <div className="px-2 py-2 flex items-center justify-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-8 w-8 p-0 flex-shrink-0"
+                  className="h-8 w-8 p-0"
                   title="Student actions menu"
                 >
                   <MoreVertical className="h-4 w-4" />
@@ -223,7 +235,7 @@ export function UnifiedBatchMatrix({
           </div>
         );
       },
-        size: undefined,
+      size: 44,
       enableSorting: false,
       enableHiding: false,
     }),
@@ -237,7 +249,7 @@ export function UnifiedBatchMatrix({
             <div className="text-xs font-bold text-gray-900 whitespace-nowrap">
               {chapter.code}
             </div>
-            <div className="text-xs text-gray-600 whitespace-nowrap line-clamp-2 text-center">
+            <div className="text-xs text-gray-600 line-clamp-2 text-center" title={chapter.title}>
               {chapter.title}
             </div>
           </div>
@@ -274,6 +286,11 @@ export function UnifiedBatchMatrix({
     data: students,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    columnSizeDefaults: {
+      size: 80,
+      minSize: 50,
+      maxSize: 500,
+    },
   });
 
   // Loading state
@@ -299,25 +316,29 @@ export function UnifiedBatchMatrix({
   return (
     <div className="space-y-4">
       {/* Matrix Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 shadow-sm">
+      <div className="overflow-x-auto overflow-y-hidden rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 shadow-sm">
         <table className="w-full border-collapse">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id} className="border-b-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900">
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className={`px-2 py-2 text-left text-sm font-semibold text-gray-800 dark:text-gray-200 ${
-                      header.id === 'student' ? 'sticky left-0 z-10 bg-gray-50 dark:bg-gray-900' : ''
-                    }`}
-                    // eslint-disable-next-line react/no-unknown-property, react/style-prop-object
-                    style={{
-                      width: `${header.getSize()}px`,
-                    } as any}
-                  >
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const isSticky = header.id === 'student' || header.id === 'actions';
+                  
+                  return (
+                    <th
+                      key={header.id}
+                      className={`text-left text-sm font-semibold text-gray-800 dark:text-gray-200 ${
+                        isSticky ? 'sticky z-20 bg-gray-50 dark:bg-gray-900 p-0' : 'px-2 py-2'
+                      }`}
+                      style={{
+                        width: `${header.getSize()}px`,
+                        left: isSticky ? (header.id === 'actions' ? '220px' : '0px') : undefined,
+                      } as any}
+                    >
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    </th>
+                  );
+                })}
               </tr>
             ))}
           </thead>
@@ -328,27 +349,24 @@ export function UnifiedBatchMatrix({
                 key={row.id}
                 className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors"
               >
-                {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className={`px-2 py-2 ${
-                      cell.column.id === 'student' ? 'sticky left-0 z-10 bg-white dark:bg-gray-950' : 'text-center'
-                    }`}
-                    // eslint-disable-next-line react/no-unknown-property
-                    style={{
-                      width: `${cell.column.getSize()}px`,
-                    } as any}
-                  >
-                    {/* Sticky left column */}
-                    {cell.column.id === 'student' ? (
-                      <div className="sticky left-0 bg-white dark:bg-gray-950">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </div>
-                    ) : (
-                      flexRender(cell.column.columnDef.cell, cell.getContext())
-                    )}
-                  </td>
-                ))}
+                {row.getVisibleCells().map((cell) => {
+                  const isSticky = cell.column.id === 'student' || cell.column.id === 'actions';
+                  
+                  return (
+                    <td
+                      key={cell.id}
+                      className={`${
+                        isSticky ? 'sticky z-20 bg-white dark:bg-gray-950 p-0' : 'px-2 py-2 text-center'
+                      }`}
+                      style={{
+                        width: `${cell.column.getSize()}px`,
+                        left: isSticky ? (cell.column.id === 'actions' ? '220px' : '0px') : undefined,
+                      } as any}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
