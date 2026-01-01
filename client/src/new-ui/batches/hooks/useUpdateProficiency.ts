@@ -57,9 +57,11 @@ export function useUpdateProficiency() {
 
       return response.json();
     },
-    onSuccess: (_, variables) => {
-      // Invalidate batch progress to refresh matrix
-      queryClient.invalidateQueries({ queryKey: ['batch-progress', variables.batchId] });
+    onSuccess: async (data, variables, context) => {
+      // Invalidate batch progress query to trigger refetch
+      await queryClient.invalidateQueries({ 
+        queryKey: [`/api/batches/${variables.batchId}/progress`],
+      });
     },
   });
 }

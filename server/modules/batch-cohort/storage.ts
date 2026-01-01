@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { eq, sql, and, inArray, or } from "drizzle-orm";
-import { batches, enrollments, batchCoInstructors, users, tracks } from "@shared/schema";
+import { batches, enrollments, batchCoInstructors, users, tracks, studentProgress, chapters } from "@shared/schema";
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput } from "./types";
 
 export class BatchStorage {
@@ -406,9 +406,6 @@ export class BatchStorage {
 
   // Phase 5: Evaluation methods
   async getBatchProgress(batchId: number) {
-    const { studentProgress, chapters } = await import('@shared/schema');
-    const { and, inArray } = await import('drizzle-orm');
-
     // Get batch info
     const batchInfo = await this.getBatchById(batchId);
     if (!batchInfo) return null;
