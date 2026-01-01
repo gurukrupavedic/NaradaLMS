@@ -1,34 +1,13 @@
 import React from "react";
 import { ChevronDown } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import type { BatchDetail } from "../hooks/useBatches";
- 
-interface Batch {
-  id: number;
-  batchCode: string;
-  batchName: string;
-  trackId?: number | null;
-  primaryInstructorId?: string | null;
-  cohortType?: string | null;
-  description?: string | null;
-  studentCount?: number;
-  createdAt?: string;
-  updatedAt?: string;
-}
 
 interface BatchDetailsCardProps {
   batch: BatchDetail;
-  batches: Batch[];
-  batchesLoading?: boolean;
-  onBatchChange: (id: number) => void;
 }
 
-export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange }: BatchDetailsCardProps) {
+export function BatchDetailsCard({ batch }: BatchDetailsCardProps) {
   const [collapsed, setCollapsed] = React.useState(false);
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const nextId = Number(e.target.value);
-    if (nextId) onBatchChange(nextId);
-  };
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return "—";
@@ -54,6 +33,13 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
     return `${n} ${n === 1 ? "Student" : "Students"}`;
   };
 
+  const formatTrack = () => {
+    if (!batch.track) return "—";
+    const trackName = batch.track.title || batch.track.name || "Untitled Track";
+    const trackOrder = batch.track.order;
+    return trackOrder ? `Track ${trackOrder} - ${trackName}` : trackName;
+  };
+
   const coInstructorsList = batch.coInstructors?.length
     ? batch.coInstructors.map((ci) => formatInstructorName(ci.firstName, ci.lastName)).join(", ")
     : "—";
@@ -68,7 +54,7 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
               {batch.batchCode} - {batch.batchName}
             </span>
             <span className="opacity-60">•</span>
-            <span>{batch.track?.title || batch.track?.name || "—"}</span>
+            <span>{formatTrack()}</span>
             <span className="opacity-60">•</span>
             <span>{formatCohortType(batch.cohortType)}</span>
             <span className="opacity-60">•</span>
@@ -99,38 +85,20 @@ export function BatchDetailsCard({ batch, batches, batchesLoading, onBatchChange
       <>
       {/* Grid ordered as requested */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3 space-y-3">
-        {/* Row 1: Batch, Current Track, Cohort Type */}
+        {/* Row 1: Batch Code/Name, Current Track, Cohort Type */}
         <div className="space-y-2">
           <div className="space-y-1">
             <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Batch</div>
-            {batchesLoading ? (
-              <Skeleton className="h-8 w-56" />
-            ) : batches.length > 0 ? (
-              <div className="relative inline-flex items-center">
-                <select
-                  value={batch.id}
-                  onChange={handleSelectChange}
-                  title="Select a batch"
-                  className="appearance-none bg-transparent pr-6 text-sm font-medium text-foreground cursor-pointer focus:outline-none focus:ring-0 border-0 h-8 dark:[&>option]:bg-black dark:[&>option]:text-white [&>option]:bg-white [&>option]:text-black"
-                >
-                  {batches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.batchCode} - {b.batchName}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-0 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
-              </div>
-            ) : (
-              <span className="text-sm text-muted-foreground">No batches</span>
-            )}
+            <div className="text-sm font-medium text-foreground">
+              {batch.batchCode} - {batch.batchName}
+            </div>
           </div>
         </div>
 
         <div className="space-y-2">
           <div className="space-y-1">
             <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Current Track</div>
-            <div className="text-sm font-medium text-foreground">{batch.track?.title || batch.track?.name || "—"}</div>
+            <div className="text-sm font-medium text-foreground">{formatTrack()}</div>
           </div>
         </div>
 

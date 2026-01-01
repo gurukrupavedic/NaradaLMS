@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { eq, sql, and, inArray } from "drizzle-orm";
+import { eq, sql, and, inArray, or } from "drizzle-orm";
 import { batches, enrollments, batchCoInstructors, users, tracks } from "@shared/schema";
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput } from "./types";
 
@@ -14,6 +14,75 @@ export class BatchStorage {
       .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
       .groupBy(batches.id)
       .orderBy(batches.createdAt);
+  }
+
+  async listInstructorBatches(instructorId: string) {
+    // Get all co-instructor batch IDs for this user
+    const coInstructorBatches = await db
+      .select({ batchId: batchCoInstructors.batchId })
+      .from(batchCoInstructors)
+      .where(eq(batchCoInstructors.instructorId, instructorId));
+    
+    const coInstructorBatchIds = coInstructorBatches.map(row => row.batchId);
+
+    // Build the WHERE condition
+    let whereCondition: any;
+    if (coInstructorBatchIds.length > 0) {
+      whereCondition = or(
+        eq(batches.primaryInstructorId, instructorId),
+        inArray(batches.id, coInstructorBatchIds)
+      );
+    } else {
+      whereCondition = eq(batches.primaryInstructorId, instructorId);
+    }
+
+    const batchRows = await db
+      .select({
+        ...batches,
+        studentCount: sql<number>`COALESCE(COUNT(*) FILTER (WHERE ${enrollments.status} = 'active'), 0)::int`,
+        primaryInstructorFirstName: users.firstName,
+        primaryInstructorLastName: users.lastName,
+        trackName: tracks.title,
+      })
+      .from(batches)
+      .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
+      .leftJoin(users, eq(users.id, batches.primaryInstructorId))
+      .leftJoin(tracks, eq(tracks.id, batches.trackId))
+      .where(whereCondition)
+      .groupBy(batches.id, users.id, tracks.id)
+      .orderBy(batches.createdAt);
+
+    // Enrich with instructor names and co-instructors
+    return Promise.all(
+      batchRows.map(async (batch) => {
+        const coInstructors = await db
+          .select({
+            firstName: users.firstName,
+            lastName: users.lastName,
+          })
+          .from(batchCoInstructors)
+          .leftJoin(users, eq(users.id, batchCoInstructors.instructorId))
+          .where(eq(batchCoInstructors.batchId, batch.id));
+
+        const coInstructorNames = coInstructors
+          .filter(ci => ci.firstName && ci.lastName)
+          .map(ci => `${ci.firstName} ${ci.lastName}`)
+          .join(", ");
+
+        const primaryInstructorName = batch.primaryInstructorFirstName && batch.primaryInstructorLastName
+          ? `${batch.primaryInstructorFirstName} ${batch.primaryInstructorLastName}`
+          : null;
+
+        // Remove the individual name fields and add the combined name
+        const { primaryInstructorFirstName, primaryInstructorLastName, ...rest } = batch;
+
+        return {
+          ...rest,
+          primaryInstructorName,
+          coInstructorNames: coInstructorNames || null,
+        };
+      })
+    );
   }
 
   async getBatchById(id: number) {
@@ -32,7 +101,7 @@ export class BatchStorage {
 
     const track = base.trackId
       ? (await db
-          .select({ id: tracks.id, title: tracks.title, name: tracks.title })
+          .select({ id: tracks.id, title: tracks.title, name: tracks.title, order: tracks.order })
           .from(tracks)
           .where(eq(tracks.id, base.trackId)))[0] || null
       : null;

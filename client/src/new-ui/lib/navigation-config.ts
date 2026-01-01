@@ -51,12 +51,12 @@ const batchesSection: NavSection = {
   items: [
     {
       title: 'My Batches',
-      url: '/app/batches',
+      url: '/app/instructor/batches',
       icon: Users,
     },
     {
       title: 'Student Progress',
-      url: '/app/batches/progress',
+      url: '/app/instructor/batches/progress',
       icon: BarChart3,
     },
   ],

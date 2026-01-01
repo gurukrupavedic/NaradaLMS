@@ -177,11 +177,10 @@ npm run check     # TypeScript type checking
   - Font classes: `font-telugu`, `font-devanagari`, `font-iast`
 
 ### Design System
-- **Color philosophy:** Modern, vibrant (blue/green/purple/orange/pink/indigo) - **NOT** traditional brown/gold
-- **Components:** Use `client/src/components/design-system/` custom variants (26 components)
-- **Tabs:** Indigo variant with sm/md/lg sizes (used in chapter editor)
-- **Cards:** 12 color variants + educational semantics (lesson/progress/content)
-- **Badges:** 96px consistent width; semantic colors based on segment state
+- **Always use shadcn/ui components** - Never use native HTML form elements (`<select>`, `<input>`, `<button>`, etc.)
+  - Use shadcn equivalents from `@/components/ui/*` (Select, Input, Button, Badge, etc.)
+  - If a needed shadcn component is missing, inform the user before implementing custom alternatives
+  - Maintain consistent component usage across the application
 
 ### Chapter Editor Pattern (5 Tabs)
 1. **Content Editor:** HTML/Text toggle, TipTap WYSIWYG, script switcher

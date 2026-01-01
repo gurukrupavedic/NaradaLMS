@@ -10,12 +10,11 @@ import { AppLayout } from './components/app-layout';
 import UserManagement from './admin/pages/UserManagement';
 import AuditLogs from './admin/pages/AuditLogs';
 import BatchManagement from './admin/pages/BatchManagement';
-import BatchDetailAdmin from './admin/pages/BatchDetailAdmin';
 import SystemSettings from './admin/pages/SystemSettings';
 
-// Batch pages
+// Batch pages (unified)
 import MyBatchesList from './batches/pages/MyBatchesList';
-import BatchDetail from './batches/pages/BatchDetail';
+import BatchDetails from './batches/pages/BatchDetails';
 
 // Learning & Content (placeholders for now)
 const LearningPage = () => <div className="p-8"><h1 className="text-3xl font-bold">Learning Dashboard</h1></div>;
@@ -46,14 +45,14 @@ export default function AppShell() {
           <Route path="/app" component={LearningPage} />
           <Route path="/app/learning" component={LearningPage} />
           <Route path="/app/learning/courses" component={CourseContentPage} />
-          <Route path="/app/batches/:id" component={BatchDetail} />
-          <Route path="/app/batches" component={MyBatchesList} />
+          <Route path="/app/instructor/batches/:id" component={BatchDetails} />
+          <Route path="/app/instructor/batches" component={MyBatchesList} />
           <Route path="/app/content" component={ContentPage} />
           <Route path="/app/admin" component={() => { window.location.href = '/app/admin/users'; return null; }} />
           <Route path="/app/admin/users" component={UserManagement} />
           <Route path="/app/admin/logs" component={AuditLogs} />
           <Route path="/app/admin/settings" component={SystemSettings} />
-          <Route path="/app/admin/batches/:id" component={BatchDetailAdmin} />
+          <Route path="/app/admin/batches/:id" component={BatchDetails} />
           <Route path="/app/admin/batches" component={BatchManagement} />
           <Route component={() => <div className="p-8">Not Found</div>} />
         </Switch>

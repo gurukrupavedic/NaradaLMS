@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary, AppErrorFallback } from "@/components/ui/error-boundary";
 import { LoadingScreen } from "@/components/ui/loading-screen";
+import InstructorMatrixPrototype from "@/temp-prototype/InstructorMatrixPrototype";
 import { useAuth } from "@/features/shared-features/hooks/useAuth";
 import { useWarmTrackCache } from "@/lib/query-prefetch";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -34,7 +35,7 @@ const AppShell = lazy(() => import("@/new-ui/AppShell"));
 // Simple inline NotFound component
 const SimpleNotFound = () => {
   const [, navigate] = useLocation();
-  
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
       <div className="text-center">
@@ -56,7 +57,7 @@ const SimpleNotFound = () => {
 function Router() {
   const { isAuthenticated, isLoading, user, isPendingApproval } = useAuth();
   const [location, navigate] = useLocation();
-  
+
   // Phase 5C: Background cache warming
   useWarmTrackCache();
 
@@ -121,14 +122,14 @@ function Router() {
         <Route path="/" component={() => <SimpleDashboard user={user as any} />} />
         <Route path="/dashboard" component={() => <SimpleDashboard user={user as any} />} />
         <Route path="/home" component={() => <SimpleDashboard user={user as any} />} />
-        
+
         {/* Content Management Routes */}
         <Route path="/manage" component={() => <ManageTracks />} />
         <Route path="/manage/tracks/:trackId" component={() => <ManageChapters />} />
         <Route path="/manage/tracks/:trackId/chapters/:chapterId" component={() => <EditChapter />} />
         <Route path="/manage/users" component={() => <ManageUsers />} />
         <Route path="/manage/batches" component={() => <ManageBatches />} />
-        
+
         {/* Legacy redirects for old content-management URLs */}
         <Route path="/content-management" component={() => <ManageTracks />} />
         <Route path="/content-management/tracks/:trackId" component={() => <ManageChapters />} />
@@ -146,6 +147,9 @@ function Router() {
         <Route path="/experiments/design-system" component={DesignSystemExperiment} />
         <Route path="/experiments/theming-playground" component={ThemingPlayground} />
 
+        {/* TEMPORARY PROTOTYPE */}
+        <Route path="/prototype/matrix" component={InstructorMatrixPrototype} />
+
         <Route component={SimpleNotFound} />
       </Switch>
     </Suspense>
@@ -155,13 +159,13 @@ function Router() {
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="vediclms-theme">
-      <TooltipProvider>
-        <Toaster />
-        <ErrorBoundary fallback={<AppErrorFallback />}>
-          <Router />
-        </ErrorBoundary>
-      </TooltipProvider>
+      <ThemeProvider defaultTheme="light" storageKey="vediclms-theme">
+        <TooltipProvider>
+          <Toaster />
+          <ErrorBoundary fallback={<AppErrorFallback />}>
+            <Router />
+          </ErrorBoundary>
+        </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

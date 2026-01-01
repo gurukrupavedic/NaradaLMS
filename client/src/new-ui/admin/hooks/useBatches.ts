@@ -15,7 +15,7 @@ export type Batch = {
 };
 
 export type BatchDetail = Batch & {
-  track?: { id: number; title?: string | null; name?: string | null } | null;
+  track?: { id: number; title?: string | null; name?: string | null; order?: number | null } | null;
   primaryInstructor?: { id: string; firstName?: string | null; lastName?: string | null; email: string } | null;
   coInstructors?: { id: number; instructorId: string; role: string; firstName?: string | null; lastName?: string | null; email?: string | null }[];
 };

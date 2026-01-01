@@ -7,8 +7,15 @@ export interface BatchItem {
   batchName: string;
   trackId?: number | null;
   primaryInstructorId?: string | null;
+  primaryInstructorName?: string | null;
+  coInstructorNames?: string | null;
+  cohortType?: string | null;
+  description?: string | null;
   studentCount?: number;
   status: string;
+  trackName?: string | null;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 interface PaginatedResponse<T> {
@@ -20,7 +27,7 @@ export function useBatches(params?: { limit?: number; offset?: number }) {
   const limit = params?.limit ?? 50;
   const offset = params?.offset ?? 0;
   return useQuery<PaginatedResponse<BatchItem>>({
-    queryKey: [`/api/batches?limit=${limit}&offset=${offset}`],
+    queryKey: [`/api/batches/my-batches?limit=${limit}&offset=${offset}`],
     queryFn: getQueryFn({ on401: "throw" }),
   });
 }

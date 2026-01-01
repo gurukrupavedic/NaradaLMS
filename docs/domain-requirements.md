@@ -248,6 +248,147 @@
 ### Gaps & Future Improvements
 
 - [ ] **Batch Dashboard:** Visual overview of all batches (active/completed/archived)
+
+---
+
+## 5. Student Progress & Proficiency Tracking
+
+### How It Works: The Proficiency Model
+
+**Core Principle: Student + Chapter = Proficiency Record**
+
+Proficiency is **always** tracked at the **Student + Chapter** level, NOT at the Track level. This is intentional and critical:
+
+```
+Student Progress DB Record:
+├─ Student ID
+├─ Chapter ID  ← The atomic unit
+├─ Proficiency Level (0-4)
+└─ Status (practicing, completed, absent, not_started)
+```
+
+**Why This Design?**
+
+1. **Business Flexibility:** Chapters can move between tracks
+   - Example: "Invocation" chapter starts in Track 1
+   - Later, curriculum review moves it to Track 2
+   - Student's proficiency record stays valid (linked to chapter ID, not track ID)
+   - No need to re-evaluate or update proficiency data
+
+2. **Student Batch Flexibility:** Students can switch batches anytime
+   - Student enrolled in "Track 1 Batch" → moves to "Track 3 Batch"
+   - Proficiency on chapters is portable
+   - No batch-scoping needed; just student + chapter linkage
+
+3. **Progressive Curriculum:** Chapters are reusable across tracks
+   - A chapter can appear in multiple tracks (rare, but possible)
+   - Student's proficiency applies regardless of which track they study it in
+   - One source of truth per chapter
+
+**Implication for UI:**
+- Progress grid/matrix is always **Student + Chapter** cells
+- Track selection in UI is just a **view filter** (grouping chapters)
+- Changing tracks doesn't change proficiency data, just which chapters are visible
+
+---
+
+### Proficiency Levels (0-4 Scale)
+
+| Level | Label | Meaning | Certification Status |
+|-------|-------|---------|----------------------|
+| 0 | Practicing/Attending | Currently learning, minimal competency | — |
+| 1 | 50% | Basic recitation capability, needs practice | — |
+| 2 | 70% | Good flow, minor corrections needed | — |
+| 3 | 90% (Ready) | Ready for certification exam | Ready |
+| 4 | 95% (Certified) | Mastered and certified | ✅ Certified |
+| -1 | Absent | Student was absent for evaluation | — |
+
+**Special State: Absent (-1)**
+- Used when instructor needs to mark a chapter as unevaluated for a session
+- Separate from "not_started" (which means no proficiency record exists)
+- Useful for tracking attendance vs. non-attendance
+
+---
+
+### Current Track Concept in Batch
+
+**"Current Track" = Informational Metadata**
+
+Each batch stores a `currentTrackId` which denotes:
+- ✅ **What track is this batch currently teaching?**
+- ✅ **Pedagogical position** (helps instructors/students know curriculum standing)
+- ❌ **NOT** a constraint on proficiency
+- ❌ **NOT** a requirement that batch only teaches that track
+
+**Business Scenario:**
+```
+Scenario 1: Linear Progression (Common)
+├─ Batch formed for Track 1 (currentTrackId = 1)
+├─ Students complete Track 1 chapters
+├─ Admin updates currentTrackId = 2
+├─ Same students (with preserved progress) advance to Track 2
+└─ Batch continues in sync with student progression
+
+Scenario 2: Mid-Stream Start (Also Valid)
+├─ New batch created directly for Track 5 (currentTrackId = 5)
+├─ Students from older batches merged into Track 5 batch
+├─ Their progress from prior tracks is intact
+└─ New batch doesn't care about prerequisite completion
+
+Scenario 3: Track Restructuring (Future-Proof)
+├─ Curriculum review decides to rearrange chapters
+├─ "Invocation" chapter moves from Track 1 → Track 2
+├─ All students' proficiency records on "Invocation" stay valid
+├─ No data migration needed; just metadata change
+└─ Progress is truly preserved across organizational changes
+```
+
+**Why This Matters:**
+- System doesn't enforce "must complete Track N before Track N+1" at DB level
+- Business can override sequences as needed
+- Student progress is immutable and portable
+- Tracks are just UI groupings of chapters, not rigid containers
+
+---
+
+### Progress Evaluation Workflow (Instructor/Admin)
+
+**Where Proficiency is Set:**
+- **Batch Detail Page → Unified Matrix View**
+  - Rows: Students enrolled in the batch
+  - Columns: Chapters in the **selected track** (view filter, not constraint)
+  - Cells: Student's proficiency against that chapter
+  - Action: Click cell → Edit proficiency level
+  
+**Key Behaviors:**
+1. **Independent Controls:**
+   - Batch selector → changes which students appear in rows
+   - Track selector → changes which chapters appear in columns
+   - Both independent; swapping either doesn't affect data
+
+2. **Data Persistence:**
+   - Proficiency is always Student + Chapter
+   - Track selection is just UI filtering
+   - Switching tracks doesn't lose any data
+
+3. **Evaluation Across Tracks:**
+   - Instructor can evaluate students on chapters from any track
+   - Not limited to batch's "current track"
+   - Useful for: reviewing previous track, preview-evaluating next track
+
+**Instructor Workflow Example:**
+```
+1. Open Batch: "Morning Cohort" (currently on Track 2)
+2. Select Track: [Track 1 ▼] (review progress)
+   └─ Matrix shows chapters from Track 1, proficiency of students
+   └─ Can update proficiency if needed
+3. Select Track: [Track 2 ▼] (current teaching)
+   └─ Matrix refreshes with Track 2 chapters
+   └─ Evaluate students on current track
+4. Select Track: [Track 3 ▼] (preview/explore)
+   └─ Check if students are ready for next track
+   └─ Can start evaluation if needed
+```
 - [ ] **Enrollment Limits:** Optional max capacity per batch (if needed in future)
 - [ ] **Batch Start Date:** Track when batch officially begins instruction
 - [ ] **Batch Communication:** Announcements/notifications to batch members
