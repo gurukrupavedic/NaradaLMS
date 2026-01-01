@@ -35,7 +35,7 @@ import type {
   Batch as MatrixBatch,
 } from "../types/matrix";
 
-type Enrollment = {
+type EnrollmentRow = {
   id: number;
   studentId: string;
   firstName?: string;
@@ -161,6 +161,12 @@ export default function BatchDetails() {
     setPagination({ pageIndex: 0, pageSize: 10 });
     setSearchQuery("");
     setShowDropdown(false);
+    
+    // Reset matrix UI state when batch changes
+    setMatrixSelectedStudents([]);
+    setMatrixSearchQuery("");
+    setMatrixShowTypeahead(false);
+    setMatrixHighlightedIndex(-1);
     
     // Reset track to batch's current track (if available)
     if (batchDetail.data?.trackId) {
@@ -304,7 +310,7 @@ export default function BatchDetails() {
   // Define columns for enrollment table
   const enrollmentData = enrollments.data ?? [];
 
-  const columns = useMemo<ColumnDef<Enrollment>[]>(
+  const columns = useMemo<ColumnDef<EnrollmentRow>[]>(
     () => [
       {
         accessorKey: "studentId",
@@ -383,7 +389,7 @@ export default function BatchDetails() {
     [dropEnrollment, toast]
   );
 
-  const table = useReactTable<Enrollment>({
+  const table = useReactTable<EnrollmentRow>({
     data: enrollmentData,
     columns,
     getCoreRowModel: getCoreRowModel(),
@@ -396,6 +402,17 @@ export default function BatchDetails() {
   });
 
   const isBatchSelected = !Number.isNaN(batchId);
+
+  // Transform enrollments to StudentMatrixRow array
+  const matrixStudents: StudentMatrixRow[] = useMemo(() => {
+    return (enrollments.data ?? []).map(enrollment => ({
+      id: enrollment.studentId,
+      firstName: enrollment.firstName || '',
+      lastName: enrollment.lastName || '',
+      email: enrollment.email || '',
+      enrollmentId: enrollment.id,
+    }));
+  }, [enrollments.data]);
 
   return (
     <div className="space-y-6 px-4 pt-4">
@@ -647,51 +664,7 @@ export default function BatchDetails() {
               </div>
               
               <UnifiedBatchMatrix
-                students={[
-                  // Mock data for Phase 1 - showing all proficiency levels
-                  {
-                    id: '1',
-                    firstName: 'Anya',
-                    lastName: 'Sharma',
-                    email: 'anya@vedic.com',
-                    enrollmentId: 101,
-                  },
-                  {
-                    id: '2',
-                    firstName: 'Bhavna',
-                    lastName: 'Patel',
-                    email: 'bhavna@vedic.com',
-                    enrollmentId: 102,
-                  },
-                  {
-                    id: '3',
-                    firstName: 'Chand',
-                    lastName: 'Kumar',
-                    email: 'chand@vedic.com',
-                    enrollmentId: 103,
-                  },
-                  {
-                    id: '4',
-                    firstName: 'Devendra',
-                    lastName: 'Singh',
-                    email: 'devendra@vedic.com',
-                    enrollmentId: 104,
-                  },
-                  {
-                    id: '5',
-                    firstName: 'Esha',
-                    lastName: 'Verma',
-                    email: 'esha@vedic.com',
-                    enrollmentId: 105,
-                  },
-                  {
-                    id: '6',
-                    firstName: 'Farhan',
-                    lastName: 'Ahmed',
-                    email: 'farhan@vedic.com',
-                    enrollmentId: 106,
-                  },
-                ] as StudentMatrixRow[]}
+                students={matrixStudents}
                 chapters={[
                   // Mock chapters for selected track (Phase 1)
                   {
@@ -853,15 +826,29 @@ export default function BatchDetails() {
                 selectedBatchId={String(batchId)}
                 selectedTrackId={selectedTrackId || ''}
                 onDropStudent={async (enrollmentId) => {
-                  // Phase 3: Actually drop student
-                  console.log('Drop enrollment:', enrollmentId);
+                  // Call the drop enrollment mutation
+                  await dropEnrollment.mutateAsync(
+                    { enrollmentId },
+                    {
+                      onSuccess: () => {
+                        toast({ title: 'Student removed from batch' });
+                      },
+                      onError: (err: any) => {
+                        toast({
+                          title: 'Failed to remove student',
+                          description: err?.message || 'An error occurred',
+                          variant: 'destructive',
+                        });
+                      },
+                    }
+                  );
                 }}
                 onUpdateProficiency={async (studentId, chapterId, level) => {
-                  // Phase 3: Actually update proficiency
+                  // Phase 3: Wire proficiency update mutation
                   console.log('Update proficiency:', studentId, chapterId, level);
                 }}
-                isLoading={false}
-                isUpdating={false}
+                isLoading={enrollments.isLoading}
+                isUpdating={dropEnrollment.isPending || enrollStudent.isPending}
               />
             </div>
           )}
