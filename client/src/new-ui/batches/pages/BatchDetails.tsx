@@ -16,6 +16,8 @@ import { useBatch as useAdminBatch } from "../../admin/hooks/useBatch";
 import { useBatches as useInstructorBatches, type BatchItem } from "../hooks/useBatches";
 import { useTracks } from "../hooks/useTracks";
 import { useChaptersByTrack, type ChapterListItem } from "../hooks/useChaptersByTrack";
+import { useBatchProgress } from "../hooks/useBatchProgress";
+import { useUpdateProficiency } from "../hooks/useUpdateProficiency";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
 import { BatchDetailsCard } from "../../admin/components/BatchDetailsCard";
 import { UnifiedBatchMatrix } from "../components/UnifiedBatchMatrix";
@@ -113,6 +115,12 @@ export default function BatchDetails() {
   const chapters = useChaptersByTrack(
     selectedTrackId ? Number(selectedTrackId) : undefined
   );
+
+  // Fetch batch progress (proficiency data)
+  const batchProgress = useBatchProgress(batchId ? Number(batchId) : undefined);
+
+  // Proficiency update mutation
+  const updateProficiency = useUpdateProficiency();
   
   // Convert batches to unified format for dropdown compatibility
   const batches: UnifiedBatch[] = useMemo(() => {
@@ -431,6 +439,25 @@ export default function BatchDetails() {
     }));
   }, [chapters.data]);
 
+  // Transform batch progress to flat StudentProgress array
+  const matrixProgress: StudentProgress[] = useMemo(() => {
+    if (!batchProgress.data) return [];
+
+    return batchProgress.data.students.flatMap(student =>
+      student.chapters.map(chapter => ({
+        studentId: student.studentId,
+        chapterId: String(chapter.chapterId),
+        proficiencyLevel: chapter.proficiencyLevel ?? -1,
+        status: chapter.proficiencyLevel === null ? 'not_started' 
+          : chapter.proficiencyLevel === 0 ? 'in_progress'
+          : chapter.proficiencyLevel >= 4 ? 'completed'
+          : 'in_progress',
+        lastEvaluatedAt: chapter.lastEvaluatedAt,
+        notes: chapter.notes,
+      }))
+    );
+  }, [batchProgress.data]);
+
   return (
     <div className="space-y-6 px-4 pt-4">
       {/* Page-Level Controls: Batch Selection & View Toggle */}
@@ -674,9 +701,7 @@ export default function BatchDetails() {
                   <UnifiedBatchMatrix
                     students={matrixStudents}
                     chapters={matrixChapters}
-                    progress={[
-                      // Mock progress data - will be wired in next phase
-                    ] as StudentProgress[]}
+                    progress={matrixProgress}
                     selectedBatchId={String(batchId)}
                     selectedTrackId={selectedTrackId || ''}
                     onDropStudent={async (enrollmentId) => {
@@ -697,8 +722,24 @@ export default function BatchDetails() {
                       );
                     }}
                     onUpdateProficiency={async (studentId, chapterId, level) => {
-                      // Phase 3: Wire proficiency update mutation
-                      console.log('Update proficiency:', studentId, chapterId, level);
+                      try {
+                        await updateProficiency.mutateAsync({
+                          batchId: Number(batchId),
+                          studentId,
+                          chapterId: Number(chapterId),
+                          proficiencyLevel: level,
+                        });
+                        toast({ 
+                          title: 'Proficiency updated',
+                          description: `Level set to ${level}`,
+                        });
+                      } catch (error: any) {
+                        toast({
+                          title: 'Failed to update proficiency',
+                          description: error?.message || 'An error occurred',
+                          variant: 'destructive',
+                        });
+                      }
                     }}
                     isLoading={enrollments.isLoading}
                     isUpdating={dropEnrollment.isPending || enrollStudent.isPending}
