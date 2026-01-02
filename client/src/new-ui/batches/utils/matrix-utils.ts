@@ -179,8 +179,10 @@ export function getProficiencyLabel(level: ProficiencyLevel): string {
  */
 export function getProficiencyShortLabel(level: ProficiencyLevel): string {
   switch (level) {
-    case -1:
+    case 8:
       return 'Abs';
+    case 9:
+      return 'NS';
     case 0:
       return 'Prac';
     case 1:
@@ -233,7 +235,8 @@ export function getCertificationStatus(level: ProficiencyLevel): 'certified' | '
     case 1:
     case 2:
       return 'in-progress';
-    case -1:
+    case 8:
+    case 9:
     default:
       return 'not-started';
   }
@@ -373,5 +376,5 @@ export function isCertified(level: ProficiencyLevel): boolean {
  * Check if student needs evaluation
  */
 export function needsEvaluation(level: ProficiencyLevel, status: string): boolean {
-  return level === -1 || status === 'not_started';
+  return level === 8 || level === 9 || status === 'not_started';
 }

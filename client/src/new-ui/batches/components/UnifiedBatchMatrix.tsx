@@ -88,7 +88,7 @@ export function UnifiedBatchMatrix({
       return {
         studentId,
         chapterId,
-        proficiencyLevel: -1,
+        proficiencyLevel: 9,
         status: 'not_started',
         isEmpty: true,
       };

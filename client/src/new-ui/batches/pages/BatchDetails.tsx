@@ -256,9 +256,9 @@ export default function BatchDetails() {
       row.cells.map(cell => ({
         studentId: row.studentId,
         chapterId: String(cell.chapterId),
-        proficiencyLevel: (cell.proficiencyLevel ?? -1) as ProficiencyLevel,
+        proficiencyLevel: (cell.proficiencyLevel ?? 9) as ProficiencyLevel,
         status: cell.proficiencyLevel === null ? 'not_started' 
-          : cell.proficiencyLevel === -1 ? 'absent'
+          : cell.proficiencyLevel === 8 ? 'absent'
           : cell.proficiencyLevel === 0 ? 'practicing'
           : cell.proficiencyLevel >= 4 ? 'completed'
           : 'practicing',
