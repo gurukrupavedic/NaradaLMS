@@ -168,7 +168,7 @@ export function MatrixEvaluationModal({
           {/* Reset button */}
           <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
             <button
-              onClick={() => handleSelectLevel(-1)}
+              onClick={() => handleSelectLevel(8)}
               disabled={isUpdating}
               className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >

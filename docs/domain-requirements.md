@@ -301,12 +301,12 @@ Student Progress DB Record:
 | 2 | 70% | Good flow, minor corrections needed | — |
 | 3 | 90% (Ready) | Ready for certification exam | Ready |
 | 4 | 95% (Certified) | Mastered and certified | ✅ Certified |
-| -1 | Absent | Student was absent for evaluation | — |
+| 8 | Absent | Student was absent for this session | — |
+| 9 | Not Started | Chapter not yet taught | — |
 
-**Special State: Absent (-1)**
-- Used when instructor needs to mark a chapter as unevaluated for a session
-- Separate from "not_started" (which means no proficiency record exists)
-- Useful for tracking attendance vs. non-attendance
+**Special States:**
+- **8 (Absent):** Used when instructor marks a chapter as not evaluated for a session due to student absence
+- **9 (Not Started):** Used when no proficiency record exists (chapter not yet taught to the batch)
 
 ---
 

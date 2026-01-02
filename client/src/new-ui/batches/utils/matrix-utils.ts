@@ -33,7 +33,7 @@ export function getCellColor(
   textHex: string;
 } {
   // Absent takes priority
-  if (level === -1 || status === 'absent') {
+  if (level === 8 || status === 'absent') {
     return {
       bgColor: 'bg-gray-100',
       textColor: 'text-gray-600',
@@ -157,7 +157,7 @@ export function getCellColor(
  */
 export function getProficiencyLabel(level: ProficiencyLevel): string {
   switch (level) {
-    case -1:
+    case 8:
       return 'Absent';
     case 0:
       return 'Practicing';
@@ -201,8 +201,10 @@ export function getProficiencyShortLabel(level: ProficiencyLevel): string {
  */
 export function getProficiencyDescription(level: ProficiencyLevel): string {
   switch (level) {
-    case -1:
-      return 'Student was absent or not evaluated';
+    case 8:
+      return 'Student was absent for this session';
+    case 9:
+      return 'Chapter not yet taught';
     case 0:
       return 'Currently learning, minimal competency';
     case 1:
@@ -255,8 +257,10 @@ export function getProficiencyVariant(
       return 'default'; // L1
     case 0:
       return 'secondary'; // Practicing
-    case -1:
+    case 8:
       return 'destructive'; // Absent
+    case 9:
+      return 'outline'; // Not Started
     default:
       return 'outline';
   }
@@ -271,8 +275,8 @@ export function sortByProficiency(
   b: ProficiencyLevel
 ): number {
   // Absent always last
-  if (a === -1) return 1;
-  if (b === -1) return -1;
+  if (a === 8) return 1;
+  if (b === 8) return -1;
 
   // Sort descending (4, 3, 2, 1, 0)
   return b - a;
@@ -293,7 +297,8 @@ export function getProgressPercentage(level: ProficiencyLevel): number {
       return 50;
     case 0:
       return 20;
-    case -1:
+    case 8:
+    case 9:
     default:
       return 0;
   }
@@ -304,9 +309,9 @@ export function getProgressPercentage(level: ProficiencyLevel): number {
  */
 export const PROFICIENCY_OPTIONS: Array<{ value: ProficiencyLevel; label: string; description: string }> = [
   {
-    value: -1,
+    value: 8,
     label: 'Absent',
-    description: 'Student was absent or not evaluated',
+    description: 'Student was absent for this session',
   },
   {
     value: 0,
