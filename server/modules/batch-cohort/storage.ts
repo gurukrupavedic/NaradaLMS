@@ -433,19 +433,15 @@ export class BatchStorage {
       };
     }
 
-    // Get track chapters if trackId exists
-    let chaptersList: any[] = [];
-    if (batchInfo.trackId) {
-      chaptersList = await db
-        .select({
-          chapterId: chapters.id,
-          chapterTitle: chapters.title,
-          chapterNumber: chapters.order,
-        })
-        .from(chapters)
-        .where(eq(chapters.trackId, batchInfo.trackId))
-        .orderBy(chapters.order);
-    }
+    // Get all chapters (across all tracks) so proficiency can be tracked for chapters in any track
+    const chaptersList = await db
+      .select({
+        chapterId: chapters.id,
+        chapterTitle: chapters.title,
+        chapterNumber: chapters.order,
+      })
+      .from(chapters)
+      .orderBy(chapters.order);
 
     // Get student IDs for progress query
     const studentIds = enrollmentsList.map(e => e.studentId);
