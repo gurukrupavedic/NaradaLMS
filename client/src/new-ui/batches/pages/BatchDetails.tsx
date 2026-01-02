@@ -1,15 +1,5 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
-import {
-  ColumnDef,
-  SortingState,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  PaginationState,
-  getPaginationRowModel,
-} from "@tanstack/react-table";
 import { useEnrollments, useDropEnrollment, useEligibleStudents, useEnrollStudent, type EligibleStudent } from "../../admin/hooks/useBatchRelations";
 import { useBatches as useAdminBatches, type Batch as AdminBatch } from "../../admin/hooks/useBatches";
 import { useBatch as useAdminBatch } from "../../admin/hooks/useBatch";
@@ -24,29 +14,19 @@ import { UnifiedBatchMatrix } from "../components/UnifiedBatchMatrix";
 import { TrackTabs } from "../components/TrackTabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, MoreVertical, ChevronDown, Search, X, Plus, Loader } from "lucide-react";
+import { Loader2, ChevronDown, Loader } from "lucide-react";
 import type {
   StudentMatrixRow,
   Chapter,
   StudentProgress,
   Track,
   Batch as MatrixBatch,
+  ProficiencyLevel,
 } from "../types/matrix";
-
-type EnrollmentRow = {
-  id: number;
-  studentId: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  status: string;
-};
 
 // Unified batch type for dropdown purposes
 type UnifiedBatch = {
@@ -75,22 +55,10 @@ export default function BatchDetails() {
   const batchId = Number(adminParams?.id || instructorParams?.id);
   
   // State management
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
 
   // Track selection state (independent of batch)
   const [selectedTrackId, setSelectedTrackId] = useState<string | undefined>(undefined);
-  const [showMatrixView, setShowMatrixView] = useState(false); // Toggle between table and matrix views
-
-  // Enrollment typeahead state (for table view)
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Matrix search state (separate from table search)
   const [matrixSearchQuery, setMatrixSearchQuery] = useState("");
@@ -161,8 +129,7 @@ export default function BatchDetails() {
   const enrollments = useEnrollments(isNaN(batchId) ? 0 : batchId);
   const dropEnrollment = useDropEnrollment(isNaN(batchId) ? 0 : batchId);
   const enrollStudent = useEnrollStudent(isNaN(batchId) ? 0 : batchId);
-  const eligibleStudents = useEligibleStudents(isNaN(batchId) ? 0 : batchId, searchQuery); // For table view
-  const matrixEligibleStudents = useEligibleStudents(isNaN(batchId) ? 0 : batchId, matrixSearchQuery); // For matrix view
+  const matrixEligibleStudents = useEligibleStudents(isNaN(batchId) ? 0 : batchId, matrixSearchQuery);
 
   // Auto-redirect to first batch if invalid ID
   useEffect(() => {
@@ -171,11 +138,9 @@ export default function BatchDetails() {
     }
   }, [batchId, batches, setLocation, context]);
 
-  // Reset pagination and track when batch changes
+  // Reset track when batch changes
   useEffect(() => {
     setPagination({ pageIndex: 0, pageSize: 10 });
-    setSearchQuery("");
-    setShowDropdown(false);
     
     // Reset matrix UI state when batch changes
     setMatrixSelectedStudents([]);
@@ -190,48 +155,6 @@ export default function BatchDetails() {
       setSelectedTrackId(undefined);
     }
   }, [batchId, batchDetail.data?.trackId]);
-
-  // Handle dropdown visibility
-  useEffect(() => {
-    setShowDropdown(searchQuery.trim().length > 0 && eligibleStudents.data !== undefined);
-  }, [searchQuery, eligibleStudents.data]);
-
-  // Reset highlighted index when results change
-  useEffect(() => {
-    setHighlightedIndex(0);
-  }, [eligibleStudents.data]);
-
-  // Handle enrollment
-  const handleEnroll = (student: EligibleStudent) => {
-    const displayName = student.firstName || student.lastName
-      ? `${student.firstName ?? ""} ${student.lastName ?? ""}`.trim()
-      : student.email;
-
-    enrollStudent.mutate(
-      { studentId: student.id },
-      {
-        onSuccess: () => {
-          toast({ title: "Student enrolled successfully" });
-          setSearchQuery("");
-          setShowDropdown(false);
-        },
-        onError: (err: any) => {
-          const isAlreadyEnrolled = err.message?.includes('already enrolled') || 
-                                   (err.code === 'ALREADY_ENROLLED');
-          
-          const errorMessage = isAlreadyEnrolled
-            ? `${displayName} is already enrolled in another batch. Students can only enroll in one batch at a time.`
-            : err.message || "Failed to enroll student";
-
-          toast({
-            title: isAlreadyEnrolled ? "Already Enrolled" : "Failed to enroll student",
-            description: errorMessage,
-            variant: "destructive",
-          });
-        },
-      }
-    );
-  };
 
   // Matrix enrollment handlers
   const handleMatrixAddStudent = async () => {
@@ -302,120 +225,6 @@ export default function BatchDetails() {
     setMatrixSelectedStudents(prev => prev.filter(s => s.id !== studentId));
   };
 
-  // Keyboard navigation (table view)
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const students = eligibleStudents.data ?? [];
-    
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setHighlightedIndex((prev) => Math.min(prev + 1, students.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setHighlightedIndex((prev) => Math.max(prev - 1, 0));
-    } else if (e.key === "Enter" && students.length > 0 && highlightedIndex >= 0) {
-      e.preventDefault();
-      handleEnroll(students[highlightedIndex]);
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      setSearchQuery("");
-      setShowDropdown(false);
-    }
-  };
-
-  // Define columns for enrollment table
-  const enrollmentData = enrollments.data ?? [];
-
-  const columns = useMemo<ColumnDef<EnrollmentRow>[]>(
-    () => [
-      {
-        accessorKey: "studentId",
-        header: "STUDENT",
-        cell: ({ row }) => {
-          const en = row.original;
-          const displayName =
-            en.firstName || en.lastName ? `${en.firstName ?? ""} ${en.lastName ?? ""}`.trim() : en.email || en.studentId;
-          return <span className="text-sm font-medium text-foreground">{displayName}</span>;
-        },
-      },
-      {
-        accessorKey: "email",
-        header: "CONTACT",
-        cell: ({ row }) => <span className="text-sm text-foreground">{row.original.email || "—"}</span>,
-      },
-      {
-        id: "timezone",
-        header: "TIMEZONE",
-        cell: () => <span className="text-sm text-foreground">—</span>,
-      },
-      {
-        id: "lastActive",
-        header: "LAST ACTIVE",
-        cell: () => <span className="text-sm text-muted-foreground">—</span>,
-      },
-      {
-        id: "progress",
-        header: "PROGRESS",
-        cell: () => <span className="text-sm text-foreground">—</span>,
-      },
-      {
-        id: "actions",
-        header: "ACTIONS",
-        size: 50,
-        cell: ({ row }) => {
-          const en = row.original;
-          return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">Actions</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="bg-white dark:bg-black border border-border shadow-lg min-w-[180px]"
-              >
-                <DropdownMenuItem
-                  onClick={() =>
-                    dropEnrollment.mutate(
-                      { enrollmentId: en.id },
-                      {
-                        onSuccess: () => toast({ title: "Student dropped" }),
-                        onError: (err: any) =>
-                          toast({
-                            title: "Failed to drop",
-                            description: err.message,
-                            variant: "destructive",
-                          }),
-                      }
-                    )
-                  }
-                  disabled={dropEnrollment.isPending}
-                  className="text-destructive focus:text-destructive"
-                >
-                  Drop
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
-        },
-      },
-    ],
-    [dropEnrollment, toast]
-  );
-
-  const table = useReactTable<EnrollmentRow>({
-    data: enrollmentData,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    state: { sorting, pagination },
-    onSortingChange: setSorting,
-    onPaginationChange: setPagination,
-    pageCount: Math.ceil(enrollmentData.length / pagination.pageSize),
-  });
-
   const isBatchSelected = !Number.isNaN(batchId);
 
   // Transform enrollments to StudentMatrixRow array
@@ -447,7 +256,7 @@ export default function BatchDetails() {
       row.cells.map(cell => ({
         studentId: row.studentId,
         chapterId: String(cell.chapterId),
-        proficiencyLevel: cell.proficiencyLevel ?? -1,
+        proficiencyLevel: (cell.proficiencyLevel ?? -1) as ProficiencyLevel,
         status: cell.proficiencyLevel === null ? 'not_started' 
           : cell.proficiencyLevel === -1 ? 'absent'
           : cell.proficiencyLevel === 0 ? 'practicing'
@@ -485,24 +294,6 @@ export default function BatchDetails() {
               ))}
             </SelectContent>
           </Select>
-        </div>
-
-        {/* View Toggle */}
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant={showMatrixView ? 'default' : 'outline'}
-            onClick={() => setShowMatrixView(true)}
-          >
-            Matrix View
-          </Button>
-          <Button
-            size="sm"
-            variant={!showMatrixView ? 'default' : 'outline'}
-            onClick={() => setShowMatrixView(false)}
-          >
-            Table View
-          </Button>
         </div>
       </div>
 
@@ -545,143 +336,12 @@ export default function BatchDetails() {
       ) : (
         <div className="space-y-6">
           {/* Matrix View with Track Tabs */}
-          {showMatrixView && (
-            <div className="space-y-4">
-              {/* Enrollment Controls - Batch Level (Outside Tabs) */}
-              <div className="flex items-center gap-3">
-                <div className="flex-1 relative">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                    <Input
-                      type="text"
-                      placeholder="Search and add student..."
-                      value={matrixSearchQuery}
-                      onChange={(e) => {
-                        const newQuery = e.target.value;
-                        setMatrixSearchQuery(newQuery);
-                        setMatrixShowTypeahead(true);
-                        setMatrixHighlightedIndex(-1);
-                      }}
-                      onFocus={() => setMatrixShowTypeahead(true)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
-                          setMatrixShowTypeahead(false);
-                        }
-                      }}
-                      className="pl-9"
-                      disabled={isAddingStudent}
-                    />
-                    {matrixSearchQuery && (
-                      <button
-                        onClick={() => {
-                          setMatrixSearchQuery('');
-                          setMatrixShowTypeahead(false);
-                        }}
-                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                        title="Clear search"
-                        type="button"
-                      >
-                        <X className="h-4 w-4" />
-                        <span className="sr-only">Clear search</span>
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Selected students pills */}
-                  {matrixSelectedStudents.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {matrixSelectedStudents.map(student => {
-                        const displayName = student.firstName || student.lastName
-                          ? `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim()
-                          : student.email;
-                        
-                        return (
-                          <Badge 
-                            key={student.id}
-                            variant="secondary"
-                            className="flex items-center gap-1 pl-2 pr-1 py-1"
-                          >
-                            <span className="text-sm">{displayName}</span>
-                            <button
-                              onClick={() => handleMatrixRemoveStudent(student.id)}
-                              className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
-                              type="button"
-                              title={`Remove ${displayName}`}
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Typeahead dropdown with eligible students */}
-                  {matrixShowTypeahead && matrixSearchQuery && (
-                    <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white dark:bg-gray-900 shadow-lg">
-                      {matrixEligibleStudents.isFetching ? (
-                        <div className="p-3 text-center text-sm text-gray-500 dark:text-gray-400">
-                          <Loader className="h-4 w-4 inline-block animate-spin mr-2" />
-                          Searching...
-                        </div>
-                      ) : (matrixEligibleStudents.data?.length ?? 0) === 0 ? (
-                        <div className="p-3 text-center text-sm text-gray-500 dark:text-gray-400">
-                          No eligible students found
-                        </div>
-                      ) : (
-                        <div className="py-1">
-                          {matrixEligibleStudents.data?.map((student, idx) => {
-                            const displayName = student.firstName || student.lastName
-                              ? `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim()
-                              : student.email;
-                            
-                            return (
-                              <button
-                                key={student.id}
-                                type="button"
-                                onClick={() => handleMatrixSelectStudent(student)}
-                                onMouseEnter={() => setMatrixHighlightedIndex(idx)}
-                                className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
-                                  idx === matrixHighlightedIndex ? 'bg-gray-100 dark:bg-gray-800' : ''
-                                }`}
-                                disabled={isAddingStudent}
-                              >
-                                <div className="font-medium text-gray-900 dark:text-gray-100">{displayName}</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">{student.email}</div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <Button
-                  onClick={handleMatrixAddStudent}
-                  disabled={matrixSelectedStudents.length === 0 || isAddingStudent}
-                  size="sm"
-                >
-                  {isAddingStudent ? (
-                    <>
-                      <Loader className="h-4 w-4 mr-1 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add {matrixSelectedStudents.length > 0 && `(${matrixSelectedStudents.length})`}
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              {/* Track Tabs with Matrix */}
-              <TrackTabs
+          <TrackTabs
                 tracks={(tracks.data ?? []).map(t => ({
                   id: String(t.id),
                   name: t.title,
-                  description: t.description,
+                  code: `Track ${t.order}`,
+                  description: t.description ?? undefined,
                   order: t.order,
                 }))}
                 selectedTrackId={selectedTrackId}
@@ -744,180 +404,6 @@ export default function BatchDetails() {
                   />
                 )}
               </TrackTabs>
-            </div>
-          )}
-
-          {/* Table View (Original Enrollments Table) */}
-          {!showMatrixView && (
-            <>
-          {/* Enrollments Section */}
-          <div className="space-y-3">
-            <h2 className="text-lg font-semibold text-foreground">Enrollments</h2>
-            
-            {/* Enrollments Table */}
-            <div className="rounded-lg border border-border/60 bg-card shadow-sm overflow-hidden">
-              {enrollments.isLoading ? (
-                <div className="p-4 space-y-3">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="grid grid-cols-3 gap-4">
-                      <Skeleton className="h-5 w-56 col-span-1" />
-                      <Skeleton className="h-5 w-24 col-span-1" />
-                      <Skeleton className="h-8 w-16 col-span-1 justify-self-end" />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader className="bg-muted/40 sticky top-0 z-10">
-                    {table.getHeaderGroups().map((headerGroup) => (
-                      <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
-                        {headerGroup.headers.map((header) => (
-                          <TableHead 
-                            key={header.id} 
-                            className="text-xs font-bold text-foreground/70 uppercase tracking-widest"
-                            style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
-                          >
-                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                          </TableHead>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableHeader>
-                  <TableBody>
-                    {/* Pinned Add Student Row */}
-                    <TableRow className="border-b border-border/60 bg-muted/20 hover:bg-muted/30 transition-colors">
-                      {/* STUDENT Column - Active Input */}
-                      <TableCell className="relative">
-                        <div className="relative">
-                          <Input
-                            ref={inputRef}
-                            type="text"
-                            name="student-search"
-                            role="combobox"
-                            aria-autocomplete="list"
-                            aria-expanded={showDropdown}
-                            placeholder="Type student name to enroll..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            className="w-full"
-                            disabled={enrollStudent.isPending}
-                            autoComplete="off"
-                            data-1p-ignore
-                            data-lpignore="true"
-                            data-form-type="other"
-                          />
-                          {eligibleStudents.isFetching && (
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                            </div>
-                          )}
-                          
-                          {/* Typeahead Dropdown */}
-                          {showDropdown && (
-                            <div
-                              ref={dropdownRef}
-                              className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-64 overflow-y-auto"
-                            >
-                              {eligibleStudents.data && eligibleStudents.data.length > 0 ? (
-                                eligibleStudents.data.map((student, idx) => {
-                                  const displayName = student.firstName || student.lastName
-                                    ? `${student.firstName ?? ""} ${student.lastName ?? ""}`.trim()
-                                    : student.email;
-                                  return (
-                                    <button
-                                      key={student.id}
-                                      type="button"
-                                      className={`w-full px-4 py-2 text-left text-sm hover:bg-accent transition-colors ${
-                                        idx === highlightedIndex ? "bg-accent" : ""
-                                      }`}
-                                      onClick={() => handleEnroll(student)}
-                                      disabled={enrollStudent.isPending}
-                                    >
-                                      <div className="flex flex-col gap-0.5">
-                                        <span className="font-medium text-foreground">{displayName}</span>
-                                        <span className="text-xs text-muted-foreground">{student.email}</span>
-                                      </div>
-                                    </button>
-                                  );
-                                })
-                              ) : (
-                                <div className="px-4 py-3 text-sm text-muted-foreground">
-                                  No eligible students found.
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-
-                      {/* CONTACT Column - Placeholder */}
-                      <TableCell>
-                        <div className="h-10 bg-muted rounded border border-dashed border-muted-foreground/40" />
-                      </TableCell>
-
-                      {/* TIMEZONE Column - Placeholder */}
-                      <TableCell>
-                        <div className="h-10 bg-muted rounded border border-dashed border-muted-foreground/40" />
-                      </TableCell>
-
-                      {/* LAST ACTIVE Column - Placeholder */}
-                      <TableCell>
-                        <div className="h-10 bg-muted rounded border border-dashed border-muted-foreground/40" />
-                      </TableCell>
-
-                      {/* PROGRESS Column - Placeholder */}
-                      <TableCell>
-                        <div className="h-10 bg-muted rounded border border-dashed border-muted-foreground/40" />
-                      </TableCell>
-
-                      {/* ACTIONS Column - Placeholder */}
-                      <TableCell>
-                        <div className="h-10 bg-muted rounded border border-dashed border-muted-foreground/40" />
-                      </TableCell>
-                    </TableRow>
-
-                    {table.getRowModel().rows.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="py-6 text-center text-muted-foreground">
-                          No enrollments yet.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      table.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors">
-                          {row.getVisibleCells().map((cell) => (
-                            <TableCell 
-                              key={cell.id}
-                              style={{ width: cell.column.getSize() !== 150 ? cell.column.getSize() : undefined }}
-                            >
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              )}
-          </div>
-
-          {!enrollments.isLoading && (
-            <DataTablePagination
-              currentPage={table.getState().pagination.pageIndex + 1}
-              totalPages={table.getPageCount() || 1}
-              pageSize={table.getState().pagination.pageSize}
-              onPageChange={(page) =>
-                table.setPageIndex(
-                  Math.max(0, Math.min(page - 1, Math.max(0, table.getPageCount() - 1)))
-                )
-              }
-              onPageSizeChange={(size) => table.setPageSize(size)}
-            />
-          )}
-          </div>
-            </>
-          )}
         </div>
       )}
     </div>
