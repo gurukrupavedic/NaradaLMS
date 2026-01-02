@@ -213,20 +213,23 @@ export function UnifiedBatchMatrix({
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
+                  size="icon"
+                  className="data-[state=open]:bg-muted"
                   title="Student actions menu"
                 >
                   <MoreVertical className="h-4 w-4" />
                   <span className="sr-only">Student actions</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent
+                align="end"
+                className="bg-white dark:bg-black border border-border shadow-lg min-w-[180px]"
+              >
                 <DropdownMenuItem
                   onClick={() =>
                     handleDropStudent(student.enrollmentId, `${student.firstName} ${student.lastName}`)
                   }
-                  className="text-red-600"
+                  className="text-destructive focus:text-destructive"
                 >
                   Drop Student
                 </DropdownMenuItem>
