@@ -404,7 +404,6 @@ export class BatchStorage {
     return !!rows[0];
   }
 
-  // Phase 5: Evaluation methods
   async getBatchProgress(batchId: number) {
     // Get batch info
     const batchInfo = await this.getBatchById(batchId);
@@ -441,11 +440,11 @@ export class BatchStorage {
         .select({
           chapterId: chapters.id,
           chapterTitle: chapters.title,
-          chapterNumber: chapters.chapterNumber,
+          chapterNumber: chapters.order,
         })
         .from(chapters)
         .where(eq(chapters.trackId, batchInfo.trackId))
-        .orderBy(chapters.chapterNumber);
+        .orderBy(chapters.order);
     }
 
     // Get student IDs for progress query
@@ -454,7 +453,7 @@ export class BatchStorage {
 
     // Get all progress records for these students/chapters
     let progressRecords: any[] = [];
-    if (chapterIds.length > 0) {
+    if (chapterIds.length > 0 && studentIds.length > 0) {
       progressRecords = await db
         .select()
         .from(studentProgress)
@@ -501,9 +500,6 @@ export class BatchStorage {
   }
 
   async evaluateStudent(input: { studentId: string; chapterId: number; proficiencyLevel: number; notes?: string; evaluatedBy: string; batchId?: number }) {
-    const { studentProgress } = await import('@shared/schema');
-    const { and } = await import('drizzle-orm');
-
     // Check if progress record exists
     const existing = await db
       .select()
@@ -547,7 +543,6 @@ export class BatchStorage {
   }
 
   async chapterExists(chapterId: number) {
-    const { chapters } = await import('@shared/schema');
     const rows = await db.select({ id: chapters.id }).from(chapters).where(eq(chapters.id, chapterId));
     return !!rows[0];
   }

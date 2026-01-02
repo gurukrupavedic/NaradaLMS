@@ -49,8 +49,9 @@ export interface StudentProgress {
   chapterId: string;
   proficiencyLevel: ProficiencyLevel;
   status: 'practicing' | 'completed' | 'absent' | 'not_started';
-  lastUpdated: Date;
-  evaluatedBy?: string; // Instructor who last evaluated
+  lastEvaluatedAt: string | null; // Timestamp of last evaluation
+  evaluatedBy: string | null; // Instructor who last evaluated
+  notes: string | null; // Optional notes from evaluation
 }
 
 /**

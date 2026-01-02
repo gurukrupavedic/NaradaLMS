@@ -1,4 +1,5 @@
 import { batchStorage } from "./storage";
+import { VALID_PROFICIENCY_LEVELS } from "@shared/constants";
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput, BatchDetail } from "./types";
 
 export class BatchService {
@@ -127,8 +128,6 @@ export class BatchService {
   }
 
   async evaluateStudent(input: { studentId: string; chapterId: number; proficiencyLevel: number; notes?: string; evaluatedBy: string; batchId?: number }) {
-    const { VALID_PROFICIENCY_LEVELS } = await import('@shared/constants');
-    
     // Validate proficiency level
     if (!VALID_PROFICIENCY_LEVELS.includes(input.proficiencyLevel as any)) {
       throw Object.assign(

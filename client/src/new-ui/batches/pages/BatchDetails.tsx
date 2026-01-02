@@ -443,17 +443,19 @@ export default function BatchDetails() {
   const matrixProgress: StudentProgress[] = useMemo(() => {
     if (!batchProgress.data) return [];
 
-    return batchProgress.data.students.flatMap(student =>
-      student.chapters.map(chapter => ({
-        studentId: student.studentId,
-        chapterId: String(chapter.chapterId),
-        proficiencyLevel: chapter.proficiencyLevel ?? -1,
-        status: chapter.proficiencyLevel === null ? 'not_started' 
-          : chapter.proficiencyLevel === 0 ? 'in_progress'
-          : chapter.proficiencyLevel >= 4 ? 'completed'
-          : 'in_progress',
-        lastEvaluatedAt: chapter.lastEvaluatedAt,
-        notes: chapter.notes,
+    return batchProgress.data.rows.flatMap(row =>
+      row.cells.map(cell => ({
+        studentId: row.studentId,
+        chapterId: String(cell.chapterId),
+        proficiencyLevel: cell.proficiencyLevel ?? -1,
+        status: cell.proficiencyLevel === null ? 'not_started' 
+          : cell.proficiencyLevel === -1 ? 'absent'
+          : cell.proficiencyLevel === 0 ? 'practicing'
+          : cell.proficiencyLevel >= 4 ? 'completed'
+          : 'practicing',
+        lastEvaluatedAt: cell.lastEvaluatedAt ?? null,
+        evaluatedBy: cell.evaluatedBy ?? null,
+        notes: cell.notes ?? null,
       }))
     );
   }, [batchProgress.data]);
@@ -728,10 +730,6 @@ export default function BatchDetails() {
                           studentId,
                           chapterId: Number(chapterId),
                           proficiencyLevel: level,
-                        });
-                        toast({ 
-                          title: 'Proficiency updated',
-                          description: `Level set to ${level}`,
                         });
                       } catch (error: any) {
                         toast({
