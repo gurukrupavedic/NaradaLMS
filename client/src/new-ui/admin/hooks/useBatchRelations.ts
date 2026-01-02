@@ -21,6 +21,9 @@ export type Enrollment = {
   status: string; // active, dropped, completed
   enrolledAt?: string;
   droppedAt?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string;
 };
 
 export type EligibleStudent = {

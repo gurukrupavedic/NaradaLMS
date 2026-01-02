@@ -5,6 +5,7 @@ export interface ChapterProgressCell {
   chapterId: number;
   proficiencyLevel: number; // 0-4
   lastEvaluatedAt?: string | null;
+  evaluatedBy?: string | null;
   notes?: string | null;
 }
 
@@ -64,6 +65,7 @@ function transform(server: BatchProgressResponseServer): BatchProgressResponseUI
         chapterId: c.chapterId,
         proficiencyLevel: found?.proficiencyLevel ?? 0,
         lastEvaluatedAt: found?.lastEvaluatedAt ?? null,
+        evaluatedBy: found?.evaluatedBy ?? null,
         notes: found?.notes ?? null,
       };
     }),

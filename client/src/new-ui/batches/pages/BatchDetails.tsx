@@ -15,9 +15,13 @@ import { useBatches as useAdminBatches, type Batch as AdminBatch } from "../../a
 import { useBatch as useAdminBatch } from "../../admin/hooks/useBatch";
 import { useBatches as useInstructorBatches, type BatchItem } from "../hooks/useBatches";
 import { useTracks } from "../hooks/useTracks";
+import { useChaptersByTrack, type ChapterListItem } from "../hooks/useChaptersByTrack";
+import { useBatchProgress } from "../hooks/useBatchProgress";
+import { useUpdateProficiency } from "../hooks/useUpdateProficiency";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
 import { BatchDetailsCard } from "../../admin/components/BatchDetailsCard";
 import { UnifiedBatchMatrix } from "../components/UnifiedBatchMatrix";
+import { TrackTabs } from "../components/TrackTabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +39,7 @@ import type {
   Batch as MatrixBatch,
 } from "../types/matrix";
 
-type Enrollment = {
+type EnrollmentRow = {
   id: number;
   studentId: string;
   firstName?: string;
@@ -107,6 +111,17 @@ export default function BatchDetails() {
   // Fetch all tracks
   const tracks = useTracks();
   
+  // Fetch chapters for selected track
+  const chapters = useChaptersByTrack(
+    selectedTrackId ? Number(selectedTrackId) : undefined
+  );
+
+  // Fetch batch progress (proficiency data)
+  const batchProgress = useBatchProgress(batchId ? Number(batchId) : undefined);
+
+  // Proficiency update mutation
+  const updateProficiency = useUpdateProficiency();
+  
   // Convert batches to unified format for dropdown compatibility
   const batches: UnifiedBatch[] = useMemo(() => {
     const items = batchesData?.items ?? [];
@@ -161,6 +176,12 @@ export default function BatchDetails() {
     setPagination({ pageIndex: 0, pageSize: 10 });
     setSearchQuery("");
     setShowDropdown(false);
+    
+    // Reset matrix UI state when batch changes
+    setMatrixSelectedStudents([]);
+    setMatrixSearchQuery("");
+    setMatrixShowTypeahead(false);
+    setMatrixHighlightedIndex(-1);
     
     // Reset track to batch's current track (if available)
     if (batchDetail.data?.trackId) {
@@ -304,7 +325,7 @@ export default function BatchDetails() {
   // Define columns for enrollment table
   const enrollmentData = enrollments.data ?? [];
 
-  const columns = useMemo<ColumnDef<Enrollment>[]>(
+  const columns = useMemo<ColumnDef<EnrollmentRow>[]>(
     () => [
       {
         accessorKey: "studentId",
@@ -383,7 +404,7 @@ export default function BatchDetails() {
     [dropEnrollment, toast]
   );
 
-  const table = useReactTable<Enrollment>({
+  const table = useReactTable<EnrollmentRow>({
     data: enrollmentData,
     columns,
     getCoreRowModel: getCoreRowModel(),
@@ -397,9 +418,51 @@ export default function BatchDetails() {
 
   const isBatchSelected = !Number.isNaN(batchId);
 
+  // Transform enrollments to StudentMatrixRow array
+  const matrixStudents: StudentMatrixRow[] = useMemo(() => {
+    return (enrollments.data ?? []).map(enrollment => ({
+      id: enrollment.studentId,
+      firstName: enrollment.firstName || '',
+      lastName: enrollment.lastName || '',
+      email: enrollment.email || '',
+      enrollmentId: enrollment.id,
+    }));
+  }, [enrollments.data]);
+
+  // Transform chapters to matrix columns
+  const matrixChapters: Chapter[] = useMemo(() => {
+    return (chapters.data ?? []).map(ch => ({
+      id: String(ch.id),
+      code: `CH${ch.order}`,
+      title: ch.title,
+      trackId: String(ch.trackId),
+    }));
+  }, [chapters.data]);
+
+  // Transform batch progress to flat StudentProgress array
+  const matrixProgress: StudentProgress[] = useMemo(() => {
+    if (!batchProgress.data) return [];
+
+    return batchProgress.data.rows.flatMap(row =>
+      row.cells.map(cell => ({
+        studentId: row.studentId,
+        chapterId: String(cell.chapterId),
+        proficiencyLevel: cell.proficiencyLevel ?? -1,
+        status: cell.proficiencyLevel === null ? 'not_started' 
+          : cell.proficiencyLevel === -1 ? 'absent'
+          : cell.proficiencyLevel === 0 ? 'practicing'
+          : cell.proficiencyLevel >= 4 ? 'completed'
+          : 'practicing',
+        lastEvaluatedAt: cell.lastEvaluatedAt ?? null,
+        evaluatedBy: cell.evaluatedBy ?? null,
+        notes: cell.notes ?? null,
+      }))
+    );
+  }, [batchProgress.data]);
+
   return (
     <div className="space-y-6 px-4 pt-4">
-      {/* Page-Level Controls: Batch & Track Selection - At Top */}
+      {/* Page-Level Controls: Batch Selection & View Toggle */}
       <div className="flex flex-wrap items-center gap-6">
         {/* Batch Selector */}
         <div className="flex items-center gap-3 flex-1 min-w-[300px]">
@@ -420,39 +483,6 @@ export default function BatchDetails() {
                   {b.batchCode} - {b.batchName}
                 </SelectItem>
               ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Track Selector (Independent) */}
-        <div className="flex items-center gap-3 flex-1 min-w-[300px]">
-          <label className="text-sm font-medium text-foreground dark:text-gray-100 whitespace-nowrap">
-            Track:
-          </label>
-          <Select
-            value={selectedTrackId}
-            onValueChange={(value) => setSelectedTrackId(value || undefined)}
-            disabled={tracks.isLoading}
-          >
-            <SelectTrigger className="flex-1 h-9">
-              <SelectValue placeholder="-- Select Track --" />
-            </SelectTrigger>
-            <SelectContent className="bg-white dark:bg-gray-900">
-              {tracks.data?.map((track) => {
-                const isCurrentTrack = batchDetail.data?.trackId === track.id;
-                return (
-                  <SelectItem key={track.id} value={String(track.id)}>
-                    <div className="flex items-center justify-between w-full gap-2">
-                      <span>Track {track.order} - {track.title}</span>
-                      {isCurrentTrack && (
-                        <Badge variant="secondary" className="ml-2 text-[10px] px-2 py-0">
-                          Current
-                        </Badge>
-                      )}
-                    </div>
-                  </SelectItem>
-                );
-              })}
             </SelectContent>
           </Select>
         </div>
@@ -514,11 +544,11 @@ export default function BatchDetails() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Matrix View (Phase 1 - UI Only) */}
+          {/* Matrix View with Track Tabs */}
           {showMatrixView && (
-            <div className="space-y-3">
-              {/* Enrollment Controls */}
-              <div className="flex items-center gap-3 pb-4">
+            <div className="space-y-4">
+              {/* Enrollment Controls - Batch Level (Outside Tabs) */}
+              <div className="flex items-center gap-3">
                 <div className="flex-1 relative">
                   <div className="relative">
                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -645,224 +675,75 @@ export default function BatchDetails() {
                   )}
                 </Button>
               </div>
-              
-              <UnifiedBatchMatrix
-                students={[
-                  // Mock data for Phase 1 - showing all proficiency levels
-                  {
-                    id: '1',
-                    firstName: 'Anya',
-                    lastName: 'Sharma',
-                    email: 'anya@vedic.com',
-                    enrollmentId: 101,
-                  },
-                  {
-                    id: '2',
-                    firstName: 'Bhavna',
-                    lastName: 'Patel',
-                    email: 'bhavna@vedic.com',
-                    enrollmentId: 102,
-                  },
-                  {
-                    id: '3',
-                    firstName: 'Chand',
-                    lastName: 'Kumar',
-                    email: 'chand@vedic.com',
-                    enrollmentId: 103,
-                  },
-                  {
-                    id: '4',
-                    firstName: 'Devendra',
-                    lastName: 'Singh',
-                    email: 'devendra@vedic.com',
-                    enrollmentId: 104,
-                  },
-                  {
-                    id: '5',
-                    firstName: 'Esha',
-                    lastName: 'Verma',
-                    email: 'esha@vedic.com',
-                    enrollmentId: 105,
-                  },
-                  {
-                    id: '6',
-                    firstName: 'Farhan',
-                    lastName: 'Ahmed',
-                    email: 'farhan@vedic.com',
-                    enrollmentId: 106,
-                  },
-                ] as StudentMatrixRow[]}
-                chapters={[
-                  // Mock chapters for selected track (Phase 1)
-                  {
-                    id: 'ch1',
-                    code: 'INTRO',
-                    title: 'Introduction',
-                    trackId: selectedTrackId || '1',
-                  },
-                  {
-                    id: 'ch2',
-                    code: 'MANTRA',
-                    title: 'Core Mantras',
-                    trackId: selectedTrackId || '1',
-                  },
-                  {
-                    id: 'ch3',
-                    code: 'MEANING',
-                    title: 'Meaning & Context',
-                    trackId: selectedTrackId || '1',
-                  },
-                ] as Chapter[]}
-                progress={[
-                  // Mock progress data showing all 6 proficiency levels
-                  // Absent (-1)
-                  {
-                    studentId: '3',
-                    chapterId: 'ch1',
-                    proficiencyLevel: -1,
-                    status: 'absent',
-                    lastUpdated: new Date(),
-                  },
-                  // Practicing (0)
-                  {
-                    studentId: '4',
-                    chapterId: 'ch1',
-                    proficiencyLevel: 0,
-                    status: 'practicing',
-                    lastUpdated: new Date(),
-                  },
-                  // L1 - 50% (1)
-                  {
-                    studentId: '5',
-                    chapterId: 'ch1',
-                    proficiencyLevel: 1,
-                    status: 'completed',
-                    lastUpdated: new Date(),
-                  },
-                  // L2 - 70% (2)
-                  {
-                    studentId: '2',
-                    chapterId: 'ch1',
-                    proficiencyLevel: 2,
-                    status: 'completed',
-                    lastUpdated: new Date(),
-                  },
-                  // L3 - 90% Ready (3)
-                  {
-                    studentId: '1',
-                    chapterId: 'ch1',
-                    proficiencyLevel: 3,
-                    status: 'completed',
-                    lastUpdated: new Date(),
-                  },
-                  // L4 - 95% Certified (4)
-                  {
-                    studentId: '6',
-                    chapterId: 'ch1',
-                    proficiencyLevel: 4,
-                    status: 'completed',
-                    lastUpdated: new Date(),
-                  },
-                  // Second chapter - mixed levels
-                  {
-                    studentId: '1',
-                    chapterId: 'ch2',
-                    proficiencyLevel: 2,
-                    status: 'completed',
-                    lastUpdated: new Date(),
-                  },
-                  {
-                    studentId: '2',
-                    chapterId: 'ch2',
-                    proficiencyLevel: 1,
-                    status: 'completed',
-                    lastUpdated: new Date(),
-                  },
-                  {
-                    studentId: '3',
-                    chapterId: 'ch2',
-                    proficiencyLevel: 0,
-                    status: 'practicing',
-                    lastUpdated: new Date(),
-                  },
-                  {
-                    studentId: '4',
-                    chapterId: 'ch2',
-                    proficiencyLevel: 3,
-                    status: 'completed',
-                    lastUpdated: new Date(),
-                  },
-                  {
-                    studentId: '5',
-                    chapterId: 'ch2',
-                    proficiencyLevel: 4,
-                    status: 'completed',
-                    lastUpdated: new Date(),
-                  },
-                  {
-                    studentId: '6',
-                    chapterId: 'ch2',
-                    proficiencyLevel: 2,
-                    status: 'completed',
-                    lastUpdated: new Date(),
-                  },
-                  // Third chapter
-                  {
-                    studentId: '1',
-                    chapterId: 'ch3',
-                    proficiencyLevel: 4,
-                    status: 'completed',
-                    lastUpdated: new Date(),
-                  },
-                  {
-                    studentId: '2',
-                    chapterId: 'ch3',
-                    proficiencyLevel: 3,
-                    status: 'completed',
-                    lastUpdated: new Date(),
-                  },
-                  {
-                    studentId: '3',
-                    chapterId: 'ch3',
-                    proficiencyLevel: -1,
-                    status: 'absent',
-                    lastUpdated: new Date(),
-                  },
-                  {
-                    studentId: '4',
-                    chapterId: 'ch3',
-                    proficiencyLevel: 1,
-                    status: 'completed',
-                    lastUpdated: new Date(),
-                  },
-                  {
-                    studentId: '5',
-                    chapterId: 'ch3',
-                    proficiencyLevel: 2,
-                    status: 'completed',
-                    lastUpdated: new Date(),
-                  },
-                  {
-                    studentId: '6',
-                    chapterId: 'ch3',
-                    proficiencyLevel: 0,
-                    status: 'practicing',
-                    lastUpdated: new Date(),
-                  },
-                ] as StudentProgress[]}
-                selectedBatchId={String(batchId)}
-                selectedTrackId={selectedTrackId || ''}
-                onDropStudent={async (enrollmentId) => {
-                  // Phase 3: Actually drop student
-                  console.log('Drop enrollment:', enrollmentId);
-                }}
-                onUpdateProficiency={async (studentId, chapterId, level) => {
-                  // Phase 3: Actually update proficiency
-                  console.log('Update proficiency:', studentId, chapterId, level);
-                }}
-                isLoading={false}
-                isUpdating={false}
-              />
+
+              {/* Track Tabs with Matrix */}
+              <TrackTabs
+                tracks={(tracks.data ?? []).map(t => ({
+                  id: String(t.id),
+                  name: t.title,
+                  description: t.description,
+                  order: t.order,
+                }))}
+                selectedTrackId={selectedTrackId}
+                currentTrackId={batchDetail.data?.trackId ? String(batchDetail.data.trackId) : undefined}
+                onSelectTrack={(trackId) => setSelectedTrackId(trackId)}
+                isLoading={tracks.isLoading}
+              >
+                {chapters.isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader className="h-6 w-6 animate-spin text-gray-400" />
+                    <span className="ml-2 text-sm text-gray-600">Loading chapters...</span>
+                  </div>
+                ) : matrixChapters.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+                    <div className="text-sm font-medium text-gray-700">No chapters in this track</div>
+                    <div className="mt-2 text-sm text-gray-600">Add chapters in Content Studio to get started.</div>
+                  </div>
+                ) : (
+                  <UnifiedBatchMatrix
+                    students={matrixStudents}
+                    chapters={matrixChapters}
+                    progress={matrixProgress}
+                    selectedBatchId={String(batchId)}
+                    selectedTrackId={selectedTrackId || ''}
+                    onDropStudent={async (enrollmentId) => {
+                      await dropEnrollment.mutateAsync(
+                        { enrollmentId },
+                        {
+                          onSuccess: () => {
+                            toast({ title: 'Student removed from batch' });
+                          },
+                          onError: (err: any) => {
+                            toast({
+                              title: 'Failed to remove student',
+                              description: err?.message || 'An error occurred',
+                              variant: 'destructive',
+                            });
+                          },
+                        }
+                      );
+                    }}
+                    onUpdateProficiency={async (studentId, chapterId, level) => {
+                      try {
+                        await updateProficiency.mutateAsync({
+                          batchId: Number(batchId),
+                          studentId,
+                          chapterId: Number(chapterId),
+                          proficiencyLevel: level,
+                        });
+                      } catch (error: any) {
+                        toast({
+                          title: 'Failed to update proficiency',
+                          description: error?.message || 'An error occurred',
+                          variant: 'destructive',
+                        });
+                      }
+                    }}
+                    isLoading={enrollments.isLoading}
+                    isUpdating={dropEnrollment.isPending || enrollStudent.isPending}
+                  />
+                )}
+              </TrackTabs>
             </div>
           )}
 
