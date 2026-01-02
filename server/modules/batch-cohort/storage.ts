@@ -202,12 +202,39 @@ export class BatchStorage {
   }
 
   async addEnrollment(input: EnrollmentCreateInput) {
+    // Create the enrollment record
     const [created] = await db.insert(enrollments).values({
       batchId: input.batchId,
       studentId: input.studentId,
       status: 'active',
       enrolledBy: input.enrolledBy,
     }).returning();
+
+    // Automatically create proficiency records for all chapters with level 9 (Not Started)
+    try {
+      const allChapters = await db
+        .select({ id: chapters.id })
+        .from(chapters);
+
+      if (allChapters.length > 0) {
+        const proficiencyRecords = allChapters.map(chapter => ({
+          studentId: input.studentId,
+          chapterId: chapter.id,
+          batchId: input.batchId,
+          proficiencyLevel: 9, // Not Started
+          lastEvaluatedAt: new Date(),
+        }));
+
+        // Bulk insert proficiency records
+        if (proficiencyRecords.length > 0) {
+          await db.insert(studentProgress).values(proficiencyRecords);
+        }
+      }
+    } catch (error) {
+      // Log error but don't fail enrollment if proficiency creation fails
+      console.error('Warning: Failed to create proficiency records for new enrollment:', error);
+    }
+
     return created;
   }
 
