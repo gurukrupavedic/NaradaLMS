@@ -99,7 +99,7 @@ export function BatchDetailsCard({ batch, batches = [], currentBatchId, onBatchC
                 value={String(currentBatchId)}
                 onValueChange={(value) => onBatchChange(Number(value))}
               >
-                <SelectTrigger className="h-8 text-sm">
+                <SelectTrigger className="h-8 text-sm border-border/20 data-[state=open]:bg-muted">
                   <SelectValue placeholder="Select batch..." />
                 </SelectTrigger>
                 <SelectContent>
