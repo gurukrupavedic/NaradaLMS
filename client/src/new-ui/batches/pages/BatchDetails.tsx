@@ -271,32 +271,6 @@ export default function BatchDetails() {
 
   return (
     <div className="space-y-6 px-4 pt-4">
-      {/* Page-Level Controls: Batch Selection & View Toggle */}
-      <div className="flex flex-wrap items-center gap-6">
-        {/* Batch Selector */}
-        <div className="flex items-center gap-3 flex-1 min-w-[300px]">
-          <label className="text-sm font-medium text-foreground dark:text-gray-100 whitespace-nowrap">
-            Batch:
-          </label>
-          <Select
-            value={String(batchId)}
-            onValueChange={(value) => setLocation(`/app/${context}/batches/${Number(value)}`)}
-            disabled={isBatchesLoading}
-          >
-            <SelectTrigger className="flex-1 h-9">
-              <SelectValue placeholder="-- Select Batch --" />
-            </SelectTrigger>
-            <SelectContent className="bg-white dark:bg-gray-900">
-              {batches.map((b) => (
-                <SelectItem key={b.id} value={String(b.id)}>
-                  {b.batchCode} - {b.batchName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
       {/* Batch Details Card - Same for both admin and instructor */}
       {isBatchSelected && (
         batchDetail.isLoading ? (
@@ -323,7 +297,12 @@ export default function BatchDetails() {
         ) : batchDetail.isError ? (
           <p className="text-sm text-destructive">Failed to load batch details.</p>
         ) : batchDetail.data ? (
-          <BatchDetailsCard batch={batchDetail.data} />
+          <BatchDetailsCard 
+            batch={batchDetail.data} 
+            batches={batches.map(b => ({ id: b.id, batchCode: b.batchCode, batchName: b.batchName }))}
+            currentBatchId={batchId}
+            onBatchChange={(newBatchId: number) => setLocation(`/app/${context}/batches/${newBatchId}`)}
+          />
         ) : null
       )}
 

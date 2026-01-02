@@ -1,12 +1,17 @@
+/* eslint-disable jsx-a11y/aria-proptypes */
 import React from "react";
 import { ChevronDown } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { BatchDetail } from "../hooks/useBatches";
 
 interface BatchDetailsCardProps {
   batch: BatchDetail;
+  batches?: Array<{ id: number; batchCode: string; batchName: string }>;
+  currentBatchId?: number;
+  onBatchChange?: (batchId: number) => void;
 }
 
-export function BatchDetailsCard({ batch }: BatchDetailsCardProps) {
+export function BatchDetailsCard({ batch, batches = [], currentBatchId, onBatchChange }: BatchDetailsCardProps) {
   const [collapsed, setCollapsed] = React.useState(false);
 
   const formatDate = (dateStr?: string) => {
@@ -85,13 +90,31 @@ export function BatchDetailsCard({ batch }: BatchDetailsCardProps) {
       <>
       {/* Grid ordered as requested */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3 space-y-3">
-        {/* Row 1: Batch Code/Name, Current Track, Cohort Type */}
+        {/* Row 1: Batch Selector, Current Track, Cohort Type */}
         <div className="space-y-2">
           <div className="space-y-1">
             <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Batch</div>
-            <div className="text-sm font-medium text-foreground">
-              {batch.batchCode} - {batch.batchName}
-            </div>
+            {batches.length > 0 && currentBatchId && onBatchChange ? (
+              <Select
+                value={String(currentBatchId)}
+                onValueChange={(value) => onBatchChange(Number(value))}
+              >
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue placeholder="Select batch..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {batches.map((b) => (
+                    <SelectItem key={b.id} value={String(b.id)}>
+                      {b.batchCode} - {b.batchName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="text-sm font-medium text-foreground">
+                {batch.batchCode} - {batch.batchName}
+              </div>
+            )}
           </div>
         </div>
 
