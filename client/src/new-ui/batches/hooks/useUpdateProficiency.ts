@@ -62,6 +62,11 @@ export function useUpdateProficiency() {
       await queryClient.invalidateQueries({ 
         queryKey: [`/api/batches/${variables.batchId}/progress`],
       });
+      
+      // Also refetch to ensure data is updated before UI updates
+      await queryClient.refetchQueries({
+        queryKey: [`/api/batches/${variables.batchId}/progress`],
+      });
     },
   });
 }
