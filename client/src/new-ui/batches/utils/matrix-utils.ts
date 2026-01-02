@@ -10,7 +10,7 @@ import { ProficiencyLevel } from '../types/matrix';
  * Get Tailwind CSS classes for a proficiency cell based on level and status
  * 
  * Color scheme (custom hex codes):
- * - Absent: #F3F4F6 / #6B7280 text
+ * - Absent: #E5E7EB / #374151 text
  * - Practicing: #FEF3C7 / #92400E text
  * - L1 (50%): #D1FAE5 / #065F46 text
  * - L2 (70%): #86EFAC / #166534 text
@@ -35,16 +35,16 @@ export function getCellColor(
   // Absent takes priority
   if (level === 8 || status === 'absent') {
     return {
-      bgColor: 'bg-gray-100',
-      textColor: 'text-gray-600',
-      borderColor: 'border-gray-300',
-      darkBgColor: 'dark:bg-gray-800',
-      darkTextColor: 'dark:text-gray-400',
-      darkBorderColor: 'dark:border-gray-600',
-      bgHex: '#F3F4F6',
-      borderHex: '#D1D5DB',
-      circleHex: '#9CA3AF',
-      textHex: '#4B5563',
+      bgColor: 'bg-gray-200',
+      textColor: 'text-gray-700',
+      borderColor: 'border-gray-400',
+      darkBgColor: 'dark:bg-gray-700',
+      darkTextColor: 'dark:text-gray-300',
+      darkBorderColor: 'dark:border-gray-500',
+      bgHex: '#E5E7EB',
+      borderHex: '#9CA3AF',
+      circleHex: '#6B7280',
+      textHex: '#374151',
     };
   }
 
