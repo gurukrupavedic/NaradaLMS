@@ -1,8 +1,9 @@
 # Unified Batch Matrix - UI Implementation Architecture
 
 **Last Updated:** January 2, 2026  
+**Status:** ✅ **COMPLETED & ARCHIVED** - Gap issue resolved  
 **Component Location:** `client/src/new-ui/batches/components/UnifiedBatchMatrix.tsx`  
-**Purpose:** This document explains the UI implementation of the unified batch matrix component for developers seeking to help debug or enhance it.
+**Purpose:** Reference documentation for the UI implementation of the unified batch matrix component.
 
 ---
 
@@ -269,73 +270,14 @@ const getCellColor = (level: ProficiencyLevel): string => {
 
 ---
 
-## Current Issue: Gap Between Student & Actions Columns
+## Sticky Column Positioning
 
-### Problem Description
+### ✅ Issue Resolved
 
-**Visual Issue:** When horizontally scrolling the matrix, there's a visible gap between the sticky student column and the sticky actions (kebab menu) column. Content from behind (chapter cells) shows through this gap.
+The gap between sticky student and actions columns has been resolved. The columns now align perfectly with no content bleeding through during horizontal scrolling.
 
-**Root Cause Analysis:**
-
-The positioning logic appears to have a mismatch:
-
-```typescript
-// Header positioning
-style={{ 
-  width: '220px',           // Student column width
-  left: isSticky ? (header.id === 'actions' ? '220px' : '0px') : undefined
-}}
-
-// Cell positioning  
-style={{
-  width: '44px',            // Actions column width
-  left: isSticky ? (cell.column.id === 'actions' ? '220px' : '0px') : undefined
-}}
-```
-
-**Possible Causes:**
-1. **Width Mismatch** - If the student column's actual rendered width doesn't equal 220px due to padding, borders, or content overflow, the `left: 220px` position for actions will be incorrect
-2. **Padding Inclusion** - The `size: 220` may not account for padding (`pl-4 pr-2`)
-3. **Z-index Layering** - Both columns have `z-20`, so they're at the same stacking level; if they're not perfectly adjacent, one might appear behind the other
-4. **Border/Spacing** - The table's border-collapse or cell spacing might add pixels between columns
-
-### Current Styling
-
-**Student Column Cell:**
-```typescript
-className="pl-4 pr-2 py-2 flex items-center gap-2 min-w-0"
-// Total horizontal: 16px (pl-4) + 8px (pr-2) + content + 8px (gap) = ?
-```
-
-**Actions Column Cell:**
-```typescript
-className="px-2 py-2 flex items-center justify-center"
-// Total horizontal: 8px (px-2) + 8px (px-2) = 16px padding
-```
-
-### Debugging Steps
-
-To help identify the exact issue:
-
-1. **Inspect Column Widths in Browser DevTools:**
-   - Right-click student column → Inspect
-   - Check computed width (should be 220px)
-   - Check actual rendered width (padding + border + content)
-   - Repeat for actions column (should be 44px)
-
-2. **Verify `left` Position Calculations:**
-   - Student col: `left: 0px` (should align to table left)
-   - Actions col: `left: 220px` (should align immediately after student col)
-   - If gap exists, `left` value is too large
-
-3. **Check TanStack Table's Size Configuration:**
-   - Student: `size: 220` - Is this before or after padding?
-   - Actions: `size: 44` - Is this the full width or just button?
-
-4. **Visual Debugging:**
-   - Add temporary `border: 2px solid red` to student column
-   - Add temporary `border: 2px solid blue` to actions column
-   - This shows exact boundaries of each column
+**Previous Issue:** Visible gap between sticky columns when scrolling
+**Resolution:** Fixed in production (Jan 2, 2026)
 
 ---
 
@@ -451,29 +393,29 @@ UnifiedBatchMatrix.tsx
 
 ---
 
-## Testing Recommendations
+## Testing Checklist
 
-### Manual Testing Checklist
+### Manual Testing
 
-- [ ] Matrix renders with 5+ students
-- [ ] Matrix renders with 10+ chapters
-- [ ] Horizontal scroll works smoothly
-- [ ] Student column stays visible while scrolling chapters
-- [ ] Actions (kebab menu) column stays visible
-- [ ] **No gap visible between student & actions columns when scrolling**
-- [ ] Click proficiency cell → modal opens
-- [ ] Select level in modal → cell updates color
-- [ ] Click drop student → row removed
-- [ ] Loading state displays
-- [ ] Empty state displays
-- [ ] Error state displays
+- ✅ Matrix renders with 5+ students
+- ✅ Matrix renders with 10+ chapters
+- ✅ Horizontal scroll works smoothly
+- ✅ Student column stays visible while scrolling chapters
+- ✅ Actions (kebab menu) column stays visible
+- ✅ No gap visible between student & actions columns when scrolling
+- ✅ Click proficiency cell → modal opens
+- ✅ Select level in modal → cell updates color
+- ✅ Click drop student → row removed
+- ✅ Loading state displays
+- ✅ Empty state displays
+- ✅ Error state displays
 
 ### Browser Testing
 
-- Chrome/Edge (latest)
-- Firefox (latest)
-- Safari (if available)
-- Dark mode toggle
+- ✅ Chrome/Edge (latest)
+- ✅ Firefox (latest)
+- ✅ Safari (if available)
+- ✅ Dark mode toggle
 
 ---
 
@@ -484,19 +426,9 @@ UnifiedBatchMatrix.tsx
 - **Hooks:** `client/src/new-ui/batches/hooks/useBatchProgress.ts`
 - **Types:** `client/src/new-ui/batches/types/matrix.ts`
 - **Utils:** `client/src/new-ui/batches/utils/matrix-utils.ts`
+- **Implementation Plan:** [unified-batch-matrix-implementation.md](unified-batch-matrix-implementation.md)
 
 ---
 
-## Questions for External Contributor
-
-1. What is the exact gap width (in pixels) when scrolling horizontally?
-2. Does the gap change based on zoom level or viewport width?
-3. Can you reproduce the gap in a minimal React example with TanStack Table?
-4. Have you tested with different browser rendering engines?
-5. Is the gap consistent between the header row and body rows, or different?
-
----
-
-**Document created:** January 2, 2026  
-**Last reviewed:** January 2, 2026  
-**Status:** Ready for external review
+**Archive Date:** January 2, 2026  
+**Final Status:** ✅ Complete and Production Ready
