@@ -7,6 +7,7 @@ import { db } from '../../db';
 import { studentProgress, chapters, tracks, batches, enrollments } from '@shared/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import type { StudentProgressDTO, ProgressQueryFilters, AvailableChapterDTO } from './types';
+import type { ProficiencyLevel } from '@shared/constants';
 
 export class LearningStorage {
   /**
@@ -42,7 +43,7 @@ export class LearningStorage {
       studentId: row.studentId,
       chapterId: row.chapterId,
       batchId: row.batchId,
-      proficiencyLevel: row.proficiencyLevel,
+      proficiencyLevel: row.proficiencyLevel as ProficiencyLevel,
       lastAccessed: row.lastAccessed,
       lastEvaluatedAt: row.lastEvaluatedAt,
       evaluatedBy: row.evaluatedBy,

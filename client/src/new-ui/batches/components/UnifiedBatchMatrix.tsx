@@ -88,7 +88,7 @@ export function UnifiedBatchMatrix({
       return {
         studentId,
         chapterId,
-        proficiencyLevel: -1,
+        proficiencyLevel: 9,
         status: 'not_started',
         isEmpty: true,
       };
@@ -175,7 +175,7 @@ export function UnifiedBatchMatrix({
       cell: (info) => {
         const student = info.row.original;
         return (
-          <div className="px-2 py-2 flex items-center gap-2 min-w-0">
+          <div className="pl-4 pr-2 py-2 flex items-center gap-2 min-w-0">
             {/* Student Initials Badge */}
             <div
               className={`${getInitialBgColor(
@@ -185,7 +185,7 @@ export function UnifiedBatchMatrix({
             >
               {getInitials(student.firstName, student.lastName)}
             </div>
-            
+
             {/* Student Info */}
             <div className="min-w-0">
               <div className="truncate font-medium text-sm">
@@ -208,25 +208,28 @@ export function UnifiedBatchMatrix({
       cell: ({ row }) => {
         const student = row.original;
         return (
-          <div className="px-2 py-2 flex items-center justify-center">
+          <div className="flex items-center justify-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 w-8 p-0"
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="data-[state=open]:bg-muted"
                   title="Student actions menu"
                 >
                   <MoreVertical className="h-4 w-4" />
                   <span className="sr-only">Student actions</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent
+                align="end"
+                className="bg-white dark:bg-black border border-border shadow-lg min-w-[180px]"
+              >
                 <DropdownMenuItem
                   onClick={() =>
                     handleDropStudent(student.enrollmentId, `${student.firstName} ${student.lastName}`)
                   }
-                  className="text-red-600"
+                  className="text-destructive focus:text-destructive"
                 >
                   Drop Student
                 </DropdownMenuItem>
@@ -245,11 +248,11 @@ export function UnifiedBatchMatrix({
       columnHelper.accessor((row) => row.id, {
         id: `chapter-${chapter.id}`,
         header: () => (
-          <div className="w-20 flex flex-col items-center justify-center gap-0.5">
-            <div className="text-xs font-bold text-gray-900 whitespace-nowrap">
+          <div className="px-2 py-2 flex flex-col items-center justify-center gap-0.5">
+            <div className="text-xs font-bold text-gray-900 whitespace-nowrap text-center">
               {chapter.code}
             </div>
-            <div className="text-xs text-gray-600 line-clamp-2 text-center" title={chapter.title}>
+            <div className="text-[10px] text-gray-600 line-clamp-2 text-center" title={chapter.title}>
               {chapter.title}
             </div>
           </div>
@@ -260,20 +263,22 @@ export function UnifiedBatchMatrix({
           const colors = getCellColor(cell.proficiencyLevel, cell.status);
 
           return (
-            <button
-              onClick={() => handleCellClick(studentId, chapter.id)}
-              disabled={isUpdating}
-              className={`
-                h-14 w-20 flex items-center justify-center rounded-lg
-                border-2 transition-all cursor-pointer
-                ${colors.bgColor} ${colors.darkBgColor} ${colors.textColor} ${colors.darkTextColor} ${colors.borderColor} ${colors.darkBorderColor}
-                hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50
-                font-semibold text-sm
-              `}
-              title={`${info.row.original.firstName} - ${chapter.code}`}
-            >
-              {getProficiencyShortLabel(cell.proficiencyLevel)}
-            </button>
+            <div className="px-2 py-2 flex items-center justify-center">
+              <button
+                onClick={() => handleCellClick(studentId, chapter.id)}
+                disabled={isUpdating}
+                className={`
+                  h-14 w-20 flex items-center justify-center rounded-lg
+                  border-2 transition-all cursor-pointer
+                  ${colors.bgColor} ${colors.darkBgColor} ${colors.textColor} ${colors.darkTextColor} ${colors.borderColor} ${colors.darkBorderColor}
+                  hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50
+                  font-semibold text-sm
+                `}
+                title={`${info.row.original.firstName} - ${chapter.code}`}
+              >
+                {getProficiencyShortLabel(cell.proficiencyLevel)}
+              </button>
+            </div>
           );
         },
         size: undefined,
@@ -316,23 +321,24 @@ export function UnifiedBatchMatrix({
   return (
     <div className="space-y-4">
       {/* Matrix Table */}
-      <div className="overflow-x-auto overflow-y-hidden rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 shadow-sm">
-        <table className="w-full border-collapse">
+      <div className="overflow-x-auto overflow-y-auto max-h-[75vh] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 shadow-sm">
+        <table className="w-full border-collapse table-fixed">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id} className="border-b-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900">
                 {headerGroup.headers.map((header) => {
                   const isSticky = header.id === 'student' || header.id === 'actions';
-                  
+                  const isStudentCol = header.id === 'student';
+
                   return (
                     <th
                       key={header.id}
-                      className={`text-left text-sm font-semibold text-gray-800 dark:text-gray-200 ${
-                        isSticky ? 'sticky z-20 bg-gray-50 dark:bg-gray-900 p-0' : 'px-2 py-2'
-                      }`}
+                      className={`${isStudentCol ? 'text-center' : 'text-center'} text-xs font-semibold text-muted-foreground uppercase tracking-tight ${isStudentCol ? 'pl-4 pr-2 py-2 align-middle' : 'p-0'
+                        } ${isSticky ? 'sticky z-20 bg-gray-50 dark:bg-gray-900' : ''
+                        }`}
                       style={{
                         width: `${header.getSize()}px`,
-                        left: isSticky ? (header.id === 'actions' ? '220px' : '0px') : undefined,
+                        left: isSticky ? `${header.column.getStart()}px` : undefined,
                       } as any}
                     >
                       {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -351,16 +357,15 @@ export function UnifiedBatchMatrix({
               >
                 {row.getVisibleCells().map((cell) => {
                   const isSticky = cell.column.id === 'student' || cell.column.id === 'actions';
-                  
+
                   return (
                     <td
                       key={cell.id}
-                      className={`${
-                        isSticky ? 'sticky z-20 bg-white dark:bg-gray-950 p-0' : 'px-2 py-2 text-center'
-                      }`}
+                      className={`align-middle ${isSticky ? 'sticky z-20 bg-white dark:bg-gray-950 p-0' : 'p-0 text-center'
+                        }`}
                       style={{
                         width: `${cell.column.getSize()}px`,
-                        left: isSticky ? (cell.column.id === 'actions' ? '220px' : '0px') : undefined,
+                        left: isSticky ? `${cell.column.getStart()}px` : undefined,
                       } as any}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

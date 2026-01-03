@@ -6,16 +6,17 @@
  */
 
 /**
- * Proficiency level scale: 0-4 for mastery levels, -1 for absent
+ * Proficiency level scale: 0-4 for mastery progression, 8-9 for special states
  * 
  * - 0: Practicing/Attending - Currently learning, minimal competency
  * - 1: 50% - Basic recitation capability, needs practice
  * - 2: 70% - Good flow, minor corrections needed
  * - 3: 90% (Ready) - Ready for certification exam
  * - 4: 95% (Certified) - Mastered and certified
- * - -1: Absent - Student was absent or not evaluated
+ * - 8: Absent - Student was absent for this session
+ * - 9: Not Started - Chapter not yet taught
  */
-export type ProficiencyLevel = -1 | 0 | 1 | 2 | 3 | 4;
+export type ProficiencyLevel = 0 | 1 | 2 | 3 | 4 | 8 | 9;
 
 /**
  * Student row in the matrix

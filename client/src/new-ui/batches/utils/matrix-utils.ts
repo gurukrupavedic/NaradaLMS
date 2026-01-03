@@ -10,7 +10,7 @@ import { ProficiencyLevel } from '../types/matrix';
  * Get Tailwind CSS classes for a proficiency cell based on level and status
  * 
  * Color scheme (custom hex codes):
- * - Absent: #F3F4F6 / #6B7280 text
+ * - Absent: #E5E7EB / #374151 text
  * - Practicing: #FEF3C7 / #92400E text
  * - L1 (50%): #D1FAE5 / #065F46 text
  * - L2 (70%): #86EFAC / #166534 text
@@ -33,18 +33,18 @@ export function getCellColor(
   textHex: string;
 } {
   // Absent takes priority
-  if (level === -1 || status === 'absent') {
+  if (level === 8 || status === 'absent') {
     return {
-      bgColor: 'bg-gray-100',
-      textColor: 'text-gray-600',
-      borderColor: 'border-gray-300',
-      darkBgColor: 'dark:bg-gray-800',
-      darkTextColor: 'dark:text-gray-400',
-      darkBorderColor: 'dark:border-gray-600',
-      bgHex: '#F3F4F6',
-      borderHex: '#D1D5DB',
-      circleHex: '#9CA3AF',
-      textHex: '#4B5563',
+      bgColor: 'bg-gray-200',
+      textColor: 'text-gray-700',
+      borderColor: 'border-gray-400',
+      darkBgColor: 'dark:bg-gray-700',
+      darkTextColor: 'dark:text-gray-300',
+      darkBorderColor: 'dark:border-gray-500',
+      bgHex: '#E5E7EB',
+      borderHex: '#9CA3AF',
+      circleHex: '#6B7280',
+      textHex: '#374151',
     };
   }
 
@@ -90,7 +90,7 @@ export function getCellColor(
         darkBorderColor: 'dark:border-emerald-700',
         bgHex: '#F0FDF4',
         borderHex: '#6EE7B7',
-        circleHex: '#059669',
+        circleHex: '#10B981', // Emerald 500
         textHex: '#065F46',
       };
 
@@ -118,7 +118,7 @@ export function getCellColor(
         darkBorderColor: 'dark:border-violet-700',
         bgHex: '#EDE9FE',
         borderHex: '#C4B5FD',
-        circleHex: '#7C3AED',
+        circleHex: '#8B5CF6', // Violet 500
         textHex: '#4C1D95',
       };
 
@@ -157,7 +157,7 @@ export function getCellColor(
  */
 export function getProficiencyLabel(level: ProficiencyLevel): string {
   switch (level) {
-    case -1:
+    case 8:
       return 'Absent';
     case 0:
       return 'Practicing';
@@ -179,8 +179,10 @@ export function getProficiencyLabel(level: ProficiencyLevel): string {
  */
 export function getProficiencyShortLabel(level: ProficiencyLevel): string {
   switch (level) {
-    case -1:
+    case 8:
       return 'Abs';
+    case 9:
+      return 'NS';
     case 0:
       return 'Prac';
     case 1:
@@ -201,8 +203,10 @@ export function getProficiencyShortLabel(level: ProficiencyLevel): string {
  */
 export function getProficiencyDescription(level: ProficiencyLevel): string {
   switch (level) {
-    case -1:
-      return 'Student was absent or not evaluated';
+    case 8:
+      return 'Student was absent for this session';
+    case 9:
+      return 'Chapter not yet taught';
     case 0:
       return 'Currently learning, minimal competency';
     case 1:
@@ -231,7 +235,8 @@ export function getCertificationStatus(level: ProficiencyLevel): 'certified' | '
     case 1:
     case 2:
       return 'in-progress';
-    case -1:
+    case 8:
+    case 9:
     default:
       return 'not-started';
   }
@@ -255,8 +260,10 @@ export function getProficiencyVariant(
       return 'default'; // L1
     case 0:
       return 'secondary'; // Practicing
-    case -1:
+    case 8:
       return 'destructive'; // Absent
+    case 9:
+      return 'outline'; // Not Started
     default:
       return 'outline';
   }
@@ -271,8 +278,8 @@ export function sortByProficiency(
   b: ProficiencyLevel
 ): number {
   // Absent always last
-  if (a === -1) return 1;
-  if (b === -1) return -1;
+  if (a === 8) return 1;
+  if (b === 8) return -1;
 
   // Sort descending (4, 3, 2, 1, 0)
   return b - a;
@@ -293,7 +300,8 @@ export function getProgressPercentage(level: ProficiencyLevel): number {
       return 50;
     case 0:
       return 20;
-    case -1:
+    case 8:
+    case 9:
     default:
       return 0;
   }
@@ -304,9 +312,9 @@ export function getProgressPercentage(level: ProficiencyLevel): number {
  */
 export const PROFICIENCY_OPTIONS: Array<{ value: ProficiencyLevel; label: string; description: string }> = [
   {
-    value: -1,
+    value: 8,
     label: 'Absent',
-    description: 'Student was absent or not evaluated',
+    description: 'Student was absent for this session',
   },
   {
     value: 0,
@@ -368,5 +376,5 @@ export function isCertified(level: ProficiencyLevel): boolean {
  * Check if student needs evaluation
  */
 export function needsEvaluation(level: ProficiencyLevel, status: string): boolean {
-  return level === -1 || status === 'not_started';
+  return level === 8 || level === 9 || status === 'not_started';
 }

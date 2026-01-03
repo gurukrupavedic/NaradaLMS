@@ -182,6 +182,13 @@ npm run check     # TypeScript type checking
   - If a needed shadcn component is missing, inform the user before implementing custom alternatives
   - Maintain consistent component usage across the application
 
+- **Dropdown/Popover Background Fix** (CRITICAL - prevents text overlap):
+  - All shadcn dropdown components (Select, DropdownMenu, Popover) use `bg-white dark:bg-black` instead of `bg-popover`
+  - This ensures solid backgrounds prevent underlying text from showing through
+  - Already fixed in: `client/src/components/ui/select.tsx`, `dropdown-menu.tsx`, `popover.tsx`
+  - Pattern: Replace `bg-popover` with `bg-white dark:bg-black` in component base className
+  - See commit 7b23d6f for reference implementation
+
 ### Chapter Editor Pattern (5 Tabs)
 1. **Content Editor:** HTML/Text toggle, TipTap WYSIWYG, script switcher
 2. **Audio Management:** Upload with metadata extraction, reciter attribution

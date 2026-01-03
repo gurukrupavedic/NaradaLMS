@@ -30,9 +30,9 @@ export function AppLayout({
   return (
     <SidebarProvider>
       <AppSidebar user={user} userRole={userRole} />
-      <SidebarInset>
+      <SidebarInset className="min-w-0">
         <TopNav user={user} />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto min-w-0">
           {children}
         </main>
       </SidebarInset>
