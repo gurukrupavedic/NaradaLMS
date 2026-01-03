@@ -314,6 +314,36 @@ export default function BatchDetails() {
         </div>
       ) : (
         <div className="space-y-6">
+          {/* Admin-only: Student Enrollment Section */}
+          {context === 'admin' && eligibleStudents.data && (
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <StudentCombobox
+                    students={eligibleStudents.data}
+                    selectedStudents={selectedStudentIds}
+                    onSelectionChange={setSelectedStudentIds}
+                    placeholder="Search students by name or email..."
+                  />
+                </div>
+                <Button
+                  onClick={handleAddStudents}
+                  disabled={selectedStudentIds.length === 0 || enrollStudent.isPending}
+                  className="shrink-0"
+                >
+                  {enrollStudent.isPending ? (
+                    <>
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    `Add Student${selectedStudentIds.length > 1 ? 's' : ''} (${selectedStudentIds.length})`
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Matrix View with Track Tabs */}
           <TrackTabs
                 tracks={(tracks.data ?? []).map(t => ({

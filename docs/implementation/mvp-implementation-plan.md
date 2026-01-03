@@ -585,7 +585,7 @@ Admin Center refinement is complete. Batches & Progress is now in active develop
   - ✅ Card layout matching Admin Center quality
   - ✅ 3-column metadata grid (Track, Instructors, Cohort Type, Enrollment, Dates)
   - ✅ Backend: `/api/batches/my-batches` with instructor filtering (primary + co-instructor)
-- ✅ BatchDetails - Unified Component (Complete - December 30, 2025)
+- ✅ BatchDetails - Unified Component (Complete - January 2-3, 2026) 🎉
   - ✅ Merged admin and instructor views into single component
   - ✅ Dual route support: `/app/admin/batches/:id` AND `/app/instructor/batches/:id`
   - ✅ Context-aware batch fetching (all batches for admin, instructor's batches only)
@@ -596,17 +596,34 @@ Admin Center refinement is complete. Batches & Progress is now in active develop
   - ✅ Toast notifications for all mutations
   - ✅ Loading skeletons and error states
   - ✅ Professional table styling matching Admin Center patterns
-- [ ] Batch Progress Tracker (Next)
-  - [ ] View switcher: Individual Student vs. Batch Overview
-  - [ ] Student progress table with proficiency levels (0-4 scale)
-  - [ ] Batch heatmap visualization
-  - [ ] Progress update workflow
-  - [ ] Standard header with filters
-- [ ] Student Progress Tracker (Next)
-  - [ ] Student-specific progress view
-  - [ ] Chapter-level proficiency display
-  - [ ] Historical progress tracking
+  - ✅ **Unified Batch Matrix** - Interactive proficiency tracking grid (MAJOR FEATURE)
+    - ✅ Proficiency scale architecture: 0-4 (mastery progression), 8 (Absent), 9 (Not Started)
+    - ✅ Cross-track proficiency support (getBatchProgress returns all chapters across all tracks)
+    - ✅ Auto-create proficiency records on student enrollment (default level 9)
+    - ✅ Interactive MatrixEvaluationModal with 8 proficiency levels
+    - ✅ Color-coded cells: Yellow (Practicing) → Green (50-90%) → Purple (90-95%), Gray (Absent), White (Not Started)
+    - ✅ Responsive table with sticky student/actions columns
+    - ✅ Chapter headers: centered codes (CH1, CH2...), 10px font size titles with 2-line clamp
+    - ✅ Consistent padding: px-2 py-2 wrapper divs, pl-4 pr-2 for student column
+    - ✅ Reset button: sends level 9 (Not Started) instead of 8 (Absent)
+    - ✅ Kebab menu styling standardized with Admin Center patterns
+    - ✅ Real-time refetch after mutations via TanStack Query invalidation
+    - ✅ Backend: getBatchProgress removed track filter, addEnrollment creates proficiency records
+    - ✅ Database utilities: 3 proficiency reset scripts (reset-all, check-and-reset, full-proficiency-reset)
+    - ✅ Documentation: Proficiency scale in domain-requirements.md and copilot-instructions.md
+- [ ] My Students (Next - Starting January 3+, 2026)
+  - [ ] Student list view for instructors (all students across instructor's batches)
+  - [ ] Filterable by batch, proficiency level, track progress
+  - [ ] Quick actions: View details, send message, track progress
+  - [ ] Loading/empty/error states
+  - [ ] Professional table styling matching Admin Center patterns
+- [ ] Student Details (Next - Starting January 3+, 2026)
+  - [ ] Comprehensive student profile page
+  - [ ] Batch enrollment history with dates
+  - [ ] Proficiency timeline and progress charts
   - [ ] Notes and evaluation interface
+  - [ ] Chapter-by-chapter proficiency breakdown with historical tracking
+  - [ ] Export student progress report
 
 **Content Studio:**
 - [ ] Content Studio Home
