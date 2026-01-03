@@ -10,16 +10,16 @@ import { useBatchProgress } from "../hooks/useBatchProgress";
 import { useUpdateProficiency } from "../hooks/useUpdateProficiency";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
 import { BatchDetailsCard } from "../../admin/components/BatchDetailsCard";
-import { StudentCombobox } from "../../admin/components/StudentCombobox";
 import { UnifiedBatchMatrix } from "../components/UnifiedBatchMatrix";
 import { TrackTabs } from "../components/TrackTabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, ChevronDown, Loader } from "lucide-react";
+import { Loader2, ChevronDown, Loader, Search, X } from "lucide-react";
 import type {
   StudentMatrixRow,
   Chapter,
@@ -316,29 +316,123 @@ export default function BatchDetails() {
       ) : (
         <div className="space-y-6">
           {/* Admin-only: Student Enrollment Section */}
-          {context === 'admin' && matrixEligibleStudents.data && (
+          {context === 'admin' && (
             <div className="rounded-lg border bg-card p-4">
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <StudentCombobox
-                    students={matrixEligibleStudents.data}
-                    selectedStudents={selectedStudentIds}
-                    onSelectionChange={setSelectedStudentIds}
-                    placeholder="Search students by name or email..."
-                  />
+              <div className="flex items-center gap-3">
+                <div className="flex-1 relative">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search and add students..."
+                      value={matrixSearchQuery}
+                      onChange={(e) => {
+                        const newQuery = e.target.value;
+                        setMatrixSearchQuery(newQuery);
+                        setMatrixShowTypeahead(true);
+                        setMatrixHighlightedIndex(-1);
+                      }}
+                      onFocus={() => setMatrixShowTypeahead(true)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setMatrixShowTypeahead(false);
+                        }
+                      }}
+                      className="pl-9"
+                      disabled={isAddingStudent}
+                    />
+                    {matrixSearchQuery && (
+                      <button
+                        onClick={() => {
+                          setMatrixSearchQuery('');
+                          setMatrixShowTypeahead(false);
+                        }}
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                        title="Clear search"
+                        type="button"
+                      >
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Clear search</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Selected students pills */}
+                  {matrixSelectedStudents.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {matrixSelectedStudents.map((student) => {
+                        const displayName = student.firstName || student.lastName
+                          ? `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim()
+                          : student.email;
+                        return (
+                          <Badge key={student.id} variant="secondary" className="flex items-center gap-1">
+                            {displayName}
+                            <button
+                              onClick={() => handleMatrixRemoveStudent(student.id)}
+                              className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
+                              type="button"
+                              title={`Remove ${displayName}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Typeahead dropdown with eligible students */}
+                  {matrixShowTypeahead && matrixSearchQuery && (
+                    <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-md border border-gray-200 bg-white dark:bg-gray-900 shadow-lg">
+                      {matrixEligibleStudents.isFetching ? (
+                        <div className="p-3 text-center text-sm text-gray-500 dark:text-gray-400">
+                          <Loader className="h-4 w-4 inline-block animate-spin mr-2" />
+                          Searching...
+                        </div>
+                      ) : (matrixEligibleStudents.data?.length ?? 0) === 0 ? (
+                        <div className="p-3 text-center text-sm text-gray-500 dark:text-gray-400">
+                          No eligible students found
+                        </div>
+                      ) : (
+                        <div className="py-1">
+                          {matrixEligibleStudents.data?.map((student, idx) => {
+                            const displayName = student.firstName || student.lastName
+                              ? `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim()
+                              : student.email;
+                            const isAlreadySelected = matrixSelectedStudents.find(s => s.id === student.id);
+                            
+                            if (isAlreadySelected) return null;
+                            
+                            return (
+                              <button
+                                key={student.id}
+                                type="button"
+                                onClick={() => handleMatrixSelectStudent(student)}
+                                className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                              >
+                                <div className="font-medium text-sm">{displayName}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">{student.email}</div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
+
                 <Button
-                  onClick={handleAddStudents}
-                  disabled={selectedStudentIds.length === 0 || enrollStudent.isPending}
+                  onClick={handleMatrixAddStudents}
+                  disabled={matrixSelectedStudents.length === 0 || isAddingStudent}
                   className="shrink-0"
                 >
-                  {enrollStudent.isPending ? (
+                  {isAddingStudent ? (
                     <>
                       <Loader className="mr-2 h-4 w-4 animate-spin" />
                       Adding...
                     </>
                   ) : (
-                    `Add Student${selectedStudentIds.length > 1 ? 's' : ''} (${selectedStudentIds.length})`
+                    `Add ${matrixSelectedStudents.length} Student${matrixSelectedStudents.length > 1 ? 's' : ''}`
                   )}
                 </Button>
               </div>
