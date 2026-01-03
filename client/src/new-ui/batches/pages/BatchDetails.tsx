@@ -10,6 +10,7 @@ import { useBatchProgress } from "../hooks/useBatchProgress";
 import { useUpdateProficiency } from "../hooks/useUpdateProficiency";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
 import { BatchDetailsCard } from "../../admin/components/BatchDetailsCard";
+import { StudentCombobox } from "../../admin/components/StudentCombobox";
 import { UnifiedBatchMatrix } from "../components/UnifiedBatchMatrix";
 import { TrackTabs } from "../components/TrackTabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -315,12 +316,12 @@ export default function BatchDetails() {
       ) : (
         <div className="space-y-6">
           {/* Admin-only: Student Enrollment Section */}
-          {context === 'admin' && eligibleStudents.data && (
+          {context === 'admin' && matrixEligibleStudents.data && (
             <div className="rounded-lg border bg-card p-4">
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <StudentCombobox
-                    students={eligibleStudents.data}
+                    students={matrixEligibleStudents.data}
                     selectedStudents={selectedStudentIds}
                     onSelectionChange={setSelectedStudentIds}
                     placeholder="Search students by name or email..."
