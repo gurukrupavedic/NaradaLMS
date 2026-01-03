@@ -252,7 +252,7 @@ export function UnifiedBatchMatrix({
             <div className="text-xs font-bold text-gray-900 whitespace-nowrap">
               {chapter.code}
             </div>
-            <div className="text-xs text-gray-600 line-clamp-2 text-center" title={chapter.title}>
+            <div className="text-[10px] text-gray-600 line-clamp-2 text-center" title={chapter.title}>
               {chapter.title}
             </div>
           </div>
