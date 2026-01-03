@@ -90,7 +90,7 @@ export function getCellColor(
         darkBorderColor: 'dark:border-emerald-700',
         bgHex: '#F0FDF4',
         borderHex: '#6EE7B7',
-        circleHex: '#059669',
+        circleHex: '#10B981', // Emerald 500
         textHex: '#065F46',
       };
 
@@ -118,7 +118,7 @@ export function getCellColor(
         darkBorderColor: 'dark:border-violet-700',
         bgHex: '#EDE9FE',
         borderHex: '#C4B5FD',
-        circleHex: '#7C3AED',
+        circleHex: '#8B5CF6', // Violet 500
         textHex: '#4C1D95',
       };
 
