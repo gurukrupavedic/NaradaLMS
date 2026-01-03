@@ -248,7 +248,7 @@ export function UnifiedBatchMatrix({
       columnHelper.accessor((row) => row.id, {
         id: `chapter-${chapter.id}`,
         header: () => (
-          <div className="px-2 py-2 w-20 flex flex-col items-center justify-center gap-0.5">
+          <div className="px-2 py-2 flex flex-col items-center justify-center gap-0.5">
             <div className="text-xs font-bold text-gray-900 whitespace-nowrap">
               {chapter.code}
             </div>
