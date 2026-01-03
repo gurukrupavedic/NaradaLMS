@@ -248,7 +248,7 @@ export function UnifiedBatchMatrix({
       columnHelper.accessor((row) => row.id, {
         id: `chapter-${chapter.id}`,
         header: () => (
-          <div className="w-20 flex flex-col items-center justify-center gap-0.5">
+          <div className="px-2 py-2 w-20 flex flex-col items-center justify-center gap-0.5">
             <div className="text-xs font-bold text-gray-900 whitespace-nowrap">
               {chapter.code}
             </div>
@@ -333,7 +333,7 @@ export function UnifiedBatchMatrix({
                   return (
                     <th
                       key={header.id}
-                      className={`${isStudentCol ? 'text-center' : 'text-center'} text-xs font-semibold text-muted-foreground uppercase tracking-tight ${isStudentCol ? 'pl-4 pr-2 py-2 align-middle' : 'px-2 py-2'
+                      className={`${isStudentCol ? 'text-center' : 'text-center'} text-xs font-semibold text-muted-foreground uppercase tracking-tight ${isStudentCol ? 'pl-4 pr-2 py-2 align-middle' : 'p-0'
                         } ${isSticky ? 'sticky z-20 bg-gray-50 dark:bg-gray-900' : ''
                         }`}
                       style={{
