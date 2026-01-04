@@ -315,16 +315,16 @@ export default function BatchDetails() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Admin-only: Student Enrollment Section */}
+          {/* Student Enrollment Section */}
           {context === 'admin' && (
-            <div className="rounded-lg border bg-card p-4">
+            <div className="rounded-lg bg-card p-4 space-y-3">
               <div className="flex items-center gap-3">
                 <div className="flex-1 relative">
                   <div className="relative">
                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                     <Input
                       type="text"
-                      placeholder="Search and add students..."
+                      placeholder="Search & Enroll Students ..."
                       value={matrixSearchQuery}
                       onChange={(e) => {
                         const newQuery = e.target.value;
@@ -356,30 +356,6 @@ export default function BatchDetails() {
                       </button>
                     )}
                   </div>
-
-                  {/* Selected students pills */}
-                  {matrixSelectedStudents.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {matrixSelectedStudents.map((student) => {
-                        const displayName = student.firstName || student.lastName
-                          ? `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim()
-                          : student.email;
-                        return (
-                          <Badge key={student.id} variant="secondary" className="flex items-center gap-1">
-                            {displayName}
-                            <button
-                              onClick={() => handleMatrixRemoveStudent(student.id)}
-                              className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
-                              type="button"
-                              title={`Remove ${displayName}`}
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                  )}
 
                   {/* Typeahead dropdown with eligible students */}
                   {matrixShowTypeahead && matrixSearchQuery && (
@@ -429,13 +405,39 @@ export default function BatchDetails() {
                   {isAddingStudent ? (
                     <>
                       <Loader className="mr-2 h-4 w-4 animate-spin" />
-                      Adding...
+                      Enrolling...
                     </>
+                  ) : matrixSelectedStudents.length > 0 ? (
+                    `Enroll (${matrixSelectedStudents.length})`
                   ) : (
-                    `Add ${matrixSelectedStudents.length} Student${matrixSelectedStudents.length > 1 ? 's' : ''}`
+                    'Enroll'
                   )}
                 </Button>
               </div>
+
+              {/* Selected students pills */}
+              {matrixSelectedStudents.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {matrixSelectedStudents.map((student) => {
+                    const displayName = student.firstName || student.lastName
+                      ? `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim()
+                      : student.email;
+                    return (
+                      <Badge key={student.id} variant="secondary" className="flex items-center gap-1">
+                        {displayName}
+                        <button
+                          onClick={() => handleMatrixRemoveStudent(student.id)}
+                          className="ml-1 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full p-0.5"
+                          type="button"
+                          title={`Remove ${displayName}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
