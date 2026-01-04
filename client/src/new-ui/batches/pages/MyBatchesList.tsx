@@ -64,14 +64,20 @@ export default function MyBatchesList() {
             <Link key={b.id} href={`/app/instructor/batches/${b.id}`}>
               <a className="group block rounded-lg border border-border bg-card transition duration-200 hover:shadow-md hover:border-border/80">
                 {/* Batch Name - Header with full-width divider */}
-                <div className="p-5 pb-3 border-b border-border/50 flex items-center justify-between gap-3">
+                <div className="p-5 pb-3 border-b border-border/50 flex items-center justify-between gap-4">
                   <h3 className="text-base font-semibold text-foreground">
                     {b.batchCode} - {b.batchName}
                   </h3>
                   {b.trackName && (
-                    <p className="text-sm text-muted-foreground">
-                      {b.trackName}
-                    </p>
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground flex-shrink-0 whitespace-nowrap">
+                      {b.trackOrder && (
+                        <>
+                          <span>Track {b.trackOrder}</span>
+                          <span className="opacity-60">-</span>
+                        </>
+                      )}
+                      <span className="truncate max-w-xs">{b.trackName}</span>
+                    </div>
                   )}
                 </div>
 

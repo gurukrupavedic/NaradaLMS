@@ -43,6 +43,7 @@ export class BatchStorage {
         primaryInstructorFirstName: users.firstName,
         primaryInstructorLastName: users.lastName,
         trackName: tracks.title,
+        trackOrder: tracks.order,
       })
       .from(batches)
       .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
