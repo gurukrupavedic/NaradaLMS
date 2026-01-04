@@ -53,7 +53,7 @@ export function BatchDetailsCard({ batch, batches = [], currentBatchId, onBatchC
     <div className="rounded-lg border border-border bg-card p-4 relative">
       {/* Collapsible Header */}
       <div
-        className="flex items-center gap-2.5 mb-2 cursor-pointer hover:bg-muted/30 -mx-4 px-4 py-0.5 rounded-t-lg transition-colors"
+        className="flex items-center gap-2.5 mb-2 cursor-pointer hover:bg-muted/30 -mx-4 px-4 py-2 rounded-t-lg transition-colors"
         onClick={() => setCollapsed((v) => !v)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -86,10 +86,8 @@ export function BatchDetailsCard({ batch, batches = [], currentBatchId, onBatchC
             <span className="flex-shrink-0">{formatStudents(batch.studentCount)}</span>
           </div>
         ) : (
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-semibold text-base leading-none">{batch.batchCode} - {batch.batchName}</h3>
-            </div>
+          <div className="flex-1 min-w-0 flex items-center">
+            <h3 className="font-semibold text-base leading-tight">{batch.batchCode} - {batch.batchName}</h3>
           </div>
         )}
 
