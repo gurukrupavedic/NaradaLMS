@@ -18,8 +18,9 @@ This document archives all completed work from the MVP implementation. For activ
 7. [Phase 7.2: Shell Overhaul](#phase-72-shell-overhaul)
 8. [Phase 7.3: Workflow Refinement - Admin Center](#phase-73-workflow-refinement---admin-center)
 9. [Phase 7.3: Workflow Refinement - Batches & Progress](#phase-73-workflow-refinement---batches--progress)
-10. [Navigation & Layout Blueprints](#navigation--layout-blueprints)
-11. [Screen Hierarchy Reference](#screen-hierarchy-per-persona)
+10. [Phase 7.3.1: My Students & Student Progress](#phase-731-my-students--student-progress)
+11. [Navigation & Layout Blueprints](#navigation--layout-blueprints)
+12. [Screen Hierarchy Reference](#screen-hierarchy-per-persona)
 
 ---
 
@@ -669,6 +670,136 @@ Main Content (adaptive 2-column or single)
 6. **System Settings** ✅ COMPLETE (Placeholder)
    - Coming soon placeholder
    - Future: Key-value settings
+
+---
+
+## Phase 7.3.1: My Students & Student Progress
+**Completed:** January 4, 2026  
+**Branch:** `daily/2026-01-04`
+
+### Goal
+Build instructor student management and progress tracking with professional loading/empty/error states.
+
+### What We Built
+
+**Phase A: My Students List** ✅ COMPLETE
+- Professional TanStack Table with 7 columns (Roll#, Name, Contact, Timezone, Type, Batch, Actions)
+- Backend: `GET /api/batches/my-students` with filter support (search, batchId, status)
+- Features:
+  - Pagination with rows-per-page selector (10/25/50/100)
+  - **Bonus filters:** Search (debounced 300ms), batch dropdown, status dropdown
+  - Loading state with 4-card skeleton grid
+  - Empty state with GraduationCap icon
+  - Error state with retry button
+  - Click Roll# or Name → navigate to `/app/instructor/students/:studentId`
+  - Responsive design (mobile/tablet/desktop)
+
+**Phase B: Student Progress Page** ✅ COMPLETE
+- StudentDetailsCard component (collapsible: profile + enrollment info)
+- Collapsed state: Student name + roll# + batch context + track info
+- Expanded state: Full details grid (Email, Phone, Timezone, Type, Batch, Enrollment Date, Progress %)
+- Placeholder for track-wise progress: "Track-wise Progress Tracking — Coming Soon"
+- Permission checks: Instructors can only view students from their batches (403 protection)
+- Loading/error/not-found states with appropriate messaging
+- Responsive design across all breakpoints
+
+**Phase C: My Students - Advanced Features** ✅ COMPLETE
+- Search input with debounced filtering (300ms)
+- Batch dropdown filter
+- Status dropdown filter (active/inactive/all)
+- Client-side filtering logic fully integrated
+- Responsive filter layout with compact design
+
+**UI/UX Polish & Batch Details Refinement:**
+- Extended divider lines on My Batches cards to full width
+- Added track order (number) display: "Track X - Track Name"
+- Improved BatchDetailsCard header spacing: py-2 (increased from py-0.5)
+- Fixed vertical alignment in header (leading-tight, flex items-center)
+- Batch selector dropdown styling:
+  - DropdownMenu component instead of Popover
+  - Matches Actions menu pattern (bg-white dark:bg-black, border-border, shadow-lg)
+  - Single-line batch items: "CODE - NAME" with truncation
+  - Current batch highlighted with bg-muted/50
+
+### Frontend Deliverables
+
+**Pages:**
+- ✅ `MyStudentsPage.tsx` - List of students with filters
+- ✅ `StudentDetailsPage.tsx` - Student profile + progress placeholder
+
+**Components:**
+- ✅ `StudentDetailsCard.tsx` - Collapsible student info (reusable)
+
+**Hooks:**
+- ✅ `useMyStudents(filters)` - Fetch students with pagination
+- ✅ `useStudentProgress(studentId)` - Fetch student details + permissions
+
+**Location:** `client/src/new-ui/instructor/`
+
+### Backend Deliverables
+
+**Endpoints:**
+- ✅ `GET /api/batches/my-students` - List students from instructor's batches
+  - Filters: search, batchId, status
+  - Pagination: limit, offset
+- ✅ `GET /api/students/:studentId/progress` - Student details + progress
+  - Permission: 403 if not instructor's student
+
+### Database Updates
+
+**Queries Fixed:**
+- Fixed 3 critical Drizzle ORM schema issues in studentProgress queries
+- Proper joins: enrollments → students → batches
+- Aggregate functions for progress calculation
+
+### Design Patterns Established
+
+**StudentDetailsCard Pattern:**
+- Reusable collapsible component
+- Compact collapsed summary (1-2 lines)
+- Full details in expanded grid
+- Matches BatchDetailsCard architecture
+- Keyboard accessible (Enter/Space toggle)
+- Hover feedback on header
+
+**Batch Card Divider Extension:**
+- Full-width horizontal line separating header from content
+- Achieved with -mx-4 px-4 on divider (overrides card padding)
+- Applies to both My Batches grid and Batch Details expanded view
+
+**Batch Selector Dropdown:**
+- Trigger: ArrowLeftRight icon button in header (visible only when expanded)
+- Popover content: DropdownMenuContent component
+- Items: Single-line format with current batch highlighted
+- Consistent with app's Actions menu styling
+
+### Acceptance Criteria Met
+
+✅ **All criteria met (Jan 4, 2026):**
+- ✅ Instructor can view all students from their batches
+- ✅ Clicking student navigates to detail page
+- ✅ Table is responsive and professional
+- ✅ Loading/empty/error states render correctly
+- ✅ Filters (search, batch, status) work correctly
+- ✅ Student detail card is collapsible and displays all info
+- ✅ Permission checks prevent unauthorized access
+- ✅ Placeholder communicates upcoming feature
+- ✅ All cards and UI elements use consistent styling
+- ✅ No TypeScript errors
+- ✅ Responsive across all breakpoints
+
+### What's Next
+
+**Phase D: Track-wise Progress Visualization** 🔮 FUTURE
+- Design brainstorming: Accordion vs. Table vs. Tabs vs. Cards
+- Implement chosen pattern for chapter-by-chapter progress
+- Color-coded proficiency display
+- Mobile-optimized layout
+
+**Phase E: Schema Updates** 🔮 POST-MVP
+- Add missing fields: timezone, cohortType, phone, avatar
+- Update seed scripts with realistic data
+- Update UI to use real fields instead of placeholders
 
 ---
 
