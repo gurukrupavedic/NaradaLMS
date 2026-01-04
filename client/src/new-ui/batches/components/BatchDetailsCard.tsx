@@ -1,7 +1,7 @@
 import React from "react";
 import { ChevronDown, ArrowLeftRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import type { BatchItem } from "../hooks/useBatches";
 
 interface BatchDetailsCardProps {
@@ -92,8 +92,8 @@ export function BatchDetailsCard({
 
         {/* Batch Selector Button - shows only when expanded */}
         {!collapsed && batches.length > 0 && (
-          <Popover>
-            <PopoverTrigger asChild>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <button 
                 onClick={(e) => e.stopPropagation()}
                 className="p-0.5 text-foreground/60 hover:text-foreground hover:bg-muted/30 rounded-md transition-colors flex-shrink-0"
@@ -101,31 +101,25 @@ export function BatchDetailsCard({
               >
                 <ArrowLeftRight className="w-4 h-4" />
               </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-56 p-3" align="end">
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight px-2">
-                  Switch Batch
-                </p>
-                <div className="space-y-1">
-                  {batches.map((b) => (
-                    <button
-                      key={b.id}
-                      onClick={() => onBatchChange(b.id)}
-                      className={`w-full text-left px-2 py-1.5 text-sm rounded-md transition-colors ${
-                        b.id === batch.id
-                          ? "bg-indigo-100 dark:bg-indigo-950 text-indigo-900 dark:text-indigo-100 font-medium"
-                          : "hover:bg-muted text-foreground"
-                      }`}
-                    >
-                      <div className="font-mono text-xs opacity-60">{b.batchCode}</div>
-                      <div className="font-medium">{b.batchName}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-white dark:bg-black border border-border shadow-lg min-w-56">
+              {batches.map((b) => (
+                <DropdownMenuItem
+                  key={b.id}
+                  onClick={() => onBatchChange(b.id)}
+                  className={`py-1.5 cursor-pointer ${
+                    b.id === batch.id
+                      ? "bg-muted/50 text-foreground font-medium"
+                      : ""
+                  }`}
+                >
+                  <span className="font-mono text-sm text-muted-foreground">{b.batchCode}</span>
+                  <span className="text-sm text-foreground ml-2">-</span>
+                  <span className="text-sm text-foreground ml-2">{b.batchName}</span>
+                </DropdownMenuItem>
+              ))}}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
 
         {/* Expand/Collapse Icon - purely decorative, parent handles interaction */}
