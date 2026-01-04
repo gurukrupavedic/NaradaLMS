@@ -62,9 +62,9 @@ export default function MyBatchesList() {
         <div className="grid gap-4 md:grid-cols-2">
           {items.map((b) => (
             <Link key={b.id} href={`/app/instructor/batches/${b.id}`}>
-              <a className="group block rounded-lg border border-border bg-card p-5 transition duration-200 hover:shadow-md hover:border-border/80">
-                {/* Batch Name */}
-                <div className="mb-4 pb-3 border-b border-border/50 flex items-center justify-between gap-3">
+              <a className="group block rounded-lg border border-border bg-card transition duration-200 hover:shadow-md hover:border-border/80">
+                {/* Batch Name - Header with full-width divider */}
+                <div className="p-5 pb-3 border-b border-border/50 flex items-center justify-between gap-3">
                   <h3 className="text-base font-semibold text-foreground">
                     {b.batchCode} - {b.batchName}
                   </h3>
@@ -76,7 +76,7 @@ export default function MyBatchesList() {
                 </div>
 
                 {/* Metadata Grid */}
-                <div className="grid grid-cols-3 gap-4 mb-4 text-xs">
+                <div className="grid grid-cols-3 gap-4 p-5 text-xs">
                   {/* Column 1 */}
                   <div className="space-y-3">
                     {/* Primary Instructor */}
@@ -136,7 +136,7 @@ export default function MyBatchesList() {
                 </div>
 
                 {/* View Details */}
-                <div className="flex justify-end">
+                <div className="flex justify-end p-5 pt-0">
                   <div className="inline-flex items-center gap-2 text-sm text-primary font-medium group-hover:gap-3 transition-all">
                     <span>View Details</span>
                     <span className="transition-transform duration-150 group-hover:translate-x-1">→</span>
