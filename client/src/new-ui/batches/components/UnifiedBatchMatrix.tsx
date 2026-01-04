@@ -273,7 +273,6 @@ export function UnifiedBatchMatrix({
                   border-2 transition-all
                   ${colors.bgColor} ${colors.darkBgColor} ${colors.textColor} ${colors.darkTextColor} ${colors.borderColor} ${colors.darkBorderColor}
                   ${canEditProficiency ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}
-                  disabled:cursor-not-allowed disabled:opacity-50
                   font-semibold text-sm
                 `}
                 title={canEditProficiency ? `${info.row.original.firstName} - ${chapter.code}` : 'Only instructors can update proficiency'}
