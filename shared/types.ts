@@ -151,3 +151,63 @@ export interface ApiSuccessResponse<T = any> {
   message?: string;
   timestamp: string;
 }
+
+// My Students / Instructor Student List Type
+export interface MyStudent {
+  id: string; // User ID
+  rollNumber: string; // Format: BATCH_CODE-XXX
+  name: string;
+  email: string;
+  phone: string;
+  timezone: string;
+  type: string; // 'bramhachari' | 'grihasta' or '-' if null
+  batchCode: string;
+  batchName: string;
+  enrolledAt: Date | string | null;
+}
+
+export interface GetMyStudentsResponse {
+  items: MyStudent[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+}
+
+// Student Details / Proficiency Types
+export interface ProficiencyRecord {
+  chapterId: number;
+  chapterTitle: string;
+  chapterNumber: number;
+  proficiencyLevel: number | null; // 0-4 scale or null if not evaluated
+  lastAccessed: Date | null;
+  lastEvaluatedAt: Date | null;
+  evaluatedBy: string | null;
+  notes: string | null;
+}
+
+export interface StudentEnrollment {
+  enrollmentId: number;
+  batchId: number;
+  batchCode: string;
+  batchName: string;
+  trackId: number;
+  trackName: string;
+  enrolledAt: Date | string | null;
+  status: 'active' | 'dropped' | 'completed';
+}
+
+export interface StudentDetail {
+  id: string; // User ID
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  enrollment: StudentEnrollment | null;
+  proficiencyMatrix: ProficiencyRecord[];
+}
+
+export interface GetStudentDetailsResponse {
+  data: StudentDetail;
+  timestamp: string;
+}

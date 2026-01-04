@@ -152,6 +152,31 @@ export class BatchService {
 
     return batchStorage.evaluateStudent(input);
   }
+
+  async listStudentsByInstructor(
+    instructorId: string,
+    filters?: {
+      search?: string;
+      batchId?: number;
+      status?: 'active' | 'dropped' | 'completed';
+    }
+  ) {
+    const rawStudents = await batchStorage.listStudentsByInstructor(instructorId, filters);
+    
+    // Format roll number as BATCH_CODE-XXX (using enrollment ID)
+    return rawStudents.map((student) => ({
+      id: student.id,
+      rollNumber: `${student.batchCode}-${String(student.rollNumber).padStart(3, '0')}`,
+      name: `${student.firstName || ''} ${student.lastName || ''}`.trim(),
+      email: student.email || '-',
+      phone: '-', // Field doesn't exist in schema yet - will be added in Phase E
+      timezone: '-', // Field doesn't exist in schema yet - will be added in Phase E
+      type: '-', // Field doesn't exist in schema yet - will be added in Phase E
+      batchCode: student.batchCode,
+      batchName: student.batchName,
+      enrolledAt: student.enrolledAt,
+    }));
+  }
 }
 
 export const batchService = new BatchService();

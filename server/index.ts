@@ -65,6 +65,8 @@ import { mediaRouter } from "./routes/media.routes";
 app.use('/api', mediaRouter);
 import { batchRouter } from "./routes/batch.routes";
 app.use('/api', batchRouter);
+import { studentRouter } from "./routes/student.routes";
+app.use('/api', studentRouter);
 import { learningRouter } from "./routes/learning.routes";
 app.use('/api/learning', learningRouter);
 

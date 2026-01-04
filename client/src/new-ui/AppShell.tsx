@@ -16,6 +16,10 @@ import SystemSettings from './admin/pages/SystemSettings';
 import MyBatchesList from './batches/pages/MyBatchesList';
 import BatchDetails from './batches/pages/BatchDetails';
 
+// Instructor pages
+import { MyStudentsPage } from './instructor/pages/MyStudentsPage';
+import { StudentDetailsPage } from './instructor/pages/StudentDetailsPage';
+
 // Learning & Content (placeholders for now)
 const LearningPage = () => <div className="p-8"><h1 className="text-3xl font-bold">Learning Dashboard</h1></div>;
 const CourseContentPage = () => <div className="p-8"><h1 className="text-3xl font-bold">Course Content</h1></div>;
@@ -45,6 +49,8 @@ export default function AppShell() {
           <Route path="/app" component={LearningPage} />
           <Route path="/app/learning" component={LearningPage} />
           <Route path="/app/learning/courses" component={CourseContentPage} />
+          <Route path="/app/instructor/students/:studentId" component={StudentDetailsPage} />
+          <Route path="/app/instructor/students" component={MyStudentsPage} />
           <Route path="/app/instructor/batches/:id" component={BatchDetails} />
           <Route path="/app/instructor/batches" component={MyBatchesList} />
           <Route path="/app/content" component={ContentPage} />

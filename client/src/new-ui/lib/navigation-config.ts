@@ -55,9 +55,9 @@ const batchesSection: NavSection = {
       icon: Users,
     },
     {
-      title: 'Student Progress',
-      url: '/app/instructor/batches/progress',
-      icon: BarChart3,
+      title: 'My Students',
+      url: '/app/instructor/students',
+      icon: Users,
     },
   ],
 };
