@@ -8,6 +8,9 @@ import type { StudentProgressDTO, ChapterAccessDTO, ProgressQueryFilters, Availa
 import { LEARNING_DELIVERY_EVENTS } from './events';
 import { contentService } from '../content-publishing';
 import { mediaService } from '../media-pipeline';
+import { db } from '../../db';
+import { batches, batchCoInstructors } from '@shared/schema';
+import { eq, and, or } from 'drizzle-orm';
 
 export class LearningService {
   /**
@@ -119,6 +122,52 @@ export class LearningService {
     }
 
     return result;
+  }
+
+  /**
+   * Get student details with proficiency matrix (instructor view)
+   * Instructors can only see students in their batches
+   */
+  async getStudentDetails(requestingUserId: string, studentId: string, isAdmin: boolean): Promise<any> {
+    const studentDetails = await learningStorage.getStudentDetailsWithProgress(studentId);
+    
+    if (!studentDetails) {
+      return null;
+    }
+
+    // If not admin, verify instructor is teaching this student's batch
+    if (!isAdmin && studentDetails.enrollment) {
+      const [batchInstructor] = await db
+        .select({ id: batches.id })
+        .from(batches)
+        .where(
+          and(
+            eq(batches.id, studentDetails.enrollment.batchId),
+            eq(batches.primaryInstructorId, requestingUserId)
+          )
+        )
+        .limit(1);
+
+      if (!batchInstructor) {
+        // Also check co-instructors
+        const [coInstructor] = await db
+          .select({ id: batchCoInstructors.id })
+          .from(batchCoInstructors)
+          .where(
+            and(
+              eq(batchCoInstructors.batchId, studentDetails.enrollment.batchId),
+              eq(batchCoInstructors.instructorId, requestingUserId)
+            )
+          )
+          .limit(1);
+
+        if (!coInstructor) {
+          return null; // Instructor doesn't have access to this student
+        }
+      }
+    }
+
+    return studentDetails;
   }
 }
 

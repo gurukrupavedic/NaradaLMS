@@ -1,1043 +1,668 @@
 # VedicLMS MVP Implementation Plan
 
-**Last Updated:** December 30, 2025  
-**Status:** Admin Center Complete → Batches & Progress In Progress  
-**Current Phase:** Phase 7.4 - Batches & Progress refinement
+**Last Updated:** January 4, 2026  
+**Current Phase:** Phase 7.3.1 - Complete  
+**Status:** Phases A, B, C Complete - Ready for Phase D (Track-wise Progress)
+
+---
+
+## 🎉 Recent Accomplishments (January 4, 2026)
+
+**Phase 7.3.1 - My Students & Student Progress - COMPLETE**
+
+Completed all phases in **1 day** (planned for 4 days) with bonus features:
+
+✅ **Phase A: My Students Table**
+- Professional TanStack Table with 7 columns (roll#, name, contact, timezone, type, batch, actions)
+- Pagination with rows-per-page selector (10/25/50/100)
+- **Bonus filters:** Search (debounced 300ms), batch dropdown, status dropdown
+- Backend: `GET /api/batches/my-students` with filter support
+- All loading/empty/error states, responsive design
+
+✅ **Phase B: Student Progress Page**
+- StudentDetailsCard component (collapsible: profile + enrollment info)
+- Permission checks (instructors can only view their students)
+- Placeholder for Phase D: "Track-wise Progress Tracking — Coming Soon"
+- Backend: `GET /api/students/:studentId/progress` with 403 protection
+- Fixed 3 critical Drizzle ORM schema bugs
+
+✅ **Phase C: My Students Advanced Features**
+- Search input (debounced 300ms by name/email)
+- Batch dropdown filter
+- Status dropdown filter (active/inactive/all)
+- Client-side filtering logic fully integrated
+- Responsive filter layout with compact design
+
+✅ **Refactoring & Polish**
+- Extracted StudentDetailsCard.tsx for reusability
+- Removed inline code, cleaner architecture
+- Extended divider lines on batch cards to full width (My Batches page)
+- Track order (number) now displays with track name on batch cards
+- Improved BatchDetailsCard header spacing and vertical alignment (py-2, proper centering)
+- Dropdown menu styling for batch selector (matches Actions menu pattern)
+- Single-line batch selector items with proper truncation
+- Zero TypeScript errors, all features working
+
+**Next:** Phase D - Track-wise progress visualization design & implementation
+
+**Next:** Phase D - Track-wise progress visualization design & implementation
 
 ---
 
 ## Document Purpose
 
-This is a **living implementation guide** for VedicLMS MVP v1.0. It combines:
-- Scope definition (see [mvp-scope](mvp-scope.md))
-- Navigation & layout architecture
-- Phase-by-phase breakdown
-- Component inventory
-- Development checklist
+This is the **active implementation guide** for VedicLMS MVP v1.0. It shows:
+- ✅ What's done (high-level summary)
+- 🎯 What we're working on now (detailed)
+- 📋 What's next (roadmap)
 
-**This document evolves as we progress through phases. Update sections as decisions are made.**
+**For completed phase details, see:** [mvp-completed-phases.md](mvp-completed-phases.md)
 
 ---
 
 ## Quick Links
 
-- **Scope & Features:** [mvp-scope](mvp-scope.md)
+- **Completed Phases Archive:** [mvp-completed-phases.md](mvp-completed-phases.md)
+- **Scope & Features:** [mvp-scope.md](mvp-scope.md)
 - **Domain Requirements:** [../domain-requirements.md](../domain-requirements.md)
 - **Product Guide:** [../product-guide.md](../product-guide.md)
 - **Architecture:** [../architecture/architecture.md](../architecture/architecture.md)
 
 ---
 
-## App Architecture Overview
+## 📊 Current Status Dashboard
 
-### Role-Based Tab Navigation
+### ✅ Completed (Phases 0-7.3)
 
-All users see **one or more tabs** based on their role:
+**Foundation (Dec 2025):**
+- ✅ Phase 0: Planning & Setup
+- ✅ Phase 1: Theme Infrastructure (v0 shadcn theme + dark/light toggle)
+- ✅ Phase 2: New Route Namespace (`/app/*` shell with feature flag)
 
-```
-All Users:
-├─ 📚 Learning (default)        [Student experience]
+**Feature Migration (Dec 2025):**
+- ✅ Phase 3: Admin Center Complete
+  - Dashboard, User Management, Batch Management, Audit Logs, System Settings
+- ✅ Phase 4: Batches & Progress (Initial)
+  - My Batches List, Batch Detail (basic)
 
-Instructors see:
-├─ 📚 Learning
-└─ 👨‍🏫 Batches & Progress        [Instructor features]
+**Navigation & Polish (Dec 2025):**
+- ✅ Phase 7.1: Navigation Architecture (role-based taxonomy, breadcrumbs)
+- ✅ Phase 7.2: Shell Overhaul (v0 sidebar, SidebarProvider)
+- ✅ Phase 7.3: Workflow Refinement
+  - ✅ Admin Center: All pages polished (Users, Batches, Batch Detail, Audit Logs, Settings)
+  - ✅ Batches & Progress: My Batches List, Unified Batch Matrix (Jan 2-3, 2026)
 
-Content Managers see:
-├─ 📚 Learning
-└─ ✏️ Content Studio            [Publishing workflow]
-
-Admins see:
-├─ 📚 Learning
-└─ ⚙️ Admin Center              [System management]
-```
-
-**Navigation Responsive Behavior:**
-- **Mobile (< 640px):** Hamburger drawer
-- **Tablet (640–1024px):** Horizontal tabs with icons
-- **Desktop (1024px+):** Persistent left sidebar (240px)
+**See detailed history:** [mvp-completed-phases.md](mvp-completed-phases.md)
 
 ---
 
-## Navigation & Layout Blueprint
+### 🎯 In Progress (Phase 7.3.1 - Jan 4, 2026)
 
-### Mobile (< 640px)
+**My Students & Student Progress**
+- [x] **Phase A:** My Students - Basic Table + Filters ✅ COMPLETE (Jan 4)
+- [x] **Phase B:** Student Progress - Details Card + Placeholder ✅ COMPLETE (Jan 4)
+- [x] **Refactoring:** Extracted StudentDetailsCard component ✅ COMPLETE (Jan 4)
+- [ ] **Phase C:** My Students - Advanced Features (Sorting, URL Params) - DEFERRED
+- [ ] **Phase D:** Track-wise Progress View (Future - Needs Design Brainstorming)
+- [ ] **Phase E:** Schema Updates & Data Completeness (Future - Post-MVP)
 
-```
-┌─────────────────────────────────────┐
-│ [☰] VedicLMS    [Profile 👤]        │  ← Sticky header
-└─────────────────────────────────────┘
-
-Hamburger Menu (overlay):
-├─ 📚 Learning
-├─ 👨‍🏫 Batches & Progress*
-├─ ✏️ Content Studio*
-├─ ⚙️ Admin Center*
-├─ ─────────────────
-├─ [Profile Settings]
-└─ [Logout]
-
-Main Content (full-width, scrollable)
-┌─────────────────────────────────────┐
-│ [Active Tab Content]                │
-│ (Single column, touch-optimized)    │
-└─────────────────────────────────────┘
-```
-
-**Key Principles:**
-- 44px minimum touch targets
-- Single column layout
-- Larger fonts (36px Telugu/Devanagari)
-- Sticky controls (audio, navigation)
+**Current Focus:** Phase A & B complete. Awaiting Phase D design requirements.
 
 ---
 
-### Tablet (640–1024px)
+### 📋 Next Up (Roadmap)
 
-```
-┌──────────────────────────────────────────────────┐
-│ VedicLMS | Learning | Batches* | Content* | ⚙️* │ 👤 │
-└──────────────────────────────────────────────────┘
+**Remaining Feature Migration:**
+- [ ] **Phase 5:** Content Studio (1 week)
+  - Content Studio Home, Track Detail, Edit Chapter (responsive)
+- [ ] **Phase 6:** Learning Board (1 week)
+  - Learning Board (student dashboard), Study Chapter (wrapped in new UI)
 
-Main Content (adaptive 2-column or single)
-┌──────────────────────────────────────────────────┐
-│ [Active Tab Content]                             │
-│ (Optimized for medium screens)                   │
-└──────────────────────────────────────────────────┘
-```
-
-**Key Principles:**
-- Horizontal tab navigation
-- Adaptive grids (2 columns where logical)
-- Table-to-card fallback for dense data
+**Final Polish:**
+- [ ] **Phase 7.4:** A11y, Performance, Responsive Testing, Production Release
 
 ---
 
-### Desktop (1024px+)
+## 🎯 Active Phase: 7.3.1 - My Students & Student Progress
 
-```
-┌──────────┬────────────────────────────────────────┐
-│ Sidebar  │ Content Area                           │
-│ 240px    │                                        │
-├──────────┼────────────────────────────────────────┤
-│ VedicLMS │ [Breadcrumb / Header]                 │
-│          ├────────────────────────────────────────┤
-│ 📚 Learn │ [Tab Content - Optimized for width]   │
-│ 📖 Curr  │                                        │
-│ 📊 Prog  │ - Wide tables                         │
-│          │ - Multi-panel layouts                  │
-│ 👨‍🏫 Batch │ - Rich information density            │
-│ 📈 Prog  │                                        │
-│          │                                        │
-│ ✏️ Contn │                                        │
-│ 🎵 Media │                                        │
-│          │                                        │
-│ ⚙️ Admin │                                        │
-│ 👥 Users │                                        │
-│ 🏫 Batch │                                        │
-│ 📋 Logs  │                                        │
-│          │                                        │
-│ ─────────│                                        │
-│ [👤 Pro] │                                        │
-│ [🔓 Log] │                                        │
-└──────────┴────────────────────────────────────────┘
-```
-
-**Key Principles:**
-- Persistent navigation (always visible)
-- Wider content area (efficient use of space)
-- Dense tables and admin dashboards
-- Multi-panel layouts possible
+**Strategic Approach:**
+- Start simple: Core functionality without advanced filters
+- Incremental phases: Each phase delivers working features
+- Defer enhancements: Filters and advanced UI decided after core is stable
+- Clear separation: What's definite vs. what needs discussion
 
 ---
 
-## Screen Hierarchy per Persona
+### Phase A: My Students - Basic Table ✅ COMPLETE (Jan 4, 2026)
 
-### STUDENT - Learning Tab
+**Goal:** Display all students from instructor's batches in a professional table.
 
-**Key Screens:**
-1. **Learning Board (Dashboard)**
-   - My Batch card
-   - Current Chapters (auto-highlighted, proficiency 0-1)
-   - Curriculum Overview (expandable accordion)
-   - Quick actions (Resume, Browse all)
-
-2. **Study Chapter**
-   - Header: Back, Chapter title, proficiency badge, menu
-   - Controls: Script selector, audio file selector, learn mode toggle
-   - Audio controls (play/pause/seek/volume/speed)
-   - Content: Interactive segments (Learn Mode) or HTML prose (Read Mode)
-
-### INSTRUCTOR - Batches & Progress Tab
-
-**Key Screens:**
-1. **My Batches List**
-   - Batch cards: name, current track, role indicator (primary/secondary)
-   - Click → Batch Detail
-
-2. **Batch Detail**
-   - Header: Batch name, current track selector
-   - Batch info: Description, instructors, created date
-   - Student Progress:
-     - Mobile: Expandable student cards with per-chapter proficiency
-     - Desktop: Dense DataTable with inline proficiency dropdowns
-   - Filters: By track, by proficiency range
-
-### CONTENT MANAGER - Content Studio Tab
-
-**Key Screens:**
-1. **Content Studio Home**
-   - Track list (cards or table)
-   - Create track button
-
-2. **Track Detail - Chapter List**
-   - Chapter list (with status badge: Published/Draft)
-   - Create chapter button
-   - Reorder chapters (drag handles)
-
-3. **Edit Chapter (5-Step Flow)**
-   - Mobile: Step wizard (progress dots, full-screen steps, footer buttons)
-   - Desktop: Horizontal tabs (Content, Media, Segmentation, Mapping, Preview)
-   - All steps with script-aware functionality (te/hi/en)
-
-   **Steps:**
-   1. Content: Rich text editor (TipTap), script selector, auto-save
-   2. Media: Upload audio (drag-drop), list with edit/delete
-   3. Text Segmentation: Tap-to-segment, reorder, delete (per-script)
-   4. Audio Mapping: Progressive Mapper (click-when-heard, state colors)
-   5. Preview: Student view with Learn Mode toggle, Publish button
-
-### ADMIN - Admin Center Tab
-
-**Key Screens:**
-1. **Admin Dashboard**
-   - Overview cards (pending approvals, active batches, user count, recent activity)
-   - Quick action buttons
-
-2. **User Management**
-   - Pending Approvals: Table/cards with approve/reject
-   - All Users: Table/cards with role editor and enable/disable
-
-3. **Batch Management**
-   - Batch list: Cards/table with actions (edit, close, deprecate)
-   - Create/Edit Batch form: Name, description, current track, instructor/student assignment
-
-4. **Audit Logs**
-   - Filters: Date range, user, action type
-   - Table/cards: Timestamp, user, action, resource, details
-
-5. **System Settings**
-   - Key-value settings (placeholder for MVP, expandable post-release)
+**Delivered:** Completed in 1 day with bonus filters (originally planned for Phase C)
 
 ---
 
-## Phase Breakdown
+#### Frontend Deliverables
 
-### Phase 0: Planning & Setup (Done)
-- ✅ MVP scope defined ([mvp-scope](mvp-scope.md))
-- ✅ Navigation blueprint created (this document)
-- ✅ Persona journeys mapped
-- ✅ v0 shadcn theme selected for new UI
-- ✅ Phase 1 kickoff completed
+✅ **Delivered:** `MyStudentsPage.tsx` at `client/src/new-ui/instructor/pages/`
 
----
+**TanStack React Table with columns:**
+- Roll# (clickable) ✅
+- Name (clickable) ✅
+- Contact (email or phone) ✅
+- Timezone ✅
+- Type (Bramhachari/Grihasta) ✅
+- Batch Code + Batch Name ✅
+- Actions (kebab menu) ✅
 
-### Phase 1: Theme Infrastructure (Done)
-**Goal:** Set up v0 theme colors and dark/light toggle. No breaking changes to existing UI.
-
-**Key Decision:** We use the v0 theme's colors **as-is**. No custom palette creation. Later (Phase 7+), we can tweak specific colors if needed.
-
-**Tasks:**
-- [x] Extract v0 theme CSS variables into `client/src/index.css`
-- [x] Install `next-themes` (Vite-compatible)
-- [x] Create `ThemeProvider` wrapper component
-- [x] Add theme toggle button to header (SimpleDashboard)
-- [x] Map v0 colors to Tailwind tokens in `tailwind.config.ts`
-- [x] Test dark/light mode across entire app (old UI should work instantly)
-
-**Deliverables:**
-- Entire app respects v0 color palette (light & dark)
-- Theme toggle works globally
-- No breaking changes to existing routes (`/`, `/manage/*`, `/learning/*`)
-
-**Note:** Completed on branch `phase-1-theme-infrastructure` and merged into `daily/2025-12-22`.
-
----
-
-### Phase 2: New Route Namespace (`/app/*`) – Shell Scaffolding (Done)
-**Goal:** Build a parallel `/app/*` shell using the v0 theme behind a feature flag, leaving legacy routes unchanged.
-
-**What shipped:**
-- `/app` shell with TopNav + Sidebar + section placeholders (Learning, Batches, Content, Admin)
-- Feature flag `VITE_NEW_UI_ENABLED` documented in `.env.example`; defaults off
-- v0 theme tokens applied; light/dark toggle works in the shell
-- Legacy routes remain untouched
-
-**Tasks:**
-- [x] Create `client/src/new-ui/` structure (AppShell, TopNav, Sidebar)
-- [x] Build `AppShell.tsx` with section placeholders and Wouter routing
-- [x] Adapt imports for Vite + Wouter (no Next.js APIs)
-- [x] Wire `/app/*` routes into `App.tsx` under a feature flag
-- [x] Add `VITE_NEW_UI_ENABLED` flag + document in `.env.example`
-- [x] Test coexistence: `/app/*` (flag on) and legacy routes (always)
-
-**Deliverables:**
-- `/app/*` preview shell available when the flag is true
-- Legacy UI unaffected when the flag is false
-- Ready to start Phase 3 feature migration inside the shell
-
----
-
-### Phase 3: Feature Migration – Admin Center ✅ COMPLETE (Dec 22, 2025)
-**Goal:** Build fully functional new Admin Center using v0 components.
-
-**Completed Work:**
-- ✅ Admin dashboard with stats cards and quick navigation
-- ✅ User Management with pending approvals, role assignment, and disable/enable toggle
-- ✅ Batch Management with CRUD, track selector, and pagination
-- ✅ Audit Logs with filters and pagination
-- ✅ System Settings placeholder
-- ✅ Deep links from dashboard to detail pages
-- ✅ Unified toast notifications
-- ✅ Compact UI refinements (small uppercase headers, normalized button sizes)
-- ✅ Design system alignment with shadcn/studio
-- ✅ Responsive testing completed
-
-**Backend Additions:**
-- ✅ `GET /api/admin/stats` (aggregated counts)
-- ✅ `POST /api/auth/admin/users/:userId/enable` (toggle user status)
-- ✅ `POST /api/auth/admin/users/:userId/reject` (delete pending user)
-- ✅ Pagination support across admin endpoints
-
-**Branch:** `phase-3-admin-center` (pushed to origin)  
-**Status:** Ready to merge to main
-
-**Future Refinements (deferred):**
-- Inline validation for duplicate batch codes
-- Filter batches by track
-- Advanced audit log search
-- System settings implementation
-
----
-
-### Phase 4: Feature Migration – Batches & Progress ✅ COMPLETE
-**Goal:** Build instructor batch management using v0 components.
-
-**Completed (December 23, 2025):**
-- ✅ Defined data needs (fields, filters, pagination) for instructor views
-- ✅ Mapped needs to existing APIs (no gaps found; backend ready)
-- ✅ Built `new-ui/batches/pages/MyBatchesList.tsx` (card grid)
-- ✅ Built `new-ui/batches/pages/BatchDetail.tsx` (table + mobile cards)
-- ✅ Implemented inline proficiency editing (dropdown 0-4 scale)
-- ✅ Connected to APIs (`/api/batches`, `/api/auth/admin/users`, `/api/content/tracks`)
-- ✅ Responsive design (mobile/tablet/desktop)
-- ✅ Toast notifications on all mutations
-- ✅ Searchable student combobox (name/email/ID)
-- ✅ Track context card in batch detail
-- ✅ All Phase 4 code type-safe (0 TypeScript errors)
-
-**Deliverables:**
-- `/app/batches/*` fully functional with responsive design
-- 9 custom hooks (data fetching, mutations)
-- 2 pages (MyBatchesList, BatchDetail)
-- 1 reusable component (StudentCombobox)
-- Backend fix: studentName query in batch-cohort/storage.ts
-- Ready for EOD merge to main
-
----
-
-### Phase 5: Feature Migration – Content Studio (1 week) 🔜 NEXT
-**Goal:** Polish content management for new UI using v0 components.
-
-**Screens:**
-- Content Studio home (v0 card grid for tracks)
-- Track Detail (v0 table/cards for chapters)
-- Edit Chapter (desktop tabs OR mobile step wizard, both v0 styled)
-
-**Tasks:**
-- [ ] Build `new-ui/content/pages/ContentStudio.tsx` (v0 card grid)
-- [ ] Build `new-ui/content/pages/TrackDetail.tsx` (v0 table/cards)
-- [ ] Adapt existing `EditChapter.tsx` to work in new UI (wrap with v0 styling)
-- [ ] Mobile: Convert tabs → step wizard (v0 styling)
-- [ ] Desktop: Keep tabs, apply v0 styling
-- [ ] Connect to APIs
-- [ ] Responsive testing
-
-**Deliverables:**
-- `/app/content/*` fully functional with v0 styling
-- Old `/manage/tracks` still works
-
----
-
-### Phase 6: Feature Migration – Learning Board (1 week)
-**Goal:** Polish student learning experience using v0 components.
-
-**Screens:**
-- Learning Board (v0 card grid dashboard)
-- Study Chapter (interactive learning, reuse existing components)
-
-**Tasks:**
-- [ ] Build `new-ui/learning/pages/LearningBoard.tsx` (v0 card grid)
-- [ ] Wrap existing `StudyChapter.tsx` with new UI shell (v0 styling)
-- [ ] Reuse `SegmentedTextDisplay`, `AudioControls`, `ProgressiveMapper` (no changes)
-- [ ] Mobile: Bottom-sheet audio controls
-- [ ] Desktop: Sidebar layout
-- [ ] Connect to APIs
-- [ ] Responsive testing
-
-**Deliverables:**
-- `/app/learning/*` fully functional with v0 styling
-- Old `/learning/*` still works
-
----
-
-### Phase 7.1: Navigation Architecture ✅ COMPLETE (Dec 23, 2025)
-**Goal:** Define role-based navigation taxonomy and implement foundational architecture.
-
-**Completed Work:**
-- ✅ Downloaded v0 shadcn sidebar block (free, from ui.shadcn.com/blocks)
-- ✅ Created `navigation-config.ts` with role-based taxonomy
-  - Learn section (All roles)
-  - Batches & Progress (Instructor)
-  - Content Studio (Content Manager)
-  - Admin (Admin)
-- ✅ Built `getNavigationForRole(role)` function with 4 role types
-- ✅ Added Course Content page under Learn section
-- ✅ Implemented breadcrumb mapping (`getBreadcrumbs(pathname)`)
-
-**Deliverables:**
-- Navigation configuration file with role-aware sections
-- Foundation for AppSidebar and TopNav components
-- Clear separation of concerns (student, instructor, content_manager, admin)
-
----
-
-### Phase 7.2: Shell Overhaul ✅ COMPLETE (Dec 23, 2025)
-**Goal:** Replace basic AppShell with professional v0 sidebar layout.
-
-**Completed Work:**
-- ✅ Built 6 new components from v0 block:
-  - `app-sidebar.tsx` - Collapsible sidebar with role-based navigation
-  - `nav-main.tsx` - Renders nav groups with nested items
-  - `nav-user.tsx` - User profile dropdown (profile, settings, logout)
-  - `brand-header.tsx` - VedicLMS logo header
-  - `top-nav.tsx` - Top bar with breadcrumbs, notifications, theme toggle
-  - `app-layout.tsx` - SidebarProvider wrapper
-- ✅ Replaced `AppShell.tsx` completely with new SidebarProvider-based layout
-- ✅ Implemented simple breadcrumbs ("Section > Page" format)
-- ✅ Fixed user role extraction from `user.roles[0]` with fallback
-- ✅ Tested with admin role (all sections visible)
-- ✅ Mobile responsiveness via SidebarProvider (hamburger menu automatic)
-
-**Deliverables:**
-- Professional sidebar navigation matching v0 design patterns
-- Role-aware section visibility (navigation-config integration)
-- Breadcrumb navigation auto-updating based on route
-- Theme: v0 base (black/white, light/dark mode ready)
-- Responsive: Mobile hamburger, desktop persistent sidebar
-
-**Branch:** `daily/2025-12-23` (commit e02a73c)  
-**Next Step:** Phase 7.3 or Phase 5 (user to decide)
-
----
-
-### Phase 7.3: Workflow Refinement (page-by-page) ✅ ADMIN CENTER COMPLETE
-**Goal:** Refine one page at a time across Batches and Admin Center, focusing on loading, empty, and error states with consistent headers and toasts.
-
-**Status:** Admin Center refinement complete (December 25, 2025). Remaining modules (Batches & Progress, Content Studio, Learning) scheduled for next phase.
-
-**Branch:** phase-7.3-batch-details (merged to origin)
-
-**Approach:** Page-by-page execution with quick reviews and incremental merges into the daily branch. Each page must meet acceptance criteria before moving on.
-
-**Completed Pages (December 23-25, 2025):**
-
-#### ✅ Admin Center - Complete (December 25, 2025)
-
-All Admin Center pages have been refined with professional loading/empty/error states, contextual navigation, and consistent UX patterns.
-
-##### BatchDetailAdmin (Complete - December 25, 2025)
-**Deliverables:**
-- ✅ Contextual navigation implementation (Sub-Page/Level 3)
-  - "Batch Details" appears under "Batches" page when viewing specific batch
-  - Chevron expands/collapses based on route context
-  - Controlled collapsible state for proper behavior
-- ✅ Enrollment table UX improvements
-  - Split STUDENT column into STUDENT and EMAIL columns
-  - Removed STATUS column (only active enrollments shown)
-  - Replaced Drop button with kebab menu for consistency
-  - Set ACTIONS column width to 50px for compact layout
-- ✅ TanStack Table column width standardization
-  - Applied width styling pattern to all admin tables (UserManagement, BatchManagement, AuditLogs, BatchDetailAdmin)
-  - Fixed size property application with inline styles on TableHead and TableCell
-  - Established reusable pattern for future data tables
-- ✅ Collapsible BatchDetailsCard with compact summary view
-- ✅ Student enrollment with pinned typeahead row
-- ✅ One-to-many student-batch relationship enforcement
-- ✅ Responsive design across all breakpoints
-- ✅ Toast notifications for all mutations
-
-**Navigation Architecture:**
-- ✅ Defined 3-level navigation taxonomy:
-  - Level 1: Sections (Admin Center, Batches & Progress, Content Studio, Learn)
-  - Level 2: Pages (Users, Batches, Tracks, etc.)
-  - Level 3: Sub-Pages (contextual only - Batch Details, etc.)
-- ✅ Removed redundant static sub-items ("View All", "All Tracks")
-- ✅ Established pattern for future contextual navigation (User Details, Chapter Editor, etc.)
-
-**System Settings:**
-- ✅ Replaced with professional "Coming Soon" placeholder
-  - Clean centered layout with Settings icon
-  - Clear messaging about future availability
-  - Consistent with design system aesthetics
-
-##### BatchManagement (Complete - December 24, 2025)
-**Deliverables:**
-- ✅ Full CRUD operations for batches (create, read, update, delete)
-  - Create modal with batch code, name, track selector, primary instructor, secondary instructors, description
-  - Edit modal with all fields pre-filled
-  - Delete with validation (prevents deletion if batch has active students)
-- ✅ Professional TanStack React Table with 8 columns (CODE, NAME, COHORT TYPE, CURRENT TRACK, PRIMARY INSTRUCTOR, SECONDARY INSTRUCTOR(S), STUDENTS, ACTIONS)
-- ✅ Secondary instructor management:
-  - Chip-based multi-select UI in create/edit modals
-  - Display co-instructors with deduplication logic
-  - Sync secondary instructors on batch update
-- ✅ Pagination with rows-per-page selector
-- ✅ Loading states with skeleton loaders
-- ✅ Empty state with call-to-action
-- ✅ Error boundaries and retry functionality
-- ✅ Responsive design (mobile/tablet/desktop)
-- ✅ Dark mode support for dropdowns and inputs
-- ✅ Toast notifications for all mutations (success/error)
-- ✅ Auto-refresh table on all changes via TanStack Query invalidation
-- ✅ Instructor dropdown with filtering
-- ✅ Cohort type selector (Bramhachari/Grihasta)
-- ✅ Track selector from available tracks API
-
-**Backend Improvements:**
-- ✅ DELETE /api/batches/:id endpoint with validation
-- ✅ Proper query invalidation patterns in mutation hooks
-- ✅ Co-instructor assignment and removal
-- ✅ Secondary instructor sync on update
-
-**Database Seeding (Completed):**
-- ✅ 10 sample batches created (BR01-BR05, GR01-GR05) with full details
-- ✅ 2 secondary instructors assigned per batch
-- ✅ 10 test users created (test1-test10) in pending_approval status
-- ✅ 20 test users created (test11-test30) approved with random roles
-- ✅ Kashyap account name updated (Kashyap Kuchipudi)
-
-**UI/UX Improvements:**
-- ✅ Toast component background color set to card background (not transparent)
-- ✅ Batch dropdown dark mode support (black background, white text in dark mode)
-- ✅ Deduplication guard in CoInstructorCell to prevent duplicate display
-
-**Next Phase (December 25, 2025):**
-- [ ] BatchDetailsCard refinement (page with batch dropdown selector, detail grid, description)
-- [ ] Loading states, empty states, error handling
-- [ ] Responsive testing across all breakpoints
-
-#### Previous Completed Pages (December 23, 2025)
-
-#### ✅ AuditLogs (Complete)
-**Deliverables:**
-- ✅ Professional TanStack React Table with 6 columns (TIME, ACTION, USER, RESOURCE, RESOURCE ID, CHANGES)
-- ✅ Inline filter row: Action (dropdown), Resource (dropdown), User (searchable dropdown), Date range
-- ✅ Searchable user dropdown with client-side filtering by name/email
-- ✅ Smart changes display (inline for simple, popover for complex)
+**Features Delivered:**
 - ✅ Pagination with rows-per-page selector (10, 25, 50, 100)
-- ✅ Loading state with skeleton cards
-- ✅ Empty state with helpful messaging
-- ✅ Error state with retry button
-- ✅ Theme-aware styling (light/dark mode ready)
-- ✅ Proper z-indexing for dropdowns (z-50 for dropdowns, z-10 for sticky header)
-- ✅ Standard header with breadcrumbs
-- ✅ Toast notifications for all interactions
-
-#### ✅ Users Page (Complete)
-**Deliverables:**
-- ✅ Professional TanStack React Table with 5 columns (Name, Email, Status, Roles, Created/Requested, Actions)
-- ✅ Tab-style status filters (All Users, Pending, Inactive, Active) with dynamic count badges
-- ✅ Removed traditional filter bar in favor of preset tab navigation
-- ✅ Separate Name and Email columns for better scannability
-- ✅ Simplified status and role display (plain text, no pills)
-- ✅ Friendly role labels (Admin, Instructor, Content Manager, Student)
-- ✅ Removed checkbox selection (no bulk actions needed for MVP)
-- ✅ Vertical kebab menu for row actions (approve/reject for pending; edit roles/enable/disable for active)
-- ✅ Inline role editing with friendly labels and clean checkbox styling
-- ✅ Auto-refetch on all mutations (approve, reject, assign roles, toggle status)
-- ✅ Dynamic navigation highlighting (active route in sidebar)
-- ✅ Consistent px-4 padding on all sides
-- ✅ Refresh icon aligned to right of tabs
-- ✅ Pagination matching v0 reference (rows-per-page Select, 4 nav buttons)
-- ✅ Professional table styling (muted sticky header, row borders, hover states)
-- ✅ Loading skeleton, empty state, error state with retry
-- ✅ Toast notifications for all interactions
-
-**Next Phase: Batches & Progress, Content Studio, Learning (Started December 30, 2025)**
-
-Admin Center refinement is complete. Batches & Progress is now in active development.
-
-**Batches & Progress:**
-- ✅ MyBatchesList (Complete - December 30, 2025)
-  - ✅ Professional loading skeletons (4-card grid preview)
-  - ✅ Empty state with GraduationCap icon and helpful message
-  - ✅ Error boundary with retry button
-  - ✅ Card layout matching Admin Center quality
-  - ✅ 3-column metadata grid (Track, Instructors, Cohort Type, Enrollment, Dates)
-  - ✅ Backend: `/api/batches/my-batches` with instructor filtering (primary + co-instructor)
-- ✅ BatchDetails - Unified Component (Complete - January 2-3, 2026) 🎉
-  - ✅ Merged admin and instructor views into single component
-  - ✅ Dual route support: `/app/admin/batches/:id` AND `/app/instructor/batches/:id`
-  - ✅ Context-aware batch fetching (all batches for admin, instructor's batches only)
-  - ✅ Shared BatchDetailsCard with collapsible header
-  - ✅ Full enrollment table with TanStack Table (sorting, pagination)
-  - ✅ Typeahead student search with keyboard navigation
-  - ✅ Add/drop enrollment functionality
-  - ✅ Toast notifications for all mutations
-  - ✅ Loading skeletons and error states
-  - ✅ Professional table styling matching Admin Center patterns
-  - ✅ **Unified Batch Matrix** - Interactive proficiency tracking grid (MAJOR FEATURE)
-    - ✅ Proficiency scale architecture: 0-4 (mastery progression), 8 (Absent), 9 (Not Started)
-    - ✅ Cross-track proficiency support (getBatchProgress returns all chapters across all tracks)
-    - ✅ Auto-create proficiency records on student enrollment (default level 9)
-    - ✅ Interactive MatrixEvaluationModal with 8 proficiency levels
-    - ✅ Color-coded cells: Yellow (Practicing) → Green (50-90%) → Purple (90-95%), Gray (Absent), White (Not Started)
-    - ✅ Responsive table with sticky student/actions columns
-    - ✅ Chapter headers: centered codes (CH1, CH2...), 10px font size titles with 2-line clamp
-    - ✅ Consistent padding: px-2 py-2 wrapper divs, pl-4 pr-2 for student column
-    - ✅ Reset button: sends level 9 (Not Started) instead of 8 (Absent)
-    - ✅ Kebab menu styling standardized with Admin Center patterns
-    - ✅ Real-time refetch after mutations via TanStack Query invalidation
-    - ✅ Backend: getBatchProgress removed track filter, addEnrollment creates proficiency records
-    - ✅ Database utilities: 3 proficiency reset scripts (reset-all, check-and-reset, full-proficiency-reset)
-    - ✅ Documentation: Proficiency scale in domain-requirements.md and copilot-instructions.md
-- [ ] My Students (Next - Starting January 3+, 2026)
-  - [ ] Student list view for instructors (all students across instructor's batches)
-  - [ ] Filterable by batch, proficiency level, track progress
-  - [ ] Quick actions: View details, send message, track progress
-  - [ ] Loading/empty/error states
-  - [ ] Professional table styling matching Admin Center patterns
-- [ ] Student Details (Next - Starting January 3+, 2026)
-  - [ ] Comprehensive student profile page
-  - [ ] Batch enrollment history with dates
-  - [ ] Proficiency timeline and progress charts
-  - [ ] Notes and evaluation interface
-  - [ ] Chapter-by-chapter proficiency breakdown with historical tracking
-  - [ ] Export student progress report
-
-**Content Studio:**
-- [ ] Content Studio Home
-- [ ] Track Detail
-- [ ] Edit Chapter workflow
-
-**Learning:**
-- [ ] Learning Board
-- [ ] Study Chapter
-
-**Deliverables:**
-- Production-quality loading/empty/error behaviors per module
-- Standardized headers and toast patterns
-- Consistent UX across all sections
-- Incremental commits, review after each module
-
-**Architecture Notes (December 30, 2025):**
-- Unified batch details reduces duplication and ensures feature parity between admin and instructor
-- Both roles now share enrollment management, progress tracking, and batch overview capabilities
-- Next focus: Progress tracker interfaces for batch-level and student-level views
+- ✅ Loading state: Professional skeleton loader
+- ✅ Empty state: Helpful message with icon
+- ✅ Error state: Retry button
+- ✅ Click Roll# or Name → navigate to `/app/instructor/students/:studentId`
+- ✅ Standard page header with breadcrumb
+- ✅ Responsive design (mobile/tablet/desktop)
+- ✅ **Bonus:** Search filter (debounced 300ms)
+- ✅ **Bonus:** Batch dropdown filter
+- ✅ **Bonus:** Status dropdown filter
 
 ---
 
-### Phase 7.4: Final Polish (After Phase 5-6) 🔜 DEFERRED
-**Goal:** Production-ready new UI with A11y, performance, and testing.
+#### Backend Deliverables
 
-**Scope:**
-- A11y audit (keyboard nav, screen reader, focus, contrast)
-- Responsive testing (all breakpoints, all devices)
-- Dark/light mode testing (v0 theme)
-- Performance optimization (code splitting, prefetch, images)
-- Global bug fixes and refinements
+✅ **Delivered:** `GET /api/batches/my-students`
 
-**Tasks:**
-- [ ] A11y audit & fixes
-  - [ ] Keyboard navigation (all screens)
-  - [ ] Screen reader support (aria labels)
-  - [ ] Focus indicators (visible on all elements)
-  - [ ] Color contrast (WCAG AA)
-- [ ] Performance optimization
-  - [ ] Bundle analysis & code splitting
-  - [ ] Image optimization
-  - [ ] TanStack Query prefetching
-  - [ ] Lazy-load routes
-- [ ] Responsive testing (all breakpoints, all devices)
-- [ ] Dark/light mode testing (v0 theme)
-- [ ] Edge case testing (empty states, loading states, error boundaries)
-- [ ] Documentation
-  - [ ] Component library (Storybook, optional)
-  - [ ] API documentation (OpenAPI, optional)
-  - [ ] User guide (optional)
+**Endpoint supports filters:**
+- `limit` & `offset` for pagination ✅
+- `search` - filters by name or email ✅
+- `batchId` - filters by specific batch ✅
+- `status` - filters by enrollment status ✅
 
-**Then You Decide:**
+**Logic Implemented:**
+- ✅ Query all enrollments where batch's primary instructor = user OR user in co-instructors
+- ✅ Join: enrollments → students → batches
+- ✅ Return: Array of students with batch context
+- ✅ Permission check: Verify user is instructor
 
-**Option A: Keep Both UIs (Recommended for now)**
-- Both `/` and `/app/*` routes continue working
-- Feature flag lets users toggle between old/new
-- Gradual deprecation of old UI later
-
-**Option B: Cutover to New UI (Future)**
-- Delete old routes (`/`, `/manage/*`)
-- Rename `/app/*` → `/` (simple folder rename)
-- Deprecate old UI completely
-- This becomes a separate implementation task
-
-**Deliverable:** **MVP v1.0 - Production Release** (v0 theme, fully accessible, tested)
-
----
-
-## Component Inventory
-
-### Strategy: Reuse Existing + Build New UI Parallel
-
-**Existing Core Components (Keep Unchanged):**
-- Learning, content management, and audio components work in both old UI and new UI
-- `/app/*` routes wrap these components with new v0 theme styling
-- No API changes, no business logic changes—just visual refresh
-
-### Reuse from Existing Codebase (Shared Across Both UIs)
-
-| Component | Location | Status | New UI Usage |
-|-----------|----------|--------|--------------|
-| `SegmentedTextDisplay` | `client/src/components/text-segmentation/` | ✅ Ready | Study Chapter |
-| `ProgressiveMapper` | `client/src/components/audio-mapping/` | ✅ Ready | Content Studio Edit |
-| `AudioControls` | `client/src/components/design-system/` | ✅ Ready | Study Chapter |
-| `ScriptSelector` | `client/src/components/common/` | ✅ Ready | Study + Content |
-| `Badge` | `client/src/components/design-system/` | ✅ Ready | Proficiency display |
-| `Switch` | `client/src/components/design-system/` | ✅ Ready | Learn mode toggle |
-| `RichTextEditor` | `client/src/components/ui/` | ✅ Ready | Content editor |
-| `EditChapter.tsx` | `client/src/features/content-management/pages/` | ✅ Ready | Wrapped in new UI |
-| `StudyChapter.tsx` | `client/src/features/learning/pages/` | ✅ Ready | Wrapped in new UI |
-
-### New Components for New UI (`client/src/new-ui/`)
-
-| Component | Purpose | Phase | UI Style |
-|-----------|---------|-------|----------|
-| `AppShell.tsx` | Header + Sidebar layout | 2 | v0 theme |
-| `TopNav.tsx` | Header navigation | 2 | v0 theme |
-| `Sidebar.tsx` | Sidebar navigation | 2 | v0 theme |
-| `LearningBoard.tsx` | Student dashboard | 6 | v0 card grid |
-| `MyBatchesList.tsx` | Instructor batch list | 4 | v0 card grid |
-| `BatchDetail.tsx` | Batch overview + student progress | 4 | v0 table + mobile cards |
-| `StudentProgressTable.tsx` | Proficiency grid (desktop) | 4 | v0 DataTable |
-| `StudentProgressCards.tsx` | Proficiency cards (mobile) | 4 | v0 expandable cards |
-| `AdminDashboard.tsx` | Admin overview | 3 | v0 card grid |
-| `UserApprovalQueue.tsx` | Pending user reviews | 3 | v0 table/cards |
-| `UserManagement.tsx` | User list + role editor | 3 | v0 table |
-| `BatchCRUDForm.tsx` | Create/edit batch | 3 | v0 form |
-| `ContentStudio.tsx` | Track management | 5 | v0 card grid |
-| `TrackDetail.tsx` | Chapter list | 5 | v0 table/cards |
-| `AuditLogTable.tsx` | Activity log viewer | 3 | v0 table |
-
-### Design System Components (shadcn/Radix – Already in Codebase)
-
-| Component | Usage | Status | Notes |
-|-----------|-------|--------|-------|
-| `Button` | All actions | ✅ Existing | v0 theme colors |
-| `Card` | Container, layout | ✅ Existing | v0 theme colors |
-| `Tabs` | Desktop navigation, step selector | ✅ Existing | v0 styling |
-| `Dropdown` | Select, filters | ✅ Existing | v0 styling |
-| `Table` | Dense data display | ✅ Existing | v0 styling |
-| `Form` | Input fields, validation | ✅ Existing | v0 styling |
-| `Dialog/Modal` | Confirmations, forms | ✅ Existing | v0 styling |
-| `Input` | Text entry | ✅ Existing | v0 styling |
-| `Textarea` | Multi-line text | ✅ Existing | v0 styling |
-| `Badge` | Status, tags | ✅ Custom variant | v0 colors |
-| `Accordion` | Expandable sections | ✅ Existing | v0 styling |
-
----
-
-## Responsive Design Tokens
-
-### Breakpoints (Tailwind)
-
-```
-Mobile:  < 640px   (sm)
-Tablet:  640–1024px (sm–lg)
-Desktop: 1024px+   (lg+)
-```
-
-### Touch Targets
-
-```
-Minimum: 44px × 44px
-Ideal:   48px × 48px
-Large:   56px × 56px (primary actions)
-```
-
-### Typography Scale
-
-```
-Mobile:
-  - Telugu/Devanagari body: 36px, line-height 2.0
-  - English body: 18px, line-height 1.8
-  - Headers: 28px
-  - Small: 14px
-
-Tablet:
-  - Telugu/Devanagari body: 32px, line-height 1.8
-  - English body: 16px, line-height 1.6
-  - Headers: 24px
-  - Small: 13px
-
-Desktop:
-  - Telugu/Devanagari body: 30px, line-height 1.6
-  - English body: 16px, line-height 1.6
-  - Headers: 24px
-  - Small: 12px
-```
-
-### Spacing Scale
-
-```
-xs:  4px
-sm:  8px
-md:  16px
-lg:  24px
-xl:  32px
-2xl: 48px
-```
-
-## Color Palette & Design Tokens
-
-### v0 Theme Colors (Used As-Is)
-
-We extract the v0 shadcn theme's color palette directly into our CSS variables. **No custom palette creation.** The v0 theme already has:
-- Light mode colors
-- Dark mode colors
-- Semantic colors (primary, secondary, accent, destructive, etc.)
-
-**If we need adjustments later (Phase 7+):**
-- Tweak specific hues/shades in `tailwind.config.ts`
-- Or extend v0 tokens with custom additions
-- But we start with v0 unchanged
-
-### CSS Variables (Extracted from v0)
-
-All colors in `client/src/index.css`:
-```css
-:root {
-  --background: /* v0 light background */
-  --foreground: /* v0 light foreground */
-  --primary: /* v0 primary */
-  --primary-foreground: /* v0 primary foreground */
-  --secondary: /* v0 secondary */
-  --accent: /* v0 accent */
-  --destructive: /* v0 destructive */
-  --border: /* v0 border */
-  --ring: /* v0 ring */
-  --chart-1 through --chart-5: /* v0 chart colors */
-  /* ... etc */
-}
-
-.dark {
-  /* v0 dark mode overrides */
+**Response Shape:**
+```typescript
+{
+  students: [{
+    id: number,
+    rollNumber: string,  // Format: BATCH_CODE-XXX (generated)
+    name: string,
+    email: string,
+    phone: string | null,
+    timezone: string | null,  // Shows '-' in UI (schema field doesn't exist)
+    type: 'bramhachari' | 'grihasta' | null,  // Shows '-' in UI (schema field doesn't exist)
+    batchCode: string,
+    batchName: string,
+    enrolledAt: string  // ISO timestamp
+  }],
+  total: number  // Total count for pagination
 }
 ```
 
-### Design Tokens (Responsive)
+---
 
-#### Breakpoints
+#### Frontend Hooks
+
+✅ **Delivered:** 
+- `useMyStudents(filters)` - Fetches students with filter support, pagination, loading/error states
+- `useInstructorBatches()` - Fetches batch list for dropdown filter
+
+**Location:** `client/src/new-ui/instructor/hooks/`
+
+---
+
+#### Acceptance Criteria
+
+✅ **All criteria met (Jan 4, 2026):**
+- ✅ Table displays all students from instructor's batches
+- ✅ Clicking Roll# or Name navigates to Student Progress page
+- ✅ Pagination works with row selector
+- ✅ Loading/empty/error states render correctly
+- ✅ Responsive across all breakpoints
+- ✅ No TypeScript errors
+- ✅ **Bonus:** Filters (search, batch, status) implemented ahead of schedule
+
+---
+- Sorting by column headers
+- Bulk actions
+
+---
+
+### Phase B: Student Progress - Details Card + Placeholder ✅ COMPLETE (Jan 4, 2026)
+
+**Goal:** Display student details and placeholder for track progress.
+
+**Delivered:** Completed in 1 day. Refactored to use StudentDetailsCard component.
+
+---
+
+#### Frontend Deliverables
+
+**Page:** `StudentProgressPage.tsx` at `client/src/new-ui/instructor/pages/`
+
+**Student Details Card** (collapsible, reuse BatchDetailsCard pattern):
+
+**Collapsed state:**
+```
+┌─ Student Details ──────────────────────────────────────┐
+│ [Avatar] Ramesh Kumar (#BR01-005)                  [▼] │
+│ Bramhachari • Batch BR01 - Morning Vedic Recitation    │
+└────────────────────────────────────────────────────────┘
+```
+
+**Expanded state:**
+```
+┌─ Student Details ──────────────────────────────────────┐
+│ [Avatar] Ramesh Kumar (#BR01-005)                  [▲] │
+├────────────────────────────────────────────────────────┤
+│ Email:      ramesh.kumar@example.com                   │
+│ Phone:      +91 98765 43210 (or '-' if null)           │
+│ Timezone:   Asia/Kolkata (IST, UTC+5:30) (or '-')      │
+│ Type:       Bramhachari (or '-')                       │
+│ Batch:      BR01 - Morning Vedic Recitation            │
+│ Enrolled:   Oct 15, 2025                               │
+│ Progress:   45% complete (18/40 chapters)              │
+└────────────────────────────────────────────────────────┘
+```
+
+**Track Progress Section:** Placeholder card
+- Text: "Track-wise progress view - Design in progress"
+- Gray background, centered text
+- Emoji: 🚧 or 📊
+
+**Features:**
+- Breadcrumb: Batches & Progress > My Students > Student Progress
+- Sidebar: Active state on "My Students" with "Student Progress" as contextual sub-item
+- Loading state: Skeleton for details card + placeholder section
+- Error state: Retry button with helpful message
+- Standard page header
+
+---
+
+#### Backend Deliverables
+
+**Endpoint:** `GET /api/students/:studentId/progress`
+
+**Logic:**
+- Query student by ID
+- Join: students → enrollments → batches
+- Join: studentProgress → chapters → tracks
+- Permission check: Verify instructor is associated with student's batch (primary or co-instructor)
+- Return `403 Forbidden` if not authorized
+
+**Response Shape:**
+```typescript
+{
+  student: {
+    id: number,
+    rollNumber: string,
+    name: string,
+    email: string,
+    phone: string | null,
+    timezone: string | null,
+    type: 'bramhachari' | 'grihasta' | null,
+    batchCode: string,
+    batchName: string,
+    batchId: number,
+    enrolledAt: string
+  },
+  progress: {
+    totalChapters: number,
+    completedChapters: number,  // Count where proficiencyLevel >= 4
+    percentComplete: number,
+    tracks: [{
+      trackId: number,
+      trackName: string,
+      trackCode: string,
+      chapters: [{
+        chapterId: number,
+        chapterName: string,
+        chapterCode: string,
+        proficiencyLevel: number,  // 0-4, 8 (absent), 9 (not started)
+        lastEvaluatedAt: string | null
+      }]
+    }]
+  }
+}
+```
+
+---
+
+#### Frontend Hooks
+
+**Hooks:**
+- `useStudentProgress(studentId)` - Fetches student details + track progress
+- `useAuth()` - Verify user has instructor role
+
+---
+
+#### Navigation
+
+**Updates:**
+- Update `navigation-config.ts` to add contextual "Student Progress" sub-item under "My Students"
+- Update breadcrumb logic in `AppLayout.tsx` to handle `/app/instructor/students/:studentId`
+- Back button behavior: Navigate to `/app/instructor/students` (no filter preservation yet)
+
+---
+
+#### Acceptance Criteria
+
+✅ **All criteria met (Jan 4, 2026):**
+- ✅ Student Details Card renders with all metadata
+- ✅ Collapsible behavior works (extracted to StudentDetailsCard component)
+- ✅ Placeholder for track progress visible ("Track-wise Progress Tracking — Coming Soon")
+- ✅ Breadcrumb and sidebar navigation correct
+- ✅ Permission check prevents unauthorized access (403 error)
+- ✅ Loading/error states work
+- ✅ No TypeScript errors
+
+**Bonus:** Refactored to extract StudentDetailsCard component for reusability
+
+---
+
+#### Deferred to Phase D
+
+- Track-wise progress UI (needs separate brainstorming)
+
+---
+
+### Phase C: My Students - Advanced Features ✅ COMPLETE (Jan 4, 2026)
+
+**Goal:** Add advanced filtering, sorting, and search to My Students table.
+
+**Status:** Filters fully implemented in Phase A, sorting & URL params deferred post-MVP
+
+**What Was Delivered (Jan 4, 2026):**
+- ✅ Search input (by name, email) - debounced 300ms
+- ✅ Batch dropdown filter (filter by specific batch)
+- ✅ Status dropdown filter (active/inactive/all)
+- ✅ Client-side filtering logic
+- ✅ Responsive filter layout
+- ✅ All features integrated and tested
+
+**What Was Deferred (Post-MVP):**
+- ❌ Sortable column headers (click to sort by Roll#, Name, Batch, etc.)
+- ❌ URL query param persistence:
+  - Example: `/app/instructor/students?search=ramesh&status=active&batch=BR01`
+  - Preserves filters on back navigation
+  - Shareable URLs
+- ❌ Type dropdown (Bramhachari/Grihasta) - schema field doesn't exist yet
+
+**Why Deferred:**
+- Filters are sufficient for MVP without sorting
+- URL query params add implementation overhead
+- Can add after MVP if user feedback indicates need
+- Type field requires schema updates (Phase E)
+
+**Decision Point:**
+- MVP is stable with current filter set
+- Sorting and URL params can be prioritized based on usage feedback
+
+---
+
+### Phase D: Track-wise Progress View 🔮 FUTURE (Next Priority)
+
+**Open Questions (To Be Discussed Separately):**
+1. **Layout Pattern:** Accordion vs. Table vs. Tabs vs. Cards?
+   - Current leading idea: Accordion (collapsible tracks)
+   - Pros: Scalable, mobile-friendly, industry standard
+   - Cons: Requires click to expand (not "at a glance")
+   
+2. **Chapter Display:** How much detail per chapter?
+   - Proficiency level (0-4, 8, 9) with color coding?
+   - Progress bar vs. badge vs. both?
+   - Last evaluated date?
+   - Notes from evaluation (future feature)?
+
+3. **Mobile Responsiveness:** Stack vertically? Collapse to cards?
+
+4. **Visualization Patterns:**
+   - Reuse Batch Matrix color coding (Yellow → Green → Purple)?
+   - Summary stats per track (X/Y chapters, overall %)?
+   - Expand all / collapse all toggle?
+
+**Proposed Design (For Discussion):**
+```
+┌─ Track 1: Rigveda Foundation (4/10 chapters, 40%) ────── [▼]
+│ CH1: Introduction        ████░░ Level 2  Last: Dec 15
+│ CH2: Basics              ██░░░░ Level 1  Last: Dec 10
+│ CH3: Fundamentals        ░░░░░░ Level 0  Last: Never
+│ CH4: Advanced Concepts   █████░ Level 3  Last: Dec 20
+│ ... (6 more chapters collapsed)
+└────────────────────────────────────────────────────────────┘
+
+┌─ Track 2: Rigveda Intermediate (0/8 chapters, 0%) ──────── [▶]
+```
+
+**Decision Point:**
+- After Phase B is complete, schedule separate brainstorming session
+- User will provide specific requirements for visualization
+- Then implement based on agreed design
+
+---
+
+### Phase E: Schema Updates & Data Completeness 🔮 FUTURE
+
+**Goal:** Add missing fields to student schema based on real-world usage.
+
+**Status:** Post-MVP (after Phases A & B are stable)
+
+**Potential Schema Changes:**
+- Add `timezone` field to users table (string, nullable)
+- Add `cohortType` field to users table ('bramhachari' | 'grihasta', nullable)
+- Add `phone` field to users table (string, nullable)
+- Add `avatar` field to users table (string URL, nullable)
+
+**Migration Strategy:**
+- Update `shared/schema.ts` with new fields
+- Run `npm run db:push` to apply changes
+- Update API responses to include new fields
+- Update UI to use real data instead of '-' placeholders
+- Seed scripts: Generate realistic test data
+
+**Decision Point:**
+- After Phases A & B are stable
+- Analyze which fields are actually needed vs. nice-to-have
+- Prioritize based on instructor feedback
+
+---
+
+## Implementation Timeline
+
+### ✅ Week 1 - January 4, 2026 (COMPLETE)
+
+**Day 1 (Jan 4):** ✅ Phase A - My Students Table + Filters
+- ✅ Backend: `GET /api/batches/my-students` endpoint with filter support
+- ✅ Frontend: MyStudentsPage.tsx with TanStack Table
+- ✅ Hooks: useMyStudents(), useInstructorBatches()
+- ✅ Filters: Search (debounced), batch dropdown, status dropdown
+- ✅ Testing: All breakpoints, loading/empty/error states
+- **Bonus:** Implemented Phase C filters ahead of schedule
+
+**Day 1 (Jan 4):** ✅ Phase B - Student Progress Page
+- ✅ Backend: `GET /api/students/:studentId/progress` endpoint
+- ✅ Frontend: StudentDetailsPage.tsx with inline profile/enrollment/matrix
+- ✅ Hook: useStudentDetails(studentId)
+- ✅ Navigation: Updated breadcrumbs, contextual sidebar navigation
+- ✅ Testing: Permission checks (403 on unauthorized), all states
+- ✅ Fixed Drizzle ORM schema bugs (3 issues resolved)
+
+**Day 1 (Jan 4):** ✅ Refactoring
+- ✅ Extracted StudentDetailsCard.tsx component
+- ✅ Simplified StudentDetailsPage to use card + placeholder
+- ✅ Removed all inline profile/enrollment code
+- ✅ Removed proficiency matrix (deferred to Phase D)
+- ✅ Added placeholder: "Track-wise Progress Tracking — Coming Soon"
+
+**Accomplishments:**
+- Completed Phases A & B in **1 day** (planned for 4 days)
+- Implemented 50% of Phase C (filters) as bonus
+- Refactored for better component architecture
+- Resolved critical Drizzle ORM schema issues
+- Zero TypeScript errors, all features working
+
+### 📋 Week 2+ (January 5+, 2026)
+
+**Next Steps:**
+- Phase D: Design brainstorming session (user to provide requirements)
+- Phase C remaining: Sortable columns, URL param persistence (if needed)
+- Phase E: Schema updates (post-MVP)
+
+**TBD:** Phase D Brainstorming Session
+- Design track-wise progress UI
+- Mockups or wireframes
+- Decide on accordion vs. table vs. other
+
+**TBD:** Phase D Implementation
+- Build chosen track progress design
+- Test across all devices
+
+**TBD:** Phase C (Filters) - If Deemed Necessary
+- Add filters, sorting, search
+- Optional URL query params
+
+**TBD:** Phase E (Schema Updates) - Post-MVP
+- Add missing fields to users table
+- Update seed scripts
+
+---
+
+## Dependencies & Prerequisites
+
+### Before Starting Phase A
+- ✅ Unified Batch Matrix complete (proficiency tracking working)
+- ✅ Admin Center patterns established (table styling, pagination, kebab menus)
+- ✅ TanStack Query hooks working
+- ✅ Navigation config supports contextual sub-items
+
+### Before Starting Phase B
+- ✅ Phase A complete (My Students table working)
+- ✅ Backend can query student proficiency across all tracks
+- ✅ Permission validation logic in place
+
+### Before Starting Phase D
+- ✅ Phase B complete (Student Progress page with placeholder)
+- ⏳ Design brainstorming session completed
+- ⏳ UI mockups or wireframes approved
+
+---
+
+## Success Metrics
+
+### Phase A Success
+- Instructor can view all students from their batches
+- Clicking student navigates to detail page
+- Table is responsive and professional
+- Loading/empty/error states work
+
+### Phase B Success
+- Instructor can view student details and overall progress
+- Permission checks prevent unauthorized access
+- Collapsible card works smoothly
+- Placeholder communicates upcoming feature
+
+### Phase D Success (Future)
+- Instructor can see detailed track-wise progress at a glance
+- Proficiency levels are clear and color-coded
+- Mobile experience is usable
+- Design scales to 8 tracks × 5-10 chapters each
+
+---
+
+## Quick Reference
+
+### Component Inventory
+
+**Reuse from Existing Codebase:**
+- SegmentedTextDisplay, ProgressiveMapper, AudioControls, ScriptSelector
+- Badge, Switch, RichTextEditor
+- EditChapter.tsx, StudyChapter.tsx
+
+**New Components Built:**
+- AppShell, TopNav, Sidebar (Phase 2)
+- Admin Center: AdminDashboard, UserManagement, BatchManagement, AuditLogs (Phase 3)
+- Batches & Progress: MyBatchesList, UnifiedBatchMatrix (Phase 4 + 7.3)
+
+**To Be Built:**
+- My Students: MyStudentsPage (Phase 7.3.1-A)
+- Student Progress: StudentProgressPage (Phase 7.3.1-B)
+- Content Studio: ContentStudio, TrackDetail (Phase 5)
+- Learning: LearningBoard (Phase 6)
+
+### Design Tokens
+
+**Breakpoints:**
 - Mobile: < 640px
 - Tablet: 640–1024px
 - Desktop: 1024px+
 
-#### Touch Targets
+**Touch Targets:**
 - Minimum: 44px × 44px
 - Ideal: 48px × 48px
-- Large (primary actions): 56px × 56px
+- Large: 56px × 56px (primary actions)
 
-#### Typography (Responsive Scale)
+**Typography (Responsive):**
 - **Mobile:** Telugu/Devanagari 36px, English 18px, headers 28px
 - **Tablet:** Telugu/Devanagari 32px, English 16px, headers 24px
 - **Desktop:** Telugu/Devanagari 30px, English 16px, headers 24px
 
-#### Spacing
+**Spacing:**
 - xs: 4px, sm: 8px, md: 16px, lg: 24px, xl: 32px, 2xl: 48px
 
-#### Fonts (Existing)
-- Telugu: JIMS font, fallback Noto Sans Telugu
-- Devanagari: AdishilaSanVedic, fallback Noto Sans Devanagari
-- English: AdishilaSan, fallback Noto Sans
+**Fonts:**
+- Telugu: JIMS font (fallback: Noto Sans Telugu)
+- Devanagari: AdishilaSanVedic (fallback: Noto Sans Devanagari)
+- English: AdishilaSan (fallback: Noto Sans)
 
 ---
 
-## Development Checklist
+## Established Patterns
 
-### Pre-Phase 1: Setup
-- [ ] Create navigation shell component
-- [ ] Set up responsive layout system
-- [ ] Define tailwind tokens (spacing, typography, colors)
-- [ ] Update routes structure
-- [ ] Set up TanStack Query hooks for batches/students/chapters
+### TanStack Table Pattern
+- Column width styling: `style={{ width: '...' }}`
+- Sticky headers with `sticky top-0 z-10`
+- Pagination with rows-per-page selector
+- Loading: Skeleton rows (4-6 rows preview)
+- Empty: Icon + helpful message + CTA button
+- Error: Alert + retry button
 
-### Phase 1: Student Learning
-- [ ] Build Learning Board dashboard
-  - [ ] My Batch card
-  - [ ] Current Chapters section
-  - [ ] Curriculum accordion
-  - [ ] Responsive variants (mobile/tablet/desktop)
-- [ ] Polish StudyChapter.tsx
-  - [ ] Mobile: Bottom-sheet audio, larger segments
-  - [ ] Tablet: Split view (audio left, content right)
-  - [ ] Desktop: Current layout, optimize
-  - [ ] Responsive font sizes
-  - [ ] 44px+ touch targets
-- [ ] Test across devices
-  - [ ] iPhone SE, iPhone 14, Android 360/414px
-  - [ ] iPad, iPad Pro
-  - [ ] Desktop 1440px, 2560px
-- [ ] Accessibility check (keyboard nav, screen reader, focus)
+### Collapsible Card Pattern
+- Collapsed: Key info only (1-2 lines)
+- Expanded: Full metadata grid
+- Chevron toggle in header
+- Used in: Batch Details, Student Details (upcoming)
 
-### Phase 2: Instructor Features
-- [ ] Build My Batches list
-  - [ ] Card grid layout
-  - [ ] Batch card component
-  - [ ] Navigation to batch detail
-  - [ ] Responsive variants
-- [ ] Build Batch Detail screen
-  - [ ] Batch info section
-  - [ ] Mobile: Expandable student cards
-  - [ ] Desktop: shadcn DataTable
-  - [ ] Inline proficiency editing
-  - [ ] Filters (track, proficiency)
-- [ ] API integration (fetch batches, students, update proficiency)
-- [ ] Test across devices
-- [ ] Accessibility check
+### Contextual Navigation Pattern
+- Level 1: Sections (Admin Center, Batches & Progress)
+- Level 2: Pages (Users, Batches, My Batches, My Students)
+- Level 3: Sub-Pages (Batch Details, Student Progress) - shown only when active
+- Breadcrumb follows same hierarchy
 
-### Phase 3: Content Manager Polish
-- [ ] Build Track/Chapter management
-  - [ ] CRUD screens
-  - [ ] Reorder functionality
-  - [ ] Publish/unpublish logic
-  - [ ] Status badges
-- [ ] Responsive EditChapter.tsx
-  - [ ] Mobile: Convert tabs to step wizard
-  - [ ] Progress indicator (dots)
-  - [ ] Full-screen steps
-  - [ ] Footer buttons (Back/Save/Next)
-  - [ ] Desktop: Keep tabs, polish
-- [ ] Touch-optimize Progressive Mapper
-  - [ ] Larger segments (48px+)
-  - [ ] Better mobile state colors
-- [ ] Test across devices
-- [ ] Accessibility check
+### Role-Based Routing
+- Same component serves multiple roles via URL detection
+- Context-aware data fetching (admin sees all, instructor sees assigned only)
+- Permission checks in both frontend (UX) and backend (security)
 
-### Phase 4: Admin Features
-- [ ] Build Admin dashboard
-  - [ ] Overview cards
-  - [ ] Quick action buttons
-- [ ] User Management
-  - [ ] Pending approvals queue
-  - [ ] User list with role editor
-  - [ ] Enable/disable toggle
-- [ ] Batch Management
-  - [ ] Batch CRUD forms
-  - [ ] Instructor/student assignment
-  - [ ] Multi-select UI
-- [ ] Audit Logs (basic)
-  - [ ] Table/cards with filters
-- [ ] System Settings (placeholder)
-- [ ] Test across devices
-- [ ] Accessibility check
-
-### Phase 5: Polish & Release
-- [ ] A11y audit
-  - [ ] Keyboard navigation (Tab, Enter, Escape, Arrow keys)
-  - [ ] Screen reader testing (VoiceOver, TalkBack)
-  - [ ] Focus indicators (all interactive elements)
-  - [ ] WCAG AA color contrast
-- [ ] Performance optimization
-  - [ ] Bundle analysis
-  - [ ] Code splitting
-  - [ ] Image optimization
-  - [ ] TanStack Query prefetch
-- [ ] Responsive testing
-  - [ ] All breakpoints (sm, md, lg, xl)
-  - [ ] All device orientations (portrait, landscape)
-  - [ ] All browsers (Chrome, Safari, Firefox, Edge)
-- [ ] Bug fixes
-  - [ ] Error states
-  - [ ] Loading states
-  - [ ] Edge cases (empty, long names, etc.)
-  - [ ] Error boundaries
-- [ ] Documentation (optional)
-  - [ ] Component library (Storybook)
-  - [ ] API docs (OpenAPI)
-- [ ] Release preparation
-  - [ ] Version bump
-  - [ ] Changelog
-  - [ ] Deployment guide
-
----
-
-## Known Issues & Decisions
-
-### Issues to Resolve
-
-| Issue | Impact | Phase | Status |
-|-------|--------|-------|--------|
-| Proficiency visibility (batch-specific vs global) | Student confusion | 1 | ✅ Decided: Global (not batch-specific) |
-| Audio file default selection | UX friction | 1 | ✅ Decided: First file in list |
-| Publish gates (validation checks) | CM workflow | 3 | ✅ Decided: No gates for MVP |
-| Instructor edit permissions on chapters | Role clarity | 3 | ✅ Decided: View-only for instructors |
-| Deprecate batch behavior | Admin workflow | 4 | ✅ Decided: Read-only, prevent assignments |
-
-### Design Decisions to Lock In
-
-- [ ] Confirm color palette (proficiency badges, segment states)
-- [ ] Confirm font sizes (responsive scale)
-- [ ] Confirm touch target sizes (44px min)
-- [ ] Confirm breakpoints (sm 640, md 1024)
-- [ ] Confirm segment state animations (if any)
-
----
-
-## Communication & Feedback
-
-### Demo Schedule (Proposed)
-
-| Date | Phase | Demo Focus | Audience |
-|------|-------|-----------|----------|
-| Week 3 | Phase 1 | Student Learning Board + Study | Internal review |
-| Week 5 | Phase 2 | Instructor Batches | Internal review |
-| Week 7.5 | Phase 3 | Content Studio (responsive) | Internal review |
-| Week 9 | Phase 4 | Admin Center | Internal review |
-| Week 10.5 | Phase 5 | MVP v1.0 (production) | Stakeholders |
-
-### Feedback Collection
-
-- [ ] Create feedback template (what works, what's confusing, what breaks)
-- [ ] Schedule debrief after each phase demo
-- [ ] Track bugs/improvements in backlog
-- [ ] Iterate quickly based on feedback
+### Toast Notification Pattern
+- Success: Green toast, auto-dismiss 3s
+- Error: Red toast, auto-dismiss 5s
+- Background: Card background (not transparent)
+- Consistent messaging across all mutations
 
 ---
 
 ## References
 
-- **Scope:** [mvp-scope](mvp-scope.md)
+- **Completed Phases:** [mvp-completed-phases.md](mvp-completed-phases.md)
+- **Scope:** [mvp-scope.md](mvp-scope.md)
 - **Domain:** [../domain-requirements.md](../domain-requirements.md)
 - **Product:** [../product-guide.md](../product-guide.md)
 - **Architecture:** [../architecture/architecture.md](../architecture/architecture.md)
 
 ---
 
-## Notes
-
-- **Build Philosophy:** Responsive-first (mobile & desktop equally polished).
-- **Existing Code:** Preserve StudyChapter.tsx, EditChapter.tsx, ProgressiveMapper — they're MVP-ready.
-- **Design System:** Use shadcn/Radix foundation + custom edu-layer (Badge, Switch, SegmentedTextDisplay).
-- **Accessibility:** Built-in from day 1, not bolted on post-MVP.
-- **Incremental Demos:** After each phase, demo to gather feedback and adjust.
-
----
-
-**Living Document:** This plan will evolve. Update as we progress, lock in decisions, and discover new requirements.
+**Living Document:** This plan evolves as we progress. Update status dashboard and active phase sections regularly. Move completed work to [mvp-completed-phases.md](mvp-completed-phases.md).

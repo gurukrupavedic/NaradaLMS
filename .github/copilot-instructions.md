@@ -3,6 +3,37 @@
 ## Project Overview
 VedicLMS is a multilingual Learning Management System for Vedic education. The system synchronizes audio recitations with text in three scripts (Telugu, Hindi/Devanagari, English/IAST) using an interactive segment-based learning experience.
 
+## AI Assistant Communication Rules
+
+**CRITICAL: When asking questions to the user, ALWAYS format them in a code block.**
+
+This is a mandatory requirement to allow easy copy-paste for responses. Never post questions in regular markdown format.
+
+**Correct format:**
+```
+QUESTIONS ABOUT [FEATURE NAME]
+
+1. Question about X?
+   - Sub-point if needed
+   - Another sub-point
+
+2. Question about Y?
+
+3. Question about Z?
+```
+
+**Incorrect format:**
+Do NOT post questions as regular markdown bullets or numbered lists outside code blocks.
+
+**When to use this:**
+- Architecture/design clarifications
+- Feature specification questions
+- Implementation approach discussions
+- Any multi-question brainstorming session
+
+**Exception:**
+Single, simple clarifying questions can be asked inline without a code block.
+
 ## Architecture Essentials
 
 ### Tech Stack

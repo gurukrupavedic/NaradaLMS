@@ -65,6 +65,33 @@ router.get('/batches/my-batches', authMiddleware, requireInstructor, async (req:
   } catch (error) { next(error); }
 });
 
+// GET /api/batches/my-students - List all students from instructor's batches (must come BEFORE :id route)
+router.get('/batches/my-students', authMiddleware, requireInstructor, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = req.user as any;
+    const instructorId = user?.id;
+    
+    if (!instructorId) {
+      return res.status(401).json(createErrorResponse('User ID not found', 'NO_USER_ID'));
+    }
+    
+    const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
+    const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+
+    // Parse filter params
+    const filters: any = {};
+    if (req.query.search) filters.search = req.query.search as string;
+    if (req.query.batchId) filters.batchId = parseInt(req.query.batchId as string);
+    if (req.query.status) filters.status = req.query.status as 'active' | 'dropped' | 'completed';
+
+    const allItems = await batchService.listStudentsByInstructor(instructorId, filters);
+    const total = allItems.length;
+    const paginatedItems = allItems.slice(offset, offset + limit);
+
+    res.json({ items: paginatedItems, pagination: { limit, offset, total } });
+  } catch (error) { next(error); }
+});
+
 // GET /api/batches/:id - Get batch by ID
 router.get('/batches/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {

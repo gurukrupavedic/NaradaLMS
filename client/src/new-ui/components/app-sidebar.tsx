@@ -64,6 +64,24 @@ export function AppSidebar({
         }
       }
 
+      // Instructor Students page - add contextual "Student Progress" when viewing a specific student
+      if (item.url === '/app/instructor/students') {
+        const studentDetailMatch = location.match(/^\/app\/instructor\/students\/(.+)$/);
+        if (studentDetailMatch) {
+          const studentId = studentDetailMatch[1];
+          return {
+            ...item,
+            items: [
+              {
+                title: 'Student Progress',
+                url: `/app/instructor/students/${studentId}`,
+                isContextual: true,
+              },
+            ],
+          };
+        }
+      }
+
       // Admin Batches page - add contextual "Batch Details" when viewing a specific batch
       if (item.url === '/app/admin/batches') {
         const batchDetailMatch = location.match(/^\/app\/admin\/batches\/(\d+)$/);

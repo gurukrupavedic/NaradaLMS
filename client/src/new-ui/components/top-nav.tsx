@@ -43,6 +43,17 @@ function getBreadcrumbs(pathname: string): string[] {
     return ['Batches & Progress', 'Student Progress'];
   }
 
+  // My Students (Instructor)
+  if (pathname.includes('/app/instructor/students')) {
+    if (pathname === '/app/instructor/students') {
+      return ['Batches & Progress', 'My Students'];
+    }
+    // Student detail pages
+    if (/\/app\/instructor\/students\/[a-zA-Z0-9_-]+/.test(pathname)) {
+      return ['Batches & Progress', 'My Students', 'Student Progress'];
+    }
+  }
+
   // Content Studio
   if (pathname.includes('/app/content')) {
     if (pathname === '/app/content') {

@@ -43,6 +43,7 @@ export class BatchStorage {
         primaryInstructorFirstName: users.firstName,
         primaryInstructorLastName: users.lastName,
         trackName: tracks.title,
+        trackOrder: tracks.order,
       })
       .from(batches)
       .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
@@ -568,6 +569,78 @@ export class BatchStorage {
   async chapterExists(chapterId: number) {
     const rows = await db.select({ id: chapters.id }).from(chapters).where(eq(chapters.id, chapterId));
     return !!rows[0];
+  }
+
+  async listStudentsByInstructor(
+    instructorId: string,
+    filters?: {
+      search?: string;
+      batchId?: number;
+      status?: 'active' | 'dropped' | 'completed';
+    }
+  ) {
+    // Get all co-instructor batch IDs for this user
+    const coInstructorBatches = await db
+      .select({ batchId: batchCoInstructors.batchId })
+      .from(batchCoInstructors)
+      .where(eq(batchCoInstructors.instructorId, instructorId));
+    
+    const coInstructorBatchIds = coInstructorBatches.map(row => row.batchId);
+
+    // Build the WHERE condition - user is primary OR co-instructor
+    let batchWhereCondition: any;
+    if (coInstructorBatchIds.length > 0) {
+      batchWhereCondition = or(
+        eq(batches.primaryInstructorId, instructorId),
+        inArray(batches.id, coInstructorBatchIds)
+      );
+    } else {
+      batchWhereCondition = eq(batches.primaryInstructorId, instructorId);
+    }
+
+    // Build filter conditions
+    const filterConditions: any[] = [batchWhereCondition];
+
+    // Status filter (default to 'active' if not specified)
+    const statusFilter = filters?.status || 'active';
+    filterConditions.push(eq(enrollments.status, statusFilter));
+
+    // Batch ID filter
+    if (filters?.batchId) {
+      filterConditions.push(eq(batches.id, filters.batchId));
+    }
+
+    // Search filter (firstName, lastName, email)
+    if (filters?.search) {
+      const searchPattern = `%${filters.search}%`;
+      filterConditions.push(
+        or(
+          sql`LOWER(${users.firstName}) LIKE LOWER(${searchPattern})`,
+          sql`LOWER(${users.lastName}) LIKE LOWER(${searchPattern})`,
+          sql`LOWER(${users.email}) LIKE LOWER(${searchPattern})`
+        )
+      );
+    }
+
+    // Query: enrollments → students + batches, filtered by instructor's batches
+    const results = await db
+      .select({
+        id: users.id,
+        rollNumber: enrollments.id, // Will be formatted as BATCH_CODE-XXX in service layer
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        batchCode: batches.batchCode,
+        batchName: batches.batchName,
+        enrolledAt: enrollments.enrolledAt,
+      })
+      .from(enrollments)
+      .innerJoin(users, eq(users.id, enrollments.studentId))
+      .innerJoin(batches, eq(batches.id, enrollments.batchId))
+      .where(and(...filterConditions))
+      .orderBy(enrollments.enrolledAt);
+
+    return results;
   }
 }
 

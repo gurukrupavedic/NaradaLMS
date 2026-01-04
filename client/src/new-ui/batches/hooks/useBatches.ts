@@ -6,6 +6,7 @@ export interface BatchItem {
   batchCode: string;
   batchName: string;
   trackId?: number | null;
+  trackOrder?: number | null;
   primaryInstructorId?: string | null;
   primaryInstructorName?: string | null;
   coInstructorNames?: string | null;
