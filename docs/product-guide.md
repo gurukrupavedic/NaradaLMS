@@ -439,6 +439,54 @@ StudentProgress {
 - Progress displayed in track/chapter views
 - Future: gating (Track N+1 requires Track N chapters ≥ level 2)
 
+### 4.8.1 Batch Details / Batch Progress Page
+
+**Purpose:** Unified view for batch management and progress evaluation with role-based permissions
+
+**Dual Interface:**
+
+*For Admins (Batch Details):*
+- ✅ **Can enroll/unenroll students** in batch (student roster management)
+- ❌ **Cannot evaluate proficiency** (disabled cells, read-only view of progress data)
+- Rationale: Admins handle logistics, instructors own evaluation
+- View proficiency data for reporting/oversight without editing capabilities
+
+*For Instructors (Batch Progress):*
+- ❌ **Cannot enroll/unenroll students** (enrollment section hidden)
+- ✅ **Can evaluate proficiency** (clickable cells, interactive proficiency modal)
+- Rationale: Instructors manage teaching and assessment, admins handle enrollment
+- Full control over evaluating student mastery per chapter
+
+**Technical Implementation:**
+
+*Frontend (UX Prevention):*
+- Determined by route context: `/app/admin/batches/:id` vs `/app/instructor/batches/:id`
+- `canEditProficiency` prop disables proficiency cells for admins
+- Disabled cells show tooltip: "Only instructors can update proficiency"
+- Only cursor style changes (cursor-not-allowed); cells remain visually vibrant for data readability
+
+*Backend (Security Enforcement):*
+- Evaluation endpoint validates user is assigned to batch (primary or co-instructor)
+- Admins with instructor role still blocked if not assigned to batch
+- Returns 403 FORBIDDEN_NOT_ASSIGNED for unauthorized attempts
+- Prevents API bypass attacks even if admin manipulates frontend
+
+**Key Behaviors:**
+
+| Action | Admin | Instructor |
+|--------|-------|-----------|
+| View batch roster | ✅ Yes | ✅ Yes |
+| Enroll students | ✅ Yes | ❌ No |
+| Unenroll students | ✅ Yes | ❌ No |
+| View proficiency matrix | ✅ Yes (read-only) | ✅ Yes (read/write) |
+| Update proficiency level | ❌ No | ✅ Yes |
+| View student notes | ✅ Yes | ✅ Yes |
+| Add evaluation notes | ❌ No | ✅ Yes |
+
+**Page Title Context:**
+- Admin context: "Batch Details" (administrative overview)
+- Instructor context: "Batch Progress" (teaching/evaluation focus)
+
 ### 4.9 User Management & Authentication
 
 **Technology:** Passport.js with local strategy + social OAuth
