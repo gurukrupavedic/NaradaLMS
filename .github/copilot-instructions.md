@@ -209,6 +209,27 @@ npm run check     # TypeScript type checking
 - **Admin:** `/manage/users`, `/manage/batches`
 - **Legacy redirects:** `/content-management/*` → `/manage/*`
 
+### Batch Management (Role-Based Access Control)
+
+**Unified Page for Two Roles:**
+- Single page at `/app/admin/batches/:id` (Admin) and `/app/instructor/batches/:id` (Instructor)
+- Page title changes by context: "Batch Details" (admin) vs "Batch Progress" (instructor)
+
+**Admin Access (Batch Details):**
+- ✅ Can enroll/unenroll students (enrollment section visible)
+- ❌ Cannot update proficiency levels (proficiency cells disabled, read-only)
+- Use case: Administrative roster and student lifecycle management
+
+**Instructor Access (Batch Progress):**
+- ❌ Cannot enroll/unenroll students (enrollment section hidden)
+- ✅ Can update proficiency levels (proficiency cells interactive)
+- Use case: Teaching and student evaluation
+
+**Implementation:**
+- Frontend: Pass `canEditProficiency={context === 'instructor'}` prop to `UnifiedBatchMatrix`
+- Backend: Verify user is batch's primary or co-instructor before allowing proficiency updates
+- Security: Two-layer enforcement (UX disabling + API validation) prevents unauthorized changes
+
 ## Code Organization Rules
 
 ### Component Architecture
