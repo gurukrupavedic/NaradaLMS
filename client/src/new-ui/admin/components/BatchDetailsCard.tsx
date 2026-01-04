@@ -51,135 +51,192 @@ export function BatchDetailsCard({ batch, batches = [], currentBatchId, onBatchC
 
   return (
     <div className="rounded-lg border border-border bg-card p-4 relative">
-      {/* Header with collapse toggle in top-right */}
-      <div className="flex items-center justify-between mb-3">
+      {/* Collapsible Header */}
+      <div
+        className="flex items-center gap-2.5 mb-2 cursor-pointer hover:bg-muted/30 -mx-4 px-4 py-0.5 rounded-t-lg transition-colors"
+        onClick={() => setCollapsed((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setCollapsed((v) => !v);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? "Expand batch details" : "Collapse batch details"}
+      >
+        {/* Header Content - Always visible summary, conditional expanded details */}
         {collapsed ? (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground pr-10">
-            <span className="font-medium">
-              {batch.batchCode} - {batch.batchName}
-            </span>
-            <span className="opacity-60">•</span>
-            <span>{formatTrack()}</span>
-            <span className="opacity-60">•</span>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-foreground flex-1 min-w-0">
+            <span className="font-mono font-semibold flex-shrink-0">{batch.batchCode}</span>
+            <span className="opacity-60 flex-shrink-0">-</span>
+            <span className="font-medium truncate">{batch.batchName}</span>
+            <span className="opacity-60 flex-shrink-0">•</span>
+            <span className="truncate">{formatTrack()}</span>
+            <span className="opacity-60 flex-shrink-0">•</span>
             <span>{formatCohortType(batch.cohortType)}</span>
-            <span className="opacity-60">•</span>
-            <span>
+            <span className="opacity-60 flex-shrink-0">•</span>
+            <span className="truncate">
               {batch.primaryInstructor
                 ? formatInstructorName(batch.primaryInstructor.firstName, batch.primaryInstructor.lastName)
                 : "—"}
             </span>
-            <span className="opacity-60">•</span>
-            <span>{formatStudents(batch.studentCount)}</span>
+            <span className="opacity-60 flex-shrink-0">•</span>
+            <span className="flex-shrink-0">{formatStudents(batch.studentCount)}</span>
           </div>
-        ) : null}
+        ) : (
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-semibold text-base leading-none">{batch.batchCode} - {batch.batchName}</h3>
+            </div>
+          </div>
+        )}
 
-        <button
-          type="button"
-          onClick={() => setCollapsed((v) => !v)}
-          className="absolute top-4 right-4 p-1 rounded-md text-foreground/60 hover:bg-muted hover:text-foreground transition-all"
-          aria-expanded={!collapsed}
-          aria-label={collapsed ? "Expand batch details" : "Collapse batch details"}
-        >
+        {/* Expand/Collapse Icon - purely decorative, parent handles interaction */}
+        <div className="p-0.5 text-foreground/60 pointer-events-none flex-shrink-0">
           <ChevronDown 
-            className={`w-5 h-5 transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`}
+            className={`w-4 h-4 transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`}
           />
-        </button>
+        </div>
       </div>
 
       {!collapsed && (
-      <>
-      {/* Grid ordered as requested */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 space-y-3">
-        {/* Row 1: Batch Selector, Current Track, Cohort Type */}
-        <div className="space-y-2">
-          <div className="space-y-1">
-            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Batch</div>
-            {batches.length > 0 && currentBatchId && onBatchChange ? (
-              <Select
-                value={String(currentBatchId)}
-                onValueChange={(value) => onBatchChange(Number(value))}
-              >
-                <SelectTrigger className="h-8 text-sm border-border/20 data-[state=open]:bg-muted">
-                  <SelectValue placeholder="Select batch..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {batches.map((b) => (
-                    <SelectItem key={b.id} value={String(b.id)}>
-                      {b.batchCode} - {b.batchName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <div className="text-sm font-medium text-foreground">
-                {batch.batchCode} - {batch.batchName}
+        <>
+          {/* Divider */}
+          <div className="border-t -mx-4 px-4 pt-4 mt-1">
+            {/* Batch Selector Dropdown */}
+            {batches.length > 0 && currentBatchId && onBatchChange && (
+              <div className="mb-4">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-tight block mb-2">
+                  Select Batch
+                </label>
+                <Select
+                  value={String(currentBatchId)}
+                  onValueChange={(value) => onBatchChange(Number(value))}
+                >
+                  <SelectTrigger className="h-9 text-sm border-border data-[state=open]:bg-muted">
+                    <SelectValue placeholder="Select batch..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {batches.map((b) => (
+                      <SelectItem key={b.id} value={String(b.id)}>
+                        {b.batchCode} - {b.batchName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Batch Details Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+              {/* Batch Code */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Code
+                </p>
+                <p className="text-sm font-mono text-foreground mt-1">
+                  {batch.batchCode}
+                </p>
+              </div>
+
+              {/* Batch Name */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Batch Name
+                </p>
+                <p className="text-sm font-medium text-foreground mt-1">
+                  {batch.batchName}
+                </p>
+              </div>
+
+              {/* Current Track */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Current Track
+                </p>
+                <p className="text-sm text-foreground mt-1">
+                  {formatTrack()}
+                </p>
+              </div>
+
+              {/* Cohort Type */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Cohort Type
+                </p>
+                <p className="text-sm text-foreground mt-1">
+                  {formatCohortType(batch.cohortType)}
+                </p>
+              </div>
+
+              {/* Primary Instructor */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Primary Instructor
+                </p>
+                <p className="text-sm text-foreground mt-1">
+                  {batch.primaryInstructor
+                    ? formatInstructorName(batch.primaryInstructor.firstName, batch.primaryInstructor.lastName)
+                    : "—"}
+                </p>
+              </div>
+
+              {/* Co-Instructors */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Co-Instructors
+                </p>
+                <p className="text-sm text-foreground mt-1">
+                  {coInstructorsList}
+                </p>
+              </div>
+
+              {/* Active Enrollment */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Active Enrollment
+                </p>
+                <p className="text-sm font-medium text-foreground mt-1">
+                  {formatStudents(batch.studentCount)}
+                </p>
+              </div>
+
+              {/* Created */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Created
+                </p>
+                <p className="text-sm text-foreground mt-1">
+                  {formatDate(batch.createdAt)}
+                </p>
+              </div>
+
+              {/* Updated */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Updated
+                </p>
+                <p className="text-sm text-foreground mt-1">
+                  {formatDate(batch.updatedAt)}
+                </p>
+              </div>
+            </div>
+
+            {/* Description - Full width, appears below grid */}
+            {batch.description && (
+              <div className="mt-4">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-tight block mb-2">
+                  Description
+                </label>
+                <p className="text-sm text-foreground">
+                  {batch.description}
+                </p>
               </div>
             )}
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="space-y-1">
-            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Current Track</div>
-            <div className="text-sm font-medium text-foreground">{formatTrack()}</div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="space-y-1">
-            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Cohort Type</div>
-            <div className="text-sm font-medium text-foreground">{formatCohortType(batch.cohortType)}</div>
-          </div>
-        </div>
-
-        {/* Row 2: Primary Instructor, Co-Instructors, Active Enrollment */}
-        <div className="space-y-2">
-          <div className="space-y-1">
-            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Primary Instructor</div>
-            <div className="text-sm font-medium text-foreground">
-              {batch.primaryInstructor
-                ? formatInstructorName(batch.primaryInstructor.firstName, batch.primaryInstructor.lastName)
-                : "—"}
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="space-y-1">
-            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Co-Instructors</div>
-            <div className="text-sm font-medium text-foreground">{coInstructorsList}</div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="space-y-1">
-            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Active Enrollment</div>
-            <div className="text-sm font-medium text-foreground">{formatStudents(batch.studentCount)}</div>
-          </div>
-        </div>
-
-        {/* Row 3: Created, Updated */}
-        <div className="space-y-2">
-          <div className="space-y-1">
-            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Created</div>
-            <div className="text-sm font-medium text-foreground">{formatDate(batch.createdAt)}</div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="space-y-1">
-            <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Updated</div>
-            <div className="text-sm font-medium text-foreground">{formatDate(batch.updatedAt)}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Description at end with single divider */}
-      <div className="border-t border-border mt-3 pt-3 space-y-1">
-        <div className="text-[10px] font-normal uppercase text-muted-foreground/50">Description</div>
-        <div className="text-sm text-foreground">{batch.description || "—"}</div>
-      </div>
-      </>
+        </>
       )}
     </div>
   );

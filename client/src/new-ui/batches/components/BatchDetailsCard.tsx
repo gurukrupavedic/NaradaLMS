@@ -58,150 +58,176 @@ export function BatchDetailsCard({
 
   return (
     <div className="rounded-lg border border-border bg-card p-4 relative">
-      {/* Header with collapse toggle */}
-      <div className="flex items-center justify-between mb-3">
-        {collapsed ? (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground pr-10">
-            <span className="font-medium">
-              {batch.batchCode} - {batch.batchName}
-            </span>
-            <span className="opacity-60">•</span>
-            <span>{batch.trackName || "—"}</span>
-            <span className="opacity-60">•</span>
-            <span>{formatCohortType(batch.cohortType)}</span>
-            <span className="opacity-60">•</span>
-            <span>{formatStudents(batch.studentCount)}</span>
-          </div>
-        ) : null}
-
-        <button
-          type="button"
-          onClick={() => setCollapsed((v) => !v)}
-          className="absolute top-4 right-4 p-1 rounded-md text-foreground/60 hover:bg-muted hover:text-foreground transition-all"
-          aria-expanded={!collapsed}
-          aria-label={
-            collapsed ? "Expand batch details" : "Collapse batch details"
+      {/* Collapsible Header */}
+      <div
+        className="flex items-center gap-2.5 mb-2 cursor-pointer hover:bg-muted/30 -mx-4 px-4 py-0.5 rounded-t-lg transition-colors"
+        onClick={() => setCollapsed((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setCollapsed((v) => !v);
           }
-        >
-          <ChevronDown
-            className={`w-5 h-5 transition-transform duration-200 ${
-              collapsed ? "rotate-180" : ""
-            }`}
+        }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? "Expand batch details" : "Collapse batch details"}
+      >
+        {/* Header Content - Always visible summary, conditional expanded details */}
+        {collapsed ? (
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-foreground flex-1 min-w-0">
+            <span className="font-mono font-semibold flex-shrink-0">{batch.batchCode}</span>
+            <span className="opacity-60 flex-shrink-0">-</span>
+            <span className="font-medium truncate">{batch.batchName}</span>
+            <span className="opacity-60 flex-shrink-0">•</span>
+            <span className="truncate">{batch.trackName || "—"}</span>
+            <span className="opacity-60 flex-shrink-0">•</span>
+            <span>{formatCohortType(batch.cohortType)}</span>
+            <span className="opacity-60 flex-shrink-0">•</span>
+            <span className="flex-shrink-0">{formatStudents(batch.studentCount)}</span>
+          </div>
+        ) : (
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-semibold text-base leading-none">{batch.batchCode} - {batch.batchName}</h3>
+            </div>
+          </div>
+        )}
+
+        {/* Expand/Collapse Icon - purely decorative, parent handles interaction */}
+        <div className="p-0.5 text-foreground/60 pointer-events-none flex-shrink-0">
+          <ChevronDown 
+            className={`w-4 h-4 transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`}
           />
-        </button>
+        </div>
       </div>
 
       {!collapsed && (
         <>
-          {/* Batch Selector Dropdown */}
-          <div className="mb-4">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-tight block mb-2">
-              Select Batch
-            </label>
-            <select
-              value={batch.id}
-              onChange={handleSelectChange}
-              className="w-full h-9 px-3 py-1 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {batches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.batchCode} - {b.batchName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Batch Details Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-            {/* Batch Name */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
-                Batch Name
-              </p>
-              <p className="text-sm font-medium text-foreground mt-1">
-                {batch.batchName}
-              </p>
+          {/* Divider */}
+          <div className="border-t -mx-4 px-4 pt-4 mt-1">
+            {/* Batch Selector Dropdown */}
+            <div className="mb-4">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-tight block mb-2">
+                Select Batch
+              </label>
+              <select
+                value={batch.id}
+                onChange={handleSelectChange}
+                className="w-full h-9 px-3 py-1 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {batches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.batchCode} - {b.batchName}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Batch Code */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
-                Code
-              </p>
-              <p className="text-sm font-mono text-foreground mt-1">
-                {batch.batchCode}
-              </p>
+            {/* Batch Details Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+              {/* Batch Code */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Code
+                </p>
+                <p className="text-sm font-mono text-foreground mt-1">
+                  {batch.batchCode}
+                </p>
+              </div>
+
+              {/* Batch Name */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Batch Name
+                </p>
+                <p className="text-sm font-medium text-foreground mt-1">
+                  {batch.batchName}
+                </p>
+              </div>
+
+              {/* Current Track */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Current Track
+                </p>
+                <p className="text-sm text-foreground mt-1">
+                  {batch.trackName || "—"}
+                </p>
+              </div>
+
+              {/* Cohort Type */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Cohort Type
+                </p>
+                <p className="text-sm text-foreground mt-1">
+                  {formatCohortType(batch.cohortType)}
+                </p>
+              </div>
+
+              {/* Active Enrollment */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Active Enrollment
+                </p>
+                <p className="text-sm font-medium text-foreground mt-1">
+                  {formatStudents(batch.studentCount)}
+                </p>
+              </div>
+
+              {/* Status */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Status
+                </p>
+                <p className="text-sm capitalize text-foreground mt-1">
+                  {batch.status}
+                </p>
+              </div>
+
+              {/* Primary Instructor */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Primary Instructor
+                </p>
+                <p className="text-sm text-foreground mt-1">
+                  {batch.primaryInstructorName || "—"}
+                </p>
+              </div>
+
+              {/* Co-Instructors */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Co-Instructors
+                </p>
+                <p className="text-sm text-foreground mt-1">
+                  {batch.coInstructorNames || "—"}
+                </p>
+              </div>
+
+              {/* Created */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                  Created
+                </p>
+                <p className="text-sm text-foreground mt-1">
+                  {formatDate(batch.createdAt)}
+                </p>
+              </div>
             </div>
 
-            {/* Current Track */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
-                Current Track
-              </p>
-              <p className="text-sm text-foreground mt-1">
-                {batch.trackName || "—"}
-              </p>
-            </div>
-
-            {/* Cohort Type */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
-                Cohort Type
-              </p>
-              <p className="text-sm text-foreground mt-1">
-                {formatCohortType(batch.cohortType)}
-              </p>
-            </div>
-
-            {/* Active Enrollment */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
-                Active Enrollment
-              </p>
-              <p className="text-sm font-medium text-foreground mt-1">
-                {formatStudents(batch.studentCount)}
-              </p>
-            </div>
-
-            {/* Status */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
-                Status
-              </p>
-              <p className="text-sm capitalize text-foreground mt-1">
-                {batch.status}
-              </p>
-            </div>
-
-            {/* Primary Instructor */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
-                Primary Instructor
-              </p>
-              <p className="text-sm text-foreground mt-1">
-                {batch.primaryInstructorName || "—"}
-              </p>
-            </div>
-
-            {/* Co-Instructors */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
-                Co-Instructors
-              </p>
-              <p className="text-sm text-foreground mt-1">
-                {batch.coInstructorNames || "—"}
-              </p>
-            </div>
-
-            {/* Created */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
-                Created
-              </p>
-              <p className="text-sm text-foreground mt-1">
-                {formatDate(batch.createdAt)}
-              </p>
-            </div>
+            {/* Description - Full width, appears below grid */}
+            {batch.description && (
+              <div className="mt-4">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-tight block mb-2">
+                  Description
+                </label>
+                <p className="text-sm text-foreground">
+                  {batch.description}
+                </p>
+              </div>
+            )}
           </div>
         </>
       )}

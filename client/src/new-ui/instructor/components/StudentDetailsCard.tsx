@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown, ChevronUp, User, Calendar, Mail } from 'lucide-react';
+import { ChevronDown, User } from 'lucide-react';
 import type { StudentDetail } from '@shared/types';
 
 interface StudentDetailsCardProps {
@@ -22,130 +20,152 @@ export function StudentDetailsCard({ student }: StudentDetailsCardProps) {
     : 'N/A';
 
   return (
-    <Card className="overflow-hidden">
+    <div className="rounded-lg border border-border bg-card p-4 relative">
       {/* Collapsible Header */}
       <div
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+        className="flex items-center gap-2.5 mb-2 cursor-pointer hover:bg-muted/30 -mx-4 px-4 py-0.5 rounded-t-lg transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsExpanded(!isExpanded);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={!isExpanded}
+        aria-label={isExpanded ? "Collapse student details" : "Expand student details"}
       >
-        <div className="flex items-center gap-3 flex-1">
-          {/* Avatar */}
-          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-            <User className="h-5 w-5 text-blue-600" />
-          </div>
-
-          {/* Collapsed Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-semibold text-lg">{fullName}</h3>
-              <span className="text-sm text-muted-foreground">({rollNumber})</span>
-            </div>
-            {student.enrollment && (
-              <p className="text-sm text-muted-foreground truncate">
-                {student.enrollment.batchCode} - {student.enrollment.batchName}
-              </p>
-            )}
-          </div>
+        {/* Avatar */}
+        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+          <User className="h-4 w-4 text-muted-foreground" />
         </div>
 
-        {/* Expand/Collapse Button */}
-        <Button variant="ghost" size="sm" className="ml-2 flex-shrink-0">
-          {isExpanded ? (
-            <ChevronUp className="h-4 w-4" />
-          ) : (
-            <ChevronDown className="h-4 w-4" />
-          )}
-        </Button>
+        {/* Header Content - Always visible name, conditional collapsed summary */}
+        {isExpanded ? (
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-semibold text-base leading-none">{fullName}</h3>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-foreground flex-1 min-w-0">
+            <span className="font-medium truncate">{fullName}</span>
+            {student.enrollment && (
+              <>
+                <span className="opacity-60 flex-shrink-0">•</span>
+                <span className="font-mono flex-shrink-0">{student.enrollment.batchCode}</span>
+                <span className="opacity-60 flex-shrink-0">•</span>
+                <span className="truncate">{student.enrollment.batchName}</span>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Expand/Collapse Icon - purely decorative, parent handles interaction */}
+        <div className="p-0.5 text-foreground/60 pointer-events-none flex-shrink-0">
+          <ChevronDown 
+            className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? "" : "rotate-180"}`}
+          />
+        </div>
       </div>
 
       {/* Expanded Content */}
       {isExpanded && (
-        <CardContent className="border-t pt-4 pb-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Profile Information */}
-            <div className="space-y-4">
-              <h4 className="font-semibold text-sm uppercase text-muted-foreground">
-                Profile Information
-              </h4>
-
-              <div>
-                <label className="text-sm text-muted-foreground">Full Name</label>
-                <p className="font-medium">{fullName}</p>
-              </div>
-
-              <div>
-                <label className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Email
-                </label>
-                <p className="font-medium">{student.email}</p>
-              </div>
-
-              <div>
-                <label className="text-sm text-muted-foreground">User ID</label>
-                <p className="font-mono text-sm text-muted-foreground">{student.id}</p>
-              </div>
+        <div className="border-t -mx-4 px-4 pt-4 mt-1">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+            {/* Full Name */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                Full Name
+              </p>
+              <p className="text-sm font-medium text-foreground mt-1">{fullName}</p>
             </div>
 
-            {/* Enrollment Information */}
-            <div className="space-y-4">
-              <h4 className="font-semibold text-sm uppercase text-muted-foreground">
-                Enrollment Information
-              </h4>
-
-              {student.enrollment ? (
-                <>
-                  <div>
-                    <label className="text-sm text-muted-foreground">Batch Code</label>
-                    <p className="font-mono font-bold text-lg">
-                      {student.enrollment.batchCode}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-muted-foreground">Batch Name</label>
-                    <p className="font-medium">{student.enrollment.batchName}</p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-muted-foreground">Track</label>
-                    <p className="font-medium">{student.enrollment.trackName || '—'}</p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Enrolled Since
-                    </label>
-                    <p className="font-medium">
-                      {student.enrollment.enrolledAt
-                        ? new Date(student.enrollment.enrolledAt).toLocaleDateString()
-                        : '—'}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-muted-foreground">Status</label>
-                    <div className="mt-1">
-                      <Badge
-                        className={
-                          student.enrollment.status === 'active'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-700'
-                        }
-                      >
-                        {student.enrollment.status}
-                      </Badge>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <p className="text-muted-foreground">No active enrollment</p>
-              )}
+            {/* Email */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                Email
+              </p>
+              <p className="text-sm text-foreground mt-1">{student.email}</p>
             </div>
+
+            {/* User ID */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                User ID
+              </p>
+              <p className="text-sm font-mono text-muted-foreground mt-1">{student.id}</p>
+            </div>
+
+            {student.enrollment ? (
+              <>
+                {/* Batch Code */}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                    Batch Code
+                  </p>
+                  <p className="text-sm font-mono text-foreground mt-1">
+                    {student.enrollment.batchCode}
+                  </p>
+                </div>
+
+                {/* Batch Name */}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                    Batch Name
+                  </p>
+                  <p className="text-sm font-medium text-foreground mt-1">
+                    {student.enrollment.batchName}
+                  </p>
+                </div>
+
+                {/* Track */}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                    Track
+                  </p>
+                  <p className="text-sm text-foreground mt-1">
+                    {student.enrollment.trackName || '—'}
+                  </p>
+                </div>
+
+                {/* Enrolled Since */}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                    Enrolled Since
+                  </p>
+                  <p className="text-sm text-foreground mt-1">
+                    {student.enrollment.enrolledAt
+                      ? new Date(student.enrollment.enrolledAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })
+                      : '—'}
+                  </p>
+                </div>
+
+                {/* Status */}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
+                    Status
+                  </p>
+                  <div className="mt-1">
+                    <Badge variant={student.enrollment.status === 'active' ? 'default' : 'secondary'}>
+                      {student.enrollment.status}
+                    </Badge>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="col-span-2 md:col-span-3">
+                <p className="text-sm text-muted-foreground">No active enrollment</p>
+              </div>
+            )}
           </div>
-        </CardContent>
+        </div>
       )}
-    </Card>
+    </div>
   );
 }
