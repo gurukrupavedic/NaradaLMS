@@ -422,7 +422,7 @@ export default function BatchDetails() {
                 </div>
 
                 <Button
-                  onClick={handleMatrixAddStudents}
+                  onClick={handleMatrixAddStudent}
                   disabled={matrixSelectedStudents.length === 0 || isAddingStudent}
                   className="shrink-0"
                 >
