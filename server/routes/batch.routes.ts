@@ -258,6 +258,23 @@ router.post('/batches/:batchId/students/:studentId/evaluate', async (req: Reques
     }
 
     const batchId = parseInt(req.params.batchId);
+    
+    // Verify user is assigned to this batch (primary or co-instructor)
+    const batch = await batchService.getBatch(batchId);
+    if (!batch) {
+      return res.status(404).json(createErrorResponse('Batch not found', 'BATCH_NOT_FOUND'));
+    }
+
+    const isAssignedInstructor = batch.primaryInstructorId === user.id || 
+      (batch.batchCoInstructors && batch.batchCoInstructors.some(ci => ci.instructorId === user.id));
+    
+    if (!isAssignedInstructor) {
+      return res.status(403).json(createErrorResponse(
+        'Forbidden: Only assigned instructors can update proficiency', 
+        'FORBIDDEN_NOT_ASSIGNED'
+      ));
+    }
+
     const studentId = req.params.studentId;
     const { chapterId, proficiencyLevel, notes } = req.body;
 

@@ -60,6 +60,7 @@ export function UnifiedBatchMatrix({
   onUpdateProficiency,
   isLoading = false,
   isUpdating = false,
+  canEditProficiency = true,
 }: UnifiedBatchMatrixProps) {
   const { toast } = useToast();
 
@@ -265,16 +266,17 @@ export function UnifiedBatchMatrix({
           return (
             <div className="px-2 py-2 flex items-center justify-center">
               <button
-                onClick={() => handleCellClick(studentId, chapter.id)}
-                disabled={isUpdating}
+                onClick={() => canEditProficiency && handleCellClick(studentId, chapter.id)}
+                disabled={isUpdating || !canEditProficiency}
                 className={`
                   h-14 w-20 flex items-center justify-center rounded-lg
-                  border-2 transition-all cursor-pointer
+                  border-2 transition-all
                   ${colors.bgColor} ${colors.darkBgColor} ${colors.textColor} ${colors.darkTextColor} ${colors.borderColor} ${colors.darkBorderColor}
-                  hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50
+                  ${canEditProficiency ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}
+                  disabled:cursor-not-allowed disabled:opacity-50
                   font-semibold text-sm
                 `}
-                title={`${info.row.original.firstName} - ${chapter.code}`}
+                title={canEditProficiency ? `${info.row.original.firstName} - ${chapter.code}` : 'Only instructors can update proficiency'}
               >
                 {getProficiencyShortLabel(cell.proficiencyLevel)}
               </button>

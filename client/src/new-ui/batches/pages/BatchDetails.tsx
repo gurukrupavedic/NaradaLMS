@@ -472,6 +472,7 @@ export default function BatchDetails() {
                     progress={matrixProgress}
                     selectedBatchId={String(batchId)}
                     selectedTrackId={selectedTrackId || ''}
+                    canEditProficiency={context === 'instructor'}
                     onDropStudent={async (enrollmentId) => {
                       await dropEnrollment.mutateAsync(
                         { enrollmentId },

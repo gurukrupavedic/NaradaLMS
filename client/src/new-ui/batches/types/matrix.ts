@@ -106,6 +106,9 @@ export interface UnifiedBatchMatrixProps {
   // Loading states
   isLoading?: boolean;
   isUpdating?: boolean;
+
+  // Permissions
+  canEditProficiency?: boolean; // Only instructors can edit; admins can only view
 }
 
 /**
