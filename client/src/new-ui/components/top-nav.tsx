@@ -38,7 +38,7 @@ function getBreadcrumbs(pathname: string): string[] {
     }
     // Batch detail pages
     if (/\/app\/instructor\/batches\/[0-9]+/.test(pathname)) {
-      return ['Batches & Progress', 'My Batches', 'Batch Details'];
+      return ['Batches & Progress', 'My Batches', 'Batch Progress'];
     }
     return ['Batches & Progress', 'Student Progress'];
   }
