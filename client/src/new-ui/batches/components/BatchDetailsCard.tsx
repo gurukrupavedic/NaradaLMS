@@ -1,6 +1,7 @@
 import React from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ArrowLeftRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { BatchItem } from "../hooks/useBatches";
 
 interface BatchDetailsCardProps {
@@ -17,11 +18,6 @@ export function BatchDetailsCard({
   onBatchChange,
 }: BatchDetailsCardProps) {
   const [collapsed, setCollapsed] = React.useState(false);
-
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const nextId = Number(e.target.value);
-    if (nextId) onBatchChange(nextId);
-  };
 
   const formatDate = (dateStr?: string | Date) => {
     if (!dateStr) return "—";
@@ -94,6 +90,44 @@ export function BatchDetailsCard({
           </div>
         )}
 
+        {/* Batch Selector Button - shows only when expanded */}
+        {!collapsed && batches.length > 0 && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button 
+                onClick={(e) => e.stopPropagation()}
+                className="p-0.5 text-foreground/60 hover:text-foreground hover:bg-muted/30 rounded-md transition-colors flex-shrink-0"
+                title="Switch batch"
+              >
+                <ArrowLeftRight className="w-4 h-4" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-3" align="end">
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight px-2">
+                  Switch Batch
+                </p>
+                <div className="space-y-1">
+                  {batches.map((b) => (
+                    <button
+                      key={b.id}
+                      onClick={() => onBatchChange(b.id)}
+                      className={`w-full text-left px-2 py-1.5 text-sm rounded-md transition-colors ${
+                        b.id === batch.id
+                          ? "bg-indigo-100 dark:bg-indigo-950 text-indigo-900 dark:text-indigo-100 font-medium"
+                          : "hover:bg-muted text-foreground"
+                      }`}
+                    >
+                      <div className="font-mono text-xs opacity-60">{b.batchCode}</div>
+                      <div className="font-medium">{b.batchName}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
+
         {/* Expand/Collapse Icon - purely decorative, parent handles interaction */}
         <div className="p-0.5 text-foreground/60 pointer-events-none flex-shrink-0">
           <ChevronDown 
@@ -106,24 +140,6 @@ export function BatchDetailsCard({
         <>
           {/* Divider */}
           <div className="border-t -mx-4 px-4 pt-4 mt-1">
-            {/* Batch Selector Dropdown */}
-            <div className="mb-4">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-tight block mb-2">
-                Select Batch
-              </label>
-              <select
-                value={batch.id}
-                onChange={handleSelectChange}
-                className="w-full h-9 px-3 py-1 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                {batches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.batchCode} - {b.batchName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             {/* Batch Details Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
               {/* Batch Code */}
