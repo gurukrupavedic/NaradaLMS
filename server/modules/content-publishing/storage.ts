@@ -108,7 +108,6 @@ export class ContentStorage {
         order: chapters.order,
         status: chapters.status,
         content: chapters.content,
-        description: chapters.description,
         publishedAt: chapters.publishedAt,
         lastEditedBy: chapters.lastEditedBy,
         createdBy: chapters.createdBy,
