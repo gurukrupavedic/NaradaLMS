@@ -1,6 +1,6 @@
 # VedicLMS MVP - Completed Phases Archive
 
-**Last Updated:** January 4, 2026  
+**Last Updated:** January 5, 2026  
 **Purpose:** Historical record of completed implementation phases
 
 This document archives all completed work from the MVP implementation. For active/upcoming work, see [mvp-implementation-plan.md](mvp-implementation-plan.md).
@@ -19,8 +19,9 @@ This document archives all completed work from the MVP implementation. For activ
 8. [Phase 7.3: Workflow Refinement - Admin Center](#phase-73-workflow-refinement---admin-center)
 9. [Phase 7.3: Workflow Refinement - Batches & Progress](#phase-73-workflow-refinement---batches--progress)
 10. [Phase 7.3.1: My Students & Student Progress](#phase-731-my-students--student-progress)
-11. [Navigation & Layout Blueprints](#navigation--layout-blueprints)
-12. [Screen Hierarchy Reference](#screen-hierarchy-per-persona)
+11. [Phase D: Track-wise Student Progress Tracker](#phase-d-track-wise-student-progress-tracker)
+12. [Navigation & Layout Blueprints](#navigation--layout-blueprints)
+13. [Screen Hierarchy Reference](#screen-hierarchy-per-persona)
 
 ---
 
@@ -803,6 +804,84 @@ Build instructor student management and progress tracking with professional load
 
 ---
 
+## Phase D: Track-wise Student Progress Tracker
+**Completed:** January 5, 2026  
+**Branch:** `feat-student-progress-tracker` → merged to main  
+**Duration:** 1 day (prototyping + implementation + bug fixes)
+
+### Goal
+Enable instructors to view detailed chapter-by-chapter proficiency for individual students across all tracks they've studied.
+
+### What We Built
+
+**Backend Implementation:**
+- ✅ New endpoint: `GET /api/students/:studentId/track-progress`
+- ✅ Service methods in learning-delivery module:
+  - `getStudentTrackProgress()` - Main orchestrator with permission checks
+  - `buildTrackProgress()` - Builds track-wise hierarchical data
+- ✅ Shows ALL tracks in system (not just enrolled tracks)
+- ✅ Chapter completion count uses L2-L4 proficiency levels only (excludes L0, L1, absent=8, not_started=9)
+- ✅ Permission validation: Instructors can only view their assigned students
+- ✅ Returns hierarchical data: student → tracks → chapters with proficiency
+
+**Frontend Components:**
+- ✅ Migrated 4 production-ready components from prototype:
+  - `TrackList.tsx` - Accordion layout with smart defaults (opens first incomplete track)
+  - `TrackCard.tsx` - Track header with progress bar and completion count
+  - `ChapterList.tsx` - Responsive grid (2-6 columns based on screen size)
+  - `ChapterItem.tsx` - Proficiency card with color coding and evaluation tooltip
+- ✅ Color consistency: Uses `getCellColor()` from batch matrix (exact same colors)
+- ✅ Mobile-first responsive design (tested 360px+)
+- ✅ All components pure and presentational (zero mock data)
+
+**Frontend Integration:**
+- ✅ New hook: `useTrackProgress(studentId)` with TanStack Query caching
+- ✅ Updated `StudentDetailsPage.tsx` with track progress rendering
+- ✅ Loading states: Parallel skeleton loaders for details + tracks
+- ✅ Error states: Retry buttons for failed loads
+- ✅ Empty state: When student has no tracks assigned
+
+**Types & Contracts:**
+- ✅ Added 3 new types to `shared/types.ts`:
+  - `ChapterProgress` - Individual chapter with proficiency metadata
+  - `TrackProgress` - Track with chapters array and completion stats
+  - `StudentProgressData` - Student + tracks array wrapper
+
+**Bug Fixes (Post-Implementation):**
+- ✅ Fixed nullish coalescing operator bug (proficiency level 0 showing as 9)
+- ✅ Fixed TanStack Query cache invalidation (extracted queryKey to variable)
+- ✅ Fixed chapter completion logic (only count L2-L4, not L0/L1/8/9)
+- ✅ Fixed track filtering (show all tracks, not just enrolled)
+- ✅ Documented nullish coalescing gotcha in `docs/common-gotchas.md`
+
+**Cleanup:**
+- ✅ Deleted `temp-prototype/student-progress-tracker` folder
+- ✅ Verified zero mock data imports in production code
+- ✅ All import paths use `@shared/types`
+- ✅ Zero TypeScript errors
+
+### Deliverables
+- Working track-wise progress visualization on Student Details page
+- 9 commits total (feature + 8 bug fixes)
+- 100% color consistency with batch matrix
+- Mobile-responsive design (360px to 4K)
+- Permission-protected backend with comprehensive error handling
+
+### Key Technical Decisions
+- **Separate endpoint** (`/track-progress`) instead of extending existing `/progress` endpoint
+- **All tracks shown** (not enrollment-filtered) for comprehensive student history
+- **Nullish coalescing (`??`)** used for proficiency level 0 handling (critical fix)
+- **TanStack Query cache keys** extracted to variables for reliable invalidation
+- **Proficiency completion threshold** set to L2-L4 (excludes practicing levels)
+
+### Lessons Learned
+- JavaScript's `||` operator treats 0 as falsy - always use `??` for numeric proficiency levels
+- TanStack Query cache invalidation requires exact string reference equality
+- Proficiency enumeration (8=absent, 9=not_started) must be explicitly excluded from completion counts
+- Mobile-first responsive grid (2-6 columns) provides excellent UX across all devices
+
+---
+
 ## Key Learnings & Patterns
 
 ### TanStack Table Pattern
@@ -848,5 +927,5 @@ Build instructor student management and progress tracking with professional load
 
 ---
 
-**Last Updated:** January 4, 2026  
-**Next Active Phase:** 7.3.1 - My Students & Student Progress
+**Last Updated:** January 5, 2026  
+**Next Active Phase:** Phase 5 - Content Studio (Track Detail, Edit Chapter)

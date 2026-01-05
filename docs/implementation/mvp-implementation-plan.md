@@ -1,131 +1,45 @@
 # VedicLMS MVP Implementation Plan
 
-**Last Updated:** January 4, 2026  
-**Current Phase:** Phase 7.3.1 - Complete, Phase D - Complete  
-**Status:** Phases A, B, C Complete + Phase D Complete - Ready for Phase 5 (Content Studio)
+**Last Updated:** January 5, 2026  
+**Current Phase:** Phase 5 - Content Studio (Ready to Start)  
+**Status:** Phases 0-7.3.1 + Phase D Complete - Content Studio Next
 
 ---
 
-## 🎉 Recent Accomplishments (January 4, 2026)
+## 🎉 Recent Accomplishments (January 4-5, 2026)
 
-**Phase 7.3.1 - My Students & Student Progress - COMPLETE**
+**Phase D - Track-wise Student Progress Tracker - COMPLETE ✅**
 
-Completed all phases in **1 day** (planned for 4 days) with bonus features:
-
-✅ **Phase A: My Students Table**
-- Professional TanStack Table with 7 columns (roll#, name, contact, timezone, type, batch, actions)
-- Pagination with rows-per-page selector (10/25/50/100)
-- **Bonus filters:** Search (debounced 300ms), batch dropdown, status dropdown
-- Backend: `GET /api/batches/my-students` with filter support
-- All loading/empty/error states, responsive design
-
-✅ **Phase B: Student Progress Page**
-- StudentDetailsCard component (collapsible: profile + enrollment info)
-- Permission checks (instructors can only view their students)
-- Placeholder for Phase D: "Track-wise Progress Tracking — Coming Soon"
-- Backend: `GET /api/students/:studentId/progress` with 403 protection
-- Fixed 3 critical Drizzle ORM schema bugs
-
-✅ **Phase C: My Students Advanced Features**
-- Search input (debounced 300ms by name/email)
-- Batch dropdown filter
-- Status dropdown filter (active/inactive/all)
-- Client-side filtering logic fully integrated
-- Responsive filter layout with compact design
-
-✅ **Refactoring & Polish**
-- Extracted StudentDetailsCard.tsx for reusability
-- Removed inline code, cleaner architecture
-- Extended divider lines on batch cards to full width (My Batches page)
-- Track order (number) now displays with track name on batch cards
-- Improved BatchDetailsCard header spacing and vertical alignment (py-2, proper centering)
-- Dropdown menu styling for batch selector (matches Actions menu pattern)
-- Single-line batch selector items with proper truncation
-- Zero TypeScript errors, all features working
-
----
-
-**Phase D - Track-wise Student Progress Tracking - COMPLETE (January 4, 2026)**
-
-Completed full implementation in **1 day** of planning + coding:
+Completed in **1 day** with full implementation + bug fixes:
 
 ✅ **Backend Implementation**
 - New endpoint: `GET /api/students/:studentId/track-progress`
 - Service methods: `getStudentTrackProgress()`, `buildTrackProgress()`
-- Full permission checks (instructor can only view their students)
-- Returns hierarchical track-wise data: tracks → chapters with proficiency levels
-- Supports students with multiple tracks across batch enrollment history
+- Shows ALL tracks in system (not just enrolled)
+- Chapter completion count: L2-L4 only (excludes L0, L1, absent=8, not_started=9)
+- Permission validation: Instructors can only view assigned students
 
-✅ **Frontend Components**
-- Migrated 4 production-ready components from prototype:
-  - TrackList.tsx (accordion layout with smart defaults)
-  - TrackCard.tsx (track header with progress bar + chapter count)
-  - ChapterList.tsx (responsive grid: 2-6 columns, mobile to desktop)
-  - ChapterItem.tsx (proficiency card with tooltip for evaluation details)
-- Color consistency: Uses existing `getCellColor()` from batch matrix (exact same colors)
-- Mobile-first responsive design (tested on 360px+)
-- All components: Pure, presentational, zero mock data
+✅ **Frontend Components** (Migrated from Prototype)
+- TrackList.tsx - Accordion with smart defaults
+- TrackCard.tsx - Progress bar + completion count
+- ChapterList.tsx - Responsive grid (2-6 columns)
+- ChapterItem.tsx - Color-coded proficiency cards
+- 100% color consistency with batch matrix
 
-✅ **Frontend Integration**
-- New hook: `useTrackProgress(studentId)` with TanStack Query
-- Updated StudentDetailsPage to fetch and render track progress
-- Added loading states (parallel skeleton loaders for both details + tracks)
-- Added error states (retry buttons for failed track loads)
-- Added empty state (when student has no tracks assigned)
-- Replaced "Coming Soon" placeholder with working TrackList
-
-✅ **Types & Contracts**
-- Added 3 new types to shared/types.ts:
-  - `ChapterProgress` (individual chapter with proficiency)
-  - `TrackProgress` (track with chapters array)
-  - `StudentProgressData` (student + tracks array)
+✅ **Bug Fixes**
+- Fixed nullish coalescing operator bug (0 vs 9)
+- Fixed TanStack Query cache invalidation
+- Fixed completion count logic (L2-L4 threshold)
+- Fixed track filtering (show all, not just enrolled)
+- Documented gotcha in `docs/common-gotchas.md`
 
 ✅ **Cleanup**
-- Deleted temp-prototype folder entirely
-- Verified no mock data imports in production code
-- All import paths point to @shared/types
-- Zero prototype artifacts
+- Deleted temp-prototype folder
+- Zero mock data in production
+- All imports use @shared/types
+- Deleted 4 Phase D design docs
 
-**Next:** Phase 5 - Content Studio (Track Detail, Edit Chapter, responsive)
-
----
-
-## 🎉 Recent Accomplishments (January 4, 2026)
-
-✅ **Phase A: My Students Table**
-- Professional TanStack Table with 7 columns (roll#, name, contact, timezone, type, batch, actions)
-- Pagination with rows-per-page selector (10/25/50/100)
-- **Bonus filters:** Search (debounced 300ms), batch dropdown, status dropdown
-- Backend: `GET /api/batches/my-students` with filter support
-- All loading/empty/error states, responsive design
-
-✅ **Phase B: Student Progress Page**
-- StudentDetailsCard component (collapsible: profile + enrollment info)
-- Permission checks (instructors can only view their students)
-- Placeholder for Phase D: "Track-wise Progress Tracking — Coming Soon"
-- Backend: `GET /api/students/:studentId/progress` with 403 protection
-- Fixed 3 critical Drizzle ORM schema bugs
-
-✅ **Phase C: My Students Advanced Features**
-- Search input (debounced 300ms by name/email)
-- Batch dropdown filter
-- Status dropdown filter (active/inactive/all)
-- Client-side filtering logic fully integrated
-- Responsive filter layout with compact design
-
-✅ **Refactoring & Polish**
-- Extracted StudentDetailsCard.tsx for reusability
-- Removed inline code, cleaner architecture
-- Extended divider lines on batch cards to full width (My Batches page)
-- Track order (number) now displays with track name on batch cards
-- Improved BatchDetailsCard header spacing and vertical alignment (py-2, proper centering)
-- Dropdown menu styling for batch selector (matches Actions menu pattern)
-- Single-line batch selector items with proper truncation
-- Zero TypeScript errors, all features working
-
-**Next:** Phase D - Track-wise progress visualization design & implementation
-
-**Next:** Phase D - Track-wise progress visualization design & implementation
+**See detailed history:** [mvp-completed-phases.md](mvp-completed-phases.md#phase-d-track-wise-student-progress-tracker)
 
 ---
 
@@ -485,44 +399,24 @@ This is the **active implementation guide** for VedicLMS MVP v1.0. It shows:
 
 ---
 
-### Phase D: Track-wise Progress View 🔮 FUTURE (Next Priority)
+### Phase D: Track-wise Progress View ✅ COMPLETE (January 5, 2026)
 
-**Open Questions (To Be Discussed Separately):**
-1. **Layout Pattern:** Accordion vs. Table vs. Tabs vs. Cards?
-   - Current leading idea: Accordion (collapsible tracks)
-   - Pros: Scalable, mobile-friendly, industry standard
-   - Cons: Requires click to expand (not "at a glance")
-   
-2. **Chapter Display:** How much detail per chapter?
-   - Proficiency level (0-4, 8, 9) with color coding?
-   - Progress bar vs. badge vs. both?
-   - Last evaluated date?
-   - Notes from evaluation (future feature)?
+**Goal:** Display detailed track-by-track chapter proficiency for individual students.
 
-3. **Mobile Responsiveness:** Stack vertically? Collapse to cards?
+**Status:** Fully implemented and merged to main.
 
-4. **Visualization Patterns:**
-   - Reuse Batch Matrix color coding (Yellow → Green → Purple)?
-   - Summary stats per track (X/Y chapters, overall %)?
-   - Expand all / collapse all toggle?
+**See detailed documentation:** [mvp-completed-phases.md](mvp-completed-phases.md#phase-d-track-wise-student-progress-tracker)
 
-**Proposed Design (For Discussion):**
-```
-┌─ Track 1: Rigveda Foundation (4/10 chapters, 40%) ────── [▼]
-│ CH1: Introduction        ████░░ Level 2  Last: Dec 15
-│ CH2: Basics              ██░░░░ Level 1  Last: Dec 10
-│ CH3: Fundamentals        ░░░░░░ Level 0  Last: Never
-│ CH4: Advanced Concepts   █████░ Level 3  Last: Dec 20
-│ ... (6 more chapters collapsed)
-└────────────────────────────────────────────────────────────┘
+**Quick Summary:**
+- ✅ Backend: New `/api/students/:studentId/track-progress` endpoint
+- ✅ Frontend: 4 components (TrackList, TrackCard, ChapterList, ChapterItem)
+- ✅ Shows all tracks with chapter-level proficiency
+- ✅ Color-coded cards matching batch matrix
+- ✅ Responsive grid layout (2-6 columns)
+- ✅ Bug fixes: Nullish coalescing, cache invalidation, completion logic
+- ✅ Cleanup: Deleted prototype folder, removed mock data
 
-┌─ Track 2: Rigveda Intermediate (0/8 chapters, 0%) ──────── [▶]
-```
-
-**Decision Point:**
-- After Phase B is complete, schedule separate brainstorming session
-- User will provide specific requirements for visualization
-- Then implement based on agreed design
+**Outcome:** Instructors can now view comprehensive student progress history across all tracks.
 
 ---
 
@@ -606,6 +500,12 @@ This is the **active implementation guide** for VedicLMS MVP v1.0. It shows:
 - Add filters, sorting, search
 - Optional URL query params
 
+**COMPLETE:** Phase D (Track-wise Progress View) - January 5, 2026
+- Track-wise visualization with accordion layout
+- Color-coded chapter proficiency cards
+- Responsive grid (2-6 columns)
+- All tracks shown regardless of enrollment
+
 **TBD:** Phase E (Schema Updates) - Post-MVP
 - Add missing fields to users table
 - Update seed scripts
@@ -614,43 +514,46 @@ This is the **active implementation guide** for VedicLMS MVP v1.0. It shows:
 
 ## Dependencies & Prerequisites
 
-### Before Starting Phase A
+### Before Starting Phase A ✅ DONE
 - ✅ Unified Batch Matrix complete (proficiency tracking working)
 - ✅ Admin Center patterns established (table styling, pagination, kebab menus)
 - ✅ TanStack Query hooks working
 - ✅ Navigation config supports contextual sub-items
 
-### Before Starting Phase B
+### Before Starting Phase B ✅ DONE
 - ✅ Phase A complete (My Students table working)
 - ✅ Backend can query student proficiency across all tracks
 - ✅ Permission validation logic in place
 
-### Before Starting Phase D
+### Before Starting Phase D ✅ DONE
 - ✅ Phase B complete (Student Progress page with placeholder)
-- ⏳ Design brainstorming session completed
-- ⏳ UI mockups or wireframes approved
+- ✅ Design brainstorming session completed
+- ✅ UI mockups approved (accordion + grid layout)
 
 ---
 
 ## Success Metrics
 
-### Phase A Success
-- Instructor can view all students from their batches
-- Clicking student navigates to detail page
-- Table is responsive and professional
-- Loading/empty/error states work
+### Phase A Success ✅ ACHIEVED
+- ✅ Instructor can view all students from their batches
+- ✅ Clicking student navigates to detail page
+- ✅ Table is responsive and professional
+- ✅ Loading/empty/error states work
+- ✅ Bonus: Search and filters implemented
 
-### Phase B Success
-- Instructor can view student details and overall progress
-- Permission checks prevent unauthorized access
-- Collapsible card works smoothly
-- Placeholder communicates upcoming feature
+### Phase B Success ✅ ACHIEVED
+- ✅ Instructor can view student details and overall progress
+- ✅ Permission checks prevent unauthorized access
+- ✅ Collapsible card works smoothly
+- ✅ Extracted StudentDetailsCard for reusability
 
-### Phase D Success (Future)
-- Instructor can see detailed track-wise progress at a glance
-- Proficiency levels are clear and color-coded
-- Mobile experience is usable
-- Design scales to 8 tracks × 5-10 chapters each
+### Phase D Success ✅ ACHIEVED (January 5, 2026)
+- ✅ Instructor can see detailed track-wise progress at a glance
+- ✅ Proficiency levels are clear and color-coded
+- ✅ Mobile experience is fully usable
+- ✅ Design scales to all tracks × variable chapters
+- ✅ Tooltips show evaluation details
+- ✅ Smart accordion defaults (opens first incomplete track)
 
 ---
 
