@@ -241,7 +241,7 @@ export function LearnChapterPage() {
   const lastAccessLabel = currentProgress?.lastAccessed
     ? new Date(currentProgress.lastAccessed).toLocaleDateString()
     : "Not visited yet";
-  
+
   // Derive track and chapter info from fetched chapter data
   const displayTitle = chapter?.title || "Learn Chapter";
   const trackName = chapter?.track?.title || undefined;
@@ -256,7 +256,7 @@ export function LearnChapterPage() {
   }
 
   return (
-    <div className="flex flex-col bg-gray-50 dark:bg-gray-950 h-full">
+    <div className="flex flex-col bg-gray-50 dark:bg-gray-950 h-[calc(100dvh-4rem)]">
       <div className="sticky top-0 z-40 bg-white/95 dark:bg-black/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur border-b border-gray-200 dark:border-gray-800 shadow-sm flex-shrink-0">
         <div className="w-full mx-auto px-6 py-3">
           <div className="flex items-start justify-between gap-4">
@@ -269,17 +269,17 @@ export function LearnChapterPage() {
               </h1>
             </div>
             <div className="flex items-center gap-1">
-              <Badge 
+              <Badge
                 className={cn(
                   "text-xs font-medium border flex items-center gap-1.5",
                   proficiencyLevel === null || proficiencyLevel === 9 ? "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600" :
-                  proficiencyLevel === 8 ? "bg-gray-200 text-gray-700 border-gray-400 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500" :
-                  proficiencyLevel === 0 ? "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-700" :
-                  proficiencyLevel === 1 ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-200 dark:border-green-700" :
-                  proficiencyLevel === 2 ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-200 dark:border-green-700" :
-                  proficiencyLevel === 3 ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:text-purple-200 dark:border-purple-700" :
-                  proficiencyLevel === 4 ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:text-purple-200 dark:border-purple-700" : 
-                  "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"
+                    proficiencyLevel === 8 ? "bg-gray-200 text-gray-700 border-gray-400 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500" :
+                      proficiencyLevel === 0 ? "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-700" :
+                        proficiencyLevel === 1 ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-200 dark:border-green-700" :
+                          proficiencyLevel === 2 ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-200 dark:border-green-700" :
+                            proficiencyLevel === 3 ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:text-purple-200 dark:border-purple-700" :
+                              proficiencyLevel === 4 ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:text-purple-200 dark:border-purple-700" :
+                                "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"
                 )}
               >
                 <span>{proficiencyLabel}</span>
@@ -293,7 +293,7 @@ export function LearnChapterPage() {
                         <div className="space-y-1">
                           <p className="text-xs">
                             <span className="font-semibold">Last Evaluated:</span>{" "}
-                            {currentProgress.lastEvaluatedAt 
+                            {currentProgress.lastEvaluatedAt
                               ? new Date(currentProgress.lastEvaluatedAt).toLocaleDateString()
                               : "Never"}
                           </p>
@@ -312,8 +312,8 @@ export function LearnChapterPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto px-4 pt-4 pb-6 md:px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="flex-1 overflow-auto lg:overflow-hidden px-4 pt-4 pb-6 md:px-4">
+        <div className="flex flex-col lg:grid lg:grid-cols-3 lg:h-full h-full gap-4">
           <div className="lg:col-span-2 flex-1 min-h-0 flex flex-col border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black overflow-hidden">
             <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-3">
@@ -359,9 +359,6 @@ export function LearnChapterPage() {
             </div>
             <div
               className="flex-1 min-h-0 overflow-auto p-6"
-              style={{
-                minHeight: "400px",
-              }}
             >
               {chapterContent[contentScript] ? (
                 learnMode ? (
@@ -377,10 +374,10 @@ export function LearnChapterPage() {
                 ) : (
                   <div
                     className={`prose max-w-none ${contentScript === "te"
-                        ? "font-telugu"
-                        : contentScript === "hi"
-                          ? "font-devanagari"
-                          : "font-iast"
+                      ? "font-telugu"
+                      : contentScript === "hi"
+                        ? "font-devanagari"
+                        : "font-iast"
                       }`}
                     style={{ lineHeight: "1.6" }}
                     dangerouslySetInnerHTML={{ __html: chapterContent[contentScript] || "" }}
@@ -396,7 +393,7 @@ export function LearnChapterPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-1 flex flex-col gap-4">
+          <div className="lg:col-span-1 flex flex-col gap-4 flex-shrink-0">
             <div className="border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black p-3 lg:sticky lg:top-0">
               <div className="flex items-center gap-2 mb-3">
                 <label className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Audio File:</label>
