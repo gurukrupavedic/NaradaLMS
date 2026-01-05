@@ -323,6 +323,23 @@ export class LearningService {
       (p) => p?.proficiencyLevel !== null && p?.proficiencyLevel >= 3
     ).length;
 
+    // Fetch evaluator names for all chapters with evaluations
+    const evaluatorIds = new Set(
+      Object.values(progressByChapter)
+        .map((p) => p?.evaluatedBy)
+        .filter((id): id is string => id !== null && id !== undefined)
+    );
+
+    let evaluatorNames: Record<string, string> = {};
+    if (evaluatorIds.size > 0) {
+      const evaluators = await db.query.users.findMany({
+        where: (u, { inArray }) => inArray(u.id, Array.from(evaluatorIds)),
+      });
+      evaluators.forEach((user) => {
+        evaluatorNames[user.id] = `${user.firstName} ${user.lastName}`;
+      });
+    }
+
     return {
       trackId: track.id,
       trackOrder: track.number,
@@ -341,7 +358,9 @@ export class LearningService {
           lastEvaluatedAt: progress?.lastEvaluatedAt
             ? progress.lastEvaluatedAt.toISOString()
             : null,
-          evaluatedBy: progress?.evaluatedBy ?? null,
+          evaluatedBy: progress?.evaluatedBy
+            ? evaluatorNames[progress.evaluatedBy] || progress.evaluatedBy
+            : null,
           notes: progress?.notes ?? null,
         };
       }),
