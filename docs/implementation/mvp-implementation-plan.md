@@ -506,9 +506,12 @@ This is the **active implementation guide** for VedicLMS MVP v1.0. It shows:
 - Responsive grid (2-6 columns)
 - All tracks shown regardless of enrollment
 
-**TBD:** Phase E (Schema Updates) - Post-MVP
-- Add missing fields to users table
-- Update seed scripts
+**DEFERRED TO SIGN-UP/ONBOARDING FLOW:** User Profile Fields
+- Instead of Phase E (standalone schema updates), user profile field capture will be integrated into:
+  - New user onboarding/sign-up flow refinement
+  - User profile edit page
+- Fields to capture: timezone, type (bramhachari/grihasta), phone, avatar, etc.
+- Decision: Consolidate with upcoming onboarding work rather than separate phase
 
 ---
 
@@ -636,6 +639,28 @@ This is the **active implementation guide** for VedicLMS MVP v1.0. It shows:
 - Error: Red toast, auto-dismiss 5s
 - Background: Card background (not transparent)
 - Consistent messaging across all mutations
+
+---
+
+## 🎯 Next Phase: Phase 5 - Content Studio
+
+**Planned Scope:**
+- Content Studio home (track list with metadata)
+- Track detail page (chapter list, publish status)
+- Edit chapter (5-tab interface: Content, Audio, Segmentation, Mapping, Preview)
+- Responsive design (mobile/tablet/desktop)
+
+**Timeline:** TBD - Ready to start
+
+---
+
+## ⚠️ Deferred Work
+
+**Phase E - User Profile Fields** (Deferred to Sign-Up/Onboarding Flow)
+- Not a standalone phase
+- Will be integrated into upcoming user onboarding/sign-up refinement
+- Fields to capture: timezone, type (bramhachari/grihasta), phone, avatar, etc.
+- These fields will become available in student details pages once onboarding captures them
 
 ---
 

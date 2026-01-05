@@ -797,10 +797,12 @@ Build instructor student management and progress tracking with professional load
 - Color-coded proficiency display
 - Mobile-optimized layout
 
-**Phase E: Schema Updates** 🔮 POST-MVP
-- Add missing fields: timezone, cohortType, phone, avatar
-- Update seed scripts with realistic data
-- Update UI to use real fields instead of placeholders
+**Phase E: User Profile Fields** 🔮 DEFERRED (Merged with Sign-Up/Onboarding)
+- **Decision:** Skip as standalone phase
+- **Reason:** Fields will be captured during upcoming user onboarding/sign-up refinement
+- **Scope:** timezone, cohortType, phone, avatar, type (bramhachari/grihasta)
+- **Integration:** These fields will be available in student details once onboarding captures them
+- **Timeline:** Part of separate onboarding work (not part of MVP implementation plan)
 
 ---
 
