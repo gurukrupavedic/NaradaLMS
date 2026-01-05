@@ -10,7 +10,7 @@ import { contentService } from '../content-publishing';
 import { mediaService } from '../media-pipeline';
 import { db } from '../../db';
 import { batches, batchCoInstructors, enrollments, chapters, studentProgress } from '@shared/schema';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and, or, inArray } from 'drizzle-orm';
 
 export class LearningService {
   /**
@@ -293,31 +293,34 @@ export class LearningService {
 
     if (!track) return null;
 
-    const chapters = await db
-      .select({
-        chapterId: chapters.id,
-        chapterOrder: chapters.order,
-        chapterTitle: chapters.title,
-        chapterCode: chapters.code,
-        proficiencyLevel: studentProgress.proficiencyLevel,
-        lastEvaluatedAt: studentProgress.lastEvaluatedAt,
-        evaluatedBy: studentProgress.evaluatedBy,
-        notes: studentProgress.notes,
-      })
-      .from(chapters)
-      .leftJoin(
-        studentProgress,
-        and(
-          eq(studentProgress.studentId, studentId),
-          eq(studentProgress.chapterId, chapters.id)
-        )
-      )
-      .where(eq(chapters.trackId, trackId))
-      .orderBy(chapters.order);
+    // Get all chapters in the track
+    const chapterList = await db.query.chapters.findMany({
+      where: (c, { eq }) => eq(c.trackId, trackId),
+      orderBy: (c) => c.order,
+    });
+
+    // Get all student progress for this track's chapters
+    const chapterIds = chapterList.map((ch) => ch.id);
+    let progressByChapter: Record<number, any> = {};
+
+    if (chapterIds.length > 0) {
+      const progress = await db.query.studentProgress.findMany({
+        where: (sp, { eq, and, inArray }) =>
+          and(
+            eq(sp.studentId, studentId),
+            inArray(sp.chapterId, chapterIds)
+          ),
+      });
+
+      // Map progress by chapter ID for quick lookup
+      progress.forEach((p) => {
+        progressByChapter[p.chapterId] = p;
+      });
+    }
 
     // Compute completed chapters (proficiency >= 3)
-    const completedChapters = chapters.filter(
-      (ch) => ch.proficiencyLevel !== null && ch.proficiencyLevel >= 3
+    const completedChapters = Object.values(progressByChapter).filter(
+      (p) => p?.proficiencyLevel !== null && p?.proficiencyLevel >= 3
     ).length;
 
     return {
@@ -326,19 +329,22 @@ export class LearningService {
       trackTitle: track.title,
       trackDescription: track.description || '',
       completedChapters,
-      totalChapters: chapters.length,
-      chapters: chapters.map((ch) => ({
-        chapterId: ch.chapterId,
-        chapterOrder: ch.chapterOrder,
-        chapterTitle: ch.chapterTitle,
-        chapterCode: ch.chapterCode || `CH${ch.chapterOrder}`, // Generate if missing
-        proficiencyLevel: ch.proficiencyLevel,
-        lastEvaluatedAt: ch.lastEvaluatedAt
-          ? ch.lastEvaluatedAt.toISOString()
-          : null,
-        evaluatedBy: ch.evaluatedBy,
-        notes: ch.notes,
-      })),
+      totalChapters: chapterList.length,
+      chapters: chapterList.map((ch) => {
+        const progress = progressByChapter[ch.id];
+        return {
+          chapterId: ch.id,
+          chapterOrder: ch.order,
+          chapterTitle: ch.title,
+          chapterCode: ch.code || `CH${ch.order}`,
+          proficiencyLevel: progress?.proficiencyLevel ?? null,
+          lastEvaluatedAt: progress?.lastEvaluatedAt
+            ? progress.lastEvaluatedAt.toISOString()
+            : null,
+          evaluatedBy: progress?.evaluatedBy ?? null,
+          notes: progress?.notes ?? null,
+        };
+      }),
     };
   }
 }
