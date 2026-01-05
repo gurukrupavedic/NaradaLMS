@@ -309,148 +309,147 @@ export function LearnChapterPage() {
       </div>
 
       <div className="w-full mx-auto px-6 py-6">
-        <div className="flex justify-between items-center mb-4 p-3 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg">
-          <div className="flex items-center gap-4">
-            <ScriptSelector
-              currentScript={contentScript}
-              availableScripts={["te", "hi", "en"]}
-              onScriptChange={setContentScript}
-            />
-
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Audio File:</label>
-              <Select
-                value={selectedAudioFileId?.toString() || ""}
-                onValueChange={(value) => {
-                  const audioFileId = parseInt(value);
-                  const audioFile = audioFiles.find((f) => f.id === audioFileId);
-                  if (audioFile) {
-                    previewAudioRef.current.src = `/uploads/${audioFile.filename}`;
-                    setSelectedAudioFileId(audioFileId);
-                  }
-                }}
-              >
-                <SelectTrigger className="w-80 h-7 text-xs" data-testid="select-audio-file">
-                  <SelectValue placeholder="Select audio file" />
-                </SelectTrigger>
-                <SelectContent>
-                  {audioFiles.map((file) => (
-                    <SelectItem key={file.id} value={file.id.toString()}>
-                      {file.displayName || file.filename}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <Badge variant="blue" badgeStyle="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
-              {currentScriptSegments.length} segments
-            </Badge>
-            <Badge variant="green" badgeStyle="sharp" className="text-xs" icon={<Zap className="h-3 w-3" />}>
-              {mappedSegments.length} mapped
-            </Badge>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          {selectedAudioFileId ? (
-            <AudioControls
-              title={
-                audioFiles.find((f) => f.id === selectedAudioFileId)?.displayName ||
-                audioFiles.find((f) => f.id === selectedAudioFileId)?.filename ||
-                "Audio File"
-              }
-              currentTime={currentTime}
-              duration={duration}
-              isPlaying={isPlaying}
-              volume={volume}
-              playbackRate={playbackRate}
-              onPlay={() => {
-                previewAudioRef.current.play().catch(console.error);
-                setIsPlaying(true);
-              }}
-              onPause={() => {
-                previewAudioRef.current.pause();
-                setIsPlaying(false);
-              }}
-              onStop={() => {
-                previewAudioRef.current.pause();
-                previewAudioRef.current.currentTime = 0;
-                setIsPlaying(false);
-                setCurrentTime(0);
-              }}
-              onSeek={(time) => {
-                previewAudioRef.current.currentTime = time;
-                setCurrentTime(time);
-              }}
-              onVolumeUpdate={(vol) => {
-                previewAudioRef.current.volume = vol / 100;
-                setVolume(vol);
-              }}
-              onPlaybackRateChange={(rate) => {
-                previewAudioRef.current.playbackRate = rate;
-                setPlaybackRate(rate);
-              }}
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black">
-              <Music className="w-12 h-12 mb-4 opacity-50" />
-              <p>Select an audio file to begin studying</p>
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1 min-h-0 flex flex-col border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black overflow-hidden">
-          <div className="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              {chapter?.title || "Chapter"} (
-              {contentScript === "te" ? "Telugu" : contentScript === "hi" ? "Hindi" : "English"})
-            </h3>
-
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Learn Mode:</span>
-              <Switch
-                checked={learnMode}
-                onCheckedChange={setLearnMode}
-                variant="orange"
-                size="sm"
-                data-testid="toggle-learn-mode"
-              />
-            </div>
-          </div>
-          <div className="flex-1 min-h-0 overflow-auto p-6" style={{ minHeight: "400px" }}>
-            {chapterContent[contentScript] ? (
-              learnMode ? (
-                <SegmentedTextDisplay
-                  content={chapterContent}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 flex-1 min-h-0 flex flex-col border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black overflow-hidden">
+            <div className="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <ScriptSelector
                   currentScript={contentScript}
-                  segments={textSegments}
-                  selectedSegmentId={selectedSegmentId}
-                  onSegmentClick={handleSegmentClick}
-                  mode="preview"
-                  className=""
+                  availableScripts={["te", "hi", "en"]}
+                  onScriptChange={setContentScript}
+                  showLabel={false}
+                />
+                {learnMode && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="blue" badgeStyle="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
+                      {currentScriptSegments.length} segments
+                    </Badge>
+                    <Badge variant="green" badgeStyle="sharp" className="text-xs" icon={<Zap className="h-3 w-3" />}>
+                      {mappedSegments.length} mapped
+                    </Badge>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Learn Mode:</span>
+                <Switch
+                  checked={learnMode}
+                  onCheckedChange={setLearnMode}
+                  variant="orange"
+                  size="sm"
+                  data-testid="toggle-learn-mode"
+                />
+              </div>
+            </div>
+            <div className="flex-1 min-h-0 overflow-auto p-6" style={{ minHeight: "400px" }}>
+              {chapterContent[contentScript] ? (
+                learnMode ? (
+                  <SegmentedTextDisplay
+                    content={chapterContent}
+                    currentScript={contentScript}
+                    segments={textSegments}
+                    selectedSegmentId={selectedSegmentId}
+                    onSegmentClick={handleSegmentClick}
+                    mode="preview"
+                    className=""
+                  />
+                ) : (
+                  <div
+                    className={`prose max-w-none ${contentScript === "te"
+                        ? "font-telugu"
+                        : contentScript === "hi"
+                          ? "font-devanagari"
+                          : "font-iast"
+                      }`}
+                    style={{ lineHeight: "1.6" }}
+                    dangerouslySetInnerHTML={{ __html: chapterContent[contentScript] || "" }}
+                    data-testid="html-content-view"
+                  />
+                )
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <FileText className="w-12 h-12 mb-4 opacity-50" />
+                  <p>No content available for this script</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="lg:col-span-1 flex flex-col gap-4">
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black p-3">
+              <div className="flex items-center gap-2 mb-3">
+                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Audio File:</label>
+                <Select
+                  value={selectedAudioFileId?.toString() || ""}
+                  onValueChange={(value) => {
+                    const audioFileId = parseInt(value);
+                    const audioFile = audioFiles.find((f) => f.id === audioFileId);
+                    if (audioFile) {
+                      previewAudioRef.current.src = `/uploads/${audioFile.filename}`;
+                      setSelectedAudioFileId(audioFileId);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-8 text-sm" data-testid="select-audio-file">
+                    <SelectValue placeholder="Select audio file" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {audioFiles.map((file) => (
+                      <SelectItem key={file.id} value={file.id.toString()}>
+                        {file.displayName || file.filename}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selectedAudioFileId ? (
+                <AudioControls
+                  title={
+                    audioFiles.find((f) => f.id === selectedAudioFileId)?.displayName ||
+                    audioFiles.find((f) => f.id === selectedAudioFileId)?.filename ||
+                    "Audio File"
+                  }
+                  currentTime={currentTime}
+                  duration={duration}
+                  isPlaying={isPlaying}
+                  volume={volume}
+                  playbackRate={playbackRate}
+                  onPlay={() => {
+                    previewAudioRef.current.play().catch(console.error);
+                    setIsPlaying(true);
+                  }}
+                  onPause={() => {
+                    previewAudioRef.current.pause();
+                    setIsPlaying(false);
+                  }}
+                  onStop={() => {
+                    previewAudioRef.current.pause();
+                    previewAudioRef.current.currentTime = 0;
+                    setIsPlaying(false);
+                    setCurrentTime(0);
+                  }}
+                  onSeek={(time) => {
+                    previewAudioRef.current.currentTime = time;
+                    setCurrentTime(time);
+                  }}
+                  onVolumeUpdate={(vol) => {
+                    previewAudioRef.current.volume = vol / 100;
+                    setVolume(vol);
+                  }}
+                  onPlaybackRateChange={(rate) => {
+                    previewAudioRef.current.playbackRate = rate;
+                    setPlaybackRate(rate);
+                  }}
                 />
               ) : (
-                <div
-                  className={`prose max-w-none ${contentScript === "te"
-                      ? "font-telugu"
-                      : contentScript === "hi"
-                        ? "font-devanagari"
-                        : "font-iast"
-                    }`}
-                  style={{ lineHeight: "1.6" }}
-                  dangerouslySetInnerHTML={{ __html: chapterContent[contentScript] || "" }}
-                  data-testid="html-content-view"
-                />
-              )
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <FileText className="w-12 h-12 mb-4 opacity-50" />
-                <p>No content available for this script</p>
-              </div>
-            )}
+                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground border border-dashed border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/40">
+                  <Music className="w-10 h-10 mb-3 opacity-60" />
+                  <p className="text-sm">Select an audio file to begin studying</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
