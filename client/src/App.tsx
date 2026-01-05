@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary, AppErrorFallback } from "@/components/ui/error-boundary";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import InstructorMatrixPrototype from "@/temp-prototype/InstructorMatrixPrototype";
+import StudentProgressTracker from "@/temp-prototype/student-progress-tracker/StudentProgressTracker";
 import { useAuth } from "@/features/shared-features/hooks/useAuth";
 import { useWarmTrackCache } from "@/lib/query-prefetch";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -149,6 +150,7 @@ function Router() {
 
         {/* TEMPORARY PROTOTYPE */}
         <Route path="/prototype/matrix" component={InstructorMatrixPrototype} />
+        <Route path="/prototype/student-progress" component={StudentProgressTracker} />
 
         <Route component={SimpleNotFound} />
       </Switch>
