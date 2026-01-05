@@ -75,8 +75,10 @@ function transform(server: BatchProgressResponseServer): BatchProgressResponseUI
 }
 
 export function useBatchProgress(batchId: number | string | undefined) {
+  const queryKey = batchId ? `/api/batches/${batchId}/progress` : "/api/batches/undefined/progress";
+  
   return useQuery<BatchProgressResponseUI>({
-    queryKey: batchId ? [`/api/batches/${batchId}/progress`] : ["/api/batches/undefined/progress"],
+    queryKey: [queryKey],
     queryFn: async ({ queryKey }) => {
       const res = await getQueryFn<BatchProgressResponseServer>({ on401: "throw" })({ queryKey } as any);
       return transform(res as unknown as BatchProgressResponseServer);

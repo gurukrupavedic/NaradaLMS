@@ -58,14 +58,16 @@ export function useUpdateProficiency() {
       return response.json();
     },
     onSuccess: async (data, variables, context) => {
+      const queryKey = `/api/batches/${variables.batchId}/progress`;
+      
       // Invalidate batch progress query to trigger refetch
       await queryClient.invalidateQueries({ 
-        queryKey: [`/api/batches/${variables.batchId}/progress`],
+        queryKey: [queryKey],
       });
       
       // Also refetch to ensure data is updated before UI updates
       await queryClient.refetchQueries({
-        queryKey: [`/api/batches/${variables.batchId}/progress`],
+        queryKey: [queryKey],
       });
     },
   });
