@@ -100,9 +100,31 @@ export class ContentStorage {
   }
 
   async getChapter(id: number): Promise<any | null> {
-    const [chapter] = await db.select().from(chapters).where(eq(chapters.id, id));
+    const result = await db
+      .select({
+        id: chapters.id,
+        trackId: chapters.trackId,
+        title: chapters.title,
+        order: chapters.order,
+        status: chapters.status,
+        content: chapters.content,
+        description: chapters.description,
+        publishedAt: chapters.publishedAt,
+        lastEditedBy: chapters.lastEditedBy,
+        createdBy: chapters.createdBy,
+        createdAt: chapters.createdAt,
+        updatedAt: chapters.updatedAt,
+        track: {
+          id: tracks.id,
+          title: tracks.title,
+        }
+      })
+      .from(chapters)
+      .leftJoin(tracks, eq(chapters.trackId, tracks.id))
+      .where(eq(chapters.id, id));
     
-    if (!chapter) return null;
+    if (result.length === 0) return null;
+    const chapter = result[0];
     
     if (chapter.content && typeof chapter.content === 'string') {
       try {

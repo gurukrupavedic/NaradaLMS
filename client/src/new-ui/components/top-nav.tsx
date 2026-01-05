@@ -29,20 +29,7 @@ function getBreadcrumbs(pathname: string): string[] {
 
   // Learn Chapter (student)
   if (/^\/app\/learning\/chapter\/[a-zA-Z0-9_-]+/.test(pathname)) {
-    const search = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : undefined;
-    const trackOrder = search?.get('trackOrder');
-    const chapterOrder = search?.get('chapterOrder');
-    const chapterTitle = search?.get('chapterTitle');
-
-    const parts = [] as string[];
-    if (trackOrder) parts.push(`T${trackOrder}`);
-    if (chapterOrder) parts.push(`CH${chapterOrder}`);
-    const labelCore = parts.length > 0 ? `${parts.join('.')}` : '';
-    const label = labelCore
-      ? `Learn Chapter : ${labelCore}${chapterTitle ? ` ${chapterTitle}` : ''}`
-      : `Learn Chapter${chapterTitle ? ` : ${chapterTitle}` : ''}`;
-
-    return ['Vedic Learning', label];
+    return ['Vedic Learning', 'Learn Chapter'];
   }
 
   // Batches & Progress (Instructor)

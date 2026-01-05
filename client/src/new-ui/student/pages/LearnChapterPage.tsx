@@ -2,14 +2,17 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/design-system/Badge";
+import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/design-system/Switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Music, FileText, List, Zap } from "lucide-react";
+import { ArrowLeft, Music, FileText, List, Zap, Clock3, Info } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading";
 import { ScriptSelector } from "@/components/common/ScriptSelector";
 import { AudioControls } from "@/components/design-system/AudioControls";
 import { SegmentedTextDisplay } from "@/components/text-segmentation/SegmentedTextDisplay";
+import { getProficiencyLabel } from "@/new-ui/batches/utils/matrix-utils";
+import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ChapterData {
   id: number;
@@ -22,6 +25,11 @@ interface ChapterData {
     hi?: string;
     en?: string;
   };
+  track?: {
+    id: number;
+    title: string;
+  };
+  order?: number;
 }
 
 interface TextSegment {
@@ -69,12 +77,6 @@ export function LearnChapterPage() {
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/app/learning/chapter/:chapterId");
   const chapterId = params?.chapterId;
-
-  const search = useMemo(() => new URLSearchParams(window.location.search), []);
-  const trackOrder = search.get("trackOrder") || undefined;
-  const chapterOrder = search.get("chapterOrder") || undefined;
-  const trackTitle = search.get("trackTitle") || undefined;
-  const chapterTitleFromQuery = search.get("chapterTitle") || undefined;
 
   const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
   const [selectedAudioFileId, setSelectedAudioFileId] = useState<number | null>(null);
@@ -174,7 +176,7 @@ export function LearnChapterPage() {
     setSelectedSegmentId(segmentId);
 
     // Priority: selected audio file first, then fallback to any other mapping
-    const mapping = mappings.find((m) => 
+    const mapping = mappings.find((m) =>
       m.textSegmentId === segmentId && m.audioFileId === selectedAudioFileId
     ) || mappings.find((m) => m.textSegmentId === segmentId);
 
@@ -229,15 +231,17 @@ export function LearnChapterPage() {
     )
   );
 
-  const breadcrumbLabel = useMemo(() => {
-    if (trackOrder || chapterOrder) {
-      const trackPart = trackOrder ? `T${trackOrder}` : 'Track';
-      const chapterPart = chapterOrder ? `CH${chapterOrder}` : 'Chapter';
-      const title = chapterTitleFromQuery || chapter?.title || 'Chapter';
-      return `${trackPart}.${chapterPart} ${title}`;
-    }
-    return chapter?.title || 'Learn Chapter';
-  }, [trackOrder, chapterOrder, chapterTitleFromQuery, chapter?.title]);
+  const currentProgress = progress[0];
+  const proficiencyLevel = currentProgress?.proficiencyLevel ?? null;
+  const proficiencyLabel = getProficiencyLabel(proficiencyLevel);
+  const lastAccessLabel = currentProgress?.lastAccessed
+    ? new Date(currentProgress.lastAccessed).toLocaleDateString()
+    : "Not visited yet";
+  
+  // Derive track and chapter info from fetched chapter data
+  const displayTitle = chapter?.title || "Learn Chapter";
+  const trackName = chapter?.track?.title || undefined;
+  const chapterNumber = chapter?.order || undefined;
 
   if (chapterLoading) {
     return (
@@ -248,31 +252,64 @@ export function LearnChapterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLocation(`/app/learning`)}
-              data-testid="button-back-chapters"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Vedic Learning
-            </Button>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 sticky top-0 z-20 shadow-sm">
+        <div className="w-full mx-auto px-6 py-3">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900" data-testid="text-chapter-title">
-                {breadcrumbLabel}
+              <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
+                {trackName ? `Track ${chapter?.track?.id || '?'} - ${trackName}` : 'Learn Chapter'}
+              </p>
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white leading-tight" data-testid="text-chapter-title">
+                {chapterNumber ? `Chapter ${chapterNumber} - ${displayTitle}` : displayTitle}
               </h1>
-              <p className="text-sm text-gray-600">{trackTitle || chapter?.description || ""}</p>
+            </div>
+            <div className="flex items-center gap-1">
+              <Badge 
+                className={cn(
+                  "text-xs font-medium border flex items-center gap-1.5",
+                  proficiencyLevel === null || proficiencyLevel === 9 ? "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600" :
+                  proficiencyLevel === 8 ? "bg-gray-200 text-gray-700 border-gray-400 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500" :
+                  proficiencyLevel === 0 ? "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-700" :
+                  proficiencyLevel === 1 ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-200 dark:border-green-700" :
+                  proficiencyLevel === 2 ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-200 dark:border-green-700" :
+                  proficiencyLevel === 3 ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:text-purple-200 dark:border-purple-700" :
+                  proficiencyLevel === 4 ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:text-purple-200 dark:border-purple-700" : 
+                  "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"
+                )}
+              >
+                <span>{proficiencyLabel}</span>
+                {currentProgress && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3 w-3" />
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="bg-slate-900 text-slate-50 border-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-300">
+                        <div className="space-y-1">
+                          <p className="text-xs">
+                            <span className="font-semibold">Last Evaluated:</span>{" "}
+                            {currentProgress.lastEvaluatedAt 
+                              ? new Date(currentProgress.lastEvaluatedAt).toLocaleDateString()
+                              : "Never"}
+                          </p>
+                          <p className="text-xs">
+                            <span className="font-semibold">Evaluated By:</span>{" "}
+                            {currentProgress.evaluatedBy || "—"}
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </Badge>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-6">
-        <div className="flex justify-between items-center mb-4 p-3 bg-white border rounded-lg">
+      <div className="w-full mx-auto px-6 py-6">
+        <div className="flex justify-between items-center mb-4 p-3 bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg">
           <div className="flex items-center gap-4">
             <ScriptSelector
               currentScript={contentScript}
@@ -281,7 +318,7 @@ export function LearnChapterPage() {
             />
 
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium">Audio File:</label>
+              <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Audio File:</label>
               <Select
                 value={selectedAudioFileId?.toString() || ""}
                 onValueChange={(value) => {
@@ -314,16 +351,6 @@ export function LearnChapterPage() {
             <Badge variant="green" badgeStyle="sharp" className="text-xs" icon={<Zap className="h-3 w-3" />}>
               {mappedSegments.length} mapped
             </Badge>
-            {(() => {
-              const p = progress[0];
-              const levelText = p?.proficiencyLevel ?? 'N/A';
-              const last = p?.lastAccessed ? new Date(p.lastAccessed).toLocaleDateString() : '—';
-              return (
-                <Badge variant="blue" badgeStyle="sharp" className="text-xs">
-                  Progress: {String(levelText)} • Last: {last}
-                </Badge>
-              );
-            })()}
           </div>
         </div>
 
@@ -368,22 +395,22 @@ export function LearnChapterPage() {
               }}
             />
           ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground border rounded-lg bg-white">
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black">
               <Music className="w-12 h-12 mb-4 opacity-50" />
               <p>Select an audio file to begin studying</p>
             </div>
           )}
         </div>
 
-        <div className="flex-1 min-h-0 flex flex-col border rounded-lg bg-white overflow-hidden">
-          <div className="flex-shrink-0 p-4 border-b bg-gray-50 flex justify-between items-center">
-            <h3 className="text-sm font-semibold text-gray-700">
+        <div className="flex-1 min-h-0 flex flex-col border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black overflow-hidden">
+          <div className="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
               {chapter?.title || "Chapter"} (
               {contentScript === "te" ? "Telugu" : contentScript === "hi" ? "Hindi" : "English"})
             </h3>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-600">Learn Mode:</span>
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Learn Mode:</span>
               <Switch
                 checked={learnMode}
                 onCheckedChange={setLearnMode}
@@ -407,13 +434,12 @@ export function LearnChapterPage() {
                 />
               ) : (
                 <div
-                  className={`prose max-w-none ${
-                    contentScript === "te"
+                  className={`prose max-w-none ${contentScript === "te"
                       ? "font-telugu"
                       : contentScript === "hi"
-                      ? "font-devanagari"
-                      : "font-iast"
-                  }`}
+                        ? "font-devanagari"
+                        : "font-iast"
+                    }`}
                   style={{ lineHeight: "1.6" }}
                   dangerouslySetInnerHTML={{ __html: chapterContent[contentScript] || "" }}
                   data-testid="html-content-view"

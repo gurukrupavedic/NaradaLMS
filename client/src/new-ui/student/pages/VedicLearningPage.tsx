@@ -29,13 +29,8 @@ export function VedicLearningPage() {
   } = useMyTrackProgress();
 
   const handleChapterClick = (chapter: ChapterProgress, track: TrackProgress) => {
-    const query = new URLSearchParams({
-      trackOrder: String(track.trackOrder ?? ''),
-      chapterOrder: String(chapter.chapterOrder ?? ''),
-      trackTitle: track.trackTitle ?? '',
-      chapterTitle: chapter.chapterTitle ?? '',
-    });
-    navigate(`/app/learning/chapter/${chapter.chapterId}?${query.toString()}`);
+    // Use clean URL - all data will be fetched from backend
+    navigate(`/app/learning/chapter/${chapter.chapterId}`);
   };
 
   if (detailsLoading || tracksLoading) {
