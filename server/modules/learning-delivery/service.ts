@@ -278,6 +278,20 @@ export class LearningService {
   }
 
   /**
+   * Convenience: student fetching their own track progress (no instructor checks)
+   */
+  async getSelfTrackProgress(studentId: string) {
+    return this.getStudentTrackProgress(studentId, studentId, true);
+  }
+
+  /**
+   * Convenience: student fetching their own profile + proficiency matrix
+   */
+  async getSelfDetails(studentId: string) {
+    return learningStorage.getStudentDetailsWithProgress(studentId);
+  }
+
+  /**
    * Build track progress data for a specific student and track
    * Includes all chapters and their proficiency levels
    */

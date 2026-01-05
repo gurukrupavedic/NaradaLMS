@@ -33,15 +33,10 @@ export interface NavSection {
 const learnSection: NavSection = {
   items: [
     {
-      title: 'Dashboard',
+      title: 'Vedic Learning',
       url: '/app/learning',
       icon: LayoutDashboard,
       isActive: true,
-    },
-    {
-      title: 'Course Content',
-      url: '/app/learning/courses',
-      icon: BookOpen,
     },
   ],
 };

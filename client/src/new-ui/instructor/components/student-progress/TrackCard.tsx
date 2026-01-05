@@ -10,9 +10,10 @@ import { ChapterList } from './ChapterList';
 
 interface TrackCardProps {
   track: TrackProgress;
+  onChapterClick?: (chapter: any, track: TrackProgress) => void;
 }
 
-export function TrackCard({ track }: TrackCardProps) {
+export function TrackCard({ track, onChapterClick }: TrackCardProps) {
   const completionPercentage = Math.round(
     (track.completedChapters / track.totalChapters) * 100
   );
@@ -48,7 +49,10 @@ export function TrackCard({ track }: TrackCardProps) {
 
       <AccordionContent className="px-4 pb-4 pt-4 bg-card/50 border-t">
         <div className="mt-4">
-          <ChapterList chapters={track.chapters} />
+          <ChapterList
+            chapters={track.chapters}
+            onChapterClick={onChapterClick ? (chapter) => onChapterClick(chapter, track) : undefined}
+          />
         </div>
       </AccordionContent>
     </AccordionItem>

@@ -13,9 +13,10 @@ import { ChapterProgress } from '@shared/types';
 
 interface ChapterItemProps {
   chapter: ChapterProgress;
+  onClick?: (chapter: ChapterProgress) => void;
 }
 
-export function ChapterItem({ chapter }: ChapterItemProps) {
+export function ChapterItem({ chapter, onClick }: ChapterItemProps) {
   // Determine status for getCellColor map
   // Align with batch matrix logic:
   // - proficiencyLevel === null → 'not_started'
@@ -43,14 +44,30 @@ export function ChapterItem({ chapter }: ChapterItemProps) {
 
   const hasInfo = Boolean(chapter.notes || chapter.lastEvaluatedAt);
 
+  const handleClick = () => {
+    if (onClick) {
+      onClick(chapter);
+    }
+  };
+
   return (
     <div
       className={`
-        relative flex flex-col justify-between p-3 rounded-lg border transition-all cursor-default
+        relative flex flex-col justify-between p-3 rounded-lg border transition-all
         ${colors.bgColor} ${colors.darkBgColor}
         ${colors.borderColor} ${colors.darkBorderColor}
-        hover:shadow-sm
+        ${onClick ? 'cursor-pointer hover:shadow-md hover:border-primary/40' : 'cursor-default hover:shadow-sm'}
       `}
+      onClick={handleClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : -1}
+      onKeyDown={(e) => {
+        if (!onClick) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
     >
       {/* Header: Code & Title */}
       <div className="flex justify-between items-start gap-2 mb-2">

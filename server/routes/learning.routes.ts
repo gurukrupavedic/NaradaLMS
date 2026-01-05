@@ -10,6 +10,52 @@ import type { ChapterAccessDTO, ProgressQueryFilters, ChapterInclude } from '../
 const router = Router();
 
 /**
+ * GET /api/learning/my-progress
+ * Student self-service track-wise progress
+ */
+router.get('/my-progress', async (req, res) => {
+  try {
+    const user = (req as any).user;
+    if (!user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const progress = await learningService.getSelfTrackProgress(user.id);
+    if (!progress) {
+      return res.status(404).json({ error: 'Progress not found' });
+    }
+
+    res.json(progress);
+  } catch (error: any) {
+    console.error('Error fetching self track progress:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch progress' });
+  }
+});
+
+/**
+ * GET /api/learning/my-details
+ * Student self-service profile + proficiency matrix
+ */
+router.get('/my-details', async (req, res) => {
+  try {
+    const user = (req as any).user;
+    if (!user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const details = await learningService.getSelfDetails(user.id);
+    if (!details) {
+      return res.status(404).json({ error: 'Details not found' });
+    }
+
+    res.json(details);
+  } catch (error: any) {
+    console.error('Error fetching self student details:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch details' });
+  }
+});
+
+/**
  * GET /api/learning/progress
  * Get student progress (students see own, instructors/admin can filter)
  */

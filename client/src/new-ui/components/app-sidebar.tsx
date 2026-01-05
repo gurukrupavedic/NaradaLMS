@@ -100,6 +100,28 @@ export function AppSidebar({
         }
       }
 
+      // Student learning page - add contextual "Learn Chapter" when viewing a specific chapter
+      if (item.url === '/app/learning') {
+        const chapterMatch = location.match(/^\/app\/learning\/chapter\/(\d+)/);
+        if (chapterMatch) {
+          const chapterId = chapterMatch[1];
+          const search = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : undefined;
+          const trackOrder = search?.get('trackOrder');
+          const chapterOrder = search?.get('chapterOrder');
+          const suffix = trackOrder && chapterOrder ? ` : T${trackOrder}.CH${chapterOrder}` : '';
+          return {
+            ...item,
+            items: [
+              {
+                title: `Learn Chapter${suffix}`,
+                url: `/app/learning/chapter/${chapterId}`,
+                isContextual: true,
+              },
+            ],
+          };
+        }
+      }
+
       return item;
     });
   };
@@ -117,7 +139,7 @@ export function AppSidebar({
         {navSections.learn && (
           <NavMain
             label={getSectionLabel('learn')}
-            items={navSections.learn.items}
+            items={enhanceWithContextualItems(navSections.learn.items)}
           />
         )}
 
