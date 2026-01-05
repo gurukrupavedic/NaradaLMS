@@ -342,7 +342,7 @@ export class LearningService {
 
     return {
       trackId: track.id,
-      trackOrder: track.number,
+      trackOrder: track.order,
       trackTitle: track.title,
       trackDescription: track.description || '',
       completedChapters,
