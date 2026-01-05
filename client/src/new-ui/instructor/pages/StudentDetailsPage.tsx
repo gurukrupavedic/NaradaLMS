@@ -1,17 +1,23 @@
 import { useRoute, useLocation } from 'wouter';
 import { useStudentDetails } from '../hooks/useStudentDetails';
+import { useTrackProgress } from '../hooks/useTrackProgress';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
 import { StudentDetailsCard } from '../components/StudentDetailsCard';
+import { TrackList } from '../components/student-progress/TrackList';
 
 export function StudentDetailsPage() {
   const [, params] = useRoute('/app/instructor/students/:studentId');
   const [, navigate] = useLocation();
   const studentId = params?.studentId;
 
-  const { data: studentDetails, isLoading, isError, error, refetch } = useStudentDetails(
+  const { data: studentDetails, isLoading: detailsLoading, isError: detailsError, error: detailsErrorMsg, refetch: refetchDetails } = useStudentDetails(
+    studentId || ''
+  );
+
+  const { data: trackProgress, isLoading: tracksLoading, isError: tracksError, error: tracksErrorMsg, refetch: refetchTracks } = useTrackProgress(
     studentId || ''
   );
 
@@ -29,39 +35,54 @@ export function StudentDetailsPage() {
   }
 
   // Loading state
-  if (isLoading) {
+  if (detailsLoading || tracksLoading) {
     return (
       <div className="space-y-6 px-4 pt-4">
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-64" />
-              <Skeleton className="h-4 w-64" />
-            </div>
-            <div className="space-y-4">
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-64" />
-              <Skeleton className="h-4 w-64" />
+        {/* Student Details Skeleton */}
+        {detailsLoading && (
+          <div className="rounded-lg border border-border bg-card p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-64" />
+                <Skeleton className="h-4 w-64" />
+              </div>
+              <div className="space-y-4">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-64" />
+                <Skeleton className="h-4 w-64" />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="rounded-lg border border-border bg-card p-6">
-          <Skeleton className="h-32 w-full" />
-        </div>
+        {/* Track Progress Skeleton */}
+        {tracksLoading && (
+          <div className="space-y-4">
+            {[1, 2].map((i) => (
+              <div key={i} className="rounded-lg border border-border bg-card p-6">
+                <Skeleton className="h-12 w-full mb-4" />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
-  // Error state
-  if (isError) {
+  // Error state for student details
+  if (detailsError) {
     return (
       <div className="space-y-6 px-4 pt-4">
         <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-destructive">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium">Failed to load student details.</p>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <p className="text-sm font-medium">Failed to load student details.</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => refetchDetails()}>
+              Retry
+            </Button>
           </div>
         </div>
       </div>
@@ -76,26 +97,41 @@ export function StudentDetailsPage() {
     );
   }
 
-  const fullName = [studentDetails.firstName, studentDetails.lastName]
-    .filter(Boolean)
-    .join(' ') || 'Student';
-
   return (
     <div className="space-y-6 px-4 pt-4">
       {/* Student Details Card */}
       <StudentDetailsCard student={studentDetails} />
 
-      {/* Track-wise Progress - Placeholder for Phase D */}
-      <Card className="bg-muted/30">
-        <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground text-lg">
-            Track-wise Progress Tracking — Coming Soon
-          </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Detailed chapter-by-chapter proficiency tracking will be displayed here
-          </p>
-        </CardContent>
-      </Card>
+      {/* Track-wise Progress Section */}
+      {tracksError ? (
+        <Card className="border-destructive/30 bg-destructive/10">
+          <CardContent className="py-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-destructive">
+                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">Failed to load track progress</p>
+                  <p className="text-xs opacity-75">{tracksErrorMsg?.message}</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => refetchTracks()}>
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : trackProgress && trackProgress.trackProgress.length > 0 ? (
+        <TrackList tracks={trackProgress.trackProgress} />
+      ) : trackProgress && trackProgress.trackProgress.length === 0 ? (
+        <Card className="bg-muted/30">
+          <CardContent className="py-12 text-center">
+            <p className="text-muted-foreground text-lg">No tracks assigned</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              This student has not been assigned to any tracks yet.
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }
