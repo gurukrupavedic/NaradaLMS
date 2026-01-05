@@ -242,14 +242,12 @@ export class LearningService {
       }
     }
 
-    // Get all unique track IDs from enrollments
-    const trackIds = [...new Set(
-      studentEnrollments
-        .map((e) => e.trackId)
-        .filter((id): id is number => id !== null)
-    )];
+    // Get ALL tracks in the system (not just enrolled ones)
+    const allTracks = await db.query.tracks.findMany({
+      orderBy: (t) => t.order,
+    });
 
-    if (trackIds.length === 0) {
+    if (allTracks.length === 0) {
       return {
         student: {
           id: student.id,
@@ -261,9 +259,9 @@ export class LearningService {
       };
     }
 
-    // For each track, fetch chapters + proficiency
+    // For each track, fetch chapters + proficiency (even if no progress exists)
     const trackProgress = await Promise.all(
-      trackIds.map((trackId) => this.buildTrackProgress(studentId, trackId))
+      allTracks.map((track) => this.buildTrackProgress(studentId, track.id))
     );
 
     return {
@@ -318,9 +316,11 @@ export class LearningService {
       });
     }
 
-    // Compute completed chapters (proficiency >= 3)
+    // Compute completed chapters (only L2, L3, L4 - exclude L0, L1, absent=8, not_started=9)
     const completedChapters = Object.values(progressByChapter).filter(
-      (p) => p?.proficiencyLevel !== null && p?.proficiencyLevel >= 3
+      (p) => p?.proficiencyLevel !== null && 
+             p?.proficiencyLevel >= 2 && 
+             p?.proficiencyLevel <= 4
     ).length;
 
     // Fetch evaluator names for all chapters with evaluations
