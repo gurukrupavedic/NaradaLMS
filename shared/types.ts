@@ -211,3 +211,35 @@ export interface GetStudentDetailsResponse {
   data: StudentDetail;
   timestamp: string;
 }
+
+// Student Track Progress Types (Phase D: Track-wise Progress Visualization)
+export interface ChapterProgress {
+  chapterId: number;
+  chapterOrder: number;
+  chapterTitle: string;
+  chapterCode: string;
+  proficiencyLevel: number | null; // 0-4, 8 (absent), 9 (not started), or null
+  lastEvaluatedAt: string | null; // ISO Date string
+  evaluatedBy: string | null;
+  notes: string | null;
+}
+
+export interface TrackProgress {
+  trackId: number;
+  trackOrder: number;
+  trackTitle: string;
+  trackDescription: string;
+  completedChapters: number;
+  totalChapters: number;
+  chapters: ChapterProgress[];
+}
+
+export interface StudentProgressData {
+  student: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  };
+  trackProgress: TrackProgress[];
+}
