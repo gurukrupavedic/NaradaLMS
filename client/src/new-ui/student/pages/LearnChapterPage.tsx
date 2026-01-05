@@ -3,11 +3,10 @@ import { useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/design-system/Switch";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Music, FileText, List, Zap, Clock3, Info } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { ScriptSelector } from "@/components/common/ScriptSelector";
 import { AudioControls } from "@/components/design-system/AudioControls";
 import { SegmentedTextDisplay } from "@/components/text-segmentation/SegmentedTextDisplay";
 import { getProficiencyLabel } from "@/new-ui/batches/utils/matrix-utils";
@@ -85,6 +84,11 @@ export function LearnChapterPage() {
     const stored = localStorage.getItem("study-learn-mode");
     return stored ? JSON.parse(stored) : true;
   });
+  const scriptOptions = useMemo(() => ([
+    { value: "te" as const, label: "Telugu" },
+    { value: "hi" as const, label: "Devanagari (Hindi)" },
+    { value: "en" as const, label: "English (IAST)" },
+  ]), []);
 
   const previewAudioRef = useRef<HTMLAudioElement>(new Audio());
   const timeUpdateCleanupRef = useRef<(() => void) | null>(null);
@@ -252,8 +256,8 @@ export function LearnChapterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 sticky top-0 z-20 shadow-sm">
+    <div className="flex flex-col bg-gray-50 dark:bg-gray-950 h-full">
+      <div className="sticky top-0 z-40 bg-white/95 dark:bg-black/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur border-b border-gray-200 dark:border-gray-800 shadow-sm flex-shrink-0">
         <div className="w-full mx-auto px-6 py-3">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -308,17 +312,29 @@ export function LearnChapterPage() {
         </div>
       </div>
 
-      <div className="w-full mx-auto px-6 py-6">
+      <div className="flex-1 overflow-auto px-4 pt-4 pb-6 md:px-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 flex-1 min-h-0 flex flex-col border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black overflow-hidden">
-            <div className="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-3">
-                <ScriptSelector
-                  currentScript={contentScript}
-                  availableScripts={["te", "hi", "en"]}
-                  onScriptChange={setContentScript}
-                  showLabel={false}
-                />
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Script</span>
+                  <Select
+                    value={contentScript}
+                    onValueChange={(value) => setContentScript(value as typeof contentScript)}
+                  >
+                    <SelectTrigger className="h-8 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700 shadow-sm">
+                      <SelectValue placeholder="Script" />
+                    </SelectTrigger>
+                    <SelectContent className="text-sm">
+                      {scriptOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 {learnMode && (
                   <div className="flex items-center gap-2">
                     <Badge variant="blue" badgeStyle="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
@@ -336,13 +352,17 @@ export function LearnChapterPage() {
                 <Switch
                   checked={learnMode}
                   onCheckedChange={setLearnMode}
-                  variant="orange"
-                  size="sm"
+                  className="border border-gray-300 dark:border-gray-600 data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-700"
                   data-testid="toggle-learn-mode"
                 />
               </div>
             </div>
-            <div className="flex-1 min-h-0 overflow-auto p-6" style={{ minHeight: "400px" }}>
+            <div
+              className="flex-1 min-h-0 overflow-auto p-6"
+              style={{
+                minHeight: "400px",
+              }}
+            >
               {chapterContent[contentScript] ? (
                 learnMode ? (
                   <SegmentedTextDisplay
@@ -377,7 +397,7 @@ export function LearnChapterPage() {
           </div>
 
           <div className="lg:col-span-1 flex flex-col gap-4">
-            <div className="border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black p-3">
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black p-3 lg:sticky lg:top-0">
               <div className="flex items-center gap-2 mb-3">
                 <label className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Audio File:</label>
                 <Select
