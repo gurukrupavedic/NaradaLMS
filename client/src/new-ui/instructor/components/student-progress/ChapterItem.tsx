@@ -17,17 +17,26 @@ interface ChapterItemProps {
 
 export function ChapterItem({ chapter }: ChapterItemProps) {
   // Determine status for getCellColor map
-  // proficiencyLevel: 8=absent, 9=not_started, null=not_started (not yet evaluated)
-  // 0=practicing, 1-2=in progress, 3+=completed
+  // Align with batch matrix logic:
+  // - proficiencyLevel === null → 'not_started'
+  // - proficiencyLevel === 8 → 'absent'
+  // - proficiencyLevel === 0 → 'practicing'
+  // - proficiencyLevel >= 4 → 'completed'
+  // - proficiencyLevel 1-3 → 'practicing'
   let status: 'practicing' | 'completed' | 'absent' | 'not_started' = 'not_started';
 
-  if (chapter.proficiencyLevel === 8) status = 'absent';
-  else if (chapter.proficiencyLevel === 9) status = 'not_started';
-  else if (chapter.proficiencyLevel === 0) status = 'practicing';
-  else if (chapter.proficiencyLevel !== null && chapter.proficiencyLevel >= 3)
+  if (chapter.proficiencyLevel === null) {
+    status = 'not_started';
+  } else if (chapter.proficiencyLevel === 8) {
+    status = 'absent';
+  } else if (chapter.proficiencyLevel === 9) {
+    status = 'not_started';
+  } else if (chapter.proficiencyLevel >= 4) {
     status = 'completed';
-  else if (chapter.proficiencyLevel !== null && chapter.proficiencyLevel > 0)
-    status = 'practicing'; // L1 or L2 in progress
+  } else {
+    // 0, 1, 2, 3 → practicing
+    status = 'practicing';
+  }
 
   const colors = getCellColor(chapter.proficiencyLevel || 9, status);
   const label = getProficiencyLabel(chapter.proficiencyLevel);
