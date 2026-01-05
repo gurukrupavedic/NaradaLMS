@@ -9,7 +9,7 @@ import { LEARNING_DELIVERY_EVENTS } from './events';
 import { contentService } from '../content-publishing';
 import { mediaService } from '../media-pipeline';
 import { db } from '../../db';
-import { batches, batchCoInstructors } from '@shared/schema';
+import { batches, batchCoInstructors, enrollments, chapters, studentProgress } from '@shared/schema';
 import { eq, and, or } from 'drizzle-orm';
 
 export class LearningService {
