@@ -17,14 +17,17 @@ interface ChapterItemProps {
 
 export function ChapterItem({ chapter }: ChapterItemProps) {
   // Determine status for getCellColor map
-  // proficiencyLevel: 8=absent, 9=not_started.
-  // status: 'practicing' | 'completed' | 'absent' | 'not_started'
-  let status: 'practicing' | 'completed' | 'absent' | 'not_started' = 'practicing';
+  // proficiencyLevel: 8=absent, 9=not_started, null=not_started (not yet evaluated)
+  // 0=practicing, 1-2=in progress, 3+=completed
+  let status: 'practicing' | 'completed' | 'absent' | 'not_started' = 'not_started';
 
   if (chapter.proficiencyLevel === 8) status = 'absent';
   else if (chapter.proficiencyLevel === 9) status = 'not_started';
+  else if (chapter.proficiencyLevel === 0) status = 'practicing';
   else if (chapter.proficiencyLevel !== null && chapter.proficiencyLevel >= 3)
     status = 'completed';
+  else if (chapter.proficiencyLevel !== null && chapter.proficiencyLevel > 0)
+    status = 'practicing'; // L1 or L2 in progress
 
   const colors = getCellColor(chapter.proficiencyLevel || 9, status);
   const label = getProficiencyLabel(chapter.proficiencyLevel);
