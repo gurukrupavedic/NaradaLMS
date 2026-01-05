@@ -357,12 +357,7 @@ export function LearnChapterPage() {
                 />
               </div>
             </div>
-            <div
-              className="flex-1 min-h-0 overflow-auto p-6"
-              style={{
-                minHeight: "400px",
-              }}
-            >
+            <div\n              className=\"flex-1 min-h-0 overflow-auto p-6\"\n              style={{\n                minHeight: \"400px\",\n              }}\n            >
               {chapterContent[contentScript] ? (
                 learnMode ? (
                   <SegmentedTextDisplay
