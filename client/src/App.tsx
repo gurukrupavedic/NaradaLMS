@@ -146,6 +146,7 @@ function Router() {
 
         <Route path="/experiments/design-system" component={DesignSystemExperiment} />
         <Route path="/experiments/theming-playground" component={ThemingPlayground} />
+        <Route path="/experiments/audio-player" component={lazy(() => import("@/temp-prototype/AudioPlayerPlayground"))} />
 
         {/* TEMPORARY PROTOTYPE */}
         <Route path="/prototype/matrix" component={InstructorMatrixPrototype} />
