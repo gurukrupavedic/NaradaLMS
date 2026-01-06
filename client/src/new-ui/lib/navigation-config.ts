@@ -61,13 +61,15 @@ const batchesSection: NavSection = {
 const contentSection: NavSection = {
   items: [
     {
-      title: 'Tracks',
+      title: 'Tracks & Chapters',
       url: '/app/content',
       icon: BookOpen,
     },
     {
-      title: 'Media Library',
-      url: '/app/content/media',
+      title: 'Chapter Content',
+      // Default link goes to Content Studio. The specific chapter content
+      // page is accessed via deep link when a track/chapter is selected.
+      url: '/app/content',
       icon: PenTool,
     },
   ],

@@ -27,8 +27,10 @@ import { LearnChapterPage } from './student/pages/LearnChapterPage';
 // Prototypes
 import { TracksAndChaptersAccordion } from '@/temp-prototype/TracksAndChaptersAccordion';
 import { TracksAndChaptersColumn } from '@/temp-prototype/TracksAndChaptersColumn';
+import TracksAndChapters from './content/pages/TracksAndChapters';
+import ChapterContent from './content/pages/ChapterContent';
 
-const ContentPage = () => <div className="p-8"><h1 className="text-3xl font-bold">Content Studio</h1></div>;
+// Placeholder pages are scaffolded in new-ui/content/pages
 
 export default function AppShell() {
   const { user } = useAuth();
@@ -58,7 +60,8 @@ export default function AppShell() {
           <Route path="/app/instructor/students" component={MyStudentsPage} />
           <Route path="/app/instructor/batches/:id" component={BatchDetails} />
           <Route path="/app/instructor/batches" component={MyBatchesList} />
-          <Route path="/app/content" component={ContentPage} />
+          <Route path="/app/content" component={TracksAndChapters} />
+          <Route path="/app/content/tracks/:trackId/chapters/:chapterId" component={ChapterContent} />
           <Route path="/app/admin" component={() => { window.location.href = '/app/admin/users'; return null; }} />
           <Route path="/app/admin/users" component={UserManagement} />
           <Route path="/app/admin/logs" component={AuditLogs} />
