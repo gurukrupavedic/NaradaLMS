@@ -806,69 +806,86 @@ Build instructor student management and progress tracking with professional load
 
 ---
 
-## Phase 7.3.1: My Students & Student Progress
+---
+
+## Phase 6: Learn - Complete Student Learning Workflow
 **Completed:** January 5, 2026  
 **Branch:** `daily/2026-01-05` 
-**Duration:** 2 days (Jan 4-5, 2026) - Full 4-subphase implementation
+**Duration:** 2 days (Jan 4-5, 2026) - Full end-to-end student learning experience
 
 ### Goal
-Build instructor-facing "Learn" module with student roster and detailed progress tracking.
+Build complete student learning workflow with instructor progress monitoring and proficiency evaluation.
 
 ### What We Built
 
-**Phase A: My Students - Basic Table** ✅ COMPLETE (Jan 4, 2026)
-- Professional TanStack React Table with 7 columns (Roll#, Name, Email, Timezone, Type, Batch, Actions)
-- Pagination with rows-per-page selector (10, 25, 50, 100)
-- Click Roll# or Name to navigate to Student Progress page
-- Loading, empty, error states with retry
-- Responsive design (mobile/tablet/desktop)
-- Backend endpoint: `GET /api/batches/my-students` with pagination + filters
+**Student-Facing Views (Learning Experience):**
+- ✅ Vedic Learning Page: Track progression with chapter accordion, bottom spacing (pb-8)
+- ✅ Current track context label: "(current track)" shown on student's active track
+- ✅ Track-wise progress visualization: Accordion display with completion metrics
+- ✅ Chapter-level details: Proficiency badges color-coded by level
+- ✅ Responsive design: Mobile, tablet, desktop optimized
 
-**Phase B: Student Progress - Details Card** ✅ COMPLETE (Jan 4, 2026)
-- Collapsible StudentDetailsCard component with metadata
-- Email, phone, timezone, cohort type, batch, enrollment date
-- Breadcrumb navigation and sidebar integration
-- Permission check: Instructors can only view assigned students
-- Backend endpoint: `GET /api/students/:studentId/progress`
+**Instructor-Facing Views (Progress Monitoring):**
+- ✅ My Students List: Professional TanStack React Table with 7 columns
+  - Roll#, Name, Email, Timezone, Type, Batch, Actions
+  - Pagination with rows-per-page selector (10, 25, 50, 100)
+  - Click Roll# or Name to navigate to Student Progress
+- ✅ Student Details Card: Collapsible metadata display
+  - Email, phone, timezone, cohort type, batch, enrollment date
+- ✅ Track-wise Progress Tracker: Accordion-style track view
+  - All tracks shown (not just enrolled)
+  - Progress bar + completion counter (L2-L4 proficiency)
+  - Color-coded chapter proficiency badges
+- ✅ Advanced Filters: Search, batch, status with debounced client-side filtering
 
-**Phase C: Advanced Features** ✅ COMPLETE (Jan 4, 2026)
-- Search filter (debounced 300ms) by name/email
-- Batch dropdown filter
-- Status dropdown filter (active/inactive/all)
-- All filters integrated and tested
+**Batch Management Integration:**
+- ✅ Unified Batch Matrix: Proficiency evaluation grid with 4-level color coding
+  - Gray (absent/not started) → Amber (practicing) → Green (L1-L2) → Blue (L3) → Purple (L4)
+  - Sticky student and action columns
+  - Cell-level loading states with spinner feedback
+  - Modal-based proficiency evaluation
+- ✅ Real-time cache updates: Deterministic setQueryData pattern
+  - Eliminates race conditions from invalidateQueries/refetch
+  - Immediate UI feedback on proficiency changes
+- ✅ Multi-instructor support: Primary and co-instructor proficiency updates
 
-**Phase D: Track-wise Progress Tracker** ✅ COMPLETE (Jan 4-5, 2026)
-- TrackList/TrackCard/ChapterList/ChapterItem components
-- Accordion-style track display with smart defaults
-- Progress bar + completion counter (L2-L4 only)
-- Color-coded proficiency badges matching batch matrix
-- Shows all tracks in system (not just enrolled)
-- Backend endpoint: `GET /api/students/:studentId/track-progress`
+**Backend Endpoints:**
+- ✅ `GET /api/batches/my-students` - Student roster with pagination + filters
+- ✅ `GET /api/students/:studentId/progress` - Student metadata and context
+- ✅ `GET /api/students/:studentId/track-progress` - Track-wise progress breakdown
+- ✅ `GET /api/batches/:id/progress` - Batch proficiency matrix
+- ✅ `POST /api/batches/:batchId/students/:studentId/evaluate` - Proficiency updates
 
-### Bug Fixes & Improvements (Jan 5, 2026)
+**Bug Fixes & Critical Improvements (Jan 5, 2026):**
 - Fixed missing return statements in proficiency update flow
 - Fixed ARIA attributes to use string format ("true"/"false")
 - Fixed co-instructor authorization check (batchCoInstructors → coInstructors)
-- Improved cache update pattern (refetch → setQueryData)
-- Added cell-level loading states in batch matrix
+- Improved cache update pattern (refetch → setQueryData) for reliability
+- Added cell-level loading states with spinner and opacity feedback
+- Fixed nullish coalescing bug (0 vs 9 proficiency level handling)
 - Removed temporary debug documentation files
 - Zero TypeScript errors across all components
 
 ### Acceptance Criteria - All Met ✅
-- ✅ Students table displays all instructor's students with pagination
+- ✅ Students see track progression with current track context
+- ✅ Instructors can view student rosters with pagination and filtering
 - ✅ Student Progress page shows detailed metadata and track-wise proficiency
 - ✅ All filters work correctly (search, batch, status)
 - ✅ Track-wise view shows ALL tracks with completion metrics
+- ✅ Proficiency matrix allows evaluation by primary and co-instructors
+- ✅ Real-time cache updates with visual feedback
 - ✅ Responsive across mobile/tablet/desktop
 - ✅ Permission checks prevent unauthorized access
 - ✅ Loading/error/empty states render correctly
 - ✅ No TypeScript errors
-- ✅ Full backend integration
+- ✅ Full backend-frontend integration
 
-### Learn Module Complete ✅
-All components for instructor "Learn" module (view-only student progress tracking) are complete and production-ready.
+### Phase 6 Summary: Learn Module Complete ✅
+Complete end-to-end student learning workflow. Students see their track progression with current track context. Instructors can view student rosters, detailed progress, track-wise proficiency breakdown, and evaluate student levels in the batch matrix. All views are responsive, permission-based, type-safe, and production-ready. The entire "Learn" user workflow is feature-complete.
 
 ---
+
+## Phase 7.3.1: My Students & Student Progress (Archived - Merged into Phase 6)
 
 ## Phase D: Track-wise Student Progress Tracker
 **Completed:** January 5, 2026  
