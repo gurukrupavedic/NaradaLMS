@@ -268,6 +268,7 @@ export default function BatchDetails() {
         notes: cell.notes ?? null,
       }))
     );
+
   }, [batchProgress.data]);
 
   return (

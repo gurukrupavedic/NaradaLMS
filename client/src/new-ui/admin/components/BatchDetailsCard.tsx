@@ -63,8 +63,8 @@ export function BatchDetailsCard({ batch, batches = [], currentBatchId, onBatchC
         }}
         role="button"
         tabIndex={0}
-        aria-expanded={!collapsed}
-        aria-label={collapsed ? "Expand batch details" : "Collapse batch details"}
+        aria-expanded={!collapsed ? "true" : "false"}
+        aria-label={!collapsed ? "Collapse batch details" : "Expand batch details"}
       >
         {/* Header Content - Always visible summary, conditional expanded details */}
         {collapsed ? (

@@ -293,7 +293,7 @@ router.post('/batches/:batchId/students/:studentId/evaluate', async (req: Reques
     }
 
     const isAssignedInstructor = batch.primaryInstructorId === user.id || 
-      (batch.batchCoInstructors && batch.batchCoInstructors.some(ci => ci.instructorId === user.id));
+      (batch.coInstructors && batch.coInstructors.some(ci => ci.instructorId === user.id));
     
     if (!isAssignedInstructor) {
       return res.status(403).json(createErrorResponse(

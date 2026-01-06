@@ -22,13 +22,14 @@ interface TopNavProps {
  * Returns array of breadcrumb segments for flexible rendering
  */
 function getBreadcrumbs(pathname: string): string[] {
-  // Learn
+  // Learn - student
   if (pathname === '/app' || pathname === '/app/learning') {
-    return ['Learn', 'Dashboard'];
+    return ['Vedic Learning'];
   }
 
-  if (pathname.includes('/app/learning/courses')) {
-    return ['Learn', 'Course Content'];
+  // Learn Chapter (student)
+  if (/^\/app\/learning\/chapter\/[a-zA-Z0-9_-]+/.test(pathname)) {
+    return ['Vedic Learning', 'Learn Chapter'];
   }
 
   // Batches & Progress (Instructor)

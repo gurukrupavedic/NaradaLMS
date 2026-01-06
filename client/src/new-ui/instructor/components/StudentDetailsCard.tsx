@@ -33,7 +33,7 @@ export function StudentDetailsCard({ student }: StudentDetailsCardProps) {
         }}
         role="button"
         tabIndex={0}
-        aria-expanded={!isExpanded}
+        aria-expanded={isExpanded ? "true" : "false"}
         aria-label={isExpanded ? "Collapse student details" : "Expand student details"}
       >
         {/* Avatar */}

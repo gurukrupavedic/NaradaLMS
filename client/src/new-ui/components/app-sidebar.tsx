@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { BookOpen, Settings2 } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 
 import { NavMain } from './nav-main';
 import { NavUser } from './nav-user';
@@ -21,6 +22,17 @@ import {
   type NavSection,
 } from '@/new-ui/lib/navigation-config';
 import type { NavMainItem } from './nav-main';
+
+interface ChapterData {
+  id: number;
+  trackId: number;
+  title: string;
+  track?: {
+    id: number;
+    title: string;
+  };
+  chapterOrder?: number;
+}
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user?: {
@@ -42,6 +54,16 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const [location] = useLocation();
   const navSections = getNavigationForRole(userRole);
+
+  // Extract chapter ID from location to fetch chapter data for sidebar label
+  const chapterMatch = location.match(/^\/app\/learning\/chapter\/(\d+)/);
+  const chapterId = chapterMatch ? parseInt(chapterMatch[1]) : null;
+
+  // Fetch chapter data for label (optional - sidebar will work without it)
+  const { data: chapter } = useQuery<ChapterData>({
+    queryKey: [`/api/chapters/${chapterId}/details`],
+    enabled: !!chapterId,
+  });
 
   // Helper: Inject contextual sub-items based on current route
   const enhanceWithContextualItems = (items: NavMainItem[]): NavMainItem[] => {
@@ -100,6 +122,26 @@ export function AppSidebar({
         }
       }
 
+      // Student learning page - add contextual "Learn Chapter" when viewing a specific chapter
+      if (item.url === '/app/learning') {
+        if (chapterId) {
+          let suffix = '';
+          if (chapter?.track?.id && chapter?.order) {
+            suffix = ` : T${chapter.track.id}.CH${chapter.order}`;
+          }
+          return {
+            ...item,
+            items: [
+              {
+                title: `Learn Chapter${suffix}`,
+                url: `/app/learning/chapter/${chapterId}`,
+                isContextual: true,
+              },
+            ],
+          };
+        }
+      }
+
       return item;
     });
   };
@@ -117,7 +159,7 @@ export function AppSidebar({
         {navSections.learn && (
           <NavMain
             label={getSectionLabel('learn')}
-            items={navSections.learn.items}
+            items={enhanceWithContextualItems(navSections.learn.items)}
           />
         )}
 

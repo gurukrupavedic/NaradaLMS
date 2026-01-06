@@ -28,6 +28,11 @@ interface UpdateProficiencyResponse {
  * Access: Instructors only
  * 
  * Upserts studentProgress record (student + chapter unique key)
+ * 
+ * RELIABILITY PATTERN:
+ * Uses setQueryData with backend response to immediately update cache.
+ * This eliminates race conditions and ensures UI shows exactly what was saved.
+ * Backend response is the single source of truth.
  */
 export function useUpdateProficiency() {
   const queryClient = useQueryClient();
@@ -55,19 +60,39 @@ export function useUpdateProficiency() {
         throw new Error(error.error?.message || 'Failed to update proficiency');
       }
 
-      return response.json();
+      const responseData = await response.json();
+      return responseData;
     },
-    onSuccess: async (data, variables, context) => {
+    onSuccess: (data, variables) => {
       const queryKey = `/api/batches/${variables.batchId}/progress`;
       
-      // Invalidate batch progress query to trigger refetch
-      await queryClient.invalidateQueries({ 
-        queryKey: [queryKey],
-      });
-      
-      // Also refetch to ensure data is updated before UI updates
-      await queryClient.refetchQueries({
-        queryKey: [queryKey],
+      // Immediately update cache with backend response (eliminates race conditions)
+      queryClient.setQueryData([queryKey], (oldData: any) => {
+        if (!oldData) return oldData;
+
+        // Update the specific cell with backend response data
+        return {
+          ...oldData,
+          rows: oldData.rows.map((row: any) => {
+            if (row.studentId !== data.studentId) return row;
+            
+            return {
+              ...row,
+              cells: row.cells.map((cell: any) => {
+                if (cell.chapterId !== data.chapterId) return cell;
+                
+                // Update with actual backend response values
+                return {
+                  ...cell,
+                  proficiencyLevel: data.proficiencyLevel,
+                  lastEvaluatedAt: data.lastEvaluatedAt,
+                  evaluatedBy: data.evaluatedBy,
+                  notes: data.notes,
+                };
+              }),
+            };
+          }),
+        };
       });
     },
   });
