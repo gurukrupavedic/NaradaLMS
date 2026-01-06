@@ -2,7 +2,7 @@
 
 **Last Updated:** January 6, 2026  
 **Current Phase:** Phase 5 - Content Studio  
-**Status:** Phases 0-4 + Phase 6 Complete | Phase 5 In Progress | MVP Completion Target: End of Phase 5
+**Status:** Phases 0-4 + Phase 6 Complete | Phase 5.1 ✅ Complete | Phase 5.2-5.4 In Progress | MVP Completion Target: End of Phase 5
 
 ---
 
@@ -162,82 +162,100 @@ This is the **active implementation guide** for the final MVP phase. It focuses 
 
 ---
 
-#### Sub-Phase 5.1: Backend API Refactoring
+#### Sub-Phase 5.1: Backend API Refactoring ✅ COMPLETE
+
+**Status:** COMPLETE (Jan 6, 2026)  
+**Duration:** 1 day (ahead of schedule)
 
 **Goal:** Create clean `/api/content/*` endpoints for new-ui.
 
-**Tasks:**
+**Completed Implementation:**
 
-1. **Create content routes module** (`server/routes/content.routes.ts`)
+1. ✅ **Content routes module** (`server/routes/content.routes.ts`)
    - `GET /api/content/tracks` - List all tracks (ordered)
-   - `POST /api/content/tracks` - Create track
+   - `POST /api/content/tracks` - Create track (title + description)
    - `PUT /api/content/tracks/:trackId` - Update track
    - `DELETE /api/content/tracks/:trackId` - Delete track
-   - `POST /api/content/tracks/:trackId/move` - Reorder track
+   - `POST /api/content/tracks/:trackId/move` - Reorder track (up/down)
 
-2. **Chapter routes**
+2. ✅ **Chapter routes**
    - `GET /api/content/tracks/:trackId/chapters` - List chapters for track
    - `POST /api/content/tracks/:trackId/chapters` - Create chapter
-   - `GET /api/content/chapters/:chapterId` - Get chapter details
+   - `GET /api/content/chapters/:chapterId` - Get chapter details (includes track context)
    - `PUT /api/content/chapters/:chapterId` - Update chapter
-   - `DELETE /api/content/chapters/:chapterId` - Delete chapter
+   - `DELETE /api/content/chapters/:chapterId` - Delete chapter (blocks if published)
    - `PATCH /api/content/chapters/:chapterId/status` - Publish/unpublish
-   - `POST /api/content/chapters/:chapterId/move` - Reorder chapter
+   - `POST /api/content/chapters/:chapterId/move` - Reorder chapter (up/down OR move to track via toTrackId)
 
-3. **Segment & mapping routes**
-   - `GET /api/content/chapters/:chapterId/segments?script=te` - Get segments
+3. ✅ **Segment & mapping routes**
+   - `GET /api/content/chapters/:chapterId/segments?script=te` - Get segments by script
    - `POST /api/content/chapters/:chapterId/segments` - Create segment
    - `PUT /api/content/chapters/:chapterId/segments/:segmentId` - Update segment
    - `DELETE /api/content/chapters/:chapterId/segments/:segmentId` - Delete segment
    - `POST /api/content/chapters/:chapterId/segments/reorder` - Reorder segments
    - `GET /api/content/chapters/:chapterId/mappings?audioFileId=123` - Get mappings
    - `POST /api/content/chapters/:chapterId/mappings` - Create mapping
-   - `PUT /api/content/chapters/:chapterId/mappings/:mappingId` - Update mapping
+   - `PUT /api/content/chapters/:chapterId/mappings/:mappingId` - Update mapping timestamps
    - `DELETE /api/content/chapters/:chapterId/mappings/:mappingId` - Delete mapping
 
-4. **Audio routes**
-   - `POST /api/content/chapters/:chapterId/audio` - Upload audio file
+4. ✅ **Audio routes**
+   - `POST /api/content/chapters/:chapterId/audio` - Upload audio file with metadata extraction
    - `GET /api/content/chapters/:chapterId/audio` - List audio files
    - `PUT /api/content/chapters/:chapterId/audio/:audioFileId` - Update filename
    - `DELETE /api/content/chapters/:chapterId/audio/:audioFileId` - Delete audio
 
-5. **Auth middleware**
-   - Add `requireRole('content_manager')` to all routes
-   - Validate user has permission before mutations
+5. ✅ **Auth middleware**
+   - Applied `requireContentManager` guard to all routes
+   - Returns 403 Forbidden for unauthorized access
 
-**Reuse Strategy:**
-- Import service methods from `content-publishing` module
-- Share validation logic with legacy routes
-- No database schema changes needed
+**Implementation Details:**
+- Mounted router at both `/api` and `/api/content` for backward compatibility with legacy UI
+- Updated content-publishing module types: `Track` now uses `title` + `description` (aligned with schema)
+- Enhanced `moveChapter()` service method to support moving chapters between tracks via `toTrackId` parameter
+- Integrated multer for audio uploads with automatic metadata extraction (duration via music-metadata)
+- Consistent error responses using `createErrorResponse()` format with timestamps and request IDs
+- Chapter details endpoint returns embedded track context (id, title) to support breadcrumbs with minimal API calls
+- All routes properly typed with TypeScript (zero type errors)
+
+**Testing & Validation:**
+- Created comprehensive smoke test: `scripts/test/content-smoke.ts`
+- Validates end-to-end operations: track CRUD, chapter CRUD, segments, audio upload, mappings, reorder, cleanup
+- Test execution confirms all operations work correctly
+
+**Code Changes:**
+- New file: [server/routes/content.routes.ts](../../../server/routes/content.routes.ts) (400+ lines)
+- Updated: [server/modules/content-publishing/types.ts](../../../server/modules/content-publishing/types.ts) - Track interface
+- Updated: [server/modules/content-publishing/service.ts](../../../server/modules/content-publishing/service.ts) - createTrack() and moveChapterToTrack()
+- Updated: [server/index.ts](../../../server/index.ts) - mount content router
+- New file: [scripts/test/content-smoke.ts](../../../scripts/test/content-smoke.ts)
+- Fixed: [client/src/new-ui/batches/components/BatchDetailsCard.tsx](../../../client/src/new-ui/batches/components/BatchDetailsCard.tsx) - JSX syntax
 
 **Acceptance Criteria:**
-- [ ] All endpoints return correct data
-- [ ] Auth checks enforce content_manager role
-- [ ] Error responses follow standard format
-- [ ] Legacy routes still work (no breaking changes)
-- [ ] Zero TypeScript errors
+- ✅ All endpoints return correct data
+- ✅ Auth checks enforce content_manager role (403 for non-managers)
+- ✅ Error responses follow standard format with timestamps and request IDs
+- ✅ Legacy routes still work (no breaking changes to existing API)
+- ✅ Zero TypeScript errors on new code
 
-**Duration:** 2 days
+**Next:** Phase 5.2 deferred pending prototype UI refinement
 
 ---
 
 #### Sub-Phase 5.2: Tracks & Chapters Page
 
+**Status:** PENDING (prototype refinement phase before implementation)
+
 **Goal:** Port the working prototype into new-ui and fully integrate with the backend to manage tracks and chapters from the Content Studio.
 
 **Component:** `client/src/new-ui/content/pages/TracksAndChapters.tsx`
 
-**Finalized Layout:** Column Style (Master/Detail)
-- Left column: Track list with selection state
-- Right column: Chapter list for the selected track
-- Resizable divider via shadcn `ResizablePanelGroup` for adjustable column widths
-
 **Prototype Port Plan:**
-1. Move/port UI from `client/src/temp-prototype/TracksAndChaptersColumn.tsx` into the new page component.
-2. Fit within the new-ui AppShell (sidebar/top-nav), keeping spacing consistent with design system.
-3. Replace all local state operations with TanStack Query hooks and mutations.
-4. Wire navigation: "Open Chapter" → `/app/content/tracks/:trackId/chapters/:chapterId`.
-5. Enforce role guard on route: `content_manager` only.
+1. Refine prototype UI first (localStorage, defaults, dialog UX) - in progress
+2. Move/port UI from `client/src/temp-prototype/TracksAndChaptersColumn.tsx` into the new page component.
+3. Fit within the new-ui AppShell (sidebar/top-nav), keeping spacing consistent with design system.
+4. Replace all local state operations with TanStack Query hooks and mutations.
+5. Wire navigation: "Open Chapter" → `/app/content/tracks/:trackId/chapters/:chapterId`.
+6. Enforce role guard on route: `content_manager` only.
 
 **API Integration Map:**
 - Tracks

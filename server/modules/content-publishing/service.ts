@@ -31,7 +31,8 @@ export class ContentService {
 
   async createTrack(data: CreateTrackData): Promise<Track> {
     const track = await this.storage.createTrack({
-      name: data.name,
+      title: data.title,
+      description: data.description,
       createdBy: data.createdBy || "system"
     });
     return track;
@@ -199,6 +200,17 @@ export class ContentService {
     } else {
       throw new Error("Cannot move chapter in that direction");
     }
+  }
+
+  async moveChapterToTrack(chapterId: number, toTrackId: number): Promise<void> {
+    const chapter = await this.storage.getChapter(chapterId);
+    if (!chapter) throw new Error('Chapter not found');
+
+    const targetChapters = await this.storage.getChaptersByTrack(toTrackId);
+    const maxOrder = targetChapters.reduce((acc, c) => Math.max(acc, c.order ?? 0), 0);
+    const nextOrder = (maxOrder || 0) + 1;
+
+    await this.storage.updateChapter(chapterId, { trackId: toTrackId, order: nextOrder });
   }
 
   /**

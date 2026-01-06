@@ -4,7 +4,8 @@
 
 export interface Track {
   id: number;
-  name: string;
+  title: string;
+  description: string;
   order: number;
   createdBy: string;
   createdAt: Date;
@@ -52,7 +53,8 @@ export interface CreateSegmentData {
 }
 
 export interface CreateTrackData {
-  name: string;
+  title: string;
+  description: string;
   createdBy?: string;
 }
 

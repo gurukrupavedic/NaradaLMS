@@ -60,7 +60,9 @@ app.use('/api/admin', adminRouter);
 
 // Content & Publishing routes (Phase 2 module)
 import { contentRouter } from "./routes/content.routes";
+// Mount content routes under both legacy '/api' and new namespaced '/api/content'
 app.use('/api', contentRouter);
+app.use('/api/content', contentRouter);
 import { mediaRouter } from "./routes/media.routes";
 app.use('/api', mediaRouter);
 import { batchRouter } from "./routes/batch.routes";
