@@ -27,8 +27,8 @@ import { LearnChapterPage } from './student/pages/LearnChapterPage';
 // Prototypes
 import { TracksAndChaptersAccordion } from '@/temp-prototype/TracksAndChaptersAccordion';
 import { TracksAndChaptersColumn } from '@/temp-prototype/TracksAndChaptersColumn';
-import TracksAndChapters from './content/pages/TracksAndChapters';
-import ChapterContent from './content/pages/ChapterContent';
+import TracksAndChapters from './content/pages/TracksAndChaptersPage';
+import ChapterContent from './content/pages/ChapterContentPage';
 
 // Placeholder pages are scaffolded in new-ui/content/pages
 
