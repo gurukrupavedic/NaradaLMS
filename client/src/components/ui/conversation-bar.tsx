@@ -283,7 +283,7 @@ export const ConversationBar = React.forwardRef<
                   >
                     <Keyboard
                       className={
-                        "h-5 w-5 transform-gpu transition-all duration-200 ease-[cubic-bezier(0.22_1_0.36_1)] " +
+                        "h-5 w-5 transform-gpu transition-all duration-200 ease-keyboard " +
                         (keyboardOpen
                           ? "scale-75 opacity-0"
                           : "scale-100 opacity-100")
@@ -291,7 +291,7 @@ export const ConversationBar = React.forwardRef<
                     />
                     <ChevronDown
                       className={
-                        "absolute inset-0 m-auto h-5 w-5 transform-gpu transition-all delay-50 duration-200 ease-[cubic-bezier(0.34_1.56_0.64_1)] " +
+                        "absolute inset-0 m-auto h-5 w-5 transform-gpu transition-all delay-50 duration-200 ease-keyboard-bounce " +
                         (keyboardOpen
                           ? "scale-100 opacity-100"
                           : "scale-75 opacity-0")
