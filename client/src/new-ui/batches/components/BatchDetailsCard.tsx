@@ -67,7 +67,7 @@ export function BatchDetailsCard({
         role="button"
         tabIndex={0}
         aria-expanded={!collapsed}
-        aria-label={collapsed ? "Expand batch details" : "Collapse batch details"}}
+        aria-label={collapsed ? "Expand batch details" : "Collapse batch details"}
       >
         {/* Header Content - Always visible summary, conditional expanded details */}
         {collapsed ? (
@@ -115,7 +115,7 @@ export function BatchDetailsCard({
                   <span className="text-sm text-foreground ml-2">-</span>
                   <span className="text-sm text-foreground ml-2">{b.batchName}</span>
                 </DropdownMenuItem>
-              ))}}
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
