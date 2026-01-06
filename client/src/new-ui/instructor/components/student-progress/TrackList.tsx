@@ -5,9 +5,10 @@ import { TrackCard } from './TrackCard';
 interface TrackListProps {
   tracks: TrackProgress[];
   onChapterClick?: (chapter: ChapterProgress, track: TrackProgress) => void;
+  currentTrackId?: number; // Track ID currently being taught in the batch
 }
 
-export function TrackList({ tracks, onChapterClick }: TrackListProps) {
+export function TrackList({ tracks, onChapterClick, currentTrackId }: TrackListProps) {
   // By default, open the first track that isn't fully complete, or the first one if all are complete/incomplete
   const firstIncompleteTrack = tracks.find(t => t.completedChapters < t.totalChapters) || tracks[0];
   const defaultValue = firstIncompleteTrack ? `track-${firstIncompleteTrack.trackId}` : undefined;
@@ -15,7 +16,12 @@ export function TrackList({ tracks, onChapterClick }: TrackListProps) {
   return (
     <Accordion type="single" collapsible defaultValue={defaultValue} className="w-full space-y-4">
       {tracks.map((track) => (
-        <TrackCard key={track.trackId} track={track} onChapterClick={onChapterClick} />
+        <TrackCard 
+          key={track.trackId} 
+          track={track} 
+          onChapterClick={onChapterClick}
+          isCurrentTrack={currentTrackId === track.trackId}
+        />
       ))}
     </Accordion>
   );

@@ -11,9 +11,10 @@ import { ChapterList } from './ChapterList';
 interface TrackCardProps {
   track: TrackProgress;
   onChapterClick?: (chapter: any, track: TrackProgress) => void;
+  isCurrentTrack?: boolean;
 }
 
-export function TrackCard({ track, onChapterClick }: TrackCardProps) {
+export function TrackCard({ track, onChapterClick, isCurrentTrack }: TrackCardProps) {
   const completionPercentage = Math.round(
     (track.completedChapters / track.totalChapters) * 100
   );
@@ -29,7 +30,7 @@ export function TrackCard({ track, onChapterClick }: TrackCardProps) {
           <div className="flex flex-col gap-2 flex-1 min-w-0">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Track {track.trackOrder}
+                Track {track.trackOrder}{isCurrentTrack && ' (current track)'}
               </span>
               <h3 className="font-semibold text-lg text-card-foreground leading-none group-hover:text-primary transition-colors truncate">
                 {track.trackTitle}

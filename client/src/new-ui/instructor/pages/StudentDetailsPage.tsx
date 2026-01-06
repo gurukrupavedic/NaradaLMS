@@ -98,7 +98,7 @@ export function StudentDetailsPage() {
   }
 
   return (
-    <div className="space-y-6 px-4 pt-4">
+    <div className="space-y-6 px-4 pt-4 pb-8">
       {/* Student Details Card */}
       <StudentDetailsCard student={studentDetails} />
 
@@ -121,7 +121,10 @@ export function StudentDetailsPage() {
           </CardContent>
         </Card>
       ) : trackProgress && trackProgress.trackProgress.length > 0 ? (
-        <TrackList tracks={trackProgress.trackProgress} />
+        <TrackList 
+          tracks={trackProgress.trackProgress}
+          currentTrackId={studentDetails?.enrollment?.trackId}
+        />
       ) : trackProgress && trackProgress.trackProgress.length === 0 ? (
         <Card className="bg-muted/30">
           <CardContent className="py-12 text-center">

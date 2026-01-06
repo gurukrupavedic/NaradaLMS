@@ -70,6 +70,12 @@ export function UnifiedBatchMatrix({
     studentId: string;
     chapterId: string;
   } | null>(null);
+  
+  // Track which cell is being updated for loading state
+  const [updatingCell, setUpdatingCell] = useState<{
+    studentId: string;
+    chapterId: string;
+  } | null>(null);
 
   // Build progress lookup for O(1) access
   const progressMap = useMemo(() => {
@@ -123,16 +129,31 @@ export function UnifiedBatchMatrix({
     if (!selectedCell) return;
 
     try {
+      // Set loading state for this specific cell
+      setUpdatingCell({ studentId: selectedCell.studentId, chapterId: selectedCell.chapterId });
+      
+      console.log('🔵 handleUpdateProficiency called:', {
+        studentId: selectedCell.studentId,
+        chapterId: selectedCell.chapterId,
+        newLevel: level,
+      });
+      
       await onUpdateProficiency(selectedCell.studentId, selectedCell.chapterId, level);
+      
+      console.log('🟢 Update succeeded, closing modal');
       toast({ title: 'Proficiency updated' });
       setModalOpen(false);
       setSelectedCell(null);
     } catch (error: any) {
+      console.log('🔴 Update failed:', error.message);
       toast({
         title: 'Failed to update proficiency',
         description: error?.message || 'An error occurred',
         variant: 'destructive',
       });
+    } finally {
+      // Clear loading state
+      setUpdatingCell(null);
     }
   };
 
@@ -262,22 +283,30 @@ export function UnifiedBatchMatrix({
           const studentId = info.row.original.id;
           const cell = getMatrixCell(studentId, chapter.id);
           const colors = getCellColor(cell.proficiencyLevel, cell.status);
+          
+          // Check if this specific cell is being updated
+          const isCellUpdating = updatingCell?.studentId === studentId && updatingCell?.chapterId === chapter.id;
 
           return (
             <div className="px-2 py-2 flex items-center justify-center">
               <button
                 onClick={() => canEditProficiency && handleCellClick(studentId, chapter.id)}
-                disabled={isUpdating || !canEditProficiency}
+                disabled={isUpdating || !canEditProficiency || isCellUpdating}
                 className={`
                   h-14 w-20 flex items-center justify-center rounded-lg
-                  border-2 transition-all
+                  border-2 transition-all relative
                   ${colors.bgColor} ${colors.darkBgColor} ${colors.textColor} ${colors.darkTextColor} ${colors.borderColor} ${colors.darkBorderColor}
-                  ${canEditProficiency ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}
+                  ${canEditProficiency && !isCellUpdating ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}
+                  ${isCellUpdating ? 'opacity-60' : ''}
                   font-semibold text-sm
                 `}
                 title={canEditProficiency ? `${info.row.original.firstName} - ${chapter.code}` : 'Only instructors can update proficiency'}
               >
-                {getProficiencyShortLabel(cell.proficiencyLevel)}
+                {isCellUpdating ? (
+                  <Loader className="h-4 w-4 animate-spin" />
+                ) : (
+                  getProficiencyShortLabel(cell.proficiencyLevel)
+                )}
               </button>
             </div>
           );
@@ -330,16 +359,19 @@ export function UnifiedBatchMatrix({
                 {headerGroup.headers.map((header) => {
                   const isSticky = header.id === 'student' || header.id === 'actions';
                   const isStudentCol = header.id === 'student';
+                  const stickyLeftStyle = isSticky ? `${header.column.getStart()}px` : '0';
 
                   return (
+                    // eslint-disable-next-line @stylistic/no-non-null-assertion
                     <th
                       key={header.id}
                       className={`${isStudentCol ? 'text-center' : 'text-center'} text-xs font-semibold text-muted-foreground uppercase tracking-tight ${isStudentCol ? 'pl-4 pr-2 py-2 align-middle' : 'p-0'
                         } ${isSticky ? 'sticky z-20 bg-gray-50 dark:bg-gray-900' : ''
                         }`}
+                      // eslint-disable-next-line jsx-a11y/no-static-element-interactions
                       style={{
                         width: `${header.getSize()}px`,
-                        left: isSticky ? `${header.column.getStart()}px` : undefined,
+                        ...(isSticky && { left: stickyLeftStyle }),
                       } as any}
                     >
                       {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -358,15 +390,17 @@ export function UnifiedBatchMatrix({
               >
                 {row.getVisibleCells().map((cell) => {
                   const isSticky = cell.column.id === 'student' || cell.column.id === 'actions';
+                  const stickyCellLeftStyle = isSticky ? `${cell.column.getStart()}px` : '0';
 
                   return (
+                    // eslint-disable-next-line @stylistic/no-non-null-assertion
                     <td
                       key={cell.id}
                       className={`align-middle ${isSticky ? 'sticky z-20 bg-white dark:bg-gray-950 p-0' : 'p-0 text-center'
                         }`}
                       style={{
                         width: `${cell.column.getSize()}px`,
-                        left: isSticky ? `${cell.column.getStart()}px` : undefined,
+                        ...(isSticky && { left: stickyCellLeftStyle }),
                       } as any}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

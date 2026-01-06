@@ -86,7 +86,7 @@ export function VedicLearningPage() {
   }
 
   return (
-    <div className="space-y-6 px-4 pt-4">
+    <div className="space-y-6 px-4 pt-4 pb-8">
       {studentDetails && <StudentDetailsCard student={studentDetails} />}
 
       {tracksError ? (
@@ -107,7 +107,11 @@ export function VedicLearningPage() {
           </CardContent>
         </Card>
       ) : trackProgress && trackProgress.trackProgress.length > 0 ? (
-        <TrackList tracks={trackProgress.trackProgress} onChapterClick={handleChapterClick} />
+        <TrackList 
+          tracks={trackProgress.trackProgress} 
+          onChapterClick={handleChapterClick}
+          currentTrackId={studentDetails?.enrollment?.trackId}
+        />
       ) : trackProgress && trackProgress.trackProgress.length === 0 ? (
         <Card className="bg-muted/30">
           <CardContent className="py-12 text-center">
