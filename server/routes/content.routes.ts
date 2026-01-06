@@ -98,14 +98,14 @@ router.post('/tracks/:id/move', async (req: Request, res: Response, next: NextFu
   try {
     const trackId = parseInt(req.params.id);
     const { direction } = req.body;
-    
+
     if (!['up', 'down'].includes(direction)) {
       return res.status(400).json(createErrorResponse(
         "Invalid direction. Must be 'up' or 'down'",
         "INVALID_DIRECTION"
       ));
     }
-    
+
     await contentService.moveTrack(trackId, direction);
     res.json({ message: "Track order updated successfully" });
   } catch (error) {
@@ -133,12 +133,12 @@ router.get('/chapters/:chapterId/details', async (req: Request, res: Response, n
   try {
     const chapterId = parseInt(req.params.chapterId);
     const chapter = await contentService.getChapter(chapterId);
-    
+
     if (!chapter) {
       return res.status(404).json(createErrorResponse("Chapter not found", "CHAPTER_NOT_FOUND"));
     }
-    
-    console.log('API: Chapter details response:', JSON.stringify(chapter, null, 2));
+
+
     res.json(chapter);
   } catch (error) {
     next(error);
@@ -176,18 +176,18 @@ router.patch('/chapters/:chapterId/status', async (req: Request, res: Response, 
   try {
     const chapterId = parseInt(req.params.chapterId);
     const { status } = req.body;
-    
+
     if (!['draft', 'published'].includes(status)) {
       return res.status(400).json(createErrorResponse(
         "Invalid status. Must be 'draft' or 'published'",
         "INVALID_STATUS"
       ));
     }
-    
-    const chapter = status === 'published' 
+
+    const chapter = status === 'published'
       ? await contentService.publishChapter(chapterId, req.body.userId || "system")
       : await contentService.unpublishChapter(chapterId, req.body.userId || "system");
-      
+
     res.json(chapter);
   } catch (error) {
     next(error);
@@ -199,14 +199,14 @@ router.post('/chapters/:id/move', async (req: Request, res: Response, next: Next
   try {
     const chapterId = parseInt(req.params.id);
     const { direction } = req.body;
-    
+
     if (!['up', 'down'].includes(direction)) {
       return res.status(400).json(createErrorResponse(
         "Invalid direction. Must be 'up' or 'down'",
         "INVALID_DIRECTION"
       ));
     }
-    
+
     await contentService.moveChapter(chapterId, direction);
     res.json({ message: "Chapter order updated successfully" });
   } catch (error) {
@@ -234,14 +234,14 @@ router.get('/segments/:chapterId/:script', async (req: Request, res: Response, n
   try {
     const chapterId = parseInt(req.params.chapterId);
     const script = req.params.script as 'te' | 'hi' | 'en';
-    
+
     if (!['te', 'hi', 'en'].includes(script)) {
       return res.status(400).json(createErrorResponse(
         "Invalid script. Must be 'te', 'hi', or 'en'",
         "INVALID_SCRIPT"
       ));
     }
-    
+
     const segments = await contentService.getSegmentsByChapter(chapterId, script);
     res.json(segments);
   } catch (error) {
@@ -264,7 +264,7 @@ router.get('/segments/:chapterId', async (req: Request, res: Response, next: Nex
 router.post('/segments', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { chapterId, script, startPosition, endPosition, order, createdBy } = req.body;
-    
+
     // Validate required fields
     if (!chapterId || !script || startPosition === undefined || endPosition === undefined) {
       return res.status(400).json(createErrorResponse(
@@ -273,16 +273,16 @@ router.post('/segments', async (req: Request, res: Response, next: NextFunction)
         { received: { chapterId, script, startPosition, endPosition } }
       ));
     }
-    
+
     // Validate field types
-    if (typeof chapterId !== 'number' || typeof script !== 'string' || 
-        typeof startPosition !== 'number' || typeof endPosition !== 'number') {
+    if (typeof chapterId !== 'number' || typeof script !== 'string' ||
+      typeof startPosition !== 'number' || typeof endPosition !== 'number') {
       return res.status(400).json(createErrorResponse(
         "Invalid field types. Expected: chapterId (number), script (string), startPosition (number), endPosition (number)",
         "INVALID_FIELD_TYPES"
       ));
     }
-    
+
     // Validate position values
     if (startPosition < 0 || endPosition < 0 || startPosition >= endPosition) {
       return res.status(400).json(createErrorResponse(
@@ -290,7 +290,7 @@ router.post('/segments', async (req: Request, res: Response, next: NextFunction)
         "INVALID_POSITION_VALUES"
       ));
     }
-    
+
     const segment = await contentService.createSegment({
       chapterId,
       script: script as 'te' | 'hi' | 'en',
@@ -299,7 +299,7 @@ router.post('/segments', async (req: Request, res: Response, next: NextFunction)
       order,
       createdBy: createdBy || "system"
     });
-    
+
     res.json(segment);
   } catch (error) {
     next(error);
@@ -333,14 +333,14 @@ router.patch('/segments/:chapterId/reorder', async (req: Request, res: Response,
   try {
     const chapterId = parseInt(req.params.chapterId);
     const { segmentOrders } = req.body;
-    
+
     if (!segmentOrders || !Array.isArray(segmentOrders)) {
       return res.status(400).json(createErrorResponse(
         "segmentOrders array is required",
         "MISSING_SEGMENT_ORDERS"
       ));
     }
-    
+
     await contentService.reorderSegments(chapterId, segmentOrders);
     res.json({ message: "Segments reordered successfully" });
   } catch (error) {

@@ -51,13 +51,7 @@ export class LearningService {
 
     await learningStorage.trackChapterAccess(studentId, chapterId, batchId);
 
-    // Event stub (for future EventBus integration)
-    console.log(LEARNING_DELIVERY_EVENTS.CHAPTER_ACCESSED, {
-      studentId,
-      chapterId,
-      batchId,
-      timestamp: new Date().toISOString(),
-    });
+
   }
 
   /**
@@ -130,7 +124,7 @@ export class LearningService {
    */
   async getStudentDetails(requestingUserId: string, studentId: string, isAdmin: boolean): Promise<any> {
     const studentDetails = await learningStorage.getStudentDetailsWithProgress(studentId);
-    
+
     if (!studentDetails) {
       return null;
     }
@@ -332,9 +326,9 @@ export class LearningService {
 
     // Compute completed chapters (only L2, L3, L4 - exclude L0, L1, absent=8, not_started=9)
     const completedChapters = Object.values(progressByChapter).filter(
-      (p) => p?.proficiencyLevel !== null && 
-             p?.proficiencyLevel >= 2 && 
-             p?.proficiencyLevel <= 4
+      (p) => p?.proficiencyLevel !== null &&
+        p?.proficiencyLevel >= 2 &&
+        p?.proficiencyLevel <= 4
     ).length;
 
     // Fetch evaluator names for all chapters with evaluations
