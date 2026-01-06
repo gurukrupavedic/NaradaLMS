@@ -7,11 +7,12 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Music, FileText, List, Zap, Clock3, Info } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { AudioControls } from "@/components/design-system/AudioControls";
+
 import { SegmentedTextDisplay } from "@/components/text-segmentation/SegmentedTextDisplay";
 import { getProficiencyLabel } from "@/new-ui/batches/utils/matrix-utils";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AudioPlayerControls } from "@/components/ui/audio-player-controls";
 
 interface ChapterData {
   id: number;
@@ -96,6 +97,7 @@ export function LearnChapterPage() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(80);
+  const [isMuted, setIsMuted] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
 
   useEffect(() => {
@@ -422,7 +424,7 @@ export function LearnChapterPage() {
               </div>
 
               {selectedAudioFileId ? (
-                <AudioControls
+                <AudioPlayerControls
                   title={
                     audioFiles.find((f) => f.id === selectedAudioFileId)?.displayName ||
                     audioFiles.find((f) => f.id === selectedAudioFileId)?.filename ||
@@ -432,6 +434,7 @@ export function LearnChapterPage() {
                   duration={duration}
                   isPlaying={isPlaying}
                   volume={volume}
+                  isMuted={isMuted}
                   playbackRate={playbackRate}
                   onPlay={() => {
                     previewAudioRef.current.play().catch(console.error);
@@ -441,23 +444,34 @@ export function LearnChapterPage() {
                     previewAudioRef.current.pause();
                     setIsPlaying(false);
                   }}
-                  onStop={() => {
-                    previewAudioRef.current.pause();
-                    previewAudioRef.current.currentTime = 0;
-                    setIsPlaying(false);
-                    setCurrentTime(0);
-                  }}
                   onSeek={(time) => {
                     previewAudioRef.current.currentTime = time;
                     setCurrentTime(time);
                   }}
-                  onVolumeUpdate={(vol) => {
+                  onVolumeChange={(vol) => {
                     previewAudioRef.current.volume = vol / 100;
                     setVolume(vol);
+                  }}
+                  onMuteToggle={() => {
+                    if (previewAudioRef.current) {
+                      const newMutedState = !isMuted;
+                      previewAudioRef.current.muted = newMutedState;
+                      setIsMuted(newMutedState);
+                    }
                   }}
                   onPlaybackRateChange={(rate) => {
                     previewAudioRef.current.playbackRate = rate;
                     setPlaybackRate(rate);
+                  }}
+                  onSkipForward={() => {
+                    if (previewAudioRef.current) {
+                      previewAudioRef.current.currentTime = Math.min(previewAudioRef.current.currentTime + 10, duration);
+                    }
+                  }}
+                  onSkipBackward={() => {
+                    if (previewAudioRef.current) {
+                      previewAudioRef.current.currentTime = Math.max(previewAudioRef.current.currentTime - 10, 0);
+                    }
                   }}
                 />
               ) : (
