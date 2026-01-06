@@ -7,6 +7,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary, AppErrorFallback } from "@/components/ui/error-boundary";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import InstructorMatrixPrototype from "@/temp-prototype/InstructorMatrixPrototype";
+import { TracksAndChaptersAccordion } from "@/temp-prototype/TracksAndChaptersAccordion";
+import { TracksAndChaptersColumn } from "@/temp-prototype/TracksAndChaptersColumn";
 import { useAuth } from "@/features/shared-features/hooks/useAuth";
 import { useWarmTrackCache } from "@/lib/query-prefetch";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -148,8 +150,10 @@ function Router() {
         <Route path="/experiments/theming-playground" component={ThemingPlayground} />
         <Route path="/experiments/audio-player" component={lazy(() => import("@/temp-prototype/AudioPlayerPlayground"))} />
 
-        {/* TEMPORARY PROTOTYPE */}
+        {/* TEMPORARY PROTOTYPES */}
         <Route path="/prototype/matrix" component={InstructorMatrixPrototype} />
+        <Route path="/prototype/tracks-accordion" component={TracksAndChaptersAccordion} />
+        <Route path="/prototype/tracks-column" component={TracksAndChaptersColumn} />
 
         <Route component={SimpleNotFound} />
       </Switch>

@@ -55,171 +55,404 @@ This is the **active implementation guide** for the final MVP phase. It focuses 
 
 ## 🎯 Phase 5 - Content Studio
 
-**Goal:** Build professional content management interface for content creators to manage and publish educational content.
+**Goal:** Build professional content management interface for content creators to manage tracks, chapters, and publish educational content.
 
 **Scope:**
-1. **Content Studio Home** - Track list with metadata and statistics
-2. **Track Detail Page** - Chapter management with publish status
-3. **Edit Chapter** - Full 5-tab editor (Content, Audio, Segmentation, Mapping, Preview)
-4. **Responsive Design** - Mobile, tablet, desktop equally polished
+1. **Tracks & Chapters Page** - Single unified page for track/chapter management
+2. **Chapter Content Editor** - Full 5-tab editor (Content, Audio, Segmentation, Mapping, Preview)
+3. **Backend API Refactoring** - Clean `/api/content/*` namespace following modular architecture
+4. **Auth & Permissions** - Content manager role enforcement
 
-**Key Features:**
-- ✅ Professional chapter editor (TipTap WYSIWYG, multilingual support)
-- ✅ Audio management (upload, extract metadata, attribute reciter)
-- ✅ Text segmentation (click-drag selection, visual feedback)
-- ✅ Audio mapping (progressive click-when-heard interface)
-- ✅ Live preview with Learn Mode toggle
-- ✅ Publish/unpublish workflow with status indicators
-- ✅ Permission checks (content manager can edit only their assigned tracks)
+**Key Principles:**
+- **Clean foundation**: New namespaced endpoints, structured query keys, consistent conventions
+- **Parallel operation**: Keep legacy UI working while building new-ui
+- **Role-based access**: Only `content_manager` role (no admin access to content creation)
+- **Zero regressions**: Copy/adapt existing editor, don't rewrite proven workflows
 
 **Technical Requirements:**
 - Type-safe (zero TypeScript errors)
 - Real-time feedback for all mutations
-- Responsive across all breakpoints
-- Consistent with established design patterns (TanStack Table, loading states, etc.)
+- Responsive across all breakpoints (mobile/tablet/desktop)
+- Consistent with new-ui patterns (shadcn components, TanStack Query v5)
 
-### Phase 5 - Detailed Deliverables
+---
+
+### Phase 5 Architecture Decisions
+
+#### 1. Backend API Structure
+
+**New Namespaced Endpoints:**
+```
+/api/content/tracks                          → List/create tracks
+/api/content/tracks/:trackId                 → Get/update/delete track
+/api/content/tracks/:trackId/chapters        → List/create chapters for track
+/api/content/chapters/:chapterId             → Get/update/delete chapter
+/api/content/chapters/:chapterId/segments    → Manage text segments (add ?script=te)
+/api/content/chapters/:chapterId/mappings    → Manage audio-text mappings
+/api/content/chapters/:chapterId/audio       → Upload/manage audio files
+```
+
+**Why:**
+- Clear module ownership (content-publishing module)
+- Follows modular monolith architecture
+- Future-proof namespacing
+- Easier to add middleware/auth at module level
+
+**Migration Strategy:**
+- Keep legacy endpoints (`/api/tracks`, `/api/chapters`) for legacy UI
+- New-ui uses only `/api/content/*` endpoints
+- Backend routes can share service layer (avoid duplication)
+
+#### 2. React Query Keys
+
+**Structured Array Keys:**
+```typescript
+['content', 'tracks']                                      → All tracks
+['content', 'tracks', trackId, 'chapters']                → Chapters in track
+['content', 'chapters', chapterId, 'details']             → Chapter details
+['content', 'chapters', chapterId, 'segments', script]    → Segments for script
+['content', 'chapters', chapterId, 'mappings', audioFileId] → Mappings for audio
+```
+
+**Why:**
+- Easy cache invalidation (clear all with `['content']`)
+- Clear hierarchy and relationships
+- Type-safe with TypeScript
+- Matches batches/students pattern from Phases 3-4
+
+#### 3. Frontend Routing
+
+**New Routes:**
+```
+/app/content                                              → Tracks & Chapters page
+/app/content/tracks/:trackId/chapters/:chapterId          → Chapter Content editor
+```
+
+**Why:**
+- Track context in URL helps breadcrumbs and prefetching
+- Matches mental model (track → chapter hierarchy)
+- Clean separation from legacy `/manage/*` routes
+
+**Legacy Routes (preserved):**
+```
+/manage                                   → Legacy tracks page
+/manage/tracks/:trackId                   → Legacy chapters page
+/manage/tracks/:trackId/chapters/:chapterId → Legacy chapter editor
+```
+
+#### 4. Authorization
+
+**Content Studio Access:**
+- Only users with `content_manager` role
+- Check: `user.roles.includes('content_manager')`
+- Multi-role support: `['admin', 'content_manager']` gets access
+
+**No Admin Access:**
+- Admin role does NOT get Content Studio access
+- Follows separation of duties principle
+- If needed, assign both roles to user
+
+---
+
+### Phase 5 - Detailed Implementation Plan
 
 **Status:** Ready to begin  
-**Timeline:** TBD  
-**Dependencies:** All Phase 6 work complete, all admin/instructor workflows complete
-
-#### Sub-Phase 5.1: Content Studio Home
-
-**Goal:** Track list with metadata and quick stats.
-
-**Deliverables:**
-- Content Studio home page at `/app/content/studio`
-- Track card grid showing:
-  - Track code, name, description
-  - Total chapters, published chapters
-  - Last edited date, editor name
-  - Click to navigate to Track Detail
-- Loading skeleton (4-6 card preview)
-- Empty state if no tracks assigned
-- Responsive grid (1-3 columns by breakpoint)
-
-**Backend:**
-- `GET /api/content/tracks/assigned` - Get tracks assigned to user (content manager)
-- Returns: Array of tracks with metadata
-
-**Acceptance Criteria:**
-- [ ] Track list displays with proper metadata
-- [ ] Click track → navigates to Track Detail
-- [ ] Loading/empty/error states work
-- [ ] Responsive across all breakpoints
-- [ ] Zero TypeScript errors
+**Timeline:** 5-7 days estimated  
+**Dependencies:** Phases 0-4 and 6 complete
 
 ---
 
-#### Sub-Phase 5.2: Track Detail Page
+#### Sub-Phase 5.1: Backend API Refactoring
 
-**Goal:** Chapter list with publish status and management options.
+**Goal:** Create clean `/api/content/*` endpoints for new-ui.
 
-**Deliverables:**
-- Track detail page at `/app/content/studio/tracks/:trackId`
-- Chapter list table with columns:
-  - CHAPTER CODE, CHAPTER NAME, STATUS (Published/Draft), LAST EDITED, ACTIONS
-- Edit/Delete actions for each chapter
-- Create new chapter button (modal form)
-- Chapter list sorting by code
-- Breadcrumb: Content Studio > [Track Name]
+**Tasks:**
 
-**Backend:**
-- `GET /api/content/tracks/:trackId` - Get track with chapters
-- Returns: Track with array of chapters
+1. **Create content routes module** (`server/routes/content.routes.ts`)
+   - `GET /api/content/tracks` - List all tracks (ordered)
+   - `POST /api/content/tracks` - Create track
+   - `PUT /api/content/tracks/:trackId` - Update track
+   - `DELETE /api/content/tracks/:trackId` - Delete track
+   - `POST /api/content/tracks/:trackId/move` - Reorder track
+
+2. **Chapter routes**
+   - `GET /api/content/tracks/:trackId/chapters` - List chapters for track
+   - `POST /api/content/tracks/:trackId/chapters` - Create chapter
+   - `GET /api/content/chapters/:chapterId` - Get chapter details
+   - `PUT /api/content/chapters/:chapterId` - Update chapter
+   - `DELETE /api/content/chapters/:chapterId` - Delete chapter
+   - `PATCH /api/content/chapters/:chapterId/status` - Publish/unpublish
+   - `POST /api/content/chapters/:chapterId/move` - Reorder chapter
+
+3. **Segment & mapping routes**
+   - `GET /api/content/chapters/:chapterId/segments?script=te` - Get segments
+   - `POST /api/content/chapters/:chapterId/segments` - Create segment
+   - `PUT /api/content/chapters/:chapterId/segments/:segmentId` - Update segment
+   - `DELETE /api/content/chapters/:chapterId/segments/:segmentId` - Delete segment
+   - `POST /api/content/chapters/:chapterId/segments/reorder` - Reorder segments
+   - `GET /api/content/chapters/:chapterId/mappings?audioFileId=123` - Get mappings
+   - `POST /api/content/chapters/:chapterId/mappings` - Create mapping
+   - `PUT /api/content/chapters/:chapterId/mappings/:mappingId` - Update mapping
+   - `DELETE /api/content/chapters/:chapterId/mappings/:mappingId` - Delete mapping
+
+4. **Audio routes**
+   - `POST /api/content/chapters/:chapterId/audio` - Upload audio file
+   - `GET /api/content/chapters/:chapterId/audio` - List audio files
+   - `PUT /api/content/chapters/:chapterId/audio/:audioFileId` - Update filename
+   - `DELETE /api/content/chapters/:chapterId/audio/:audioFileId` - Delete audio
+
+5. **Auth middleware**
+   - Add `requireRole('content_manager')` to all routes
+   - Validate user has permission before mutations
+
+**Reuse Strategy:**
+- Import service methods from `content-publishing` module
+- Share validation logic with legacy routes
+- No database schema changes needed
 
 **Acceptance Criteria:**
-- [ ] Chapter list displays correctly
-- [ ] Click Edit → navigates to Edit Chapter
-- [ ] Create new chapter modal works
-- [ ] Delete chapter with confirmation
-- [ ] Status indicator shows published/draft
-- [ ] Responsive design works
+- [ ] All endpoints return correct data
+- [ ] Auth checks enforce content_manager role
+- [ ] Error responses follow standard format
+- [ ] Legacy routes still work (no breaking changes)
 - [ ] Zero TypeScript errors
+
+**Duration:** 2 days
 
 ---
 
-#### Sub-Phase 5.3: Edit Chapter (5-Tab Interface)
+#### Sub-Phase 5.2: Tracks & Chapters Page
 
-**Goal:** Comprehensive chapter editor with content, audio, segmentation, mapping, and preview tabs.
+**Goal:** Port the working prototype into new-ui and fully integrate with the backend to manage tracks and chapters from the Content Studio.
 
-**Deliverables:**
+**Component:** `client/src/new-ui/content/pages/TracksAndChapters.tsx`
 
-**Tab 1: Content Editor**
-- HTML/Text toggle for editor type
-- TipTap WYSIWYG rich text editor
-- Script selector (Telugu, Hindi, English)
-- Save and auto-save functionality
+**Finalized Layout:** Column Style (Master/Detail)
+- Left column: Track list with selection state
+- Right column: Chapter list for the selected track
+- Resizable divider via shadcn `ResizablePanelGroup` for adjustable column widths
 
-**Tab 2: Audio Management**
-- Upload audio file (50MB max)
-- Display: File name, duration, upload date
-- Metadata extraction (duration, channels, sample rate)
-- Reciter attribution dropdown
-- Delete audio option
+**Prototype Port Plan:**
+1. Move/port UI from `client/src/temp-prototype/TracksAndChaptersColumn.tsx` into the new page component.
+2. Fit within the new-ui AppShell (sidebar/top-nav), keeping spacing consistent with design system.
+3. Replace all local state operations with TanStack Query hooks and mutations.
+4. Wire navigation: "Open Chapter" → `/app/content/tracks/:trackId/chapters/:chapterId`.
+5. Enforce role guard on route: `content_manager` only.
+
+**API Integration Map:**
+- Tracks
+   - List: `GET /api/content/tracks` → Query key `['content', 'tracks']`
+   - Create: `POST /api/content/tracks` → invalidate `['content', 'tracks']`
+   - Update: `PUT /api/content/tracks/:trackId` → update cache or invalidate
+   - Delete: `DELETE /api/content/tracks/:trackId` → invalidate
+   - Reorder: `POST /api/content/tracks/:trackId/move` → optimistic update then reconcile
+- Chapters
+   - List (by track): `GET /api/content/tracks/:trackId/chapters` → `['content', 'tracks', trackId, 'chapters']`
+   - Create: `POST /api/content/tracks/:trackId/chapters` → invalidate chapters key
+   - Update: `PUT /api/content/chapters/:chapterId` → update cache or invalidate
+   - Delete: `DELETE /api/content/chapters/:chapterId` → invalidate
+   - Publish/Unpublish: `PATCH /api/content/chapters/:chapterId/status` → update status badge
+   - Reorder: `POST /api/content/chapters/:chapterId/move` → optimistic update then reconcile
+
+**React Query Keys:**
+- Tracks: `['content', 'tracks']`
+- Chapters in track: `['content', 'tracks', trackId, 'chapters']`
+- Derived detail prefetch (hover or selection): `['content', 'chapters', chapterId, 'details']`
+
+**UI Functionality To Port & Integrate:**
+- Track Management:
+   - Create/edit/delete tracks with dialogs (shadcn `Dialog`, `AlertDialog`).
+   - Reorder with up/down actions (optimistic updates + toast feedback).
+   - Display order, title, description, chapter count.
+- Chapter Management:
+   - Create/edit/delete chapters with dialogs.
+   - Reorder with up/down actions (optimistic updates).
+   - Status badge for `draft` vs `published` (warn before delete when published).
+   - "Open Chapter" navigates to editor.
+- States & UX:
+   - Loading skeletons, empty states, and error toasts.
+   - Responsive layout (mobile/tablet/desktop) with resizable columns.
+   - Type-safe across queries and mutations; zero `any`.
+
+**Route & Navigation:**
+- Add route in AppShell: `/app/content` → `TracksAndChapters`.
+- Breadcrumbs: `['Content Studio', 'Tracks & Chapters']`.
+- Guard access via role check (`content_manager`); redirect unauthorized.
+
+**Acceptance Criteria:**
+- [ ] Prototype UI ported into `client/src/new-ui/content/pages/TracksAndChapters.tsx`.
+- [ ] All CRUD operations work against `/api/content/*` endpoints with optimistic updates for reorder.
+- [ ] Status badges reflect publish state; delete warns for published chapters.
+- [ ] "Open Chapter" navigates to `/app/content/tracks/:trackId/chapters/:chapterId`.
+- [ ] Loading/empty/error states implemented; toasts show mutation outcomes.
+- [ ] Responsive and resizable columns; consistent with shadcn design system.
+- [ ] Route is guarded by `content_manager` role both frontend and backend.
+- [ ] Zero TypeScript errors; no regressions in legacy UI.
+
+**Duration:** 2 days (prototype complete; focused on integration and polish)
+
+---
+
+#### Sub-Phase 5.3: Chapter Content Editor
+
+**Goal:** Port legacy chapter editor to new-ui with clean endpoints/routing.
+
+**Component:** `client/src/new-ui/content/pages/ChapterContent.tsx`
+
+**Migration Strategy:**
+
+1. **Copy, don't move:**
+   - Copy `client/src/features/content-management/pages/EditChapter.tsx`
+   - Paste as `client/src/new-ui/content/pages/ChapterContent.tsx`
+   - Keep legacy file intact (no breaking changes to legacy UI)
+
+2. **Adapt imports and routing:**
+   - Update `setLocation()` calls to use `/app/content/*` paths
+   - Update breadcrumb "Back" button to return to `/app/content`
+   - Fit component within new-ui AppShell (sidebar/top-nav already present)
+
+3. **Update API endpoints:**
+   - Replace `/api/chapters/:id/details` → `/api/content/chapters/:chapterId`
+   - Replace `/api/segments/:chapterId/:script` → `/api/content/chapters/:chapterId/segments?script=te`
+   - Replace `/api/mappings` → `/api/content/chapters/:chapterId/mappings`
+   - Update audio upload/delete endpoints
+
+4. **Update React Query keys:**
+   - Replace `["/api/chapters/${chapterId}/details"]` → `['content', 'chapters', chapterId, 'details']`
+   - Replace `["/api/segments/${chapterId}/${script}"]` → `['content', 'chapters', chapterId, 'segments', script]`
+   - Update all other query keys to structured arrays
+
+5. **Keep all features intact:**
+   - Five tabs: Chapter Text, Chapter Audio, Segmentation, Mapping, Preview
+   - TipTap editor with autosave
+   - Script selector (te/hi/en)
+   - Audio upload/metadata extraction
+   - Text segmentation UI (AnnotationLayer, SegmentPanel)
+   - Progressive mapping (ProgressiveMapper)
+   - Preview with Learn Mode toggle
+   - Publish/unpublish workflow
+   - Published chapter read-only enforcement
+
+6. **Reuse existing components:**
+   - Import from `components/chapter-editor/*`
+   - Import from `components/text-segmentation/*`
+   - Import from `components/audio-mapping/*`
+   - No need to rewrite proven components
+
+**Tab Breakdown:**
+
+**Tab 1: Chapter Text**
+- TipTap rich text editor (multilingual)
+- Script selector (Telugu/Hindi/English)
+- Auto-save with status indicator (dirty/saving/saved/clean)
+- Publish lock (read-only when published)
+
+**Tab 2: Chapter Audio**
+- Upload audio files (drag-drop or browse)
+- Display uploaded files (name, duration, file size)
+- Edit filename (inline edit)
+- Delete audio (confirmation)
 - Audio playback preview
 
-**Tab 3: Text Segmentation**
-- Segment editor: Click-drag to select text, create segments
-- List of segments with start/end character counts
-- Delete segment option
-- Sticky note aesthetic (amber-50 background)
-- Segment editor state colors (idle/hover/selected)
+**Tab 3: Segmentation**
+- Left panel: Text content with selection tool
+- Right panel: Segment list
+- Click-drag text selection creates segments
+- Segment cards show script, position, order
+- Delete segments (if not mapped)
+- Reorder segments
 
-**Tab 4: Audio Mapping**
-- Progressive interface: Click-when-heard button during playback
-- Maps text segments to audio timestamps
-- Visual feedback: Gray → Orange (recording) → Green (mapped)
-- Display: Segment text, start time, end time
-- Delete mapping option
-- Playback preview with highlight synchronization
+**Tab 4: Mapping**
+- Audio file selector dropdown
+- Left panel: Audio player with controls
+- Right panel: Segment mapping grid
+- Progressive mapping session (click-when-heard)
+- Visual states: unmapped (gray) → recording (orange) → mapped (green)
+- Edit/delete mappings
+- Playback preview with segment highlight
 
 **Tab 5: Preview**
-- Learn Mode toggle (interactive segments vs. read-only HTML)
-- Display: Full chapter content with styling
-- Audio playback with synchronized text highlight
-- Mobile/tablet/desktop responsive preview
-
-**Backend:**
-- `GET /api/content/chapters/:chapterId` - Get full chapter with all segments/mappings
-- `POST /api/content/chapters/:chapterId` - Save chapter (all tabs)
-- `PUT /api/content/chapters/:chapterId` - Update chapter
-- `DELETE /api/content/chapters/:chapterId` - Delete chapter
+- Learn Mode toggle (interactive vs HTML view)
+- Audio file selector
+- Audio controls (play/pause/stop/seek/volume/speed)
+- Script selector
+- Segmented text display with click-to-play
+- Mapping count badges
 
 **Acceptance Criteria:**
-- [ ] All 5 tabs display and function correctly
-- [ ] Save/auto-save works across all tabs
-- [ ] Script selector changes content language
-- [ ] Audio upload and metadata extraction work
-- [ ] Text segmentation visual feedback clear
-- [ ] Audio mapping interface intuitive
-- [ ] Preview accurately reflects content
-- [ ] Responsive design across breakpoints
-- [ ] Loading states during save
-- [ ] Error handling for upload failures
+- [ ] All 5 tabs function identically to legacy editor
+- [ ] New endpoints work (`/api/content/*`)
+- [ ] New query keys cache correctly
+- [ ] Navigation works (back to Tracks & Chapters)
+- [ ] Breadcrumbs show correct context
+- [ ] Publish/unpublish workflow works
+- [ ] Published chapters are read-only
+- [ ] Audio upload works (50MB max)
+- [ ] Text segmentation UI works
+- [ ] Progressive mapping works
+- [ ] Preview matches learn page
+- [ ] Responsive across breakpoints
 - [ ] Zero TypeScript errors
+- [ ] Legacy UI still works (no regressions)
+
+**Duration:** 2-3 days
+
+---
+
+#### Sub-Phase 5.4: Navigation & Auth Integration
+
+**Goal:** Wire Content Studio into new-ui navigation with proper auth.
+
+**Tasks:**
+
+1. **Update AppShell routes** (`client/src/new-ui/AppShell.tsx`)
+   ```typescript
+   <Route path="/app/content" component={TracksAndChapters} />
+   <Route path="/app/content/tracks/:trackId/chapters/:chapterId" component={ChapterContent} />
+   ```
+
+2. **Update navigation config** (`client/src/new-ui/lib/navigation-config.ts`)
+   - Remove Content Studio from admin role
+   - Keep only for content_manager
+   - Update section items if needed
+
+3. **Update top-nav breadcrumbs** (`client/src/new-ui/components/top-nav.tsx`)
+   ```
+   /app/content                                   → ['Content Studio', 'Tracks & Chapters']
+   /app/content/tracks/:trackId/chapters/:chapterId → ['Content Studio', 'Track Name', 'Chapter Name']
+   ```
+
+4. **Add route guards**
+   - Verify `user.roles.includes('content_manager')` before rendering
+   - Redirect unauthorized users to `/app/learning`
+   - Show error message if access denied
+
+5. **Backend auth**
+   - All `/api/content/*` routes check for `content_manager` role
+   - Return 403 Forbidden if not authorized
+
+**Acceptance Criteria:**
+- [ ] Content Studio shows in sidebar for content_manager only
+- [ ] Routes protected with role checks
+- [ ] Breadcrumbs show correct context
+- [ ] Unauthorized users can't access
+- [ ] Backend enforces role checks
+- [ ] Zero TypeScript errors
+
+**Duration:** 0.5 day
 
 ---
 
 ### Timeline & Dependencies
 
-**Phase 5.1: Content Studio Home**
-- Start: Anytime
-- Duration: 1 day
-- Blockers: None
+| Sub-Phase | Duration | Blockers | Start After |
+|-----------|----------|----------|-------------|
+| 5.1: Backend API | 2 days | None | Anytime |
+| 5.2: Tracks & Chapters | 2-3 days | 5.1 complete | 5.1 |
+| 5.3: Chapter Content | 2-3 days | 5.1 complete | 5.1 (parallel with 5.2) |
+| 5.4: Nav & Auth | 0.5 day | 5.2, 5.3 complete | 5.2, 5.3 |
 
-**Phase 5.2: Track Detail Page**
-- Start: After 5.1
-- Duration: 1-2 days
-- Blockers: None
-
-**Phase 5.3: Edit Chapter**
-- Start: After 5.2
-- Duration: 2-3 days
-- Blockers: TipTap integration, audio upload setup
-
-**Total Phase 5 Duration:** ~4-6 days estimated
+**Total Phase 5 Duration:** 5-7 days estimated (some parallel work possible)
 
 ---
 

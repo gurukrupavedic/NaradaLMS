@@ -23,6 +23,11 @@ import { StudentDetailsPage } from './instructor/pages/StudentDetailsPage';
 // Learning & Content
 import { VedicLearningPage } from './student/pages/VedicLearningPage';
 import { LearnChapterPage } from './student/pages/LearnChapterPage';
+
+// Prototypes
+import { TracksAndChaptersAccordion } from '@/temp-prototype/TracksAndChaptersAccordion';
+import { TracksAndChaptersColumn } from '@/temp-prototype/TracksAndChaptersColumn';
+
 const ContentPage = () => <div className="p-8"><h1 className="text-3xl font-bold">Content Studio</h1></div>;
 
 export default function AppShell() {
@@ -60,6 +65,11 @@ export default function AppShell() {
           <Route path="/app/admin/settings" component={SystemSettings} />
           <Route path="/app/admin/batches/:id" component={BatchDetails} />
           <Route path="/app/admin/batches" component={BatchManagement} />
+          
+          {/* Prototype Routes */}
+          <Route path="/prototype/tracks-accordion" component={TracksAndChaptersAccordion} />
+          <Route path="/prototype/tracks-column" component={TracksAndChaptersColumn} />
+          
           <Route component={() => <div className="p-8">Not Found</div>} />
         </Switch>
       </Suspense>
