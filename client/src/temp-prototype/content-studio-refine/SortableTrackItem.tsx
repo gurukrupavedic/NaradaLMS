@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Edit2, GripVertical, Trash2, BookOpen } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { MockTrack } from '../mock-tracks-data';
+import './SortableTrackItem.css';
 
 interface SortableTrackItemProps {
     track: MockTrack;
@@ -32,15 +33,15 @@ export function SortableTrackItem({
         isDragging,
     } = useSortable({ id: track.id });
 
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        zIndex: isDragging ? 20 : 'auto',
-        opacity: isDragging ? 0.8 : 1,
-    };
-
     return (
-        <div ref={setNodeRef} style={style} className="mb-3 group relative">
+        <div
+            ref={setNodeRef}
+            className={`mb-3 group relative sortable-track-item ${isDragging ? 'dragging' : ''}`}
+            style={{
+                '--transform': CSS.Transform.toString(transform) || 'none',
+                '--transition': transition || 'none',
+            } as React.CSSProperties}
+        >
             <Card
                 className={`relative overflow-hidden cursor-pointer transition-all duration-200 ${isSelected
                     ? 'border-y border-r border-l-[6px] border-l-primary border-y-border border-r-border shadow-md bg-slate-100 dark:bg-slate-800' // Selected: Primary accent bar, distinct grey bg
