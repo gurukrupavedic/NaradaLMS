@@ -65,13 +65,6 @@ const contentSection: NavSection = {
       url: '/app/content',
       icon: BookOpen,
     },
-    {
-      title: 'Chapter Content',
-      // Default link goes to Content Studio. The specific chapter content
-      // page is accessed via deep link when a track/chapter is selected.
-      url: '/app/content',
-      icon: PenTool,
-    },
   ],
 };
 

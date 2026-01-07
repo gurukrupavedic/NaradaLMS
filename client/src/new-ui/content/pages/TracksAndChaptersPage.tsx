@@ -503,7 +503,9 @@ export default function TracksAndChapters() {
                           onEdit={(c) => openEditDialog(c, 'chapter')}
                           onMove={(c) => openMoveDialog(c)}
                           onDelete={(c) => setDeleteState({ isOpen: true, itemType: 'chapter', item: c, trackId: selectedTrack.id })}
-                          onOpen={(c) => navigate(`/app/content/tracks/${selectedTrack.id}/chapters/${c.id}`)}
+                          onOpen={(c) => {
+                            navigate(`/app/content/tracks/${selectedTrack.id}/chapters/${c.id}`);
+                          }}
                         />
                       ))}
                     </SortableContext>
