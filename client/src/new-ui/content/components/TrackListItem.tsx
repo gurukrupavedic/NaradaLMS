@@ -31,7 +31,7 @@ export function TrackListItem({ track, index, isSelected, onSelect, onEdit, onDe
     >
       <Card
         className={`relative overflow-hidden cursor-pointer transition-all duration-200 ${isSelected
-          ? 'bg-muted/50 border-primary shadow-sm'
+          ? 'bg-primary/5 border-primary border-l-4 shadow-md'
           : 'border hover:border-primary/50 hover:shadow-sm bg-card'
           }`}
         onClick={() => onSelect(track.id)}
@@ -57,7 +57,7 @@ export function TrackListItem({ track, index, isSelected, onSelect, onEdit, onDe
                 </span>
                 {track.title}
               </h3>
-              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />}
+
             </div>
 
             {track.description && (

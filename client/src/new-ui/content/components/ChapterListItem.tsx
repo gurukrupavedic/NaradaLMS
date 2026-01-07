@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Edit2, Trash2, ArrowRight, ExternalLink } from 'lucide-react';
+import { GripVertical, Edit2, Trash2, ArrowRight, ExternalLink, Headphones, Link2 } from 'lucide-react';
 import { Chapter } from '@shared/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,9 +61,16 @@ export function ChapterListItem({ chapter, index, onEdit, onMove, onDelete, onOp
             </div>
 
             {chapter.hasContent && (
-              <p className="text-xs text-muted-foreground">
-                {chapter.audioFileCount ?? 0} audio · {chapter.segmentCount ?? 0} mappings
-              </p>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground/80" title="Audio Files">
+                  <Headphones className="w-3 h-3" />
+                  <span className="font-medium">{chapter.audioFileCount ?? 0}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground/80" title="Mappings">
+                  <Link2 className="w-3 h-3" />
+                  <span className="font-medium">{chapter.segmentCount ?? 0}</span>
+                </div>
+              </div>
             )}
 
             <div className="flex items-center gap-2 pt-2 mt-2 border-t border-border/40">
