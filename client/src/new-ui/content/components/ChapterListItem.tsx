@@ -34,15 +34,15 @@ export function ChapterListItem({ chapter, index, onEdit, onMove, onDelete, onOp
       <Card className="relative overflow-hidden hover:shadow-md transition-all duration-200 border hover:border-border/80">
         <div className="absolute left-0 top-0 bottom-0 w-1 transition-colors bg-transparent group-hover:bg-primary/50" />
 
-        <CardContent className="p-4 pl-4 flex items-start gap-3">
-          <div
-            {...attributes}
-            {...listeners}
-            className="mt-1 flex items-center justify-center cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-foreground transition-colors px-1"
-          >
-            <GripVertical className="w-5 h-5" />
-          </div>
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute left-1 top-1/2 -translate-y-1/2 z-20 p-2 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+        >
+          <GripVertical className="w-5 h-5 bg-card/80 backdrop-blur-[1px] rounded" />
+        </div>
 
+        <CardContent className="p-4 pl-9 flex items-start gap-3">
           <div className="flex-1 min-w-0 space-y-2">
             <div className="flex items-start justify-between gap-3">
               <h3 className="font-semibold text-sm leading-snug pt-0.5">
@@ -53,9 +53,8 @@ export function ChapterListItem({ chapter, index, onEdit, onMove, onDelete, onOp
               </h3>
               <Badge
                 variant="secondary"
-                className={`flex-shrink-0 text-[10px] uppercase tracking-wider font-bold h-5 px-2 text-white ${
-                  isPublished ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-500 hover:bg-amber-600'
-                }`}
+                className={`flex-shrink-0 text-[10px] uppercase tracking-wider font-bold h-5 px-2 text-white ${isPublished ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-500 hover:bg-amber-600'
+                  }`}
               >
                 {chapter.status}
               </Badge>

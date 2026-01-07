@@ -58,7 +58,7 @@ import { TrackListItem, TrackRow } from '../components/TrackListItem';
 import { ChapterListItem, ChapterRow } from '../components/ChapterListItem';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { handleJsonResponse } from '../utils/handleJsonResponse';
-import { Layers, Plus, LayoutTemplate } from 'lucide-react';
+import { Grip, Plus, BookOpen } from 'lucide-react';
 
 interface DialogState {
   isOpen: boolean;
@@ -202,12 +202,12 @@ export default function TracksAndChapters() {
   });
 
   const createChapterMutation = useMutation({
-    mutationFn: async ({ trackId, title }: { trackId: number; title: string }) => {
+    mutationFn: async ({ trackId, title, description }: { trackId: number; title: string, description: string }) => {
       const res = await fetch(`/api/content/tracks/${trackId}/chapters`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ title, content: {} }),
+        body: JSON.stringify({ title, description, content: {} }),
       });
       return handleJsonResponse<ChapterRow>(res, 'Failed to create chapter');
     },
@@ -222,12 +222,12 @@ export default function TracksAndChapters() {
   });
 
   const updateChapterMutation = useMutation({
-    mutationFn: async ({ chapterId, title }: { chapterId: number; title: string }) => {
+    mutationFn: async ({ chapterId, title, description }: { chapterId: number; title: string, description: string }) => {
       const res = await fetch(`/api/content/chapters/${chapterId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ title, description }),
       });
       return handleJsonResponse<ChapterRow>(res, 'Failed to update chapter');
     },
@@ -354,13 +354,13 @@ export default function TracksAndChapters() {
 
   const handleCreateChapter = () => {
     if (!selectedTrackId || !formData.title.trim()) return;
-    createChapterMutation.mutate({ trackId: selectedTrackId, title: formData.title });
+    createChapterMutation.mutate({ trackId: selectedTrackId, title: formData.title, description: formData.description });
     closeDialog();
   };
 
   const handleEditChapter = (chapter: ChapterRow) => {
     if (!formData.title.trim()) return;
-    updateChapterMutation.mutate({ chapterId: chapter.id, title: formData.title });
+    updateChapterMutation.mutate({ chapterId: chapter.id, title: formData.title, description: formData.description });
     closeDialog();
   };
 
@@ -421,8 +421,8 @@ export default function TracksAndChapters() {
   }
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-hidden p-6 max-w-7xl mx-auto w-full">
+    <div className="h-[calc(100vh-4rem)] bg-background flex flex-col overflow-hidden">
+      <div className="flex-1 overflow-hidden p-4 w-full h-full">
         <ResizablePanelGroup direction="horizontal" onLayout={handleLayoutChange} className="h-full">
           <ResizablePanel
             defaultSize={columnSizes.left}
@@ -432,7 +432,7 @@ export default function TracksAndChapters() {
           >
             <div className="p-4 border-b flex justify-between items-center bg-card rounded-t-lg">
               <div className="flex items-center gap-2">
-                <Layers className="w-5 h-5 text-primary" />
+                <Grip className="w-5 h-5 text-primary" />
                 <h2 className="font-semibold">Tracks</h2>
                 <Badge variant="secondary" className="ml-2">
                   {tracksQuery.isLoading ? '…' : tracks.length}
@@ -480,7 +480,7 @@ export default function TracksAndChapters() {
               <>
                 <div className="p-4 border-b flex justify-between items-center bg-card rounded-t-lg">
                   <div className="flex items-center gap-2">
-                    <LayoutTemplate className="w-5 h-5 text-primary" />
+                    <BookOpen className="w-5 h-5 text-primary" />
                     <div>
                       <h2 className="font-semibold">{selectedTrack.title}</h2>
                       <p className="text-xs text-muted-foreground">{selectedTrackChapters.length} chapters</p>
@@ -518,7 +518,7 @@ export default function TracksAndChapters() {
               </>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground flex-col gap-2">
-                <Layers className="w-10 h-10 opacity-20" />
+                <Grip className="w-10 h-10 opacity-20" />
                 <p>Select a track to manage chapters</p>
               </div>
             )}
@@ -571,16 +571,14 @@ export default function TracksAndChapters() {
                 <label className="text-sm font-medium">Title</label>
                 <Input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="Enter title" />
               </div>
-              {dialogState.itemType === 'track' && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Enter description"
-                  />
-                </div>
-              )}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Description</label>
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Enter description"
+                />
+              </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={closeDialog}>
                   Cancel
