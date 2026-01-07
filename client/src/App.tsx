@@ -118,7 +118,7 @@ function Router() {
           <>
             {/* Specific deep route for Content Studio - must come before general patterns */}
             <Route path="/app/content/tracks/:trackId/chapters/:chapterId" component={AppShell} />
-            {/* General routes for new UI */}
+            {/* General explicit routes for new UI */}
             <Route path="/app" component={AppShell} />
             <Route path="/app/:section" component={AppShell} />
             <Route path="/app/:section/:subsection" component={AppShell} />
