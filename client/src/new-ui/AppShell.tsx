@@ -1,7 +1,7 @@
 'use client';
 
-import React, { Suspense, useEffect } from 'react';
-import { Switch, Route, useLocation } from 'wouter';
+import React, { Suspense } from 'react';
+import { Switch, Route } from 'wouter';
 import { useAuth } from '@/features/shared-features/hooks/useAuth';
 import { LoadingScreen } from '@/components/ui/loading-screen';
 import { AppLayout } from './components/app-layout';
@@ -65,7 +65,7 @@ export default function AppShell() {
           <Route path="/app/instructor/batches" component={MyBatchesList} />
           <Route path="/app/content" component={TracksAndChapters} />
           <Route path="/app/content/tracks/:trackId/chapters/:chapterId" component={ChapterContent} />
-          <Route path="/app/admin" component={AdminRedirect} />
+          <Route path="/app/admin" component={() => { window.location.href = '/app/admin/users'; return null; }} />
           <Route path="/app/admin/users" component={UserManagement} />
           <Route path="/app/admin/logs" component={AuditLogs} />
           <Route path="/app/admin/settings" component={SystemSettings} />
@@ -82,12 +82,4 @@ export default function AppShell() {
       </Suspense>
     </AppLayout>
   );
-}
-
-function AdminRedirect() {
-  const [, navigate] = useLocation();
-  useEffect(() => {
-    navigate('/app/admin/users');
-  }, [navigate]);
-  return null;
 }

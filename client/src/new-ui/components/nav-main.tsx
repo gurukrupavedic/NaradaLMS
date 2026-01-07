@@ -1,8 +1,7 @@
-
 'use client';
 
 import { ChevronRight, type LucideIcon } from 'lucide-react';
-import { Link, useLocation } from 'wouter';
+import { useLocation } from 'wouter';
 
 import {
   Collapsible,
@@ -90,13 +89,13 @@ export function NavMain({
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton tooltip={item.title} asChild isActive={isActive}>
-                    <Link href={item.url}>
+                    <a href={item.url}>
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>
                       {showChevron && (
                         <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                       )}
-                    </Link>
+                    </a>
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 {item.items && item.items.length > 0 && (
@@ -105,9 +104,9 @@ export function NavMain({
                       {item.items.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton asChild isActive={location === subItem.url}>
-                            <Link href={subItem.url}>
+                            <a href={subItem.url}>
                               <span>{subItem.title}</span>
-                            </Link>
+                            </a>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       ))}
