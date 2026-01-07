@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronRight, type LucideIcon } from 'lucide-react';
-import { useLocation } from 'wouter';
+import { Link, useLocation } from 'wouter';
 
 import {
   Collapsible,
@@ -44,28 +44,28 @@ export function NavMain({
   const isItemActive = (item: NavMainItem) => {
     // Exact match
     if (location === item.url) return true;
-    
+
     // For items with sub-items, check if we're on a descendant route
     if (item.items && item.items.length > 0 && location.startsWith(item.url + '/')) {
       return true;
     }
-    
+
     // Check if any sub-items match exactly
     if (item.items?.some(subItem => location === subItem.url)) return true;
-    
+
     return false;
   };
 
   const shouldShowChevron = (item: NavMainItem) => {
     // Only show chevron if item has sub-items AND we're on a descendant page
     if (!item.items || item.items.length === 0) return false;
-    
+
     // For contextual sub-items, only show chevron when we're actually on a descendant route
     const hasContextualItems = item.items.some(sub => sub.isContextual);
     if (hasContextualItems) {
       return isItemActive(item) && location !== item.url;
     }
-    
+
     // For static sub-items, always show chevron
     return true;
   };
@@ -78,7 +78,7 @@ export function NavMain({
           const isActive = isItemActive(item);
           const showChevron = shouldShowChevron(item);
           const isOpen = isActive && item.items && item.items.length > 0;
-          
+
           return (
             <Collapsible
               key={item.title}
@@ -89,13 +89,13 @@ export function NavMain({
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton tooltip={item.title} asChild isActive={isActive}>
-                    <a href={item.url}>
+                    <Link href={item.url}>
                       {item.icon && <item.icon />}
                       <span>{item.title}</span>
                       {showChevron && (
                         <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                       )}
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 {item.items && item.items.length > 0 && (
@@ -104,9 +104,9 @@ export function NavMain({
                       {item.items.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton asChild isActive={location === subItem.url}>
-                            <a href={subItem.url}>
+                            <Link href={subItem.url}>
                               <span>{subItem.title}</span>
-                            </a>
+                            </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       ))}
