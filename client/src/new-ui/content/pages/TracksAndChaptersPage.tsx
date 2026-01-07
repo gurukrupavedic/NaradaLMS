@@ -129,15 +129,15 @@ function TrackListItem({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: track.id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 20 : 'auto',
-    opacity: isDragging ? 0.8 : 1,
-  } as const;
-
   return (
-    <div ref={setNodeRef} style={style} className="mb-3 group relative">
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition: transition || undefined,
+      }}
+      className={`mb-3 group relative ${isDragging ? 'opacity-80 z-20' : 'opacity-100 z-auto'}`}
+    >
       <Card
         className={`relative overflow-hidden cursor-pointer transition-all duration-200 ${
           isSelected
@@ -230,17 +230,17 @@ function ChapterListItem({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: chapter.id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 20 : 'auto',
-    opacity: isDragging ? 0.8 : 1,
-  } as const;
-
   const isPublished = chapter.status === 'published';
 
   return (
-    <div ref={setNodeRef} style={style} className="mb-3 group relative">
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+      className={`mb-3 group relative ${isDragging ? 'opacity-80 z-20' : 'opacity-100 z-auto'}`}
+    >
       <Card className="relative overflow-hidden hover:shadow-md transition-all duration-200 border hover:border-border/80">
         <div className="absolute left-0 top-0 bottom-0 w-1 transition-colors bg-transparent group-hover:bg-primary/50" />
 
