@@ -25,8 +25,8 @@ import { VedicLearningPage } from './student/pages/VedicLearningPage';
 import { LearnChapterPage } from './student/pages/LearnChapterPage';
 
 // Prototypes
-import { TracksAndChaptersAccordion } from '@/temp-prototype/TracksAndChaptersAccordion';
-import { TracksAndChaptersColumn } from '@/temp-prototype/TracksAndChaptersColumn';
+import { TracksAndChaptersAccordion } from '@/temp-prototype/content-studio-refine/TracksAndChaptersAccordion';
+import { TracksAndChaptersColumn } from '@/temp-prototype/content-studio-refine/TracksAndChaptersColumn';
 
 // Content pages
 import TracksAndChapters from './content/pages/TracksAndChaptersPage';

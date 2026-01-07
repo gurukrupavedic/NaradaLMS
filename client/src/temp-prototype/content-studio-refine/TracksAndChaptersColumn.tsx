@@ -34,7 +34,7 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from '@/components/ui/AlertDialog';
-import { MOCK_TRACKS, type MockTrack, type MockChapter } from './mock-tracks-data';
+import { MOCK_TRACKS, type MockTrack, type MockChapter } from '../mock-tracks-data';
 
 interface DialogState {
   isOpen: boolean;
