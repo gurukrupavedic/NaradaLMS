@@ -2,7 +2,7 @@
 
 **Last Updated:** January 6, 2026  
 **Current Phase:** Phase 5 - Content Studio  
-**Status:** Phases 0-4 + Phase 6 Complete | Phase 5.1 ✅ Complete | Phase 5.2-5.4 In Progress | MVP Completion Target: End of Phase 5
+**Status:** Phases 0-4 + Phase 6 Complete | Phase 5.1 ✅ Complete | Phase 5.2 ✅ Complete | Phase 5.3-5.4 In Progress | MVP Completion Target: End of Phase 5
 
 ---
 
@@ -243,15 +243,29 @@ This is the **active implementation guide** for the final MVP phase. It focuses 
 
 #### Sub-Phase 5.2: Tracks & Chapters Page
 
-**Status:** PENDING (prototype refinement phase before implementation)
+**Status:** COMPLETE (Jan 6, 2026)
 
 **Goal:** Port the working prototype into new-ui and fully integrate with the backend to manage tracks and chapters from the Content Studio.
 
-**Component:** `client/src/new-ui/content/pages/TracksAndChapters.tsx`
+**Component:** `client/src/new-ui/content/pages/TracksAndChaptersPage.tsx`
+
+**Completed Implementation:**
+- Ported refined prototype into the new-ui page with a two-column resizable layout and localStorage persistence for selection and panel sizes.
+- Wired TanStack Query v5 for `['content','tracks']` and per-track `['content','tracks',trackId,'chapters']` with create/update/delete mutations.
+- Implemented optimistic DnD reorder for tracks and chapters and server reconciliation via `/api/content/*/move` endpoints.
+- Added dialogs for create/edit (track title+description, chapter title) and move chapter across tracks; delete rules aligned (block track deletion when it has chapters; warn on published chapter).
+- Navigation from chapter list to editor at `/app/content/tracks/:trackId/chapters/:chapterId`.
+- Basic role guard messaging inside the page for users without `content_manager`.
+
+**Remaining Polish (tomorrow):**
+- Broaden loading/empty/error states coverage and toast copy QA.
+- Responsive tuning across breakpoints and minor UI refinements.
+- End-to-end verification against live API for move/reorder edge cases and published delete behavior.
+- Repo-wide TypeScript error cleanup in unrelated modules (tracked separately; not blocking 5.2 functionality).
 
 **Prototype Port Plan:**
 1. Refine prototype UI first (localStorage, defaults, dialog UX) - in progress
-2. Move/port UI from `client/src/temp-prototype/TracksAndChaptersColumn.tsx` into the new page component.
+2. Move/port UI from temp-prototype into the new page component.
 3. Fit within the new-ui AppShell (sidebar/top-nav), keeping spacing consistent with design system.
 4. Replace all local state operations with TanStack Query hooks and mutations.
 5. Wire navigation: "Open Chapter" → `/app/content/tracks/:trackId/chapters/:chapterId`.
@@ -312,6 +326,8 @@ This is the **active implementation guide** for the final MVP phase. It focuses 
 ---
 
 #### Sub-Phase 5.3: Chapter Content Editor
+
+**Status:** IN PROGRESS (Jan 6, 2026)
 
 **Goal:** Port legacy chapter editor to new-ui with clean endpoints/routing.
 
