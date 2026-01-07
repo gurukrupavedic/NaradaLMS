@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Edit2, GripVertical, Trash2, BookOpen } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { MockTrack } from '../mock-tracks-data';
-import './SortableTrackItem.css';
 
 interface SortableTrackItemProps {
     track: MockTrack;
