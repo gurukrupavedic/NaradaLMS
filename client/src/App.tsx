@@ -9,6 +9,7 @@ import { LoadingScreen } from "@/components/ui/loading-screen";
 import InstructorMatrixPrototype from "@/temp-prototype/InstructorMatrixPrototype";
 import { TracksAndChaptersAccordion } from "@/temp-prototype/TracksAndChaptersAccordion";
 import { TracksAndChaptersColumn } from "@/temp-prototype/TracksAndChaptersColumn";
+import { TracksAndChaptersRefined } from "@/temp-prototype/content-studio-refine/TracksAndChaptersRefined";
 import { useAuth } from "@/features/shared-features/hooks/useAuth";
 import { useWarmTrackCache } from "@/lib/query-prefetch";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -154,6 +155,7 @@ function Router() {
         <Route path="/prototype/matrix" component={InstructorMatrixPrototype} />
         <Route path="/prototype/tracks-accordion" component={TracksAndChaptersAccordion} />
         <Route path="/prototype/tracks-column" component={TracksAndChaptersColumn} />
+        <Route path="/prototype/content-studio-refine" component={TracksAndChaptersRefined} />
 
         <Route component={SimpleNotFound} />
       </Switch>
