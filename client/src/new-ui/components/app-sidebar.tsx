@@ -40,7 +40,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     email: string;
     avatar?: string;
   };
-  userRole?: UserRole;
+  userRoles?: UserRole[];
 }
 
 export function AppSidebar({
@@ -49,11 +49,11 @@ export function AppSidebar({
     email: 'user@example.com',
     avatar: '',
   },
-  userRole = 'student',
+  userRoles = ['student'],
   ...props
 }: AppSidebarProps) {
   const [location] = useLocation();
-  const navSections = getNavigationForRole(userRole);
+  const navSections = getNavigationForRole(userRoles);
 
   // Extract chapter ID from location to fetch chapter data for sidebar label
   const chapterMatch = location.match(/^\/app\/learning\/chapter\/(\d+)/);
@@ -150,10 +150,10 @@ export function AppSidebar({
           const trackId = editorMatch[1];
           const chapterId = editorMatch[2];
           const contextualUrl = `/app/content/tracks/${trackId}/chapters/${chapterId}`;
-          
+
           // Add track/chapter suffix to label
           const suffix = ` : T${trackId}.CH${chapterId}`;
-          
+
           return {
             ...item,
             items: [

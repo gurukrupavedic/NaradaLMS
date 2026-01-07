@@ -42,9 +42,9 @@ export default function AppShell() {
     return <LoadingScreen message="Loading..." />;
   }
 
-  // Get the primary role (first role in array)
-  // Fallback to 'student' if no roles assigned
-  const userRole = (user.roles && user.roles.length > 0) ? user.roles[0] : 'student';
+  // Get all user roles for multi-role support
+  // Fallback to ['student'] if no roles assigned
+  const userRoles = (user.roles && user.roles.length > 0) ? user.roles : ['student'];
 
   return (
     <AppLayout
@@ -52,7 +52,7 @@ export default function AppShell() {
         name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
         email: user.email || '',
       }}
-      userRole={userRole as any}
+      userRoles={userRoles as any}
     >
       <Suspense fallback={<LoadingScreen message="Loading..." />}>
         <Switch>

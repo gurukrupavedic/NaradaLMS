@@ -16,7 +16,7 @@ interface AppLayoutProps {
     email: string;
     avatar?: string;
   };
-  userRole?: UserRole;
+  userRoles?: UserRole[];
 }
 
 export function AppLayout({
@@ -25,11 +25,11 @@ export function AppLayout({
     name: 'User',
     email: 'user@example.com',
   },
-  userRole = 'student',
+  userRoles = ['student'],
 }: AppLayoutProps) {
   return (
     <SidebarProvider>
-      <AppSidebar user={user} userRole={userRole} />
+      <AppSidebar user={user} userRoles={userRoles} />
       <SidebarInset className="min-w-0">
         <TopNav user={user} />
         <main className="flex-1 overflow-auto min-w-0">

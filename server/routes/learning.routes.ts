@@ -4,10 +4,14 @@
  */
 
 import { Router } from 'express';
+import { authMiddleware } from '../shared/middleware/auth';
 import { learningService } from '../modules/learning-delivery';
 import type { ChapterAccessDTO, ProgressQueryFilters, ChapterInclude } from '../modules/learning-delivery/types';
 
 const router = Router();
+
+// Protect all learning routes - users must be authenticated
+router.use(authMiddleware);
 
 /**
  * GET /api/learning/my-progress
@@ -67,7 +71,7 @@ router.get('/progress', async (req, res) => {
     }
 
     const isStudent = user.roles?.includes('student') && !user.roles?.includes('instructor') && !user.roles?.includes('admin');
-    
+
     const filters: ProgressQueryFilters = {
       studentId: req.query.studentId as string,
       trackId: req.query.trackId ? parseInt(req.query.trackId as string) : undefined,

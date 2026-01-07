@@ -95,17 +95,16 @@ const adminSection: NavSection = {
 };
 
 /**
- * Get navigation sections for a specific role
+ * Get navigation sections for user roles (supports multi-role)
  */
-export function getNavigationForRole(role?: UserRole): {
+export function getNavigationForRole(roles?: UserRole[] | UserRole): {
   learn: NavSection;
   batches?: NavSection;
   content?: NavSection;
   admin?: NavSection;
 } {
-  if (!role) {
-    role = 'student';
-  }
+  // Normalize to array
+  const roleArray = Array.isArray(roles) ? roles : (roles ? [roles] : ['student']);
 
   const nav: {
     learn: NavSection;
@@ -116,20 +115,19 @@ export function getNavigationForRole(role?: UserRole): {
     learn: learnSection,
   };
 
-  // Instructor: can see batches + learn
-  if (role === 'instructor') {
+  // Instructor or Admin: can see batches + learn
+  if (roleArray.includes('instructor') || roleArray.includes('admin')) {
     nav.batches = batchesSection;
   }
 
-  // Content Manager: can see content studio + learn
-  if (role === 'content_manager') {
+  // Content Manager ONLY: can see content studio + learn
+  // Admin does NOT get content studio access (separation of duties)
+  if (roleArray.includes('content_manager')) {
     nav.content = contentSection;
   }
 
-  // Admin: sees everything
-  if (role === 'admin') {
-    nav.batches = batchesSection;
-    nav.content = contentSection;
+  // Admin: sees admin center + batches (content excluded)
+  if (roleArray.includes('admin')) {
     nav.admin = adminSection;
   }
 
