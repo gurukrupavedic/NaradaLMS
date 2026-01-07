@@ -116,14 +116,10 @@ function Router() {
       <Switch>
         {NEW_UI_ENABLED && (
           <>
-            {/* Specific deep route for Content Studio - must come before catch-all */}
-            <Route
-              path="/app/content/tracks/:trackId/chapters/:chapterId"
-              component={AppShell}
-            />
-            {/* Catch-all for new UI deep routes under /app */}
             <Route path="/app" component={AppShell} />
-            <Route path="/app/:rest*" component={AppShell} />
+            <Route path="/app/:section" component={AppShell} />
+            <Route path="/app/:section/:subsection" component={AppShell} />
+            <Route path="/app/:section/:subsection/:detail" component={AppShell} />
           </>
         )}
         <Route path="/" component={() => <SimpleDashboard user={user as any} />} />
