@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarIcon, Filter, AlertCircle, ChevronDown, RotateCcw, Copy, ChevronUp, ArrowUpDown } from "lucide-react";
+import { CalendarIcon, Filter, AlertCircle, ChevronDown, RotateCcw, Copy, ChevronUp, ArrowUpDown, FileSearch } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -26,7 +26,7 @@ import {
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
-import { Badge } from "@/components/design-system/badge";
+import { Badge } from "@/components/design-system/Badge";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 
 const ITEMS_PER_PAGE = 25;
@@ -327,10 +327,10 @@ export default function AuditLogs() {
               });
             }}
           >
-            <SelectTrigger className="w-fit min-w-32 h-8" size="sm">
+            <SelectTrigger className="w-fit min-w-32 h-8">
               <SelectValue placeholder="Action" />
             </SelectTrigger>
-            <SelectContent className="z-50" portal={true}>
+            <SelectContent className="z-50">
               <SelectItem value="all">All Actions</SelectItem>
               {uniqueActions.map((action) => (
                 <SelectItem key={action} value={action}>
@@ -352,10 +352,10 @@ export default function AuditLogs() {
               });
             }}
           >
-            <SelectTrigger className="w-fit min-w-32 h-8" size="sm">
+            <SelectTrigger className="w-fit min-w-32 h-8">
               <SelectValue placeholder="Resource Type" />
             </SelectTrigger>
-            <SelectContent className="z-50" portal={true}>
+            <SelectContent className="z-50">
               <SelectItem value="all">All Resources</SelectItem>
               {uniqueResourceTypes.map((type) => (
                 <SelectItem key={type} value={type}>

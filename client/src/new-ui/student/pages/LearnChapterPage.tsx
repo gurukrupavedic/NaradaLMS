@@ -12,7 +12,7 @@ import { SegmentedTextDisplay } from "@/components/text-segmentation/SegmentedTe
 import { getProficiencyLabel } from "@/new-ui/batches/utils/matrix-utils";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AudioPlayerControls } from "@/components/ui/audio-player-controls";
+import { AudioPlayerControls } from "@/new-ui/student/components/AudioPlayerControls";
 
 interface ChapterData {
   id: number;
@@ -339,10 +339,10 @@ export function LearnChapterPage() {
                 </div>
                 {learnMode && (
                   <div className="flex items-center gap-2">
-                    <Badge variant="blue" badgeStyle="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
+                    <Badge variant="secondary" className="text-xs" icon={<List className="h-3 w-3" />}>
                       {currentScriptSegments.length} segments
                     </Badge>
-                    <Badge variant="green" badgeStyle="sharp" className="text-xs" icon={<Zap className="h-3 w-3" />}>
+                    <Badge variant="secondary" className="text-xs" icon={<Zap className="h-3 w-3" />}>
                       {mappedSegments.length} mapped
                     </Badge>
                   </div>
