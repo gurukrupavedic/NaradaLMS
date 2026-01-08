@@ -589,7 +589,7 @@ export default function TracksAndChapters() {
                   onClick={() => {
                     if (dialogState.itemType === 'track') {
                       dialogState.type === 'create' ? handleCreateTrack() : handleEditTrack();
-                    } else if (dialogState.itemType === 'chapter' && dialogState.item) {
+                    } else if (dialogState.itemType === 'chapter') {
                       dialogState.type === 'create'
                         ? handleCreateChapter()
                         : handleEditChapter(dialogState.item as ChapterRow);
