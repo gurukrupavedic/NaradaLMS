@@ -155,7 +155,7 @@ router.get('/tracks/:trackId/chapters', async (req: Request, res: Response, next
 });
 
 // GET /api/chapters/:chapterId/details - Get chapter details
-router.get('/chapters/:chapterId', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/chapters/:chapterId/details', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const chapter = await contentService.getChapter(chapterId);

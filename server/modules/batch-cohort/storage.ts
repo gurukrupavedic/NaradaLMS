@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { eq, sql, and, inArray, or } from "drizzle-orm";
-import { batches, enrollments, batchCoInstructors, users, tracks, studentProgress, chapters } from "@shared/schema";
+import { batches, enrollments, batchCoInstructors, users, tracks, studentProgress, chapters, proficiencyEvaluationLog } from "@shared/schema";
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput } from "./types";
 
 export class BatchStorage {
@@ -22,7 +22,7 @@ export class BatchStorage {
       .select({ batchId: batchCoInstructors.batchId })
       .from(batchCoInstructors)
       .where(eq(batchCoInstructors.instructorId, instructorId));
-    
+
     const coInstructorBatchIds = coInstructorBatches.map(row => row.batchId);
 
     // Build the WHERE condition
@@ -102,21 +102,21 @@ export class BatchStorage {
 
     const track = base.trackId
       ? (await db
-          .select({ id: tracks.id, title: tracks.title, name: tracks.title, order: tracks.order })
-          .from(tracks)
-          .where(eq(tracks.id, base.trackId)))[0] || null
+        .select({ id: tracks.id, title: tracks.title, name: tracks.title, order: tracks.order })
+        .from(tracks)
+        .where(eq(tracks.id, base.trackId)))[0] || null
       : null;
 
     const primaryInstructor = base.primaryInstructorId
       ? (await db
-          .select({
-            id: users.id,
-            firstName: users.firstName,
-            lastName: users.lastName,
-            email: users.email,
-          })
-          .from(users)
-          .where(eq(users.id, base.primaryInstructorId)))[0] || null
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+        })
+        .from(users)
+        .where(eq(users.id, base.primaryInstructorId)))[0] || null
       : null;
 
     const coInstructors = await db
@@ -211,23 +211,34 @@ export class BatchStorage {
       enrolledBy: input.enrolledBy,
     }).returning();
 
-    // Automatically create proficiency records for all chapters with level 9 (Not Started)
+    // Automatically create proficiency records ONLY for chapters the student doesn't have yet
     try {
       const allChapters = await db
         .select({ id: chapters.id })
         .from(chapters);
 
       if (allChapters.length > 0) {
-        const proficiencyRecords = allChapters.map(chapter => ({
-          studentId: input.studentId,
-          chapterId: chapter.id,
-          batchId: input.batchId,
-          proficiencyLevel: 9, // Not Started
-          lastEvaluatedAt: new Date(),
-        }));
+        // Check which chapters the student already has proficiency records for
+        const existingProgress = await db
+          .select({ chapterId: studentProgress.chapterId })
+          .from(studentProgress)
+          .where(eq(studentProgress.studentId, input.studentId));
 
-        // Bulk insert proficiency records
-        if (proficiencyRecords.length > 0) {
+        const existingChapterIds = new Set(existingProgress.map(p => p.chapterId));
+
+        // Only create records for NEW chapters (preserves progress when student changes batches)
+        const newChapters = allChapters.filter(ch => !existingChapterIds.has(ch.id));
+
+        if (newChapters.length > 0) {
+          const proficiencyRecords = newChapters.map(chapter => ({
+            studentId: input.studentId,
+            chapterId: chapter.id,
+            batchId: null,  // Batch-agnostic: proficiency is global per student per chapter
+            proficiencyLevel: 9, // Not Started
+            lastEvaluatedAt: new Date(),
+          }));
+
+          // Bulk insert proficiency records
           await db.insert(studentProgress).values(proficiencyRecords);
         }
       }
@@ -299,7 +310,7 @@ export class BatchStorage {
       .select({ studentId: enrollments.studentId })
       .from(enrollments)
       .where(eq(enrollments.status, 'active')); // Removed batchId filter - exclude all enrolled students
-    
+
     const enrolledIds = enrolled.map(e => e.studentId);
 
     // Build query for eligible students
@@ -321,7 +332,7 @@ export class BatchStorage {
 
     // Execute and filter
     const allEligible = await query;
-    
+
     // Exclude already enrolled students
     let filtered = allEligible.filter(u => !enrolledIds.includes(u.id));
 
@@ -524,7 +535,8 @@ export class BatchStorage {
   }
 
   async evaluateStudent(input: { studentId: string; chapterId: number; proficiencyLevel: number; notes?: string; evaluatedBy: string; batchId?: number }) {
-    // Check if progress record exists
+    // Query by (studentId, chapterId) only - batch-agnostic
+    // A student should have exactly ONE proficiency record per chapter
     const existing = await db
       .select()
       .from(studentProgress)
@@ -534,36 +546,51 @@ export class BatchStorage {
       ))
       .limit(1);
 
+    let result;
+    const oldProficiency = existing[0]?.proficiencyLevel ?? null;
+
     if (existing.length > 0) {
-      // Update existing
-      const [updated] = await db
+      // Update existing record
+      [result] = await db
         .update(studentProgress)
         .set({
           proficiencyLevel: input.proficiencyLevel,
           notes: input.notes ?? null,
           lastEvaluatedAt: new Date(),
           evaluatedBy: input.evaluatedBy,
+          batchId: null,  // Remove batch dependency - proficiency is global
           updatedAt: new Date(),
         })
         .where(eq(studentProgress.id, existing[0].id))
         .returning();
-      return updated;
     } else {
-      // Create new progress record
-      const [created] = await db
+      // Create new record
+      [result] = await db
         .insert(studentProgress)
         .values({
           studentId: input.studentId,
           chapterId: input.chapterId,
-          batchId: input.batchId ?? null,
+          batchId: null,  // Batch-agnostic
           proficiencyLevel: input.proficiencyLevel,
           notes: input.notes ?? null,
           lastEvaluatedAt: new Date(),
           evaluatedBy: input.evaluatedBy,
         })
         .returning();
-      return created;
     }
+
+    // Create audit log entry (track which batch the instructor evaluated from)
+    await db.insert(proficiencyEvaluationLog).values({
+      studentId: input.studentId,
+      chapterId: input.chapterId,
+      batchId: input.batchId ?? null,  // Current batch for audit purposes
+      instructorId: input.evaluatedBy,
+      oldProficiencyLevel: oldProficiency,
+      newProficiencyLevel: input.proficiencyLevel,
+      notes: input.notes ?? null,
+    });
+
+    return result;
   }
 
   async chapterExists(chapterId: number) {
@@ -584,7 +611,7 @@ export class BatchStorage {
       .select({ batchId: batchCoInstructors.batchId })
       .from(batchCoInstructors)
       .where(eq(batchCoInstructors.instructorId, instructorId));
-    
+
     const coInstructorBatchIds = coInstructorBatches.map(row => row.batchId);
 
     // Build the WHERE condition - user is primary OR co-instructor

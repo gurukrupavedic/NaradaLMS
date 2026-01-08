@@ -187,6 +187,23 @@ export const studentProgress = pgTable("student_progress", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Proficiency Evaluation Log - Audit trail for proficiency changes
+export const proficiencyEvaluationLog = pgTable("proficiency_evaluation_log", {
+  id: serial("id").primaryKey(),
+  studentId: varchar("student_id").notNull().references(() => users.id),
+  chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
+  batchId: integer("batch_id").references(() => batches.id), // Current batch at time of evaluation
+  instructorId: varchar("instructor_id").notNull().references(() => users.id),
+  oldProficiencyLevel: integer("old_proficiency_level"),
+  newProficiencyLevel: integer("new_proficiency_level").notNull(),
+  notes: text("notes"),
+  evaluatedAt: timestamp("evaluated_at").defaultNow().notNull(),
+}, (table) => ([
+  index("idx_proficiency_log_student").on(table.studentId),
+  index("idx_proficiency_log_chapter").on(table.chapterId),
+  index("idx_proficiency_log_batch").on(table.batchId),
+]));
+
 // Audit logs - Track all sensitive operations
 export const auditLogs = pgTable("audit_logs", {
   id: serial("id").primaryKey(),
