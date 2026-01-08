@@ -60,6 +60,9 @@ function getBreadcrumbs(pathname: string): string[] {
     if (pathname === '/app/content') {
       return ['Content Studio', 'Tracks'];
     }
+    if (/\/app\/content\/tracks\/[^/]+\/chapters\/[^/]+/.test(pathname)) {
+      return ['Chapter Studio', 'Chapter Content'];
+    }
     return ['Content Studio', 'Media Library'];
   }
 
@@ -94,7 +97,7 @@ export function TopNav({ user }: TopNavProps) {
       {/* Left side - Sidebar trigger + Breadcrumbs */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <SidebarTrigger className="-ml-1" />
-        
+
         {/* Breadcrumbs - Flexible multi-level navigation */}
         {breadcrumbs.length > 0 && (
           <nav className="hidden sm:flex items-center gap-2 text-sm">
