@@ -30,8 +30,9 @@ interface ChapterData {
   track?: {
     id: number;
     title: string;
+    order?: number;
   };
-  chapterOrder?: number;
+  order?: number;
 }
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -56,12 +57,16 @@ export function AppSidebar({
   const navSections = getNavigationForRole(userRoles);
 
   // Extract chapter ID from location to fetch chapter data for sidebar label
-  const chapterMatch = location.match(/^\/app\/learning\/chapter\/(\d+)/);
+  // Support both Learning (Student) and Content (Admin/Editor) routes
+  const chapterMatch = location.match(/^\/app\/learning\/chapter\/(\d+)/) ||
+    location.match(/^\/app\/content\/tracks\/\d+\/chapters\/(\d+)/);
   const chapterId = chapterMatch ? parseInt(chapterMatch[1]) : null;
+  const isContentRoute = location.startsWith('/app/content');
 
   // Fetch chapter data for label (optional - sidebar will work without it)
+  // Use appropriate endpoint based on route context
   const { data: chapter } = useQuery<ChapterData>({
-    queryKey: [`/api/chapters/${chapterId}/details`],
+    queryKey: [isContentRoute ? `/api/content/chapters/${chapterId}/details` : `/api/chapters/${chapterId}/details`],
     enabled: !!chapterId,
   });
 
@@ -126,8 +131,9 @@ export function AppSidebar({
       if (item.url === '/app/learning') {
         if (chapterId) {
           let suffix = '';
-          if (chapter?.track?.id && chapter?.chapterOrder) {
-            suffix = ` : T${chapter.track.id}.CH${chapter.chapterOrder}`;
+          if (chapter?.track && chapter?.order) {
+            const trackNum = chapter.track.order ?? chapter.track.id;
+            suffix = ` - T${trackNum}.CH${chapter.order}`;
           }
           return {
             ...item,
@@ -147,12 +153,24 @@ export function AppSidebar({
         // Only show if currently on an editor route (no localStorage fallback)
         const editorMatch = location.match(/^\/app\/content\/tracks\/(\d+)\/chapters\/(\d+)$/);
         if (editorMatch) {
-          const trackId = editorMatch[1];
-          const chapterId = editorMatch[2];
-          const contextualUrl = `/app/content/tracks/${trackId}/chapters/${chapterId}`;
+          const urlTrackId = editorMatch[1];
+          const urlChapterId = editorMatch[2];
+          const contextualUrl = `/app/content/tracks/${urlTrackId}/chapters/${urlChapterId}`;
 
           // Add track/chapter suffix to label
-          const suffix = ` : T${trackId}.CH${chapterId}`;
+          // Default to URL params if data not yet loaded, but prefer fetched Order data
+          let suffix = '';
+          if (chapter?.track && chapter?.order) {
+            const trackNum = chapter.track.order ?? chapter.track.id;
+            suffix = ` - T${trackNum}.CH${chapter.order}`;
+          } else {
+            // Fallback to URL IDs while loading
+            suffix = ` - T${urlTrackId}.CH${urlChapterId} (Loading...)`;
+            if (chapterId) {
+              // Clean fallback if we have IDs but waiting for data
+              suffix = ` - T${urlTrackId}.CH${urlChapterId}`;
+            }
+          }
 
           return {
             ...item,

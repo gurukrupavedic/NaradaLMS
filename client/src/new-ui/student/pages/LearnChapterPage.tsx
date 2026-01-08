@@ -28,6 +28,7 @@ interface ChapterData {
   track?: {
     id: number;
     title: string;
+    order?: number;
   };
   order?: number;
 }
@@ -264,7 +265,7 @@ export function LearnChapterPage() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
-                {trackName ? `Track ${chapter?.track?.id || '?'} - ${trackName}` : 'Learn Chapter'}
+                {trackName ? `Track ${chapter?.track?.order || chapter?.track?.id || '?'} - ${trackName}` : 'Learn Chapter'}
               </p>
               <h1 className="text-lg font-bold text-gray-900 dark:text-white leading-tight" data-testid="text-chapter-title">
                 {chapterNumber ? `Chapter ${chapterNumber} - ${displayTitle}` : displayTitle}
