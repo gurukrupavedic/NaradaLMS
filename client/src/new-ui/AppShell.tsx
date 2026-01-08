@@ -65,10 +65,6 @@ export default function AppShell() {
           <Route path="/app/admin/batches/:id" component={BatchDetails} />
           <Route path="/app/admin/batches" component={BatchManagement} />
 
-          {/* Prototype Routes */}
-          <Route path="/prototype/tracks-accordion" component={TracksAndChaptersAccordion} />
-          <Route path="/prototype/tracks-column" component={TracksAndChaptersColumn} />
-          <Route path="/prototype/content-studio-refine" component={TracksAndChaptersRefined} />
 
           <Route component={() => <div className="p-8">Not Found</div>} />
         </Switch>
