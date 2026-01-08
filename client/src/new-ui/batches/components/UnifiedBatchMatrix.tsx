@@ -270,11 +270,11 @@ export function UnifiedBatchMatrix({
       columnHelper.accessor((row) => row.id, {
         id: `chapter-${chapter.id}`,
         header: () => (
-          <div className="px-2 py-2 flex flex-col items-center justify-center gap-0.5">
+          <div className="px-2 py-2 flex flex-col items-center justify-center gap-0.5 max-w-[120px]">
             <div className="text-xs font-bold text-gray-900 whitespace-nowrap text-center">
               {chapter.code}
             </div>
-            <div className="text-[10px] text-gray-600 line-clamp-2 text-center" title={chapter.title}>
+            <div className="text-[10px] text-gray-600 line-clamp-2 text-center leading-tight" title={chapter.title}>
               {chapter.title}
             </div>
           </div>
@@ -311,7 +311,7 @@ export function UnifiedBatchMatrix({
             </div>
           );
         },
-        size: 96, // Fixed width for consistent Excel-like grid
+        size: 120, // Fixed width for consistent Excel-like grid (fits ~8 chapters on 1440px)
         enableSorting: false,
       })
     ),
@@ -352,7 +352,7 @@ export function UnifiedBatchMatrix({
     <div className="space-y-4">
       {/* Matrix Table */}
       <div className="overflow-x-auto overflow-y-auto max-h-[75vh] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 shadow-sm">
-        <table className="border-collapse">{/* Changed from table-fixed to auto layout */}
+        <table className="w-full border-collapse">{/* Full width for header, auto columns */}
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id} className="border-b-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900">
