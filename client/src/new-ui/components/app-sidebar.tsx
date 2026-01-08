@@ -40,7 +40,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     email: string;
     avatar?: string;
   };
-  userRole?: UserRole;
+  userRoles?: UserRole[];
 }
 
 export function AppSidebar({
@@ -49,11 +49,11 @@ export function AppSidebar({
     email: 'user@example.com',
     avatar: '',
   },
-  userRole = 'student',
+  userRoles = ['student'],
   ...props
 }: AppSidebarProps) {
   const [location] = useLocation();
-  const navSections = getNavigationForRole(userRole);
+  const navSections = getNavigationForRole(userRoles);
 
   // Extract chapter ID from location to fetch chapter data for sidebar label
   const chapterMatch = location.match(/^\/app\/learning\/chapter\/(\d+)/);
@@ -66,7 +66,7 @@ export function AppSidebar({
   });
 
   // Helper: Inject contextual sub-items based on current route
-  const enhanceWithContextualItems = (items: NavMainItem[]): NavMainItem[] => {
+  const enhanceWithContextualItems = (items: any[]): NavMainItem[] => {
     return items.map(item => {
       // Instructor Batches page - add contextual "Batch Progress" when viewing a specific batch
       if (item.url === '/app/instructor/batches') {
@@ -126,8 +126,8 @@ export function AppSidebar({
       if (item.url === '/app/learning') {
         if (chapterId) {
           let suffix = '';
-          if (chapter?.track?.id && chapter?.order) {
-            suffix = ` : T${chapter.track.id}.CH${chapter.order}`;
+          if (chapter?.track?.id && chapter?.chapterOrder) {
+            suffix = ` : T${chapter.track.id}.CH${chapter.chapterOrder}`;
           }
           return {
             ...item,
@@ -139,6 +139,31 @@ export function AppSidebar({
               },
             ],
           };
+        }
+      }
+
+      // Content Studio: Add contextual "Chapter Content" under Tracks & Chapters
+      if (item.url === '/app/content') {
+        // Only show if currently on an editor route (no localStorage fallback)
+        const editorMatch = location.match(/^\/app\/content\/tracks\/(\d+)\/chapters\/(\d+)$/);
+        if (editorMatch) {
+          const trackId = editorMatch[1];
+          const chapterId = editorMatch[2];
+          const contextualUrl = `/app/content/tracks/${trackId}/chapters/${chapterId}`;
+
+          // Add track/chapter suffix to label
+          const suffix = ` : T${trackId}.CH${chapterId}`;
+
+          return {
+            ...item,
+            items: [
+              {
+                title: `Chapter Content${suffix}`,
+                url: contextualUrl,
+                isContextual: true,
+              },
+            ],
+          } as any;
         }
       }
 
@@ -159,7 +184,7 @@ export function AppSidebar({
         {navSections.learn && (
           <NavMain
             label={getSectionLabel('learn')}
-            items={enhanceWithContextualItems(navSections.learn.items)}
+            items={enhanceWithContextualItems(navSections.learn.items as any)}
           />
         )}
 
@@ -167,7 +192,7 @@ export function AppSidebar({
         {navSections.batches && (
           <NavMain
             label={getSectionLabel('batches')}
-            items={enhanceWithContextualItems(navSections.batches.items)}
+            items={enhanceWithContextualItems(navSections.batches.items as any)}
           />
         )}
 
@@ -175,7 +200,7 @@ export function AppSidebar({
         {navSections.content && (
           <NavMain
             label={getSectionLabel('content')}
-            items={navSections.content.items}
+            items={enhanceWithContextualItems(navSections.content.items as any)}
           />
         )}
 
@@ -183,7 +208,7 @@ export function AppSidebar({
         {navSections.admin && (
           <NavMain
             label={getSectionLabel('admin')}
-            items={enhanceWithContextualItems(navSections.admin.items)}
+            items={enhanceWithContextualItems(navSections.admin.items as any)}
           />
         )}
       </SidebarContent>

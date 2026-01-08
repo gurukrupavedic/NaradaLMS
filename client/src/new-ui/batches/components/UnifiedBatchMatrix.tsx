@@ -70,7 +70,7 @@ export function UnifiedBatchMatrix({
     studentId: string;
     chapterId: string;
   } | null>(null);
-  
+
   // Track which cell is being updated for loading state
   const [updatingCell, setUpdatingCell] = useState<{
     studentId: string;
@@ -131,15 +131,15 @@ export function UnifiedBatchMatrix({
     try {
       // Set loading state for this specific cell
       setUpdatingCell({ studentId: selectedCell.studentId, chapterId: selectedCell.chapterId });
-      
+
       console.log('🔵 handleUpdateProficiency called:', {
         studentId: selectedCell.studentId,
         chapterId: selectedCell.chapterId,
         newLevel: level,
       });
-      
+
       await onUpdateProficiency(selectedCell.studentId, selectedCell.chapterId, level);
-      
+
       console.log('🟢 Update succeeded, closing modal');
       toast({ title: 'Proficiency updated' });
       setModalOpen(false);
@@ -283,7 +283,7 @@ export function UnifiedBatchMatrix({
           const studentId = info.row.original.id;
           const cell = getMatrixCell(studentId, chapter.id);
           const colors = getCellColor(cell.proficiencyLevel, cell.status);
-          
+
           // Check if this specific cell is being updated
           const isCellUpdating = updatingCell?.studentId === studentId && updatingCell?.chapterId === chapter.id;
 
@@ -371,6 +371,7 @@ export function UnifiedBatchMatrix({
                       // eslint-disable-next-line jsx-a11y/no-static-element-interactions
                       style={{
                         width: `${header.getSize()}px`,
+                        maxWidth: `${header.getSize()}px`, // Prevent expansion
                         ...(isSticky && { left: stickyLeftStyle }),
                       } as any}
                     >
@@ -400,6 +401,7 @@ export function UnifiedBatchMatrix({
                         }`}
                       style={{
                         width: `${cell.column.getSize()}px`,
+                        maxWidth: `${cell.column.getSize()}px`, // Prevent expansion
                         ...(isSticky && { left: stickyCellLeftStyle }),
                       } as any}
                     >

@@ -7,8 +7,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
 import { StudentDetailsCard } from '../components/StudentDetailsCard';
 import { TrackList } from '../components/student-progress/TrackList';
+import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
 
 export function StudentDetailsPage() {
+  useRoleGuard(['instructor']);
   const [, params] = useRoute('/app/instructor/students/:studentId');
   const [, navigate] = useLocation();
   const studentId = params?.studentId;
@@ -121,7 +123,7 @@ export function StudentDetailsPage() {
           </CardContent>
         </Card>
       ) : trackProgress && trackProgress.trackProgress.length > 0 ? (
-        <TrackList 
+        <TrackList
           tracks={trackProgress.trackProgress}
           currentTrackId={studentDetails?.enrollment?.trackId}
         />

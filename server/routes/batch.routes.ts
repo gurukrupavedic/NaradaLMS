@@ -30,8 +30,8 @@ function createErrorResponse(message: string, code?: string, details?: any): Api
   };
 }
 
-// GET /api/batches - List batches with pagination
-router.get('/batches', async (req: Request, res: Response, next: NextFunction) => {
+// GET /api/batches - List batches with pagination (admins and instructors can view all)
+router.get('/batches', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
     const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
@@ -49,11 +49,11 @@ router.get('/batches/my-batches', authMiddleware, requireInstructor, async (req:
   try {
     const user = req.user as any;
     const instructorId = user?.id;
-    
+
     if (!instructorId) {
       return res.status(401).json(createErrorResponse('User ID not found', 'NO_USER_ID'));
     }
-    
+
     const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
     const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
 
@@ -70,11 +70,11 @@ router.get('/batches/my-students', authMiddleware, requireInstructor, async (req
   try {
     const user = req.user as any;
     const instructorId = user?.id;
-    
+
     if (!instructorId) {
       return res.status(401).json(createErrorResponse('User ID not found', 'NO_USER_ID'));
     }
-    
+
     const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
     const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
 
@@ -104,19 +104,19 @@ router.get('/batches/:id', async (req: Request, res: Response, next: NextFunctio
 
 // POST /api/batches - Create batch
 router.post('/batches', async (req: Request, res: Response, next: NextFunction) => {
-      // Validate required fields
-      if (!req.body.batchCode || !req.body.batchName) {
-        return res.status(400).json(createErrorResponse('Batch code and name are required', 'MISSING_REQUIRED_FIELDS'));
-      }
+  // Validate required fields
+  if (!req.body.batchCode || !req.body.batchName) {
+    return res.status(400).json(createErrorResponse('Batch code and name are required', 'MISSING_REQUIRED_FIELDS'));
+  }
 
-      if (!req.body.primaryInstructorId) {
-        return res.status(400).json(createErrorResponse('Primary instructor is required', 'MISSING_PRIMARY_INSTRUCTOR'));
-      }
+  if (!req.body.primaryInstructorId) {
+    return res.status(400).json(createErrorResponse('Primary instructor is required', 'MISSING_PRIMARY_INSTRUCTOR'));
+  }
 
-      // Validate cohortType if provided
-      if (req.body.cohortType && !['bramhachari', 'grihasta'].includes(req.body.cohortType)) {
-        return res.status(400).json(createErrorResponse('Invalid cohort type. Must be "bramhachari" or "grihasta".', 'INVALID_COHORT_TYPE'));
-      }
+  // Validate cohortType if provided
+  if (req.body.cohortType && !['bramhachari', 'grihasta'].includes(req.body.cohortType)) {
+    return res.status(400).json(createErrorResponse('Invalid cohort type. Must be "bramhachari" or "grihasta".', 'INVALID_COHORT_TYPE'));
+  }
 
   try {
     const created = await batchService.createBatch({
@@ -131,18 +131,18 @@ router.post('/batches', async (req: Request, res: Response, next: NextFunction) 
     });
 
     res.json(created);
-  } catch (error) { 
+  } catch (error) {
     console.error('Error creating batch:', error);
-    next(error); 
+    next(error);
   }
 });
 
 // PATCH /api/batches/:id - Update batch
 router.patch('/batches/:id', async (req: Request, res: Response, next: NextFunction) => {
-      // Validate cohortType if provided
-      if (req.body.cohortType !== undefined && req.body.cohortType !== null && !['bramhachari', 'grihasta'].includes(req.body.cohortType)) {
-        return res.status(400).json(createErrorResponse('Invalid cohort type. Must be "bramhachari" or "grihasta".', 'INVALID_COHORT_TYPE'));
-      }
+  // Validate cohortType if provided
+  if (req.body.cohortType !== undefined && req.body.cohortType !== null && !['bramhachari', 'grihasta'].includes(req.body.cohortType)) {
+    return res.status(400).json(createErrorResponse('Invalid cohort type. Must be "bramhachari" or "grihasta".', 'INVALID_COHORT_TYPE'));
+  }
 
   try {
     const id = parseInt(req.params.id);
@@ -285,19 +285,19 @@ router.post('/batches/:batchId/students/:studentId/evaluate', async (req: Reques
     }
 
     const batchId = parseInt(req.params.batchId);
-    
+
     // Verify user is assigned to this batch (primary or co-instructor)
     const batch = await batchService.getBatch(batchId);
     if (!batch) {
       return res.status(404).json(createErrorResponse('Batch not found', 'BATCH_NOT_FOUND'));
     }
 
-    const isAssignedInstructor = batch.primaryInstructorId === user.id || 
+    const isAssignedInstructor = batch.primaryInstructorId === user.id ||
       (batch.coInstructors && batch.coInstructors.some(ci => ci.instructorId === user.id));
-    
+
     if (!isAssignedInstructor) {
       return res.status(403).json(createErrorResponse(
-        'Forbidden: Only assigned instructors can update proficiency', 
+        'Forbidden: Only assigned instructors can update proficiency',
         'FORBIDDEN_NOT_ASSIGNED'
       ));
     }

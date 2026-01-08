@@ -439,7 +439,68 @@ StudentProgress {
 - Progress displayed in track/chapter views
 - Future: gating (Track N+1 requires Track N chapters ≥ level 2)
 
-### 4.8.1 Batch Details / Batch Progress Page
+### 4.9 Authentication & Authorization (Defense in Depth)
+
+**Problem:** Need robust security to protect content, student data, and administrative functions
+
+**Solution:** Multi-layer authentication with role-based access control
+
+**Architecture:**
+- **Backend:** Passport.js + Express middleware (authMiddleware + requireRole)
+- **Frontend:** Component-level route guards (useRoleGuard hook)
+- **Defense in depth:** Both layers enforce authorization independently
+
+**Backend Protection:**
+```typescript
+// All learning routes require authentication
+router.use(authMiddleware);
+
+// Admin routes require admin role
+router.use(authMiddleware, requireRole('admin'));
+
+// Multi-role support (instructor OR admin)
+router.use(authMiddleware, requireRole('instructor', 'admin'));
+```
+
+**Frontend Protection (MANDATORY for all protected pages):**
+```typescript
+// Standard pattern - use at top of every protected page component
+import { useRoleGuard } from '@/new-ui/hooks/useRoleGuard';
+
+export default function ProtectedPage() {
+  // Route guard - only specified roles can access
+  const isAuthorized = useRoleGuard(['required_role']);
+  if (!isAuthorized) return null;
+
+  // Rest of component logic...
+}
+```
+
+**Role-Based Access Examples:**
+| Page | Roles Allowed | Pattern |
+|------|--------------|---------|
+| Admin pages | `['admin']` | Single role |
+| Content Studio | `['content_manager']` | Single role |
+| Instructor pages | `['instructor', 'admin']` | Multi-role |
+| Learning pages | All roles | No guard needed |
+
+**Why Both Layers:**
+- Backend prevents API bypass attempts
+- Frontend provides instant UX feedback
+- Prevents accidental security holes
+- Standard pattern reduces human error
+
+**Implementation Details:**
+- `useRoleGuard` hook location: `client/src/new-ui/hooks/useRoleGuard.ts`
+- Redirects unauthorized users to `/app/learning`
+- Shows descriptive toast notification
+- Supports multi-role access (OR logic)
+- Waits for auth state to load before checking
+
+**Critical Rule:**
+> **ALWAYS** use `useRoleGuard` at the start of protected page components. Never implement custom auth checks or create alternative patterns.
+
+### 4.10 Batch System
 
 **Purpose:** Unified view for batch management and progress evaluation with role-based permissions
 

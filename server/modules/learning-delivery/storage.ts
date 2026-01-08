@@ -16,7 +16,7 @@ export class LearningStorage {
    */
   async getStudentProgress(filters: ProgressQueryFilters): Promise<StudentProgressDTO[]> {
     const conditions = [] as any[];
-    
+
     if (filters.studentId) {
       conditions.push(eq(studentProgress.studentId, filters.studentId));
     }
@@ -33,7 +33,7 @@ export class LearningStorage {
       .from(studentProgress);
 
     // Apply WHERE only if conditions exist
-    const results = conditions.length > 0 
+    const results = conditions.length > 0
       ? await baseQuery.where(and(...conditions))
       : await baseQuery;
 
@@ -87,6 +87,7 @@ export class LearningStorage {
         studentId,
         chapterId,
         batchId: batchId ?? null,
+        proficiencyLevel: 9, // STRICT DEFAULT: 9 = "Not Started". Schema default is 0 (Started), so we must override it.
         lastAccessed: new Date(),
       });
     }
@@ -134,16 +135,16 @@ export class LearningStorage {
 
     // Get student's progress for these chapters
     const chapterIds = chaptersList.map(c => c.chapterId);
-    const progressRecords = chapterIds.length > 0 
+    const progressRecords = chapterIds.length > 0
       ? await db
-          .select()
-          .from(studentProgress)
-          .where(
-            and(
-              eq(studentProgress.studentId, studentId),
-              inArray(studentProgress.chapterId, chapterIds)
-            )
+        .select()
+        .from(studentProgress)
+        .where(
+          and(
+            eq(studentProgress.studentId, studentId),
+            inArray(studentProgress.chapterId, chapterIds)
           )
+        )
       : [];
 
     // Combine data
@@ -185,7 +186,7 @@ export class LearningStorage {
       .from(chapters)
       .where(eq(chapters.id, chapterId))
       .limit(1);
-    
+
     return result.length > 0;
   }
 
@@ -204,7 +205,7 @@ export class LearningStorage {
         )
       )
       .limit(1);
-    
+
     return result.length > 0;
   }
 
@@ -214,10 +215,10 @@ export class LearningStorage {
    */
   async getStudentDetailsWithProgress(studentId: string): Promise<any> {
     // Get student info
-    const student = await db.query.users.findFirst({ 
-      where: (u, { eq }) => eq(u.id, studentId) 
+    const student = await db.query.users.findFirst({
+      where: (u, { eq }) => eq(u.id, studentId)
     });
-    
+
     if (!student) return null;
 
     // Get student's active enrollment (max 1)
@@ -292,14 +293,14 @@ export class LearningStorage {
     const chapterIds = chaptersList.map(c => c.chapterId);
     const progressRecords = chapterIds.length > 0
       ? await db
-          .select()
-          .from(studentProgress)
-          .where(
-            and(
-              eq(studentProgress.studentId, studentId),
-              inArray(studentProgress.chapterId, chapterIds)
-            )
+        .select()
+        .from(studentProgress)
+        .where(
+          and(
+            eq(studentProgress.studentId, studentId),
+            inArray(studentProgress.chapterId, chapterIds)
           )
+        )
       : [];
 
     // Build proficiency matrix

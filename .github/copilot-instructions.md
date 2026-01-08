@@ -258,10 +258,67 @@ npm run check     # TypeScript type checking
 
 **Implementation:**
 - Frontend: Pass `canEditProficiency={context === 'instructor'}` prop to `UnifiedBatchMatrix`
-- Backend: Verify user is batch's primary or co-instructor before allowing proficiency updates
+- Backend: Verify user is batch's primary or co-instructor before proficiency updates
 - Security: Two-layer enforcement (UX disabling + API validation) prevents unauthorized changes
 
-## Code Organization Rules
+### Protected Page Pattern (CRITICAL - Always Required)
+
+**MANDATORY: Every protected page MUST use the `useRoleGuard` hook. Never create custom auth checks.**
+
+**Standard Pattern:**
+```typescript
+import { useRoleGuard } from '@/new-ui/hooks/useRoleGuard';
+
+export default function ProtectedPage() {
+  // Route guard - MUST be at the very top of component
+  const isAuthorized = useRoleGuard(['required_role']);
+  if (!isAuthorized) return null;
+
+  // Rest of component logic below...
+}
+```
+
+**Role Patterns:**
+```typescript
+// Admin-only pages
+const isAuthorized = useRoleGuard(['admin']);
+
+// Content Manager-only pages
+const isAuthorized = useRoleGuard(['content_manager']);
+
+// Instructor OR Admin (multi-role)
+const isAuthorized = useRoleGuard(['instructor', 'admin']);
+```
+
+**Pages Requiring Guards:**
+- All `/app/admin/*` pages → `['admin']`
+- All `/app/content/*` pages → `['content_manager']`
+- All `/app/instructor/*` and `/app/batches/*` pages → `['instructor', 'admin']`
+- `/app/learning/*` pages → No guard (public to all authenticated users)
+
+**What the Hook Does:**
+1. Checks if authenticated user has ANY of the required roles
+2. If not authorized: redirects to `/app/learning` + shows toast notification
+3. Returns `false` during redirect, component returns `null` early
+4. Returns `true` once authorized, component continues rendering
+
+**Why This Pattern:**
+- Defense in depth with backend authMiddleware
+- Instant UX feedback (no API call needed)
+- Consistent behavior across all pages
+- Prevents accidental security holes
+- Single pattern to remember
+
+**CRITICAL RULES:**
+1. ✅ **DO** use `useRoleGuard` at component top (before any other logic)
+2. ✅ **DO** follow the exact pattern shown above
+3. ❌ **NEVER** create custom auth checks in components
+4. ❌ **NEVER** use `useAuth()` directly for authorization logic
+5. ❌ **NEVER** skip the guard because "the route is hidden in navigation"
+
+**Hook Location:** `client/src/new-ui/hooks/useRoleGuard.ts`
+
+
 
 ### Component Architecture
 - Use lazy loading for routes (see App.tsx)

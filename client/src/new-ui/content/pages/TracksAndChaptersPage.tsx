@@ -17,9 +17,7 @@ import {
   arrayMove,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-  useSortable,
 } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -56,11 +54,12 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/features/shared-features/hooks/use-toast';
 import { useAuth } from '@/features/shared-features/hooks/useAuth';
-import { Track, Chapter } from '@shared/types';
-import { GripVertical, Plus, Edit2, Trash2, ArrowRight, ExternalLink, Layers, LayoutTemplate } from 'lucide-react';
-
-type TrackRow = Track & { chapterCount?: number };
-type ChapterRow = Chapter & { description?: string; hasContent?: boolean; audioFileCount?: number; segmentCount?: number };
+import { TrackListItem, TrackRow } from '../components/TrackListItem';
+import { ChapterListItem, ChapterRow } from '../components/ChapterListItem';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { handleJsonResponse } from '../utils/handleJsonResponse';
+import { Grip, Plus, BookOpen } from 'lucide-react';
+import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
 
 interface DialogState {
   isOpen: boolean;
@@ -77,252 +76,8 @@ interface DeleteState {
   trackId?: number;
 }
 
-function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
-  const [storedValue, setStoredValue] = useState<T>(initialValue);
-
-  useEffect(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      if (item) setStoredValue(JSON.parse(item));
-    } catch (error) {
-      console.error(error);
-    }
-  }, [key]);
-
-  const setValue = (value: T) => {
-    try {
-      setStoredValue(value);
-      window.localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  return [storedValue, setValue];
-}
-
-async function handleJsonResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
-  if (response.ok) return response.json() as Promise<T>;
-  try {
-    const errorBody = await response.json();
-    throw new Error(errorBody.error?.message || errorBody.error || fallbackMessage);
-  } catch (error) {
-    if (error instanceof Error) throw error;
-    throw new Error(fallbackMessage);
-  }
-}
-
-function TrackListItem({
-  track,
-  index,
-  isSelected,
-  onSelect,
-  onEdit,
-  onDelete,
-}: {
-  track: TrackRow;
-  index: number;
-  isSelected: boolean;
-  onSelect: (id: number) => void;
-  onEdit: (track: TrackRow) => void;
-  onDelete: (track: TrackRow) => void;
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: track.id });
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition: transition || undefined,
-      }}
-      className={`mb-3 group relative ${isDragging ? 'opacity-80 z-20' : 'opacity-100 z-auto'}`}
-    >
-      <Card
-        className={`relative overflow-hidden cursor-pointer transition-all duration-200 ${
-          isSelected
-            ? 'border-y border-r border-l-[6px] border-l-primary border-y-border border-r-border shadow-md bg-slate-100 dark:bg-slate-800'
-            : 'border hover:border-primary/50 hover:shadow-sm bg-card'
-        }`}
-        onClick={() => onSelect(track.id)}
-      >
-        <CardContent className="p-3 pl-3 flex items-stretch gap-3">
-          <div
-            {...attributes}
-            {...listeners}
-            className="flex items-center justify-center -mr-1 cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-foreground transition-colors px-1"
-          >
-            <GripVertical className="w-5 h-5" />
-          </div>
-
-          <div className="flex-1 min-w-0 py-1 flex flex-col justify-between gap-1">
-            <div className="flex items-start justify-between gap-2">
-              <h3
-                className={`font-semibold text-sm leading-tight truncate ${
-                  isSelected ? 'text-primary' : 'text-foreground'
-                }`}
-              >
-                <span className="text-muted-foreground font-mono mr-2 font-normal opacity-70">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                {track.title}
-              </h3>
-            </div>
-
-            {track.description && (
-              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{track.description}</p>
-            )}
-
-            <div className="flex items-center gap-3 pt-1 mt-auto">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground/80 font-medium">
-                <LayoutTemplate className="w-3.5 h-3.5" />
-                <span>{track.chapterCount ?? 0} chapters</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col justify-center gap-1 border-l pl-2 ml-1 opacity-60 group-hover:opacity-100 transition-opacity">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(track);
-              }}
-              title="Edit Track"
-            >
-              <Edit2 className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(track);
-              }}
-              title="Delete Track"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function ChapterListItem({
-  chapter,
-  index,
-  onEdit,
-  onMove,
-  onDelete,
-  onOpen,
-}: {
-  chapter: ChapterRow;
-  index: number;
-  onEdit: (chapter: ChapterRow) => void;
-  onMove: (chapter: ChapterRow) => void;
-  onDelete: (chapter: ChapterRow) => void;
-  onOpen: (chapter: ChapterRow) => void;
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: chapter.id });
-
-  const isPublished = chapter.status === 'published';
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-      }}
-      className={`mb-3 group relative ${isDragging ? 'opacity-80 z-20' : 'opacity-100 z-auto'}`}
-    >
-      <Card className="relative overflow-hidden hover:shadow-md transition-all duration-200 border hover:border-border/80">
-        <div className="absolute left-0 top-0 bottom-0 w-1 transition-colors bg-transparent group-hover:bg-primary/50" />
-
-        <CardContent className="p-4 pl-4 flex items-start gap-3">
-          <div
-            {...attributes}
-            {...listeners}
-            className="mt-1 flex items-center justify-center cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-foreground transition-colors px-1"
-          >
-            <GripVertical className="w-5 h-5" />
-          </div>
-
-          <div className="flex-1 min-w-0 space-y-2">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="font-semibold text-sm leading-snug pt-0.5">
-                <span className="text-muted-foreground font-mono mr-2 font-normal opacity-70">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                {chapter.title}
-              </h3>
-              <Badge
-                variant="secondary"
-                className={`flex-shrink-0 text-[10px] uppercase tracking-wider font-bold h-5 px-2 text-white ${
-                  isPublished ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-500 hover:bg-amber-600'
-                }`}
-              >
-                {chapter.status}
-              </Badge>
-            </div>
-
-            {chapter.hasContent && (
-              <p className="text-xs text-muted-foreground">
-                {chapter.audioFileCount ?? 0} audio · {chapter.segmentCount ?? 0} mappings
-              </p>
-            )}
-
-            <div className="flex items-center gap-2 pt-2 mt-2 border-t border-border/40">
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1.5"
-                  onClick={() => onEdit(chapter)}
-                >
-                  <Edit2 className="w-3 h-3" />
-                  Edit
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1.5"
-                  onClick={() => onMove(chapter)}
-                >
-                  <ArrowRight className="w-3 h-3" />
-                  Move
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5"
-                  onClick={() => onDelete(chapter)}
-                >
-                  <Trash2 className="w-3 h-3" />
-                  Delete
-                </Button>
-              </div>
-
-              <div className="flex-1" />
-
-              <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5 shadow-sm" onClick={() => onOpen(chapter)}>
-                <span>Open</span>
-                <ExternalLink className="w-3 h-3 opacity-70" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
 export default function TracksAndChapters() {
+  useRoleGuard(['content_manager']);
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -449,12 +204,12 @@ export default function TracksAndChapters() {
   });
 
   const createChapterMutation = useMutation({
-    mutationFn: async ({ trackId, title }: { trackId: number; title: string }) => {
+    mutationFn: async ({ trackId, title, description }: { trackId: number; title: string, description: string }) => {
       const res = await fetch(`/api/content/tracks/${trackId}/chapters`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ title, content: {} }),
+        body: JSON.stringify({ title, description, content: {} }),
       });
       return handleJsonResponse<ChapterRow>(res, 'Failed to create chapter');
     },
@@ -469,12 +224,12 @@ export default function TracksAndChapters() {
   });
 
   const updateChapterMutation = useMutation({
-    mutationFn: async ({ chapterId, title }: { chapterId: number; title: string }) => {
+    mutationFn: async ({ chapterId, title, description }: { chapterId: number; title: string, description: string }) => {
       const res = await fetch(`/api/content/chapters/${chapterId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ title, description }),
       });
       return handleJsonResponse<ChapterRow>(res, 'Failed to update chapter');
     },
@@ -601,13 +356,13 @@ export default function TracksAndChapters() {
 
   const handleCreateChapter = () => {
     if (!selectedTrackId || !formData.title.trim()) return;
-    createChapterMutation.mutate({ trackId: selectedTrackId, title: formData.title });
+    createChapterMutation.mutate({ trackId: selectedTrackId, title: formData.title, description: formData.description });
     closeDialog();
   };
 
   const handleEditChapter = (chapter: ChapterRow) => {
     if (!formData.title.trim()) return;
-    updateChapterMutation.mutate({ chapterId: chapter.id, title: formData.title });
+    updateChapterMutation.mutate({ chapterId: chapter.id, title: formData.title, description: formData.description });
     closeDialog();
   };
 
@@ -668,8 +423,8 @@ export default function TracksAndChapters() {
   }
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-hidden p-6 max-w-7xl mx-auto w-full">
+    <div className="h-[calc(100vh-4rem)] bg-background flex flex-col overflow-hidden">
+      <div className="flex-1 overflow-hidden p-4 w-full h-full">
         <ResizablePanelGroup direction="horizontal" onLayout={handleLayoutChange} className="h-full">
           <ResizablePanel
             defaultSize={columnSizes.left}
@@ -679,7 +434,7 @@ export default function TracksAndChapters() {
           >
             <div className="p-4 border-b flex justify-between items-center bg-card rounded-t-lg">
               <div className="flex items-center gap-2">
-                <Layers className="w-5 h-5 text-primary" />
+                <Grip className="w-5 h-5 text-primary" />
                 <h2 className="font-semibold">Tracks</h2>
                 <Badge variant="secondary" className="ml-2">
                   {tracksQuery.isLoading ? '…' : tracks.length}
@@ -727,7 +482,7 @@ export default function TracksAndChapters() {
               <>
                 <div className="p-4 border-b flex justify-between items-center bg-card rounded-t-lg">
                   <div className="flex items-center gap-2">
-                    <LayoutTemplate className="w-5 h-5 text-primary" />
+                    <BookOpen className="w-5 h-5 text-primary" />
                     <div>
                       <h2 className="font-semibold">{selectedTrack.title}</h2>
                       <p className="text-xs text-muted-foreground">{selectedTrackChapters.length} chapters</p>
@@ -750,7 +505,9 @@ export default function TracksAndChapters() {
                           onEdit={(c) => openEditDialog(c, 'chapter')}
                           onMove={(c) => openMoveDialog(c)}
                           onDelete={(c) => setDeleteState({ isOpen: true, itemType: 'chapter', item: c, trackId: selectedTrack.id })}
-                          onOpen={(c) => navigate(`/app/content/tracks/${selectedTrack.id}/chapters/${c.id}`)}
+                          onOpen={(c) => {
+                            navigate(`/app/content/tracks/${selectedTrack.id}/chapters/${c.id}`);
+                          }}
                         />
                       ))}
                     </SortableContext>
@@ -765,7 +522,7 @@ export default function TracksAndChapters() {
               </>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground flex-col gap-2">
-                <Layers className="w-10 h-10 opacity-20" />
+                <Grip className="w-10 h-10 opacity-20" />
                 <p>Select a track to manage chapters</p>
               </div>
             )}
@@ -818,16 +575,14 @@ export default function TracksAndChapters() {
                 <label className="text-sm font-medium">Title</label>
                 <Input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="Enter title" />
               </div>
-              {dialogState.itemType === 'track' && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Enter description"
-                  />
-                </div>
-              )}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Description</label>
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Enter description"
+                />
+              </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={closeDialog}>
                   Cancel
@@ -836,7 +591,7 @@ export default function TracksAndChapters() {
                   onClick={() => {
                     if (dialogState.itemType === 'track') {
                       dialogState.type === 'create' ? handleCreateTrack() : handleEditTrack();
-                    } else if (dialogState.itemType === 'chapter' && dialogState.item) {
+                    } else if (dialogState.itemType === 'chapter') {
                       dialogState.type === 'create'
                         ? handleCreateChapter()
                         : handleEditChapter(dialogState.item as ChapterRow);

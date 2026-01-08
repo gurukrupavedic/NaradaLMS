@@ -6,10 +6,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary, AppErrorFallback } from "@/components/ui/error-boundary";
 import { LoadingScreen } from "@/components/ui/loading-screen";
-import InstructorMatrixPrototype from "@/temp-prototype/InstructorMatrixPrototype";
-import { TracksAndChaptersAccordion } from "@/temp-prototype/TracksAndChaptersAccordion";
-import { TracksAndChaptersColumn } from "@/temp-prototype/TracksAndChaptersColumn";
-import { TracksAndChaptersRefined } from "@/temp-prototype/content-studio-refine/TracksAndChaptersRefined";
 import { useAuth } from "@/features/shared-features/hooks/useAuth";
 import { useWarmTrackCache } from "@/lib/query-prefetch";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -116,6 +112,9 @@ function Router() {
       <Switch>
         {NEW_UI_ENABLED && (
           <>
+            {/* Specific deep route for Content Studio - must come before general patterns */}
+            <Route path="/app/content/tracks/:trackId/chapters/:chapterId" component={AppShell} />
+            {/* General explicit routes for new UI */}
             <Route path="/app" component={AppShell} />
             <Route path="/app/:section" component={AppShell} />
             <Route path="/app/:section/:subsection" component={AppShell} />
@@ -149,13 +148,6 @@ function Router() {
 
         <Route path="/experiments/design-system" component={DesignSystemExperiment} />
         <Route path="/experiments/theming-playground" component={ThemingPlayground} />
-        <Route path="/experiments/audio-player" component={lazy(() => import("@/temp-prototype/AudioPlayerPlayground"))} />
-
-        {/* TEMPORARY PROTOTYPES */}
-        <Route path="/prototype/matrix" component={InstructorMatrixPrototype} />
-        <Route path="/prototype/tracks-accordion" component={TracksAndChaptersAccordion} />
-        <Route path="/prototype/tracks-column" component={TracksAndChaptersColumn} />
-        <Route path="/prototype/content-studio-refine" component={TracksAndChaptersRefined} />
 
         <Route component={SimpleNotFound} />
       </Switch>

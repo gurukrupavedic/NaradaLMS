@@ -9,6 +9,7 @@ import { useChaptersByTrack, type ChapterListItem } from "../hooks/useChaptersBy
 import { useBatchProgress } from "../hooks/useBatchProgress";
 import { useUpdateProficiency } from "../hooks/useUpdateProficiency";
 import { useToast } from "@/features/shared-features/hooks/use-toast";
+import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
 import { BatchDetailsCard } from "../../admin/components/BatchDetailsCard";
 import { UnifiedBatchMatrix } from "../components/UnifiedBatchMatrix";
 import { TrackTabs } from "../components/TrackTabs";
@@ -44,17 +45,18 @@ type UnifiedBatch = {
 };
 
 export default function BatchDetails() {
+  useRoleGuard(['instructor']);
   const { toast } = useToast();
-  
+
   // Dual route detection
   const [, adminParams] = useRoute("/app/admin/batches/:id");
   const [, instructorParams] = useRoute("/app/instructor/batches/:id");
   const [, setLocation] = useLocation();
-  
+
   // Determine context and batch ID
   const context = adminParams ? 'admin' : 'instructor';
   const batchId = Number(adminParams?.id || instructorParams?.id);
-  
+
   // State management
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
 
@@ -63,7 +65,7 @@ export default function BatchDetails() {
 
   // Matrix search state (separate from table search)
   const [matrixSearchQuery, setMatrixSearchQuery] = useState("");
-  
+
   // Matrix enrollment state
   const [matrixSelectedStudents, setMatrixSelectedStudents] = useState<EligibleStudent[]>([]);
   const [matrixShowTypeahead, setMatrixShowTypeahead] = useState(false);
@@ -73,13 +75,13 @@ export default function BatchDetails() {
   // Fetch batches based on context
   const adminBatches = useAdminBatches({ limit: 500, offset: 0 });
   const instructorBatches = useInstructorBatches({ limit: 500, offset: 0 });
-  
+
   const batchesData = context === 'admin' ? adminBatches.data : instructorBatches.data;
   const isBatchesLoading = context === 'admin' ? adminBatches.isLoading : instructorBatches.isLoading;
-  
+
   // Fetch all tracks
   const tracks = useTracks();
-  
+
   // Fetch chapters for selected track
   const chapters = useChaptersByTrack(
     selectedTrackId ? Number(selectedTrackId) : undefined
@@ -90,7 +92,7 @@ export default function BatchDetails() {
 
   // Proficiency update mutation
   const updateProficiency = useUpdateProficiency();
-  
+
   // Convert batches to unified format for dropdown compatibility
   const batches: UnifiedBatch[] = useMemo(() => {
     const items = batchesData?.items ?? [];
@@ -125,7 +127,7 @@ export default function BatchDetails() {
 
   // Fetch current batch details with full relations (used for both admin and instructor)
   const batchDetail = useAdminBatch(isNaN(batchId) ? undefined : batchId);
-  
+
   // Fetch enrollments - only when we have a valid batch ID
   const enrollments = useEnrollments(isNaN(batchId) ? 0 : batchId);
   const dropEnrollment = useDropEnrollment(isNaN(batchId) ? 0 : batchId);
@@ -142,13 +144,13 @@ export default function BatchDetails() {
   // Reset track when batch changes
   useEffect(() => {
     setPagination({ pageIndex: 0, pageSize: 10 });
-    
+
     // Reset matrix UI state when batch changes
     setMatrixSelectedStudents([]);
     setMatrixSearchQuery("");
     setMatrixShowTypeahead(false);
     setMatrixHighlightedIndex(-1);
-    
+
     // Reset track to batch's current track (if available)
     if (batchDetail.data?.trackId) {
       setSelectedTrackId(String(batchDetail.data.trackId));
@@ -160,11 +162,11 @@ export default function BatchDetails() {
   // Matrix enrollment handlers
   const handleMatrixAddStudent = async () => {
     if (matrixSelectedStudents.length === 0) return;
-    
+
     setIsAddingStudent(true);
     const successfulEnrollments: string[] = [];
     const failedEnrollments: Array<{ name: string; error: string }> = [];
-    
+
     try {
       for (const student of matrixSelectedStudents) {
         try {
@@ -177,23 +179,23 @@ export default function BatchDetails() {
           const displayName = student.firstName || student.lastName
             ? `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim()
             : student.email;
-          failedEnrollments.push({ 
-            name: displayName, 
-            error: error?.message || 'Unknown error' 
+          failedEnrollments.push({
+            name: displayName,
+            error: error?.message || 'Unknown error'
           });
         }
       }
-      
+
       setMatrixSelectedStudents([]);
       setMatrixSearchQuery('');
       setMatrixShowTypeahead(false);
       setMatrixHighlightedIndex(-1);
-      
+
       if (failedEnrollments.length === 0) {
-        toast({ 
-          title: successfulEnrollments.length === 1 
-            ? 'Student added to batch' 
-            : `${successfulEnrollments.length} students added to batch` 
+        toast({
+          title: successfulEnrollments.length === 1
+            ? 'Student added to batch'
+            : `${successfulEnrollments.length} students added to batch`
         });
       } else if (successfulEnrollments.length === 0) {
         toast({
@@ -258,11 +260,11 @@ export default function BatchDetails() {
         studentId: row.studentId,
         chapterId: String(cell.chapterId),
         proficiencyLevel: (cell.proficiencyLevel ?? 9) as ProficiencyLevel,
-        status: cell.proficiencyLevel === null ? 'not_started' 
+        status: cell.proficiencyLevel === null ? 'not_started'
           : cell.proficiencyLevel === 8 ? 'absent'
-          : cell.proficiencyLevel === 0 ? 'practicing'
-          : cell.proficiencyLevel >= 4 ? 'completed'
-          : 'practicing',
+            : cell.proficiencyLevel === 0 ? 'practicing'
+              : cell.proficiencyLevel >= 4 ? 'completed'
+                : 'practicing',
         lastEvaluatedAt: cell.lastEvaluatedAt ?? null,
         evaluatedBy: cell.evaluatedBy ?? null,
         notes: cell.notes ?? null,
@@ -299,8 +301,8 @@ export default function BatchDetails() {
         ) : batchDetail.isError ? (
           <p className="text-sm text-destructive">Failed to load batch details.</p>
         ) : batchDetail.data ? (
-          <BatchDetailsCard 
-            batch={batchDetail.data} 
+          <BatchDetailsCard
+            batch={batchDetail.data}
             batches={batches.map(b => ({ id: b.id, batchCode: b.batchCode, batchName: b.batchName }))}
             currentBatchId={batchId}
             onBatchChange={(newBatchId: number) => setLocation(`/app/${context}/batches/${newBatchId}`)}
@@ -377,9 +379,9 @@ export default function BatchDetails() {
                               ? `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim()
                               : student.email;
                             const isAlreadySelected = matrixSelectedStudents.find(s => s.id === student.id);
-                            
+
                             if (isAlreadySelected) return null;
-                            
+
                             return (
                               <button
                                 key={student.id}
@@ -444,74 +446,74 @@ export default function BatchDetails() {
 
           {/* Matrix View with Track Tabs */}
           <TrackTabs
-                tracks={(tracks.data ?? []).map(t => ({
-                  id: String(t.id),
-                  name: t.title,
-                  code: `Track ${t.order}`,
-                  description: t.description ?? undefined,
-                  order: t.order,
-                }))}
-                selectedTrackId={selectedTrackId}
-                currentTrackId={batchDetail.data?.trackId ? String(batchDetail.data.trackId) : undefined}
-                onSelectTrack={(trackId) => setSelectedTrackId(trackId)}
-                isLoading={tracks.isLoading}
-              >
-                {chapters.isLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader className="h-6 w-6 animate-spin text-gray-400" />
-                    <span className="ml-2 text-sm text-gray-600">Loading chapters...</span>
-                  </div>
-                ) : matrixChapters.length === 0 ? (
-                  <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-                    <div className="text-sm font-medium text-gray-700">No chapters in this track</div>
-                    <div className="mt-2 text-sm text-gray-600">Add chapters in Content Studio to get started.</div>
-                  </div>
-                ) : (
-                  <UnifiedBatchMatrix
-                    students={matrixStudents}
-                    chapters={matrixChapters}
-                    progress={matrixProgress}
-                    selectedBatchId={String(batchId)}
-                    selectedTrackId={selectedTrackId || ''}
-                    canEditProficiency={context === 'instructor'}
-                    onDropStudent={async (enrollmentId) => {
-                      await dropEnrollment.mutateAsync(
-                        { enrollmentId },
-                        {
-                          onSuccess: () => {
-                            toast({ title: 'Student removed from batch' });
-                          },
-                          onError: (err: any) => {
-                            toast({
-                              title: 'Failed to remove student',
-                              description: err?.message || 'An error occurred',
-                              variant: 'destructive',
-                            });
-                          },
-                        }
-                      );
-                    }}
-                    onUpdateProficiency={async (studentId, chapterId, level) => {
-                      try {
-                        await updateProficiency.mutateAsync({
-                          batchId: Number(batchId),
-                          studentId,
-                          chapterId: Number(chapterId),
-                          proficiencyLevel: level,
-                        });
-                      } catch (error: any) {
+            tracks={(tracks.data ?? []).map(t => ({
+              id: String(t.id),
+              name: t.title,
+              code: `Track ${t.order}`,
+              description: t.description ?? undefined,
+              order: t.order,
+            }))}
+            selectedTrackId={selectedTrackId}
+            currentTrackId={batchDetail.data?.trackId ? String(batchDetail.data.trackId) : undefined}
+            onSelectTrack={(trackId) => setSelectedTrackId(trackId)}
+            isLoading={tracks.isLoading}
+          >
+            {chapters.isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader className="h-6 w-6 animate-spin text-gray-400" />
+                <span className="ml-2 text-sm text-gray-600">Loading chapters...</span>
+              </div>
+            ) : matrixChapters.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+                <div className="text-sm font-medium text-gray-700">No chapters in this track</div>
+                <div className="mt-2 text-sm text-gray-600">Add chapters in Content Studio to get started.</div>
+              </div>
+            ) : (
+              <UnifiedBatchMatrix
+                students={matrixStudents}
+                chapters={matrixChapters}
+                progress={matrixProgress}
+                selectedBatchId={String(batchId)}
+                selectedTrackId={selectedTrackId || ''}
+                canEditProficiency={context === 'instructor'}
+                onDropStudent={async (enrollmentId) => {
+                  await dropEnrollment.mutateAsync(
+                    { enrollmentId },
+                    {
+                      onSuccess: () => {
+                        toast({ title: 'Student removed from batch' });
+                      },
+                      onError: (err: any) => {
                         toast({
-                          title: 'Failed to update proficiency',
-                          description: error?.message || 'An error occurred',
+                          title: 'Failed to remove student',
+                          description: err?.message || 'An error occurred',
                           variant: 'destructive',
                         });
-                      }
-                    }}
-                    isLoading={enrollments.isLoading}
-                    isUpdating={dropEnrollment.isPending || enrollStudent.isPending}
-                  />
-                )}
-              </TrackTabs>
+                      },
+                    }
+                  );
+                }}
+                onUpdateProficiency={async (studentId, chapterId, level) => {
+                  try {
+                    await updateProficiency.mutateAsync({
+                      batchId: Number(batchId),
+                      studentId,
+                      chapterId: Number(chapterId),
+                      proficiencyLevel: level,
+                    });
+                  } catch (error: any) {
+                    toast({
+                      title: 'Failed to update proficiency',
+                      description: error?.message || 'An error occurred',
+                      variant: 'destructive',
+                    });
+                  }
+                }}
+                isLoading={enrollments.isLoading}
+                isUpdating={dropEnrollment.isPending || enrollStudent.isPending}
+              />
+            )}
+          </TrackTabs>
         </div>
       )}
     </div>

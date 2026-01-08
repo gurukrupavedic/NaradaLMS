@@ -13,12 +13,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/design-system/badge";
+import { Badge } from "@/components/design-system/Badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { RefreshCw, MoreVertical, Check, X } from "lucide-react";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
 
 const ALL_ROLES = ["student", "instructor", "content_manager", "admin"] as const;
 const ROLE_LABELS: Record<string, string> = {
@@ -35,6 +36,7 @@ const STATUS_FILTERS = [
 ];
 
 export default function UserManagement() {
+  useRoleGuard(['admin']);
   const { toast } = useToast();
 
   const [page, setPage] = useState(1);
@@ -301,10 +303,10 @@ export default function UserManagement() {
               Active <Badge variant="secondary" className="ml-1.5">{statusCounts.active}</Badge>
             </TabsTrigger>
           </TabsList>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => refetch()} 
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => refetch()}
             disabled={isLoadingState}
             className="h-8 w-8"
           >
@@ -323,50 +325,50 @@ export default function UserManagement() {
       )}
 
       <div className="rounded-lg border border-border/60 bg-card shadow-sm overflow-hidden">
-          {isLoadingState ? (
-            <TableSkeleton rows={5} cols={5} />
-          ) : (
-            <Table>
-              <TableHeader className="bg-muted/40 sticky top-0 z-10">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
-                    {headerGroup.headers.map((header) => (
-                      <TableHead 
-                        key={header.id} 
-                        className="text-xs font-bold text-foreground/70 uppercase tracking-widest"
-                        style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+        {isLoadingState ? (
+          <TableSkeleton rows={5} cols={5} />
+        ) : (
+          <Table>
+            <TableHeader className="bg-muted/40 sticky top-0 z-10">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      className="text-xs font-bold text-foreground/70 uppercase tracking-widest"
+                      style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors">
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        style={{ width: cell.column.getSize() !== 150 ? cell.column.getSize() : undefined }}
                       >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
                     ))}
                   </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors">
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell 
-                          key={cell.id}
-                          style={{ width: cell.column.getSize() !== 150 ? cell.column.getSize() : undefined }}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="py-6 text-sm text-muted-foreground text-center">No users to display.</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </div>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="py-6 text-sm text-muted-foreground text-center">No users to display.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </div>
 
       <DataTablePagination
         currentPage={page}

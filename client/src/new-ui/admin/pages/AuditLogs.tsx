@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarIcon, Filter, AlertCircle, ChevronDown, RotateCcw, Copy, ChevronUp, ArrowUpDown } from "lucide-react";
+import { CalendarIcon, Filter, AlertCircle, ChevronDown, RotateCcw, Copy, ChevronUp, ArrowUpDown, FileSearch } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -26,8 +26,9 @@ import {
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
-import { Badge } from "@/components/design-system/badge";
+import { Badge } from "@/components/design-system/Badge";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
 
 const ITEMS_PER_PAGE = 25;
 
@@ -46,7 +47,7 @@ function UserCell({ firstName, lastName, email }: { firstName?: string; lastName
   if (!firstName && !lastName && !email) {
     return <span className="text-xs text-muted-foreground">—</span>;
   }
-  
+
   const displayName = firstName && lastName ? `${firstName} ${lastName}` : '—';
   return (
     <div className="flex flex-col gap-0.5">
@@ -80,10 +81,10 @@ function ChangesCell({ changes }: { changes: any }) {
 
   // For simple changes (1-2 fields with primitive values), show inline
   if (fieldCount <= 2) {
-    const isSimple = filteredEntries.every(([_, value]) => 
+    const isSimple = filteredEntries.every(([_, value]) =>
       typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
     );
-    
+
     if (isSimple) {
       return (
         <div className="flex flex-col gap-1">
@@ -126,6 +127,7 @@ function ChangesCell({ changes }: { changes: any }) {
 }
 
 export default function AuditLogs() {
+  useRoleGuard(['admin']);
   const { toast } = useToast();
   const [filters, setFilters] = useState<AuditLogFilters>({ limit: 25, offset: 0 });
   const [startDate, setStartDate] = useState<string>("");
@@ -147,7 +149,7 @@ export default function AuditLogs() {
   const currentPage = Math.floor(offset / limit) + 1;
 
   // Get unique users from all logs (not filtered)
-  const allUsers = useMemo(() => 
+  const allUsers = useMemo(() =>
     Array.from(
       new Map(
         logs
@@ -188,12 +190,12 @@ export default function AuditLogs() {
   }, [logs, selectedUserId]);
 
   // Get unique actions and resource types from all logs
-  const uniqueActions = useMemo(() => 
+  const uniqueActions = useMemo(() =>
     Array.from(new Set(logs.map(log => log.action))).sort(),
     [logs]
   );
 
-  const uniqueResourceTypes = useMemo(() => 
+  const uniqueResourceTypes = useMemo(() =>
     Array.from(new Set(logs.map(log => log.resourceType))).sort(),
     [logs]
   );
@@ -287,16 +289,16 @@ export default function AuditLogs() {
     setSelectedUserId("");
     setUserSearchInput("");
     setUserDropdownOpen(false);
-    toast({ 
-      title: "Filters reset", 
+    toast({
+      title: "Filters reset",
       description: "All filters have been cleared."
     });
   };
 
   const handleRetry = () => {
     refetch();
-    toast({ 
-      title: "Retrying...", 
+    toast({
+      title: "Retrying...",
       description: "Attempting to reload audit logs."
     });
   };
@@ -316,21 +318,21 @@ export default function AuditLogs() {
           </div>
 
           {/* Action Dropdown */}
-          <Select 
-            value={actionFilter} 
+          <Select
+            value={actionFilter}
             onValueChange={(value) => {
               setActionFilter(value);
-              setFilters({ 
-                ...filters, 
+              setFilters({
+                ...filters,
                 action: value === "all" ? undefined : value,
-                offset: 0 
+                offset: 0
               });
             }}
           >
-            <SelectTrigger className="w-fit min-w-32 h-8" size="sm">
+            <SelectTrigger className="w-fit min-w-32 h-8">
               <SelectValue placeholder="Action" />
             </SelectTrigger>
-            <SelectContent className="z-50" portal={true}>
+            <SelectContent className="z-50">
               <SelectItem value="all">All Actions</SelectItem>
               {uniqueActions.map((action) => (
                 <SelectItem key={action} value={action}>
@@ -341,21 +343,21 @@ export default function AuditLogs() {
           </Select>
 
           {/* Resource Type Dropdown */}
-          <Select 
-            value={resourceTypeFilter} 
+          <Select
+            value={resourceTypeFilter}
             onValueChange={(value) => {
               setResourceTypeFilter(value);
-              setFilters({ 
-                ...filters, 
+              setFilters({
+                ...filters,
                 resourceType: value === "all" ? undefined : value,
-                offset: 0 
+                offset: 0
               });
             }}
           >
-            <SelectTrigger className="w-fit min-w-32 h-8" size="sm">
+            <SelectTrigger className="w-fit min-w-32 h-8">
               <SelectValue placeholder="Resource Type" />
             </SelectTrigger>
-            <SelectContent className="z-50" portal={true}>
+            <SelectContent className="z-50">
               <SelectItem value="all">All Resources</SelectItem>
               {uniqueResourceTypes.map((type) => (
                 <SelectItem key={type} value={type}>
@@ -368,7 +370,7 @@ export default function AuditLogs() {
           {/* User Search Dropdown */}
           <Popover open={userDropdownOpen} onOpenChange={setUserDropdownOpen}>
             <PopoverTrigger asChild>
-              <button 
+              <button
                 className="h-8 w-fit min-w-40 rounded-md border border-input bg-background px-3 py-1 text-sm text-left flex items-center justify-between hover:bg-muted/50"
                 aria-label="Search user by name or email"
               >
@@ -409,8 +411,8 @@ export default function AuditLogs() {
                       }}
                       className={cn(
                         "w-full text-left px-2 py-1.5 text-sm rounded transition-colors",
-                        selectedUserId === user.id 
-                          ? "bg-primary/10 border border-primary/30 text-primary" 
+                        selectedUserId === user.id
+                          ? "bg-primary/10 border border-primary/30 text-primary"
                           : "hover:bg-muted"
                       )}
                     >
@@ -438,10 +440,10 @@ export default function AuditLogs() {
               value={startDate}
               onChange={(e) => {
                 setStartDate(e.target.value);
-                setFilters({ 
-                  ...filters, 
+                setFilters({
+                  ...filters,
                   startDate: e.target.value ? new Date(e.target.value).toISOString() : undefined,
-                  offset: 0 
+                  offset: 0
                 });
               }}
               className="h-8 w-fit"
@@ -459,10 +461,10 @@ export default function AuditLogs() {
               value={endDate}
               onChange={(e) => {
                 setEndDate(e.target.value);
-                setFilters({ 
-                  ...filters, 
+                setFilters({
+                  ...filters,
                   endDate: e.target.value ? new Date(e.target.value).toISOString() : undefined,
-                  offset: 0 
+                  offset: 0
                 });
               }}
               className="h-8 w-fit"
@@ -471,9 +473,9 @@ export default function AuditLogs() {
 
           {/* Clear Filters Button */}
           {(actionFilter !== "all" || selectedUserId || resourceTypeFilter !== "all" || startDate || endDate) && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={resetFilters}
               className="h-8 px-2 text-sm"
               aria-label="Clear all filters"
@@ -510,9 +512,9 @@ export default function AuditLogs() {
 
       {/* Error State */}
       {error && (
-        <div 
-          className="rounded-2xl border border-destructive/50 bg-destructive/10 p-6" 
-          role="alert" 
+        <div
+          className="rounded-2xl border border-destructive/50 bg-destructive/10 p-6"
+          role="alert"
           aria-live="assertive"
         >
           <div className="flex items-start gap-4">
@@ -525,8 +527,8 @@ export default function AuditLogs() {
                 Unable to fetch audit logs. Please ensure you have admin access and try again.
               </p>
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleRetry}
               className="border-destructive/50 hover:bg-destructive/10"
               aria-label="Retry loading audit logs"
@@ -556,9 +558,9 @@ export default function AuditLogs() {
                         {header.isPlaceholder
                           ? null
                           : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                       </TableHead>
                     ))}
                   </TableRow>
@@ -573,7 +575,7 @@ export default function AuditLogs() {
                       className="hover:bg-muted/30 transition-colors"
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell 
+                        <TableCell
                           key={cell.id}
                           style={{ width: cell.column.getSize() !== 150 ? cell.column.getSize() : undefined }}
                         >
