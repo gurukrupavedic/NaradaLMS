@@ -8,6 +8,8 @@ import {
 } from '@/components/ui/sidebar';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
+import { useQuery } from "@tanstack/react-query";
+import type { Chapter, Track } from "@shared/schema";
 
 interface TopNavProps {
   user?: {
@@ -60,6 +62,9 @@ function getBreadcrumbs(pathname: string): string[] {
     if (pathname === '/app/content') {
       return ['Content Studio', 'Tracks'];
     }
+    if (/\/app\/content\/tracks\/[^/]+\/chapters\/[^/]+/.test(pathname)) {
+      return ['Chapter Studio', 'Chapter Content'];
+    }
     return ['Content Studio', 'Media Library'];
   }
 
@@ -89,12 +94,34 @@ export function TopNav({ user }: TopNavProps) {
   const [pathname] = useLocation();
   const breadcrumbs = getBreadcrumbs(pathname);
 
+  // Dynamic Breadcrumb for Chapter Content Page
+  const chapterContentMatch = pathname.match(/^\/app\/content\/tracks\/(\d+)\/chapters\/(\d+)$/);
+  const trackId = chapterContentMatch ? chapterContentMatch[1] : null;
+  const chapterId = chapterContentMatch ? chapterContentMatch[2] : null;
+
+  const { data: track } = useQuery<Track>({
+    queryKey: [`/api/tracks/${trackId}`],
+    enabled: !!trackId,
+  });
+
+  const { data: chapter } = useQuery<Chapter>({
+    queryKey: [`/api/chapters/${chapterId}/details`],
+    enabled: !!chapterId,
+  });
+
+  if (chapterContentMatch && track && chapter && breadcrumbs.length > 0) {
+    const lastIndex = breadcrumbs.length - 1;
+    if (breadcrumbs[lastIndex] === 'Chapter Content') {
+      breadcrumbs[lastIndex] = `Chapter Content : T${track.order}.CH${chapter.order} - ${chapter.title}`;
+    }
+  }
+
   return (
     <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-border bg-white dark:bg-black px-4">
       {/* Left side - Sidebar trigger + Breadcrumbs */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <SidebarTrigger className="-ml-1" />
-        
+
         {/* Breadcrumbs - Flexible multi-level navigation */}
         {breadcrumbs.length > 0 && (
           <nav className="hidden sm:flex items-center gap-2 text-sm">
