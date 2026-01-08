@@ -70,7 +70,7 @@ export function UnifiedBatchMatrix({
     studentId: string;
     chapterId: string;
   } | null>(null);
-  
+
   // Track which cell is being updated for loading state
   const [updatingCell, setUpdatingCell] = useState<{
     studentId: string;
@@ -131,15 +131,15 @@ export function UnifiedBatchMatrix({
     try {
       // Set loading state for this specific cell
       setUpdatingCell({ studentId: selectedCell.studentId, chapterId: selectedCell.chapterId });
-      
+
       console.log('🔵 handleUpdateProficiency called:', {
         studentId: selectedCell.studentId,
         chapterId: selectedCell.chapterId,
         newLevel: level,
       });
-      
+
       await onUpdateProficiency(selectedCell.studentId, selectedCell.chapterId, level);
-      
+
       console.log('🟢 Update succeeded, closing modal');
       toast({ title: 'Proficiency updated' });
       setModalOpen(false);
@@ -283,7 +283,7 @@ export function UnifiedBatchMatrix({
           const studentId = info.row.original.id;
           const cell = getMatrixCell(studentId, chapter.id);
           const colors = getCellColor(cell.proficiencyLevel, cell.status);
-          
+
           // Check if this specific cell is being updated
           const isCellUpdating = updatingCell?.studentId === studentId && updatingCell?.chapterId === chapter.id;
 
@@ -311,7 +311,7 @@ export function UnifiedBatchMatrix({
             </div>
           );
         },
-        size: undefined,
+        size: 96, // Fixed width for consistent Excel-like grid
         enableSorting: false,
       })
     ),
@@ -352,7 +352,7 @@ export function UnifiedBatchMatrix({
     <div className="space-y-4">
       {/* Matrix Table */}
       <div className="overflow-x-auto overflow-y-auto max-h-[75vh] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 shadow-sm">
-        <table className="w-full border-collapse table-fixed">
+        <table className="border-collapse">{/* Changed from table-fixed to auto layout */}
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id} className="border-b-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900">
