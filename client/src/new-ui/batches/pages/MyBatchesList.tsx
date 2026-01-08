@@ -4,8 +4,10 @@ import { useBatches } from "../hooks/useBatches";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GraduationCap, AlertCircle } from "lucide-react";
+import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
 
 export default function MyBatchesList() {
+  useRoleGuard(['instructor']);
   const { data, isLoading, error, refetch, isRefetching } = useBatches();
 
   const items = data?.items ?? [];

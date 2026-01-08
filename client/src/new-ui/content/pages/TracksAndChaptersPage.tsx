@@ -59,6 +59,7 @@ import { ChapterListItem, ChapterRow } from '../components/ChapterListItem';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { handleJsonResponse } from '../utils/handleJsonResponse';
 import { Grip, Plus, BookOpen } from 'lucide-react';
+import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
 
 interface DialogState {
   isOpen: boolean;
@@ -76,6 +77,7 @@ interface DeleteState {
 }
 
 export default function TracksAndChapters() {
+  useRoleGuard(['content_manager']);
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();

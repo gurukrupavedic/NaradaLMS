@@ -31,10 +31,12 @@ import { useMyStudents } from '../hooks/useMyStudents';
 import { useInstructorBatches } from '../hooks/useInstructorBatches';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DataTablePagination } from '@/components/ui/data-table-pagination';
+import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
 
 const ROWS_PER_PAGE_OPTIONS = [10, 25, 50, 100];
 
 export function MyStudentsPage() {
+  useRoleGuard(['instructor']);
   const [, navigate] = useLocation();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
