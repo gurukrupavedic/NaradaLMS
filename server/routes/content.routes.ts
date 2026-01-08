@@ -10,8 +10,9 @@ import { mediaService } from "../modules/media-pipeline";
 
 const router = Router();
 
-// Protect all content routes: authenticated content managers only
-router.use(authMiddleware, requireContentManager);
+// Protect all content routes: authenticated users can READ, content managers can WRITE
+// We'll apply requireContentManager selectively on POST/PUT/DELETE routes
+router.use(authMiddleware);
 
 // Error response interface
 interface ApiErrorResponse {
@@ -67,8 +68,8 @@ router.get('/tracks/:id', async (req: Request, res: Response, next: NextFunction
   }
 });
 
-// POST /api/tracks - Create new track
-router.post('/tracks', async (req: Request, res: Response, next: NextFunction) => {
+// POST /api/tracks - Create new track (content managers only)
+router.post('/tracks', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, description } = req.body;
     if (!title || !description) {
@@ -85,8 +86,8 @@ router.post('/tracks', async (req: Request, res: Response, next: NextFunction) =
   }
 });
 
-// PUT /api/tracks/:id - Update track
-router.put('/tracks/:id', async (req: Request, res: Response, next: NextFunction) => {
+// PUT /api/tracks/:id - Update track (content managers only)
+router.put('/tracks/:id', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const trackId = parseInt(req.params.id);
     const track = await contentService.updateTrack(trackId, req.body);
@@ -96,8 +97,8 @@ router.put('/tracks/:id', async (req: Request, res: Response, next: NextFunction
   }
 });
 
-// DELETE /api/tracks/:id - Delete track
-router.delete('/tracks/:id', async (req: Request, res: Response, next: NextFunction) => {
+// DELETE /api/tracks/:id - Delete track (content managers only)
+router.delete('/tracks/:id', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const trackId = parseInt(req.params.id);
     await contentService.deleteTrack(trackId);
@@ -107,8 +108,8 @@ router.delete('/tracks/:id', async (req: Request, res: Response, next: NextFunct
   }
 });
 
-// POST /api/tracks/:id/move - Reorder track (up/down)
-router.post('/tracks/:id/move', async (req: Request, res: Response, next: NextFunction) => {
+// POST /api/tracks/:id/move - Reorder track (up/down) (content managers only)
+router.post('/tracks/:id/move', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const trackId = parseInt(req.params.id);
     const { direction } = req.body;
@@ -246,7 +247,7 @@ router.patch('/chapters/:chapterId/status', async (req: Request, res: Response, 
 router.post('/chapters/:id/move', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.id);
-    const { direction, toTrackId } = req.body as { direction?: 'up'|'down'; toTrackId?: number };
+    const { direction, toTrackId } = req.body as { direction?: 'up' | 'down'; toTrackId?: number };
 
     if (toTrackId && Number.isInteger(toTrackId)) {
       await contentService.moveChapterToTrack(chapterId, Number(toTrackId));
@@ -534,7 +535,7 @@ router.post('/chapters/:chapterId/audio', upload.single('audio'), async (req: Re
     try {
       const meta = await parseFile(req.file.path);
       duration = meta.format.duration || 0;
-    } catch {}
+    } catch { }
 
     const created = await mediaService.uploadAudioFile({
       chapterId,
