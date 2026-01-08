@@ -351,8 +351,8 @@ export function UnifiedBatchMatrix({
   return (
     <div className="space-y-4">
       {/* Matrix Table */}
-      <div className="overflow-x-auto overflow-y-auto max-h-[75vh] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 shadow-sm">
-        <table className="w-full border-collapse">{/* Full width for header, auto columns */}
+      <div className="overflow-x-auto overflow-y-auto max-h-[75vh] rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 shadow-sm">
+        <table className="border-collapse bg-white dark:bg-gray-950">{/* Table takes only needed width */}
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id} className="border-b-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900">
