@@ -42,6 +42,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/design-system/Badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/design-system/Switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Business Components
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -275,6 +283,7 @@ export default function ChapterContent() {
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingDescription, setEditingDescription] = useState("");
+  const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false);
 
   // Audio and segmentation state
   const [selectedAudioFile, setSelectedAudioFile] = useState<any | null>(null);
@@ -1702,15 +1711,28 @@ export default function ChapterContent() {
                   >
                     {chapter?.status === "published" ? "Published" : "Draft"}
                   </span>
-                  <Button
-                    size="sm"
-                    variant={chapter?.status === "published" ? "destructive" : "default"}
-                    onClick={handlePublishToggle}
-                    disabled={toggleStatusMutation.isPending || updateContentMutation.isPending}
-                    className="h-8"
-                  >
-                    {chapter?.status === "published" ? "Unpublish" : "Publish"}
-                  </Button>
+                  {chapter?.status === "published" ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowUnpublishConfirm(true)}
+                      disabled={toggleStatusMutation.isPending}
+                      className="h-8 gap-2"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      Edit Chapter
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="h-8 gap-2 bg-green-600 hover:bg-green-700 text-white"
+                      onClick={handlePublishToggle}
+                      disabled={toggleStatusMutation.isPending || updateContentMutation.isPending}
+                    >
+                      <Eye className="w-4 h-4" />
+                      Publish Chapter
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
@@ -1729,6 +1751,14 @@ export default function ChapterContent() {
                     availableScripts={['te', 'hi', 'en']}
                     onScriptChange={setContentScript}
                   />
+
+                  {isPublished && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded text-amber-800 text-sm">
+                      <Link2Off className="w-4 h-4" />
+                      <span>Read-only: Unpublish to edit</span>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     {saveStatus === 'dirty' && (
                       <>
@@ -1775,15 +1805,7 @@ export default function ChapterContent() {
                   />
                 </div>
 
-                {/* Blocking Overlay for Published Chapters */}
-                {isPublished && (
-                  <div
-                    className="absolute inset-0 bg-transparent z-10 cursor-not-allowed"
-                    onClick={(e) => e.preventDefault()}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onKeyDown={(e) => e.preventDefault()}
-                  />
-                )}
+
               </div>
             </TabsContent>
 
@@ -2590,21 +2612,40 @@ export default function ChapterContent() {
                   </div>
                 </div>
 
-                {/* Blocking Overlay for Published Chapters */}
-                {isPublished && (
-                  <div
-                    className="absolute inset-0 bg-transparent z-10 cursor-not-allowed"
-                    onClick={(e) => e.preventDefault()}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onKeyDown={(e) => e.preventDefault()}
-                  />
-                )}
+
+
               </div>
             </TabsContent>
           </div>
         </div>
       </Tabs >
-    </div >
+      {/* Confirmation Dialog for Unpublishing */}
+      <Dialog open={showUnpublishConfirm} onOpenChange={setShowUnpublishConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Unpublish Chapter?</DialogTitle>
+            <DialogDescription>
+              This chapter is currently live. Unpublishing it will hide it from students and other users.
+              You will need to publish it again after making your edits.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUnpublishConfirm(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setShowUnpublishConfirm(false);
+                handlePublishToggle();
+              }}
+            >
+              Unpublish & Edit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 
   // Phase 4C: Return with or without context provider
