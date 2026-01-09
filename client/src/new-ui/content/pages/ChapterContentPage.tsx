@@ -8,6 +8,7 @@ import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
 import { ChapterEditorProvider, useChapterEditor } from '@/new-ui/content/context/ChapterEditorContext';
 import { ChapterHeader } from '@/new-ui/content/components/ChapterHeader';
 import { ContentTab } from '@/new-ui/content/components/ContentTab';
+import { MediaTab } from '@/new-ui/content/components/MediaTab';
 
 
 // Wrapper component - handles route parameters and context setup
@@ -73,18 +74,12 @@ function ChapterContentPageContent() {
 
             {/* Tab content area - overflow-hidden to force internal scrolling in editor */}
             <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
-                <TabsContent value="content" className="flex-1 overflow-hidden h-full flex flex-col m-0 p-4">
+                <TabsContent value="content" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
                     <ContentTab />
                 </TabsContent>
 
                 <TabsContent value="media" className="flex-1 overflow-auto h-full m-0 p-4">
-                    <Card className="p-6 h-full">
-                        <h3 className="font-medium mb-2">Media Tab</h3>
-                        <p className="text-muted-foreground">Coming in Phase 3</p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                            Will include: AudioUploader, AudioFileList
-                        </p>
-                    </Card>
+                    <MediaTab />
                 </TabsContent>
 
                 <TabsContent value="segmentation" className="flex-1 overflow-auto h-full m-0 p-4">
