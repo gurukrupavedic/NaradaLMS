@@ -9,6 +9,7 @@ import { ChapterEditorProvider, useChapterEditor } from '@/new-ui/content/contex
 import { ChapterHeader } from '@/new-ui/content/components/ChapterHeader';
 import { ContentTab } from '@/new-ui/content/components/ContentTab';
 import { MediaTab } from '@/new-ui/content/components/MediaTab';
+import { PreviewTab } from '@/new-ui/content/components/PreviewTab';
 
 
 // Wrapper component - handles route parameters and context setup
@@ -103,13 +104,7 @@ function ChapterContentPageContent() {
                 </TabsContent>
 
                 <TabsContent value="preview" className="flex-1 overflow-auto h-full m-0 p-4">
-                    <Card className="p-6 h-full">
-                        <h3 className="font-medium mb-2">Preview Tab</h3>
-                        <p className="text-muted-foreground">Coming in Phase 4</p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                            Will include: PreviewPlayer, SegmentedTextDisplay
-                        </p>
-                    </Card>
+                    <PreviewTab />
                 </TabsContent>
             </div>
         </Tabs>

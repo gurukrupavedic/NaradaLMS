@@ -12,7 +12,7 @@ import { SegmentedTextDisplay } from "@/components/text-segmentation/SegmentedTe
 import { getProficiencyLabel } from "@/new-ui/batches/utils/matrix-utils";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AudioPlayerControls } from "@/new-ui/student/components/AudioPlayerControls";
+import { AudioPlayerControls } from "@/new-ui/components/AudioPlayerControls";
 
 interface ChapterData {
   id: number;

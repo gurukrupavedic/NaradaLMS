@@ -123,7 +123,7 @@ This matrix shows what each phase provides and what it depends on from previous 
 
 ---
 
-## Phase 4: Preview Tab (Step 5)
+## Phase 4: Preview Tab (Step 5) ✅
 
 ### Depends On (from Phase 0, 1, & 2-3):
 - ✅ Audio files (from Phase 3)
@@ -131,46 +131,44 @@ This matrix shows what each phase provides and what it depends on from previous 
 - ✅ Mappings (will exist after Phase 7)
 
 ### Provides:
-- ✅ `AudioPlayerContext` (NEW - shared audio player)
-- ✅ `usePreviewPlayer` custom hook
-- ✅ `PreviewTab` component
-- ✅ `PreviewPlayer` component
-- ✅ Segmented playback logic
+- ✅ `PreviewTab` component (Reused from Student View)
+- ✅ `AudioPlayerControls` (Shared component)
+- ✅ Segmented playback logic (Local state)
 - ✅ Learn mode toggle
+- ⚠️ `AudioPlayerContext` (Deferred to Phase 5)
 
 ### Migration Notes:
-- **Replace** Phase 0 "Preview Tab - Coming in Phase 4" placeholder → `<PreviewTab />` component
-- **Reuse** existing `SegmentedTextDisplay` component
-- **Create** `AudioPlayerContext` for shared audio state
+- **Major Adjustment:** Reused `LearnChapterPage` components directly for guaranteed consistency.
+- **State:** Uses local state instead of context for now.
+- **Components:** Moved `AudioPlayerControls` to shared directory.
 
-### Don't Start Phase 5 Until:
-- [ ] Preview tab renders
-- [ ] Audio player loads (even without mappings yet)
-- [ ] Context provides audio player to other tabs
+### Status:
+- [x] Preview tab renders
+- [x] Audio player loads and plays
+- [x] Student view features ported successfully
 
 ---
 
-## Phase 5: Audio Player Context
+## Phase 5: Audio Player Context (Optimization)
 
 ### Depends On (from Phase 4):
-- ✅ `AudioPlayerContext` created in Phase 4
+- ✅ Preview Tab implementation
+- ✅ Shared `AudioPlayerControls`
 
 ### Provides:
-- ✅ Shared audio player instance across all tabs
-- ✅ `useAudioPlayer()` hook
-- ✅ Playback controls (play, pause, seek)
-- ✅ Segment boundary enforcement
+- ✅ **Refactor:** `AudioPlayerContext` for shared state
+- ✅ **Refactor:** `MediaTab` to use shared player
+- ✅ **Refactor:** `PreviewTab` to use shared player
+- ✅ Single audio source of truth (prevents overlapping playback)
 
 ### Migration Notes:
-- **Wrap** ChapterContentPage with both:
-  - `<ChapterEditorProvider>` (Phase 1)
-  - `<AudioPlayerProvider>` (Phase 5)
-- **Update** MediaTab, MappingTab, PreviewTab to use shared player
+- This is now a refactoring phase to unify the independent audio players created in Phase 3 and Phase 4.
+- Essential for Phase 7 (Mapping) to control playback cleanly.
 
 ### Don't Start Phase 6 Until:
-- [ ] Audio player context is accessible from all tabs
-- [ ] Multiple tabs can control the same audio instance
-- [ ] Playback state persists across tab switches
+- [ ] `AudioPlayerProvider` is created
+- [ ] MediaTab and PreviewTab are refactored to use it
+- [ ] Audio stops in one tab when switching to another (or persists intentionally)
 
 ---
 
