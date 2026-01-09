@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
 import { ChapterEditorProvider, useChapterEditor } from '@/new-ui/content/context/ChapterEditorContext';
+import { AudioPlayerProvider } from '@/new-ui/content/context/AudioPlayerContext';
 import { ChapterHeader } from '@/new-ui/content/components/ChapterHeader';
 import { ContentTab } from '@/new-ui/content/components/ContentTab';
 import { MediaTab } from '@/new-ui/content/components/MediaTab';
@@ -75,37 +76,39 @@ function ChapterContentPageContent() {
 
             {/* Tab content area - overflow-hidden to force internal scrolling in editor */}
             <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
-                <TabsContent value="content" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
-                    <ContentTab />
-                </TabsContent>
+                <AudioPlayerProvider>
+                    <TabsContent value="content" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
+                        <ContentTab />
+                    </TabsContent>
 
-                <TabsContent value="media" className="flex-1 overflow-auto h-full m-0 p-4">
-                    <MediaTab />
-                </TabsContent>
+                    <TabsContent value="media" className="flex-1 overflow-auto h-full m-0 p-4">
+                        <MediaTab />
+                    </TabsContent>
 
-                <TabsContent value="segmentation" className="flex-1 overflow-auto h-full m-0 p-4">
-                    <Card className="p-6 h-full">
-                        <h3 className="font-medium mb-2">Segmentation Tab</h3>
-                        <p className="text-muted-foreground">Coming in Phase 6</p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                            ⚠️ Critical: TextSelectionPanel, SegmentCreator, SegmentList
-                        </p>
-                    </Card>
-                </TabsContent>
+                    <TabsContent value="segmentation" className="flex-1 overflow-auto h-full m-0 p-4">
+                        <Card className="p-6 h-full">
+                            <h3 className="font-medium mb-2">Segmentation Tab</h3>
+                            <p className="text-muted-foreground">Coming in Phase 6</p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                                ⚠️ Critical: TextSelectionPanel, SegmentCreator, SegmentList
+                            </p>
+                        </Card>
+                    </TabsContent>
 
-                <TabsContent value="mapping" className="flex-1 overflow-auto h-full m-0 p-4">
-                    <Card className="p-6 h-full">
-                        <h3 className="font-medium mb-2">Mapping Tab</h3>
-                        <p className="text-muted-foreground">Coming in Phase 7</p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                            ⚠️ Critical: ProgressiveMapper, MappingControls, AudioPlayerPanel
-                        </p>
-                    </Card>
-                </TabsContent>
+                    <TabsContent value="mapping" className="flex-1 overflow-auto h-full m-0 p-4">
+                        <Card className="p-6 h-full">
+                            <h3 className="font-medium mb-2">Mapping Tab</h3>
+                            <p className="text-muted-foreground">Coming in Phase 7</p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                                ⚠️ Critical: ProgressiveMapper, MappingControls, AudioPlayerPanel
+                            </p>
+                        </Card>
+                    </TabsContent>
 
-                <TabsContent value="preview" className="flex-1 overflow-auto h-full m-0 p-4">
-                    <PreviewTab />
-                </TabsContent>
+                    <TabsContent value="preview" className="flex-1 overflow-auto h-full m-0 p-4">
+                        <PreviewTab />
+                    </TabsContent>
+                </AudioPlayerProvider>
             </div>
         </Tabs>
     );

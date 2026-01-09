@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,6 +8,7 @@ import { Music, FileText, List, Zap } from "lucide-react";
 import { SegmentedTextDisplay } from "@/components/text-segmentation/SegmentedTextDisplay";
 import { AudioPlayerControls } from "@/new-ui/components/AudioPlayerControls";
 import { useChapterEditor } from "../../context/ChapterEditorContext";
+import { useAudioPlayer } from "../../context/AudioPlayerContext";
 
 interface TextSegment {
     id: number;
@@ -39,8 +39,25 @@ interface AudioTextMapping {
 
 export function PreviewTab() {
     const { chapter, chapterId } = useChapterEditor();
+    const {
+        isPlaying,
+        currentTime,
+        duration,
+        volume,
+        playbackRate,
+        isMuted,
+        playerRef,
+        play,
+        pause,
+        seek,
+        setVolume,
+        setPlaybackRate,
+        toggleMute,
+        setAudioSource,
+        playSegment
+    } = useAudioPlayer();
 
-    // State management (from LearnChapterPage lines 82-102)
+    // State management
     const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
     const [selectedAudioFileId, setSelectedAudioFileId] = useState<number | null>(null);
     const [selectedSegmentId, setSelectedSegmentId] = useState<number | undefined>(undefined);
@@ -48,16 +65,6 @@ export function PreviewTab() {
         const stored = localStorage.getItem("preview-learn-mode");
         return stored ? JSON.parse(stored) : true;
     });
-
-    // Audio player state
-    const previewAudioRef = useRef<HTMLAudioElement>(new Audio());
-    const timeUpdateCleanupRef = useRef<(() => void) | null>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
-    const [volume, setVolume] = useState(80);
-    const [isMuted, setIsMuted] = useState(false);
-    const [playbackRate, setPlaybackRate] = useState(1);
 
     // Sync learnMode to localStorage
     useEffect(() => {
@@ -82,39 +89,16 @@ export function PreviewTab() {
 
     // Auto-select first audio file
     useEffect(() => {
-        if (audioFiles.length > 0 && !selectedAudioFileId) {
+        if (audioFiles.length > 0 && !selectedAudioFileId && playerRef.current) {
             setSelectedAudioFileId(audioFiles[0].id);
-            previewAudioRef.current.src = `/uploads/${audioFiles[0].filename}`;
+            setAudioSource(`/uploads/${audioFiles[0].filename}`);
         }
-    }, [audioFiles, selectedAudioFileId]);
+    }, [audioFiles, selectedAudioFileId, setAudioSource, playerRef]);
 
-    // Audio event listeners
-    useEffect(() => {
-        const audio = previewAudioRef.current;
-
-        const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-        const handleLoadedMetadata = () => setDuration(audio.duration);
-        const handleEnded = () => setIsPlaying(false);
-
-        audio.addEventListener("timeupdate", handleTimeUpdate);
-        audio.addEventListener("loadedmetadata", handleLoadedMetadata);
-        audio.addEventListener("ended", handleEnded);
-
-        return () => {
-            audio.removeEventListener("timeupdate", handleTimeUpdate);
-            audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
-            audio.removeEventListener("ended", handleEnded);
-        };
-    }, []);
-
-    // Segment click handler (from LearnChapterPage lines 173-231)
+    // Segment click handler
     const handleSegmentClick = useCallback((segmentId: number | undefined) => {
         if (!segmentId) {
             setSelectedSegmentId(undefined);
-            if (timeUpdateCleanupRef.current) {
-                timeUpdateCleanupRef.current();
-                timeUpdateCleanupRef.current = null;
-            }
             return;
         }
 
@@ -127,46 +111,21 @@ export function PreviewTab() {
 
         if (!mapping) return;
 
-        if (timeUpdateCleanupRef.current) {
-            timeUpdateCleanupRef.current();
-            timeUpdateCleanupRef.current = null;
-        }
-
-        const audio = previewAudioRef.current;
-
-        const playSegment = () => {
-            audio.currentTime = mapping.startTime;
-            setCurrentTime(mapping.startTime);
-
-            const handleTimeUpdate = () => {
-                if (audio.currentTime >= mapping.endTime) {
-                    audio.pause();
-                    setIsPlaying(false);
-                    audio.removeEventListener("timeupdate", handleTimeUpdate);
-                    timeUpdateCleanupRef.current = null;
-                }
-            };
-
-            audio.addEventListener("timeupdate", handleTimeUpdate);
-            timeUpdateCleanupRef.current = () => {
-                audio.removeEventListener("timeupdate", handleTimeUpdate);
-            };
-
-            audio.play().catch(console.error);
-            setIsPlaying(true);
-        };
-
         if (selectedAudioFileId !== mapping.audioFileId) {
             const audioFile = audioFiles.find((f) => f.id === mapping.audioFileId);
             if (audioFile) {
-                audio.src = `/uploads/${audioFile.filename}`;
-                setSelectedAudioFileId(mapping.audioFileId);
-                audio.addEventListener("loadedmetadata", () => playSegment(), { once: true });
+                // Switch file first, then play segment
+                setAudioSource(`/uploads/${audioFile.filename}`).then(() => {
+                    setSelectedAudioFileId(mapping.audioFileId);
+                    // Slight delay to ensure metadata loaded if needed, or rely on playSegment logic
+                    // For now, simple chained call
+                    setTimeout(() => playSegment(mapping.startTime, mapping.endTime), 50);
+                });
             }
         } else {
-            playSegment();
+            playSegment(mapping.startTime, mapping.endTime);
         }
-    }, [mappings, selectedAudioFileId, audioFiles]);
+    }, [mappings, selectedAudioFileId, audioFiles, setAudioSource, playSegment]);
 
     // Derived data
     const chapterContent = chapter?.content || {};
@@ -185,7 +144,7 @@ export function PreviewTab() {
 
     return (
         <div className="flex flex-col lg:grid lg:grid-cols-3 h-full gap-4">
-            {/* Section 1: Text Content Area (from LearnChapterPage lines 320-397) */}
+            {/* Section 1: Text Content Area */}
             <div className="lg:col-span-2 flex-1 min-h-0 flex flex-col border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black overflow-hidden">
                 <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-3">
@@ -267,7 +226,7 @@ export function PreviewTab() {
                 </div>
             </div>
 
-            {/* Section 2: Audio Player Panel (from LearnChapterPage lines 399-484) */}
+            {/* Section 2: Audio Player Panel */}
             <div className="lg:col-span-1 flex flex-col gap-4 flex-shrink-0">
                 <div className="border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black p-3 lg:sticky lg:top-0">
                     <div className="flex items-center gap-2 mb-3">
@@ -278,7 +237,7 @@ export function PreviewTab() {
                                 const audioFileId = parseInt(value);
                                 const audioFile = audioFiles.find((f) => f.id === audioFileId);
                                 if (audioFile) {
-                                    previewAudioRef.current.src = `/uploads/${audioFile.filename}`;
+                                    setAudioSource(`/uploads/${audioFile.filename}`);
                                     setSelectedAudioFileId(audioFileId);
                                 }
                             }}
@@ -309,43 +268,14 @@ export function PreviewTab() {
                             volume={volume}
                             isMuted={isMuted}
                             playbackRate={playbackRate}
-                            onPlay={() => {
-                                previewAudioRef.current.play().catch(console.error);
-                                setIsPlaying(true);
-                            }}
-                            onPause={() => {
-                                previewAudioRef.current.pause();
-                                setIsPlaying(false);
-                            }}
-                            onSeek={(time) => {
-                                previewAudioRef.current.currentTime = time;
-                                setCurrentTime(time);
-                            }}
-                            onVolumeChange={(vol) => {
-                                previewAudioRef.current.volume = vol / 100;
-                                setVolume(vol);
-                            }}
-                            onMuteToggle={() => {
-                                if (previewAudioRef.current) {
-                                    const newMutedState = !isMuted;
-                                    previewAudioRef.current.muted = newMutedState;
-                                    setIsMuted(newMutedState);
-                                }
-                            }}
-                            onPlaybackRateChange={(rate) => {
-                                previewAudioRef.current.playbackRate = rate;
-                                setPlaybackRate(rate);
-                            }}
-                            onSkipForward={() => {
-                                if (previewAudioRef.current) {
-                                    previewAudioRef.current.currentTime = Math.min(previewAudioRef.current.currentTime + 10, duration);
-                                }
-                            }}
-                            onSkipBackward={() => {
-                                if (previewAudioRef.current) {
-                                    previewAudioRef.current.currentTime = Math.max(previewAudioRef.current.currentTime - 10, 0);
-                                }
-                            }}
+                            onPlay={play}
+                            onPause={pause}
+                            onSeek={seek}
+                            onVolumeChange={setVolume}
+                            onMuteToggle={toggleMute}
+                            onPlaybackRateChange={setPlaybackRate}
+                            onSkipForward={() => seek(Math.min(currentTime + 10, duration))}
+                            onSkipBackward={() => seek(Math.max(currentTime - 10, 0))}
                         />
                     ) : (
                         <div className="flex flex-col items-center justify-center py-8 text-muted-foreground border border-dashed border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/40">
