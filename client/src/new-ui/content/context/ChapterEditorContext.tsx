@@ -12,6 +12,12 @@ interface ChapterData {
         hi?: string;
         en?: string;
     };
+    track?: {
+        id: number;
+        title: string;
+        order: number;
+    };
+    order?: number;
 }
 
 interface ChapterEditorContextValue {

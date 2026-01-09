@@ -39,43 +39,69 @@ export function ChapterHeader() {
 
     return (
         <>
-            <div className="bg-white dark:bg-gray-800 border-b sticky top-0 z-10">
-                {/* Chapter metadata row */}
-                <div className="px-4 py-3 border-b">
-                    <div className="flex items-center justify-between">
+            <div className="bg-white/95 dark:bg-black/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+                <div className="w-full mx-auto px-6 py-3">
+                    <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                            <h1 className="text-xl font-semibold mb-1">
-                                {chapter?.title || 'Chapter Content Editor'}
+                            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
+                                {chapter?.track ? `TRACK ${chapter.track.order} - ${chapter.track.title}` : 'CHAPTER STUDIO'}
+                            </p>
+                            <h1 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                                {chapter ? `Chapter ${chapter.order || '?'} - ${chapter.title}` : 'Chapter Content Editor'}
                             </h1>
-                            {chapter?.description && (
-                                <p className="text-sm text-muted-foreground">
-                                    {chapter.description}
-                                </p>
-                            )}
                         </div>
                         <div className="flex items-center gap-3">
-                            <Badge variant={isPublished ? 'default' : 'secondary'}>
-                                {isPublished ? 'Published' : 'Draft'}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                                <span className={isPublished ? "h-2 w-2 rounded-full bg-green-500" : "h-2 w-2 rounded-full bg-yellow-500"} />
+                                <span className="text-sm font-medium text-muted-foreground mr-2">
+                                    {isPublished ? 'Published' : 'Draft'}
+                                </span>
+                            </div>
                             <Button
                                 variant={isPublished ? 'outline' : 'default'}
+                                size="sm"
                                 onClick={handlePublishToggle}
                                 disabled={isTogglingStatus}
                             >
-                                {isPublished ? 'Unpublish' : 'Publish'}
+                                {isPublished ? 'Unpublish' : 'Publish Chapter'}
                             </Button>
                         </div>
                     </div>
                 </div>
 
-                {/* 5-step tabs integrated into header */}
-                <div className="px-4">
-                    <TabsList className="w-full justify-start">
-                        <TabsTrigger value="content">Step 1: Content</TabsTrigger>
-                        <TabsTrigger value="media">Step 2: Audio</TabsTrigger>
-                        <TabsTrigger value="segmentation">Step 3: Segmentation</TabsTrigger>
-                        <TabsTrigger value="mapping">Step 4: Mapping</TabsTrigger>
-                        <TabsTrigger value="preview">Step 5: Preview</TabsTrigger>
+                {/* 5-step tabs integrated into header - cleaner look */}
+                <div className="px-6 pb-2">
+                    <TabsList className="w-full justify-start h-9 bg-transparent p-0">
+                        <TabsTrigger
+                            value="content"
+                            className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
+                        >
+                            Step 1: Content
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="media"
+                            className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
+                        >
+                            Step 2: Audio
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="segmentation"
+                            className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
+                        >
+                            Step 3: Segmentation
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="mapping"
+                            className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
+                        >
+                            Step 4: Mapping
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="preview"
+                            className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
+                        >
+                            Step 5: Preview
+                        </TabsTrigger>
                     </TabsList>
                 </div>
             </div>

@@ -76,10 +76,10 @@ const FontSize = Extension.create({
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { 
-  Bold, 
-  Italic, 
-  Underline as UnderlineIcon, 
+import {
+  Bold,
+  Italic,
+  Underline as UnderlineIcon,
   AlignLeft,
   AlignCenter,
   AlignRight,
@@ -91,7 +91,8 @@ import {
   ImageIcon,
   MapPin,
   Triangle,
-  Info
+  Info,
+  Loader2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCallback, useEffect, useState, useReducer } from 'react'
@@ -100,6 +101,8 @@ import { htmlToPlainText } from '@shared/utils/text-segmentation'
 
 // Text marker functionality removed temporarily to fix editor issues
 
+type SaveStatus = 'clean' | 'dirty' | 'saving' | 'saved';
+
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -107,6 +110,12 @@ interface RichTextEditorProps {
   placeholder?: string;
   language: "te" | "hi" | "en";
   className?: string;
+  // Script selector props
+  currentScript?: "te" | "hi" | "en";
+  onScriptChange?: (script: "te" | "hi" | "en") => void;
+  availableScripts?: Array<"te" | "hi" | "en">;
+  // Auto-save status
+  autoSaveStatus?: SaveStatus;
 }
 
 export function RichTextEditor({
@@ -115,7 +124,11 @@ export function RichTextEditor({
   disabled = false,
   placeholder = "Enter content...",
   language,
-  className
+  className,
+  currentScript,
+  onScriptChange,
+  availableScripts = ['te', 'hi', 'en'],
+  autoSaveStatus
 }: RichTextEditorProps) {
   // Editor mode state with localStorage persistence
   const [editorMode, setEditorMode] = useState<'html' | 'text'>(() => {
@@ -206,7 +219,7 @@ export function RichTextEditor({
           // Check if we're inside a list (bulletList or orderedList)
           const { $from } = view.state.selection;
           const isInList = $from.node(-1)?.type.name === 'listItem';
-          
+
           if (event.shiftKey) {
             return false; // Shift+Enter: Create paragraph (TipTap default)
           } else if (isInList) {
@@ -241,7 +254,7 @@ export function RichTextEditor({
       console.log('External value:', value);
       console.log('Editor HTML:', editor.getHTML());
       console.log('Editor focused:', editor.isFocused);
-      
+
       // Always update from external value - this fixes the auto-save persistence issue
       console.log('Updating editor content with external value (forced)');
       editor.commands.setContent(value, false);
@@ -258,12 +271,12 @@ export function RichTextEditor({
   // Subscribe to editor updates for toolbar sync
   useEffect(() => {
     if (!editor) return;
-    
+
     const handleUpdate = () => forceUpdate();
-    
+
     editor.on('selectionUpdate', handleUpdate);
     editor.on('transaction', handleUpdate);
-    
+
     return () => {
       editor.off('selectionUpdate', handleUpdate);
       editor.off('transaction', handleUpdate);
@@ -318,68 +331,71 @@ export function RichTextEditor({
   return (
     <div className={cn("border rounded-md overflow-hidden h-full flex flex-col", className)}>
       {/* Reorganized Toolbar */}
-      <div className="border-b p-2 bg-white flex-shrink-0">
-        {/* Compact Single Row Toolbar */}
+      {/* Reorganized Toolbar */}
+      <div className="border-b px-4 py-2 bg-gray-50 dark:bg-gray-900 flex-shrink-0 flex items-center justify-between gap-3">
+        {/* Left Side: Script Selector & Formatting */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Show formatting controls only in HTML mode */}
+          {/* Script Selector */}
+          {currentScript && onScriptChange && (
+            <div className="flex items-center gap-2 mr-2">
+              <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Script</span>
+              <Select
+                value={currentScript}
+                onValueChange={onScriptChange}
+                disabled={disabled}
+              >
+                <SelectTrigger className="w-[140px] h-8 text-xs bg-white dark:bg-black shadow-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableScripts.map((script) => (
+                    <SelectItem key={script} value={script}>
+                      {script === 'te' ? 'Telugu' : script === 'hi' ? 'Devanagari' : 'IAST'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Formatting Controls - Grouped & White Background */}
           {editorMode === 'html' && (
             <>
-              {/* Font Family Selector */}
-              <Select
-                value={editor?.getAttributes('textStyle')?.fontFamily || 'AdishilaSan'}
-                onValueChange={(value) => {
-                  const { from, to } = editor?.state.selection || { from: 0, to: 0 };
-                  setFontFamily(value);
-                  setTimeout(() => {
-                    editor?.commands.setTextSelection({ from, to });
-                  }, 0);
-                }}
-                disabled={disabled}
-              >
-                <SelectTrigger className="w-[140px] h-8 text-xs">
-                  <SelectValue placeholder="Font" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="JIMS">JIMS</SelectItem>
-                  <SelectItem value="AdishilaSanVedic">AdishilaSanVedic</SelectItem>
-                  <SelectItem value="AdishilaSan">AdishilaSan</SelectItem>
-                  <SelectItem value="Inter">Inter</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1" />
 
-              {/* Font Size Selector */}
-              <Select
-                value={editor?.getAttributes('textStyle')?.fontSize || '30px'}
-                onValueChange={(value) => {
-                  const { from, to } = editor?.state.selection || { from: 0, to: 0 };
-                  setFontSize(value);
-                  setTimeout(() => {
-                    editor?.commands.setTextSelection({ from, to });
-                  }, 0);
-                }}
-                disabled={disabled}
-              >
-                <SelectTrigger className="w-[80px] h-8 text-xs">
-                  <SelectValue placeholder="Size" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="20px">20px</SelectItem>
-                  <SelectItem value="24px">24px</SelectItem>
-                  <SelectItem value="28px">28px</SelectItem>
-                  <SelectItem value="30px">30px</SelectItem>
-                  <SelectItem value="36px">36px</SelectItem>
-                  <SelectItem value="42px">42px</SelectItem>
-                  <SelectItem value="48px">48px</SelectItem>
-                  <SelectItem value="54px">54px</SelectItem>
-                  <SelectItem value="60px">60px</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* Font Controls */}
+              <div className="flex items-center gap-1">
+                <Select
+                  value={editor?.getAttributes('textStyle')?.fontSize || '30px'}
+                  onValueChange={(value) => {
+                    const { from, to } = editor?.state.selection || { from: 0, to: 0 };
+                    setFontSize(value);
+                    setTimeout(() => {
+                      editor?.commands.setTextSelection({ from, to });
+                    }, 0);
+                  }}
+                  disabled={disabled}
+                >
+                  <SelectTrigger className="w-[70px] h-8 text-xs bg-white dark:bg-black shadow-sm">
+                    <SelectValue placeholder="Size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="20px">20px</SelectItem>
+                    <SelectItem value="24px">24px</SelectItem>
+                    <SelectItem value="30px">30px</SelectItem>
+                    <SelectItem value="36px">36px</SelectItem>
+                    <SelectItem value="42px">42px</SelectItem>
+                    <SelectItem value="48px">48px</SelectItem>
+                    <SelectItem value="60px">60px</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-              {/* Bold, Italic, Underline */}
-              <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
+              {/* Basic Formatting Group */}
+              <div className="flex items-center gap-0.5 px-1 py-0.5 bg-white dark:bg-black rounded-md border shadow-sm">
                 <Button
                   onMouseDown={(e) => e.preventDefault()}
-                  variant={editor?.isActive('bold') ? 'default' : 'ghost'}
+                  variant={editor?.isActive('bold') ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => editor?.chain().focus().toggleBold().run()}
                   disabled={disabled}
@@ -390,7 +406,7 @@ export function RichTextEditor({
                 </Button>
                 <Button
                   onMouseDown={(e) => e.preventDefault()}
-                  variant={editor?.isActive('italic') ? 'default' : 'ghost'}
+                  variant={editor?.isActive('italic') ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => editor?.chain().focus().toggleItalic().run()}
                   disabled={disabled}
@@ -401,7 +417,7 @@ export function RichTextEditor({
                 </Button>
                 <Button
                   onMouseDown={(e) => e.preventDefault()}
-                  variant={editor?.isActive('underline') ? 'default' : 'ghost'}
+                  variant={editor?.isActive('underline') ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => editor?.chain().focus().toggleUnderline().run()}
                   disabled={disabled}
@@ -412,10 +428,9 @@ export function RichTextEditor({
                 </Button>
               </div>
 
-              {/* Text Colors */}
-              <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
+              {/* Colors */}
+              <div className="flex items-center gap-0.5 px-1 py-0.5 bg-white dark:bg-black rounded-md border shadow-sm">
                 <Button
-                  onMouseDown={(e) => e.preventDefault()}
                   variant="ghost"
                   size="sm"
                   onClick={() => editor?.chain().focus().unsetColor().run()}
@@ -426,7 +441,6 @@ export function RichTextEditor({
                   <div className="w-3 h-3 bg-black dark:bg-white rounded-sm"></div>
                 </Button>
                 <Button
-                  onMouseDown={(e) => e.preventDefault()}
                   variant="ghost"
                   size="sm"
                   onClick={() => setColor('#ef4444')}
@@ -437,7 +451,6 @@ export function RichTextEditor({
                   <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
                 </Button>
                 <Button
-                  onMouseDown={(e) => e.preventDefault()}
                   variant="ghost"
                   size="sm"
                   onClick={() => setColor('#3b82f6')}
@@ -447,160 +460,60 @@ export function RichTextEditor({
                 >
                   <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
                 </Button>
-                <Button
-                  onMouseDown={(e) => e.preventDefault()}
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setColor('#22c55e')}
-                  disabled={disabled}
-                  className="h-7 w-7 p-0"
-                  title="Green"
-                >
-                  <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
-                </Button>
               </div>
 
-              {/* Lists */}
-              <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
+              {/* Lists/Align/Insert groups could be added here similarly if needed, keeping it compact for now */}
+              <div className="flex items-center gap-0.5 px-1 py-0.5 bg-white dark:bg-black rounded-md border shadow-sm">
                 <Button
                   onMouseDown={(e) => e.preventDefault()}
-                  variant={editor?.isActive('orderedList') ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-                  disabled={disabled}
-                  className="h-7 w-7 p-0"
-                  title="Numbered List"
-                >
-                  <ListOrdered className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  onMouseDown={(e) => e.preventDefault()}
-                  variant={editor?.isActive('bulletList') ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                  disabled={disabled}
-                  className="h-7 w-7 p-0"
-                  title="Bullet List"
-                >
-                  <List className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-
-              {/* Alignment */}
-              <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
-                <Button
-                  onMouseDown={(e) => e.preventDefault()}
-                  variant={editor?.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
+                  variant={editor?.isActive({ textAlign: 'left' }) ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => setAlignment('left')}
                   disabled={disabled}
                   className="h-7 w-7 p-0"
-                  title="Left Align"
                 >
                   <AlignLeft className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                   onMouseDown={(e) => e.preventDefault()}
-                  variant={editor?.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
+                  variant={editor?.isActive({ textAlign: 'center' }) ? 'secondary' : 'ghost'}
                   size="sm"
                   onClick={() => setAlignment('center')}
                   disabled={disabled}
                   className="h-7 w-7 p-0"
-                  title="Center Align"
                 >
                   <AlignCenter className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  onMouseDown={(e) => e.preventDefault()}
-                  variant={editor?.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setAlignment('right')}
-                  disabled={disabled}
-                  className="h-7 w-7 p-0"
-                  title="Right Align"
-                >
-                  <AlignRight className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  onMouseDown={(e) => e.preventDefault()}
-                  variant={editor?.isActive({ textAlign: 'justify' }) ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setAlignment('justify')}
-                  disabled={disabled}
-                  className="h-7 w-7 p-0"
-                  title="Justify"
-                >
-                  <AlignJustify className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-
-              {/* Content Insertion */}
-              <div className="flex items-center gap-1 px-2 py-1 bg-background rounded border h-8">
-                <Button
-                  onMouseDown={(e) => e.preventDefault()}
-                  variant={editor?.isActive('link') ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={addLink}
-                  disabled={disabled}
-                  className="h-7 w-7 p-0"
-                  title="Add Link"
-                >
-                  <LinkIcon className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  onMouseDown={(e) => e.preventDefault()}
-                  variant="ghost"
-                  size="sm"
-                  onClick={addImage}
-                  disabled={disabled}
-                  className="h-7 w-7 p-0"
-                  title="Add Image"
-                >
-                  <ImageIcon className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  onMouseDown={(e) => e.preventDefault()}
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => editor?.chain().focus().setHorizontalRule().run()}
-                  disabled={disabled}
-                  className="h-7 w-7 p-0"
-                  title="Horizontal Rule"
-                >
-                  <Minus className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </>
           )}
+        </div>
 
-          {/* Spacer to push mode toggle to the right */}
-          <div className="flex-1" />
-
-          {/* HTML/Text Mode Toggle */}
-          <Tabs 
-            value={editorMode} 
+        {/* Right Side: Mode Toggle & Info */}
+        <div className="flex items-center gap-2">
+          <Tabs
+            value={editorMode}
             onValueChange={(value) => setEditorMode(value as 'html' | 'text')}
           >
-            <TabsList variant="indigo" size="sm">
-              <TabsTrigger value="html" variant="indigo" size="sm" data-testid="toggle-html-mode">
+            <TabsList className="h-8 bg-white dark:bg-black border shadow-sm">
+              <TabsTrigger value="html" className="text-xs h-6 px-3">
                 HTML
               </TabsTrigger>
-              <TabsTrigger value="text" variant="indigo" size="sm" data-testid="toggle-text-mode">
+              <TabsTrigger value="text" className="text-xs h-6 px-3">
                 Text
               </TabsTrigger>
             </TabsList>
           </Tabs>
 
-          {/* Keyboard Shortcuts Info */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                 title="Keyboard Shortcuts"
               >
-                <Info className="h-4 w-4 text-blue-500" />
+                <Info className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-72" align="end">
@@ -615,19 +528,6 @@ export function RichTextEditor({
                     <span className="text-muted-foreground">Shift+Enter</span>
                     <span>New paragraph</span>
                   </div>
-                  <div className="border-t my-2"></div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Ctrl+B</span>
-                    <span>Bold</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Ctrl+I</span>
-                    <span>Italic</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Ctrl+U</span>
-                    <span>Underline</span>
-                  </div>
                 </div>
               </div>
             </PopoverContent>
@@ -637,12 +537,12 @@ export function RichTextEditor({
 
       {/* Editor Content */}
       {editorMode === 'html' ? (
-        <div 
+        <div
           className="flex-1 overflow-auto bg-white cursor-text"
           onClick={() => editor?.commands.focus()}
         >
-          <EditorContent 
-            editor={editor} 
+          <EditorContent
+            editor={editor}
             className={cn(
               "text-xl leading-normal w-full h-full",
               "[&_.ProseMirror]:h-full [&_.ProseMirror]:outline-none [&_.ProseMirror]:cursor-text",
@@ -670,11 +570,11 @@ export function RichTextEditor({
           />
         </div>
       ) : (
-        <div 
+        <div
           className="flex-1 overflow-auto bg-white p-4"
           data-testid="text-preview-mode"
         >
-          <div 
+          <div
             className={cn(
               "whitespace-pre-wrap",
               getFontClass()
@@ -687,6 +587,35 @@ export function RichTextEditor({
             }}
           >
             {htmlToPlainText(value) || placeholder}
+          </div>
+        </div>
+      )}
+
+      {/* Bottom Toolbar with Auto-Save Status */}
+      {autoSaveStatus && (
+        <div className="border-t p-2 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
+          <div className="flex justify-end items-center">
+            {autoSaveStatus === 'clean' && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                All changes saved
+              </span>
+            )}
+            {autoSaveStatus === 'dirty' && (
+              <span className="text-xs text-yellow-600 dark:text-yellow-500">
+                Unsaved changes...
+              </span>
+            )}
+            {autoSaveStatus === 'saving' && (
+              <div className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-500">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Saving...</span>
+              </div>
+            )}
+            {autoSaveStatus === 'saved' && (
+              <span className="text-xs text-green-600 dark:text-green-500">
+                Saved ✓
+              </span>
+            )}
           </div>
         </div>
       )}
