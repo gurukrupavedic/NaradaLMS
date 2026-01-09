@@ -11,6 +11,7 @@ import { ChapterHeader } from '@/new-ui/content/components/ChapterHeader';
 import { ContentTab } from '@/new-ui/content/components/ContentTab';
 import { MediaTab } from '@/new-ui/content/components/MediaTab';
 import { PreviewTab } from '@/new-ui/content/components/PreviewTab';
+import { SegmentationTab } from '@/new-ui/content/components/SegmentationTab';
 
 
 // Wrapper component - handles route parameters and context setup
@@ -85,14 +86,8 @@ function ChapterContentPageContent() {
                         <MediaTab />
                     </TabsContent>
 
-                    <TabsContent value="segmentation" className="flex-1 overflow-auto h-full m-0 p-4">
-                        <Card className="p-6 h-full">
-                            <h3 className="font-medium mb-2">Segmentation Tab</h3>
-                            <p className="text-muted-foreground">Coming in Phase 6</p>
-                            <p className="text-xs text-muted-foreground mt-2">
-                                ⚠️ Critical: TextSelectionPanel, SegmentCreator, SegmentList
-                            </p>
-                        </Card>
+                    <TabsContent value="segmentation" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
+                        <SegmentationTab />
                     </TabsContent>
 
                     <TabsContent value="mapping" className="flex-1 overflow-auto h-full m-0 p-4">
