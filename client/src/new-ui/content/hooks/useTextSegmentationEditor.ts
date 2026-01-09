@@ -31,6 +31,9 @@ export function useTextSegmentationEditor() {
     // Script selection state
     const [selectedScript, setSelectedScript] = useState<'te' | 'hi' | 'en'>('te');
 
+    // Segment selection state (for syncing between text and list)
+    const [selectedSegmentId, setSelectedSegmentId] = useState<number | undefined>(undefined);
+
     // Use base text segmentation hook
     const {
         currentSelection,
@@ -203,6 +206,61 @@ export function useTextSegmentationEditor() {
         deleteSegmentMutation.mutate(segmentId);
     }, [isPublished, deleteSegmentMutation, toast]);
 
+    // Create segment from AnnotationLayer selection data
+    const createSegmentFromSelection = useCallback((segmentData: { script: string; startPosition: number; endPosition: number }) => {
+        if (isPublished) {
+            toast({
+                title: 'Chapter is published',
+                description: 'Unpublish the chapter to create segments',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        // Check for overlap
+        if (checkOverlap(segmentData.startPosition, segmentData.endPosition)) {
+            toast({
+                title: 'Segment overlaps',
+                description: 'This segment overlaps with an existing segment. Adjacent segments are allowed.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        // Create segment directly with provided data
+        const createMutation = async () => {
+            const response = await fetch(`/api/content/chapters/${chapterId}/segments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(segmentData),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to create segment');
+            }
+
+            return response.json();
+        };
+
+        createMutation()
+            .then(() => {
+                toast({
+                    title: 'Segment created',
+                    description: `Position ${segmentData.startPosition}-${segmentData.endPosition}`,
+                });
+                queryClient.invalidateQueries({ queryKey: ['content', 'chapters', chapterId, 'segments'] });
+            })
+            .catch((error: Error) => {
+                toast({
+                    title: 'Failed to create segment',
+                    description: error.message,
+                    variant: 'destructive',
+                });
+            });
+    }, [isPublished, checkOverlap, chapterId, toast, queryClient]);
+
     return {
         // Selection state (from base hook)
         currentSelection,
@@ -215,6 +273,10 @@ export function useTextSegmentationEditor() {
         selectedScript,
         setSelectedScript,
 
+        // Selection sync
+        selectedSegmentId,
+        setSelectedSegmentId,
+
         // Data
         textSegments,
         scriptSegments,
@@ -223,6 +285,7 @@ export function useTextSegmentationEditor() {
 
         // CRUD operations
         createSegment,
+        createSegmentFromSelection,
         deleteSegment,
         isCreating: createSegmentMutation.isPending,
         isDeleting: deleteSegmentMutation.isPending,

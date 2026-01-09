@@ -28,17 +28,19 @@ export function SegmentationTab() {
         textSegments,
         scriptSegments,
         allChapterMappings,
+        selectedSegmentId,
+        setSelectedSegmentId,
         createSegment,
+        createSegmentFromSelection,
         deleteSegment,
         isCreating,
         getMappingStatus,
-        renderSegmentedText,
     } = useTextSegmentationEditor();
 
     // Panel size persistence (matching Tracks & Chapters pattern)
-    const [panelSizes, setPanelSizes] = useLocalStorage('segmentation-panel-sizes', {
-        text: 65,
-        segments: 35,
+    const [panelSizes, setPanelSizes] = useLocalStorage('segmentation-panel-sizes-v2', {
+        text: 50,
+        segments: 50,
     });
 
     const handleLayoutChange = (sizes: number[]) => {
@@ -77,8 +79,8 @@ export function SegmentationTab() {
                     maxSize={80}
                 >
                     <Card className="h-full flex flex-col overflow-hidden">
-                        <div className="px-6 py-3 bg-gray-50 border-b flex-shrink-0">
-                            <div className="flex items-center justify-between">
+                        <div className="px-6 h-14 bg-gray-50 border-b flex-shrink-0 flex items-center">
+                            <div className="flex items-center justify-between w-full">
                                 <h2 className="text-base font-semibold text-gray-700 flex items-center gap-2">
                                     <FileText className="w-5 h-5" />
                                     Text Content ({selectedScript.toUpperCase()})
@@ -130,11 +132,9 @@ export function SegmentationTab() {
                                     content={chapter?.content || { te: '', hi: '', en: '' }}
                                     currentScript={selectedScript}
                                     segments={scriptSegments}
-                                    onSegmentCreate={(segment) => {
-                                        // The create logic is in our hook, but AnnotationLayer's FloatingToolbar
-                                        // also triggers onSegmentCreate. We can use this or rely on our button.
-                                        console.log('Segment creation triggered from AnnotationLayer', segment);
-                                    }}
+                                    selectedSegmentId={selectedSegmentId}
+                                    onSegmentSelect={setSelectedSegmentId}
+                                    onSegmentCreate={createSegmentFromSelection}
                                     onSegmentUpdate={(id, updates) => {
                                         console.log('Segment update requested', id, updates);
                                     }}
@@ -170,8 +170,8 @@ export function SegmentationTab() {
                     maxSize={60}
                 >
                     <Card className="h-full flex flex-col overflow-hidden">
-                        <div className="px-6 py-3 bg-gray-50 border-b flex-shrink-0">
-                            <div className="flex items-center justify-between">
+                        <div className="px-6 h-14 bg-gray-50 border-b flex-shrink-0 flex items-center">
+                            <div className="flex items-center justify-between w-full">
                                 <h2 className="text-base font-semibold text-gray-700 flex items-center gap-2">
                                     <FileText className="w-5 h-5" />
                                     Text Segments ({scriptSegments.length})
@@ -201,6 +201,10 @@ export function SegmentationTab() {
                                 onDelete={deleteSegment}
                                 getMappingStatus={getMappingStatus}
                                 isPublished={isPublished}
+                                selectedSegmentId={selectedSegmentId}
+                                onSelect={setSelectedSegmentId}
+                                content={chapter?.content}
+                                script={selectedScript}
                             />
                         </CardContent>
                     </Card>
