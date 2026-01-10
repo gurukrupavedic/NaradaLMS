@@ -311,6 +311,7 @@ export function AudioFileManager({
                     <AudioPlayerControls
                         {...audioPlayerProps}
                         title={selectedAudioFile.displayName || selectedAudioFile.filename}
+                        headerContent={formatBytes(selectedAudioFile.fileSize)}
                         className="border-gray-200 shadow-sm"
                     />
                 )}

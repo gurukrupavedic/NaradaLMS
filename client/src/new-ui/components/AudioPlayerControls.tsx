@@ -41,6 +41,7 @@ export interface AudioPlayerControlsProps {
 
     // Customization
     title?: string
+    headerContent?: React.ReactNode
     className?: string
     showSkipButtons?: boolean
     showPlaybackRate?: boolean
@@ -73,6 +74,7 @@ export function AudioPlayerControls({
     onSkipBackward,
     onSkipForward,
     title,
+    headerContent,
     className,
     showSkipButtons = true,
     showPlaybackRate = true,
@@ -84,12 +86,19 @@ export function AudioPlayerControls({
 
     return (
         <div className={cn("w-full bg-card rounded-xl border shadow-sm p-4 space-y-4", className)}>
-            {/* Title */}
-            {title && (
-                <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-foreground truncate w-full">
-                        {title}
-                    </h4>
+            {/* Title & Header Content */}
+            {(title || headerContent) && (
+                <div className="flex items-center justify-between gap-4">
+                    {title && (
+                        <h4 className="text-sm font-medium text-foreground truncate flex-1" title={title}>
+                            {title}
+                        </h4>
+                    )}
+                    {headerContent && (
+                        <div className="text-xs font-mono text-muted-foreground whitespace-nowrap">
+                            {headerContent}
+                        </div>
+                    )}
                 </div>
             )}
 
