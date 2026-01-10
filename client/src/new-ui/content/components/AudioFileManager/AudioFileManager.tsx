@@ -297,13 +297,6 @@ export function AudioFileManager({
                         </div>
                     </div>
 
-                    {/* Metadata */}
-                    {selectedAudioFile && (
-                        <p className="text-xs text-muted-foreground font-mono">
-                            {formatDuration(selectedAudioFile.duration)} • {formatBytes(selectedAudioFile.fileSize)}
-                        </p>
-                    )}
-
                     {/* Upload Indicator */}
                     {isUploading && (
                         <div className="flex items-center gap-2 text-xs text-blue-600 animate-pulse">

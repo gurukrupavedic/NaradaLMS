@@ -164,7 +164,7 @@ export function MappingTab() {
                             >
                                 {/* Mapping Session Controls Slot */}
                                 {audioFiles.length > 0 && (
-                                    <div className="space-y-3 pt-3 border-t mt-3">
+                                    <div className="space-y-3 pt-3 mt-3">
                                         <div className="flex items-center justify-between">
                                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 Mapping Session
