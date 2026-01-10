@@ -164,14 +164,14 @@ export function MappingTab() {
                             >
                                 {/* Mapping Session Controls Slot */}
                                 {audioFiles.length > 0 && (
-                                    <div className="space-y-3 pt-4 border-t border-dashed mt-2">
+                                    <div className="space-y-3 pt-3 border-t mt-3">
                                         <div className="flex items-center justify-between">
                                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 Mapping Session
                                             </p>
                                             {state.mappingSession === 'active' && (
-                                                <Badge variant="default" className="bg-blue-600 hover:bg-blue-600 h-5 px-1.5 text-[10px]">
-                                                    Recording
+                                                <Badge variant="default" className="bg-red-600 hover:bg-red-600 h-5 px-2 text-[10px] animate-pulse">
+                                                    ● Live
                                                 </Badge>
                                             )}
                                         </div>
@@ -179,10 +179,10 @@ export function MappingTab() {
                                         {state.mappingSession === 'idle' ? (
                                             <Button
                                                 onClick={state.startMappingSession}
-                                                className="w-full shadow-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0"
+                                                className="w-full h-11 shadow-md bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0 font-semibold tracking-wide"
                                                 disabled={isPublished}
                                             >
-                                                Start Mapping Session
+                                                START MAPPING
                                             </Button>
                                         ) : (
                                             <div className="space-y-2">
@@ -190,17 +190,17 @@ export function MappingTab() {
                                                     <Button
                                                         variant="outline"
                                                         onClick={state.pauseMappingSession}
-                                                        className="w-full justify-center"
+                                                        className="w-full justify-center h-9"
                                                         disabled={isPublished}
                                                     >
                                                         {state.mappingSession === 'paused' ? (
                                                             <>
-                                                                <Play className="h-3.5 w-3.5 mr-2 text-green-600" />
+                                                                <Play className="h-3.5 w-3.5 mr-1.5 text-green-600" />
                                                                 Resume
                                                             </>
                                                         ) : (
                                                             <>
-                                                                <Pause className="h-3.5 w-3.5 mr-2 text-amber-600" />
+                                                                <Pause className="h-3.5 w-3.5 mr-1.5 text-amber-600" />
                                                                 Pause
                                                             </>
                                                         )}
@@ -208,10 +208,10 @@ export function MappingTab() {
                                                     <Button
                                                         variant="outline"
                                                         onClick={state.stopMappingSession}
-                                                        className="w-full justify-center hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                                                        className="w-full justify-center h-9 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
                                                         disabled={isPublished}
                                                     >
-                                                        <Square className="h-3.5 w-3.5 mr-2 fill-current" />
+                                                        <Square className="h-3.5 w-3.5 mr-1.5 fill-current" />
                                                         End
                                                     </Button>
                                                 </div>

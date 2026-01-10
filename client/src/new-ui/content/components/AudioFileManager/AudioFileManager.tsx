@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import {
     Music,
     Upload,
@@ -6,7 +6,6 @@ import {
     Pencil,
     Trash2,
     Loader2,
-    MoreVertical
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +16,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -35,12 +42,11 @@ export interface AudioFileManagerProps extends Omit<AudioPlayerControlsProps, 't
     chapterId: string;
     selectedAudioFileId: number | null;
     onAudioFileChange: (fileId: number) => void;
-    // Slot for additional controls (e.g., Mapping Session)
     children?: React.ReactNode;
     disabled?: boolean;
 }
 
-// Simple utility if not imported
+// Utility functions
 const formatBytes = (bytes?: number) => {
     if (bytes === undefined || bytes === null) return '';
     if (bytes === 0) return '0 B';
@@ -75,26 +81,22 @@ export function AudioFileManager({
         editingFileName,
         setEditingFileName,
         startEditing,
-        cancelEditing,
         saveFileName,
+        isSaving,
     } = useAudioManagement(chapterId);
 
-    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    // Modal states
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [tempFileName, setTempFileName] = useState('');
+
+    // Upload states
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [dragActive, setDragActive] = useState(false);
 
-    // Auto-select newly uploaded file
-    // We can't easily detect "newly uploaded" from the hook directly without refactoring, 
-    // but the hook invalidates queries. 
-    // A simple heuristic: if we have no selection and files exist, select first. 
-    // Or if the list grows by one, find the new one. 
-    // For now, let's stick to the props control: parent handles selection changes usually 
-    // but here we might want to trigger it. 
-    // Actually, `useAudioManagement` documentation in plan said "onSuccess: ... Auto-select". 
-    // But the current `useAudioManagement` implementation doesn't callback with ID easily to the parent 
-    // primarily because it just returns mutation functions. 
-    // We can wrap the `uploadFile` call here to intercept success.
+    const selectedAudioFile = audioFiles.find(f => f.id === selectedAudioFileId);
 
+    // File upload handlers
     const handleUploadClick = () => {
         if (!disabled) {
             fileInputRef.current?.click();
@@ -106,14 +108,12 @@ export function AudioFileManager({
         if (file) {
             uploadFile(file, {
                 onSuccess: (data: any) => {
-                    // Assuming data.audioFile.id exists based on API response structure
                     if (data?.audioFile?.id) {
                         onAudioFileChange(data.audioFile.id);
                     }
                 }
             });
         }
-        // Reset input
         e.target.value = '';
     };
 
@@ -146,44 +146,41 @@ export function AudioFileManager({
         }
     };
 
-    const handleDeleteClick = () => {
-        setIsDeleteConfirmOpen(true);
+    // Action handlers
+    const handleEditClick = () => {
+        if (selectedAudioFile) {
+            setTempFileName(selectedAudioFile.displayName || selectedAudioFile.filename);
+            setIsEditDialogOpen(true);
+        }
     };
 
-    const confirmDelete = () => {
+    const handleSaveEdit = () => {
+        if (selectedAudioFileId && tempFileName.trim()) {
+            setEditingFileName(tempFileName);
+            saveFileName(selectedAudioFileId);
+            setIsEditDialogOpen(false);
+        }
+    };
+
+    const handleDeleteClick = () => {
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
         if (selectedAudioFileId) {
             deleteFile(selectedAudioFileId, {
                 onSuccess: () => {
-                    setIsDeleteConfirmOpen(false);
-                    // Parent should handle setting selectedAudioFileId to null or next file 
-                    // via the fact that audioFiles list will update.
-                    // But we should probably trigger a change to null if the current one is deleted.
-                    // The parent logic in MappingTab might need to react to audioFiles changes.
-                    // For now, simpler is:
-                    onAudioFileChange(0); // or null, depending on type, but prop expects number. 
-                    // Actually MappingTab handles "if audioFiles.length > 0 && !selected" logic.
-                    // So we just need to ensure the ID is no longer valid.
+                    setIsDeleteDialogOpen(false);
+                    onAudioFileChange(0);
                 }
             });
         }
     };
 
-    const selectedAudioFile = audioFiles.find(f => f.id === selectedAudioFileId);
-
-    // Empty State (No files at all)
+    // Empty State (Full Panel Drag-and-Drop)
     if (audioFiles.length === 0 && !isUploading) {
         return (
-            <div
-                className={cn(
-                    "h-full flex flex-col items-center justify-center text-center p-6 border-2 border-dashed rounded-lg transition-colors",
-                    dragActive ? "border-primary bg-primary/5" : "border-gray-200 bg-gray-50",
-                    disabled && "opacity-50 cursor-not-allowed"
-                )}
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-            >
+            <div className="h-full flex flex-col">
                 <input
                     ref={fileInputRef}
                     type="file"
@@ -193,28 +190,37 @@ export function AudioFileManager({
                     disabled={disabled}
                 />
 
-                <div className="bg-white p-3 rounded-full shadow-sm mb-4">
-                    <Music className="w-8 h-8 text-primary/40" />
-                </div>
-
-                <p className="text-sm font-semibold text-gray-900 mb-1">No Audio Files</p>
-                <p className="text-xs text-muted-foreground text-balance mb-4 max-w-[200px]">
-                    Upload audio files to start mapping segments
-                </p>
-
-                <Button
+                <div
+                    className={cn(
+                        "flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg transition-all cursor-pointer",
+                        dragActive
+                            ? "border-primary bg-primary/5 scale-[0.98]"
+                            : "border-gray-300 bg-gray-50/50 hover:border-gray-400 hover:bg-gray-50",
+                        disabled && "opacity-50 cursor-not-allowed"
+                    )}
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
                     onClick={handleUploadClick}
-                    disabled={disabled}
-                    variant="outline"
-                    size="sm"
                 >
-                    <Upload className="h-3.5 w-3.5 mr-2" />
-                    Upload File
-                </Button>
+                    <div className={cn(
+                        "bg-white p-4 rounded-full shadow-sm mb-4 transition-transform",
+                        dragActive && "scale-110"
+                    )}>
+                        <Music className="w-10 h-10 text-primary/40" />
+                    </div>
 
-                <p className="text-[10px] text-muted-foreground mt-4 opacity-70">
-                    Supports: MP3, WAV, M4A (Max 100MB)
-                </p>
+                    <p className="text-base font-semibold text-gray-900 mb-1">No Audio Files</p>
+                    <p className="text-sm text-muted-foreground mb-6 max-w-[280px]">
+                        {dragActive ? "Drop to upload" : "Drag & drop an audio file here or click to browse"}
+                    </p>
+
+                    <div className="space-y-2 text-xs text-muted-foreground">
+                        <p>Supports: MP3, WAV, M4A</p>
+                        <p>Maximum: 100 MB</p>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -231,28 +237,16 @@ export function AudioFileManager({
                 disabled={disabled}
             />
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-5">
-                {/* Section 1: File Selector & Details */}
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Audio Source
-                        </label>
-                        {isUploading && (
-                            <span className="flex items-center text-xs text-blue-600 animate-pulse">
-                                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                Uploading...
-                            </span>
-                        )}
-                    </div>
-
-                    <div className="flex gap-2">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {/* File Selector + Action Buttons */}
+                <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
                         <Select
                             value={selectedAudioFileId?.toString() || ''}
                             onValueChange={(val) => onAudioFileChange(parseInt(val))}
                             disabled={disabled || isUploading}
                         >
-                            <SelectTrigger className="flex-1 h-9 text-sm">
+                            <SelectTrigger className="flex-1 min-w-[140px] h-9 text-sm">
                                 <SelectValue placeholder="Select file..." />
                             </SelectTrigger>
                             <SelectContent>
@@ -264,152 +258,124 @@ export function AudioFileManager({
                             </SelectContent>
                         </Select>
 
-                        <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-9 w-9 flex-shrink-0"
-                            onClick={handleUploadClick}
-                            disabled={disabled || isUploading}
-                            title="Upload new file"
-                        >
-                            <Plus className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-9 w-9 flex-shrink-0"
+                                onClick={handleUploadClick}
+                                disabled={disabled || isUploading}
+                                title="Upload new file"
+                                aria-label="Upload audio file"
+                            >
+                                <Plus className="h-4 w-4" />
+                            </Button>
+
+                            <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-9 w-9 flex-shrink-0"
+                                onClick={handleEditClick}
+                                disabled={disabled || !selectedAudioFile}
+                                title="Rename file"
+                                aria-label="Rename audio file"
+                            >
+                                <Pencil className="h-4 w-4" />
+                            </Button>
+
+                            <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-9 w-9 flex-shrink-0"
+                                onClick={handleDeleteClick}
+                                disabled={disabled || !selectedAudioFile}
+                                title="Delete file"
+                                aria-label="Delete audio file"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
 
-                    {/* Compact File Details Card */}
+                    {/* Metadata */}
                     {selectedAudioFile && (
-                        <div className="bg-gray-50/80 border rounded-md p-3 space-y-2 group relative">
-                            {/* Renaming Mode */}
-                            {editingFileId === selectedAudioFile.id ? (
-                                <div className="flex items-center gap-2">
-                                    <Input
-                                        value={editingFileName}
-                                        onChange={(e) => setEditingFileName(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') saveFileName(selectedAudioFile.id);
-                                            if (e.key === 'Escape') cancelEditing();
-                                        }}
-                                        className="h-7 text-xs"
-                                        autoFocus
-                                        placeholder="Enter filename..."
-                                    />
-                                    <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-7 w-7"
-                                        onMouseDown={(e) => e.preventDefault()} // Prevent blur
-                                        onClick={() => saveFileName(selectedAudioFile.id)}
-                                    >
-                                        <Upload className="h-3 w-3 text-green-600" />
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-medium text-gray-900 truncate" title={selectedAudioFile.displayName || selectedAudioFile.filename}>
-                                            {selectedAudioFile.displayName || selectedAudioFile.filename}
-                                        </p>
-                                        <p className="text-[10px] text-muted-foreground mt-0.5 font-mono">
-                                            {formatDuration(selectedAudioFile.duration)} • {formatBytes(selectedAudioFile.fileSize)}
-                                        </p>
-                                    </div>
+                        <p className="text-xs text-muted-foreground font-mono">
+                            {formatDuration(selectedAudioFile.duration)} • {formatBytes(selectedAudioFile.fileSize)}
+                        </p>
+                    )}
 
-                                    {!disabled && (
-                                        <div className="flex items-center -mr-1">
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                className="h-6 w-6 text-gray-400 hover:text-gray-700"
-                                                onClick={() => startEditing(selectedAudioFile.id, selectedAudioFile.displayName || selectedAudioFile.filename)}
-                                                title="Rename file"
-                                            >
-                                                <Pencil className="h-3 w-3" />
-                                            </Button>
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                className="h-6 w-6 text-gray-400 hover:text-red-600"
-                                                onClick={handleDeleteClick}
-                                                title="Delete file"
-                                            >
-                                                <Trash2 className="h-3 w-3" />
-                                            </Button>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                    {/* Upload Indicator */}
+                    {isUploading && (
+                        <div className="flex items-center gap-2 text-xs text-blue-600 animate-pulse">
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            <span>Uploading...</span>
                         </div>
                     )}
                 </div>
 
-                {/* Section 2: Audio Player */}
+                {/* Audio Player Controls */}
                 {selectedAudioFile && (
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            Preview
-                        </label>
-                        <AudioPlayerControls
-                            {...audioPlayerProps}
-                            title={undefined} // We show title in the card above
-                            className="border-gray-200 shadow-sm"
-                            playbackRate={audioPlayerProps.playbackRate}
+                    <AudioPlayerControls
+                        {...audioPlayerProps}
+                        title={selectedAudioFile.displayName || selectedAudioFile.filename}
+                        className="border-gray-200 shadow-sm"
+                    />
+                )}
+
+                {/* Session Controls Slot */}
+                {children}
+            </div>
+
+            {/* Edit Filename Dialog */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Rename Audio File</DialogTitle>
+                        <DialogDescription>
+                            Enter a new display name for this audio file.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Input
+                            value={tempFileName}
+                            onChange={(e) => setTempFileName(e.target.value)}
+                            placeholder="Enter filename..."
+                            maxLength={100}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveEdit();
+                            }}
                         />
                     </div>
-                )}
-
-                {/* Section 3: Mapping Controls Slot */}
-                {children && (
-                    <div className="pt-2">
-                        {/* We intentionally don't label this, it should feel organic */}
-                        {children}
-                    </div>
-                )}
-            </div>
-
-            {/* Section 4: Bottom Upload Dock */}
-            {/* This is a secondary upload area for drag & drop always visible even when files exist */}
-            <div
-                className={cn(
-                    "p-4 border-t bg-gray-50/50 border-gray-100 transition-colors",
-                    dragActive && "bg-blue-50 border-blue-200"
-                )}
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-            >
-                {dragActive ? (
-                    <div className="flex flex-col items-center justify-center py-2 text-blue-600 animate-pulse">
-                        <Upload className="h-5 w-5 mb-1" />
-                        <span className="text-xs font-medium">Drop to upload</span>
-                    </div>
-                ) : (
-                    <div className="flex items-center justify-between text-muted-foreground">
-                        <span className="text-[10px]">Drag & drop to upload more</span>
-                        {!disabled && (
-                            <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={handleUploadClick}>
-                                Browse
-                            </Button>
-                        )}
-                    </div>
-                )}
-            </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSaveEdit} disabled={!tempFileName.trim() || isSaving}>
+                            {isSaving ? 'Saving...' : 'Save'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Delete Confirmation Dialog */}
-            <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Audio File?</AlertDialogTitle>
+                        <AlertDialogTitle>Delete Audio File & Mapping?</AlertDialogTitle>
                         <AlertDialogDescription>
                             This will permanently delete <span className="font-medium text-foreground">{selectedAudioFile?.displayName || selectedAudioFile?.filename}</span>.
                             <br /><br />
-                            <span className="text-destructive font-medium">Warning:</span> All mappings associated with this file will also be removed. This action cannot be undone.
+                            <span className="text-destructive font-medium">Warning:</span> Any mappings associated with this file will also be removed. This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Delete File
+                        <AlertDialogAction
+                            onClick={handleConfirmDelete}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? 'Deleting...' : 'Delete File'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
