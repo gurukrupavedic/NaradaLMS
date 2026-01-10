@@ -60,14 +60,18 @@ export const useMappingControls = ({
   const handleSegmentClick = useCallback((segmentId: number) => {
     if (mappingSession !== 'active') return;
 
-    // End previous segment if exists
+    // End previous segment if exists (BEFORE updating sessionStartTime)
     if (activeSegmentId && activeSegmentId !== segmentId) {
       handleSegmentEnd();
+      // Now update session start time for the NEW segment
+      onSessionStartTimeChange(currentTime);
+    } else if (!activeSegmentId) {
+      // First segment clicked - just set the start time
+      onSessionStartTimeChange(currentTime);
     }
 
     // Start new segment
     onActiveSegmentChange(segmentId);
-    onSessionStartTimeChange(currentTime);
   }, [mappingSession, activeSegmentId, currentTime, handleSegmentEnd, onActiveSegmentChange, onSessionStartTimeChange]);
 
   // Define proceedWithSessionStart first (no dependencies on other local functions)
@@ -75,7 +79,7 @@ export const useMappingControls = ({
     onSessionChange('active');
     onActiveSegmentChange(null);
     onSessionStartTimeChange(currentTime);
-    
+
     // Clear existing mappings for current audio file only
     segments.forEach(segment => {
       if (mappings.some(m => m.segmentId === segment.id)) {
@@ -121,7 +125,7 @@ export const useMappingControls = ({
     if (activeSegmentId) {
       handleSegmentEnd();
     }
-    
+
     onSessionChange('idle');
     onActiveSegmentChange(null);
   }, [activeSegmentId, handleSegmentEnd, onSessionChange, onActiveSegmentChange]);
@@ -129,7 +133,7 @@ export const useMappingControls = ({
   const resetMappingSession = useCallback(() => {
     onSessionChange('idle');
     onActiveSegmentChange(null);
-    
+
     // Clear all mappings for current audio file only
     segments.forEach(segment => {
       if (mappings.some(m => m.segmentId === segment.id)) {
