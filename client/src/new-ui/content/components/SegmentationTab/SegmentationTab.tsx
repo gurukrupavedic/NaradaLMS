@@ -10,14 +10,31 @@ import {
     ResizablePanelGroup,
 } from '@/components/ui/resizable';
 import { Plus, Type, Ruler, FileText } from 'lucide-react';
+import {
+    DndContext,
+    DragEndEvent,
+    PointerSensor,
+    KeyboardSensor,
+    closestCenter,
+    useSensor,
+    useSensors,
+} from '@dnd-kit/core';
+import {
+    SortableContext,
+    arrayMove,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { AnnotationLayer } from '@/components/text-segmentation/AnnotationLayer';
 import { useChapterEditor } from '@/new-ui/content/context/ChapterEditorContext';
 import { useTextSegmentationEditor } from '@/new-ui/content/hooks/useTextSegmentationEditor';
 import { useLocalStorage } from '@/new-ui/content/hooks/useLocalStorage';
+import { useQueryClient } from '@tanstack/react-query';
 import { SegmentList } from './SegmentList';
 
 export function SegmentationTab() {
-    const { chapter, isPublished } = useChapterEditor();
+    const { chapter, isPublished, chapterId } = useChapterEditor();
+    const queryClient = useQueryClient();
 
     const {
         selectedScript,
@@ -35,7 +52,44 @@ export function SegmentationTab() {
         deleteSegment,
         isCreating,
         getMappingStatus,
+        reorderSegments,
     } = useTextSegmentationEditor();
+
+    // Set up sensors for drag and drop
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
+
+    // Handle drag end
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        const oldIndex = scriptSegments.findIndex(s => s.id === active.id);
+        const newIndex = scriptSegments.findIndex(s => s.id === over.id);
+        if (oldIndex === -1 || newIndex === -1) return;
+
+        // Optimistic update
+        const reordered = arrayMove(scriptSegments, oldIndex, newIndex);
+        queryClient.setQueryData(
+            ['content', 'chapters', chapterId, 'segments'],
+            (old: any) => {
+                if (!old) return old;
+                // Replace script-specific segments
+                return old.map((seg: any) => {
+                    if (seg.script !== selectedScript) return seg;
+                    const reorderedSeg = reordered.find(r => r.id === seg.id);
+                    return reorderedSeg || seg;
+                });
+            }
+        );
+
+        // Backend update
+        const direction: 'up' | 'down' = newIndex > oldIndex ? 'down' : 'up';
+        const steps = Math.abs(newIndex - oldIndex);
+        reorderSegments({ segmentId: Number(active.id), direction, steps });
+    };
 
     // Panel size persistence (matching Tracks & Chapters pattern)
     const [panelSizes, setPanelSizes] = useLocalStorage('segmentation-panel-sizes-v2', {
@@ -195,17 +249,28 @@ export function SegmentationTab() {
                                 </Button>
                             )}
 
-                            <SegmentList
-                                segments={scriptSegments}
-                                mappings={allChapterMappings}
-                                onDelete={deleteSegment}
-                                getMappingStatus={getMappingStatus}
-                                isPublished={isPublished}
-                                selectedSegmentId={selectedSegmentId}
-                                onSelect={setSelectedSegmentId}
-                                content={chapter?.content}
-                                script={selectedScript}
-                            />
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={handleDragEnd}
+                            >
+                                <SortableContext
+                                    items={scriptSegments.map(s => s.id)}
+                                    strategy={verticalListSortingStrategy}
+                                >
+                                    <SegmentList
+                                        segments={scriptSegments}
+                                        mappings={allChapterMappings}
+                                        onDelete={deleteSegment}
+                                        getMappingStatus={getMappingStatus}
+                                        isPublished={isPublished}
+                                        selectedSegmentId={selectedSegmentId}
+                                        onSelect={setSelectedSegmentId}
+                                        content={chapter?.content}
+                                        script={selectedScript}
+                                    />
+                                </SortableContext>
+                            </DndContext>
                         </CardContent>
                     </Card>
                 </ResizablePanel>

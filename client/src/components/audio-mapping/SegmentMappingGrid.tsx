@@ -16,6 +16,7 @@ import { EmptyTimestampPill } from './EmptyTimestampPill';
 import { MappingSegmentCard } from '@/components/design-system/MappingSegmentCard';
 import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
 import { getSegmentText } from '@shared/utils/text-segmentation';
+import { cn } from '@/lib/utils';
 
 
 interface SegmentMappingGridProps {
@@ -32,6 +33,8 @@ interface SegmentMappingGridProps {
   onMappingDelete: (segmentId: number) => void;
   onMappingCreate: (mapping: AudioMapping) => void;
   onEndSession: () => void;
+  hideHeader?: boolean;
+  className?: string;
 }
 
 export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
@@ -47,7 +50,9 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
   onMappingUpdate,
   onMappingDelete,
   onMappingCreate,
-  onEndSession
+  onEndSession,
+  hideHeader,
+  className
 }) => {
   const [editingSegmentId, setEditingSegmentId] = useState<number | null>(null);
 
@@ -63,11 +68,16 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
 
   return (
     <div className="h-full">
-      <div className="bg-white border rounded-lg h-full overflow-hidden shadow-sm flex flex-col">
+      <div className={cn(
+        "bg-white border rounded-lg h-full overflow-hidden shadow-sm flex flex-col",
+        className
+      )}>
         {/* Header */}
-        <div className="px-6 py-3 bg-gray-50 border-b flex-shrink-0">
-          <h2 className="text-base font-medium text-gray-700">Segment Mapping</h2>
-        </div>
+        {!hideHeader && (
+          <div className="px-6 py-3 bg-gray-50 border-b flex-shrink-0">
+            <h2 className="text-base font-medium text-gray-700">Segment Mapping</h2>
+          </div>
+        )}
 
         {/* Scrollable Content */}
         <div className="flex-1 min-h-0 overflow-y-auto">
@@ -77,13 +87,13 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                 const mapping = getSegmentMapping(segment.id);
                 const status = getSegmentStatus(segment.id);
                 const segmentText = getSegmentText(segment, content, currentScript);
-                
+
                 // Calculate values for EmptyTimestampPill
                 const isFirstSegment = index === 0;
                 const prevSegment = index > 0 ? segments[index - 1] : null;
                 const prevMapping = prevSegment ? mappings.find(m => m.segmentId === prevSegment.id) : null;
                 const previousSegmentEndTime = prevMapping?.endTime ?? 0;
-                
+
                 return (
                   <div key={segment.id} className="flex items-center gap-4 min-w-fit">
                     {/* Left: Timestamp pill */}
@@ -95,7 +105,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                           endTime={mapping.endTime}
                           isEditing={editingSegmentId === segment.id}
                           onPlay={(start, end) => {
-                            const fakeEvent = { stopPropagation: () => {} } as React.MouseEvent;
+                            const fakeEvent = { stopPropagation: () => { } } as React.MouseEvent;
                             onPlaySegment(mapping, fakeEvent);
                           }}
                           onDelete={(segmentId) => onMappingDelete(segmentId)}
@@ -132,11 +142,11 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                   </div>
                 );
               })}
-              
+
               {/* END button - only shown during active or paused sessions */}
               {(mappingSession === 'active' || mappingSession === 'paused') && (
                 <div className="mt-6 pt-4 border-t">
-                  <Button 
+                  <Button
                     onClick={onEndSession}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-medium"
                     disabled={!activeSegmentId && mappingSession !== 'paused'}
@@ -145,7 +155,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                     END
                   </Button>
                   <p className="text-xs text-muted-foreground text-center mt-2">
-                    {activeSegmentId 
+                    {activeSegmentId
                       ? "Click to mark end of current segment and complete session"
                       : "Start recording a segment first, or pause/stop the session"}
                   </p>

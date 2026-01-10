@@ -163,6 +163,34 @@ export function useTextSegmentationEditor() {
         },
     });
 
+    // Mutation: Reorder segments
+    const reorderSegmentsMutation = useMutation({
+        mutationFn: async ({ segmentId, direction, steps }: { segmentId: number; direction: 'up' | 'down'; steps: number }) => {
+            for (let i = 0; i < steps; i++) {
+                const response = await fetch(`/api/content/segments/${segmentId}/reorder`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ direction }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to reorder segment');
+                }
+            }
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['content', 'chapters', chapterId, 'segments'] });
+        },
+        onError: (error: Error) => {
+            toast({
+                title: 'Failed to reorder segments',
+                description: error.message,
+                variant: 'destructive',
+            });
+        },
+    });
+
     // Get mapping status for a segment
     const getMappingStatus = useCallback((segmentId: number): 'mapped' | 'unmapped' => {
         const hasMapping = allChapterMappings.some(mapping => mapping.textSegmentId === segmentId);
@@ -293,5 +321,9 @@ export function useTextSegmentationEditor() {
         // Utilities
         getMappingStatus,
         checkOverlap,
+
+        // Reordering
+        reorderSegments: reorderSegmentsMutation.mutate,
+        isReordering: reorderSegmentsMutation.isPending,
     };
 }

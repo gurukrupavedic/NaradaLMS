@@ -12,6 +12,7 @@ import { ContentTab } from '@/new-ui/content/components/ContentTab';
 import { MediaTab } from '@/new-ui/content/components/MediaTab';
 import { PreviewTab } from '@/new-ui/content/components/PreviewTab';
 import { SegmentationTab } from '@/new-ui/content/components/SegmentationTab';
+import { MappingTab } from '@/new-ui/content/components/MappingTab';
 
 
 // Wrapper component - handles route parameters and context setup
@@ -90,14 +91,8 @@ function ChapterContentPageContent() {
                         <SegmentationTab />
                     </TabsContent>
 
-                    <TabsContent value="mapping" className="flex-1 overflow-auto h-full m-0 p-4">
-                        <Card className="p-6 h-full">
-                            <h3 className="font-medium mb-2">Mapping Tab</h3>
-                            <p className="text-muted-foreground">Coming in Phase 7</p>
-                            <p className="text-xs text-muted-foreground mt-2">
-                                ⚠️ Critical: ProgressiveMapper, MappingControls, AudioPlayerPanel
-                            </p>
-                        </Card>
+                    <TabsContent value="mapping" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
+                        <MappingTab />
                     </TabsContent>
 
                     <TabsContent value="preview" className="flex-1 overflow-auto h-full m-0 p-4">
@@ -105,6 +100,6 @@ function ChapterContentPageContent() {
                     </TabsContent>
                 </AudioPlayerProvider>
             </div>
-        </Tabs>
+        </Tabs >
     );
 }

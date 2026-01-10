@@ -1,2 +1,1 @@
-export
-
+export { MappingTab } from './MappingTab';

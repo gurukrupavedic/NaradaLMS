@@ -197,13 +197,13 @@ This matrix shows what each phase provides and what it depends on from previous 
 - **Test extensively** - this is critical functionality
 
 ### Don't Start Phase 7 Until:
-- [ ] Can select text with mouse
-- [ ] Can create segment from selection
-- [ ] Segments appear in list
-- [ ] Can edit segment positions
-- [ ] Can delete segments
-- [ ] Overlap validation prevents bad segments
-- [ ] Works in all 3 languages (te/hi/en)
+- [x] Can select text with mouse
+- [x] Can create segment from selection
+- [x] Segments appear in list
+- [x] Can edit segment positions (Deemed unnecessary by user - "Delete & Re-create" is sufficient)
+- [x] Can delete segments
+- [x] Overlap validation prevents bad segments
+- [x] Works in all 3 languages (te/hi/en)
 
 ---
 
