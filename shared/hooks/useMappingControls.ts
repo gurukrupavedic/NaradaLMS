@@ -46,6 +46,13 @@ export const useMappingControls = ({
   const handleSegmentEnd = useCallback(() => {
     if (!activeSegmentId) return;
 
+    console.log('[DEBUG handleSegmentEnd] Creating mapping:', {
+      segmentId: activeSegmentId,
+      startTime: sessionStartTime,
+      endTime: currentTime,
+      isValid: sessionStartTime >= 0 && currentTime > sessionStartTime
+    });
+
     const mapping: AudioMapping = {
       segmentId: activeSegmentId,
       startTime: sessionStartTime,
@@ -58,21 +65,31 @@ export const useMappingControls = ({
 
   // Define handleSegmentClick second (depends on handleSegmentEnd)
   const handleSegmentClick = useCallback((segmentId: number) => {
+    console.log('[DEBUG handleSegmentClick] Segment clicked:', {
+      segmentId,
+      currentActiveSegmentId: activeSegmentId,
+      currentTime,
+      sessionStartTime,
+      mappingSession
+    });
+
     if (mappingSession !== 'active') return;
 
     // End previous segment if exists (BEFORE updating sessionStartTime)
     if (activeSegmentId && activeSegmentId !== segmentId) {
+      console.log('[DEBUG] Ending previous segment before starting new one');
       handleSegmentEnd();
       // Now update session start time for the NEW segment
       onSessionStartTimeChange(currentTime);
     } else if (!activeSegmentId) {
       // First segment clicked - just set the start time
+      console.log('[DEBUG] First segment - setting session start time');
       onSessionStartTimeChange(currentTime);
     }
 
     // Start new segment
     onActiveSegmentChange(segmentId);
-  }, [mappingSession, activeSegmentId, currentTime, handleSegmentEnd, onActiveSegmentChange, onSessionStartTimeChange]);
+  }, [mappingSession, activeSegmentId, currentTime, sessionStartTime, handleSegmentEnd, onActiveSegmentChange, onSessionStartTimeChange]);
 
   // Define proceedWithSessionStart first (no dependencies on other local functions)
   const proceedWithSessionStart = useCallback(() => {

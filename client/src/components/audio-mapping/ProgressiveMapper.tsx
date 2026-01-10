@@ -57,6 +57,8 @@ interface ProgressiveMapperProps {
   content: ContentMap;
   mappings: AudioMapping[];
   selectedAudioFile?: { id: number; filename: string; displayName?: string };
+  currentTime: number;  // Audio player current time from shared context
+  duration: number;      // Audio duration from shared context
   onMappingCreate: (mapping: AudioMapping) => void;
   onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
   onMappingDelete: (segmentId: number) => void;
@@ -70,21 +72,15 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   content,
   mappings,
   selectedAudioFile,
+  currentTime,   // Receive from parent
+  duration,      // Receive from parent
   onMappingCreate,
   onMappingUpdate,
   onMappingDelete,
   children
 }) => {
-  // Audio player hook
-  const {
-    audioRef,
-    isPlaying,
-    currentTime,
-    duration,
-    togglePlayPause,
-    seekTo,
-    playSegment
-  } = useAudioPlayer(audioUrl);
+  // Note: audioRef, isPlaying, togglePlayPause, etc. are handled by AudioFileManager
+  // This component only manages the mapping SESSION state
 
   // Mapping session state
   const [mappingSession, setMappingSession] = useState<'idle' | 'active' | 'paused'>('idle');
@@ -169,19 +165,14 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     }
   };
 
-  // Play specific segment
-  const handlePlaySegment = (mapping: AudioMapping, event: React.MouseEvent) => {
-    event.stopPropagation();
-    playSegment(mapping.startTime, mapping.endTime);
-  };
-
-
+  // Play specific segment (only used internally for preview, not exposed to children)
+  // Children should use AudioFileManager's controls directly
 
   // Prepare state object for render props
   const mappingState: MappingState = {
-    audioRef,
+    audioRef: { current: null },  // Dummy ref, actual audio controlled by AudioFileManager
     audioUrl,
-    isPlaying,
+    isPlaying: false,  // Not used - AudioFileManager controls playback
     currentTime,
     duration,
     mappingSession,
@@ -193,14 +184,14 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     currentScript,
     content,
     mappings,
-    togglePlayPause,
-    seekTo,
+    togglePlayPause: () => { },  // No-op - AudioFileManager controls playback
+    seekTo: () => { },            // No-op - AudioFileManager controls playback  
     startMappingSession,
     pauseMappingSession,
     stopMappingSession,
     resetMappingSession,
     handleSegmentClick,
-    handlePlaySegment,
+    handlePlaySegment: () => { },  // No-op - not needed in new design
     onMappingUpdate,
     onMappingDelete,
     onMappingCreate
