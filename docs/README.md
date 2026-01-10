@@ -37,6 +37,8 @@ docs/
 
 | Document | Description |
 |----------|-------------|
+| [implementation/ChapterContentPage-Phased-Development-Plan.md](./implementation/ChapterContentPage-Phased-Development-Plan.md) | **⭐ Chapter Content Page** - Master phased plan (Phases 1-6 ✅, Phase 7 🎯 Active) |
+| [implementation/mvp-implementation-plan.md](./implementation/mvp-implementation-plan.md) | MVP Phase 5 Status - Content Studio implementation |
 | [todo/todo-backend.md](./todo/todo-backend.md) | Backend hardening, cleanup, and enhancements (14 items) |
 | [todo/todo-frontend.md](./todo/todo-frontend.md) | Frontend cleanup and UX improvements (7 items) |
 | [todo/todo-common.md](./todo/todo-common.md) | Testing, security, infrastructure, and monitoring (14 items) |
