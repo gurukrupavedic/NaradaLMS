@@ -229,11 +229,10 @@ export function MappingTab() {
 
                                         {/* Instructions for active session */}
                                         {state.mappingSession === 'active' && (
-                                            <div className="bg-blue-50/50 border border-blue-100 rounded-md p-2.5">
-                                                <div className="text-xs text-blue-700 flex items-start gap-2">
-                                                    <div className="mt-1.5 min-w-[4px] min-h-[4px] rounded-full bg-blue-500 shrink-0" />
-                                                    <span>Click segment cards in the grid as you hear them in the audio.</span>
-                                                </div>
+                                            <div className="bg-blue-50/50 border border-blue-100 rounded-md p-2.5 text-center">
+                                                <span className="text-xs text-blue-700">
+                                                    Click segment cards in the grid as you start hearing them in the audio.
+                                                </span>
                                             </div>
                                         )}
                                     </div>
