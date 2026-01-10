@@ -180,7 +180,7 @@ export function AudioFileManager({
     // Empty State (Full Panel Drag-and-Drop)
     if (audioFiles.length === 0 && !isUploading) {
         return (
-            <div className="h-full flex flex-col">
+            <div className="h-full flex flex-col p-4">
                 <input
                     ref={fileInputRef}
                     type="file"
