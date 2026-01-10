@@ -165,22 +165,30 @@ export function useTextSegmentationEditor() {
 
     // Mutation: Reorder segments
     const reorderSegmentsMutation = useMutation({
-        mutationFn: async ({ segmentId, direction, steps }: { segmentId: number; direction: 'up' | 'down'; steps: number }) => {
-            for (let i = 0; i < steps; i++) {
-                const response = await fetch(`/api/content/segments/${segmentId}/reorder`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ direction }),
-                });
+        mutationFn: async (reorderedSegments: TextSegment[]) => {
+            // Prepare payload with new order indices
+            const segmentOrders = reorderedSegments.map((segment, index) => ({
+                id: segment.id,
+                order: index
+            }));
 
-                if (!response.ok) {
-                    throw new Error('Failed to reorder segment');
-                }
+            const response = await fetch(`/api/content/segments/${chapterId}/reorder`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ segmentOrders }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to reorder segments');
             }
+
+            return response.json();
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['content', 'chapters', chapterId, 'segments'] });
+            // Also invalidate mappings as they depend on segment order implicitly for creation? No, but safer.
         },
         onError: (error: Error) => {
             toast({

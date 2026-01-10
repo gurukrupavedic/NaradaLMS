@@ -44,12 +44,12 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
 
     if (scriptSegments.length === 0) {
       return (
-        <div 
+        <div
           className="whitespace-pre-wrap leading-relaxed"
           style={{
             fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
-                        currentScript === 'hi' ? "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif" :
-                        "'AdishilaSan', 'Noto Sans', sans-serif",
+              currentScript === 'hi' ? "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif" :
+                "'AdishilaSan', 'Noto Sans', sans-serif",
             fontSize: 'var(--font-size-standard)',
             fontWeight: currentScript === 'hi' ? 'var(--font-weight-devanagari)' : 400
           }}
@@ -64,7 +64,7 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
 
     scriptSegments.forEach((segment, index) => {
       const range = { start: segment.startPosition, end: segment.endPosition };
-      
+
       // Add text before this segment
       if (range.start > lastIndex) {
         parts.push(
@@ -79,11 +79,10 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
       parts.push(
         <span
           key={segment.id}
-          className={`relative rounded-sm px-0.5 mx-0.5 align-middle cursor-pointer select-none transition-colors ${
-            isSelected 
-              ? 'bg-indigo-200 text-indigo-900 border-2 border-indigo-400' 
-              : 'bg-amber-50 text-amber-900 hover:bg-amber-100'
-          }`}
+          className={`relative rounded-sm px-0.5 mx-0.5 cursor-pointer select-none transition-colors ${isSelected
+            ? 'bg-blue-50 border-2 border-blue-200 ring-1 ring-blue-300'
+            : 'bg-amber-50 text-amber-900 hover:bg-amber-100'
+            }`}
           title={`Segment ${segment.order + 1}: ${normalizedText.slice(range.start, Math.min(range.end, range.start + 50))}${range.end - range.start > 50 ? '...' : ''}`}
           onClick={() => onSegmentClick?.(isSelected ? undefined : segment.id)}
         >
@@ -105,12 +104,12 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
     }
 
     return (
-      <div 
+      <div
         className="leading-relaxed"
         style={{
           fontFamily: currentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
-                      currentScript === 'hi' ? "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif" :
-                      "'AdishilaSan', 'Noto Sans', sans-serif",
+            currentScript === 'hi' ? "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif" :
+              "'AdishilaSan', 'Noto Sans', sans-serif",
           fontSize: 'var(--font-size-standard)',
           fontWeight: currentScript === 'hi' ? 'var(--font-weight-devanagari)' : 400,
           lineHeight: '1.4'
@@ -122,7 +121,7 @@ export const SegmentedTextDisplay: React.FC<SegmentedTextDisplayProps> = ({
   };
 
   return (
-    <div 
+    <div
       className={`${className} ${mode === 'edit' ? 'cursor-text' : 'cursor-default'}`}
       style={{
         userSelect: mode === 'edit' ? 'text' : 'none'

@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { Trash2, FileText } from 'lucide-react';
+import { Trash2, FileText, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -73,34 +73,49 @@ function SortableSegmentItem({
         <div
             ref={setNodeRef}
             style={style}
-            {...attributes}
-            {...listeners}
             id={`segment-${segment.id}`}
             onClick={() => onSelect?.(segment.id)}
             className={cn(
-                "group p-3 border rounded-lg transition-colors cursor-pointer",
+                "group pt-1.5 pb-0 px-2 border rounded-lg transition-colors cursor-pointer relative",
                 isSelected
                     ? "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 ring-1 ring-blue-300 dark:ring-blue-700"
                     : "bg-card hover:bg-accent/50"
             )}
         >
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start gap-2">
+                {/* Drag Handle */}
+                {!isPublished && (
+                    <div
+                        {...attributes}
+                        {...listeners}
+                        className={cn(
+                            "self-center -ml-1 p-1 cursor-grab active:cursor-grabbing",
+                            isSelected
+                                ? "text-blue-400 hover:text-blue-600 opacity-100"
+                                : "text-muted-foreground/50 hover:text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                        )}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <GripVertical className="h-4 w-4" />
+                    </div>
+                )}
+
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-0.5">
                         <span className={cn(
                             "text-xs font-medium px-1.5 py-0.5 rounded",
                             isSelected ? "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
                         )}>
                             #{index + 1}
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-[10px] text-muted-foreground">
                             {segment.startPosition}-{segment.endPosition}
                         </span>
                     </div>
 
                     <div
                         className={cn(
-                            "leading-relaxed line-clamp-2",
+                            "line-clamp-2 pt-1",
                             !segmentText && "italic text-muted-foreground"
                         )}
                         style={{
@@ -108,17 +123,18 @@ function SortableSegmentItem({
                                 script === 'hi' ? "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif" :
                                     "'AdishilaSan', 'Noto Sans', sans-serif",
                             fontSize: 'var(--font-size-standard)',
-                            fontWeight: script === 'hi' ? 'var(--font-weight-devanagari)' : 400
+                            fontWeight: script === 'hi' ? 'var(--font-weight-devanagari)' : 400,
+                            lineHeight: 1.85
                         }}
                     >
                         {segmentText || "No text content"}
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 flex-shrink-0 self-start">
                     <LinkStatusIcon
                         status={getMappingStatus(segment.id)}
-                        size="md"
+                        size="sm"
                     />
                     {!isPublished && (
                         <Button
@@ -128,7 +144,7 @@ function SortableSegmentItem({
                                 e.stopPropagation(); // Prevent selection when deleting
                                 onDelete(segment.id);
                             }}
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                            className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
                             title="Delete segment"
                         >
                             <Trash2 className="w-3 h-3" />

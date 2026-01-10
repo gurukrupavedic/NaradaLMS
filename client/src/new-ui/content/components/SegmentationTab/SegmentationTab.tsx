@@ -76,19 +76,14 @@ export function SegmentationTab() {
             ['content', 'chapters', chapterId, 'segments'],
             (old: any) => {
                 if (!old) return old;
-                // Replace script-specific segments
-                return old.map((seg: any) => {
-                    if (seg.script !== selectedScript) return seg;
-                    const reorderedSeg = reordered.find(r => r.id === seg.id);
-                    return reorderedSeg || seg;
-                });
+                // Remove segments of the current script and append the reordered ones
+                const others = old.filter((seg: any) => seg.script !== selectedScript);
+                return [...others, ...reordered];
             }
         );
 
         // Backend update
-        const direction: 'up' | 'down' = newIndex > oldIndex ? 'down' : 'up';
-        const steps = Math.abs(newIndex - oldIndex);
-        reorderSegments({ segmentId: Number(active.id), direction, steps });
+        reorderSegments(reordered);
     };
 
     // Panel size persistence (matching Tracks & Chapters pattern)
