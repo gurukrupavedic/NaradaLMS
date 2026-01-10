@@ -22,20 +22,20 @@ export interface MappingState {
   isPlaying: boolean;
   currentTime: number;
   duration: number;
-  
+
   // Mapping session state
   mappingSession: 'idle' | 'active' | 'paused';
   activeSegmentId: number | null;
   progressPercentage: number;
   mappedCount: number;
   totalCount: number;
-  
+
   // Data needed by child components
   segments: TextSegment[];
   currentScript: Script;
   content: ContentMap;
   mappings: AudioMapping[];
-  
+
   // Handlers
   togglePlayPause: () => void;
   seekTo: (time: number) => void;
@@ -85,12 +85,12 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     seekTo,
     playSegment
   } = useAudioPlayer(audioUrl);
-  
+
   // Mapping session state
   const [mappingSession, setMappingSession] = useState<'idle' | 'active' | 'paused'>('idle');
   const [activeSegmentId, setActiveSegmentId] = useState<number | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number>(0);
-  
+
   // Warning dialog state
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [pendingMappingCount, setPendingMappingCount] = useState(0);
@@ -175,15 +175,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     playSegment(mapping.startTime, mapping.endTime);
   };
 
-  if (!audioUrl) {
-    return (
-      <Card>
-        <CardContent className="p-6 text-center">
-          <p className="text-muted-foreground">No audio file selected. Please upload an audio file to begin mapping.</p>
-        </CardContent>
-      </Card>
-    );
-  }
+
 
   // Prepare state object for render props
   const mappingState: MappingState = {
@@ -217,7 +209,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   return (
     <>
       {children(mappingState)}
-      
+
       {/* Warning Dialog */}
       <MappingWarningDialog
         isOpen={showWarningDialog}
