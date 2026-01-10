@@ -633,3 +633,41 @@ router.delete('/chapters/:chapterId/mappings/:mappingId', async (req: Request, r
     res.json({ message: 'Mapping deleted successfully' });
   } catch (error) { next(error); }
 });
+
+// New: DELETE /chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId - Delete by natural key
+router.delete('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const audioFileId = parseInt(req.params.audioFileId);
+    const segmentId = parseInt(req.params.segmentId);
+    await mediaService.deleteMappingByTextSegment(segmentId, audioFileId);
+    res.json({ message: 'Mapping deleted successfully' });
+  } catch (error) { next(error); }
+});
+
+// New: PATCH /chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId - Update by natural key
+router.patch('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const audioFileId = parseInt(req.params.audioFileId);
+    const segmentId = parseInt(req.params.segmentId);
+    const { startTime, endTime } = req.body;
+
+    if (startTime === undefined || endTime === undefined) {
+      return res.status(400).json(createErrorResponse('startTime and endTime are required', 'MISSING_TIMESTAMP_FIELDS'));
+    }
+
+    // Find the mapping first
+    const mappings = await mediaService.listMappingsByAudioFile(audioFileId);
+    const target = mappings.find(m => m.textSegmentId === segmentId);
+
+    if (!target) {
+      return res.status(404).json(createErrorResponse('Mapping not found for this segment and audio file', 'MAPPING_NOT_FOUND'));
+    }
+
+    const updated = await mediaService.updateMediaSegment(target.mediaSegmentId, {
+      startTimestamp: startTime,
+      endTimestamp: endTime,
+    } as any);
+
+    res.json(updated);
+  } catch (error) { next(error); }
+});

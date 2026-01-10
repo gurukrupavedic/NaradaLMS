@@ -22,7 +22,7 @@ export function useAudioMapping() {
     // Create mapping mutation
     const createMappingMutation = useMutation({
         mutationFn: async (mapping: CreateMappingInput) => {
-            const response = await fetch('/api/content/mappings/create', {
+            const response = await fetch(`/api/content/chapters/${chapterId}/mappings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -55,8 +55,8 @@ export function useAudioMapping() {
 
     // Update mapping mutation
     const updateMappingMutation = useMutation({
-        mutationFn: async ({ segmentId, updates }: { segmentId: number; updates: UpdateMappingInput }) => {
-            const response = await fetch(`/api/content/mappings/${segmentId}/update`, {
+        mutationFn: async ({ audioFileId, segmentId, updates }: { audioFileId: number; segmentId: number; updates: UpdateMappingInput }) => {
+            const response = await fetch(`/api/content/chapters/${chapterId}/mappings/audio/${audioFileId}/segment/${segmentId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -85,7 +85,7 @@ export function useAudioMapping() {
     // Delete mapping mutation
     const deleteMappingMutation = useMutation({
         mutationFn: async ({ audioFileId, segmentId }: { audioFileId: number; segmentId: number }) => {
-            const response = await fetch(`/api/content/mappings/${audioFileId}/${segmentId}`, {
+            const response = await fetch(`/api/content/chapters/${chapterId}/mappings/audio/${audioFileId}/segment/${segmentId}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -122,7 +122,7 @@ export function useAudioMapping() {
         createMappingMutation.mutate(mapping);
     };
 
-    const updateMapping = (segmentId: number, updates: UpdateMappingInput) => {
+    const updateMapping = (audioFileId: number, segmentId: number, updates: UpdateMappingInput) => {
         if (isPublished) {
             toast({
                 title: 'Cannot modify published chapter',
@@ -131,7 +131,7 @@ export function useAudioMapping() {
             });
             return;
         }
-        updateMappingMutation.mutate({ segmentId, updates });
+        updateMappingMutation.mutate({ audioFileId, segmentId, updates });
     };
 
     const deleteMapping = (audioFileId: number, segmentId: number) => {

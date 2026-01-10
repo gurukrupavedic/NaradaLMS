@@ -120,7 +120,7 @@ export function MappingTab() {
                     });
                 }}
                 onMappingUpdate={(segmentId, updates) => {
-                    updateMapping(segmentId, {
+                    updateMapping(selectedAudioFileId!, segmentId, {
                         startTime: updates.startTime,
                         endTime: updates.endTime,
                     });
@@ -231,7 +231,7 @@ export function MappingTab() {
                                         {state.mappingSession === 'active' && (
                                             <div className="bg-blue-50/50 border border-blue-100 rounded-md p-2.5 text-center">
                                                 <span className="text-xs text-blue-700">
-                                                    Click segment cards in the grid as you start hearing them in the audio.
+                                                    Click segment cards in the grid before you start hearing them in the audio.
                                                 </span>
                                             </div>
                                         )}
