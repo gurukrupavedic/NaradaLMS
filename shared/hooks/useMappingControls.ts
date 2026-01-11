@@ -53,6 +53,15 @@ export const useMappingControls = ({
       isValid: sessionStartTime >= 0 && currentTime > sessionStartTime
     });
 
+    // Validate timestamp range
+    if (currentTime <= sessionStartTime) {
+      console.warn('[handleSegmentEnd] Invalid timestamp range (endTime <= startTime), skipping mapping:', {
+        startTime: sessionStartTime,
+        endTime: currentTime
+      });
+      return;
+    }
+
     const mapping: AudioMapping = {
       segmentId: activeSegmentId,
       startTime: sessionStartTime,

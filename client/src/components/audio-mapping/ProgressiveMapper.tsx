@@ -60,6 +60,8 @@ interface ProgressiveMapperProps {
   selectedAudioFile?: { id: number; filename: string; displayName?: string };
   currentTime: number;  // Audio player current time from shared context
   duration: number;      // Audio duration from shared context
+  isPlaying: boolean;    // Audio player playing state from shared context
+  togglePlayPause: () => void; // Audio player toggle function
   onMappingCreate: (mapping: AudioMapping) => void;
   onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
   onMappingDelete: (segmentId: number) => void;
@@ -75,6 +77,8 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   selectedAudioFile,
   currentTime,   // Receive from parent
   duration,      // Receive from parent
+  isPlaying,     // Receive from parent
+  togglePlayPause, // Receive from parent
   onMappingCreate,
   onMappingUpdate,
   onMappingDelete,
@@ -154,7 +158,6 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
 
   const resetMappingSession = () => {
     baseMappingReset();
-    seekTo(0);
     // Audio control moved to parent (MappingTab)
   };
 
@@ -165,7 +168,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   const mappingState: MappingState = {
     audioRef: { current: null },  // Dummy ref, actual audio controlled by AudioFileManager
     audioUrl,
-    isPlaying: false,  // Not used - AudioFileManager controls playback
+    isPlaying,
     currentTime,
     duration,
     mappingSession,
@@ -177,7 +180,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     currentScript,
     content,
     mappings,
-    togglePlayPause: () => { },  // No-op - AudioFileManager controls playback
+    togglePlayPause,
     seekTo: () => { },            // No-op - AudioFileManager controls playback  
     startMappingSession,
     pauseMappingSession,

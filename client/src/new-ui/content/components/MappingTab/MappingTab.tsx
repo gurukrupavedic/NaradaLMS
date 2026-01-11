@@ -116,6 +116,8 @@ export function MappingTab() {
                 selectedAudioFile={selectedAudioFile}
                 currentTime={audioPlayer.currentTime}  // Pass from shared context
                 duration={audioPlayer.duration}         // Pass from shared context
+                isPlaying={audioPlayer.isPlaying}      // Pass from shared context
+                togglePlayPause={audioPlayer.togglePlayPause} // Pass from shared context
                 onMappingCreate={(mapping) => {
                     createMapping({
                         textSegmentId: mapping.segmentId,

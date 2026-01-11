@@ -116,6 +116,13 @@ export function FocusMappingView({
     const currentText = getSegmentText(currentSegment, content, currentScript);
     const nextText = nextSegment ? getSegmentText(nextSegment, content, currentScript) : null;
 
+    const handleResume = () => {
+        onTogglePlayPause();
+        if (isPaused) {
+            onPauseSession();
+        }
+    };
+
     return (
         <div className="h-full flex flex-col bg-slate-900 text-white rounded-lg overflow-hidden relative">
             {/* Top Bar */}
@@ -211,7 +218,7 @@ export function FocusMappingView({
             <div className="p-6 bg-slate-800/50 backdrop-blur-sm border-t border-white/10">
                 <div className="max-w-xl mx-auto">
                     <Button
-                        onClick={onMarkSegment}
+                        onClick={isPlaying ? onMarkSegment : handleResume}
                         size="lg"
                         className="w-full h-20 text-xl font-bold rounded-xl shadow-lg shadow-blue-900/20 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 transition-all transform active:scale-95"
                     >
