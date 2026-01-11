@@ -54,12 +54,26 @@ export function FocusSessionSetup({
     // --- Local State ---
     const [openSegmentCombo, setOpenSegmentCombo] = useState(false);
 
+    // --- Helper: Smart Defaults ---
+    const getSmartStartSegmentId = React.useCallback((currentSegments: TextSegment[], currentMappings: AudioMapping[]) => {
+        if (!currentSegments.length) return 0;
+
+        // Find the first unmapped segment
+        const mappedIds = new Set(currentMappings.map(m => m.segmentId));
+        const firstUnmapped = currentSegments.find(s => !mappedIds.has(s.id));
+
+        return firstUnmapped ? firstUnmapped.id : currentSegments[0].id;
+    }, []);
+
     // Configuration State
-    // Initialize with defaults passed from parent (or sane defaults)
-    const [startSegmentId, setStartSegmentId] = useState<number>(() => {
-        if (segments.length > 0) return segments[0].id;
-        return 0;
-    });
+    const [startSegmentId, setStartSegmentId] = useState<number>(() =>
+        getSmartStartSegmentId(segments, mappings)
+    );
+
+    // Reset smart default when audio or segments change completely
+    useEffect(() => {
+        setStartSegmentId(getSmartStartSegmentId(segments, mappings));
+    }, [selectedAudioId, segments, mappings, getSmartStartSegmentId]);
 
     const [startTimestamp, setStartTimestamp] = useState<number>(0);
 

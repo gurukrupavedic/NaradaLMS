@@ -110,13 +110,11 @@ export const useMappingControls = ({
     }
     onSessionStartTimeChange(startTime !== undefined ? startTime : currentTime);
 
-    // Clear existing mappings for current audio file only
-    segments.forEach(segment => {
-      if (mappings.some(m => m.segmentId === segment.id)) {
-        onMappingDelete(segment.id);
-      }
-    });
-  }, [currentTime, segments, mappings, onSessionChange, onActiveSegmentChange, onSessionStartTimeChange, onMappingDelete]);
+    onSessionStartTimeChange(startTime !== undefined ? startTime : currentTime);
+
+    // [MODIFIED] Removed auto-deletion of existing mappings. 
+    // New session should append/merge, not wipe previous work.
+  }, [currentTime, onSessionChange, onActiveSegmentChange, onSessionStartTimeChange]);
 
   // Define startMappingSession second (depends on proceedWithSessionStart)
   const startMappingSession = useCallback(() => {
@@ -145,14 +143,16 @@ export const useMappingControls = ({
   const resetMappingSession = useCallback(() => {
     onSessionChange('idle');
     onActiveSegmentChange(null);
+  }, [onSessionChange, onActiveSegmentChange]);
 
-    // Clear all mappings for current audio file only
+  const clearSessionData = useCallback(() => {
+    // Explicitly clear all mappings for current audio file
     segments.forEach(segment => {
       if (mappings.some(m => m.segmentId === segment.id)) {
         onMappingDelete(segment.id);
       }
     });
-  }, [segments, mappings, onSessionChange, onActiveSegmentChange, onMappingDelete]);
+  }, [segments, mappings, onMappingDelete]);
 
   return {
     handleSegmentClick,
@@ -161,6 +161,7 @@ export const useMappingControls = ({
     proceedWithSessionStart,
     pauseMappingSession,
     stopMappingSession,
-    resetMappingSession
+    resetMappingSession,
+    clearSessionData
   };
 };

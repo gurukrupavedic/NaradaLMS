@@ -38,6 +38,7 @@ export interface MappingState {
 
   // Handlers
   togglePlayPause: () => void;
+  clearSessionData: () => void;
   seekTo: (time: number) => void;
   startMappingSession: () => void;
   pauseMappingSession: () => void;
@@ -116,7 +117,8 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     proceedWithSessionStart,
     pauseMappingSession: baseMappingPause,
     stopMappingSession: baseMappingStop,
-    resetMappingSession: baseMappingReset
+    resetMappingSession: baseMappingReset,
+    clearSessionData: baseClearData,
   } = useMappingControls({
     mappingSession,
     activeSegmentId,
@@ -161,6 +163,10 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     // Audio control moved to parent (MappingTab)
   };
 
+  const clearSessionData = () => {
+    baseClearData();
+  };
+
   // Play specific segment (only used internally for preview, not exposed to children)
   // Children should use AudioFileManager's controls directly
 
@@ -185,7 +191,9 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     startMappingSession,
     pauseMappingSession,
     stopMappingSession,
+    stopMappingSession,
     resetMappingSession,
+    clearSessionData,
     handleSegmentClick,
     handlePlaySegment: () => { },  // No-op - not needed in new design
     onMappingUpdate,
