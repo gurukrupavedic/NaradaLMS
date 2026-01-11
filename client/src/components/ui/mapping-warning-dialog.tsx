@@ -50,7 +50,7 @@ export const MappingWarningDialog: React.FC<MappingWarningDialogProps> = ({
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction onClick={onConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-            Clear and Continue
+            Clear & Continue
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
