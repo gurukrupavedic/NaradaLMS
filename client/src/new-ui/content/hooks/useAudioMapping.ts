@@ -7,6 +7,7 @@ interface CreateMappingInput {
     audioFileId: number;
     startTime: number;
     endTime: number;
+    silent?: boolean;
 }
 
 interface UpdateMappingInput {
@@ -40,9 +41,11 @@ export function useAudioMapping() {
 
             return response.json();
         },
-        onSuccess: () => {
+        onSuccess: (data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['content', 'chapters', chapterId, 'mappings'] });
-            toast({ title: 'Mapping created' });
+            if (!variables.silent) {
+                toast({ title: 'Mapping created' });
+            }
         },
         onError: (error: Error) => {
             toast({

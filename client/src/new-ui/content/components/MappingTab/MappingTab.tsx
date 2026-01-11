@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useToast } from '@/features/shared-features/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -32,6 +33,7 @@ const toSimplifiedMapping = (dbMapping: any) => ({
 });
 
 export function MappingTab() {
+    const { toast } = useToast();
     const { chapter, chapterId, isPublished } = useChapterEditor();
     const { audioFiles, uploadFile } = useAudioManagement(chapterId);
     const { scriptSegments, allChapterMappings, textSegments } = useTextSegmentationEditor();
@@ -124,6 +126,7 @@ export function MappingTab() {
                         audioFileId: selectedAudioFileId!,
                         startTime: mapping.startTime,
                         endTime: mapping.endTime,
+                        silent: true
                     });
                 }}
                 onMappingUpdate={(segmentId, updates) => {
@@ -217,6 +220,7 @@ export function MappingTab() {
                                     onStopSession={() => {
                                         state.stopMappingSession();
                                         audioPlayer.pause();
+                                        toast({ title: 'Mapping Ended' });
                                     }}
                                     onResetSession={() => {
                                         state.resetMappingSession();

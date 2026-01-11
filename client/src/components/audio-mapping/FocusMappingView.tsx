@@ -234,8 +234,8 @@ export function FocusMappingView({
                             </>
                         )}
                     </Button>
-                    <p className="text-center text-xs text-slate-500 mt-3 select-none">
-                        Tap [SPACEBAR] on keyboard when audio matching current segment is complete.
+                    <p className="text-center text-xs text-slate-500 mt-3 select-none flex items-center justify-center gap-1.5">
+                        Tap <kbd className="pointer-events-none h-5 select-none items-center justify-center gap-1 rounded border border-white/10 border-b-2 bg-white/5 px-2 min-w-[3rem] font-mono text-[10px] font-medium text-slate-400 opacity-100 inline-flex">SPACE</kbd> on keyboard when audio matching current segment is complete.
                     </p>
                 </div>
             </div>
