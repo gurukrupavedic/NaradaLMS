@@ -191,7 +191,6 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     startMappingSession,
     pauseMappingSession,
     stopMappingSession,
-    stopMappingSession,
     resetMappingSession,
     clearSessionData,
     handleSegmentClick,
