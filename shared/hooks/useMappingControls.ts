@@ -11,7 +11,7 @@ import { useCallback } from 'react';
 import type { TextSegment, AudioMapping } from '../types/text-segmentation';
 
 interface MappingControlsProps {
-  mappingSession: 'idle' | 'active' | 'paused';
+  mappingSession: 'idle' | 'setup' | 'active' | 'paused';
   activeSegmentId: number | null;
   currentTime: number;
   sessionStartTime: number;
@@ -20,7 +20,7 @@ interface MappingControlsProps {
   selectedAudioFileId?: number;
   onMappingCreate: (mapping: AudioMapping) => void;
   onMappingDelete: (segmentId: number) => void;
-  onSessionChange: (session: 'idle' | 'active' | 'paused') => void;
+  onSessionChange: (session: 'idle' | 'setup' | 'active' | 'paused') => void;
   onActiveSegmentChange: (segmentId: number | null) => void;
   onSessionStartTimeChange: (time: number) => void;
   onSessionStartRequest?: (existingCount: number) => void;
@@ -92,10 +92,14 @@ export const useMappingControls = ({
   }, [mappingSession, activeSegmentId, currentTime, sessionStartTime, handleSegmentEnd, onActiveSegmentChange, onSessionStartTimeChange]);
 
   // Define proceedWithSessionStart first (no dependencies on other local functions)
-  const proceedWithSessionStart = useCallback(() => {
+  const proceedWithSessionStart = useCallback((startSegmentId?: number, startTime?: number) => {
     onSessionChange('active');
-    onActiveSegmentChange(null);
-    onSessionStartTimeChange(currentTime);
+    if (startSegmentId !== undefined) {
+      onActiveSegmentChange(startSegmentId);
+    } else {
+      onActiveSegmentChange(null);
+    }
+    onSessionStartTimeChange(startTime !== undefined ? startTime : currentTime);
 
     // Clear existing mappings for current audio file only
     segments.forEach(segment => {
@@ -107,27 +111,9 @@ export const useMappingControls = ({
 
   // Define startMappingSession second (depends on proceedWithSessionStart)
   const startMappingSession = useCallback(() => {
-    if (!selectedAudioFileId) {
-      console.warn('Cannot start mapping session without selected audio file');
-      return;
-    }
-
-    // Count existing mappings for current audio file
-    // Since mappings array now only contains mappings for current audio file,
-    // we just need to count segments that have any mapping
-    const existingMappingsForAudioFile = segments.filter(segment =>
-      mappings.some(m => m.segmentId === segment.id)
-    ).length;
-
-    if (existingMappingsForAudioFile > 0 && onSessionStartRequest) {
-      // Request confirmation from parent component
-      onSessionStartRequest(existingMappingsForAudioFile);
-      return;
-    }
-
-    // Proceed with session start
-    proceedWithSessionStart();
-  }, [selectedAudioFileId, segments, mappings, onSessionStartRequest, proceedWithSessionStart]);
+    // Transition to Setup Wizard
+    onSessionChange('setup');
+  }, [onSessionChange]);
 
   const pauseMappingSession = useCallback(() => {
     if (mappingSession === 'active') {

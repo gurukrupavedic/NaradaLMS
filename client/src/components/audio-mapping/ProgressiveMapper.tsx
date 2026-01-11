@@ -24,7 +24,7 @@ export interface MappingState {
   duration: number;
 
   // Mapping session state
-  mappingSession: 'idle' | 'active' | 'paused';
+  mappingSession: 'idle' | 'setup' | 'active' | 'paused';
   activeSegmentId: number | null;
   progressPercentage: number;
   mappedCount: number;
@@ -48,6 +48,7 @@ export interface MappingState {
   onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
   onMappingDelete: (segmentId: number) => void;
   onMappingCreate: (mapping: AudioMapping) => void;
+  confirmStartSession: (startSegmentId?: number, startTime?: number) => void;
 }
 
 interface ProgressiveMapperProps {
@@ -83,7 +84,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   // This component only manages the mapping SESSION state
 
   // Mapping session state
-  const [mappingSession, setMappingSession] = useState<'idle' | 'active' | 'paused'>('idle');
+  const [mappingSession, setMappingSession] = useState<'idle' | 'setup' | 'active' | 'paused'>('idle');
   const [activeSegmentId, setActiveSegmentId] = useState<number | null>(null);
   const [sessionStartTime, setSessionStartTime] = useState<number>(0);
 
@@ -133,8 +134,8 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     baseMappingStart();
   };
 
-  const proceedWithMappingSession = () => {
-    proceedWithSessionStart();
+  const proceedWithMappingSession = (startSegmentId?: number, startTime?: number) => {
+    proceedWithSessionStart(startSegmentId, startTime);
     if (!isPlaying) {
       togglePlayPause();
     }
@@ -143,26 +144,18 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
 
   const pauseMappingSession = () => {
     baseMappingPause();
-    if (mappingSession === 'active' && isPlaying) {
-      togglePlayPause();
-    } else if (mappingSession === 'paused' && !isPlaying) {
-      togglePlayPause();
-    }
+    // Audio control moved to parent (MappingTab)
   };
 
   const stopMappingSession = () => {
     baseMappingStop();
-    if (isPlaying) {
-      togglePlayPause();
-    }
+    // Audio control moved to parent (MappingTab)
   };
 
   const resetMappingSession = () => {
     baseMappingReset();
     seekTo(0);
-    if (isPlaying) {
-      togglePlayPause();
-    }
+    // Audio control moved to parent (MappingTab)
   };
 
   // Play specific segment (only used internally for preview, not exposed to children)
@@ -194,7 +187,8 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     handlePlaySegment: () => { },  // No-op - not needed in new design
     onMappingUpdate,
     onMappingDelete,
-    onMappingCreate
+    onMappingCreate,
+    confirmStartSession: proceedWithMappingSession
   };
 
   return (

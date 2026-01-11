@@ -96,7 +96,19 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
 
                 return (
                   <div key={segment.id} className="flex items-center gap-4 min-w-fit">
-                    {/* Left: Timestamp pill */}
+                    {/* Left: Segment card */}
+                    <div className="flex-1">
+                      <MappingSegmentCard
+                        content={segmentText}
+                        segmentNumber={index + 1}
+                        status={status}
+                        script={currentScript}
+                        fontSize="28px"
+                        onSegmentClick={() => onSegmentClick(segment.id)}
+                      />
+                    </div>
+
+                    {/* Right: Timestamp pill */}
                     <div className="w-32 flex-shrink-0 flex items-center justify-start">
                       {mapping ? (
                         <TimestampPill
@@ -126,18 +138,6 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                           duration={duration}
                         />
                       )}
-                    </div>
-
-                    {/* Right: Segment card */}
-                    <div className="flex-1">
-                      <MappingSegmentCard
-                        content={segmentText}
-                        segmentNumber={index + 1}
-                        status={status}
-                        script={currentScript}
-                        fontSize="28px"
-                        onSegmentClick={() => onSegmentClick(segment.id)}
-                      />
                     </div>
                   </div>
                 );
