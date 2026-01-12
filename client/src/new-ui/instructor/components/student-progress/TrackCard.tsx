@@ -4,6 +4,7 @@ import {
   AccordionContent,
 } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
 import { TrackProgress } from '@shared/types';
 import { ChapterList } from './ChapterList';
@@ -22,39 +23,38 @@ export function TrackCard({ track, onChapterClick, isCurrentTrack }: TrackCardPr
   return (
     <AccordionItem
       value={`track-${track.trackId}`}
-      className="border rounded-lg bg-card px-0 mb-4 overflow-hidden"
+      className="border rounded-lg bg-card px-4 pb-4 pt-2 overflow-hidden"
     >
-      <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30 transition-colors group">
-        <div className="flex items-center gap-4 w-full pr-2 text-left">
-          {/* Left Side: Info & Progress */}
-          <div className="flex flex-col gap-2 flex-1 min-w-0">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Track {track.trackOrder}{isCurrentTrack && ' (current track)'}
-              </span>
-              <h3 className="font-semibold text-lg text-card-foreground leading-none group-hover:text-primary transition-colors truncate">
-                {track.trackTitle}
+      <AccordionTrigger className="-mx-4 px-4 py-3 hover:no-underline hover:bg-muted/30 transition-colors group items-start">
+        <div className="flex flex-col gap-2 w-full pr-2 text-left">
+          {/* Top Row: Title & Stats */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <h3 className="font-semibold text-base text-card-foreground leading-normal group-hover:text-primary transition-colors truncate">
+                Track {track.trackOrder} - {track.trackTitle}
               </h3>
+              {isCurrentTrack && (
+                <Badge variant="default" className="text-xs whitespace-nowrap h-5 px-1.5">
+                  Current
+                </Badge>
+              )}
             </div>
-            <Progress value={completionPercentage} className="h-1 w-full bg-muted/60" />
-          </div>
 
-          {/* Right Side: Stats (Next to Chevron) */}
-          <div className="text-right">
-            <span className="text-xs font-medium text-muted-foreground tabular-nums whitespace-nowrap opacity-80">
+            <span className="text-xs font-medium text-muted-foreground tabular-nums whitespace-nowrap opacity-80 flex-shrink-0">
               {track.completedChapters}/{track.totalChapters} chapters
             </span>
           </div>
+
+          {/* Bottom Row: Progress */}
+          <Progress value={completionPercentage} className="h-1 w-full bg-muted/60" />
         </div>
       </AccordionTrigger>
 
-      <AccordionContent className="px-4 pb-4 pt-4 bg-card/50 border-t">
-        <div className="mt-4">
-          <ChapterList
-            chapters={track.chapters}
-            onChapterClick={onChapterClick ? (chapter) => onChapterClick(chapter, track) : undefined}
-          />
-        </div>
+      <AccordionContent className="px-0 pb-0 pt-2 bg-transparent">
+        <ChapterList
+          chapters={track.chapters}
+          onChapterClick={onChapterClick ? (chapter) => onChapterClick(chapter, track) : undefined}
+        />
       </AccordionContent>
     </AccordionItem>
   );

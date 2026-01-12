@@ -58,7 +58,7 @@ import { TrackListItem, TrackRow } from '../components/TrackListItem';
 import { ChapterListItem, ChapterRow } from '../components/ChapterListItem';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { handleJsonResponse } from '../utils/handleJsonResponse';
-import { Grip, Plus, BookOpen } from 'lucide-react';
+import { Plus, LibraryBig, BookText } from 'lucide-react';
 import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
 
 interface DialogState {
@@ -432,9 +432,9 @@ export default function TracksAndChapters() {
             maxSize={50}
             className="flex flex-col h-full bg-card/50 rounded-lg border shadow-sm mr-4"
           >
-            <div className="p-4 border-b flex justify-between items-center bg-card rounded-t-lg">
+            <div className="px-4 py-2 border-b flex justify-between items-center bg-card rounded-t-lg">
               <div className="flex items-center gap-2">
-                <Grip className="w-5 h-5 text-primary" />
+                <LibraryBig className="w-5 h-5 text-primary" />
                 <h2 className="font-semibold">Tracks</h2>
                 <Badge variant="secondary" className="ml-2">
                   {tracksQuery.isLoading ? '…' : tracks.length}
@@ -480,9 +480,9 @@ export default function TracksAndChapters() {
           >
             {selectedTrack ? (
               <>
-                <div className="p-4 border-b flex justify-between items-center bg-card rounded-t-lg">
+                <div className="px-4 py-2 border-b flex justify-between items-center bg-card rounded-t-lg">
                   <div className="flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-primary" />
+                    <BookText className="w-5 h-5 text-primary" />
                     <div>
                       <h2 className="font-semibold">{selectedTrack.title}</h2>
                       <p className="text-xs text-muted-foreground">{selectedTrackChapters.length} chapters</p>
@@ -522,7 +522,7 @@ export default function TracksAndChapters() {
               </>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground flex-col gap-2">
-                <Grip className="w-10 h-10 opacity-20" />
+                <LibraryBig className="w-10 h-10 opacity-20" />
                 <p>Select a track to manage chapters</p>
               </div>
             )}

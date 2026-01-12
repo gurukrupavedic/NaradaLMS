@@ -20,10 +20,10 @@ export function StudentDetailsCard({ student }: StudentDetailsCardProps) {
     : 'N/A';
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4 relative">
+    <div className="rounded-lg border border-border bg-card px-4 pb-4 pt-2 relative">
       {/* Collapsible Header */}
       <div
-        className="flex items-center gap-2.5 mb-2 cursor-pointer hover:bg-muted/30 -mx-4 px-4 py-0.5 rounded-t-lg transition-colors"
+        className="flex items-center gap-2.5 cursor-pointer hover:bg-muted/30 -mx-4 px-4 py-2 rounded-t-lg transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -36,16 +36,13 @@ export function StudentDetailsCard({ student }: StudentDetailsCardProps) {
         aria-expanded={isExpanded ? "true" : "false"}
         aria-label={isExpanded ? "Collapse student details" : "Expand student details"}
       >
-        {/* Avatar */}
-        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-          <User className="h-4 w-4 text-muted-foreground" />
-        </div>
+
 
         {/* Header Content - Always visible name, conditional collapsed summary */}
         {isExpanded ? (
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-semibold text-base leading-none">{fullName}</h3>
+              <h3 className="font-semibold text-base leading-normal">{fullName}</h3>
             </div>
           </div>
         ) : (
@@ -64,7 +61,7 @@ export function StudentDetailsCard({ student }: StudentDetailsCardProps) {
 
         {/* Expand/Collapse Icon - purely decorative, parent handles interaction */}
         <div className="p-0.5 text-foreground/60 pointer-events-none flex-shrink-0">
-          <ChevronDown 
+          <ChevronDown
             className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? "" : "rotate-180"}`}
           />
         </div>
@@ -72,15 +69,9 @@ export function StudentDetailsCard({ student }: StudentDetailsCardProps) {
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="border-t -mx-4 px-4 pt-4 mt-1">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-            {/* Full Name */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
-                Full Name
-              </p>
-              <p className="text-sm font-medium text-foreground mt-1">{fullName}</p>
-            </div>
+        <div className="pt-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 text-sm">
+
 
             {/* Email */}
             <div>
@@ -138,10 +129,10 @@ export function StudentDetailsCard({ student }: StudentDetailsCardProps) {
                   <p className="text-sm text-foreground mt-1">
                     {student.enrollment.enrolledAt
                       ? new Date(student.enrollment.enrolledAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                        })
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })
                       : '—'}
                   </p>
                 </div>

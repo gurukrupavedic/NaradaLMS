@@ -53,7 +53,7 @@ export function BatchDetailsCard({ batch, batches = [], currentBatchId, onBatchC
     <div className="rounded-lg border border-border bg-card p-4 relative">
       {/* Collapsible Header */}
       <div
-        className="flex items-center gap-2.5 mb-2 cursor-pointer hover:bg-muted/30 -mx-4 px-4 py-2 rounded-t-lg transition-colors"
+        className="flex items-center gap-2.5 cursor-pointer hover:bg-muted/30 -mx-4 px-4 py-2 rounded-t-lg transition-colors"
         onClick={() => setCollapsed((v) => !v)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -87,7 +87,7 @@ export function BatchDetailsCard({ batch, batches = [], currentBatchId, onBatchC
           </div>
         ) : (
           <div className="flex-1 min-w-0 flex items-center">
-            <h3 className="font-semibold text-base leading-tight">{batch.batchCode} - {batch.batchName}</h3>
+            <h3 className="font-semibold text-base leading-normal">{batch.batchCode} - {batch.batchName}</h3>
           </div>
         )}
 
@@ -95,7 +95,7 @@ export function BatchDetailsCard({ batch, batches = [], currentBatchId, onBatchC
         {!collapsed && batches.length > 0 && currentBatchId && onBatchChange && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button 
+              <button
                 onClick={(e) => e.stopPropagation()}
                 className="p-0.5 text-foreground/60 hover:text-foreground hover:bg-muted/30 rounded-md transition-colors flex-shrink-0"
                 title="Switch batch"
@@ -108,11 +108,10 @@ export function BatchDetailsCard({ batch, batches = [], currentBatchId, onBatchC
                 <DropdownMenuItem
                   key={b.id}
                   onClick={() => onBatchChange(b.id)}
-                  className={`py-1.5 cursor-pointer ${
-                    b.id === currentBatchId
-                      ? "bg-muted/50 text-foreground font-medium"
-                      : ""
-                  }`}
+                  className={`py-1.5 cursor-pointer ${b.id === currentBatchId
+                    ? "bg-muted/50 text-foreground font-medium"
+                    : ""
+                    }`}
                 >
                   <span className="font-mono text-sm text-muted-foreground">{b.batchCode}</span>
                   <span className="text-sm text-foreground ml-2">-</span>
@@ -125,7 +124,7 @@ export function BatchDetailsCard({ batch, batches = [], currentBatchId, onBatchC
 
         {/* Expand/Collapse Icon - purely decorative, parent handles interaction */}
         <div className="p-0.5 text-foreground/60 pointer-events-none flex-shrink-0">
-          <ChevronDown 
+          <ChevronDown
             className={`w-4 h-4 transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`}
           />
         </div>
@@ -136,7 +135,7 @@ export function BatchDetailsCard({ batch, batches = [], currentBatchId, onBatchC
           {/* Divider */}
           <div className="border-t -mx-4 px-4 pt-4 mt-1">
             {/* Batch Details Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 text-sm">
               {/* Batch Code */}
               <div>
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">

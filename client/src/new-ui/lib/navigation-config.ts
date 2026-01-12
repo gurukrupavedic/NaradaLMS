@@ -1,10 +1,13 @@
 import {
   BookOpen,
+  BookOpenText,
   Users,
-  PenTool,
   Settings,
-  BarChart3,
-  LayoutDashboard,
+  UserPlus,
+  CircleUser,
+  LibraryBig,
+  UserCog,
+  Logs,
 } from 'lucide-react';
 
 export type UserRole = 'student' | 'instructor' | 'content_manager' | 'admin';
@@ -35,7 +38,7 @@ const learnSection: NavSection = {
     {
       title: 'Vedic Learning',
       url: '/app/learning',
-      icon: LayoutDashboard,
+      icon: BookOpenText,
       isActive: true,
     },
   ],
@@ -47,12 +50,12 @@ const batchesSection: NavSection = {
     {
       title: 'My Batches',
       url: '/app/instructor/batches',
-      icon: Users,
+      icon: UserPlus,
     },
     {
       title: 'My Students',
       url: '/app/instructor/students',
-      icon: Users,
+      icon: CircleUser,
     },
   ],
 };
@@ -63,7 +66,7 @@ const contentSection: NavSection = {
     {
       title: 'Tracks & Chapters',
       url: '/app/content',
-      icon: BookOpen,
+      icon: LibraryBig,
     },
   ],
 };
@@ -74,7 +77,7 @@ const adminSection: NavSection = {
     {
       title: 'Users',
       url: '/app/admin/users',
-      icon: Users,
+      icon: UserCog,
     },
     {
       title: 'Batches',
@@ -84,7 +87,7 @@ const adminSection: NavSection = {
     {
       title: 'Audit Logs',
       url: '/app/admin/logs',
-      icon: BarChart3,
+      icon: Logs,
     },
     {
       title: 'Settings',

@@ -35,7 +35,7 @@ export function VedicLearningPage() {
 
   if (detailsLoading || tracksLoading) {
     return (
-      <div className="space-y-6 px-4 pt-4">
+      <div className="space-y-4 px-4 py-4">
         {/* Student Details Skeleton */}
         <div className="rounded-lg border border-border bg-card p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -66,7 +66,7 @@ export function VedicLearningPage() {
 
   if (detailsError) {
     return (
-      <div className="space-y-6 px-4 pt-4">
+      <div className="space-y-4 px-4 py-4">
         <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-destructive">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -86,7 +86,7 @@ export function VedicLearningPage() {
   }
 
   return (
-    <div className="space-y-6 px-4 pt-4 pb-8">
+    <div className="space-y-4 px-4 py-4">
       {studentDetails && <StudentDetailsCard student={studentDetails} />}
 
       {tracksError ? (
@@ -107,8 +107,8 @@ export function VedicLearningPage() {
           </CardContent>
         </Card>
       ) : trackProgress && trackProgress.trackProgress.length > 0 ? (
-        <TrackList 
-          tracks={trackProgress.trackProgress} 
+        <TrackList
+          tracks={trackProgress.trackProgress}
           onChapterClick={handleChapterClick}
           currentTrackId={studentDetails?.enrollment?.trackId}
         />

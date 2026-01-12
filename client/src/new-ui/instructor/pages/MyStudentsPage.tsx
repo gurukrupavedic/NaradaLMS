@@ -370,151 +370,158 @@ export function MyStudentsPage() {
 
   // Success state - render table
   return (
-    <div className="space-y-6 px-4 pt-4">
-      {/* Inline Filters - AuditLogs Pattern */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <Filter className="h-4 w-4" />
-            <span>Filters:</span>
-          </div>
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
+      {/* Inline Filters */}
+      <div className="flex-shrink-0 px-4 py-4 bg-background z-10">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Filter className="h-4 w-4" />
+              <span>Filters:</span>
+            </div>
 
-          {/* Search Input */}
-          <div className="relative flex-1 min-w-[240px] max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name or email..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="h-8 pl-9 pr-9"
-            />
-            {searchInput && (
-              <button
-                onClick={() => setSearchInput('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
+            {/* Search Input */}
+            <div className="relative flex-1 min-w-[240px] max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or email..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="h-8 pl-9 pr-9"
+              />
+              {searchInput && (
+                <button
+                  onClick={() => setSearchInput('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Batch Filter */}
+            <Select
+              value={selectedBatchId ? String(selectedBatchId) : 'all'}
+              onValueChange={(value) => setSelectedBatchId(value === 'all' ? undefined : parseInt(value))}
+            >
+              <SelectTrigger className="h-8 w-fit min-w-40">
+                <SelectValue placeholder="All Batches" />
+              </SelectTrigger>
+              <SelectContent className="z-50">
+                <SelectItem value="all">All Batches</SelectItem>
+                {batchesLoading ? (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                ) : (
+                  batches?.map((batch) => (
+                    <SelectItem key={batch.id} value={String(batch.id)}>
+                      {batch.batchCode} - {batch.batchName}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+
+            {/* Status Filter */}
+            <Select
+              value={selectedStatus || 'all'}
+              onValueChange={(value) => setSelectedStatus(value === 'all' ? undefined : value as 'active' | 'dropped' | 'completed')}
+            >
+              <SelectTrigger className="h-8 w-fit min-w-32">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent className="z-50">
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="dropped">Dropped</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Refresh Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="h-8 w-8"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+
+            {/* Clear Filters + Active Count */}
+            {activeFilterCount > 0 && (
+              <>
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 h-8">
+                  <X className="h-4 w-4" />
+                  Clear
+                </Button>
+                <Badge variant="secondary" className="text-xs">
+                  {activeFilterCount} active
+                </Badge>
+              </>
             )}
           </div>
-
-          {/* Batch Filter */}
-          <Select
-            value={selectedBatchId ? String(selectedBatchId) : 'all'}
-            onValueChange={(value) => setSelectedBatchId(value === 'all' ? undefined : parseInt(value))}
-          >
-            <SelectTrigger className="h-8 w-fit min-w-40">
-              <SelectValue placeholder="All Batches" />
-            </SelectTrigger>
-            <SelectContent className="z-50">
-              <SelectItem value="all">All Batches</SelectItem>
-              {batchesLoading ? (
-                <SelectItem value="loading" disabled>Loading...</SelectItem>
-              ) : (
-                batches?.map((batch) => (
-                  <SelectItem key={batch.id} value={String(batch.id)}>
-                    {batch.batchCode} - {batch.batchName}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
-
-          {/* Status Filter */}
-          <Select
-            value={selectedStatus || 'all'}
-            onValueChange={(value) => setSelectedStatus(value === 'all' ? undefined : value as 'active' | 'dropped' | 'completed')}
-          >
-            <SelectTrigger className="h-8 w-fit min-w-32">
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent className="z-50">
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="dropped">Dropped</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Refresh Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="h-8 w-8"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-
-          {/* Clear Filters + Active Count */}
-          {activeFilterCount > 0 && (
-            <>
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 h-8">
-                <X className="h-4 w-4" />
-                Clear
-              </Button>
-              <Badge variant="secondary" className="text-xs">
-                {activeFilterCount} active
-              </Badge>
-            </>
-          )}
         </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-lg border border-border/60 bg-card shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader className="bg-muted/40 sticky top-0 z-10">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    style={{
-                      width: header.getSize() !== 150 ? header.getSize() : undefined,
-                    }}
-                    className="text-xs font-bold text-foreground/70 uppercase tracking-widest"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors">
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    key={cell.id}
-                    style={{
-                      width: cell.column.getSize() !== 150 ? cell.column.getSize() : undefined,
-                    }}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      {/* Table Area */}
+      <div className="flex-1 min-h-0 px-4">
+        <div className="h-full overflow-auto rounded-lg border border-border/60 bg-card shadow-sm">
+          <Table>
+            <TableHeader className="bg-muted/40 sticky top-0 z-10">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      style={{
+                        width: header.getSize() !== 150 ? header.getSize() : undefined,
+                      }}
+                      className="text-xs font-bold text-foreground/70 uppercase tracking-widest bg-muted/40"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody className="[&_tr:last-child]:border-b">
+              {table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} className="border-b border-border/60 hover:bg-muted/30 transition-colors">
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className="py-2"
+                      style={{
+                        width: cell.column.getSize() !== 150 ? cell.column.getSize() : undefined,
+                      }}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {/* Pagination */}
-      <DataTablePagination
-        currentPage={page}
-        totalPages={totalPages}
-        pageSize={limit}
-        onPageChange={setPage}
-        onPageSizeChange={(newSize) => {
-          setLimit(newSize);
-          setPage(1);
-        }}
-        pageSizeOptions={ROWS_PER_PAGE_OPTIONS}
-      />
+      <div className="flex-shrink-0">
+        <DataTablePagination
+          currentPage={page}
+          totalPages={totalPages}
+          pageSize={limit}
+          onPageChange={setPage}
+          onPageSizeChange={(newSize) => {
+            setLimit(newSize);
+            setPage(1);
+          }}
+          pageSizeOptions={ROWS_PER_PAGE_OPTIONS}
+        />
+      </div>
     </div>
   );
 }

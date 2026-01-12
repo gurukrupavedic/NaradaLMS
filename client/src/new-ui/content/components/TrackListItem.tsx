@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Edit2, Trash2, BookOpen } from 'lucide-react';
+import { GripVertical, Edit2, Trash2, BookText } from 'lucide-react';
 import { Track } from '@shared/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -66,7 +66,7 @@ export function TrackListItem({ track, index, isSelected, onSelect, onEdit, onDe
 
             <div className="flex items-center gap-3 pt-1 mt-auto">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground/80 font-medium">
-                <BookOpen className="w-3.5 h-3.5" />
+                <BookText className="w-3.5 h-3.5" />
                 <span>{track.chapterCount ?? 0} chapters</span>
               </div>
             </div>

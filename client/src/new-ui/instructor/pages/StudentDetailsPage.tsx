@@ -39,7 +39,7 @@ export function StudentDetailsPage() {
   // Loading state
   if (detailsLoading || tracksLoading) {
     return (
-      <div className="space-y-6 px-4 pt-4">
+      <div className="space-y-4 px-4 py-4">
         {/* Student Details Skeleton */}
         {detailsLoading && (
           <div className="rounded-lg border border-border bg-card p-6">
@@ -75,7 +75,7 @@ export function StudentDetailsPage() {
   // Error state for student details
   if (detailsError) {
     return (
-      <div className="space-y-6 px-4 pt-4">
+      <div className="space-y-4 px-4 py-4">
         <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-destructive">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -93,14 +93,14 @@ export function StudentDetailsPage() {
 
   if (!studentDetails) {
     return (
-      <div className="space-y-6 px-4 pt-4">
+      <div className="space-y-4 px-4 py-4">
         <p className="text-center text-muted-foreground">Student not found</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 px-4 pt-4 pb-8">
+    <div className="space-y-4 px-4 py-4">
       {/* Student Details Card */}
       <StudentDetailsCard student={studentDetails} />
 
