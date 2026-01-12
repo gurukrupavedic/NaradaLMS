@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Square } from 'lucide-react';
 import { TimestampPill } from './TimestampPill';
 import { EmptyTimestampPill } from './EmptyTimestampPill';
-import { MappingSegmentCard } from '@/components/design-system/MappingSegmentCard';
+import { SegmentCard } from '@/new-ui/content/components/SegmentCard';
 import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
 import { getSegmentText } from '@shared/utils/text-segmentation';
 import { cn } from '@/lib/utils';
@@ -35,6 +35,7 @@ interface SegmentMappingGridProps {
   onEndSession: () => void;
   hideHeader?: boolean;
   className?: string;
+  readOnly?: boolean;
 }
 
 export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
@@ -51,8 +52,10 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
   onMappingDelete,
   onMappingCreate,
   onEndSession,
+
   hideHeader,
-  className
+  className,
+  readOnly = false
 }) => {
   const [editingSegmentId, setEditingSegmentId] = useState<number | null>(null);
 
@@ -69,13 +72,13 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
   return (
     <div className="h-full">
       <div className={cn(
-        "bg-white border rounded-lg h-full overflow-hidden shadow-sm flex flex-col",
+        "bg-card border rounded-lg h-full overflow-hidden shadow-sm flex flex-col",
         className
       )}>
         {/* Header */}
         {!hideHeader && (
-          <div className="px-6 py-3 bg-gray-50 border-b flex-shrink-0">
-            <h2 className="text-base font-medium text-gray-700">Segment Mapping</h2>
+          <div className="px-6 py-3 bg-muted/50 border-b flex-shrink-0">
+            <h2 className="text-base font-medium text-foreground">Segment Mapping</h2>
           </div>
         )}
 
@@ -98,13 +101,16 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                   <div key={segment.id} className="flex items-center gap-4 min-w-fit">
                     {/* Left: Segment card */}
                     <div className="flex-1">
-                      <MappingSegmentCard
+                      <SegmentCard
                         content={segmentText}
                         segmentNumber={index + 1}
                         status={status}
                         script={currentScript}
                         fontSize="28px"
-                        onSegmentClick={() => onSegmentClick(segment.id)}
+                        script={currentScript}
+                        fontSize="28px"
+                        onClick={() => !readOnly && onSegmentClick(segment.id)}
+                        className={readOnly ? 'opacity-70' : ''}
                       />
                     </div>
 
@@ -120,11 +126,12 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                             const fakeEvent = { stopPropagation: () => { } } as React.MouseEvent;
                             onPlaySegment(mapping, fakeEvent);
                           }}
-                          onDelete={(segmentId) => onMappingDelete(segmentId)}
-                          onTimestampUpdate={onMappingUpdate}
-                          onEditStart={() => setEditingSegmentId(segment.id)}
+                          onDelete={(segmentId) => !readOnly && onMappingDelete(segmentId)}
+                          onTimestampUpdate={(id, m) => !readOnly && onMappingUpdate(id, m)}
+                          onEditStart={() => !readOnly && setEditingSegmentId(segment.id)}
                           onEditCancel={() => setEditingSegmentId(null)}
                           duration={duration}
+                          readOnly={readOnly}
                         />
                       ) : (
                         <EmptyTimestampPill
@@ -132,10 +139,11 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                           isFirstSegment={isFirstSegment}
                           previousSegmentEndTime={previousSegmentEndTime}
                           isEditing={editingSegmentId === segment.id}
-                          onEditStart={() => setEditingSegmentId(segment.id)}
+                          onEditStart={() => !readOnly && setEditingSegmentId(segment.id)}
                           onEditCancel={() => setEditingSegmentId(null)}
-                          onMappingCreate={onMappingCreate}
+                          onMappingCreate={(m) => !readOnly && onMappingCreate(m)}
                           duration={duration}
+                          readOnly={readOnly}
                         />
                       )}
                     </div>

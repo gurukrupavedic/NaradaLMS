@@ -155,13 +155,7 @@ export function SegmentationTab() {
                         </div>
 
                         <div className="flex-1 overflow-auto p-4">
-                            {isPublished && (
-                                <Alert className="mb-4">
-                                    <AlertDescription>
-                                        This chapter is published. Text segmentation is disabled.
-                                    </AlertDescription>
-                                </Alert>
-                            )}
+
 
                             {hasSelection && !isPublished && (
                                 <div className="p-3 mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">

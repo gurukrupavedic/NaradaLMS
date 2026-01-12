@@ -65,7 +65,9 @@ interface ProgressiveMapperProps {
   togglePlayPause: () => void; // Audio player toggle function
   onMappingCreate: (mapping: AudioMapping) => void;
   onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
+  onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
   onMappingDelete: (segmentId: number) => void;
+  readOnly?: boolean;
   children: (state: MappingState) => React.ReactNode;
 }
 
@@ -83,6 +85,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
   onMappingCreate,
   onMappingUpdate,
   onMappingDelete,
+  readOnly = false,
   children
 }) => {
   // Note: audioRef, isPlaying, togglePlayPause, etc. are handled by AudioFileManager
@@ -188,16 +191,16 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     mappings,
     togglePlayPause,
     seekTo: () => { },            // No-op - AudioFileManager controls playback  
-    startMappingSession,
+    startMappingSession: () => !readOnly && startMappingSession(),
     pauseMappingSession,
     stopMappingSession,
     resetMappingSession,
     clearSessionData,
-    handleSegmentClick,
+    handleSegmentClick: (id) => !readOnly && handleSegmentClick(id),
     handlePlaySegment: () => { },  // No-op - not needed in new design
-    onMappingUpdate,
-    onMappingDelete,
-    onMappingCreate,
+    onMappingUpdate: (id, m) => !readOnly && onMappingUpdate(id, m),
+    onMappingDelete: (id) => !readOnly && onMappingDelete(id),
+    onMappingCreate: (m) => !readOnly && onMappingCreate(m),
     confirmStartSession: proceedWithMappingSession
   };
 

@@ -34,7 +34,7 @@ export default function ChapterContentPage() {
 
 // Content component - uses context for data
 function ChapterContentPageContent() {
-    const { isLoading, error } = useChapterEditor();
+    const { isLoading, error, isPublished } = useChapterEditor();
     const [activeTab, setActiveTab] = useState('content');
 
     // Loading state
@@ -72,33 +72,36 @@ function ChapterContentPageContent() {
 
     // Main render
     return (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col bg-gray-50 dark:bg-gray-900 h-[calc(100dvh-4rem)]">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className={`flex flex-col bg-gray-50 dark:bg-gray-900 h-[calc(100dvh-4rem)] ${isPublished ? 'cursor-not-allowed' : ''}`}>
             {/* Phase 1: ChapterHeader with integrated tabs */}
             <ChapterHeader />
 
             {/* Tab content area - overflow-hidden to force internal scrolling in editor */}
-            <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
-                <AudioPlayerProvider>
-                    <TabsContent value="content" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
-                        <ContentTab />
-                    </TabsContent>
+            <div className={`flex-1 overflow-hidden min-h-0 flex flex-col ${isPublished ? 'pointer-events-none' : ''}`}>
+                {/* Re-enable pointer events for scrolling containers inside tabs */}
+                <div className={`h-full flex flex-col ${isPublished ? 'pointer-events-auto' : ''}`}>
+                    <AudioPlayerProvider>
+                        <TabsContent value="content" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
+                            <ContentTab />
+                        </TabsContent>
 
-                    <TabsContent value="media" className="flex-1 overflow-auto h-full m-0 p-4">
-                        <MediaTab />
-                    </TabsContent>
+                        <TabsContent value="media" className="flex-1 overflow-auto h-full m-0 p-4">
+                            <MediaTab />
+                        </TabsContent>
 
-                    <TabsContent value="segmentation" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
-                        <SegmentationTab />
-                    </TabsContent>
+                        <TabsContent value="segmentation" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
+                            <SegmentationTab />
+                        </TabsContent>
 
-                    <TabsContent value="mapping" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
-                        <MappingTab />
-                    </TabsContent>
+                        <TabsContent value="mapping" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
+                            <MappingTab />
+                        </TabsContent>
 
-                    <TabsContent value="preview" className="flex-1 overflow-auto h-full m-0 p-4">
-                        <PreviewTab />
-                    </TabsContent>
-                </AudioPlayerProvider>
+                        <TabsContent value="preview" className="flex-1 overflow-auto h-full m-0 p-4">
+                            <PreviewTab />
+                        </TabsContent>
+                    </AudioPlayerProvider>
+                </div>
             </div>
         </Tabs >
     );
