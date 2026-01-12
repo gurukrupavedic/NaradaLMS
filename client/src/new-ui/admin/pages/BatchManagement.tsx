@@ -295,24 +295,26 @@ export default function BatchManagement() {
   });
 
   return (
-    <div className="space-y-6 px-4 pt-4">
-      {/* Create Batch Button */}
-      <div className="flex items-center justify-end">
-        <Button
-          onClick={() => {
-            setDialogMode('create');
-            setEditingBatch(null);
-            setForm({ batchCode: "", batchName: "", trackId: undefined, cohortType: undefined, primaryInstructorId: undefined });
-            setSecondaryInstructorIds([]);
-            setBatchDescription("");
-            setInstructorSearch("");
-            setShowInstructorDropdown(false);
-            setDialogOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create Batch
-        </Button>
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
+      {/* Fixed Header / Action Button */}
+      <div className="flex-shrink-0 px-4 py-4 bg-background z-10">
+        <div className="flex items-center justify-end">
+          <Button
+            onClick={() => {
+              setDialogMode('create');
+              setEditingBatch(null);
+              setForm({ batchCode: "", batchName: "", trackId: undefined, cohortType: undefined, primaryInstructorId: undefined });
+              setSecondaryInstructorIds([]);
+              setBatchDescription("");
+              setInstructorSearch("");
+              setShowInstructorDropdown(false);
+              setDialogOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create Batch
+          </Button>
+        </div>
       </div>
 
       {/* Create Batch Modal */}
@@ -351,88 +353,95 @@ export default function BatchManagement() {
         isPending={dialogMode === 'create' ? createBatch.isPending : updateBatch.isPending}
       />
 
-      {/* Table */}
-      <div className="rounded-lg border border-border/60 bg-card overflow-hidden">
-        {isLoading ? (
-          <div className="p-4 space-y-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <Skeleton className="h-10 w-full" />
-              </div>
-            ))}
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center p-12 text-center">
-            <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">Failed to load batches</h3>
-            <p className="text-sm text-muted-foreground mb-4">There was an error loading the batch data.</p>
-            <Button onClick={() => refetch()} variant="outline">
-              Retry
-            </Button>
-          </div>
-        ) : batches.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-12 text-center">
-            <FolderPlus className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">No batches yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">Get started by creating your first batch above.</p>
-          </div>
-        ) : (
-          <Table>
-            <TableHeader className="bg-muted/40 sticky top-0 z-10">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
-                  {headerGroup.headers.map((header) => (
-                    <TableHead
-                      key={header.id}
-                      className="text-xs font-bold text-foreground/70 uppercase tracking-widest"
-                      style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  ))}
-                </TableRow>
+      {/* Scrollable Content Area */}
+      <div className="flex-1 min-h-0 px-4">
+        <div className="h-full rounded-lg border border-border/60 bg-card overflow-hidden flex flex-col shadow-sm">
+          {isLoading ? (
+            <div className="p-4 space-y-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <Skeleton className="h-10 w-full" />
+                </div>
               ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.map(row => (
-                <TableRow
-                  key={row.id}
-                  className="border-t border-border cursor-pointer hover:bg-muted/50"
-                  onClick={(e) => {
-                    // Don't navigate if clicking on action buttons or dropdowns
-                    const target = e.target as HTMLElement;
-                    if (target.closest('button') || target.closest('[role="menuitem"]')) {
-                      return;
-                    }
-                    setLocation(`/app/admin/batches/${row.original.id}`);
-                  }}
-                >
-                  {row.getVisibleCells().map(cell => (
-                    <TableCell
-                      key={cell.id}
-                      style={{ width: cell.column.getSize() !== 150 ? cell.column.getSize() : undefined }}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center h-full">
+              <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">Failed to load batches</h3>
+              <p className="text-sm text-muted-foreground mb-4">There was an error loading the batch data.</p>
+              <Button onClick={() => refetch()} variant="outline">
+                Retry
+              </Button>
+            </div>
+          ) : batches.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center h-full">
+              <FolderPlus className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">No batches yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">Get started by creating your first batch above.</p>
+            </div>
+          ) : (
+            <div className="flex-1 overflow-auto">
+              <Table>
+                <TableHeader className="bg-muted/40 sticky top-0 z-10">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
+                      {headerGroup.headers.map((header) => (
+                        <TableHead
+                          key={header.id}
+                          className="text-xs font-bold text-foreground/70 uppercase tracking-widest bg-muted/40"
+                          style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableHead>
+                      ))}
+                    </TableRow>
                   ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+                </TableHeader>
+                <TableBody className="[&_tr:last-child]:border-b">
+                  {table.getRowModel().rows.map(row => (
+                    <TableRow
+                      key={row.id}
+                      className="border-b border-border/60 cursor-pointer hover:bg-muted/50"
+                      onClick={(e) => {
+                        // Don't navigate if clicking on action buttons or dropdowns
+                        const target = e.target as HTMLElement;
+                        if (target.closest('button') || target.closest('[role="menuitem"]')) {
+                          return;
+                        }
+                        setLocation(`/app/admin/batches/${row.original.id}`);
+                      }}
+                    >
+                      {row.getVisibleCells().map(cell => (
+                        <TableCell
+                          key={cell.id}
+                          className="py-2"
+                          style={{ width: cell.column.getSize() !== 150 ? cell.column.getSize() : undefined }}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Pagination */}
       {!isLoading && !error && batches.length > 0 && (
-        <DataTablePagination
-          currentPage={page}
-          totalPages={totalPages}
-          pageSize={limit}
-          onPageChange={setPage}
-          onPageSizeChange={(newSize) => { setLimit(newSize); setPage(1); }}
-        />
+        <div className="flex-shrink-0">
+          <DataTablePagination
+            currentPage={page}
+            totalPages={totalPages}
+            pageSize={limit}
+            onPageChange={setPage}
+            onPageSizeChange={(newSize) => { setLimit(newSize); setPage(1); }}
+          />
+        </div>
       )}
     </div>
   );

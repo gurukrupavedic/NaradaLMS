@@ -286,97 +286,111 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="space-y-6 px-4 pt-4">
-      <Tabs value={statusFilter} onValueChange={handleStatusChange} className="w-full">
-        <div className="flex items-center justify-between">
-          <TabsList className="h-auto p-1">
-            <TabsTrigger value="all">
-              All Users
-            </TabsTrigger>
-            <TabsTrigger value="pending_approval">
-              Pending <Badge variant="secondary" className="ml-1.5">{statusCounts.pending}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="inactive">
-              Inactive <Badge variant="secondary" className="ml-1.5">{statusCounts.inactive}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="active">
-              Active <Badge variant="secondary" className="ml-1.5">{statusCounts.active}</Badge>
-            </TabsTrigger>
-          </TabsList>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => refetch()}
-            disabled={isLoadingState}
-            className="h-8 w-8"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-        </div>
-      </Tabs>
-
-      {error && (
-        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
+      {/* Fixed Header / Tabs Section */}
+      <div className="flex-shrink-0 px-4 py-4 bg-background z-10">
+        <Tabs value={statusFilter} onValueChange={handleStatusChange} className="w-full">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium">Failed to load users.</p>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
+            <TabsList className="h-auto bg-transparent p-0">
+              <TabsTrigger value="all">
+                All Users
+              </TabsTrigger>
+              <TabsTrigger value="pending_approval">
+                Pending <Badge variant="secondary" className="ml-1.5">{statusCounts.pending}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="inactive">
+                Inactive <Badge variant="secondary" className="ml-1.5">{statusCounts.inactive}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="active">
+                Active <Badge variant="secondary" className="ml-1.5">{statusCounts.active}</Badge>
+              </TabsTrigger>
+            </TabsList>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => refetch()}
+              disabled={isLoadingState}
+              className="h-8 w-8"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
           </div>
-        </div>
-      )}
+        </Tabs>
 
-      <div className="rounded-lg border border-border/60 bg-card shadow-sm overflow-hidden">
-        {isLoadingState ? (
-          <TableSkeleton rows={5} cols={5} />
-        ) : (
-          <Table>
-            <TableHeader className="bg-muted/40 sticky top-0 z-10">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
-                  {headerGroup.headers.map((header) => (
-                    <TableHead
-                      key={header.id}
-                      className="text-xs font-bold text-foreground/70 uppercase tracking-widest"
-                      style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors">
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        style={{ width: cell.column.getSize() !== 150 ? cell.column.getSize() : undefined }}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="py-6 text-sm text-muted-foreground text-center">No users to display.</TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+        {error && (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">Failed to load users.</p>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
+            </div>
+          </div>
         )}
       </div>
 
-      <DataTablePagination
-        currentPage={page}
-        totalPages={totalPages}
-        pageSize={limit}
-        onPageChange={setPage}
-        onPageSizeChange={(newSize) => { setLimit(newSize); setPage(1); }}
-      />
+      {/* Scrollable Content Area */}
+      <div className="flex-1 min-h-0 px-4">
+        <div className="h-full rounded-lg border border-border/60 bg-card shadow-sm overflow-hidden flex flex-col">
+          {isLoadingState ? (
+            <div className="p-4">
+              <TableSkeleton rows={10} cols={5} />
+            </div>
+          ) : (
+            <div className="flex-1 overflow-auto">
+              <Table>
+                <TableHeader className="bg-muted/40 sticky top-0 z-10">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
+                      {headerGroup.headers.map((header) => (
+                        <TableHead
+                          key={header.id}
+                          className="text-xs font-bold text-foreground/70 uppercase tracking-widest bg-muted/40"
+                          style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody className="[&_tr:last-child]:border-b">
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="border-b border-border/60 hover:bg-muted/30 transition-colors">
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell
+                            key={cell.id}
+                            className="py-2"
+                            style={{ width: cell.column.getSize() !== 150 ? cell.column.getSize() : undefined }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={columns.length} className="py-12 text-sm text-muted-foreground text-center">No users to display.</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Fixed Pagination Footer */}
+      <div className="flex-shrink-0">
+        <DataTablePagination
+          currentPage={page}
+          totalPages={totalPages}
+          pageSize={limit}
+          onPageChange={setPage}
+          onPageSizeChange={(newSize) => { setLimit(newSize); setPage(1); }}
+        />
+      </div>
     </div>
   );
 }

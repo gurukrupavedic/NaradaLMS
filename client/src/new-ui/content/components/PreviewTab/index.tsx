@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music, FileText, List, Zap } from "lucide-react";
+import { Music, FileText, StretchHorizontal, Zap } from "lucide-react";
 
 import { SegmentedTextDisplay } from "@/components/text-segmentation/SegmentedTextDisplay";
 import { AudioPlayerControls } from "@/new-ui/components/AudioPlayerControls";
@@ -147,7 +147,7 @@ export function PreviewTab() {
             {/* Section 1: Text Content Area */}
             <div className="lg:col-span-2 flex-1 min-h-0 flex flex-col border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black overflow-hidden">
                 <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-4">
                         <div className="flex items-center gap-2">
                             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Script</span>
                             <Select
@@ -167,13 +167,13 @@ export function PreviewTab() {
                             </Select>
                         </div>
                         {learnMode && (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-4">
                                 <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                                    <List className="h-3 w-3" />
+                                    <StretchHorizontal className="h-3 w-3 text-orange-500 fill-current" />
                                     {currentScriptSegments.length} segments
                                 </Badge>
                                 <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                                    <Zap className="h-3 w-3 text-green-600 fill-current" />
+                                    <Zap className="h-3 w-3 text-blue-500 fill-current" />
                                     {mappedSegments.length} mapped
                                 </Badge>
                             </div>

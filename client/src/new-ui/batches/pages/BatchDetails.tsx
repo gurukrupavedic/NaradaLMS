@@ -274,7 +274,7 @@ export default function BatchDetails() {
   }, [batchProgress.data]);
 
   return (
-    <div className="space-y-6 px-4 pt-4">
+    <div className="space-y-4 px-4 py-4">
       {/* Batch Details Card - Same for both admin and instructor */}
       {isBatchSelected && (
         batchDetail.isLoading ? (
@@ -317,14 +317,14 @@ export default function BatchDetails() {
             : "Select a batch to view details."}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Student Enrollment Section */}
           {context === 'admin' && (
-            <div className="rounded-lg bg-card p-4 space-y-3">
-              <div className="flex items-center gap-3">
+            <div className="space-y-4 pt-4">
+              <div className="flex items-center gap-4">
                 <div className="flex-1 relative">
                   <div className="relative">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-4 top-2.5 h-4 w-4 text-gray-400" />
                     <Input
                       type="text"
                       placeholder="Search & Enroll Students ..."
@@ -341,7 +341,7 @@ export default function BatchDetails() {
                           setMatrixShowTypeahead(false);
                         }
                       }}
-                      className="pl-9"
+                      className="pl-11"
                       disabled={isAddingStudent}
                     />
                     {matrixSearchQuery && (
@@ -387,7 +387,7 @@ export default function BatchDetails() {
                                 key={student.id}
                                 type="button"
                                 onClick={() => handleMatrixSelectStudent(student)}
-                                className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                                className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
                               >
                                 <div className="font-medium text-sm">{displayName}</div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400">{student.email}</div>

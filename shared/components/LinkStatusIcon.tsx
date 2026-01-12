@@ -26,7 +26,7 @@ export const LinkStatusIcon: React.FC<LinkStatusIconProps> = ({
 }) => {
   return (
     <Zap
-      className={`${status === 'mapped' ? 'text-green-600 fill-current' : 'text-gray-400 opacity-60'} ${sizeClasses[size]} ${className}`}
+      className={`${status === 'mapped' ? 'text-blue-500 fill-current' : 'text-gray-400 opacity-60'} ${sizeClasses[size]} ${className}`}
     />
   );
 };

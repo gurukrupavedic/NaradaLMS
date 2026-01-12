@@ -9,7 +9,7 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from '@/components/ui/resizable';
-import { Plus, Type, Ruler, FileText } from 'lucide-react';
+import { Plus, Type, Ruler, FileText, StretchHorizontal } from 'lucide-react';
 import {
     DndContext,
     DragEndEvent,
@@ -216,7 +216,7 @@ export function SegmentationTab() {
                         <div className="px-6 h-14 bg-gray-50 border-b flex-shrink-0 flex items-center">
                             <div className="flex items-center justify-between w-full">
                                 <h2 className="text-base font-semibold text-gray-700 flex items-center gap-2">
-                                    <FileText className="w-5 h-5" />
+                                    <StretchHorizontal className="w-5 h-5 text-orange-500 fill-current" />
                                     Text Segments ({scriptSegments.length})
                                 </h2>
                                 {hasSelection && !isPublished && (

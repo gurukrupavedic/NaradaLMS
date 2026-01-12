@@ -8,7 +8,7 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from '@/components/ui/resizable';
-import { List, Zap, RotateCcw } from 'lucide-react';
+import { StretchHorizontal, Zap, RotateCcw } from 'lucide-react';
 import { AudioFileManager } from '@/new-ui/content/components/AudioFileManager';
 import { ProgressiveMapper } from '@/components/audio-mapping/ProgressiveMapper';
 import { SegmentMappingGrid } from '@/components/audio-mapping/SegmentMappingGrid';
@@ -293,14 +293,14 @@ export function MappingTab() {
                                             </Select>
                                         </div>
 
-                                        <div className="flex bg-card items-center gap-2">
+                                        <div className="flex bg-card items-center gap-4">
                                             <Badge variant="secondary" className="flex items-center gap-1">
-                                                <List className="h-3 w-3" />
+                                                <StretchHorizontal className="h-3 w-3 text-orange-500 fill-current" />
                                                 {currentScriptSegments.length} segments
                                             </Badge>
                                             {audioFiles.length > 0 && (
                                                 <Badge variant="secondary" className="flex items-center gap-1">
-                                                    <Zap className="h-3 w-3 text-green-600 fill-current" />
+                                                    <Zap className="h-3 w-3 text-blue-500 fill-current" />
                                                     {mappedCount} mapped
                                                 </Badge>
                                             )}

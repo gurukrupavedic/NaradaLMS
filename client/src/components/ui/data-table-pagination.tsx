@@ -30,7 +30,7 @@ export function DataTablePagination({
   pageSizeOptions = [10, 25, 50, 100],
 }: DataTablePaginationProps) {
   return (
-    <div className="flex items-center justify-end gap-6 px-4 py-3">
+    <div className="flex items-center justify-end gap-6 px-4 py-4">
       {/* Rows per page */}
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">Rows per page</span>
@@ -54,38 +54,38 @@ export function DataTablePagination({
 
       {/* 4 Navigation buttons */}
       <div className="flex items-center gap-1">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="icon"
-          onClick={() => onPageChange(1)} 
+          onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
           className="h-8 w-8"
           aria-label="First page"
         >
           <ChevronsLeft className="h-4 w-4" />
         </Button>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="icon"
-          onClick={() => onPageChange(currentPage - 1)} 
+          onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
           className="h-8 w-8"
           aria-label="Previous page"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="icon"
-          onClick={() => onPageChange(currentPage + 1)} 
+          onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
           className="h-8 w-8"
           aria-label="Next page"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="icon"
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}

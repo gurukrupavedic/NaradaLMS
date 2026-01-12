@@ -433,10 +433,7 @@ export function UnifiedBatchMatrix({
         />
       )}
 
-      {/* Info text */}
-      <div className="text-xs text-gray-600 italic px-2 pt-2">
-        💡 Click any colored cell to update proficiency. Use [⋮] menu to drop students. Colors: Gray=Absent, Amber=Practicing, Green=L1-L2, Blue=L3, Purple=L4
-      </div>
+
     </div>
   );
 }
