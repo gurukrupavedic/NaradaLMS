@@ -8,6 +8,7 @@ import { TrackList } from '@/new-ui/instructor/components/student-progress/Track
 import type { ChapterProgress, TrackProgress } from '@shared/types';
 import { useMyDetails } from '../hooks/useMyDetails';
 import { useMyTrackProgress } from '../hooks/useMyTrackProgress';
+import { Separator } from '@/components/ui/separator';
 
 export function VedicLearningPage() {
   const [, navigate] = useLocation();
@@ -89,6 +90,9 @@ export function VedicLearningPage() {
     <div className="space-y-4 px-4 py-4">
       {studentDetails && <StudentDetailsCard student={studentDetails} />}
 
+      <Separator className="my-8 h-[1px] bg-black/5 dark:bg-white/10" />
+
+      {/* Track-wise Progress Section */}
       {tracksError ? (
         <Card className="border-destructive/30 bg-destructive/10">
           <CardContent className="py-8">

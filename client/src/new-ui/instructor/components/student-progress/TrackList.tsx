@@ -9,16 +9,22 @@ interface TrackListProps {
 }
 
 export function TrackList({ tracks, onChapterClick, currentTrackId }: TrackListProps) {
-  // By default, open the first track that isn't fully complete, or the first one if all are complete/incomplete
-  const firstIncompleteTrack = tracks.find(t => t.completedChapters < t.totalChapters) || tracks[0];
-  const defaultValue = firstIncompleteTrack ? `track-${firstIncompleteTrack.trackId}` : undefined;
+  // Determine which track to open by default:
+  // 1. If there's a current active track, open it.
+  // 2. Otherwise, open the first incomplete track.
+  // 3. Fallback to the first track.
+  const targetTrack = currentTrackId
+    ? tracks.find(t => t.trackId === currentTrackId)
+    : (tracks.find(t => t.completedChapters < t.totalChapters) || tracks[0]);
+
+  const defaultValue = targetTrack ? [`track-${targetTrack.trackId}`] : undefined;
 
   return (
-    <Accordion type="single" collapsible defaultValue={defaultValue} className="w-full space-y-4">
+    <Accordion type="multiple" defaultValue={defaultValue} className="w-full space-y-4">
       {tracks.map((track) => (
-        <TrackCard 
-          key={track.trackId} 
-          track={track} 
+        <TrackCard
+          key={track.trackId}
+          track={track}
           onChapterClick={onChapterClick}
           isCurrentTrack={currentTrackId === track.trackId}
         />

@@ -62,7 +62,7 @@ export function StudentDetailsCard({ student }: StudentDetailsCardProps) {
         {/* Expand/Collapse Icon - purely decorative, parent handles interaction */}
         <div className="p-0.5 text-foreground/60 pointer-events-none flex-shrink-0">
           <ChevronDown
-            className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? "" : "rotate-180"}`}
+            className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
           />
         </div>
       </div>

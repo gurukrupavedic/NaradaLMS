@@ -25,12 +25,12 @@ export function TrackCard({ track, onChapterClick, isCurrentTrack }: TrackCardPr
       value={`track-${track.trackId}`}
       className="border rounded-lg bg-card px-4 pb-4 pt-2 overflow-hidden"
     >
-      <AccordionTrigger className="-mx-4 px-4 py-3 hover:no-underline hover:bg-muted/30 transition-colors group items-start">
-        <div className="flex flex-col gap-2 w-full pr-2 text-left">
+      <AccordionTrigger className="-mx-4 px-4 py-2 hover:no-underline hover:bg-muted/30 transition-colors group relative">
+        <div className="w-full pr-2 text-left">
           {/* Top Row: Title & Stats */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
-              <h3 className="font-semibold text-base text-card-foreground leading-normal group-hover:text-primary transition-colors truncate">
+              <h3 className="font-medium text-sm text-card-foreground leading-normal group-hover:text-primary transition-colors truncate">
                 Track {track.trackOrder} - {track.trackTitle}
               </h3>
               {isCurrentTrack && (
@@ -45,8 +45,8 @@ export function TrackCard({ track, onChapterClick, isCurrentTrack }: TrackCardPr
             </span>
           </div>
 
-          {/* Bottom Row: Progress */}
-          <Progress value={completionPercentage} className="h-1 w-full bg-muted/60" />
+          {/* Bottom Row: Progress (Absolute) */}
+          <Progress value={completionPercentage} className="absolute bottom-0 left-0 right-0 h-1 w-full bg-muted/60 rounded-none transform translate-y-px" />
         </div>
       </AccordionTrigger>
 

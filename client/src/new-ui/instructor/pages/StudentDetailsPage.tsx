@@ -8,6 +8,7 @@ import { AlertCircle } from 'lucide-react';
 import { StudentDetailsCard } from '../components/StudentDetailsCard';
 import { TrackList } from '../components/student-progress/TrackList';
 import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
+import { Separator } from '@/components/ui/separator';
 
 export function StudentDetailsPage() {
   useRoleGuard(['instructor']);
@@ -103,6 +104,8 @@ export function StudentDetailsPage() {
     <div className="space-y-4 px-4 py-4">
       {/* Student Details Card */}
       <StudentDetailsCard student={studentDetails} />
+
+      <Separator className="my-8 h-[1px] bg-black/5 dark:bg-white/10" />
 
       {/* Track-wise Progress Section */}
       {tracksError ? (
