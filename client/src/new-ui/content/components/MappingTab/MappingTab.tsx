@@ -300,7 +300,7 @@ export function MappingTab() {
                                             </Badge>
                                             {audioFiles.length > 0 && (
                                                 <Badge variant="secondary" className="flex items-center gap-1">
-                                                    <Zap className="h-3 w-3" />
+                                                    <Zap className="h-3 w-3 text-green-600 fill-current" />
                                                     {mappedCount} mapped
                                                 </Badge>
                                             )}
@@ -357,7 +357,7 @@ export function MappingTab() {
                                             activeSegmentId={state.activeSegmentId}
                                             duration={state.duration}
                                             onSegmentClick={state.handleSegmentClick}
-                                            onPlaySegment={state.handlePlaySegment}
+                                            onPlaySegment={(mapping) => audioPlayer.playSegment(mapping.startTime, mapping.endTime)}
                                             onMappingUpdate={state.onMappingUpdate}
                                             onMappingDelete={state.onMappingDelete}
                                             onMappingCreate={state.onMappingCreate}

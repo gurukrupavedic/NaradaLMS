@@ -11,9 +11,8 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Square } from 'lucide-react';
-import { TimestampPill } from './TimestampPill';
-import { EmptyTimestampPill } from './EmptyTimestampPill';
-import { SegmentCard } from '@/new-ui/content/components/SegmentCard';
+import { TimestampControl } from '@/new-ui/content/components/TimestampControl';
+import { MappingSegmentCard } from '@/components/design-system/MappingSegmentCard';
 import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
 import { getSegmentText } from '@shared/utils/text-segmentation';
 import { cn } from '@/lib/utils';
@@ -84,8 +83,8 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
 
         {/* Scrollable Content */}
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="p-6">
-            <div className="space-y-3 min-w-[800px]">
+          <div className="p-4">
+            <div className="space-y-4 min-w-[800px]">
               {segments.map((segment, index) => {
                 const mapping = getSegmentMapping(segment.id);
                 const status = getSegmentStatus(segment.id);
@@ -101,12 +100,10 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                   <div key={segment.id} className="flex items-center gap-4 min-w-fit">
                     {/* Left: Segment card */}
                     <div className="flex-1">
-                      <SegmentCard
+                      <MappingSegmentCard
                         content={segmentText}
                         segmentNumber={index + 1}
                         status={status}
-                        script={currentScript}
-                        fontSize="28px"
                         script={currentScript}
                         fontSize="28px"
                         onClick={() => !readOnly && onSegmentClick(segment.id)}
@@ -114,38 +111,31 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                       />
                     </div>
 
-                    {/* Right: Timestamp pill */}
-                    <div className="w-32 flex-shrink-0 flex items-center justify-start">
-                      {mapping ? (
-                        <TimestampPill
-                          segmentId={segment.id}
-                          startTime={mapping.startTime}
-                          endTime={mapping.endTime}
-                          isEditing={editingSegmentId === segment.id}
-                          onPlay={(start, end) => {
-                            const fakeEvent = { stopPropagation: () => { } } as React.MouseEvent;
-                            onPlaySegment(mapping, fakeEvent);
-                          }}
-                          onDelete={(segmentId) => !readOnly && onMappingDelete(segmentId)}
-                          onTimestampUpdate={(id, m) => !readOnly && onMappingUpdate(id, m)}
-                          onEditStart={() => !readOnly && setEditingSegmentId(segment.id)}
-                          onEditCancel={() => setEditingSegmentId(null)}
-                          duration={duration}
-                          readOnly={readOnly}
-                        />
-                      ) : (
-                        <EmptyTimestampPill
-                          segmentId={segment.id}
-                          isFirstSegment={isFirstSegment}
-                          previousSegmentEndTime={previousSegmentEndTime}
-                          isEditing={editingSegmentId === segment.id}
-                          onEditStart={() => !readOnly && setEditingSegmentId(segment.id)}
-                          onEditCancel={() => setEditingSegmentId(null)}
-                          onMappingCreate={(m) => !readOnly && onMappingCreate(m)}
-                          duration={duration}
-                          readOnly={readOnly}
-                        />
-                      )}
+                    {/* Right: Timestamp Control */}
+                    <div className="flex-shrink-0">
+                      <TimestampControl
+                        segmentId={segment.id}
+                        isMapped={!!mapping}
+                        startTime={mapping?.startTime}
+                        endTime={mapping?.endTime}
+                        previousSegmentEndTime={previousSegmentEndTime}
+                        isFirstSegment={isFirstSegment}
+                        duration={duration}
+                        isEditing={editingSegmentId === segment.id}
+                        onEditStart={() => !readOnly && setEditingSegmentId(segment.id)}
+                        onEditCancel={() => setEditingSegmentId(null)}
+                        onPlay={(start, end) => {
+                          const fakeEvent = { stopPropagation: () => { } } as React.MouseEvent;
+                          // Ensure mapping is not undefined when playing
+                          if (mapping) {
+                            onPlaySegment({ ...mapping, startTime: start, endTime: end }, fakeEvent);
+                          }
+                        }}
+                        onDelete={(id) => !readOnly && onMappingDelete(id)}
+                        onUpdate={(id, updates) => !readOnly && onMappingUpdate(id, updates)}
+                        onCreate={(m) => !readOnly && onMappingCreate(m)}
+                        readOnly={readOnly}
+                      />
                     </div>
                   </div>
                 );

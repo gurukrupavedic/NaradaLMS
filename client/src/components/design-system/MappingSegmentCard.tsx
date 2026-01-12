@@ -20,6 +20,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import { LinkStatusIcon } from '@shared/components/LinkStatusIcon';
 
 const mappingSegmentCardVariants = cva(
   "relative bg-card border rounded-lg transition-all duration-200 cursor-pointer",
@@ -28,7 +29,7 @@ const mappingSegmentCardVariants = cva(
       status: {
         ready: "border-border hover:border-muted-foreground/50 hover:bg-muted/50",
         recording: "border-orange-500 bg-orange-500/10 dark:bg-orange-500/20 shadow-md animate-subtle-pulse",
-        mapped: "border-green-500 bg-green-500/10 dark:bg-green-500/20 hover:bg-green-500/20 dark:hover:bg-green-500/30"
+        mapped: "border-green-400 bg-green-400/5 dark:bg-green-400/10 hover:bg-green-400/10 dark:hover:bg-green-400/20"
       }
     },
     defaultVariants: {
@@ -95,10 +96,15 @@ const MappingSegmentCard = React.forwardRef<HTMLDivElement, MappingSegmentCardPr
         {...props}
       >
         {/* Content with #N numbering */}
-        <div className="flex items-center px-4 py-3 gap-3">
+        <div className="flex items-center px-4 py-2 gap-3">
           {/* Segment Number - Simple #N format */}
           <div className="flex-shrink-0 self-start pt-1">
-            <span className="font-mono text-sm text-muted-foreground">
+            <span className={cn(
+              "text-xs font-medium px-1.5 py-0.5 rounded",
+              status === 'mapped'
+                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+            )}>
               #{segmentNumber}
             </span>
           </div>
@@ -116,6 +122,14 @@ const MappingSegmentCard = React.forwardRef<HTMLDivElement, MappingSegmentCardPr
             >
               {content}
             </div>
+          </div>
+
+          {/* Status Icon (Subtle Zap) */}
+          <div className="flex-shrink-0 self-start pt-1.5 opacity-80">
+            <LinkStatusIcon
+              status={status === 'mapped' ? 'mapped' : 'unmapped'}
+              size="sm"
+            />
           </div>
         </div>
       </div>

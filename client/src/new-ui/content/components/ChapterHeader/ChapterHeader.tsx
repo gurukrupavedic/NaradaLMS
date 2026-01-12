@@ -79,28 +79,22 @@ export function ChapterHeader() {
                             Step 1: Content
                         </TabsTrigger>
                         <TabsTrigger
-                            value="media"
-                            className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
-                        >
-                            Step 2: Audio
-                        </TabsTrigger>
-                        <TabsTrigger
                             value="segmentation"
                             className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
                         >
-                            Step 3: Segmentation
+                            Step 2: Segmentation
                         </TabsTrigger>
                         <TabsTrigger
                             value="mapping"
                             className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
                         >
-                            Step 4: Mapping
+                            Step 3: Audio Mapping
                         </TabsTrigger>
                         <TabsTrigger
                             value="preview"
                             className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
                         >
-                            Step 5: Preview
+                            Step 4: Preview
                         </TabsTrigger>
                     </TabsList>
                 </div>

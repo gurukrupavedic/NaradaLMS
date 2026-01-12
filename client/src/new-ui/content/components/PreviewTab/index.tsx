@@ -173,7 +173,7 @@ export function PreviewTab() {
                                     {currentScriptSegments.length} segments
                                 </Badge>
                                 <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                                    <Zap className="h-3 w-3" />
+                                    <Zap className="h-3 w-3 text-green-600 fill-current" />
                                     {mappedSegments.length} mapped
                                 </Badge>
                             </div>

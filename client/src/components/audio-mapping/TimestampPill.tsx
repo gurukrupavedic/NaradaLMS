@@ -38,39 +38,62 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
   onEditCancel,
   duration
 }) => {
-  const [editValue, setEditValue] = useState<string>('');
+  const [editStartValue, setEditStartValue] = useState<string>('');
+  const [editEndValue, setEditEndValue] = useState<string>('');
   const pillRef = useRef<HTMLDivElement>(null);
 
   const parseTimeFromEdit = (timeString: string): number => {
     const parts = timeString.split(':');
     if (parts.length !== 2) return -1;
-    
+
     const mins = parseInt(parts[0]);
     const secs = parseFloat(parts[1]);
-    
+
     if (isNaN(mins) || isNaN(secs)) return -1;
-    
+
     return mins * 60 + secs;
   };
 
   const startEditingTimestamp = () => {
     onEditStart();
-    setEditValue(formatDuration(endTime, { showDecimal: true }));
+    setEditStartValue(formatDuration(startTime, { showDecimal: true }));
+    setEditEndValue(formatDuration(endTime, { showDecimal: true }));
   };
 
   const saveTimestampEdit = () => {
-    const newTime = parseTimeFromEdit(editValue);
-    if (newTime >= 0 && newTime <= duration) {
-      onTimestampUpdate(segmentId, { endTime: newTime });
+    const newStartTime = parseTimeFromEdit(editStartValue);
+    const newEndTime = parseTimeFromEdit(editEndValue);
+
+    // Validation
+    if (newEndTime < 0 || newEndTime > duration) {
+      alert('End time must be between 0 and ' + formatDuration(duration, { showDecimal: true }));
+      return;
     }
-    
+
+    if (newStartTime < 0 || newStartTime > duration) {
+      alert('Start time must be between 0 and ' + formatDuration(duration, { showDecimal: true }));
+      return;
+    }
+
+    if (newStartTime >= newEndTime) {
+      alert('Start time must be before end time');
+      return;
+    }
+
+    onTimestampUpdate(segmentId, {
+      startTime: newStartTime,
+      endTime: newEndTime
+    });
+
     onEditCancel();
-    setEditValue('');
+    setEditStartValue('');
+    setEditEndValue('');
   };
 
   const cancelTimestampEdit = () => {
     onEditCancel();
-    setEditValue('');
+    setEditStartValue('');
+    setEditEndValue('');
   };
 
   // Click-outside detection to auto-cancel edit mode
@@ -100,23 +123,35 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
   };
 
   return (
-    <div 
+    <div
       ref={pillRef}
-      className="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium w-32 h-10 shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
+      className="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium w-auto min-w-[130px] h-10 shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
     >
       {/* End timestamp display */}
       <div className="flex-1 flex items-center justify-center text-gray-700">
         {isEditing ? (
           <div className="flex items-center gap-1">
             <Input
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
+              value={editStartValue}
+              onChange={(e) => setEditStartValue(e.target.value)}
               className="h-5 w-14 text-xs bg-white border-gray-300 text-gray-700"
+              placeholder="0:00.0"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') saveTimestampEdit();
                 if (e.key === 'Escape') cancelTimestampEdit();
               }}
               autoFocus
+            />
+            <span className="text-gray-400">-</span>
+            <Input
+              value={editEndValue}
+              onChange={(e) => setEditEndValue(e.target.value)}
+              className="h-5 w-14 text-xs bg-white border-gray-300 text-gray-700"
+              placeholder="0:00.0"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveTimestampEdit();
+                if (e.key === 'Escape') cancelTimestampEdit();
+              }}
             />
             <button onClick={saveTimestampEdit} className="text-blue-600 hover:text-blue-700">
               <Check className="h-3 w-3" />
@@ -126,11 +161,11 @@ export const TimestampPill: React.FC<TimestampPillProps> = ({
             </button>
           </div>
         ) : (
-          <button 
+          <button
             onClick={startEditingTimestamp}
             className="hover:bg-gray-100 px-2 py-1 rounded transition-colors font-mono"
           >
-            {formatDuration(endTime, { showDecimal: true })}
+            {formatDuration(startTime, { showDecimal: false })} - {formatDuration(endTime, { showDecimal: true })}
           </button>
         )}
       </div>

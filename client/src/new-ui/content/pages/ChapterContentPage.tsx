@@ -9,7 +9,7 @@ import { ChapterEditorProvider, useChapterEditor } from '@/new-ui/content/contex
 import { AudioPlayerProvider } from '@/new-ui/content/context/AudioPlayerContext';
 import { ChapterHeader } from '@/new-ui/content/components/ChapterHeader';
 import { ContentTab } from '@/new-ui/content/components/ContentTab';
-import { MediaTab } from '@/new-ui/content/components/MediaTab';
+
 import { PreviewTab } from '@/new-ui/content/components/PreviewTab';
 import { SegmentationTab } from '@/new-ui/content/components/SegmentationTab';
 import { MappingTab } from '@/new-ui/content/components/MappingTab';
@@ -83,10 +83,6 @@ function ChapterContentPageContent() {
                     <AudioPlayerProvider>
                         <TabsContent value="content" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
                             <ContentTab />
-                        </TabsContent>
-
-                        <TabsContent value="media" className="flex-1 overflow-auto h-full m-0 p-4">
-                            <MediaTab />
                         </TabsContent>
 
                         <TabsContent value="segmentation" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">

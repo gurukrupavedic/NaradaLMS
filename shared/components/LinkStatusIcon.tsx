@@ -19,14 +19,14 @@ const sizeClasses = {
   md: 'h-4 w-4'
 };
 
-export const LinkStatusIcon: React.FC<LinkStatusIconProps> = ({ 
-  status, 
-  size = 'md', 
-  className = '' 
+export const LinkStatusIcon: React.FC<LinkStatusIconProps> = ({
+  status,
+  size = 'md',
+  className = ''
 }) => {
   return (
-    <Zap 
-      className={`${status === 'mapped' ? 'text-green-600' : 'text-gray-400 opacity-60'} ${sizeClasses[size]} ${className}`} 
+    <Zap
+      className={`${status === 'mapped' ? 'text-green-600 fill-current' : 'text-gray-400 opacity-60'} ${sizeClasses[size]} ${className}`}
     />
   );
 };
