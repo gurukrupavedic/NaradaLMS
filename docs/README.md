@@ -37,8 +37,9 @@ docs/
 
 | Document | Description |
 |----------|-------------|
-| [implementation/ChapterContentPage-Phased-Development-Plan.md](./implementation/ChapterContentPage-Phased-Development-Plan.md) | **⭐ Chapter Content Page** - Master phased plan (Phases 1-6 ✅, Phase 7 🎯 Active) |
-| [implementation/mvp-implementation-plan.md](./implementation/mvp-implementation-plan.md) | MVP Phase 5 Status - Content Studio implementation |
+| [implementation/ChapterContentPage-Phased-Development-Plan.md](./implementation/ChapterContentPage-Phased-Development-Plan.md) | **Chapter Content Page** - Phases 1-7 ✅ Complete (tab refinements, dark mode, read-only UX) |
+| **New UI Architecture** | **🎯 Active Milestone** - Modern AppShell with role-based organization, dark mode support |
+| [implementation/mvp-implementation-plan.md](./implementation/mvp-implementation-plan.md) | MVP 1.0 - Target: Mid-March 2026 |
 | [todo/todo-backend.md](./todo/todo-backend.md) | Backend hardening, cleanup, and enhancements (14 items) |
 | [todo/todo-frontend.md](./todo/todo-frontend.md) | Frontend cleanup and UX improvements (7 items) |
 | [todo/todo-common.md](./todo/todo-common.md) | Testing, security, infrastructure, and monitoring (14 items) |
@@ -93,6 +94,8 @@ VedicLMS completed a comprehensive modular refactoring initiative, transforming 
 
 | Date | Change |
 |------|--------|
+| Jan 13, 2026 | New UI architecture introduced (AppShell, role-based pages, dark mode) |
+| Jan 2026 | Chapter Content Page refinements (tab renaming, dark mode fixes, standardized read-only UX) |
 | Dec 18, 2025 | Archived modular refactoring docs (2025 initiative complete); updated structure |
 | Dec 18, 2025 | Reorganized TODO folder with metadata-driven backlog (Backend/Frontend/Common) |
 | Dec 16, 2025 | Split PRD.md and ARCHITECTURE.md into separate documents |
@@ -102,4 +105,19 @@ VedicLMS completed a comprehensive modular refactoring initiative, transforming 
 
 ---
 
-**Last Updated:** December 16, 2025
+## Current Development Focus
+
+**Primary Milestone:** Migration to New UI Architecture
+- Transitioning from feature-based structure to role-based AppShell pattern
+- Building modern, accessible interface with dark mode support
+- Target: Complete migration before MVP 1.0 (Mid-March 2026)
+
+**Recent Achievements:**
+- ✅ New UI foundation with AppShell, sidebar navigation, theming
+- ✅ Content Studio migrated (ChapterContentPage with enhanced UX)
+- ✅ Dark mode implementation across all tabs
+- ✅ Admin, Instructor, and Student page structure
+
+---
+
+**Last Updated:** January 13, 2026

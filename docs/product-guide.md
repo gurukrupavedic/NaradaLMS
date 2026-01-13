@@ -1,8 +1,8 @@
 # VedicLMS Product Guide
 
 **Version:** 2.0  
-**Last Updated:** December 18, 2025  
-**Status:** Production - Modular Architecture Implemented
+**Last Updated:** January 13, 2026  
+**Status:** Production - Modular Architecture + New UI
 
 > This is the single source of truth for understanding VedicLMS: what we're building, why we built it this way, and how it works. Feed this to any LLM to get complete product context.
 
@@ -95,6 +95,7 @@ VedicLMS is a full-stack web application with three integrated subsystems:
 | **Progress Tracking** | 5-level proficiency scale with instructor evaluation |
 | **Batch Management** | Cohort-based learning with primary + co-instructors |
 | **User Management** | Multi-role system (student, instructor, content_manager, admin) with approval workflow |
+| **Modern UI Shell** | Role-based AppShell with sidebar navigation, dark mode, responsive layout |
 | **Design System** | 26 custom components with 12-color variant system |
 
 ### 2.3 Value Proposition
@@ -138,12 +139,11 @@ VedicLMS is a full-stack web application with three integrated subsystems:
    ↓
 2. Create Chapter within Track (/manage/tracks/:trackId)
    ↓
-3. Edit Chapter Content (/manage/tracks/:trackId/chapters/:chapterId)
-   ├─ Tab 1: Write content in 3 scripts using rich text editor
-   ├─ Tab 2: Upload audio files
-   ├─ Tab 3: Create text segments by selecting text
-   ├─ Tab 4: Map segments to audio timestamps (progressive mapper)
-   └─ Tab 5: Preview learning experience
+3. Edit Chapter Content (/app/content/tracks/:trackId/chapters/:chapterId)
+   ├─ Tab 1: Content - Write content in 3 scripts using rich text editor
+   ├─ Tab 2: Segmentation - Create text segments by selecting text
+   ├─ Tab 3: Audio & Mapping - Upload audio files and map to timestamps (progressive mapper)
+   └─ Tab 4: Preview - Preview learning experience
    ↓
 4. Publish Chapter (status: draft → published)
    ↓
@@ -837,7 +837,7 @@ client/src/
 
 ## 7. Current State & Roadmap
 
-### 7.1 What's Implemented (December 18, 2025)
+### 7.1 What's Implemented (January 13, 2026)
 
 **✅ Core Features:**
 - [x] User registration & approval workflow
@@ -846,15 +846,20 @@ client/src/
 - [x] Rich text editor with 3-script support
 - [x] Audio file upload with metadata extraction
 - [x] Text segmentation with sticky note aesthetic
-- [x] Progressive audio-text mapping
+- [x] Progressive audio-text mapping (combined Audio & Mapping tab)
 - [x] Dual learning modes (interactive segments + article view)
 - [x] Batch management with enrollments
 - [x] Co-instructor assignment
 - [x] Student progress tracking (5-level proficiency)
+- [x] Modern UI shell with sidebar navigation
+- [x] Dark mode support (light / dark / system)
+- [x] Role-based page organization
 - [x] Design system (26 components, 12 colors)
 
 **✅ Architecture:**
 - [x] Modular monolith (6 domain modules)
+- [x] Dual UI architecture (New UI + Legacy)
+- [x] AppShell pattern with theming
 - [x] TypeScript clean compile
 - [x] Drizzle ORM with PostgreSQL
 - [x] TanStack Query for state management
@@ -924,11 +929,12 @@ client/src/
 ### 7.4 Future Enhancements
 
 **Near-Term (Next 3-6 months):**
-1. **Student Dashboard:** Dedicated student view with progress visualization
-2. **Instructor Dashboard:** Batch roster, progress overview, evaluation tools
-3. **Admin Dashboard:** System health, user analytics, audit log browser
-4. **Mobile Responsive:** Touch-friendly segmentation, audio controls
-5. **Track Gating:** Auto-unlock next track based on proficiency
+1. **Complete New UI Migration:** Finish migrating all pages from legacy to new-ui architecture
+2. **Student Dashboard:** Dedicated student view with progress visualization
+3. **Instructor Dashboard:** Batch roster, progress overview, evaluation tools
+4. **Admin Dashboard:** System health, user analytics, audit log browser
+5. **Mobile Responsive:** Continue enhancing touch-friendly controls (in progress)
+6. **Track Gating:** Auto-unlock next track based on proficiency
 
 **Medium-Term (6-12 months):**
 1. **Waveform Visualization:** Visual audio timeline for mapping
@@ -989,5 +995,5 @@ client/src/
 - Keep "Current State" section accurate
 - Archive outdated sections to `/docs/archive/`
 
-**Last Updated:** December 18, 2025  
-**Next Review:** January 2026
+**Last Updated:** January 13, 2026  
+**Next Review:** February 2026

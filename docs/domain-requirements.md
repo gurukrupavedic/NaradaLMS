@@ -125,6 +125,13 @@
 - Selected segments: indigo-200 background
 - Script-specific segmentation (separate segments per script)
 
+✅ **Modern Content Studio UI**
+- AppShell-based Chapter Content Page with dark mode
+- 4-tab workflow (Content, Segmentation, Audio & Mapping, Preview)
+- Standardized read-only UX for published chapters (disabled controls, no overlays)
+- Combined Audio & Mapping tab for streamlined workflow
+- Improved segment mapping grid with visual status indicators
+
 ### Gaps & Future Improvements
 
 - [ ] **Published Chapter Protection:** Prevent deletion of published chapters (item 4 in TODO-Backend)
@@ -625,5 +632,5 @@ Scenario 3: Track Restructuring (Future-Proof)
 
 ---
 
-**Last Updated:** December 18, 2025  
+**Last Updated:** January 13, 2026  
 **Status:** Living document - updated as workflows evolve

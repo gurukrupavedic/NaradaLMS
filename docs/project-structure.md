@@ -47,7 +47,7 @@ client/src/
 │   ├── dark-theme-showcase.html
 │   └── docs/
 │
-├── features/                  # Feature-based modules (primary organization)
+├── features/                  # Feature-based modules (LEGACY - maintenance mode)
 │   ├── learning/              # Student learning experiences
 │   │   ├── pages/
 │   │   │   ├── LearnTracks.tsx       # Track selection page
@@ -68,7 +68,7 @@ client/src/
 │   │   ├── pages/
 │   │   │   ├── ManageTracks.tsx       # Track CRUD and ordering
 │   │   │   ├── ManageChapters.tsx     # Chapter list and management
-│   │   │   └── EditChapter.tsx        # 5-tab chapter editor
+│   │   │   └── EditChapter.tsx        # (legacy - see new-ui/content)
 │   │   ├── components/
 │   │   └── hooks/
 │   │
@@ -105,6 +105,30 @@ client/src/
 │           ├── use-mobile.tsx
 │           ├── useNetworkStatus.ts
 │           └── usePerformanceMonitor.ts
+│
+├── new-ui/                    # NEW UI - Role-based architecture (ACTIVE)
+│   ├── AppShell.tsx           # Main shell with sidebar, header, theming
+│   ├── admin/                 # Admin-specific pages and components
+│   │   ├── pages/
+│   │   ├── components/
+│   │   └── hooks/
+│   ├── instructor/            # Instructor-specific pages
+│   │   ├── pages/
+│   │   ├── components/
+│   │   └── hooks/
+│   ├── student/               # Student learning pages
+│   │   ├── pages/
+│   │   └── hooks/
+│   ├── content/               # Content management (Content Studio)
+│   │   ├── pages/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── hooks/
+│   │   └── utils/
+│   ├── batches/               # Shared batch components
+│   ├── components/            # Shared new-ui components
+│   ├── hooks/                 # New UI hooks (useRoleGuard, etc.)
+│   └── lib/                   # New UI utilities
 │
 ├── legacy/                    # Deprecated experiment pages (11 files)
 │   └── *Experiment.tsx        # Old prototype and experimental pages
@@ -192,17 +216,42 @@ Located in `client/src/components/ui/`, these are shadcn/ui components:
 - Form controls, sidebar components
 - Styling via Tailwind CSS
 
-### Chapter Editor
+### Chapter Editor (Content Studio)
 
-The `components/chapter-editor/` folder contains the 5-tab interface for editing chapters:
+The `new-ui/content/pages/ChapterContentPage.tsx` contains the modern 4-tab interface for editing chapters:
 
-1. **ContentTab** - HTML editor with WYSIWYG (TipTap)
-2. **AudioMappingTab** - Audio upload and playback
-3. **SegmentationTab** - Text selection and segmentation
-4. **AudioMappingTab** - Timestamp alignment
-5. **PreviewTab** - Live learning mode preview
+1. **Content Tab** - Rich text editor (TipTap WYSIWYG)
+   - Three-script editing (Telugu, Devanagari, IAST)
+   - Custom font support (JIMS, AdishilaSanVedic)
+   - Reversed Enter behavior for verse formatting
+   - HTML/Text mode toggle
 
-Each tab is a separate component with shared context via `ChapterEditorContext`.
+2. **Segmentation Tab** - Text selection and segmentation
+   - Click-drag to create segments
+   - Script-specific segmentation
+   - Sticky note aesthetic (amber-50/100)
+   - Segment reordering with drag-and-drop
+
+3. **Audio & Mapping Tab** - Combined audio upload and timestamp mapping
+   - Audio file upload and management
+   - Progressive mapper workflow (click-when-heard)
+   - Segment-to-audio timestamp linking
+   - Visual feedback (idle → recording → mapped)
+
+4. **Preview Tab** - Live learning mode preview
+   - Interactive segment playback
+   - Learn Mode toggle
+   - Simulates student experience
+
+**Design Philosophy:**
+- **Dark mode support:** All tabs fully compatible with light/dark themes
+- **Read-only for published:** Disabled controls with cursor-not-allowed when chapter is published
+- **No blocking overlays:** Users can still navigate tabs and view content when published
+- **Standardized UX:** Consistent interaction patterns across all tabs
+
+**Legacy:** Old implementation preserved at `ChapterContentPage.legacy.tsx` for reference.
+
+Each tab is a separate component with shared context via `ChapterContentContext`.
 
 ### Text Segmentation
 
@@ -391,6 +440,33 @@ const chapter = await storage.chapters.get(chapterId);
 
 ### Adding a New Page
 
+**For New UI (Preferred):**
+
+1. **Determine role context:** admin, instructor, student, or content
+2. **Create page file:**
+   ```
+   client/src/new-ui/{role}/pages/NewPage.tsx
+   ```
+3. **Implement with AppShell context:**
+   ```typescript
+   import { useRoleGuard } from '@/new-ui/hooks/useRoleGuard';
+   
+   export function NewPage() {
+     const isAuthorized = useRoleGuard(['required_role']);
+     if (!isAuthorized) return null;
+     
+     return (
+       <div className="container mx-auto py-6">
+         {/* Page content */}
+       </div>
+     );
+   }
+   ```
+4. **Route automatically handled:** AppShell manages routing via pattern matching
+5. **Add to sidebar:** Update `AppShell.tsx` navigation menu if needed
+
+**For Legacy UI (Maintenance Only):**
+
 1. Create file in appropriate feature: `client/src/features/feature-name/pages/NewPage.tsx`
 2. Export the component as named export
 3. Add lazy import in `client/src/App.tsx`:
@@ -511,30 +587,7 @@ All imports have been updated. The old `pages/` and `hooks/` directories are emp
   - Is it shared? Put in `features/shared-features/hooks/`
   - If it's a data hook, use TanStack Query patterns
 
-- **Modify the database schema**
-  - Edit `shared/schema.ts`
-  - Update types in `shared/types.ts`
-  - Add/update methods in `server/database-storage.ts`
-  - Run `npm run db:push`
-
-- **Create a utility or test script**
-  - Never create standalone scripts in root folder
-  - Organize in `scripts/` folder by purpose:
-    - Database utilities → `scripts/db/` (e.g., reset-db.ts)
-    - Data seeding → `scripts/seed/` (e.g., create-sample-users.ts)
-    - Testing → `scripts/test/` (e.g., auth-test.ts, smoke tests)
-    - One-off utilities → `scripts/utils/` (e.g., list-users.ts)
-  - Run with `npx tsx scripts/folder/script-name.ts`
-  - Delete temporary scripts after use
-
-- **Add an API endpoint**
-  - Create in appropriate module's routes.ts
-  - Use storage layer for database
-  - Add authentication if needed
-  - Document in OpenAPI schema
-
----
-
-**Last Updated**: December 19, 2025  
+**Last Updated**: January 13, 2026  
 **Project**: VedicLMS  
-**Version**: Feature-based organization (Phase 3 complete)
+**Version**: Dual UI Architecture (New UI + Legacy)  
+**Target**: Complete migration to New UI before MVP 1.0 (Mid-March 2026)
