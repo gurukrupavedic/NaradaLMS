@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/features/shared-features/hooks/use-toast';
 import { useChapterEditor } from '@/new-ui/content/context/ChapterEditorContext';
-import { useTextSegmentation } from '@/features/learning/hooks/useTextSegmentation';
+import { useTextSegmentation } from './useTextSegmentation';
 
 interface TextSegment {
     id: number;

@@ -26,7 +26,7 @@ import {
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
-import { Badge } from "@/components/design-system/Badge";
+import { Badge } from "@/components/ui/badge";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
 
