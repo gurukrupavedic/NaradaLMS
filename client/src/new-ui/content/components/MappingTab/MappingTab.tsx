@@ -10,11 +10,11 @@ import {
 } from '@/components/ui/resizable';
 import { StretchHorizontal, Zap, RotateCcw } from 'lucide-react';
 import { AudioFileManager } from '@/new-ui/content/components/AudioFileManager';
-import { ProgressiveMapper } from '@/components/audio-mapping/ProgressiveMapper';
-import { SegmentMappingGrid } from '@/components/audio-mapping/SegmentMappingGrid';
-import { FocusMappingView } from '@/components/audio-mapping/FocusMappingView';
+import { ProgressiveMapper } from './ProgressiveMapper';
+import { SegmentMappingGrid } from './SegmentMappingGrid';
+import { FocusMappingView } from './FocusMappingView';
 import { SegmentCard } from '@/new-ui/content/components/SegmentCard';
-import { FocusSessionSetup, SessionConfig } from '@/components/audio-mapping/FocusSessionSetup';
+import { FocusSessionSetup, SessionConfig } from './FocusSessionSetup';
 import { useChapterEditor } from '@/new-ui/content/context/ChapterEditorContext';
 import { useAudioPlayer } from '@/new-ui/content/context/AudioPlayerContext';
 import { useAudioManagement } from '@/new-ui/content/hooks/useAudioManagement';
@@ -320,53 +320,24 @@ export function MappingTab() {
                                 </div>
 
                                 <div className="flex-1 min-h-0 bg-muted/30">
-                                    {audioFiles.length === 0 ? (
-                                        // Read-only view when no audio files
-                                        <div className="h-full overflow-auto p-6">
-                                            {currentScriptSegments.length === 0 ? (
-                                                <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground">
-                                                    <List className="w-12 h-12 mb-4 opacity-20" />
-                                                    <p className="text-sm">No segments for {selectedScript.toUpperCase()}</p>
-                                                    <p className="text-xs mt-1">Create segments in the Segmentation tab</p>
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-3">
-                                                    {currentScriptSegments.map((segment, index) => {
-                                                        const segmentText = getSegmentText(segment, chapter?.content || {}, selectedScript);
-                                                        return (
-                                                            <SegmentCard
-                                                                key={segment.id}
-                                                                content={segmentText}
-                                                                segmentNumber={index + 1}
-                                                                status="ready"
-                                                                script={selectedScript}
-                                                            />
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        // Interactive Grid
-                                        <SegmentMappingGrid
-                                            segments={state.segments}
-                                            currentScript={state.currentScript}
-                                            content={state.content}
-                                            mappings={state.mappings}
-                                            mappingSession={state.mappingSession}
-                                            activeSegmentId={state.activeSegmentId}
-                                            duration={state.duration}
-                                            onSegmentClick={state.handleSegmentClick}
-                                            onPlaySegment={(mapping) => audioPlayer.playSegment(mapping.startTime, mapping.endTime)}
-                                            onMappingUpdate={state.onMappingUpdate}
-                                            onMappingDelete={state.onMappingDelete}
-                                            onMappingCreate={state.onMappingCreate}
-                                            onEndSession={state.stopMappingSession}
-                                            hideHeader={true}
-                                            readOnly={isPublished}
-                                            className="border-0 shadow-none rounded-none bg-transparent"
-                                        />
-                                    )}
+                                    <SegmentMappingGrid
+                                        segments={state.segments}
+                                        currentScript={state.currentScript}
+                                        content={state.content}
+                                        mappings={state.mappings}
+                                        mappingSession={state.mappingSession}
+                                        activeSegmentId={state.activeSegmentId}
+                                        duration={state.duration}
+                                        onSegmentClick={state.handleSegmentClick}
+                                        onPlaySegment={(mapping) => audioPlayer.playSegment(mapping.startTime, mapping.endTime)}
+                                        onMappingUpdate={state.onMappingUpdate}
+                                        onMappingDelete={state.onMappingDelete}
+                                        onMappingCreate={state.onMappingCreate}
+                                        onEndSession={state.stopMappingSession}
+                                        hideHeader={true}
+                                        readOnly={isPublished}
+                                        className="border-0 shadow-none rounded-none bg-transparent"
+                                    />
                                 </div>
                             </ResizablePanel>
 

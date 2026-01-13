@@ -9,10 +9,8 @@
  */
 
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { MappingWarningDialog } from '@/components/ui/mapping-warning-dialog';
 import { useMappingControls } from '@shared/hooks/useMappingControls';
-import { useAudioPlayer } from '@shared/hooks/useAudioPlayer';
 import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
 
 export interface MappingState {
@@ -64,7 +62,6 @@ interface ProgressiveMapperProps {
   isPlaying: boolean;    // Audio player playing state from shared context
   togglePlayPause: () => void; // Audio player toggle function
   onMappingCreate: (mapping: AudioMapping) => void;
-  onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
   onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
   onMappingDelete: (segmentId: number) => void;
   readOnly?: boolean;
