@@ -12,7 +12,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Square } from 'lucide-react';
 import { TimestampControl } from '@/new-ui/content/components/TimestampControl';
-import { MappingSegmentCard } from '@/components/design-system/MappingSegmentCard';
+import { SegmentCard } from '@/new-ui/content/components/SegmentCard';
 import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
 import { getSegmentText } from '@shared/utils/text-segmentation';
 import { cn } from '@/lib/utils';
@@ -100,7 +100,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                   <div key={segment.id} className="flex items-center gap-4 min-w-fit">
                     {/* Left: Segment card */}
                     <div className="flex-1">
-                      <MappingSegmentCard
+                      <SegmentCard
                         content={segmentText}
                         segmentNumber={index + 1}
                         status={status}
@@ -108,6 +108,8 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                         fontSize="28px"
                         onClick={() => !readOnly && onSegmentClick(segment.id)}
                         className={readOnly ? 'opacity-70' : ''}
+                        badgeNumber
+                        showStatusIcon
                       />
                     </div>
 

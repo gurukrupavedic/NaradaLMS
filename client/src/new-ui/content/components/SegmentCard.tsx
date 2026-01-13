@@ -1,18 +1,22 @@
 /**
  * Segment Card Component - New UI
  * 
- * Simple, reusable segment card for mapping and segmentation workflows.
+ * Unified segment card for mapping and segmentation workflows.
  * Built with shadcn Card component for consistency with new-ui design system.
  * 
  * Features:
  * - Status-based border styling (ready, recording, mapped)
  * - Script-aware font rendering (Telugu/JIMS, Hindi/Adishila, English)
- * - Simple #N numbering format
+ * - Optional badge-style numbering with status-aware colors
+ * - Optional status icon (LinkStatusIcon) for mapping workflows
  * - Click handler support
+ * 
+ * Replaces legacy MappingSegmentCard from design-system.
  */
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { LinkStatusIcon } from "@shared/components/LinkStatusIcon";
 import type { Script } from "@shared/types/text-segmentation";
 
 interface SegmentCardProps {
@@ -23,6 +27,10 @@ interface SegmentCardProps {
     fontSize?: string;
     onClick?: () => void;
     className?: string;
+    /** Show colored badge-style number instead of simple #N */
+    badgeNumber?: boolean;
+    /** Show status icon (zap) on the right side */
+    showStatusIcon?: boolean;
 }
 
 // Get font family based on script
@@ -48,7 +56,9 @@ export function SegmentCard({
     status = 'ready',
     fontSize = '30px',
     onClick,
-    className
+    className,
+    badgeNumber = false,
+    showStatusIcon = false,
 }: SegmentCardProps) {
     const fontFamily = getFontFamily(script);
 
@@ -65,10 +75,21 @@ export function SegmentCard({
         >
             <div className="flex items-center px-4 py-2 gap-3">
                 {/* Segment Number */}
-                <div className="flex-shrink-0">
-                    <span className="font-mono text-sm text-muted-foreground">
-                        #{segmentNumber}
-                    </span>
+                <div className="flex-shrink-0 self-start pt-1">
+                    {badgeNumber ? (
+                        <span className={cn(
+                            "text-xs font-medium px-1.5 py-0.5 rounded",
+                            status === 'mapped'
+                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                        )}>
+                            #{segmentNumber}
+                        </span>
+                    ) : (
+                        <span className="font-mono text-sm text-muted-foreground">
+                            #{segmentNumber}
+                        </span>
+                    )}
                 </div>
 
                 {/* Text Content */}
@@ -84,6 +105,16 @@ export function SegmentCard({
                         {content}
                     </div>
                 </div>
+
+                {/* Status Icon */}
+                {showStatusIcon && (
+                    <div className="flex-shrink-0 self-start pt-1.5 opacity-80">
+                        <LinkStatusIcon
+                            status={status === 'mapped' ? 'mapped' : 'unmapped'}
+                            size="sm"
+                        />
+                    </div>
+                )}
             </div>
         </Card>
     );
