@@ -1,7 +1,0 @@
-
-> rest-express@1.0.0 build
-> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist 2\u003e\u00261
-
-[36mvite v5.4.14 [32mbuilding for production...[36m[39m
-transforming...
-[32m✓[39m 122 modules transformed.

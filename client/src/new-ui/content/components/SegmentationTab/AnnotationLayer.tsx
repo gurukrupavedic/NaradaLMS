@@ -15,8 +15,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, X } from 'lucide-react';
 import type { TextSegment, Script, ContentMap, TextRange } from '@shared/types/text-segmentation';
 import { getDisplayText, normalizeLineBreaks } from '@shared/utils/text-segmentation';
-import { ScriptSelector } from "@/components/common/ScriptSelector";
-import { SegmentedTextDisplay } from './SegmentedTextDisplay';
+import { ScriptSelector } from "@/new-ui/components/ScriptSelector";
+import { SegmentedTextDisplay } from '@/new-ui/components/SegmentedTextDisplay';
 
 const getScriptLabel = (script: Script): string => {
   switch (script) {
@@ -64,21 +64,21 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   // Calculate actual selection position using DOM Range API (works with repeated text)
   const getTextPosition = (selection: Selection, container: HTMLElement): { start: number, end: number } | null => {
     if (!selection.rangeCount) return null;
-    
+
     const range = selection.getRangeAt(0);
-    
+
     // Create a range from start of container to start of selection
     const preSelectionRange = document.createRange();
     preSelectionRange.selectNodeContents(container);
     preSelectionRange.setEnd(range.startContainer, range.startOffset);
     const startPosition = preSelectionRange.toString().length;
-    
+
     // Create a range from start of container to end of selection
     const fullRange = document.createRange();
     fullRange.selectNodeContents(container);
     fullRange.setEnd(range.endContainer, range.endOffset);
     const endPosition = fullRange.toString().length;
-    
+
     return {
       start: startPosition,
       end: endPosition
@@ -97,7 +97,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      
+
       // Don't hide if clicking on the floating toolbar itself
       const toolbarElement = document.querySelector('[data-floating-toolbar]');
       if (toolbarElement && toolbarElement.contains(target)) {
@@ -136,22 +136,22 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
       return;
     }
 
-    console.log('Selection detected:', { 
-      selectedText: selectedText.substring(0, 50) + '...', 
+    console.log('Selection detected:', {
+      selectedText: selectedText.substring(0, 50) + '...',
       length: selectedText.length,
       isMultiLine: selectedText.includes('\n')
     });
 
     // Calculate actual position using DOM Range API (works with repeated text)
     const range = getTextPosition(selection, textRef.current);
-    
+
     if (range && range.start >= 0 && range.end > range.start) {
       console.log('Position calculated from DOM:', range.start, 'to', range.end);
       setSelectedRange(range);
       setShowFloatingToolbar(true);
       return;
     }
-    
+
     console.warn('Could not calculate position from selection');
   }, []);
 
@@ -188,7 +188,7 @@ export const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
           </div>
 
           {/* Scrollable Content Wrapper */}
-          <div 
+          <div
             ref={scrollContainerRef}
             className="flex-1 min-h-0 overflow-y-auto"
           >
@@ -245,13 +245,13 @@ const FloatingSelectionToolbar: React.FC<{
 
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      
+
       if (rect.width === 0 && rect.height === 0) return;
 
       // Position toolbar above the selection
       const toolbarHeight = 40;
       const offset = 8;
-      
+
       let top = rect.top - toolbarHeight - offset;
       let left = rect.left + (rect.width / 2);
 
@@ -273,7 +273,7 @@ const FloatingSelectionToolbar: React.FC<{
 
     updatePosition();
     window.addEventListener('resize', updatePosition);
-    
+
     // Listen to scroll events from the scroll container instead of window
     const scrollContainer = scrollContainerRef.current;
     if (scrollContainer) {
@@ -307,7 +307,7 @@ const FloatingSelectionToolbar: React.FC<{
       >
         <Plus className="h-4 w-4" />
       </Button>
-      
+
       <Button
         size="sm"
         variant="ghost"

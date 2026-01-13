@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Music, FileText, StretchHorizontal, Zap, Clock3, Info } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading";
 
-import { SegmentedTextDisplay } from "@/components/text-segmentation/SegmentedTextDisplay";
+import { SegmentedTextDisplay } from "@/new-ui/components/SegmentedTextDisplay";
 import { getProficiencyLabel } from "@/new-ui/batches/utils/matrix-utils";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

@@ -96,7 +96,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useCallback, useEffect, useState, useReducer } from 'react'
-import { Tabs, TabsList, TabsTrigger } from '@/components/design-system/Tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs'
 import { htmlToPlainText } from '@shared/utils/text-segmentation'
 
 // Text marker functionality removed temporarily to fix editor issues

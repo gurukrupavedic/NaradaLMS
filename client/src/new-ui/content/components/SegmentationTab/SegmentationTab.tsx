@@ -25,7 +25,7 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { AnnotationLayer } from '@/components/text-segmentation/AnnotationLayer';
+import { AnnotationLayer } from './AnnotationLayer';
 import { useChapterEditor } from '@/new-ui/content/context/ChapterEditorContext';
 import { useTextSegmentationEditor } from '@/new-ui/content/hooks/useTextSegmentationEditor';
 import { useLocalStorage } from '@/new-ui/content/hooks/useLocalStorage';

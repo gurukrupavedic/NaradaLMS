@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Music, FileText, StretchHorizontal, Zap } from "lucide-react";
 
-import { SegmentedTextDisplay } from "@/components/text-segmentation/SegmentedTextDisplay";
+import { SegmentedTextDisplay } from "@/new-ui/components/SegmentedTextDisplay";
 import { AudioPlayerControls } from "@/new-ui/components/AudioPlayerControls";
 import { useChapterEditor } from "../../context/ChapterEditorContext";
 import { useAudioPlayer } from "../../context/AudioPlayerContext";

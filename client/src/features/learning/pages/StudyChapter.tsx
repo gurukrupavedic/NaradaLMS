@@ -7,9 +7,9 @@ import { Switch } from "@/components/design-system/Switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Music, FileText, List, Zap } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { ScriptSelector } from "@/components/common/ScriptSelector";
+import { ScriptSelector } from "@/new-ui/components/ScriptSelector";
 import { AudioControls } from "@/components/design-system/AudioControls";
-import { SegmentedTextDisplay } from "@/components/text-segmentation/SegmentedTextDisplay";
+import { SegmentedTextDisplay } from "@/new-ui/components/SegmentedTextDisplay";
 
 interface ChapterData {
   id: number;
@@ -168,7 +168,7 @@ export function StudyChapter() {
     setSelectedSegmentId(segmentId);
 
     // Priority: selected audio file first, then fallback to any other mapping
-    const mapping = mappings.find((m) => 
+    const mapping = mappings.find((m) =>
       m.textSegmentId === segmentId && m.audioFileId === selectedAudioFileId
     ) || mappings.find((m) => m.textSegmentId === segmentId);
 
@@ -391,13 +391,12 @@ export function StudyChapter() {
                 />
               ) : (
                 <div
-                  className={`prose max-w-none ${
-                    contentScript === "te"
-                      ? "font-telugu"
-                      : contentScript === "hi"
+                  className={`prose max-w-none ${contentScript === "te"
+                    ? "font-telugu"
+                    : contentScript === "hi"
                       ? "font-devanagari"
                       : "font-iast"
-                  }`}
+                    }`}
                   style={{ lineHeight: "1.6" }}
                   dangerouslySetInnerHTML={{ __html: chapterContent[contentScript] || "" }}
                   data-testid="html-content-view"

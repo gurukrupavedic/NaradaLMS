@@ -52,13 +52,13 @@ import {
   Timer, Ruler, Type, Settings, List, Zap,
 } from "@/lib/icons";
 import { useLocation } from "wouter";
-import { ScriptSelector } from "@/components/common/ScriptSelector";
-import { AnnotationLayer } from "@/components/text-segmentation/AnnotationLayer";
+import { ScriptSelector } from "@/new-ui/components/ScriptSelector";
+import { AnnotationLayer } from "@/new-ui/content/components/SegmentationTab/AnnotationLayer";
 import { SegmentPanel } from "@/components/text-segmentation/SegmentPanel";
-import { SegmentedTextDisplay } from "@/components/text-segmentation/SegmentedTextDisplay";
-import { ProgressiveMapper } from "@/components/audio-mapping/ProgressiveMapper";
+import { SegmentedTextDisplay } from "@/new-ui/components/SegmentedTextDisplay";
+import { ProgressiveMapper } from "@/new-ui/content/components/MappingTab/ProgressiveMapper";
 import { AudioPlayerPanel } from "@/components/audio-mapping/AudioPlayerPanel";
-import { SegmentMappingGrid } from "@/components/audio-mapping/SegmentMappingGrid";
+import { SegmentMappingGrid } from "@/new-ui/content/components/MappingTab/SegmentMappingGrid";
 import { ConnectedCirclesIcon } from "@shared/components/icons";
 import { LinkStatusIcon } from "@shared/components/LinkStatusIcon";
 import { getMappingStatus } from "@shared/utils/mapping-status";
@@ -121,13 +121,13 @@ export function EditChapter() {
 
   // Phase 4A: Hook Integration (Feature Flag) - Set to false to preserve original functionality
   const USE_EXTRACTED_HOOKS = false; // Toggle to test hooks
-  
+
   // Phase 4B: Component Integration (Feature Flag) - Set to true to test tab components
   const USE_EXTRACTED_COMPONENTS = true; // Toggle to test components
-  
+
   // Phase 4C: Context Integration (Feature Flag) - Set to true to test context providers
   const USE_CONTEXT_INTEGRATION = true; // Toggle to test context
-  
+
   // Phase 5: Performance Optimization (Feature Flag) - Set to true to enable optimizations
   const USE_PERFORMANCE_OPTIMIZATIONS = true; // Toggle to test performance improvements
 
@@ -143,7 +143,7 @@ export function EditChapter() {
   const segmentDataHook = USE_EXTRACTED_HOOKS ? useSegmentData(chapterId, chapterDataHook?.contentScript || "te") : null;
   const textSegmentationHook = USE_EXTRACTED_HOOKS ? useTextSegmentation() : null;
 
-// Safe time formatting function
+  // Safe time formatting function
   const formatTime = (seconds: number): string => {
     if (!seconds || seconds < 0 || !isFinite(seconds)) return "0:00";
     const minutes = Math.floor(seconds / 60);
@@ -248,7 +248,7 @@ export function EditChapter() {
 
   // Content editor script state (moved here to be available for queries)
   const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
-  
+
   // Auto-save status state: dirty = unsaved changes, saving = in progress, saved = just saved, clean = no changes
   const [saveStatus, setSaveStatus] = useState<'clean' | 'dirty' | 'saving' | 'saved'>('clean');
 
@@ -320,7 +320,7 @@ export function EditChapter() {
 
   // Active tab state for proper tab management
   const [activeTab, setActiveTab] = useState<string>("content");
-  
+
   // Preview tab state variables
   const [selectedTextSegmentPreview, setSelectedTextSegmentPreview] = useState<number | undefined>(undefined);
   const [previewAudioRef] = useState<HTMLAudioElement>(() => new Audio());
@@ -459,7 +459,7 @@ export function EditChapter() {
   // Handle publish with force-save if there are unsaved changes
   const handlePublishToggle = () => {
     const newStatus = activeChapter?.status === "published" ? "draft" : "published";
-    
+
     // If publishing and there are unsaved changes, save first
     if (newStatus === "published" && saveStatus === 'dirty' && activeChapter?.content) {
       setSaveStatus('saving');
@@ -550,7 +550,7 @@ export function EditChapter() {
 
   // Fetch audio files
   const { data: audioFiles = [] } = useQuery<Array<{ id: number; filename: string; duration: number; url: string }>>(
-    { 
+    {
       queryKey: [`/api/audio-files/${chapterId}`],
       enabled: !!chapterId,
     }
@@ -582,7 +582,7 @@ export function EditChapter() {
     const mapping = (allChapterMappings as SimplifiedMapping[]).find((m: SimplifiedMapping) =>
       m.textSegmentId === segmentId && m.audioFileId === selectedAudioFilePreview
     ) || (allChapterMappings as SimplifiedMapping[]).find((m: SimplifiedMapping) => m.textSegmentId === segmentId);
-    
+
     if (!mapping) {
       console.log('No mapping found for segment:', segmentId);
       return;
@@ -599,7 +599,7 @@ export function EditChapter() {
       // Seek to start time
       previewAudioRef.currentTime = mapping.startTime;
       setPreviewCurrentTime(mapping.startTime);
-      
+
       // Set up timeupdate listener to auto-stop at endTime
       const handleTimeUpdate = () => {
         if (previewAudioRef.currentTime >= mapping.endTime) {
@@ -610,14 +610,14 @@ export function EditChapter() {
           previewTimeUpdateCleanupRef.current = null;
         }
       };
-      
+
       previewAudioRef.addEventListener('timeupdate', handleTimeUpdate);
-      
+
       // Store cleanup function
       previewTimeUpdateCleanupRef.current = () => {
         previewAudioRef.removeEventListener('timeupdate', handleTimeUpdate);
       };
-      
+
       // Start playback
       previewAudioRef.play().catch((error) => {
         console.error('Failed to play audio:', error);
@@ -632,7 +632,7 @@ export function EditChapter() {
       if (audioFile) {
         previewAudioRef.src = `/uploads/${audioFile.filename}`;
         setSelectedAudioFilePreview(mapping.audioFileId);
-        
+
         // Wait for audio to load before playing segment
         previewAudioRef.addEventListener('loadedmetadata', () => {
           playSegment();
@@ -764,18 +764,18 @@ export function EditChapter() {
 
   // Standardized segment creation mutation - new format only
   const createSegmentMutation = useMutation({
-    mutationFn: async (segmentData: { 
-      chapterId: number; 
-      script: string; 
-      startPosition: number; 
-      endPosition: number; 
+    mutationFn: async (segmentData: {
+      chapterId: number;
+      script: string;
+      startPosition: number;
+      endPosition: number;
     }) => {
       // Validate required fields before API call
-      if (!segmentData.chapterId || !segmentData.script || 
-          segmentData.startPosition === undefined || segmentData.endPosition === undefined) {
+      if (!segmentData.chapterId || !segmentData.script ||
+        segmentData.startPosition === undefined || segmentData.endPosition === undefined) {
         throw new Error("Missing required segment data");
       }
-      
+
       return apiRequest("POST", `/api/segments`, segmentData);
     },
     onSuccess: () => {
@@ -799,8 +799,8 @@ export function EditChapter() {
           actionMessage = "Please select at least 10 characters of valid text.";
         }
       } else if (error.isServerError || error.isNetworkError) {
-        userMessage = error.isNetworkError 
-          ? "Network connection lost. Your work is saved locally." 
+        userMessage = error.isNetworkError
+          ? "Network connection lost. Your work is saved locally."
           : "Server temporarily unavailable. Your work is saved locally.";
         actionMessage = "Please try again in a few moments.";
         showRetry = true;
@@ -827,7 +827,7 @@ export function EditChapter() {
     },
     onError: (error: any) => {
       toast({
-        title: "Failed to update segment", 
+        title: "Failed to update segment",
         description: error.message,
         variant: "destructive"
       });
@@ -857,7 +857,7 @@ export function EditChapter() {
         id: segment.id,
         order: segment.order
       }));
-      
+
       return apiRequest("PATCH", `/api/segments/${chapterId}/reorder`, {
         segmentOrders
       });
@@ -883,7 +883,7 @@ export function EditChapter() {
   const handleCreateSegment = useCallback((segment: any) => {
     // Handle both new format (from AnnotationLayer) and legacy format
     let segmentData: { chapterId: number; script: string; startPosition: number; endPosition: number; };
-    
+
     if (segment.script && segment.startPosition !== undefined && segment.endPosition !== undefined) {
       // New format from AnnotationLayer: { script, startPosition, endPosition }
       segmentData = {
@@ -896,7 +896,7 @@ export function EditChapter() {
       // Legacy format: { textReferences: { [script]: { start, end } } }
       const firstScript = Object.keys(segment.textReferences)[0];
       const range = segment.textReferences[firstScript];
-      
+
       if (!firstScript || !range || range.start === undefined || range.end === undefined) {
         toast({
           title: "Invalid text selection",
@@ -905,7 +905,7 @@ export function EditChapter() {
         });
         return;
       }
-      
+
       segmentData = {
         chapterId: parseInt(chapterId!),
         script: firstScript,
@@ -920,10 +920,10 @@ export function EditChapter() {
       });
       return;
     }
-    
+
     // Validate the final data before API call
-    if (!segmentData.chapterId || !segmentData.script || 
-        segmentData.startPosition === undefined || segmentData.endPosition === undefined) {
+    if (!segmentData.chapterId || !segmentData.script ||
+      segmentData.startPosition === undefined || segmentData.endPosition === undefined) {
       toast({
         title: "Missing segment data",
         description: "Required segment information is missing",
@@ -931,7 +931,7 @@ export function EditChapter() {
       });
       return;
     }
-    
+
     createSegmentMutation.mutate(segmentData);
   }, [createSegmentMutation, chapterId]);
 
@@ -956,12 +956,12 @@ export function EditChapter() {
       console.log('Content save success - server response:', savedChapter);
       setSaveStatus('saved');
       toast({ title: "Content saved" });
-      
+
       // Auto-hide success status after 3 seconds
       setTimeout(() => {
         setSaveStatus('clean');
       }, 3000);
-      
+
       // Don't sync local state here - let cache invalidation handle it
       queryClient.invalidateQueries({
         queryKey: [`/api/chapters/${chapterId}/details`],
@@ -999,7 +999,7 @@ export function EditChapter() {
         hi: activeChapter.content.hi || "",
         en: activeChapter.content.en || "",
       };
-      
+
       setChapterContent(prev => {
         // Check if content actually changed
         if (prev.te === newContent.te && prev.hi === newContent.hi && prev.en === newContent.en) {
@@ -1047,9 +1047,9 @@ export function EditChapter() {
     return () => {
       if (audioPlayer) {
         audioPlayer.pause();
-        audioPlayer.removeEventListener("loadedmetadata", () => {});
-        audioPlayer.removeEventListener("timeupdate", () => {});
-        audioPlayer.removeEventListener("error", () => {});
+        audioPlayer.removeEventListener("loadedmetadata", () => { });
+        audioPlayer.removeEventListener("timeupdate", () => { });
+        audioPlayer.removeEventListener("error", () => { });
       }
     };
   }, [audioPlayer]);
@@ -1192,9 +1192,9 @@ export function EditChapter() {
   });
 
   // Loading state for mapping operations
-  const isMappingLoading = createMappingMutation.isPending || 
-                          updateMappingMutation.isPending || 
-                          deleteMappingMutation.isPending;
+  const isMappingLoading = createMappingMutation.isPending ||
+    updateMappingMutation.isPending ||
+    deleteMappingMutation.isPending;
 
   // Audio control functions
   const handlePlayPause = async () => {
@@ -1372,7 +1372,7 @@ export function EditChapter() {
       });
       return;
     }
-    
+
     updateChapterMetadataMutation.mutate({
       title: editingTitle.trim(),
       description: editingDescription.trim(),
@@ -1407,23 +1407,23 @@ export function EditChapter() {
 
     // Calculate character positions within the full text (extract plain text from HTML for position calculation)
     const fullTextContent = textContent[selectedScript] || "";
-    const fullText = isHtmlContent(fullTextContent) 
-      ? htmlToPlainText(fullTextContent) 
+    const fullText = isHtmlContent(fullTextContent)
+      ? htmlToPlainText(fullTextContent)
       : fullTextContent;
-    
+
     // For HTML content, we need to map the selection to plain text positions
     if (isHtmlContent(fullTextContent)) {
       // Get the plain text equivalent of the selection
       const plainTextSelection = htmlToPlainText(selectedText);
       const startPos = fullText.indexOf(plainTextSelection);
       const endPos = startPos + plainTextSelection.length;
-      
+
       setTextSelection({
         start: startPos >= 0 ? startPos : 0,
         end: startPos >= 0 ? endPos : plainTextSelection.length,
         text: plainTextSelection,
       });
-      
+
       setSegmentName(
         `${plainTextSelection.substring(0, 30)}${plainTextSelection.length > 30 ? "..." : ""}`,
       );
@@ -1433,13 +1433,13 @@ export function EditChapter() {
         range.startContainer.textContent?.substring(0, range.startOffset) || "";
       const startPos = fullText.indexOf(beforeText + selectedText.charAt(0));
       const endPos = startPos + selectedText.length;
-      
+
       setTextSelection({
         start: startPos,
         end: endPos,
         text: selectedText,
       });
-      
+
       setSegmentName(
         `${selectedText.substring(0, 30)}${selectedText.length > 30 ? "..." : ""}`,
       );
@@ -1457,7 +1457,7 @@ export function EditChapter() {
       });
       return;
     }
-    
+
     if (!contentScript) {
       toast({
         title: "Script not selected",
@@ -1466,7 +1466,7 @@ export function EditChapter() {
       });
       return;
     }
-    
+
     if (!chapterId) {
       toast({
         title: "Chapter not loaded",
@@ -1595,11 +1595,10 @@ export function EditChapter() {
       parts.push(
         <span
           key={`segment-${segment.id}`}
-          className={`px-1 py-0.5 rounded cursor-pointer transition-colors ${
-            hasAudioMapping
-              ? "bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700"
-              : "bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700"
-          } hover:opacity-80`}
+          className={`px-1 py-0.5 rounded cursor-pointer transition-colors ${hasAudioMapping
+            ? "bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700"
+            : "bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700"
+            } hover:opacity-80`}
           title={`${segment.conceptualName}${hasAudioMapping ? " (Audio Mapped)" : " (No Audio)"}`}
           onClick={() => {
             if (
@@ -1678,7 +1677,7 @@ export function EditChapter() {
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Back
               </Button>
-              
+
               <div className="h-5 w-px bg-border"></div>
               {isEditingMetadata ? (
                 <div className="flex-1 flex items-center gap-3">
@@ -1697,7 +1696,7 @@ export function EditChapter() {
                     }}
                     autoFocus
                   />
-                  <Button 
+                  <Button
                     onClick={handleSaveMetadata}
                     disabled={updateChapterMetadataMutation.isPending || !editingTitle.trim()}
                     size="sm"
@@ -1706,8 +1705,8 @@ export function EditChapter() {
                     <Save className="w-3 h-3 mr-1" />
                     Save
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={handleCancelMetadataEdit}
                     disabled={updateChapterMetadataMutation.isPending}
                     size="sm"
@@ -1720,8 +1719,8 @@ export function EditChapter() {
                 <div className="flex items-center gap-3">
                   <h1 className="text-xl font-semibold text-foreground">{chapter?.title}</h1>
                   {chapter?.status !== "published" && (
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       size="sm"
                       onClick={handleEditMetadata}
                       className="h-6 w-6 p-0 opacity-50 hover:opacity-100 transition-opacity"
@@ -1731,11 +1730,10 @@ export function EditChapter() {
                     </Button>
                   )}
                   <span
-                    className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                      chapter?.status === "published"
-                        ? "bg-green-100 text-green-700 border border-green-200"
-                        : "bg-amber-100 text-amber-700 border border-amber-200"
-                    }`}
+                    className={`px-2 py-0.5 text-xs font-medium rounded-full ${chapter?.status === "published"
+                      ? "bg-green-100 text-green-700 border border-green-200"
+                      : "bg-amber-100 text-amber-700 border border-amber-200"
+                      }`}
                   >
                     {chapter?.status === "published" ? "Published" : "Draft"}
                   </span>
@@ -1748,7 +1746,7 @@ export function EditChapter() {
                 </div>
               )}
             </div>
-            
+
             {!isEditingMetadata && (
               <div className="flex items-center gap-2">
                 <Button
@@ -1770,8 +1768,8 @@ export function EditChapter() {
       <div className="container mx-auto px-6 py-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="bg-transparent p-1 h-auto flex items-center">
-            <TabsTrigger 
-              value="content" 
+            <TabsTrigger
+              value="content"
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
               <FileText className="w-4 h-4" />
@@ -1782,12 +1780,12 @@ export function EditChapter() {
                 <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
               </svg>
             </div>
-            <TabsTrigger 
-              value="media" 
+            <TabsTrigger
+              value="media"
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
               <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
-                <path d="M400-120q-66 0-113-47t-47-113q0-66 47-113t113-47q23 0 42.5 5.5T480-418v-422h240v160H560v400q0 66-47 113t-113 47Z"/>
+                <path d="M400-120q-66 0-113-47t-47-113q0-66 47-113t113-47q23 0 42.5 5.5T480-418v-422h240v160H560v400q0 66-47 113t-113 47Z" />
               </svg>
               Chapter Audio
             </TabsTrigger>
@@ -1796,12 +1794,12 @@ export function EditChapter() {
                 <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
               </svg>
             </div>
-            <TabsTrigger 
-              value="text-segmentation" 
+            <TabsTrigger
+              value="text-segmentation"
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
               <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
-                <path d="M760-120 480-400l-94 94q8 15 11 32t3 34q0 66-47 113T240-80q-66 0-113-47T80-240q0-66 47-113t113-47q17 0 34 3t32 11l94-94-94-94q-15 8-32 11t-34 3q-66 0-113-47T80-720q0-66 47-113t113-47q66 0 113 47t47 113q0 17-3 34t-11 32l494 494v40H760ZM600-520l-80-80 240-240h120v40L600-520ZM240-640q33 0 56.5-23.5T320-720q0-33-23.5-56.5T240-800q-33 0-56.5 23.5T160-720q0 33 23.5 56.5T240-640Zm240 180q8 0 14-6t6-14q0-8-6-14t-14-6q-8 0-14 6t-6 14q0 8 6 14t14 6ZM240-160q33 0 56.5-23.5T320-240q0-33-23.5-56.5T240-320q-33 0-56.5 23.5T160-240q0 33 23.5 56.5T240-160Z"/>
+                <path d="M760-120 480-400l-94 94q8 15 11 32t3 34q0 66-47 113T240-80q-66 0-113-47T80-240q0-66 47-113t113-47q17 0 34 3t32 11l94-94-94-94q-15 8-32 11t-34 3q-66 0-113-47T80-720q0-66 47-113t113-47q66 0 113 47t47 113q0 17-3 34t-11 32l494 494v40H760ZM600-520l-80-80 240-240h120v40L600-520ZM240-640q33 0 56.5-23.5T320-720q0-33-23.5-56.5T240-800q-33 0-56.5 23.5T160-720q0 33 23.5 56.5T240-640Zm240 180q8 0 14-6t6-14q0-8-6-14t-14-6q-8 0-14 6t-6 14q0 8 6 14t14 6ZM240-160q33 0 56.5-23.5T320-240q0-33-23.5-56.5T240-320q-33 0-56.5 23.5T160-240q0 33 23.5 56.5T240-160Z" />
               </svg>
               Segmentation
             </TabsTrigger>
@@ -1810,8 +1808,8 @@ export function EditChapter() {
                 <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
               </svg>
             </div>
-            <TabsTrigger 
-              value="audio-mapping" 
+            <TabsTrigger
+              value="audio-mapping"
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
               <Zap className="w-4 h-4" />
@@ -1822,8 +1820,8 @@ export function EditChapter() {
                 <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
               </svg>
             </div>
-            <TabsTrigger 
-              value="preview" 
+            <TabsTrigger
+              value="preview"
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white font-medium text-gray-700 hover:border-gray-300 hover:shadow-sm data-[state=active]:border-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 transition-all"
             >
               <Eye className="w-4 h-4" />
@@ -1888,7 +1886,7 @@ export function EditChapter() {
 
               {/* Blocking Overlay for Published Chapters */}
               {isPublished && (
-                <div 
+                <div
                   className="absolute inset-0 bg-transparent z-10 cursor-not-allowed"
                   onClick={(e) => e.preventDefault()}
                   onMouseDown={(e) => e.preventDefault()}
@@ -1905,11 +1903,10 @@ export function EditChapter() {
                 <div className="space-y-4 relative">
                   {/* Upload Controls - Always Show */}
                   <div
-                    className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                      isDragOver
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                        : "border-gray-300 dark:border-gray-600"
-                    }`}
+                    className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${isDragOver
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      : "border-gray-300 dark:border-gray-600"
+                      }`}
                     onDragOver={(e) => {
                       e.preventDefault();
                       if (!isPublished) setIsDragOver(true);
@@ -1964,10 +1961,10 @@ export function EditChapter() {
                       disabled={audioUploadMutation.isPending || isPublished}
                     />
                   </div>
-                  
+
                   {/* Blocking Overlay for Published Chapters */}
                   {isPublished && (
-                    <div 
+                    <div
                       className="absolute inset-0 bg-transparent z-10 cursor-not-allowed"
                       onClick={(e) => e.preventDefault()}
                       onMouseDown={(e) => e.preventDefault()}
@@ -1976,8 +1973,8 @@ export function EditChapter() {
                   )}
 
                   {audioFiles &&
-                  Array.isArray(audioFiles) &&
-                  audioFiles.length > 0 ? (
+                    Array.isArray(audioFiles) &&
+                    audioFiles.length > 0 ? (
                     <div className="space-y-3">
                       <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                         Uploaded Files ({audioFiles.length})
@@ -2141,10 +2138,10 @@ export function EditChapter() {
                     availableScripts={['te', 'hi', 'en']}
                   />
                 </Panel>
-                
+
                 {/* Resize Handle */}
                 <PanelResizeHandle className="w-1 bg-gray-400 hover:bg-gray-600 transition-colors" />
-                
+
                 {/* Right Panel: Segment Management */}
                 <Panel defaultSize={50} minSize={30}>
                   <SegmentPanel
@@ -2158,7 +2155,7 @@ export function EditChapter() {
                     }}
                     onSegmentDelete={handleDeleteSegment}
                     onSegmentUpdate={handleUpdateSegment}
-                    onPlayMapping={() => {}}
+                    onPlayMapping={() => { }}
                     onSegmentReorder={handleSegmentReorder}
                   />
                 </Panel>
@@ -2166,7 +2163,7 @@ export function EditChapter() {
 
               {/* Blocking Overlay for Published Chapters */}
               {isPublished && (
-                <div 
+                <div
                   className="absolute inset-0 bg-transparent z-10 cursor-not-allowed"
                   onClick={(e) => e.preventDefault()}
                   onMouseDown={(e) => e.preventDefault()}
@@ -2223,9 +2220,9 @@ export function EditChapter() {
                   <Badge variant="green" badgeStyle="sharp" className="text-xs" icon={<Zap className="h-3 w-3" />}>
                     {textSegments
                       .filter(s => s.script === contentScript)
-                      .filter(segment => 
-                        allChapterMappings.some(mapping => 
-                          mapping.textSegmentId === segment.id && 
+                      .filter(segment =>
+                        allChapterMappings.some(mapping =>
+                          mapping.textSegmentId === segment.id &&
                           mapping.audioFileId === selectedAudioFile?.id
                         )
                       ).length} mapped
@@ -2275,7 +2272,7 @@ export function EditChapter() {
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Left Panel: Audio Player */}
                       <Panel defaultSize={20} minSize={20}>
                         <AudioPlayerPanel
@@ -2332,7 +2329,7 @@ export function EditChapter() {
 
               {/* Blocking Overlay for Published Chapters */}
               {isPublished && (
-                <div 
+                <div
                   className="absolute inset-0 bg-transparent z-10 cursor-not-allowed"
                   onClick={(e) => e.preventDefault()}
                   onMouseDown={(e) => e.preventDefault()}
@@ -2358,7 +2355,7 @@ export function EditChapter() {
                 <Badge variant="green" badgeStyle="sharp" className="text-xs" icon={<Zap className="h-3 w-3" />}>
                   {textSegments
                     .filter(s => s.script === contentScript)
-                    .filter(segment => 
+                    .filter(segment =>
                       allChapterMappings.some(mapping => mapping.textSegmentId === segment.id)
                     ).length} mapped
                 </Badge>
@@ -2403,13 +2400,12 @@ export function EditChapter() {
                       <Label>Text Content (Click and drag to select)</Label>
                       <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900 max-h-96 overflow-y-auto">
                         <div
-                          className={`text-sm leading-relaxed ${
-                            selectedScript === "te"
-                              ? "font-telugu"
-                              : selectedScript === "hi"
-                                ? "font-devanagari"
-                                : "font-mono"
-                          }`}
+                          className={`text-sm leading-relaxed ${selectedScript === "te"
+                            ? "font-telugu"
+                            : selectedScript === "hi"
+                              ? "font-devanagari"
+                              : "font-mono"
+                            }`}
                         >
                           {textContent[selectedScript] ? (
                             isHtmlContent(textContent[selectedScript]) ? (
@@ -2504,7 +2500,7 @@ export function EditChapter() {
                                     </div>
                                   </div>
                                   <div className="flex-shrink-0">
-                                    <LinkStatusIcon 
+                                    <LinkStatusIcon
                                       status={getMappingStatus(segment.id, allChapterMappings)}
                                       size="md"
                                     />
@@ -2556,7 +2552,7 @@ export function EditChapter() {
                     availableScripts={['te', 'hi', 'en']}
                     onScriptChange={setContentScript}
                   />
-                  
+
                   <div className="flex items-center gap-2">
                     <label className="text-xs font-medium">Audio File:</label>
                     <Select
@@ -2583,7 +2579,7 @@ export function EditChapter() {
                     </Select>
                   </div>
                 </div>
-                
+
                 <div className="flex gap-2">
                   <Badge variant="blue" badgeStyle="sharp" className="text-xs" icon={<List className="h-3 w-3" />}>
                     {textSegments.filter(s => s.script === contentScript).length} segments
@@ -2591,9 +2587,9 @@ export function EditChapter() {
                   <Badge variant="green" badgeStyle="sharp" className="text-xs" icon={<Zap className="h-3 w-3" />}>
                     {textSegments
                       .filter(s => s.script === contentScript)
-                      .filter(segment => 
-                        allChapterMappings?.some(mapping => 
-                          mapping.textSegmentId === segment.id && 
+                      .filter(segment =>
+                        allChapterMappings?.some(mapping =>
+                          mapping.textSegmentId === segment.id &&
                           mapping.audioFileId === selectedAudioFilePreview
                         )
                       ).length} mapped
@@ -2605,9 +2601,9 @@ export function EditChapter() {
               <div className="mb-4">
                 {selectedAudioFilePreview ? (
                   <AudioControls
-                    title={audioFiles?.find((f: any) => f.id === selectedAudioFilePreview)?.displayName || 
-                           audioFiles?.find((f: any) => f.id === selectedAudioFilePreview)?.filename || 
-                           'Audio File'}
+                    title={audioFiles?.find((f: any) => f.id === selectedAudioFilePreview)?.displayName ||
+                      audioFiles?.find((f: any) => f.id === selectedAudioFilePreview)?.filename ||
+                      'Audio File'}
                     currentTime={previewCurrentTime}
                     duration={previewDuration}
                     isPlaying={isPreviewPlaying}
@@ -2657,7 +2653,7 @@ export function EditChapter() {
                   <h3 className="text-sm font-semibold text-gray-700">
                     {activeChapter?.title || 'Chapter'} ({contentScript === 'te' ? 'Telugu' : contentScript === 'hi' ? 'Hindi' : 'English'})
                   </h3>
-                  
+
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-gray-600">Learn Mode:</span>
                     <Switch
@@ -2670,42 +2666,42 @@ export function EditChapter() {
                   </div>
                 </div>
                 <div className="flex-1 min-h-0 overflow-auto p-6">
-                    {chapterContent[contentScript] ? (
-                      learnMode ? (
-                        <SegmentedTextDisplay
-                          content={chapterContent}
-                          currentScript={contentScript}
-                          segments={textSegments}
-                          selectedSegmentId={selectedTextSegmentPreview}
-                          onSegmentClick={handlePreviewSegmentClick}
-                          mode="preview"
-                          className=""
-                        />
-                      ) : (
-                        <div 
-                          className={`
+                  {chapterContent[contentScript] ? (
+                    learnMode ? (
+                      <SegmentedTextDisplay
+                        content={chapterContent}
+                        currentScript={contentScript}
+                        segments={textSegments}
+                        selectedSegmentId={selectedTextSegmentPreview}
+                        onSegmentClick={handlePreviewSegmentClick}
+                        mode="preview"
+                        className=""
+                      />
+                    ) : (
+                      <div
+                        className={`
                             prose max-w-none
                             ${contentScript === 'te' ? 'font-telugu' : contentScript === 'hi' ? 'font-devanagari' : 'font-iast'}
                           `}
-                          style={{
-                            lineHeight: '1.6'
-                          }}
-                          dangerouslySetInnerHTML={{ __html: chapterContent[contentScript] }}
-                          data-testid="html-content-view"
-                        />
-                      )
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                        <FileText className="w-12 h-12 mb-4 opacity-50" />
-                        <p>No content available for this script</p>
-                      </div>
-                    )}
+                        style={{
+                          lineHeight: '1.6'
+                        }}
+                        dangerouslySetInnerHTML={{ __html: chapterContent[contentScript] }}
+                        data-testid="html-content-view"
+                      />
+                    )
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                      <FileText className="w-12 h-12 mb-4 opacity-50" />
+                      <p>No content available for this script</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Blocking Overlay for Published Chapters */}
               {isPublished && (
-                <div 
+                <div
                   className="absolute inset-0 bg-transparent z-10 cursor-not-allowed"
                   onClick={(e) => e.preventDefault()}
                   onMouseDown={(e) => e.preventDefault()}
