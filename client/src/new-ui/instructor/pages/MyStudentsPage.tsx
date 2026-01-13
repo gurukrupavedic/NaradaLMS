@@ -466,9 +466,9 @@ export function MyStudentsPage() {
 
       {/* Table Area */}
       <div className="flex-1 min-h-0 px-4">
-        <div className="h-full overflow-auto rounded-lg border border-border/60 bg-card shadow-sm">
-          <Table>
-            <TableHeader className="bg-muted/40 sticky top-0 z-10">
+        <div className="h-full overflow-hidden rounded-lg border border-border/60 bg-card shadow-sm">
+          <Table wrapperClassName="h-full">
+            <TableHeader className="bg-white dark:bg-black sticky top-0 z-10">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
                   {headerGroup.headers.map((header) => (

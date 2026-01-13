@@ -366,8 +366,7 @@ export function UnifiedBatchMatrix({
                     <th
                       key={header.id}
                       className={`${isStudentCol ? 'text-center' : 'text-center'} text-xs font-semibold text-muted-foreground uppercase tracking-tight ${isStudentCol ? 'pl-4 pr-2 py-2 align-middle' : 'p-0'
-                        } ${isSticky ? 'sticky z-20 bg-gray-50 dark:bg-gray-900' : ''
-                        }`}
+                        } sticky top-0 ${isSticky ? 'z-30' : 'z-10'} bg-white dark:bg-black`}
                       // eslint-disable-next-line jsx-a11y/no-static-element-interactions
                       style={{
                         width: `${header.getSize()}px`,

@@ -335,9 +335,9 @@ export default function UserManagement() {
               <TableSkeleton rows={10} cols={5} />
             </div>
           ) : (
-            <div className="flex-1 overflow-auto">
-              <Table>
-                <TableHeader className="bg-muted/40 sticky top-0 z-10">
+            <div className="flex-1 overflow-hidden">
+              <Table wrapperClassName="h-full">
+                <TableHeader className="bg-white dark:bg-black sticky top-0 z-10">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id} className="border-b border-border/60 hover:bg-transparent">
                       {headerGroup.headers.map((header) => (
