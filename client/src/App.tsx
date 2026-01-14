@@ -9,7 +9,6 @@ import { LoadingScreen } from "@/components/ui/loading-screen";
 import { useAuth } from "@/features/shared-features/hooks/useAuth";
 import { useWarmTrackCache } from "@/lib/query-prefetch";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { NEW_UI_ENABLED } from "@/lib/featureFlags";
 
 // Phase 5A: Bundle Optimization - Route-based code splitting
 const Landing = lazy(() => import("@/features/shared-features/pages/Landing").then(module => ({ default: module.Landing })));
@@ -104,7 +103,7 @@ function Router() {
         <Route path="/app/:section" component={AppShell} />
         <Route path="/app/:section/:subsection" component={AppShell} />
         <Route path="/app/:section/:subsection/:detail" component={AppShell} />
-        
+
         {/* Root redirect to app */}
         <Route path="/" component={() => {
           const [, navigate] = useLocation();
