@@ -17,18 +17,6 @@ const Login = lazy(() => import("@/features/shared-features/pages/Login").then(m
 const Register = lazy(() => import("@/features/shared-features/pages/Register").then(module => ({ default: module.Register })));
 const PendingApproval = lazy(() => import("@/features/shared-features/pages/PendingApproval").then(module => ({ default: module.PendingApproval })));
 const NotFound = lazy(() => import("@/features/shared-features/pages/NotFound").then(module => ({ default: module.NotFound })));
-const SimpleDashboard = lazy(() => import("@/features/shared-features/components/SimpleDashboard"));
-
-const ManageTracks = lazy(() => import("@/features/content-management/pages/ManageTracks").then(module => ({ default: module.ManageTracks })));
-const ManageChapters = lazy(() => import("@/features/content-management/pages/ManageChapters").then(module => ({ default: module.ManageChapters })));
-const EditChapter = lazy(() => import("@/features/content-management/pages/EditChapter").then(module => ({ default: module.EditChapter })));
-const ManageUsers = lazy(() => import("@/features/user-management/pages/ManageUsers").then(module => ({ default: module.ManageUsers })));
-const ManageBatches = lazy(() => import("@/features/batch-management/pages/ManageBatches").then(module => ({ default: module.ManageBatches })));
-const LearnTracks = lazy(() => import("@/features/learning/pages/LearnTracks").then(module => ({ default: module.LearnTracks })));
-const LearnChapters = lazy(() => import("@/features/learning/pages/LearnChapters").then(module => ({ default: module.LearnChapters })));
-const StudyChapter = lazy(() => import("@/features/learning/pages/StudyChapter").then(module => ({ default: module.StudyChapter })));
-const DesignSystemExperiment = lazy(() => import("@/design-system/DesignSystemExperiment"));
-const ThemingPlayground = lazy(() => import("@/design-system/ThemingPlayground").then(module => ({ default: module.ThemingPlayground })));
 const AppShell = lazy(() => import("@/new-ui/AppShell"));
 
 // Simple inline NotFound component
@@ -106,49 +94,27 @@ function Router() {
     );
   }
 
-  // Authenticated routes
+  // Authenticated routes - all users go to new-ui
   return (
     <Suspense fallback={<LoadingScreen message="Loading..." />}>
       <Switch>
-        {NEW_UI_ENABLED && (
-          <>
-            {/* Specific deep route for Content Studio - must come before general patterns */}
-            <Route path="/app/content/tracks/:trackId/chapters/:chapterId" component={AppShell} />
-            {/* General explicit routes for new UI */}
-            <Route path="/app" component={AppShell} />
-            <Route path="/app/:section" component={AppShell} />
-            <Route path="/app/:section/:subsection" component={AppShell} />
-            <Route path="/app/:section/:subsection/:detail" component={AppShell} />
-          </>
-        )}
-        <Route path="/" component={() => <SimpleDashboard user={user as any} />} />
-        <Route path="/dashboard" component={() => <SimpleDashboard user={user as any} />} />
-        <Route path="/home" component={() => <SimpleDashboard user={user as any} />} />
+        {/* New-UI Routes - All authenticated users */}
+        <Route path="/app/content/tracks/:trackId/chapters/:chapterId" component={AppShell} />
+        <Route path="/app" component={AppShell} />
+        <Route path="/app/:section" component={AppShell} />
+        <Route path="/app/:section/:subsection" component={AppShell} />
+        <Route path="/app/:section/:subsection/:detail" component={AppShell} />
+        
+        {/* Root redirect to app */}
+        <Route path="/" component={() => {
+          const [, navigate] = useLocation();
+          React.useEffect(() => {
+            navigate('/app');
+          }, []);
+          return <LoadingScreen message="Redirecting..." />;
+        }} />
 
-        {/* Content Management Routes */}
-        <Route path="/manage" component={() => <ManageTracks />} />
-        <Route path="/manage/tracks/:trackId" component={() => <ManageChapters />} />
-        <Route path="/manage/tracks/:trackId/chapters/:chapterId" component={() => <EditChapter />} />
-        <Route path="/manage/users" component={() => <ManageUsers />} />
-        <Route path="/manage/batches" component={() => <ManageBatches />} />
-
-        {/* Legacy redirects for old content-management URLs */}
-        <Route path="/content-management" component={() => <ManageTracks />} />
-        <Route path="/content-management/tracks/:trackId" component={() => <ManageChapters />} />
-        <Route path="/content-management/tracks/:trackId/chapters/:chapterId" component={() => <EditChapter />} />
-
-        {/* Learning Module Routes */}
-        <Route path="/tracks" component={() => <LearnTracks />} />
-        <Route path="/tracks/:trackId" component={() => <LearnChapters />} />
-        <Route path="/chapter/:chapterId" component={() => <StudyChapter />} />
-        {/* Learning aliases */}
-        <Route path="/learning/tracks" component={() => <LearnTracks />} />
-        <Route path="/learning/tracks/:trackId" component={() => <LearnChapters />} />
-        <Route path="/learning/chapter/:chapterId" component={() => <StudyChapter />} />
-
-        <Route path="/experiments/design-system" component={DesignSystemExperiment} />
-        <Route path="/experiments/theming-playground" component={ThemingPlayground} />
-
+        {/* 404 for all other routes */}
         <Route component={SimpleNotFound} />
       </Switch>
     </Suspense>
