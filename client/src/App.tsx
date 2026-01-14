@@ -40,6 +40,15 @@ const SimpleNotFound = () => {
 
 
 
+// Redirect helper
+const RedirectToLogin = () => {
+  const [, navigate] = useLocation();
+  React.useEffect(() => {
+    navigate('/login');
+  }, [navigate]);
+  return <LoadingScreen message="Redirecting to login..." />;
+};
+
 function Router() {
   const { isAuthenticated, isLoading, user, isPendingApproval } = useAuth();
   const [location, navigate] = useLocation();
@@ -75,6 +84,11 @@ function Router() {
           <Route path="/" component={Landing} />
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
+
+          {/* Redirect unauthenticated /app attempts to login */}
+          <Route path="/app" component={RedirectToLogin} />
+          <Route path="/app/:rest*" component={RedirectToLogin} />
+
           <Route component={SimpleNotFound} />
         </Switch>
       </Suspense>
