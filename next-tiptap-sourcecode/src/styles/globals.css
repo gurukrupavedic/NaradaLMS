@@ -1,0 +1,87 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --foreground: #1f2328;
+  --background: #fff;
+  --border: #d1d9e0;
+  --overlay-start: rgba(255, 255, 255, 0.85);
+  --overlay-end: rgba(255, 255, 255, 0.95);
+}
+
+html.dark {
+  --foreground: #f0f6fc;
+  --background: #0d1018;
+  --border: #3d444d;
+  --overlay-start: rgba(13, 16, 24, 0.85);
+  --overlay-end: rgba(13, 16, 24, 0.95);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+html {
+  font-family: var(--font-sans);
+}
+
+body {
+  position: relative;
+  color: var(--foreground);
+  background-color: var(--background);
+  background-image:
+    linear-gradient(var(--overlay-start), var(--overlay-end)),
+    url("/background.svg");
+}
+
+.article-content {
+  li p {
+    margin: 0 !important;
+  }
+
+  figcaption {
+    text-align: center;
+  }
+
+  blockquote {
+    p:first-of-type::before,
+    p:first-of-type::after {
+      content: unset;
+    }
+  }
+
+  pre {
+    position: relative;
+    background-color: hsl(224, 19%, 97%);
+    padding-block: 1rem;
+    overflow-x: auto;
+
+    code {
+      padding-inline: 1.25rem;
+      display: block;
+      width: fit-content;
+      min-width: 100%;
+      font-size: 90%;
+      line-height: 1.75;
+    }
+  }
+}
+
+html.dark .article-content {
+  pre {
+    background-color: hsl(224, 14%, 16%);
+  }
+
+  code .line span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+    font-style: var(--shiki-dark-font-style) !important;
+    font-weight: var(--shiki-dark-font-weight) !important;
+    text-decoration: var(--shiki-dark-text-decoration) !important;
+  }
+}

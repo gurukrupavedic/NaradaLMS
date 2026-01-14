@@ -1,0 +1,15 @@
+@use "sass:map";
+@use "sass:list";
+@use "variables" as *;
+
+@mixin font-size($size) {
+  $values: map.get($font-sizes, $size);
+  font-size: list.nth($values, 1);
+  line-height: list.nth($values, 2);
+}
+
+@mixin custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: $editor-scrollbar transparent;
+  scrollbar-gutter: stable;
+}
