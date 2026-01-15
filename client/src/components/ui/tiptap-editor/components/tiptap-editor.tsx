@@ -103,16 +103,6 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
       outputRef.current = output;
     });
 
-    // HTML/Text mode state with localStorage persistence
-    const [editorMode, setEditorMode] = useState<'html' | 'text'>(() => {
-      const saved = localStorage.getItem('tiptapEditorMode');
-      return (saved === 'html' || saved === 'text') ? saved : 'html';
-    });
-
-    // Persist editor mode preference
-    useEffect(() => {
-      localStorage.setItem('tiptapEditorMode', editorMode);
-    }, [editorMode]);
 
     const throttledUpdate = useMemo(
       () =>
@@ -178,20 +168,6 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
       return null;
     }
 
-    // Text mode rendering
-    // Text Mode Content Definition
-    const textModeContent = (
-      <div className="rte-editor__container box-border">
-        <div
-          className={cn(
-            "flex-1 w-full min-h-full py-10 px-10 whitespace-pre-wrap text-3xl leading-relaxed outline-none",
-            getFontClass(language)
-          )}
-        >
-          {htmlToPlainText(content as string) || placeholder || 'No content'}
-        </div>
-      </div>
-    );
 
     // Unified Render
     return (
@@ -202,9 +178,7 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
             <MenuBar
               currentScript={currentScript}
               onScriptChange={onScriptChange}
-              disabled={editorMode === 'text' ? false : !isEditable}
-              editorMode={editorMode}
-              onModeChange={setEditorMode}
+              disabled={!isEditable}
             />
           }
           slotAfter={
@@ -213,15 +187,12 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
             />
           }
           fontClassName={getFontClass(language)}
-          content={editorMode === 'text' ? textModeContent : undefined}
         >
-          {editorMode !== 'text' && (
-            <>
-              <Menus />
-              <Resizer />
-              <DragHandle />
-            </>
-          )}
+          <>
+            <Menus />
+            <Resizer />
+            <DragHandle />
+          </>
         </TiptapProvider>
       </div>
     );

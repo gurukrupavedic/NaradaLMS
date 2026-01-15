@@ -27,13 +27,9 @@ type MenuBarProps = {
   currentScript?: "te" | "hi" | "en";
   onScriptChange?: (script: "te" | "hi" | "en") => void;
   disabled?: boolean;
-  editorMode?: 'html' | 'text';
-  onModeChange?: (mode: 'html' | 'text') => void;
 };
 
-export const MenuBar = ({ currentScript, onScriptChange, disabled, editorMode, onModeChange }: MenuBarProps) => {
-  const isTextMode = editorMode === 'text';
-
+export const MenuBar = ({ currentScript, onScriptChange, disabled }: MenuBarProps) => {
   return (
     <Toolbar dense className="rte-menu-bar">
       {/* Script Selector - First group */}
@@ -56,81 +52,57 @@ export const MenuBar = ({ currentScript, onScriptChange, disabled, editorMode, o
             </Select>
           </ToolbarGroup>
 
-          {!isTextMode && <ToolbarDivider />}
+          <ToolbarDivider />
         </>
       )}
 
-      {/* Formatting Tools - Only in HTML mode */}
-      {!isTextMode && (
-        <>
-          <ToolbarGroup>
-            <UndoButton />
-            <RedoButton />
-          </ToolbarGroup>
-
-          <ToolbarDivider />
-
-          <ToolbarGroup>
-            <HeadingDropdown />
-          </ToolbarGroup>
-
-          <ToolbarDivider />
-
-          <ToolbarGroup>
-            <BoldButton />
-            <ItalicButton />
-            <UnderlineButton />
-            <MoreFormatPopover />
-          </ToolbarGroup>
-
-          <ToolbarDivider />
-
-          <ToolbarGroup>
-            <TextColorPopover />
-            <TextBackgroundPopover />
-          </ToolbarGroup>
-
-          <ToolbarDivider />
-
-          <ToolbarGroup>
-            <TextAlignPopover />
-            <BulletListButton />
-            <OrderedListButton />
-          </ToolbarGroup>
-
-          <ToolbarDivider />
-
-          <ToolbarGroup>
-            <LinkButton />
-            <ImageButton />
-            <BlockquoteButton />
-            <YoutubeButton />
-            <InsertDropdown />
-          </ToolbarGroup>
-        </>
-      )}
-
-      {/* Mode Toggle - Far right */}
-      {editorMode && onModeChange && (
-        <ToolbarGroup className="ml-auto pr-1">
-          <Tabs value={editorMode} onValueChange={onModeChange as (value: string) => void}>
-            <TabsList className="h-8 bg-transparent p-0 gap-1 select-none">
-              <TabsTrigger
-                value="html"
-                className="text-xs h-7 px-3 rounded-sm data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-none border border-transparent data-[state=active]:border-border hover:bg-muted/50"
-              >
-                HTML
-              </TabsTrigger>
-              <TabsTrigger
-                value="text"
-                className="text-xs h-7 px-3 rounded-sm data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-none border border-transparent data-[state=active]:border-border hover:bg-muted/50"
-              >
-                Text
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+      {/* Formatting Tools */}
+      <>
+        <ToolbarGroup>
+          <UndoButton />
+          <RedoButton />
         </ToolbarGroup>
-      )}
+
+        <ToolbarDivider />
+
+        <ToolbarGroup>
+          <HeadingDropdown />
+        </ToolbarGroup>
+
+        <ToolbarDivider />
+
+        <ToolbarGroup>
+          <BoldButton />
+          <ItalicButton />
+          <UnderlineButton />
+          <MoreFormatPopover />
+        </ToolbarGroup>
+
+        <ToolbarDivider />
+
+        <ToolbarGroup>
+          <TextColorPopover />
+          <TextBackgroundPopover />
+        </ToolbarGroup>
+
+        <ToolbarDivider />
+
+        <ToolbarGroup>
+          <TextAlignPopover />
+          <BulletListButton />
+          <OrderedListButton />
+        </ToolbarGroup>
+
+        <ToolbarDivider />
+
+        <ToolbarGroup>
+          <LinkButton />
+          <ImageButton />
+          <BlockquoteButton />
+          <YoutubeButton />
+          <InsertDropdown />
+        </ToolbarGroup>
+      </>
     </Toolbar>
   );
 };
