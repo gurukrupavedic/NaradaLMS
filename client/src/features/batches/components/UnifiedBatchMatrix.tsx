@@ -17,7 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useToast } from '@/features/shared-features/hooks/use-toast';
+import { useToast } from '@/features/shared/hooks/use-toast';
 
 import {
   Chapter,

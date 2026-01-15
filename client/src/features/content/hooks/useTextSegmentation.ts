@@ -10,7 +10,7 @@
  */
 
 import React, { useState, useCallback } from "react";
-import { useToast } from "@/features/shared-features/hooks/use-toast";
+import { useToast } from "@/features/shared/hooks/use-toast";
 
 interface TextSelection {
     start: number;

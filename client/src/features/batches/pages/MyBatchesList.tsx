@@ -4,7 +4,7 @@ import { useBatches } from "../hooks/useBatches";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GraduationCap, AlertCircle } from "lucide-react";
-import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
+import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
 
 export default function MyBatchesList() {
   useRoleGuard(['instructor']);

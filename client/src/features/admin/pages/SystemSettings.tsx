@@ -1,6 +1,6 @@
 import React from "react";
 import { Settings } from "lucide-react";
-import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
+import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
 
 export default function SystemSettings() {
   useRoleGuard(['admin']);

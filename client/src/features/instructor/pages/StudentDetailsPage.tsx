@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
 import { StudentDetailsCard } from '../components/StudentDetailsCard';
 import { TrackList } from '../components/student-progress/TrackList';
-import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
+import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
 import { Separator } from '@/components/ui/separator';
 
 export function StudentDetailsPage() {

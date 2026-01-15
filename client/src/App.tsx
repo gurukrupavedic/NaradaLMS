@@ -6,18 +6,18 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary, AppErrorFallback } from "@/components/ui/error-boundary";
 import { LoadingScreen } from "@/components/ui/loading-screen";
-import { useAuth } from "@/features/shared-features/hooks/useAuth";
+import { useAuth } from "@/features/shared/hooks/useAuth";
 import { useWarmTrackCache } from "@/lib/query-prefetch";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 
 
 // Phase 5A: Bundle Optimization - Route-based code splitting
-const Landing = lazy(() => import("@/features/shared-features/pages/Landing").then(module => ({ default: module.Landing })));
-const Login = lazy(() => import("@/features/shared-features/pages/Login").then(module => ({ default: module.Login })));
-const Register = lazy(() => import("@/features/shared-features/pages/Register").then(module => ({ default: module.Register })));
-const PendingApproval = lazy(() => import("@/features/shared-features/pages/PendingApproval").then(module => ({ default: module.PendingApproval })));
-const NotFound = lazy(() => import("@/features/shared-features/pages/NotFound").then(module => ({ default: module.NotFound })));
+const Landing = lazy(() => import("@/features/shared/pages/Landing").then(module => ({ default: module.Landing })));
+const Login = lazy(() => import("@/features/shared/pages/Login").then(module => ({ default: module.Login })));
+const Register = lazy(() => import("@/features/shared/pages/Register").then(module => ({ default: module.Register })));
+const PendingApproval = lazy(() => import("@/features/shared/pages/PendingApproval").then(module => ({ default: module.PendingApproval })));
+const NotFound = lazy(() => import("@/features/shared/pages/NotFound").then(module => ({ default: module.NotFound })));
 const AppShell = lazy(() => import("@/components/AppShell"));
 
 // Simple inline NotFound component

@@ -2,7 +2,7 @@
 
 import React, { Suspense } from 'react';
 import { Switch, Route } from 'wouter';
-import { useAuth } from '@/features/shared-features/hooks/useAuth';
+import { useAuth } from '@/features/shared/hooks/useAuth';
 import { LoadingScreen } from '@/components/ui/loading-screen';
 import { AppLayout } from '@/components/layout/app-layout';
 

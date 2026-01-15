@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/features/shared-features/hooks/use-toast";
+import { useToast } from "@/features/shared/hooks/use-toast";
 
 export function Login() {
   const [, navigate] = useLocation();

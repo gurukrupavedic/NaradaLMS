@@ -4,7 +4,7 @@ import { Link, useLocation } from "wouter";
 import { ColumnDef, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 import { useBatches, useCreateBatch, useUpdateBatch, useDeleteBatch, Batch } from "../hooks/useBatches";
 import { useCoInstructors } from "../hooks/useBatchRelations";
-import { useToast } from "@/features/shared-features/hooks/use-toast";
+import { useToast } from "@/features/shared/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreVertical, AlertCircle, FolderPlus, Trash2, Plus, X } from "lucide-react";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
+import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
 
 type Track = { id: number; title?: string; name?: string };
 type Instructor = { id: string; firstName?: string; lastName?: string; email: string };

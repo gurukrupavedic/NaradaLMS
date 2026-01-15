@@ -4,7 +4,7 @@ import { Tabs, TabsContent } from '@/components/ui/Tabs';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
+import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
 import { ChapterEditorProvider, useChapterEditor } from '@/features/content/context/ChapterEditorContext';
 import { AudioPlayerProvider } from '@/features/content/context/AudioPlayerContext';
 import { ChapterHeader } from '@/features/content/components/ChapterHeader';

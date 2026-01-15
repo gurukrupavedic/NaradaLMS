@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useAuditLogs, AuditLogFilters } from "../hooks/useAuditLogs";
-import { useToast } from "@/features/shared-features/hooks/use-toast";
+import { useToast } from "@/features/shared/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,7 @@ import {
 } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
+import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
 
 const ITEMS_PER_PAGE = 25;
 

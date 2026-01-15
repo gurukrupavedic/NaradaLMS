@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/features/shared-features/hooks/use-toast';
+import { useToast } from '@/features/shared/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
 interface AudioFile {

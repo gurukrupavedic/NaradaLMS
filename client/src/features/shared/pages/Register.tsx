@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/features/shared-features/hooks/use-toast";
+import { useToast } from "@/features/shared/hooks/use-toast";
 
 export function Register() {
   const [, navigate] = useLocation();

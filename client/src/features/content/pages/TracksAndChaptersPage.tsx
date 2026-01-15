@@ -52,14 +52,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/AlertDialog';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/features/shared-features/hooks/use-toast';
-import { useAuth } from '@/features/shared-features/hooks/useAuth';
+import { useToast } from '@/features/shared/hooks/use-toast';
+import { useAuth } from '@/features/shared/hooks/useAuth';
 import { TrackListItem, TrackRow } from '../components/TrackListItem';
 import { ChapterListItem, ChapterRow } from '../components/ChapterListItem';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { handleJsonResponse } from '../utils/handleJsonResponse';
 import { Plus, LibraryBig, BookText } from 'lucide-react';
-import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
+import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
 
 interface DialogState {
   isOpen: boolean;
