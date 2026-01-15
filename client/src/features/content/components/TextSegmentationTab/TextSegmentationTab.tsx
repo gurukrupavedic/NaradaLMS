@@ -32,43 +32,15 @@ import {
 } from '@dnd-kit/sortable';
 import '@/components/ui/tiptap-editor/styles/index.scss';
 
-type Mode = 'editor' | 'segmentation';
+interface TextSegmentationTabProps {
+    mode: 'editor' | 'segmentation';
+}
 
-export function TextSegmentationTab() {
-    const [mode, setMode] = useState<Mode>('editor');
+export function TextSegmentationTab({ mode }: TextSegmentationTabProps) {
     const { isPublished } = useChapterEditor();
 
     return (
         <div className="flex flex-col h-full">
-            {/* Mode Toggle */}
-            <div className="flex items-center gap-2 p-4 border-b bg-muted/30">
-                <div className="inline-flex rounded-lg border p-1 bg-background">
-                    <Button
-                        variant={mode === 'editor' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setMode('editor')}
-                        className="gap-2"
-                    >
-                        <PencilLine className="h-4 w-4" />
-                        Editor Mode
-                    </Button>
-                    <Button
-                        variant={mode === 'segmentation' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setMode('segmentation')}
-                        className="gap-2"
-                    >
-                        <Slice className="h-4 w-4" />
-                        Segmentation Mode
-                    </Button>
-                </div>
-                <span className="text-sm text-muted-foreground">
-                    {mode === 'editor'
-                        ? 'Edit chapter content with rich text formatting'
-                        : 'Create text segments for audio mapping'}
-                </span>
-            </div>
-
             {/* Content Area */}
             <div className="flex-1 overflow-hidden">
                 {mode === 'editor' ? (

@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { PencilLine, Slice } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -15,7 +16,13 @@ import {
 import { useChapterEditor } from '../../context/ChapterEditorContext';
 import { useChapterMetadata } from '../../hooks/useChapterMetadata';
 
-export function ChapterHeader() {
+interface ChapterHeaderProps {
+    activeTab: string;
+    textSegMode: 'editor' | 'segmentation';
+    onTextSegModeChange: (mode: 'editor' | 'segmentation') => void;
+}
+
+export function ChapterHeader({ activeTab, textSegMode, onTextSegModeChange }: ChapterHeaderProps) {
     const { chapter, isLoading } = useChapterEditor();
     const {
         isPublished,
@@ -31,7 +38,6 @@ export function ChapterHeader() {
             <div className="bg-white dark:bg-gray-800 border-b">
                 <div className="px-4 py-3">
                     <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
-                    <div className="h-4 w-96 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
                 </div>
             </div>
         );
@@ -40,38 +46,9 @@ export function ChapterHeader() {
     return (
         <>
             <div className="bg-white/95 dark:bg-black/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
-                <div className="w-full mx-auto px-6 py-3">
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
-                                {chapter?.track ? `TRACK ${chapter.track.order} - ${chapter.track.title}` : 'CHAPTER STUDIO'}
-                            </p>
-                            <h1 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
-                                {chapter ? `Chapter ${chapter.order || '?'} - ${chapter.title}` : 'Chapter Content Editor'}
-                            </h1>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2">
-                                <span className={isPublished ? "h-2 w-2 rounded-full bg-green-500" : "h-2 w-2 rounded-full bg-yellow-500"} />
-                                <span className="text-sm font-medium text-muted-foreground mr-2">
-                                    {isPublished ? 'Published' : 'Draft'}
-                                </span>
-                            </div>
-                            <Button
-                                variant={isPublished ? 'outline' : 'default'}
-                                size="sm"
-                                onClick={handlePublishToggle}
-                                disabled={isTogglingStatus}
-                            >
-                                {isPublished ? 'Unpublish' : 'Publish Chapter'}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 5-step tabs integrated into header - cleaner look */}
-                <div className="px-6 pb-2">
-                    <TabsList className="w-full justify-start h-9 bg-transparent p-0">
+                <div className="px-6 py-2 flex items-center justify-between">
+                    {/* Left: Tabs */}
+                    <TabsList className="h-9 bg-transparent p-0">
                         <TabsTrigger
                             value="content"
                             className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
@@ -103,6 +80,52 @@ export function ChapterHeader() {
                             Step 5: Text Segmentation (NEW)
                         </TabsTrigger>
                     </TabsList>
+
+                    {/* Right: Actions (Status + Publish + Mode Toggle) */}
+                    <div className="flex items-center gap-3">
+                        {/* Mode Toggle (Only visible on Step 5) */}
+                        {activeTab === 'text-segmentation' && (
+                            <div className="flex items-center border rounded-lg p-0.5 bg-muted/20 mr-2">
+                                <Button
+                                    variant={textSegMode === 'editor' ? 'secondary' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => onTextSegModeChange('editor')}
+                                    className="h-7 px-2 gap-1.5 text-xs font-medium"
+                                >
+                                    <PencilLine className="h-3.5 w-3.5" />
+                                    Editor
+                                </Button>
+                                <Button
+                                    variant={textSegMode === 'segmentation' ? 'secondary' : 'ghost'}
+                                    size="sm"
+                                    onClick={() => onTextSegModeChange('segmentation')}
+                                    className="h-7 px-2 gap-1.5 text-xs font-medium"
+                                >
+                                    <Slice className="h-3.5 w-3.5" />
+                                    Segment
+                                </Button>
+                            </div>
+                        )}
+
+                        <div className="h-4 w-px bg-border" />
+
+                        <div className="flex items-center gap-2">
+                            <span className={isPublished ? "h-2 w-2 rounded-full bg-green-500" : "h-2 w-2 rounded-full bg-yellow-500"} />
+                            <span className="text-sm font-medium text-muted-foreground">
+                                {isPublished ? 'Published' : 'Draft'}
+                            </span>
+                        </div>
+
+                        <Button
+                            variant={isPublished ? 'outline' : 'default'}
+                            size="sm"
+                            onClick={handlePublishToggle}
+                            disabled={isTogglingStatus}
+                            className="h-8"
+                        >
+                            {isPublished ? 'Unpublish' : 'Publish'}
+                        </Button>
+                    </div>
                 </div>
             </div>
 

@@ -36,6 +36,7 @@ export default function ChapterContentPage() {
 function ChapterContentPageContent() {
     const { isLoading, error, isPublished } = useChapterEditor();
     const [activeTab, setActiveTab] = useState('content');
+    const [textSegMode, setTextSegMode] = useState<'editor' | 'segmentation'>('editor');
 
     // Loading state
     if (isLoading) {
@@ -73,8 +74,12 @@ function ChapterContentPageContent() {
     // Main render
     return (
         <Tabs value={activeTab} onValueChange={setActiveTab} className={`flex flex-col bg-gray-50 dark:bg-gray-900 h-[calc(100dvh-4rem)] ${isPublished ? 'cursor-not-allowed' : ''}`}>
-            {/* Phase 1: ChapterHeader with integrated tabs */}
-            <ChapterHeader />
+            {/* Phase 1: ChapterHeader with integrated tabs / actions */}
+            <ChapterHeader
+                activeTab={activeTab}
+                textSegMode={textSegMode}
+                onTextSegModeChange={setTextSegMode}
+            />
 
             {/* Tab content area - overflow-hidden to force internal scrolling in editor */}
             <div className={`flex-1 overflow-hidden min-h-0 flex flex-col ${isPublished ? 'pointer-events-none' : ''}`}>
@@ -98,7 +103,7 @@ function ChapterContentPageContent() {
                         </TabsContent>
 
                         <TabsContent value="text-segmentation" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0">
-                            <TextSegmentationTab />
+                            <TextSegmentationTab mode={textSegMode} />
                         </TabsContent>
                     </AudioPlayerProvider>
                 </div>
