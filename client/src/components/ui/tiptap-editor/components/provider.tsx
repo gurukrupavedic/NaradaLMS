@@ -31,6 +31,7 @@ export const TiptapProvider = ({
   children,
   slotBefore,
   slotAfter,
+  content,
   fontClassName,
 }: TiptapProviderProps) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -47,20 +48,23 @@ export const TiptapProvider = ({
     [editor, isFullScreen, isSourceMode]
   );
 
-  const editorContent = (
-    <EditorContent
-      editor={editor}
-      className={cn("rte-editor__container", fontClassName)}
-    />
-  );
-
   return (
     <TiptapContext.Provider value={providerValue}>
       <div
         className={cn("rte-editor", { "rte-editor--fullscreen": isFullScreen })}
       >
         {slotBefore}
-        {editorContent}
+        {/* Wrap EditorContent to isolate React overrides from ProseMirror DOM */}
+        <div
+          className="flex flex-col flex-1 min-w-0"
+          style={{ display: content ? 'none' : 'flex' }}
+        >
+          <EditorContent
+            editor={editor}
+            className={cn("rte-editor__container", fontClassName)}
+          />
+        </div>
+        {content}
         {slotAfter}
         {children}
       </div>

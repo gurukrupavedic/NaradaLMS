@@ -70,11 +70,11 @@ export function debounce<T extends (...args: any[]) => any>(
 export function throttle<T extends (...args: any[]) => any>(
   fn: T,
   wait: number
-): (...args: Parameters<T>) => void {
+): ((...args: Parameters<T>) => void) & { cancel: () => void } {
   let timeout: ReturnType<typeof setTimeout> | null = null;
   let lastExecTime = 0;
 
-  return (...args: Parameters<T>) => {
+  const throttled = (...args: Parameters<T>) => {
     const now = Date.now();
 
     if (now - lastExecTime > wait) {
@@ -93,6 +93,15 @@ export function throttle<T extends (...args: any[]) => any>(
       );
     }
   };
+
+  throttled.cancel = () => {
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+  };
+
+  return throttled;
 }
 
 export function capitalize(str: string): string {

@@ -23,8 +23,11 @@ export const StatusBar = ({ autoSaveStatus }: StatusBarProps) => {
   const count = useEditorState({
     editor,
     selector({ editor: currentEditor }) {
-      const counter = currentEditor.storage.characterCount;
-      return { words: counter.words(), characters: counter.characters() };
+      const counter = currentEditor?.storage?.characterCount;
+      return {
+        words: counter?.words() ?? 0,
+        characters: counter?.characters() ?? 0
+      };
     },
   });
 
