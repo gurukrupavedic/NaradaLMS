@@ -5,7 +5,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useChapterEditor } from '../context/ChapterEditorContext';
 
 type Script = 'te' | 'hi' | 'en';
-type SaveStatus = 'clean' | 'dirty' | 'saving' | 'saved';
+type SaveStatus = 'clean' | 'dirty' | 'saving' | 'saved' | 'error';
 
 export function useContentEditor() {
     const { chapterId, chapter } = useChapterEditor();
@@ -59,7 +59,7 @@ export function useContentEditor() {
             });
         },
         onError: (error: any) => {
-            setSaveStatus('clean');
+            setSaveStatus('error');
             toast({
                 title: 'Failed to save content',
                 description: error.message,

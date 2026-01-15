@@ -8,7 +8,7 @@ import { Toolbar } from "./ui/toolbar";
 import { Loader2 } from "lucide-react";
 
 type StatusBarProps = {
-  autoSaveStatus?: 'clean' | 'dirty' | 'saving' | 'saved';
+  autoSaveStatus?: 'clean' | 'dirty' | 'saving' | 'saved' | 'error';
 };
 
 export const StatusBar = ({ autoSaveStatus }: StatusBarProps) => {
@@ -70,6 +70,11 @@ export const StatusBar = ({ autoSaveStatus }: StatusBarProps) => {
           {autoSaveStatus === 'saved' && (
             <span className="text-green-600 dark:text-green-500">
               Saved ✓
+            </span>
+          )}
+          {autoSaveStatus === 'error' && (
+            <span className="text-red-600 dark:text-red-500 font-bold">
+              Save failed ❌
             </span>
           )}
         </div>

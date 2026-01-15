@@ -1,7 +1,7 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 
-type SaveStatus = 'clean' | 'dirty' | 'saving' | 'saved';
+type SaveStatus = 'clean' | 'dirty' | 'saving' | 'saved' | 'error';
 
 interface AutoSaveIndicatorProps {
     saveStatus: SaveStatus;
@@ -37,6 +37,14 @@ export function AutoSaveIndicator({ saveStatus }: AutoSaveIndicatorProps) {
         return (
             <span className="text-xs text-green-600 dark:text-green-500">
                 Saved ✓
+            </span>
+        );
+    }
+
+    if (saveStatus === 'error') {
+        return (
+            <span className="text-xs text-red-600 dark:text-red-500 font-medium">
+                Save failed ❌
             </span>
         );
     }
