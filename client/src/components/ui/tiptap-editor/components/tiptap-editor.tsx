@@ -94,6 +94,15 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
     } = props;
     const isEditable = !readonly && !disabled;
 
+    // Refs for stable access in throttled callback
+    const onChangeRef = React.useRef(onChange);
+    const outputRef = React.useRef(output);
+
+    useEffect(() => {
+      onChangeRef.current = onChange;
+      outputRef.current = output;
+    });
+
     // HTML/Text mode state with localStorage persistence
     const [editorMode, setEditorMode] = useState<'html' | 'text'>(() => {
       const saved = localStorage.getItem('tiptapEditorMode');
@@ -105,14 +114,24 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
       localStorage.setItem('tiptapEditorMode', editorMode);
     }, [editorMode]);
 
-    const throttledUpdate = useCallback(
-      throttle(({ editor }: { editor: Editor }) => {
-        if (!onChange) return;
-        const content = getEditorContent(editor, output);
-        onChange(content);
-      }, throttleDelay),
-      [output, throttleDelay, onChange]
+    const throttledUpdate = useMemo(
+      () =>
+        throttle(({ editor }: { editor: Editor }) => {
+          const changeHandler = onChangeRef.current;
+          if (!changeHandler) return;
+
+          const content = getEditorContent(editor, outputRef.current);
+          changeHandler(content);
+        }, throttleDelay),
+      [throttleDelay]
     );
+
+    // Cleanup throttled updates on unmount
+    useEffect(() => {
+      return () => {
+        throttledUpdate.cancel();
+      };
+    }, [throttledUpdate]);
 
     const extensions = useMemo(
       () => createExtensions({ placeholder }),
@@ -160,73 +179,21 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
     }
 
     // Text mode rendering
-    // Text mode rendering
-    if (editorMode === 'text') {
-      return (
-        <div className={cn("rte-editor rte-editor--text-mode border rounded-md overflow-hidden flex flex-col h-full", className)}>
-          {/* MenuBar disabled in text mode, passed props for toggle */}
-          <div className="rte-menu-bar-wrapper">
-            <MenuBar
-              currentScript={currentScript}
-              onScriptChange={onScriptChange}
-              disabled={true}
-              editorMode={editorMode}
-              onModeChange={setEditorMode}
-            />
-          </div>
-
-          {/* Text preview */}
-          <div className="flex-1 overflow-auto bg-white dark:bg-gray-950 p-4">
-            <div
-              className={cn(
-                "whitespace-pre-wrap text-3xl leading-relaxed",
-                getFontClass(language)
-              )}
-            >
-              {htmlToPlainText(content as string) || placeholder || 'No content'}
-            </div>
-          </div>
-
-          {/* Simplified StatusBar for text mode (no editor context) */}
-          <div className="rte-status-bar">
-            <div className="flex items-center justify-between p-2 border-t bg-gray-50 dark:bg-gray-900">
-              <div className="rte-counter">
-                <span className="text-xs text-gray-600 dark:text-gray-400">Preview Mode</span>
-              </div>
-
-              {/* Auto-Save Status */}
-              {autoSaveStatus && (
-                <div className="ml-4 flex items-center gap-1.5 text-xs min-w-[120px]">
-                  {autoSaveStatus === 'clean' && (
-                    <span className="text-gray-500 dark:text-gray-400">
-                      All changes saved
-                    </span>
-                  )}
-                  {autoSaveStatus === 'dirty' && (
-                    <span className="text-yellow-600 dark:text-yellow-500">
-                      Unsaved changes...
-                    </span>
-                  )}
-                  {autoSaveStatus === 'saving' && (
-                    <>
-                      <Loader2 className="h-3 w-3 animate-spin text-blue-600 dark:text-blue-500" />
-                      <span className="text-blue-600 dark:text-blue-500">Saving...</span>
-                    </>
-                  )}
-                  {autoSaveStatus === 'saved' && (
-                    <span className="text-green-600 dark:text-green-500">
-                      Saved ✓
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+    // Text Mode Content Definition
+    const textModeContent = (
+      <div className="rte-editor__container box-border">
+        <div
+          className={cn(
+            "flex-1 w-full min-h-full py-10 px-10 whitespace-pre-wrap text-3xl leading-relaxed outline-none",
+            getFontClass(language)
+          )}
+        >
+          {htmlToPlainText(content as string) || placeholder || 'No content'}
         </div>
-      );
-    }
+      </div>
+    );
 
-    // HTML mode rendering (full editor)
+    // Unified Render
     return (
       <div className={cn("rte-editor-wrapper", className)}>
         <TiptapProvider
@@ -235,7 +202,7 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
             <MenuBar
               currentScript={currentScript}
               onScriptChange={onScriptChange}
-              disabled={!isEditable}
+              disabled={editorMode === 'text' ? false : !isEditable}
               editorMode={editorMode}
               onModeChange={setEditorMode}
             />
@@ -246,10 +213,15 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
             />
           }
           fontClassName={getFontClass(language)}
+          content={editorMode === 'text' ? textModeContent : undefined}
         >
-          <Menus />
-          <Resizer />
-          <DragHandle />
+          {editorMode !== 'text' && (
+            <>
+              <Menus />
+              <Resizer />
+              <DragHandle />
+            </>
+          )}
         </TiptapProvider>
       </div>
     );
