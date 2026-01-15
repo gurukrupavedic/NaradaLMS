@@ -73,6 +73,8 @@ function EditorMode() {
                     onScriptChange={setContentScript}
                     autoSaveStatus={saveStatus}
                     className="h-full"
+                    maxHeight="100%"
+                    minHeight="100%"
                 />
             </div>
         </div>
