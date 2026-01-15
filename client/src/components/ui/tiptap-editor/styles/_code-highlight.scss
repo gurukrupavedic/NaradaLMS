@@ -1,0 +1,86 @@
+.hljs {
+  // Keywords
+  &-keyword,
+  &-meta .hljs-keyword,
+  &-template-tag,
+  &-template-variable,
+  &-type {
+    color: var(--rte-hljs-keyword);
+  }
+
+  // Functions and classes
+  &-title,
+  &-title.class_,
+  &-title.class_.inherited__,
+  &-title.function_ {
+    color: var(--rte-hljs-function);
+  }
+
+  // Variables and attributes
+  &-attr,
+  &-attribute,
+  &-literal,
+  &-meta,
+  &-number,
+  &-operator,
+  &-variable,
+  &-selector-attr,
+  &-selector-id,
+  &-variable.language_ {
+    color: var(--rte-hljs-variable);
+  }
+
+  // Strings
+  &-meta .hljs-string,
+  &-regexp,
+  &-string {
+    color: var(--rte-hljs-string);
+  }
+
+  // Built-ins and parameters
+  &-built_in,
+  &-symbol,
+  &-params {
+    color: var(--rte-hljs-builtin);
+  }
+
+  // Comments
+  &-code,
+  &-comment,
+  &-formula {
+    color: var(--rte-hljs-comment);
+  }
+
+  // Markup and tags
+  &-name,
+  &-quote,
+  &-selector-tag,
+  &-selector-pseudo {
+    color: var(--rte-hljs-markup);
+  }
+
+  // Diff highlights
+  &-addition {
+    color: var(--rte-hljs-inserted);
+    background-color: #1b4721;
+  }
+  &-deletion {
+    color: var(--rte-hljs-deleted);
+    background-color: #78191b;
+  }
+  &-changed {
+    color: var(--rte-hljs-changed);
+  }
+  &-section {
+    color: var(--rte-hljs-constant);
+    font-weight: bold;
+  }
+  &-emphasis {
+    color: var(--rte-hljs-fg);
+    font-style: italic;
+  }
+  &-strong {
+    color: var(--rte-hljs-fg);
+    font-weight: bold;
+  }
+}
