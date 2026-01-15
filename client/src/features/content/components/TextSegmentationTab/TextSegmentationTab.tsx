@@ -40,16 +40,11 @@ export function TextSegmentationTab({ mode }: TextSegmentationTabProps) {
     const { isPublished } = useChapterEditor();
 
     return (
-        <div className="flex flex-col h-full">
-            {/* Content Area */}
-            <div className="flex-1 overflow-hidden">
-                {mode === 'editor' ? (
-                    <EditorMode />
-                ) : (
-                    <SegmentationMode />
-                )}
-            </div>
-        </div>
+        mode === 'editor' ? (
+            <EditorMode />
+        ) : (
+            <SegmentationMode />
+        )
     );
 }
 
@@ -130,7 +125,7 @@ function SegmentationMode() {
     };
 
     return (
-        <div className="h-full p-4">
+        <div className="h-full">
             <ResizablePanelGroup
                 direction="horizontal"
                 onLayout={handleLayoutChange}

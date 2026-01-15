@@ -102,7 +102,7 @@ function ChapterContentPageContent() {
                             <PreviewTab />
                         </TabsContent>
 
-                        <TabsContent value="text-segmentation" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0">
+                        <TabsContent value="text-segmentation" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
                             <TextSegmentationTab mode={textSegMode} />
                         </TabsContent>
                     </AudioPlayerProvider>
