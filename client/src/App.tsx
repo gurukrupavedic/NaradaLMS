@@ -10,8 +10,7 @@ import { useAuth } from "@/features/shared-features/hooks/useAuth";
 import { useWarmTrackCache } from "@/lib/query-prefetch";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
-// Prototype Routes
-const TiptapV3Test = lazy(() => import("@/prototypes/tiptap-v3-editor/test-page"));
+
 
 // Phase 5A: Bundle Optimization - Route-based code splitting
 const Landing = lazy(() => import("@/features/shared-features/pages/Landing").then(module => ({ default: module.Landing })));
@@ -92,8 +91,7 @@ function Router() {
           <Route path="/app" component={RedirectToLogin} />
           <Route path="/app/:rest*" component={RedirectToLogin} />
 
-          {/* Prototype Routes (Public) */}
-          <Route path="/prototype/tiptap-v3" component={TiptapV3Test} />
+
 
           <Route component={SimpleNotFound} />
         </Switch>
@@ -133,8 +131,7 @@ function Router() {
           return <LoadingScreen message="Redirecting..." />;
         }} />
 
-        {/* Prototype Routes (Accessible when logged in) */}
-        <Route path="/prototype/tiptap-v3" component={TiptapV3Test} />
+
 
         {/* 404 for all other routes */}
         <Route component={SimpleNotFound} />
