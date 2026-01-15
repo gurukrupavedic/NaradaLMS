@@ -23,6 +23,7 @@ type TiptapProviderProps = {
   slotBefore?: ReactNode;
   slotAfter?: ReactNode;
   children?: ReactNode;
+  fontClassName?: string;
 };
 
 export const TiptapProvider = ({
@@ -30,6 +31,7 @@ export const TiptapProvider = ({
   children,
   slotBefore,
   slotAfter,
+  fontClassName,
 }: TiptapProviderProps) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isSourceMode, setIsSourceMode] = useState(false);
@@ -46,7 +48,10 @@ export const TiptapProvider = ({
   );
 
   const editorContent = (
-    <EditorContent editor={editor} className="rte-editor__container" />
+    <EditorContent
+      editor={editor}
+      className={cn("rte-editor__container", fontClassName)}
+    />
   );
 
   return (

@@ -62,7 +62,6 @@ export function createExtensions({ placeholder }: ExtensionConfig) {
       lineHeight: false,
       fontFamily: false,
       fontSize: false,
-      fontSize: false,
     }),
     Color,
     Highlight.configure({ multicolor: true }),

@@ -20,10 +20,41 @@ import TextColorPopover from "./controls/text-color-popover";
 import UnderlineButton from "./controls/underline-button";
 import UndoButton from "./controls/undo-button";
 import { Toolbar, ToolbarDivider, ToolbarGroup } from "./ui/toolbar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export const MenuBar = () => {
+type MenuBarProps = {
+  currentScript?: "te" | "hi" | "en";
+  onScriptChange?: (script: "te" | "hi" | "en") => void;
+  disabled?: boolean;
+};
+
+export const MenuBar = ({ currentScript, onScriptChange, disabled }: MenuBarProps) => {
   return (
     <Toolbar dense className="rte-menu-bar">
+      {/* Script Selector - First group */}
+      {currentScript && onScriptChange && (
+        <>
+          <ToolbarGroup>
+            <Select
+              value={currentScript}
+              onValueChange={onScriptChange}
+              disabled={disabled}
+            >
+              <SelectTrigger className="w-[140px] h-8 text-xs bg-white dark:bg-gray-950 shadow-sm border-gray-300 dark:border-gray-700">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="te">Telugu</SelectItem>
+                <SelectItem value="hi">Devanagari</SelectItem>
+                <SelectItem value="en">IAST</SelectItem>
+              </SelectContent>
+            </Select>
+          </ToolbarGroup>
+
+          <ToolbarDivider />
+        </>
+      )}
+
       <ToolbarGroup>
         <UndoButton />
         <RedoButton />
