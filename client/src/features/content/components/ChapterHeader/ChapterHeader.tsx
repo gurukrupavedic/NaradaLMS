@@ -96,6 +96,12 @@ export function ChapterHeader() {
                         >
                             Step 4: Preview
                         </TabsTrigger>
+                        <TabsTrigger
+                            value="text-segmentation"
+                            className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
+                        >
+                            Step 5: Text Segmentation (NEW)
+                        </TabsTrigger>
                     </TabsList>
                 </div>
             </div>
