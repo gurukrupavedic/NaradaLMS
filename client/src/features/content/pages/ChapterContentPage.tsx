@@ -35,7 +35,7 @@ export default function ChapterContentPage() {
 // Content component - uses context for data
 function ChapterContentPageContent() {
     const { isLoading, error, isPublished } = useChapterEditor();
-    const [activeTab, setActiveTab] = useState('content');
+    const [activeTab, setActiveTab] = useState('text-segmentation');
     const [textSegMode, setTextSegMode] = useState<'editor' | 'segmentation'>('editor');
 
     // Loading state
@@ -86,8 +86,8 @@ function ChapterContentPageContent() {
                 {/* Re-enable pointer events for scrolling containers inside tabs */}
                 <div className={`h-full flex flex-col ${isPublished ? 'pointer-events-auto' : ''}`}>
                     <AudioPlayerProvider>
-                        <TabsContent value="content" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
-                            <ContentTab />
+                        <TabsContent value="text-segmentation" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
+                            <TextSegmentationTab mode={textSegMode} />
                         </TabsContent>
 
                         <TabsContent value="segmentation" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
@@ -100,10 +100,6 @@ function ChapterContentPageContent() {
 
                         <TabsContent value="preview" className="flex-1 overflow-auto h-full m-0 p-4">
                             <PreviewTab />
-                        </TabsContent>
-
-                        <TabsContent value="text-segmentation" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
-                            <TextSegmentationTab mode={textSegMode} />
                         </TabsContent>
                     </AudioPlayerProvider>
                 </div>

@@ -50,7 +50,7 @@ export function ChapterHeader({ activeTab, textSegMode, onTextSegModeChange }: C
                     {/* Left: Tabs */}
                     <TabsList className="h-9 bg-transparent p-0">
                         <TabsTrigger
-                            value="content"
+                            value="text-segmentation"
                             className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
                         >
                             Step 1: Content
@@ -65,19 +65,13 @@ export function ChapterHeader({ activeTab, textSegMode, onTextSegModeChange }: C
                             value="mapping"
                             className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
                         >
-                            Step 3: Audio Mapping
+                            Step 3: Audio & Mapping
                         </TabsTrigger>
                         <TabsTrigger
                             value="preview"
                             className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
                         >
                             Step 4: Preview
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="text-segmentation"
-                            className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
-                        >
-                            Step 5: Text Segmentation (NEW)
                         </TabsTrigger>
                     </TabsList>
 
