@@ -37,6 +37,22 @@ interface AudioTextMapping {
     endTime: number;
 }
 
+import { cn } from "@/lib/utils";
+
+// Helper to get font class based on script
+const getFontClass = (language: string) => {
+    switch (language) {
+        case "te":
+            return "font-['JIMS','Noto_Sans_Telugu',sans-serif]";
+        case "hi":
+            return "font-['AdishilaSanVedic','Noto_Sans_Devanagari',sans-serif] font-semibold";
+        case "en":
+            return "font-['AdishilaSan','Noto_Sans',sans-serif]";
+        default:
+            return "";
+    }
+};
+
 export function PreviewTab() {
     const { chapter, chapterId } = useChapterEditor();
     const {
@@ -206,13 +222,10 @@ export function PreviewTab() {
                             />
                         ) : (
                             <div
-                                className={`prose max-w-none ${contentScript === "te"
-                                    ? "font-telugu"
-                                    : contentScript === "hi"
-                                        ? "font-devanagari"
-                                        : "font-iast"
-                                    }`}
-                                style={{ lineHeight: "1.6" }}
+                                className={cn(
+                                    "prose prose-lg dark:prose-invert max-w-none text-3xl leading-[1.6]",
+                                    getFontClass(contentScript)
+                                )}
                                 dangerouslySetInnerHTML={{ __html: chapterContent[contentScript] || "" }}
                                 data-testid="html-content-view"
                             />

@@ -160,15 +160,18 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
     }
 
     // Text mode rendering
+    // Text mode rendering
     if (editorMode === 'text') {
       return (
         <div className={cn("rte-editor rte-editor--text-mode border rounded-md overflow-hidden flex flex-col h-full", className)}>
-          {/* MenuBar disabled in text mode */}
+          {/* MenuBar disabled in text mode, passed props for toggle */}
           <div className="rte-menu-bar-wrapper">
             <MenuBar
               currentScript={currentScript}
               onScriptChange={onScriptChange}
               disabled={true}
+              editorMode={editorMode}
+              onModeChange={setEditorMode}
             />
           </div>
 
@@ -190,20 +193,6 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
               <div className="rte-counter">
                 <span className="text-xs text-gray-600 dark:text-gray-400">Preview Mode</span>
               </div>
-
-              {/* HTML/Text Toggle */}
-              {editorMode && (
-                <Tabs value={editorMode} onValueChange={setEditorMode} className="ml-4">
-                  <TabsList className="h-8 bg-white dark:bg-gray-950 border shadow-sm">
-                    <TabsTrigger value="html" className="text-xs h-6 px-3">
-                      HTML
-                    </TabsTrigger>
-                    <TabsTrigger value="text" className="text-xs h-6 px-3">
-                      Text
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              )}
 
               {/* Auto-Save Status */}
               {autoSaveStatus && (
@@ -247,12 +236,12 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
               currentScript={currentScript}
               onScriptChange={onScriptChange}
               disabled={!isEditable}
+              editorMode={editorMode}
+              onModeChange={setEditorMode}
             />
           }
           slotAfter={
             <StatusBar
-              editorMode={editorMode}
-              onModeChange={setEditorMode}
               autoSaveStatus={autoSaveStatus}
             />
           }

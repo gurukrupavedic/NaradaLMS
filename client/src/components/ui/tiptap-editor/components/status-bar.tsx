@@ -5,16 +5,13 @@ import { useEditorState } from "@tiptap/react";
 import { MenuButton } from "./menu-button";
 import { useTiptapEditor } from "./provider";
 import { Toolbar } from "./ui/toolbar";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Loader2 } from "lucide-react";
 
 type StatusBarProps = {
-  editorMode?: 'html' | 'text';
-  onModeChange?: (mode: 'html' | 'text') => void;
   autoSaveStatus?: 'clean' | 'dirty' | 'saving' | 'saved';
 };
 
-export const StatusBar = ({ editorMode, onModeChange, autoSaveStatus }: StatusBarProps) => {
+export const StatusBar = ({ autoSaveStatus }: StatusBarProps) => {
   const {
     editor,
     isFullScreen,
@@ -47,20 +44,6 @@ export const StatusBar = ({ editorMode, onModeChange, autoSaveStatus }: StatusBa
         <span className="rte-word-count">Words: {count.words}</span>
         <span className="rte-charater">Characters: {count.characters}</span>
       </div>
-
-      {/* HTML/Text Toggle */}
-      {editorMode && onModeChange && (
-        <Tabs value={editorMode} onValueChange={onModeChange} className="ml-4">
-          <TabsList className="h-8 bg-white dark:bg-gray-950 border shadow-sm">
-            <TabsTrigger value="html" className="text-xs h-6 px-3">
-              HTML
-            </TabsTrigger>
-            <TabsTrigger value="text" className="text-xs h-6 px-3">
-              Text
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      )}
 
       {/* Auto-Save Status */}
       {autoSaveStatus && (
