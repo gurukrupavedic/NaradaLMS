@@ -9,15 +9,19 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden; // Force wrapper to contain children
 
   .rte-editor {
-    flex-grow: 1;
-    height: 100%;
+    flex: 1; // Allow editor to shrink/grow
+    min-height: 0; // Critical for flex scrolling
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; // Prevent content leak
 
     // Ensure the internal container also fills height
     &__container {
-      flex-grow: 1;
-      height: 100%;
+      flex: 1;
+      min-height: 0; // Critical for flex scrolling
     }
   }
 }
