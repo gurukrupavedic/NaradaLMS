@@ -11,8 +11,8 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Square } from 'lucide-react';
-import { TimestampControl } from '@/new-ui/content/components/TimestampControl';
-import { SegmentCard } from '@/new-ui/content/components/SegmentCard';
+import { TimestampControl } from '@/features/content/components/TimestampControl';
+import { SegmentCard } from '@/features/content/components/SegmentCard';
 import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
 import { getSegmentText } from '@shared/utils/text-segmentation';
 import { cn } from '@/lib/utils';

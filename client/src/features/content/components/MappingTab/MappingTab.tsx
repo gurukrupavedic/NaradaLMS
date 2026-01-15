@@ -9,18 +9,18 @@ import {
     ResizablePanelGroup,
 } from '@/components/ui/resizable';
 import { StretchHorizontal, Zap, RotateCcw } from 'lucide-react';
-import { AudioFileManager } from '@/new-ui/content/components/AudioFileManager';
+import { AudioFileManager } from '@/features/content/components/AudioFileManager';
 import { ProgressiveMapper } from './ProgressiveMapper';
 import { SegmentMappingGrid } from './SegmentMappingGrid';
 import { FocusMappingView } from './FocusMappingView';
-import { SegmentCard } from '@/new-ui/content/components/SegmentCard';
+import { SegmentCard } from '@/features/content/components/SegmentCard';
 import { FocusSessionSetup, SessionConfig } from './FocusSessionSetup';
-import { useChapterEditor } from '@/new-ui/content/context/ChapterEditorContext';
-import { useAudioPlayer } from '@/new-ui/content/context/AudioPlayerContext';
-import { useAudioManagement } from '@/new-ui/content/hooks/useAudioManagement';
-import { useTextSegmentationEditor } from '@/new-ui/content/hooks/useTextSegmentationEditor';
-import { useAudioMapping } from '@/new-ui/content/hooks/useAudioMapping';
-import { useLocalStorage } from '@/new-ui/content/hooks/useLocalStorage';
+import { useChapterEditor } from '@/features/content/context/ChapterEditorContext';
+import { useAudioPlayer } from '@/features/content/context/AudioPlayerContext';
+import { useAudioManagement } from '@/features/content/hooks/useAudioManagement';
+import { useTextSegmentationEditor } from '@/features/content/hooks/useTextSegmentationEditor';
+import { useAudioMapping } from '@/features/content/hooks/useAudioMapping';
+import { useLocalStorage } from '@/features/content/hooks/useLocalStorage';
 import type { Script } from '@shared/types/text-segmentation';
 import { getSegmentText } from '@shared/utils/text-segmentation';
 

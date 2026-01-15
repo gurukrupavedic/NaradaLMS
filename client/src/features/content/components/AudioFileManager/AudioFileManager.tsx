@@ -34,7 +34,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/AlertDialog";
-import { useAudioManagement } from '@/new-ui/content/hooks/useAudioManagement';
+import { useAudioManagement } from '@/features/content/hooks/useAudioManagement';
 import { AudioPlayerControls, AudioPlayerControlsProps } from '@/components/common/AudioPlayerControls';
 import { cn } from '@/lib/utils';
 

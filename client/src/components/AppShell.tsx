@@ -7,26 +7,26 @@ import { LoadingScreen } from '@/components/ui/loading-screen';
 import { AppLayout } from '@/components/layout/app-layout';
 
 // Admin pages
-import UserManagement from '@/new-ui/admin/pages/UserManagement';
-import AuditLogs from '@/new-ui/admin/pages/AuditLogs';
-import BatchManagement from '@/new-ui/admin/pages/BatchManagement';
-import SystemSettings from '@/new-ui/admin/pages/SystemSettings';
+import UserManagement from '@/features/admin/pages/UserManagement';
+import AuditLogs from '@/features/admin/pages/AuditLogs';
+import BatchManagement from '@/features/admin/pages/BatchManagement';
+import SystemSettings from '@/features/admin/pages/SystemSettings';
 
 // Batch pages (unified)
-import MyBatchesList from '@/new-ui/batches/pages/MyBatchesList';
-import BatchDetails from '@/new-ui/batches/pages/BatchDetails';
+import MyBatchesList from '@/features/batches/pages/MyBatchesList';
+import BatchDetails from '@/features/batches/pages/BatchDetails';
 
 // Instructor pages
-import { MyStudentsPage } from '@/new-ui/instructor/pages/MyStudentsPage';
-import { StudentDetailsPage } from '@/new-ui/instructor/pages/StudentDetailsPage';
+import { MyStudentsPage } from '@/features/instructor/pages/MyStudentsPage';
+import { StudentDetailsPage } from '@/features/instructor/pages/StudentDetailsPage';
 
 // Learning & Content
-import { VedicLearningPage } from '@/new-ui/student/pages/VedicLearningPage';
-import { LearnChapterPage } from '@/new-ui/student/pages/LearnChapterPage';
+import { VedicLearningPage } from '@/features/student/pages/VedicLearningPage';
+import { LearnChapterPage } from '@/features/student/pages/LearnChapterPage';
 
 // Content pages
-import TracksAndChapters from '@/new-ui/content/pages/TracksAndChaptersPage';
-import ChapterContent from '@/new-ui/content/pages/ChapterContentPage';
+import TracksAndChapters from '@/features/content/pages/TracksAndChaptersPage';
+import ChapterContent from '@/features/content/pages/ChapterContentPage';
 
 export default function AppShell() {
   const { user } = useAuth();

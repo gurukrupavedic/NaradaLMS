@@ -9,7 +9,7 @@ import { ArrowLeft, Music, FileText, StretchHorizontal, Zap, Clock3, Info } from
 import { LoadingSpinner } from "@/components/ui/loading";
 
 import { SegmentedTextDisplay } from "@/components/common/SegmentedTextDisplay";
-import { getProficiencyLabel } from "@/new-ui/batches/utils/matrix-utils";
+import { getProficiencyLabel } from "@/features/batches/utils/matrix-utils";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AudioPlayerControls } from "@/components/common/AudioPlayerControls";

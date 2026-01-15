@@ -26,9 +26,9 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { AnnotationLayer } from './AnnotationLayer';
-import { useChapterEditor } from '@/new-ui/content/context/ChapterEditorContext';
-import { useTextSegmentationEditor } from '@/new-ui/content/hooks/useTextSegmentationEditor';
-import { useLocalStorage } from '@/new-ui/content/hooks/useLocalStorage';
+import { useChapterEditor } from '@/features/content/context/ChapterEditorContext';
+import { useTextSegmentationEditor } from '@/features/content/hooks/useTextSegmentationEditor';
+import { useLocalStorage } from '@/features/content/hooks/useLocalStorage';
 import { useQueryClient } from '@tanstack/react-query';
 import { SegmentList } from './SegmentList';
 

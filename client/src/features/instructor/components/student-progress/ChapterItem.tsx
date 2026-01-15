@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
-import { getCellColor, getProficiencyLabel } from '@/new-ui/batches/utils/matrix-utils';
+import { getCellColor, getProficiencyLabel } from '@/features/batches/utils/matrix-utils';
 
 import { ChapterProgress } from '@shared/types';
 

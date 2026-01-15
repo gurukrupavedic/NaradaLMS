@@ -5,14 +5,14 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useRoleGuard } from '@/features/shared-features/hooks/useRoleGuard';
-import { ChapterEditorProvider, useChapterEditor } from '@/new-ui/content/context/ChapterEditorContext';
-import { AudioPlayerProvider } from '@/new-ui/content/context/AudioPlayerContext';
-import { ChapterHeader } from '@/new-ui/content/components/ChapterHeader';
-import { ContentTab } from '@/new-ui/content/components/ContentTab';
+import { ChapterEditorProvider, useChapterEditor } from '@/features/content/context/ChapterEditorContext';
+import { AudioPlayerProvider } from '@/features/content/context/AudioPlayerContext';
+import { ChapterHeader } from '@/features/content/components/ChapterHeader';
+import { ContentTab } from '@/features/content/components/ContentTab';
 
-import { PreviewTab } from '@/new-ui/content/components/PreviewTab';
-import { SegmentationTab } from '@/new-ui/content/components/SegmentationTab';
-import { MappingTab } from '@/new-ui/content/components/MappingTab';
+import { PreviewTab } from '@/features/content/components/PreviewTab';
+import { SegmentationTab } from '@/features/content/components/SegmentationTab';
+import { MappingTab } from '@/features/content/components/MappingTab';
 
 
 // Wrapper component - handles route parameters and context setup
