@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 
-import { PopoverClose } from "@radix-ui/react-popover";
+// import { PopoverClose } from "@radix-ui/react-popover";
 
 import { cn } from "../helpers/utils";
 
@@ -43,9 +43,7 @@ const TableBuilder = ({ onCreate }: TableBuilderProps) => {
 
   return (
     <div className="rte-tb__builder">
-      <PopoverClose asChild>
-        <div className="rte-tb__grid">{grid}</div>
-      </PopoverClose>
+      <div className="rte-tb__grid">{grid}</div>
       <div style={{ textAlign: "center", marginBlock: 3 }}>
         {gridSize.rows} x {gridSize.cols}
       </div>

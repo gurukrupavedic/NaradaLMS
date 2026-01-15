@@ -2,7 +2,7 @@ import React from "react";
 
 import BoldButton from "./controls/bold-button";
 import BulletListButton from "./controls/bullet-list-button";
-import EmojiPopover from "./controls/emoji-popover";
+// import EmojiPopover from "./controls/emoji-popover";
 import HeadingDropdown from "./controls/heading-dropdown";
 import ImageButton from "./controls/image-button-2";
 import InsertDropdown from "./controls/insert-dropdown";
@@ -11,7 +11,9 @@ import LinkButton from "./controls/link-button";
 import MoreFormatPopover from "./controls/more-format-popover";
 import OrderedListButton from "./controls/ordered-list-button";
 import RedoButton from "./controls/redo-button";
-import TableButton from "./controls/table-button";
+// import TableButton from "./controls/table-button";
+import BlockquoteButton from "./controls/blockquote-button";
+import YoutubeButton from "./controls/youtube-button";
 import TextAlignPopover from "./controls/text-align-popover";
 import TextBackgroundPopover from "./controls/text-background-popover";
 import TextColorPopover from "./controls/text-color-popover";
@@ -62,8 +64,8 @@ export const MenuBar = () => {
       <ToolbarGroup>
         <LinkButton />
         <ImageButton />
-        <TableButton />
-        <EmojiPopover />
+        <BlockquoteButton />
+        <YoutubeButton />
         <InsertDropdown />
       </ToolbarGroup>
     </Toolbar>
