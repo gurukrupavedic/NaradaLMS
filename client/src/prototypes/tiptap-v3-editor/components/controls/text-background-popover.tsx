@@ -3,15 +3,14 @@ import React, { CSSProperties, useRef } from "react";
 import { createPortal } from "react-dom";
 
 import useMount from "../../hooks/use-mount";
-import { useTextStyle } from "../../hooks/use-text-style";
+import { useHighlight } from "../../hooks/use-highlight";
 import ColorPicker from "../color-picker";
 import { MenuButton } from "../menu-button";
 
 const TextBackgroundPopover = () => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const mounted = useMount();
-  const { currentValue, canSetValue, setValue, unsetValue } =
-    useTextStyle("backgroundColor");
+  const { currentValue, canSetValue, setValue, unsetValue } = useHighlight();
 
   const colorBarStyle: CSSProperties = {
     position: "absolute",

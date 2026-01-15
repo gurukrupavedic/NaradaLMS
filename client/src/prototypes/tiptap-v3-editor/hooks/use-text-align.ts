@@ -13,7 +13,7 @@ export function canSetTextAlign(
   alignment: TextAlignType
 ) {
   if (!editor || !editor.isEditable) return false;
-  if (editor.isActive("table")) return false;
+  // if (editor.isActive("table")) return false;
   return editor.can().setTextAlign(alignment);
 }
 
@@ -38,9 +38,16 @@ export function useTextAlign(alignment: TextAlignType) {
   const editorState = useEditorState({
     editor,
     selector({ editor }) {
+      const canAlign = canSetTextAlign(editor, alignment);
+      console.log(`useTextAlign(${alignment}): canAlign=${canAlign}`, {
+        isEditable: editor.isEditable,
+        selection: editor.state.selection,
+        nodeType: editor.state.selection.$from.parent.type.name,
+        canSetLeft: editor.can().setTextAlign('left'),
+      });
       return {
         isActive: isTextAlignActive(editor, alignment),
-        canAlign: canSetTextAlign(editor, alignment),
+        canAlign,
       };
     },
   });

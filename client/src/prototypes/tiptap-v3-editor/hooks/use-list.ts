@@ -10,6 +10,7 @@ export type ListType = "bulletList" | "orderedList";
 // Utility functions
 export function canToggleList(editor: Editor | null, type: ListType): boolean {
   if (!editor || !editor.isEditable) return false;
+  if (editor.isActive("heading")) return false;
 
   switch (type) {
     case "bulletList":

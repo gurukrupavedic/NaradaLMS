@@ -1,3 +1,5 @@
+import { Color } from "@tiptap/extension-color";
+import { Highlight } from "@tiptap/extension-highlight";
 import { Subscript } from "@tiptap/extension-subscript";
 import { Superscript } from "@tiptap/extension-superscript";
 import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
@@ -60,7 +62,10 @@ export function createExtensions({ placeholder }: ExtensionConfig) {
       lineHeight: false,
       fontFamily: false,
       fontSize: false,
+      fontSize: false,
     }),
+    Color,
+    Highlight.configure({ multicolor: true }),
     ImageFigure,
     // CodeBlockLowlight,
     // CodeBlockShiki,
