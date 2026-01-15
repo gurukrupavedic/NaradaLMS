@@ -46,7 +46,7 @@ export function useContentEditor() {
         },
         onSuccess: () => {
             setSaveStatus('saved');
-            toast({ title: 'Content saved' });
+            // toast({ title: 'Content saved' }); // Disabled to avoid spamming toast notifications
 
             // Auto-hide success status after 3 seconds
             setTimeout(() => {

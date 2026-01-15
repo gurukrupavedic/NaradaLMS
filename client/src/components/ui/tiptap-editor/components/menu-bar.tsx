@@ -21,20 +21,25 @@ import UnderlineButton from "./controls/underline-button";
 import UndoButton from "./controls/undo-button";
 import { Toolbar, ToolbarDivider, ToolbarGroup } from "./ui/toolbar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 
 type MenuBarProps = {
   currentScript?: "te" | "hi" | "en";
   onScriptChange?: (script: "te" | "hi" | "en") => void;
   disabled?: boolean;
+  editorMode?: 'html' | 'text';
+  onModeChange?: (mode: 'html' | 'text') => void;
 };
 
-export const MenuBar = ({ currentScript, onScriptChange, disabled }: MenuBarProps) => {
+export const MenuBar = ({ currentScript, onScriptChange, disabled, editorMode, onModeChange }: MenuBarProps) => {
+  const isTextMode = editorMode === 'text';
+
   return (
     <Toolbar dense className="rte-menu-bar">
       {/* Script Selector - First group */}
       {currentScript && onScriptChange && (
         <>
-          <ToolbarGroup>
+          <ToolbarGroup className="pl-1">
             <Select
               value={currentScript}
               onValueChange={onScriptChange}
@@ -51,54 +56,81 @@ export const MenuBar = ({ currentScript, onScriptChange, disabled }: MenuBarProp
             </Select>
           </ToolbarGroup>
 
-          <ToolbarDivider />
+          {!isTextMode && <ToolbarDivider />}
         </>
       )}
 
-      <ToolbarGroup>
-        <UndoButton />
-        <RedoButton />
-      </ToolbarGroup>
+      {/* Formatting Tools - Only in HTML mode */}
+      {!isTextMode && (
+        <>
+          <ToolbarGroup>
+            <UndoButton />
+            <RedoButton />
+          </ToolbarGroup>
 
-      <ToolbarDivider />
+          <ToolbarDivider />
 
-      <ToolbarGroup>
-        <HeadingDropdown />
-      </ToolbarGroup>
+          <ToolbarGroup>
+            <HeadingDropdown />
+          </ToolbarGroup>
 
-      <ToolbarDivider />
+          <ToolbarDivider />
 
-      <ToolbarGroup>
-        <BoldButton />
-        <ItalicButton />
-        <UnderlineButton />
-        <MoreFormatPopover />
-      </ToolbarGroup>
+          <ToolbarGroup>
+            <BoldButton />
+            <ItalicButton />
+            <UnderlineButton />
+            <MoreFormatPopover />
+          </ToolbarGroup>
 
-      <ToolbarDivider />
+          <ToolbarDivider />
 
-      <ToolbarGroup>
-        <TextColorPopover />
-        <TextBackgroundPopover />
-      </ToolbarGroup>
+          <ToolbarGroup>
+            <TextColorPopover />
+            <TextBackgroundPopover />
+          </ToolbarGroup>
 
-      <ToolbarDivider />
+          <ToolbarDivider />
 
-      <ToolbarGroup>
-        <TextAlignPopover />
-        <BulletListButton />
-        <OrderedListButton />
-      </ToolbarGroup>
+          <ToolbarGroup>
+            <TextAlignPopover />
+            <BulletListButton />
+            <OrderedListButton />
+          </ToolbarGroup>
 
-      <ToolbarDivider />
+          <ToolbarDivider />
 
-      <ToolbarGroup>
-        <LinkButton />
-        <ImageButton />
-        <BlockquoteButton />
-        <YoutubeButton />
-        <InsertDropdown />
-      </ToolbarGroup>
+          <ToolbarGroup>
+            <LinkButton />
+            <ImageButton />
+            <BlockquoteButton />
+            <YoutubeButton />
+            <InsertDropdown />
+          </ToolbarGroup>
+        </>
+      )}
+
+      {/* Mode Toggle - Far right */}
+      {editorMode && onModeChange && (
+        <ToolbarGroup className="ml-auto pr-1">
+          <Tabs value={editorMode} onValueChange={onModeChange as (value: string) => void}>
+            <TabsList className="h-8 bg-transparent p-0 gap-1 select-none">
+              <TabsTrigger
+                value="html"
+                className="text-xs h-7 px-3 rounded-sm data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-none border border-transparent data-[state=active]:border-border hover:bg-muted/50"
+              >
+                HTML
+              </TabsTrigger>
+              <TabsTrigger
+                value="text"
+                className="text-xs h-7 px-3 rounded-sm data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-none border border-transparent data-[state=active]:border-border hover:bg-muted/50"
+              >
+                Text
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </ToolbarGroup>
+      )}
     </Toolbar>
   );
 };

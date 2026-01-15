@@ -5,6 +5,23 @@
 // EDITOR LAYOUT
 // ============================================================================
 
+.rte-editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .rte-editor {
+    flex-grow: 1;
+    height: 100%;
+
+    // Ensure the internal container also fills height
+    &__container {
+      flex-grow: 1;
+      height: 100%;
+    }
+  }
+}
+
 .rte-editor {
   all: unset;
   display: flex;
@@ -38,6 +55,7 @@
     background-color: $bg-color;
     color: $fg-color;
     font-size: $editor-font-size;
+    font-size: $editor-font-size;
     line-height: $editor-line-height;
     overflow: auto;
     cursor: text;
@@ -48,6 +66,24 @@
       width: 100%;
       padding-block: 2.5rem;
       padding-inline: max(2.75rem, (100% - $editor-max-width) / 2);
+
+      // Force font inheritance for text elements to respect the script-based font set on the container
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      blockquote,
+      ul,
+      ol,
+      dl,
+      li,
+      table,
+      th,
+      td {
+        font-family: inherit;
+      }
     }
 
     &:has(.ProseMirror-focused) {
@@ -68,6 +104,7 @@
   min-height: 2.75rem;
   padding: 0.125rem;
   background-color: $bg-color;
+  line-height: 1.5;
 }
 
 .rte-menu-bar {
