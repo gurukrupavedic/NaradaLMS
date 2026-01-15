@@ -18,7 +18,7 @@ const Login = lazy(() => import("@/features/shared-features/pages/Login").then(m
 const Register = lazy(() => import("@/features/shared-features/pages/Register").then(module => ({ default: module.Register })));
 const PendingApproval = lazy(() => import("@/features/shared-features/pages/PendingApproval").then(module => ({ default: module.PendingApproval })));
 const NotFound = lazy(() => import("@/features/shared-features/pages/NotFound").then(module => ({ default: module.NotFound })));
-const AppShell = lazy(() => import("@/new-ui/AppShell"));
+const AppShell = lazy(() => import("@/components/AppShell"));
 
 // Simple inline NotFound component
 const SimpleNotFound = () => {

@@ -7,7 +7,7 @@ import {
   SidebarProvider,
 } from '@/components/ui/sidebar';
 import { TopNav } from './top-nav';
-import type { UserRole } from '@/new-ui/lib/navigation-config';
+import type { UserRole } from '@/lib/navigation-config';
 
 interface AppLayoutProps {
   children: React.ReactNode;

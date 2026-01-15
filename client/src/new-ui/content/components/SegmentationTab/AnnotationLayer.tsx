@@ -15,8 +15,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, X } from 'lucide-react';
 import type { TextSegment, Script, ContentMap, TextRange } from '@shared/types/text-segmentation';
 import { getDisplayText, normalizeLineBreaks } from '@shared/utils/text-segmentation';
-import { ScriptSelector } from "@/new-ui/components/ScriptSelector";
-import { SegmentedTextDisplay } from '@/new-ui/components/SegmentedTextDisplay';
+import { ScriptSelector } from "@/components/common/ScriptSelector";
+import { SegmentedTextDisplay } from '@/components/common/SegmentedTextDisplay';
 
 const getScriptLabel = (script: Script): string => {
   switch (script) {

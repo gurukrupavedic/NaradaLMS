@@ -35,7 +35,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/AlertDialog";
 import { useAudioManagement } from '@/new-ui/content/hooks/useAudioManagement';
-import { AudioPlayerControls, AudioPlayerControlsProps } from '@/new-ui/components/AudioPlayerControls';
+import { AudioPlayerControls, AudioPlayerControlsProps } from '@/components/common/AudioPlayerControls';
 import { cn } from '@/lib/utils';
 
 export interface AudioFileManagerProps extends Omit<AudioPlayerControlsProps, 'title' | 'className'> {

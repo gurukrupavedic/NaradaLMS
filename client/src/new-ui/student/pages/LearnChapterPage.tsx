@@ -8,11 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Music, FileText, StretchHorizontal, Zap, Clock3, Info } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading";
 
-import { SegmentedTextDisplay } from "@/new-ui/components/SegmentedTextDisplay";
+import { SegmentedTextDisplay } from "@/components/common/SegmentedTextDisplay";
 import { getProficiencyLabel } from "@/new-ui/batches/utils/matrix-utils";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AudioPlayerControls } from "@/new-ui/components/AudioPlayerControls";
+import { AudioPlayerControls } from "@/components/common/AudioPlayerControls";
 
 interface ChapterData {
   id: number;

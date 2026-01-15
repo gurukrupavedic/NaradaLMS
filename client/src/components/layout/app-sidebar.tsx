@@ -20,7 +20,7 @@ import {
   getSectionLabel,
   type UserRole,
   type NavSection,
-} from '@/new-ui/lib/navigation-config';
+} from '@/lib/navigation-config';
 import type { NavMainItem } from './nav-main';
 
 interface ChapterData {

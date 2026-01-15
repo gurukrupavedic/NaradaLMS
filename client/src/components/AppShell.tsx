@@ -4,29 +4,29 @@ import React, { Suspense } from 'react';
 import { Switch, Route } from 'wouter';
 import { useAuth } from '@/features/shared-features/hooks/useAuth';
 import { LoadingScreen } from '@/components/ui/loading-screen';
-import { AppLayout } from './components/app-layout';
+import { AppLayout } from '@/components/layout/app-layout';
 
 // Admin pages
-import UserManagement from './admin/pages/UserManagement';
-import AuditLogs from './admin/pages/AuditLogs';
-import BatchManagement from './admin/pages/BatchManagement';
-import SystemSettings from './admin/pages/SystemSettings';
+import UserManagement from '@/new-ui/admin/pages/UserManagement';
+import AuditLogs from '@/new-ui/admin/pages/AuditLogs';
+import BatchManagement from '@/new-ui/admin/pages/BatchManagement';
+import SystemSettings from '@/new-ui/admin/pages/SystemSettings';
 
 // Batch pages (unified)
-import MyBatchesList from './batches/pages/MyBatchesList';
-import BatchDetails from './batches/pages/BatchDetails';
+import MyBatchesList from '@/new-ui/batches/pages/MyBatchesList';
+import BatchDetails from '@/new-ui/batches/pages/BatchDetails';
 
 // Instructor pages
-import { MyStudentsPage } from './instructor/pages/MyStudentsPage';
-import { StudentDetailsPage } from './instructor/pages/StudentDetailsPage';
+import { MyStudentsPage } from '@/new-ui/instructor/pages/MyStudentsPage';
+import { StudentDetailsPage } from '@/new-ui/instructor/pages/StudentDetailsPage';
 
 // Learning & Content
-import { VedicLearningPage } from './student/pages/VedicLearningPage';
-import { LearnChapterPage } from './student/pages/LearnChapterPage';
+import { VedicLearningPage } from '@/new-ui/student/pages/VedicLearningPage';
+import { LearnChapterPage } from '@/new-ui/student/pages/LearnChapterPage';
 
 // Content pages
-import TracksAndChapters from './content/pages/TracksAndChaptersPage';
-import ChapterContent from './content/pages/ChapterContentPage';
+import TracksAndChapters from '@/new-ui/content/pages/TracksAndChaptersPage';
+import ChapterContent from '@/new-ui/content/pages/ChapterContentPage';
 
 export default function AppShell() {
   const { user } = useAuth();
