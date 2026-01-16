@@ -1,14 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music, FileText, StretchHorizontal, Zap } from "lucide-react";
+import React, { useState, useCallback, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { TiptapEditor } from '@/components/ui/tiptap-editor';
+import { SelectableTextPanel } from '../TextSegmentationTab/SelectableTextPanel';
+import { useChapterEditor } from '../../context/ChapterEditorContext';
+import { useAudioPlayer } from '../../context/AudioPlayerContext';
+import '@/components/ui/tiptap-editor/styles/index.scss';
 
-import { SegmentedTextDisplay } from "@/components/common/SegmentedTextDisplay";
-import { AudioPlayerControls } from "@/components/common/AudioPlayerControls";
-import { useChapterEditor } from "../../context/ChapterEditorContext";
-import { useAudioPlayer } from "../../context/AudioPlayerContext";
+interface PreviewTabProps {
+    learnMode: boolean;
+    selectedAudioFileId: number | null;
+    onAudioFileChange: (id: number) => void;
+}
 
 interface TextSegment {
     id: number;
@@ -17,16 +20,6 @@ interface TextSegment {
     startPosition: number;
     endPosition: number;
     order: number;
-    createdBy: string;
-    createdAt: string;
-}
-
-interface AudioFile {
-    id: number;
-    chapterId: number;
-    filename: string;
-    displayName?: string;
-    duration: number;
 }
 
 interface AudioTextMapping {
@@ -37,266 +30,125 @@ interface AudioTextMapping {
     endTime: number;
 }
 
-import { cn } from "@/lib/utils";
+export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }: PreviewTabProps) {
+    const { chapter, chapterId, isPublished } = useChapterEditor();
+    const { playSegment, setAudioSource } = useAudioPlayer();
 
-// Helper to get font class based on script
-const getFontClass = (language: string) => {
-    switch (language) {
-        case "te":
-            return "font-['JIMS','Noto_Sans_Telugu',sans-serif]";
-        case "hi":
-            return "font-['AdishilaSanVedic','Noto_Sans_Devanagari',sans-serif] font-semibold";
-        case "en":
-            return "font-['AdishilaSan','Noto_Sans',sans-serif]";
-        default:
-            return "";
-    }
-};
-
-export function PreviewTab() {
-    const { chapter, chapterId } = useChapterEditor();
-    const {
-        isPlaying,
-        currentTime,
-        duration,
-        volume,
-        playbackRate,
-        isMuted,
-        playerRef,
-        play,
-        pause,
-        seek,
-        setVolume,
-        setPlaybackRate,
-        toggleMute,
-        setAudioSource,
-        playSegment
-    } = useAudioPlayer();
-
-    // State management
-    const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
-    const [selectedAudioFileId, setSelectedAudioFileId] = useState<number | null>(null);
+    const [contentScript, setContentScript] = useState<'te' | 'hi' | 'en'>('te');
     const [selectedSegmentId, setSelectedSegmentId] = useState<number | undefined>(undefined);
-    const [learnMode, setLearnMode] = useState<boolean>(() => {
-        const stored = localStorage.getItem("preview-learn-mode");
-        return stored ? JSON.parse(stored) : true;
-    });
 
-    // Sync learnMode to localStorage
-    useEffect(() => {
-        localStorage.setItem("preview-learn-mode", JSON.stringify(learnMode));
-    }, [learnMode]);
-
-    // Queries
+    // Fetch data for Segmented mode
     const { data: textSegments = [] } = useQuery<TextSegment[]>({
         queryKey: [`/api/segments/${chapterId}/${contentScript}`],
-        enabled: !!chapterId && !!contentScript,
+        enabled: !!chapterId && learnMode,
     });
 
-    const { data: audioFiles = [] } = useQuery<AudioFile[]>({
+    const { data: audioFiles = [] } = useQuery<Array<{ id: number; filename: string; displayName?: string }>>({
         queryKey: [`/api/audio-files/${chapterId}`],
         enabled: !!chapterId,
     });
 
     const { data: mappings = [] } = useQuery<AudioTextMapping[]>({
         queryKey: [`/api/segment-mappings/${chapterId}`],
-        enabled: !!chapterId,
+        enabled: !!chapterId && learnMode,
     });
 
-    // Auto-select first audio file
+    // Auto-select first audio file when it loads
     useEffect(() => {
-        if (audioFiles.length > 0 && !selectedAudioFileId && playerRef.current) {
-            setSelectedAudioFileId(audioFiles[0].id);
+        if (audioFiles.length > 0 && !selectedAudioFileId) {
+            onAudioFileChange(audioFiles[0].id);
             setAudioSource(`/uploads/${audioFiles[0].filename}`);
         }
-    }, [audioFiles, selectedAudioFileId, setAudioSource, playerRef]);
+    }, [audioFiles, selectedAudioFileId, onAudioFileChange, setAudioSource]);
 
-    // Segment click handler
-    const handleSegmentClick = useCallback((segmentId: number | undefined) => {
-        if (!segmentId) {
-            setSelectedSegmentId(undefined);
-            return;
-        }
-
-        setSelectedSegmentId(segmentId);
-
-        // Priority: selected audio file first, then fallback to any other mapping
-        const mapping = mappings.find((m) =>
-            m.textSegmentId === segmentId && m.audioFileId === selectedAudioFileId
-        ) || mappings.find((m) => m.textSegmentId === segmentId);
-
-        if (!mapping) return;
-
-        if (selectedAudioFileId !== mapping.audioFileId) {
-            const audioFile = audioFiles.find((f) => f.id === mapping.audioFileId);
+    // Update audio source when selected file changes
+    useEffect(() => {
+        if (selectedAudioFileId) {
+            const audioFile = audioFiles.find(f => f.id === selectedAudioFileId);
             if (audioFile) {
-                // Switch file first, then play segment
-                setAudioSource(`/uploads/${audioFile.filename}`).then(() => {
-                    setSelectedAudioFileId(mapping.audioFileId);
-                    // Slight delay to ensure metadata loaded if needed, or rely on playSegment logic
-                    // For now, simple chained call
-                    setTimeout(() => playSegment(mapping.startTime, mapping.endTime), 50);
-                });
+                setAudioSource(`/uploads/${audioFile.filename}`);
             }
-        } else {
-            playSegment(mapping.startTime, mapping.endTime);
         }
-    }, [mappings, selectedAudioFileId, audioFiles, setAudioSource, playSegment]);
+    }, [selectedAudioFileId, audioFiles, setAudioSource]);
 
-    // Derived data
-    const chapterContent = chapter?.content || {};
-    const currentScriptSegments = textSegments.filter((s) => s.script === contentScript);
-    const mappedSegments = currentScriptSegments.filter((segment) =>
-        mappings.some(
-            (m) => m.textSegmentId === segment.id && m.audioFileId === selectedAudioFileId
-        )
-    );
+    // Handle segment click in Segmented mode
+    const handleSegmentClick = useCallback((segmentId: number) => {
+        const mapping = mappings.find(m => m.textSegmentId === segmentId);
+        if (mapping) {
+            playSegment(mapping.startTime, mapping.endTime);
+            setSelectedSegmentId(segmentId);
+        }
+    }, [mappings, playSegment]);
 
     const scriptOptions = [
-        { value: "te" as const, label: "Telugu" },
-        { value: "hi" as const, label: "Devanagari (Hindi)" },
-        { value: "en" as const, label: "English (IAST)" },
+        { value: 'te' as const, label: 'Telugu' },
+        { value: 'hi' as const, label: 'Devanagari (Hindi)' },
+        { value: 'en' as const, label: 'English (IAST)' },
     ];
 
-    return (
-        <div className="flex flex-col lg:grid lg:grid-cols-3 h-full gap-4">
-            {/* Section 1: Text Content Area */}
-            <div className="lg:col-span-2 flex-1 min-h-0 flex flex-col border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black overflow-hidden">
-                <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Script</span>
-                            <Select
-                                value={contentScript}
-                                onValueChange={(value) => setContentScript(value as typeof contentScript)}
-                            >
-                                <SelectTrigger className="h-8 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700 shadow-sm">
-                                    <SelectValue placeholder="Script" />
-                                </SelectTrigger>
-                                <SelectContent className="text-sm">
-                                    {scriptOptions.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        {learnMode && (
-                            <div className="flex items-center gap-4">
-                                <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                                    <StretchHorizontal className="h-3 w-3 text-orange-500 fill-current" />
-                                    {currentScriptSegments.length} segments
-                                </Badge>
-                                <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                                    <Zap className="h-3 w-3 text-blue-500 fill-current" />
-                                    {mappedSegments.length} mapped
-                                </Badge>
-                            </div>
-                        )}
-                    </div>
+    // HTML Mode (Learn Mode OFF)
+    if (!learnMode) {
+        return (
+            <div className="h-full flex flex-col">
+                <TiptapEditor
+                    content={chapter?.content?.[contentScript] || ''}
+                    onChange={() => { }} // No-op (read-only)
+                    disabled={true}
+                    output="html"
+                    language={contentScript}
+                    currentScript={contentScript}
+                    onScriptChange={setContentScript}
+                    className="h-full"
+                    maxHeight="100%"
+                    minHeight="100%"
+                />
+            </div>
+        );
+    }
 
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Learn Mode:</span>
-                        <Switch
-                            checked={learnMode}
-                            onCheckedChange={setLearnMode}
-                            className="border border-gray-300 dark:border-gray-600 data-[state=checked]:bg-primary data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-700"
-                            data-testid="toggle-learn-mode"
-                        />
-                    </div>
-                </div>
-                <div
-                    className="flex-1 min-h-0 overflow-auto p-6"
-                >
-                    {chapterContent[contentScript] ? (
-                        learnMode ? (
-                            <SegmentedTextDisplay
-                                content={chapterContent}
-                                currentScript={contentScript}
-                                segments={textSegments}
-                                selectedSegmentId={selectedSegmentId}
-                                onSegmentClick={handleSegmentClick}
-                                mode="preview"
-                                className=""
-                            />
-                        ) : (
-                            <div
-                                className={cn(
-                                    "prose prose-lg dark:prose-invert max-w-none text-3xl leading-[1.6]",
-                                    getFontClass(contentScript)
-                                )}
-                                dangerouslySetInnerHTML={{ __html: chapterContent[contentScript] || "" }}
-                                data-testid="html-content-view"
-                            />
-                        )
-                    ) : (
-                        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                            <FileText className="w-12 h-12 mb-4 opacity-50" />
-                            <p>No content available for this script</p>
-                        </div>
-                    )}
+    // Segmented Mode (Learn Mode ON)
+    return (
+        <div className="h-full flex flex-col">
+            {/* Script selector header */}
+            <div className="px-4 py-3 border border-gray-200 dark:border-gray-800 rounded-t-lg bg-gray-50 dark:bg-gray-900">
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">Script:</span>
+                    <Select
+                        value={contentScript}
+                        onValueChange={(value) => setContentScript(value as typeof contentScript)}
+                        disabled={isPublished}
+                    >
+                        <SelectTrigger className="h-8 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <SelectValue placeholder="Script" />
+                        </SelectTrigger>
+                        <SelectContent className="text-sm">
+                            {scriptOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
 
-            {/* Section 2: Audio Player Panel */}
-            <div className="lg:col-span-1 flex flex-col gap-4 flex-shrink-0">
-                <div className="border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-black p-3 lg:sticky lg:top-0">
-                    <div className="flex items-center gap-2 mb-3">
-                        <label className="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Audio File:</label>
-                        <Select
-                            value={selectedAudioFileId?.toString() || ""}
-                            onValueChange={(value) => {
-                                const audioFileId = parseInt(value);
-                                const audioFile = audioFiles.find((f) => f.id === audioFileId);
-                                if (audioFile) {
-                                    setAudioSource(`/uploads/${audioFile.filename}`);
-                                    setSelectedAudioFileId(audioFileId);
-                                }
-                            }}
-                        >
-                            <SelectTrigger className="h-8 text-sm" data-testid="select-audio-file">
-                                <SelectValue placeholder="Select audio file" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {audioFiles.map((file) => (
-                                    <SelectItem key={file.id} value={file.id.toString()}>
-                                        {file.displayName || file.filename}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+            {/* Segmented text view */}
+            <div className="flex-1 min-h-0 border-x border-b border-gray-200 dark:border-gray-800 rounded-b-lg bg-white dark:bg-black overflow-hidden">
+                {chapter?.content?.[contentScript] ? (
+                    <SelectableTextPanel
+                        content={chapter.content}
+                        script={contentScript}
+                        segments={textSegments}
+                        selectedSegmentId={selectedSegmentId}
+                        onSegmentSelect={handleSegmentClick}
+                        onCreateSegment={() => { }} // No-op (read-only)
+                        disabled={true} // Read-only mode
+                    />
+                ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                        <p>No content available for this script</p>
                     </div>
-
-                    {selectedAudioFileId ? (
-                        <AudioPlayerControls
-                            title={
-                                audioFiles.find((f) => f.id === selectedAudioFileId)?.displayName ||
-                                audioFiles.find((f) => f.id === selectedAudioFileId)?.filename ||
-                                "Audio File"
-                            }
-                            currentTime={currentTime}
-                            duration={duration}
-                            isPlaying={isPlaying}
-                            volume={volume}
-                            isMuted={isMuted}
-                            playbackRate={playbackRate}
-                            onPlay={play}
-                            onPause={pause}
-                            onSeek={seek}
-                            onVolumeChange={setVolume}
-                            onMuteToggle={toggleMute}
-                            onPlaybackRateChange={setPlaybackRate}
-                            onSkipForward={() => seek(Math.min(currentTime + 10, duration))}
-                            onSkipBackward={() => seek(Math.max(currentTime - 10, 0))}
-                        />
-                    ) : (
-                        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground border border-dashed border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/40">
-                            <Music className="w-10 h-10 mb-3 opacity-60" />
-                            <p className="text-sm">Select an audio file to preview</p>
-                        </div>
-                    )}
-                </div>
+                )}
             </div>
         </div>
     );

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useParams } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent } from '@/components/ui/Tabs';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
 import { ChapterEditorProvider, useChapterEditor } from '@/features/content/context/ChapterEditorContext';
-import { AudioPlayerProvider } from '@/features/content/context/AudioPlayerContext';
+import { AudioPlayerProvider, useAudioPlayer } from '@/features/content/context/AudioPlayerContext';
 import { ChapterHeader } from '@/features/content/components/ChapterHeader';
 import { TextSegmentationTab } from '@/features/content/components/TextSegmentationTab/TextSegmentationTab';
 import { PreviewTab } from '@/features/content/components/PreviewTab';
@@ -32,9 +33,13 @@ export default function ChapterContentPage() {
 
 // Content component - uses context for data
 function ChapterContentPageContent() {
-    const { isLoading, error, isPublished } = useChapterEditor();
+    const { isLoading, error, isPublished, chapterId } = useChapterEditor();
     const [activeTab, setActiveTab] = useState('text-segmentation');
     const [textSegMode, setTextSegMode] = useState<'editor' | 'segmentation'>('editor');
+
+    // Preview tab state
+    const [learnMode, setLearnMode] = useState(false); // Default: Learn Mode OFF (HTML)
+    const [selectedAudioFileId, setSelectedAudioFileId] = useState<number | null>(null);
 
     // Loading state
     if (isLoading) {
@@ -72,18 +77,24 @@ function ChapterContentPageContent() {
     // Main render
     return (
         <Tabs value={activeTab} onValueChange={setActiveTab} className={`flex flex-col bg-gray-50 dark:bg-gray-900 h-[calc(100dvh-4rem)] ${isPublished ? 'cursor-not-allowed' : ''}`}>
-            {/* Phase 1: ChapterHeader with integrated tabs / actions */}
-            <ChapterHeader
-                activeTab={activeTab}
-                textSegMode={textSegMode}
-                onTextSegModeChange={setTextSegMode}
-            />
+            {/* AudioPlayerProvider wraps everything so ChapterHeader can access audio context */}
+            <AudioPlayerProvider>
+                {/* ChapterHeader with integrated tabs / actions */}
+                <PreviewTabHeaderWrapper
+                    activeTab={activeTab}
+                    textSegMode={textSegMode}
+                    onTextSegModeChange={setTextSegMode}
+                    learnMode={learnMode}
+                    onLearnModeChange={setLearnMode}
+                    selectedAudioFileId={selectedAudioFileId}
+                    onAudioFileChange={setSelectedAudioFileId}
+                    chapterId={chapterId}
+                />
 
-            {/* Tab content area - overflow-hidden to force internal scrolling in editor */}
-            <div className={`flex-1 overflow-hidden min-h-0 flex flex-col ${isPublished ? 'pointer-events-none' : ''}`}>
-                {/* Re-enable pointer events for scrolling containers inside tabs */}
-                <div className={`h-full flex flex-col ${isPublished ? 'pointer-events-auto' : ''}`}>
-                    <AudioPlayerProvider>
+                {/* Tab content area - overflow-hidden to force internal scrolling in editor */}
+                <div className={`flex-1 overflow-hidden min-h-0 flex flex-col ${isPublished ? 'pointer-events-none' : ''}`}>
+                    {/* Re-enable pointer events for scrolling containers inside tabs */}
+                    <div className={`h-full flex flex-col ${isPublished ? 'pointer-events-auto' : ''}`}>
                         <TabsContent value="text-segmentation" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
                             <TextSegmentationTab mode={textSegMode} />
                         </TabsContent>
@@ -93,11 +104,73 @@ function ChapterContentPageContent() {
                         </TabsContent>
 
                         <TabsContent value="preview" className="flex-1 overflow-auto h-full m-0 p-4">
-                            <PreviewTab />
+                            <PreviewTab
+                                learnMode={learnMode}
+                                selectedAudioFileId={selectedAudioFileId}
+                                onAudioFileChange={setSelectedAudioFileId}
+                            />
                         </TabsContent>
-                    </AudioPlayerProvider>
+                    </div>
                 </div>
-            </div>
+            </AudioPlayerProvider>
         </Tabs >
     );
 }
+
+// Helper component to wire up ChapterHeader with AudioPlayerContext
+function PreviewTabHeaderWrapper({
+    activeTab,
+    textSegMode,
+    onTextSegModeChange,
+    learnMode,
+    onLearnModeChange,
+    selectedAudioFileId,
+    onAudioFileChange,
+    chapterId,
+}: {
+    activeTab: string;
+    textSegMode: 'editor' | 'segmentation';
+    onTextSegModeChange: (mode: 'editor' | 'segmentation') => void;
+    learnMode: boolean;
+    onLearnModeChange: (mode: boolean) => void;
+    selectedAudioFileId: number | null;
+    onAudioFileChange: (id: number) => void;
+    chapterId: string;
+}) {
+    const {
+        isPlaying,
+        currentTime,
+        duration,
+        play,
+        pause,
+        seek
+    } = useAudioPlayer();
+
+    // Fetch audio files for Preview tab
+    const { data: audioFiles = [] } = useQuery<Array<{ id: number; filename: string; displayName?: string }>>({
+        queryKey: [`/api/audio-files/${chapterId}`],
+        enabled: !!chapterId && activeTab === 'preview',
+    });
+
+    return (
+        <ChapterHeader
+            activeTab={activeTab}
+            textSegMode={textSegMode}
+            onTextSegModeChange={onTextSegModeChange}
+            // Preview props
+            learnMode={learnMode}
+            onLearnModeChange={onLearnModeChange}
+            audioFiles={audioFiles}
+            selectedAudioFileId={selectedAudioFileId}
+            onAudioFileChange={onAudioFileChange}
+            // Audio player props
+            isPlaying={isPlaying}
+            currentTime={currentTime}
+            duration={duration}
+            onPlay={play}
+            onPause={pause}
+            onSeek={seek}
+        />
+    );
+}
+
