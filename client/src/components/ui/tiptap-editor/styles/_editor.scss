@@ -14,8 +14,7 @@
   .rte-editor {
     flex: 1; // Allow editor to shrink/grow
     min-height: 0; // Critical for flex scrolling
-    display: flex;
-    flex-direction: column;
+    // Removed redundant display/flex-direction - defined below
     overflow: hidden; // Prevent content leak
 
     // Ensure the internal container also fills height
@@ -52,7 +51,7 @@
   &__container {
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
+    flex: 1;
     position: relative;
     min-height: $editor-min-height;
     max-height: $editor-max-height;
