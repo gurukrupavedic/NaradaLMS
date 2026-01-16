@@ -116,7 +116,6 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
                     <Select
                         value={contentScript}
                         onValueChange={(value) => setContentScript(value as typeof contentScript)}
-                        disabled={isPublished}
                     >
                         <SelectTrigger className="h-8 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700 shadow-sm">
                             <SelectValue placeholder="Script" />
