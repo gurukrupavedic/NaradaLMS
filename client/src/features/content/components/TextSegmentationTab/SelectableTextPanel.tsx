@@ -140,8 +140,8 @@ export function SelectableTextPanel({
                 <span
                     key={`segment-${segment.id}`}
                     className={`px-1 py-0.5 rounded cursor-pointer transition-colors ${isSelected
-                            ? 'bg-primary/20 border border-primary'
-                            : 'bg-orange-100 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700'
+                        ? 'bg-primary/20 border border-primary'
+                        : 'bg-orange-100 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700'
                         } hover:opacity-80`}
                     onClick={() => onSegmentSelect?.(segment.id)}
                     title={`Segment #${segment.order}`}
@@ -192,7 +192,7 @@ export function SelectableTextPanel({
                         fontFamily: script === 'te' ? 'Noto Sans Telugu, sans-serif' :
                             script === 'hi' ? 'Noto Sans Devanagari, sans-serif' :
                                 'Noto Sans, sans-serif',
-                        fontSize: '16px',
+                        fontSize: '1.875rem',
                         lineHeight: '1.6',
                         userSelect: disabled ? 'none' : 'text',
                         cursor: disabled ? 'not-allowed' : 'text',
