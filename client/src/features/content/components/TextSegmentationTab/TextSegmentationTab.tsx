@@ -153,8 +153,8 @@ function SegmentationMode() {
                                         onValueChange={(value) => setSelectedScript(value as 'te' | 'hi' | 'en')}
                                         disabled={isPublished}
                                     >
-                                        <SelectTrigger className="h-7 w-40 text-xs bg-background border-input shadow-none">
-                                            <SelectValue placeholder="Select script" />
+                                        <SelectTrigger className="h-7 w-32 text-xs bg-background border-input shadow-none">
+                                            <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="text-sm">
                                             <SelectItem value="te">Telugu</SelectItem>
