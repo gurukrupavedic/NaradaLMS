@@ -191,7 +191,7 @@ export function SelectableTextPanel({
                 <div
                     ref={textContainerRef}
                     className="p-8 tiptap-content max-w-4xl mx-auto"
-                    onMouseUp={handleTextSelection}
+                    onMouseUp={disabled ? undefined : handleTextSelection}
                     style={{
                         fontFamily: script === 'te' ? 'JIMS, Noto Sans Telugu, sans-serif' :
                             script === 'hi' ? 'AdishilaSanVedic, Noto Sans Devanagari, sans-serif' :
@@ -200,7 +200,7 @@ export function SelectableTextPanel({
                         lineHeight: '1.8',
                         fontWeight: script === 'hi' ? 500 : 400,
                         userSelect: disabled ? 'none' : 'text',
-                        cursor: disabled ? 'not-allowed' : 'default',
+                        cursor: disabled ? 'default' : 'default',
                     }}
                 >
                     {renderSegmentedText()}
