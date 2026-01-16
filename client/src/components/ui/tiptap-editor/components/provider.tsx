@@ -53,7 +53,7 @@ export const TiptapProvider = ({
         className={cn("rte-editor", { "rte-editor--fullscreen": isFullScreen })}
       >
         {slotBefore}
-        <div className="flex flex-col flex-1 min-w-0">
+        <div className="flex flex-col flex-1 min-w-0 min-h-0">
           <EditorContent
             editor={editor}
             className={cn("rte-editor__container", fontClassName)}
