@@ -78,8 +78,8 @@ function SortableSegmentItem({
             className={cn(
                 "group pt-1.5 pb-0 px-2 border rounded-lg transition-colors cursor-pointer relative",
                 isSelected
-                    ? "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 ring-1 ring-blue-300 dark:ring-blue-700"
-                    : "bg-card hover:bg-accent/50"
+                    ? "bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800 ring-1 ring-orange-300 dark:ring-orange-700 shadow-md transform scale-[1.01]"
+                    : "bg-card hover:bg-accent/50 hover:border-orange-100 dark:hover:border-orange-900 transition-all"
             )}
         >
             <div className="flex items-start gap-2">
@@ -91,7 +91,7 @@ function SortableSegmentItem({
                         className={cn(
                             "self-center -ml-1 p-1 cursor-grab active:cursor-grabbing",
                             isSelected
-                                ? "text-blue-400 hover:text-blue-600 opacity-100"
+                                ? "text-orange-400 hover:text-orange-600 opacity-100"
                                 : "text-muted-foreground/50 hover:text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
                         )}
                         onClick={(e) => e.stopPropagation()}
@@ -104,7 +104,7 @@ function SortableSegmentItem({
                     <div className="flex items-center gap-2 mb-0.5">
                         <span className={cn(
                             "text-xs font-medium px-1.5 py-0.5 rounded",
-                            isSelected ? "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                            isSelected ? "bg-orange-100 text-orange-700 dark:bg-orange-800 dark:text-orange-200" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
                         )}>
                             #{index + 1}
                         </span>

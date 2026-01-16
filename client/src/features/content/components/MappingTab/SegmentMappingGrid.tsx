@@ -76,8 +76,8 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
       )}>
         {/* Header */}
         {!hideHeader && (
-          <div className="px-6 py-3 bg-muted/50 border-b flex-shrink-0">
-            <h2 className="text-base font-medium text-foreground">Segment Mapping</h2>
+          <div className="px-4 h-11 bg-gray-50/50 dark:bg-gray-900/50 border-b flex-shrink-0 flex items-center">
+            <h2 className="text-sm font-medium text-muted-foreground">Segment Mapping</h2>
           </div>
         )}
 

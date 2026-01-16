@@ -274,15 +274,15 @@ export function MappingTab() {
                                 className="bg-card border rounded-lg overflow-hidden flex flex-col"
                             >
                                 {/* Header with Script Selector + Stats */}
-                                <div className="px-6 py-3 bg-muted/50 border-b flex-shrink-0">
-                                    <div className="flex items-center justify-between">
+                                <div className="px-4 h-11 bg-gray-50/50 dark:bg-gray-900/50 border-b flex-shrink-0 flex items-center">
+                                    <div className="flex items-center justify-between w-full">
                                         <div className="flex items-center gap-3">
-                                            <label className="text-xs font-medium text-foreground">Script</label>
+                                            <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Script</label>
                                             <Select
                                                 value={selectedScript}
                                                 onValueChange={(value) => setSelectedScript(value as Script)}
                                             >
-                                                <SelectTrigger className="w-40 h-8">
+                                                <SelectTrigger className="w-32 h-7 text-xs bg-background border-input shadow-none">
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -294,12 +294,12 @@ export function MappingTab() {
                                         </div>
 
                                         <div className="flex bg-card items-center gap-4">
-                                            <Badge variant="secondary" className="flex items-center gap-1">
-                                                <StretchHorizontal className="h-3 w-3 text-orange-500 fill-current" />
+                                            <Badge variant="secondary" className="flex items-center gap-1 h-6 bg-orange-50 text-orange-700 border-orange-100">
+                                                <StretchHorizontal className="h-3 w-3 fill-orange-500 text-orange-600" />
                                                 {currentScriptSegments.length} segments
                                             </Badge>
                                             {audioFiles.length > 0 && (
-                                                <Badge variant="secondary" className="flex items-center gap-1">
+                                                <Badge variant="secondary" className="flex items-center gap-1 h-6">
                                                     <Zap className="h-3 w-3 text-blue-500 fill-current" />
                                                     {mappedCount} mapped
                                                 </Badge>

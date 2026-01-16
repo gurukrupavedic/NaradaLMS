@@ -140,20 +140,20 @@ function SegmentationMode() {
                     maxSize={80}
                 >
                     <Card className="h-full flex flex-col overflow-hidden">
-                        <div className="px-6 h-14 bg-gray-50 dark:bg-gray-900 border-b flex-shrink-0 flex items-center">
+                        <div className="px-4 h-11 bg-gray-50/50 dark:bg-gray-900/50 border-b flex-shrink-0 flex items-center">
                             <div className="flex items-center justify-between w-full">
-                                <h2 className="text-base font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-                                    <FileText className="w-5 h-5" />
-                                    Text Content ({selectedScript.toUpperCase()})
+                                <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                    <FileText className="w-4 h-4" />
+                                    Content Text ({selectedScript.toUpperCase()})
                                 </h2>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Script</span>
+                                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Script</span>
                                     <Select
                                         value={selectedScript}
                                         onValueChange={(value) => setSelectedScript(value as 'te' | 'hi' | 'en')}
                                         disabled={isPublished}
                                     >
-                                        <SelectTrigger className="h-8 w-48 text-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                                        <SelectTrigger className="h-7 w-40 text-xs bg-background border-input shadow-none">
                                             <SelectValue placeholder="Select script" />
                                         </SelectTrigger>
                                         <SelectContent className="text-sm">
@@ -197,10 +197,10 @@ function SegmentationMode() {
                     maxSize={60}
                 >
                     <Card className="h-full flex flex-col overflow-hidden">
-                        <div className="px-6 h-14 bg-gray-50 dark:bg-gray-900 border-b flex-shrink-0 flex items-center">
+                        <div className="px-4 h-11 bg-gray-50/50 dark:bg-gray-900/50 border-b flex-shrink-0 flex items-center">
                             <div className="flex items-center justify-between w-full">
-                                <h2 className="text-base font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-                                    <StretchHorizontal className="w-5 h-5 text-orange-500" />
+                                <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                    <StretchHorizontal className="w-4 h-4 text-orange-600/70 fill-orange-500/70" />
                                     Text Segments ({scriptSegments.length})
                                 </h2>
                             </div>
