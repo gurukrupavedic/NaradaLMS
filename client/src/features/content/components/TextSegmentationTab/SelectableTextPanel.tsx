@@ -117,7 +117,20 @@ export function SelectableTextPanel({
     // Render text with segment highlights
     const renderSegmentedText = () => {
         if (!plainText || segments.length === 0) {
-            return <div className="whitespace-pre-wrap">{plainText || ''}</div>;
+            return (
+                <div
+                    className="whitespace-pre-wrap [&>p]:mt-2 [&>p:first-child]:mt-0"
+                    style={{
+                        display: 'block',
+                        lineHeight: '1.6'
+                    }}
+                    dangerouslySetInnerHTML={{
+                        __html: plainText?.split('\n\n').map(para =>
+                            para ? `<p>${para.replace(/\n/g, '<br>')}</p>` : ''
+                        ).join('') || ''
+                    }}
+                />
+            );
         }
 
         const sortedSegments = [...segments].sort((a, b) => a.startPosition - b.startPosition);
@@ -127,15 +140,22 @@ export function SelectableTextPanel({
         sortedSegments.forEach((segment, index) => {
             // Text before segment
             if (segment.startPosition > lastEnd) {
+                const beforeText = plainText.substring(lastEnd, segment.startPosition);
                 parts.push(
-                    <span key={`before-${index}`}>
-                        {plainText.substring(lastEnd, segment.startPosition)}
-                    </span>
+                    <span
+                        key={`before-${index}`}
+                        dangerouslySetInnerHTML={{
+                            __html: beforeText.split('\n\n').map(para =>
+                                para ? `<p class="inline">${para.replace(/\n/g, '<br>')}</p>` : ''
+                            ).join('')
+                        }}
+                    />
                 );
             }
 
             // Segment highlight
             const isSelected = selectedSegmentId === segment.id;
+            const segmentText = plainText.substring(segment.startPosition, segment.endPosition);
             parts.push(
                 <span
                     key={`segment-${segment.id}`}
@@ -145,9 +165,10 @@ export function SelectableTextPanel({
                         } hover:opacity-80`}
                     onClick={() => onSegmentSelect?.(segment.id)}
                     title={`Segment #${segment.order}`}
-                >
-                    {plainText.substring(segment.startPosition, segment.endPosition)}
-                </span>
+                    dangerouslySetInnerHTML={{
+                        __html: segmentText.replace(/\n/g, '<br>')
+                    }}
+                />
             );
 
             lastEnd = segment.endPosition;
@@ -155,15 +176,32 @@ export function SelectableTextPanel({
 
         // Remaining text
         if (lastEnd < plainText.length) {
+            const afterText = plainText.substring(lastEnd);
             parts.push(
-                <span key="after">
-                    {plainText.substring(lastEnd)}
-                </span>
+                <span
+                    key="after"
+                    dangerouslySetInnerHTML={{
+                        __html: afterText.split('\n\n').map(para =>
+                            para ? `<p class="inline">${para.replace(/\n/g, '<br>')}</p>` : ''
+                        ).join('')
+                    }}
+                />
             );
         }
 
-        return <div className="whitespace-pre-wrap">{parts}</div>;
+        return (
+            <div
+                className="[&>p]:mt-2 [&>p:first-child]:mt-0"
+                style={{
+                    display: 'block',
+                    lineHeight: '1.6'
+                }}
+            >
+                {parts}
+            </div>
+        );
     };
+
 
     // Update toolbar position on scroll
     useEffect(() => {
