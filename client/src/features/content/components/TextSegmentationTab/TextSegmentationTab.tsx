@@ -14,7 +14,7 @@ import {
 import { PencilLine, Slice, FileText, StretchHorizontal } from 'lucide-react';
 import { TiptapEditor } from '@/components/ui/tiptap-editor';
 import { SelectableTextPanel } from './SelectableTextPanel';
-import { SegmentList } from '../SegmentationTab/SegmentList';
+import { SegmentList } from './SegmentList';
 import {
     DndContext,
     DragEndEvent,

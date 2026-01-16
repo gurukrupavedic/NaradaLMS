@@ -8,10 +8,8 @@ import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
 import { ChapterEditorProvider, useChapterEditor } from '@/features/content/context/ChapterEditorContext';
 import { AudioPlayerProvider } from '@/features/content/context/AudioPlayerContext';
 import { ChapterHeader } from '@/features/content/components/ChapterHeader';
-import { ContentTab } from '@/features/content/components/ContentTab';
 import { TextSegmentationTab } from '@/features/content/components/TextSegmentationTab/TextSegmentationTab';
 import { PreviewTab } from '@/features/content/components/PreviewTab';
-import { SegmentationTab } from '@/features/content/components/SegmentationTab';
 import { MappingTab } from '@/features/content/components/MappingTab';
 
 
@@ -88,10 +86,6 @@ function ChapterContentPageContent() {
                     <AudioPlayerProvider>
                         <TabsContent value="text-segmentation" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
                             <TextSegmentationTab mode={textSegMode} />
-                        </TabsContent>
-
-                        <TabsContent value="segmentation" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">
-                            <SegmentationTab />
                         </TabsContent>
 
                         <TabsContent value="mapping" className="flex-1 overflow-hidden h-full data-[state=active]:flex flex-col m-0 p-4">

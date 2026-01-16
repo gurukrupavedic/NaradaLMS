@@ -53,25 +53,19 @@ export function ChapterHeader({ activeTab, textSegMode, onTextSegModeChange }: C
                             value="text-segmentation"
                             className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
                         >
-                            Step 1: Content
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="segmentation"
-                            className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
-                        >
-                            Step 2: Segmentation
+                            Step 1: Text Segmentation
                         </TabsTrigger>
                         <TabsTrigger
                             value="mapping"
                             className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
                         >
-                            Step 3: Audio & Mapping
+                            Step 2: Audio & Mapping
                         </TabsTrigger>
                         <TabsTrigger
                             value="preview"
                             className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
                         >
-                            Step 4: Preview
+                            Step 3: Preview
                         </TabsTrigger>
                     </TabsList>
 

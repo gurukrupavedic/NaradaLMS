@@ -139,9 +139,9 @@ export function SelectableTextPanel({
             parts.push(
                 <span
                     key={`segment-${segment.id}`}
-                    className={`px-1 py-0.5 rounded cursor-pointer transition-colors ${isSelected
-                        ? 'bg-primary/20 border border-primary'
-                        : 'bg-orange-100 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700'
+                    className={`px-0.5 py-0 rounded cursor-pointer transition-colors ${isSelected
+                        ? 'bg-primary/20'
+                        : 'bg-orange-100 dark:bg-orange-900/30'
                         } hover:opacity-80`}
                     onClick={() => onSegmentSelect?.(segment.id)}
                     title={`Segment #${segment.order}`}
