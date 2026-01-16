@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { PencilLine, Slice } from 'lucide-react';
+import { FilePenLine, Scissors } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -73,25 +73,31 @@ export function ChapterHeader({ activeTab, textSegMode, onTextSegModeChange }: C
                     <div className="flex items-center gap-3">
                         {/* Mode Toggle (Only visible on Step 5) */}
                         {activeTab === 'text-segmentation' && (
-                            <div className="flex items-center border rounded-lg p-0.5 bg-muted/20 mr-2">
-                                <Button
-                                    variant={textSegMode === 'editor' ? 'secondary' : 'ghost'}
-                                    size="sm"
+                            <div className="flex items-center bg-gray-100 dark:bg-gray-800 p-1 rounded-md h-9 mr-4 ring-1 ring-inset ring-gray-200 dark:ring-gray-700">
+                                <button
                                     onClick={() => onTextSegModeChange('editor')}
-                                    className="h-7 px-2 gap-1.5 text-xs font-medium"
+                                    className={`
+                                        flex items-center gap-2 px-3 py-1 rounded-sm text-xs font-semibold transition-all
+                                        ${textSegMode === 'editor'
+                                            ? 'bg-white dark:bg-gray-900 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                                            : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100'}
+                                    `}
                                 >
-                                    <PencilLine className="h-3.5 w-3.5" />
+                                    <FilePenLine className="h-3.5 w-3.5" />
                                     Editor
-                                </Button>
-                                <Button
-                                    variant={textSegMode === 'segmentation' ? 'secondary' : 'ghost'}
-                                    size="sm"
+                                </button>
+                                <button
                                     onClick={() => onTextSegModeChange('segmentation')}
-                                    className="h-7 px-2 gap-1.5 text-xs font-medium"
+                                    className={`
+                                        flex items-center gap-2 px-3 py-1 rounded-sm text-xs font-semibold transition-all
+                                        ${textSegMode === 'segmentation'
+                                            ? 'bg-white dark:bg-gray-900 text-orange-600 shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                                            : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100'}
+                                    `}
                                 >
-                                    <Slice className="h-3.5 w-3.5" />
+                                    <Scissors className="h-3.5 w-3.5" />
                                     Segment
-                                </Button>
+                                </button>
                             </div>
                         )}
 
