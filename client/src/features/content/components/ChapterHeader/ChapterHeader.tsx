@@ -2,7 +2,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { FilePenLine, Scissors } from 'lucide-react';
+import { AudioPlayerControls } from '@/components/common/AudioPlayerControls';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -20,9 +23,40 @@ interface ChapterHeaderProps {
     activeTab: string;
     textSegMode: 'editor' | 'segmentation';
     onTextSegModeChange: (mode: 'editor' | 'segmentation') => void;
+
+    // Preview tab specific props
+    learnMode?: boolean;
+    onLearnModeChange?: (mode: boolean) => void;
+    audioFiles?: Array<{ id: number; filename: string; displayName?: string }>;
+    selectedAudioFileId?: number | null;
+    onAudioFileChange?: (audioFileId: number) => void;
+
+    // Audio player props (from AudioPlayerContext)
+    isPlaying?: boolean;
+    currentTime?: number;
+    duration?: number;
+    onPlay?: () => void;
+    onPause?: () => void;
+    onSeek?: (time: number) => void;
 }
 
-export function ChapterHeader({ activeTab, textSegMode, onTextSegModeChange }: ChapterHeaderProps) {
+export function ChapterHeader({
+    activeTab,
+    textSegMode,
+    onTextSegModeChange,
+    // Preview props
+    learnMode,
+    onLearnModeChange,
+    audioFiles = [],
+    selectedAudioFileId,
+    onAudioFileChange,
+    isPlaying,
+    currentTime,
+    duration,
+    onPlay,
+    onPause,
+    onSeek,
+}: ChapterHeaderProps) {
     const { chapter, isLoading } = useChapterEditor();
     const {
         isPublished,
@@ -71,6 +105,61 @@ export function ChapterHeader({ activeTab, textSegMode, onTextSegModeChange }: C
 
                     {/* Right: Actions (Status + Publish + Mode Toggle) */}
                     <div className="flex items-center gap-3">
+                        {/* Preview Tab Controls */}
+                        {activeTab === 'preview' && (
+                            <>
+                                {/* Audio File Selector */}
+                                {audioFiles.length > 0 && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-medium text-muted-foreground">Audio:</span>
+                                        <Select
+                                            value={selectedAudioFileId?.toString() || ''}
+                                            onValueChange={(value) => onAudioFileChange?.(parseInt(value))}
+                                        >
+                                            <SelectTrigger className="h-8 w-40 text-xs">
+                                                <SelectValue placeholder="Select audio" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {audioFiles.map((file) => (
+                                                    <SelectItem key={file.id} value={file.id.toString()}>
+                                                        {file.displayName || file.filename}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
+
+                                {/* Audio Player Controls (minimal) */}
+                                {selectedAudioFileId && (
+                                    <AudioPlayerControls
+                                        variant="minimal"
+                                        isPlaying={isPlaying}
+                                        currentTime={currentTime}
+                                        duration={duration}
+                                        onPlay={onPlay}
+                                        onPause={onPause}
+                                        onSeek={onSeek}
+                                        showSkipButtons={false}
+                                        showPlaybackRate={false}
+                                        className="w-64"
+                                    />
+                                )}
+
+                                {/* Learn Mode Toggle */}
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-medium text-muted-foreground">Learn Mode:</span>
+                                    <Switch
+                                        checked={learnMode}
+                                        onCheckedChange={onLearnModeChange}
+                                        className="border border-gray-300 dark:border-gray-600"
+                                    />
+                                </div>
+
+                                <div className="h-4 w-px bg-border" />
+                            </>
+                        )}
+
                         {/* Mode Toggle (Only visible on Step 5) */}
                         {activeTab === 'text-segmentation' && (
                             <div className="flex items-center bg-gray-100 dark:bg-gray-800 p-1 rounded-md h-9 mr-4 ring-1 ring-inset ring-gray-200 dark:ring-gray-700">
