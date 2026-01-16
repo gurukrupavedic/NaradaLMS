@@ -242,6 +242,53 @@ export function useTextSegmentationEditor() {
         deleteSegmentMutation.mutate(segmentId);
     }, [isPublished, deleteSegmentMutation, toast]);
 
+
+    // Mutation: Delete all segments for script
+    const clearAllSegmentsMutation = useMutation({
+        mutationFn: async () => {
+            const response = await fetch(`/api/content/chapters/${chapterId}/segments/all/clear?script=${selectedScript}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to clear segments');
+            }
+
+            return response.json();
+        },
+        onSuccess: () => {
+            toast({
+                title: 'All segments cleared',
+            });
+            queryClient.invalidateQueries({ queryKey: ['content', 'chapters', chapterId, 'segments'] });
+            queryClient.invalidateQueries({ queryKey: ['content', 'chapters', chapterId, 'mappings'] });
+            setSelectedSegmentId(undefined); // Clear selection
+        },
+        onError: (error: Error) => {
+            toast({
+                title: 'Failed to clear segments',
+                description: error.message,
+                variant: 'destructive',
+            });
+        },
+    });
+
+    // Clear all segments wrapper
+    const clearAllSegments = useCallback(() => {
+        if (isPublished) {
+            toast({
+                title: 'Chapter is published',
+                description: 'Unpublish the chapter to delete segments',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        clearAllSegmentsMutation.mutate();
+    }, [isPublished, clearAllSegmentsMutation, toast]);
+
     // Create segment from AnnotationLayer selection data
     const createSegmentFromSelection = useCallback((segmentData: { script: string; startPosition: number; endPosition: number }) => {
         if (isPublished) {
@@ -325,6 +372,8 @@ export function useTextSegmentationEditor() {
         deleteSegment,
         isCreating: createSegmentMutation.isPending,
         isDeleting: deleteSegmentMutation.isPending,
+        clearAllSegments,
+        isClearing: clearAllSegmentsMutation.isPending,
 
         // Utilities
         getMappingStatus,

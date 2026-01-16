@@ -128,7 +128,7 @@ export function SelectableTextPanel({
             // Text before segment
             if (segment.startPosition > lastEnd) {
                 parts.push(
-                    <span key={`before-${index}`}>
+                    <span key={`before-${index}`} className="cursor-text">
                         {plainText.substring(lastEnd, segment.startPosition)}
                     </span>
                 );
@@ -143,7 +143,10 @@ export function SelectableTextPanel({
                         ? 'bg-orange-200 text-orange-900 dark:bg-orange-900 dark:text-orange-100 shadow-sm font-medium ring-1 ring-orange-300 dark:ring-orange-700'
                         : 'bg-slate-100 hover:bg-orange-100 dark:bg-slate-800 dark:hover:bg-orange-900/50 text-foreground hover:text-orange-900 dark:hover:text-orange-100'
                         }`}
-                    onClick={() => onSegmentSelect?.(segment.id)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onSegmentSelect?.(segment.id);
+                    }}
                     title={`Segment #${segment.order}`}
                 >
                     {plainText.substring(segment.startPosition, segment.endPosition)}
@@ -156,7 +159,7 @@ export function SelectableTextPanel({
         // Remaining text
         if (lastEnd < plainText.length) {
             parts.push(
-                <span key="after">
+                <span key="after" className="cursor-text">
                     {plainText.substring(lastEnd)}
                 </span>
             );
@@ -184,7 +187,7 @@ export function SelectableTextPanel({
 
     return (
         <div className="h-full flex flex-col" ref={scrollContainerRef}>
-            <div className="flex-1 overflow-auto">
+            <div className="flex-1 overflow-auto" onClick={() => onSegmentSelect?.(undefined)}>
                 <div
                     ref={textContainerRef}
                     className="p-8 tiptap-content max-w-4xl mx-auto"
@@ -197,7 +200,7 @@ export function SelectableTextPanel({
                         lineHeight: '1.8',
                         fontWeight: script === 'hi' ? 500 : 400,
                         userSelect: disabled ? 'none' : 'text',
-                        cursor: disabled ? 'not-allowed' : 'text',
+                        cursor: disabled ? 'not-allowed' : 'default',
                     }}
                 >
                     {renderSegmentedText()}

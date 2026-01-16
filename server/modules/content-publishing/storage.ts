@@ -247,6 +247,13 @@ export class ContentStorage {
   async deleteTextSegment(id: number): Promise<void> {
     await db.delete(textSegments).where(eq(textSegments.id, id));
   }
+  async deleteTextSegmentsByChapter(chapterId: number, script?: string): Promise<void> {
+    const whereConditions = script
+      ? and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script))
+      : eq(textSegments.chapterId, chapterId);
+
+    await db.delete(textSegments).where(whereConditions);
+  }
 }
 
 // Export singleton instance

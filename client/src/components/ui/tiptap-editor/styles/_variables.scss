@@ -74,7 +74,7 @@ $shadow-3: var(--rte-shadow-3,
 // Editor
 $editor-min-height: var(--rte-editor-min-height);
 $editor-max-height: var(--rte-editor-max-height);
-$editor-max-width: var(--rte-editor-max-width, 100%);
+$editor-max-width: var(--rte-editor-max-width, 66%);
 $editor-font-size: var(--rte-editor-font-size, 1.875rem);
 $editor-link: var(--rte-editor-link, $primary-color);
 // Controls WRAP spacing (the gap between lines within the same paragraph)

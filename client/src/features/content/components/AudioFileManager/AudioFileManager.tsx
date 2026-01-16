@@ -316,6 +316,8 @@ export function AudioFileManager({
                     />
                 )}
 
+
+
                 {/* Session Controls Slot */}
                 {children}
             </div>

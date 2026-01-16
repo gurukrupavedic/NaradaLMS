@@ -47,6 +47,7 @@ export interface AudioPlayerControlsProps {
     showPlaybackRate?: boolean
     showVolumeControl?: boolean
     disabled?: boolean
+    variant?: 'default' | 'minimal'
 }
 
 function formatTime(seconds: number): string {
@@ -80,10 +81,94 @@ export function AudioPlayerControls({
     showPlaybackRate = true,
     showVolumeControl = true,
     disabled = false,
+    variant = 'default',
 }: AudioPlayerControlsProps) {
 
     const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2]
 
+    if (variant === 'minimal') {
+        return (
+            <div className={cn("w-full flex items-center gap-3 bg-card border rounded-lg shadow-sm px-3 py-2", className)}>
+                {/* Play/Pause Button */}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                        "h-8 w-8 rounded-full transition-all hover:bg-slate-100 dark:hover:bg-slate-800 flex-shrink-0",
+                        isPlaying && "bg-slate-100 dark:bg-slate-800 text-foreground"
+                    )}
+                    onClick={isPlaying ? onPause : onPlay}
+                    disabled={disabled}
+                >
+                    {isPlaying ? (
+                        <Pause className="h-4 w-4 fill-current" />
+                    ) : (
+                        <Play className="h-4 w-4 fill-current ml-0.5" />
+                    )}
+                    <span className="sr-only">{isPlaying ? "Pause" : "Play"}</span>
+                </Button>
+
+
+
+                {/* Time Display */}
+                <span className="text-xs font-mono text-muted-foreground tabular-nums flex-shrink-0 min-w-[3rem]">
+                    {formatTime(currentTime)}
+                </span>
+
+                {/* Slider */}
+                <div className="flex-1 min-w-[80px]">
+                    <Slider
+                        value={[currentTime]}
+                        max={duration || 100}
+                        step={0.1}
+                        onValueChange={(val) => onSeek?.(val[0])}
+                        disabled={disabled}
+                        className="cursor-pointer"
+                    />
+                </div>
+
+                {/* Duration */}
+                <span className="text-xs font-mono text-muted-foreground tabular-nums flex-shrink-0 min-w-[3rem] text-right">
+                    {formatTime(duration)}
+                </span>
+
+                {/* Controls Group */}
+                <div className="flex items-center gap-1 flex-shrink-0 ml-1">
+                    {/* Skip Buttons (Simplified) */}
+                    {showSkipButtons && (
+                        <>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 hidden md:flex text-muted-foreground hover:text-foreground" onClick={onSkipBackward} disabled={disabled}>
+                                <SkipBack className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 hidden md:flex text-muted-foreground hover:text-foreground" onClick={onSkipForward} disabled={disabled}>
+                                <SkipForward className="h-3.5 w-3.5" />
+                            </Button>
+                        </>
+                    )}
+
+                    {/* Playback Rate (Compact) */}
+                    {showPlaybackRate && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-7 px-1.5 text-[10px] font-medium text-muted-foreground hover:text-foreground gap-0.5 min-w-[2.5rem]" disabled={disabled}>
+                                    {playbackRate}x
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                {playbackRates.map((rate) => (
+                                    <DropdownMenuItem key={rate} onClick={() => onPlaybackRateChange?.(rate)} className={cn("text-xs cursor-pointer", playbackRate === rate && "font-bold bg-accent")}>
+                                        {rate}x
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                </div>
+            </div>
+        )
+    }
+
+    // Default Layout (Card)
     return (
         <div className={cn("w-full bg-card rounded-xl border shadow-sm p-4 space-y-4", className)}>
             {/* Title & Header Content */}

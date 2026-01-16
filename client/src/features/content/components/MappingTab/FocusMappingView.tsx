@@ -1,10 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-import { Play, Pause, Square, MapPin, ArrowRight, RotateCcw, Zap } from 'lucide-react';
+import { Play, Pause, Square, MapPin, ArrowRight, RotateCcw, Zap, Moon, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AudioPlayerControls } from '@/components/common/AudioPlayerControls';
 import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
 import { getSegmentText } from '@shared/utils/text-segmentation';
 
@@ -45,7 +46,9 @@ export function FocusMappingView({
     onMarkSegment,
     onUndoMark
 }: FocusMappingViewProps) {
-    // ... activeIndex derived state ...
+    const [isCinemaMode, setCinemaMode] = useState(true);
+    const [isSpacePressed, setIsSpacePressed] = useState(false);
+
     // Find index of active segment
     const activeIndex = activeSegmentId !== null
         ? segments.findIndex(s => s.id === activeSegmentId)
@@ -59,10 +62,11 @@ export function FocusMappingView({
 
     // Keyboard listener
     useEffect(() => {
-        // ... (keep existing effect)
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.code === 'Space') {
                 e.preventDefault(); // Prevent scrolling
+                if (!e.repeat) setIsSpacePressed(true);
+
                 // If playing, mark segment. If paused, toggle play.
                 if (isPlaying) {
                     onMarkSegment();
@@ -84,8 +88,19 @@ export function FocusMappingView({
             }
         };
 
+        const handleKeyUp = (e: KeyboardEvent) => {
+            if (e.code === 'Space') {
+                setIsSpacePressed(false);
+            }
+        };
+
         window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
     }, [isPlaying, onMarkSegment, onTogglePlayPause, onStopSession, activeIndex, currentTime, duration, onSeek]);
 
     // Format helpers
@@ -124,58 +139,59 @@ export function FocusMappingView({
     };
 
     return (
-        <div className="h-full flex flex-col bg-slate-900 text-white rounded-lg overflow-hidden relative">
+        <div className={cn(
+            "h-full flex flex-col rounded-lg overflow-hidden relative border transition-colors duration-300",
+            isCinemaMode ? "dark bg-slate-950 border-slate-800" : "bg-background border-border"
+        )}>
             {/* Top Bar */}
-            <div className="flex items-center gap-4 p-4 bg-slate-800/50 backdrop-blur-sm border-b border-white/10">
+            <div className={cn(
+                "flex items-center gap-4 p-4 backdrop-blur-sm border-b transition-colors duration-300",
+                isCinemaMode ? "bg-slate-900/50 border-white/10" : "bg-muted/30 border-border"
+            )}>
                 {/* Left: Info */}
-                <div className="flex items-center gap-4 flex-shrink-0">
-                    <Badge variant="outline" className="text-white border-white/20 bg-white/5">
+                <div className="flex-shrink-0">
+                    <Badge variant="outline" className={cn(
+                        "h-8 px-3 transition-colors",
+                        isCinemaMode ? "bg-white/5 border-white/20 text-white" : "bg-background border-border text-foreground"
+                    )}>
                         {activeIndex + 1} / {segments.length}
                     </Badge>
-                    <span className="font-mono text-sm tracking-wider text-white w-24">
-                        {formatTime(currentTime)} / {formatTime(duration)}
-                    </span>
                 </div>
 
-                {/* Middle: Seek Bar */}
-                <div className="flex-1 px-4">
-                    <Slider
-                        value={[currentTime]}
-                        max={duration}
-                        step={0.1}
-                        onValueChange={(val) => onSeek(val[0])}
-                        className="cursor-pointer"
-                        thumbClassName="bg-blue-600 h-6 w-6 border-2 border-slate-800 ring-offset-slate-900 hover:scale-110 transition-transform"
+                {/* Middle: Standard Audio Player (Minimal) */}
+                <div className="flex-1">
+                    <AudioPlayerControls
+                        variant="minimal"
+                        isPlaying={isPlaying}
+                        currentTime={currentTime}
+                        duration={duration}
+                        onPlay={onTogglePlayPause}
+                        onPause={onPauseSession}
+                        onSeek={onSeek}
+                        onSkipForward={() => onSeek(Math.min(currentTime + 5, duration))}
+                        onSkipBackward={() => onSeek(Math.max(currentTime - 5, 0))}
+                        showVolumeControl={false}
+                        className={cn(
+                            "bg-transparent border-0 shadow-none p-0 transition-colors",
+                            isCinemaMode
+                                ? "text-white [&_.text-muted-foreground]:text-slate-400 [&_.text-foreground]:text-white"
+                                : ""
+                        )}
                     />
                 </div>
 
-                {/* Right: Controls */}
+                {/* Right: Session Controls */}
                 <div className="flex gap-2 flex-shrink-0">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onPauseSession}
-                        className={cn(
-                            "hover:bg-white/10",
-                            isPaused ? "text-green-400 hover:text-green-300" : "text-amber-400 hover:text-amber-300"
-                        )}
-                    >
-                        {isPaused ? (
-                            <>
-                                <Play className="w-4 h-4 mr-1" /> Continue
-                            </>
-                        ) : (
-                            <>
-                                <Pause className="w-4 h-4 mr-1" /> Pause
-                            </>
-                        )}
-                    </Button>
-
                     <Button
                         variant="destructive"
                         size="sm"
                         onClick={onStopSession}
-                        className="bg-red-500/20 hover:bg-red-500/40 text-red-200 border border-red-500/20"
+                        className={cn(
+                            "h-8 border",
+                            isCinemaMode
+                                ? "bg-red-500/20 hover:bg-red-500/30 text-red-200 border-red-500/20"
+                                : "bg-destructive/10 text-destructive border-transparent hover:bg-destructive/20"
+                        )}
                     >
                         <Square className="w-4 h-4 mr-1" /> End
                     </Button>
@@ -187,12 +203,16 @@ export function FocusMappingView({
 
                 {/* Current Segment */}
                 <div className="w-full max-w-6xl text-center space-y-8 animate-in fade-in zoom-in duration-300">
-                    <div className="text-sm font-medium text-slate-400 uppercase tracking-widest">
+                    <div className={cn(
+                        "text-sm font-medium uppercase tracking-widest transition-colors",
+                        isCinemaMode ? "text-slate-400" : "text-muted-foreground"
+                    )}>
                         Current Segment
                     </div>
                     <div className={cn(
                         "text-5xl md:text-6xl font-bold leading-tight transition-all",
-                        currentScript === 'te' || currentScript === 'hi' ? 'font-telugu leading-lose' : 'font-sans'
+                        currentScript === 'te' || currentScript === 'hi' ? 'font-telugu leading-lose' : 'font-sans',
+                        isCinemaMode ? "text-white" : "text-foreground"
                     )}>
                         {currentText}
                     </div>
@@ -201,12 +221,16 @@ export function FocusMappingView({
                 {/* Next Segment Preview */}
                 {nextText && (
                     <div className="w-full max-w-2xl text-center space-y-2 opacity-40 scale-90 transition-all">
-                        <div className="text-xs font-medium uppercase tracking-widest">
+                        <div className={cn(
+                            "text-xs font-medium uppercase tracking-widest transition-colors",
+                            isCinemaMode ? "text-slate-500" : "text-muted-foreground"
+                        )}>
                             Up Next
                         </div>
                         <div className={cn(
-                            "text-xl md:text-2xl font-medium truncate",
-                            currentScript === 'te' || currentScript === 'hi' ? 'font-telugu' : 'font-sans'
+                            "text-xl md:text-2xl font-medium truncate transition-colors",
+                            currentScript === 'te' || currentScript === 'hi' ? 'font-telugu' : 'font-sans',
+                            isCinemaMode ? "text-slate-300" : "text-foreground"
                         )}>
                             {nextText}
                         </div>
@@ -215,12 +239,21 @@ export function FocusMappingView({
             </div>
 
             {/* Bottom Controls */}
-            <div className="p-6 bg-slate-800/50 backdrop-blur-sm border-t border-white/10">
-                <div className="max-w-xl mx-auto">
+            <div className={cn(
+                "p-4 backdrop-blur-sm border-t transition-colors duration-300 relative",
+                isCinemaMode ? "bg-slate-900/50 border-white/10" : "bg-muted/30 border-border"
+            )}>
+                <div className="max-w-md mx-auto">
                     <Button
                         onClick={isPlaying ? onMarkSegment : handleResume}
                         size="lg"
-                        className="w-full h-20 text-xl font-bold rounded-xl shadow-lg shadow-blue-900/20 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 transition-all transform active:scale-95"
+                        className={cn(
+                            "w-full h-14 text-lg font-bold rounded-xl shadow-lg transition-all transform active:scale-95 duration-100",
+                            isSpacePressed && "scale-95 ring-2 ring-offset-2 ring-blue-500 ring-offset-slate-900",
+                            isCinemaMode
+                                ? "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20"
+                                : ""
+                        )}
                     >
                         {isPlaying ? (
                             <>
@@ -234,9 +267,35 @@ export function FocusMappingView({
                             </>
                         )}
                     </Button>
-                    <p className="text-center text-xs text-slate-500 mt-3 select-none flex items-center justify-center gap-1.5">
-                        Tap <kbd className="pointer-events-none h-5 select-none items-center justify-center gap-1 rounded border border-white/10 border-b-2 bg-white/5 px-2 min-w-[3rem] font-mono text-[10px] font-medium text-slate-400 opacity-100 inline-flex">SPACE</kbd> on keyboard when audio matching current segment is complete.
+                    <p className={cn(
+                        "text-center text-xs mt-2 select-none flex items-center justify-center gap-1.5 transition-colors",
+                        isCinemaMode ? "text-slate-500" : "text-muted-foreground"
+                    )}>
+                        Tap <kbd className={cn(
+                            "pointer-events-none h-5 select-none items-center justify-center gap-1 rounded border px-2 min-w-[3rem] font-mono text-[10px] font-medium opacity-100 inline-flex transition-colors",
+                            isCinemaMode
+                                ? "bg-white/5 border-white/10 text-slate-400"
+                                : "bg-muted border-border text-muted-foreground"
+                        )}>SPACE</kbd> on keyboard when audio matching current segment is complete.
                     </p>
+                </div>
+
+                {/* Cinema Mode Toggle - Absolute Bottom Right */}
+                <div className="absolute right-4 bottom-4">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                            "h-8 w-8 rounded-full transition-colors",
+                            isCinemaMode
+                                ? "text-slate-400 hover:text-white hover:bg-white/10"
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        )}
+                        onClick={() => setCinemaMode(!isCinemaMode)}
+                        title={isCinemaMode ? "Exit Cinema Mode" : "Enter Cinema Mode"}
+                    >
+                        {isCinemaMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                    </Button>
                 </div>
             </div>
         </div>

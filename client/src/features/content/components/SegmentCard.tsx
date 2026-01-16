@@ -68,7 +68,7 @@ export function SegmentCard({
                 "cursor-pointer transition-all duration-200",
                 status === 'ready' && "border-border hover:border-muted-foreground/50 hover:bg-muted/50",
                 status === 'recording' && "border-orange-500 bg-orange-500/10 dark:bg-orange-500/20 shadow-md animate-subtle-pulse",
-                status === 'mapped' && "border-green-400 bg-green-400/5 dark:bg-green-400/10 hover:bg-green-400/10 dark:hover:bg-green-400/20",
+                status === 'mapped' && "border-blue-400 bg-blue-400/5 dark:bg-blue-400/10 hover:bg-blue-400/10 dark:hover:bg-blue-400/20",
                 className
             )}
             onClick={onClick}
@@ -80,7 +80,7 @@ export function SegmentCard({
                         <span className={cn(
                             "text-xs font-medium px-1.5 py-0.5 rounded",
                             status === 'mapped'
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
                                 : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
                         )}>
                             #{segmentNumber}
@@ -108,7 +108,7 @@ export function SegmentCard({
 
                 {/* Status Icon */}
                 {showStatusIcon && (
-                    <div className="flex-shrink-0 self-start pt-1.5 opacity-80">
+                    <div className="flex-shrink-0 opacity-80">
                         <LinkStatusIcon
                             status={status === 'mapped' ? 'mapped' : 'unmapped'}
                             size="sm"

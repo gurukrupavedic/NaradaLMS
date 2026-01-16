@@ -16,7 +16,7 @@ export class ContentService {
   constructor(
     private storage: typeof contentStorage,
     private eventBus: EventBus
-  ) {}
+  ) { }
 
   /**
    * Track Operations
@@ -51,11 +51,11 @@ export class ContentService {
     const tracks = await this.storage.getAllTracks();
     const sortedTracks = tracks.sort((a, b) => a.order - b.order);
     const currentIndex = sortedTracks.findIndex(t => t.id === trackId);
-    
+
     if (currentIndex === -1) {
       throw new Error("Track not found");
     }
-    
+
     if (direction === 'up' && currentIndex > 0) {
       const previousTrack = sortedTracks[currentIndex - 1];
       const currentTrack = sortedTracks[currentIndex];
@@ -85,13 +85,13 @@ export class ContentService {
   async getPublishedChapters(): Promise<Chapter[]> {
     const allTracks = await this.storage.getAllTracks();
     const allChapters: Chapter[] = [];
-    
+
     for (const track of allTracks) {
       const chapters = await this.storage.getChaptersByTrack(track.id);
       const publishedChapters = chapters.filter(c => c.status === 'published');
       allChapters.push(...publishedChapters);
     }
-    
+
     return allChapters;
   }
 
@@ -108,19 +108,19 @@ export class ContentService {
 
   async updateChapterContent(chapterId: number, content: object): Promise<Chapter> {
     const chapter = await this.storage.updateChapter(chapterId, { content });
-    
+
     await this.eventBus.publish(CONTENT_EVENTS.CONTENT_UPDATED, {
       type: 'ContentUpdated',
       chapterId,
       timestamp: new Date()
     });
-    
+
     return chapter;
   }
 
   async updateChapter(chapterId: number, data: Partial<Chapter>): Promise<Chapter> {
     const chapter = await this.storage.updateChapter(chapterId, data);
-    
+
     if (data.content) {
       await this.eventBus.publish(CONTENT_EVENTS.CONTENT_UPDATED, {
         type: 'ContentUpdated',
@@ -128,65 +128,65 @@ export class ContentService {
         timestamp: new Date()
       });
     }
-    
+
     return chapter;
   }
 
   async publishChapter(chapterId: number, userId: string): Promise<Chapter> {
     const chapter = await this.storage.updateChapter(chapterId, { status: 'published' });
-    
+
     await this.eventBus.publish(CONTENT_EVENTS.CHAPTER_PUBLISHED, {
       type: 'ChapterPublished',
       chapterId,
       publishedBy: userId,
       timestamp: new Date()
     });
-    
+
     return chapter;
   }
 
   async unpublishChapter(chapterId: number, userId: string): Promise<Chapter> {
     const chapter = await this.storage.updateChapter(chapterId, { status: 'draft' });
-    
+
     await this.eventBus.publish(CONTENT_EVENTS.CHAPTER_UNPUBLISHED, {
       type: 'ChapterUnpublished',
       chapterId,
       unpublishedBy: userId,
       timestamp: new Date()
     });
-    
+
     return chapter;
   }
 
   async deleteChapter(chapterId: number): Promise<void> {
     const chapter = await this.storage.getChapter(chapterId);
-    
+
     if (!chapter) {
       throw new Error("Chapter not found");
     }
-    
+
     if (chapter.status === 'published') {
       throw new Error("Cannot delete a published chapter. Unpublish it first.");
     }
-    
+
     await this.storage.deleteChapter(chapterId);
   }
 
   async moveChapter(chapterId: number, direction: 'up' | 'down'): Promise<void> {
     const chapter = await this.storage.getChapter(chapterId);
-    
+
     if (!chapter) {
       throw new Error("Chapter not found");
     }
-    
+
     const chapters = await this.storage.getChaptersByTrack(chapter.trackId);
     const sortedChapters = chapters.sort((a, b) => a.order - b.order);
     const currentIndex = sortedChapters.findIndex(c => c.id === chapterId);
-    
+
     if (currentIndex === -1) {
       throw new Error("Chapter not found in track");
     }
-    
+
     if (direction === 'up' && currentIndex > 0) {
       const previousChapter = sortedChapters[currentIndex - 1];
       const currentChapter = sortedChapters[currentIndex];
@@ -243,6 +243,10 @@ export class ContentService {
 
   async reorderSegments(chapterId: number, segmentOrders: Array<{ id: number; order: number }>): Promise<void> {
     await this.storage.updateSegmentOrder(chapterId, segmentOrders);
+  }
+
+  async deleteSegmentsByChapter(chapterId: number, script: 'te' | 'hi' | 'en'): Promise<void> {
+    await this.storage.deleteTextSegmentsByChapter(chapterId, script);
   }
 }
 

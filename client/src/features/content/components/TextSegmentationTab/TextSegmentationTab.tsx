@@ -11,8 +11,9 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from '@/components/ui/resizable';
-import { PencilLine, Slice, FileText, StretchHorizontal } from 'lucide-react';
+import { PencilLine, Slice, FileText, StretchHorizontal, RotateCcw } from 'lucide-react';
 import { TiptapEditor } from '@/components/ui/tiptap-editor';
+
 import { SelectableTextPanel } from './SelectableTextPanel';
 import { SegmentList } from './SegmentList';
 import {
@@ -30,6 +31,17 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/AlertDialog';
 import '@/components/ui/tiptap-editor/styles/index.scss';
 
 interface TextSegmentationTabProps {
@@ -94,6 +106,8 @@ function SegmentationMode() {
         deleteSegment,
         getMappingStatus,
         reorderSegments,
+        clearAllSegments,
+        isClearing,
     } = useTextSegmentationEditor();
 
     const [panelSizes, setPanelSizes] = useLocalStorage('text-segmentation-panel-sizes', {
@@ -203,6 +217,39 @@ function SegmentationMode() {
                                     <StretchHorizontal className="w-4 h-4 text-orange-600/70 fill-orange-500/70" />
                                     Text Segments ({scriptSegments.length})
                                 </h2>
+                                <div>
+                                    {scriptSegments.length > 0 && !isPublished && (
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-6 text-xs text-muted-foreground hover:text-destructive px-2"
+                                                    disabled={isClearing}
+                                                >
+                                                    <RotateCcw className="h-3 w-3 mr-1" />
+                                                    Clear All
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        This action cannot be undone. This will permanently delete all {scriptSegments.length} text segments for the <strong>{selectedScript.toUpperCase()}</strong> script.
+                                                        <br /><br />
+                                                        Note: Any audio mappings associated with these segments will also be removed.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={clearAllSegments} className="bg-destructive hover:bg-destructive/90">
+                                                        {isClearing ? 'Clearing...' : 'Yes, clear all segments'}
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    )}
+                                </div>
                             </div>
                         </div>
                         <CardContent className="flex-1 overflow-auto p-4">

@@ -456,6 +456,24 @@ router.delete('/chapters/:chapterId/segments/:segmentId', async (req: Request, r
   } catch (error) { next(error); }
 });
 
+// New: DELETE /chapters/:chapterId/segments/all - Clear all segments for a script
+router.delete('/chapters/:chapterId/segments/all/clear', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const chapterId = parseInt(req.params.chapterId);
+    const script = req.query.script as string;
+
+    if (!script || !['te', 'hi', 'en'].includes(script)) {
+      return res.status(400).json(createErrorResponse(
+        "Invalid script. Must be 'te', 'hi', or 'en'",
+        "INVALID_SCRIPT"
+      ));
+    }
+
+    await contentService.deleteSegmentsByChapter(chapterId, script as 'te' | 'hi' | 'en');
+    res.json({ message: 'All segments cleared successfully' });
+  } catch (error) { next(error); }
+});
+
 // PATCH /api/segments/:chapterId/reorder - Reorder segments
 router.patch('/segments/:chapterId/reorder', async (req: Request, res: Response, next: NextFunction) => {
   try {

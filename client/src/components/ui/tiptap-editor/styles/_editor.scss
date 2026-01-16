@@ -114,6 +114,7 @@
   border-bottom: 1px solid $border-color;
   border-top-left-radius: $radius;
   border-top-right-radius: $radius;
+  padding-inline: max(2.75rem, (100% - $editor-max-width) / 2);
 }
 
 .rte-status-bar {
