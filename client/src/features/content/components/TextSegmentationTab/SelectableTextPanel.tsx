@@ -189,11 +189,12 @@ export function SelectableTextPanel({
                     className="p-6 tiptap-content"
                     onMouseUp={handleTextSelection}
                     style={{
-                        fontFamily: script === 'te' ? 'Noto Sans Telugu, sans-serif' :
-                            script === 'hi' ? 'Noto Sans Devanagari, sans-serif' :
-                                'Noto Sans, sans-serif',
+                        fontFamily: script === 'te' ? 'JIMS, Noto Sans Telugu, sans-serif' :
+                            script === 'hi' ? 'AdishilaSanVedic, Noto Sans Devanagari, sans-serif' :
+                                'AdishilaSan, Noto Sans, sans-serif',
                         fontSize: '1.875rem',
                         lineHeight: '1.6',
+                        fontWeight: script === 'hi' ? 600 : 400,
                         userSelect: disabled ? 'none' : 'text',
                         cursor: disabled ? 'not-allowed' : 'text',
                     }}
