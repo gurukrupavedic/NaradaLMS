@@ -194,7 +194,7 @@ export function SelectableTextPanel({
                             script === 'hi' ? 'AdishilaSanVedic, Noto Sans Devanagari, sans-serif' :
                                 'AdishilaSan, Noto Sans, sans-serif',
                         fontSize: '1.875rem',
-                        lineHeight: '0.8',
+                        lineHeight: '1.2',
                         fontWeight: script === 'hi' ? 600 : 400,
                         userSelect: disabled ? 'none' : 'text',
                         cursor: disabled ? 'not-allowed' : 'text',
