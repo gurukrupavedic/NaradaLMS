@@ -299,8 +299,8 @@ export function MappingTab() {
                                                 {currentScriptSegments.length} segments
                                             </Badge>
                                             {audioFiles.length > 0 && (
-                                                <Badge variant="secondary" className="flex items-center gap-1 h-6">
-                                                    <Zap className="h-3 w-3 text-blue-500 fill-current" />
+                                                <Badge variant="secondary" className="flex items-center gap-1 h-6 bg-blue-50 text-blue-700 border-blue-100">
+                                                    <Zap className="h-3 w-3 fill-blue-500 text-blue-600" />
                                                     {mappedCount} mapped
                                                 </Badge>
                                             )}

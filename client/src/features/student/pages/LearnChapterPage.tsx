@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music, Info } from "lucide-react";
+import { Music, Info, StretchHorizontal, Zap } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading";
 import { SelectableTextPanel } from "@/features/content/components/TextSegmentationTab/SelectableTextPanel";
 import { getProficiencyLabel } from "@/features/batches/utils/matrix-utils";
@@ -239,6 +239,15 @@ export function LearnChapterPage() {
   const proficiencyLevel = currentProgress?.proficiencyLevel ?? null;
   const proficiencyLabel = getProficiencyLabel(proficiencyLevel);
 
+  // Calculate mapped count for current script
+  const mappedCount = useMemo(() => {
+    if (!selectedAudioFileId || !mappings.length) return 0;
+    const currentAudioMappings = mappings.filter(m => m.audioFileId === selectedAudioFileId);
+    return textSegments.filter(seg =>
+      currentAudioMappings.some(m => m.textSegmentId === seg.id)
+    ).length;
+  }, [textSegments, mappings, selectedAudioFileId]);
+
   const displayTitle = chapter?.title || "Learn Chapter";
   const trackName = chapter?.track?.title || undefined;
   const chapterNumber = chapter?.order || undefined;
@@ -396,8 +405,8 @@ export function LearnChapterPage() {
         ) : (
           // Learn Mode ON - Segmented view
           <div className="h-full flex flex-col">
-            {/* Script selector header */}
-            <div className="border border-gray-200 dark:border-gray-800 border-b-0 rounded-t-lg bg-gray-50 dark:bg-gray-900 min-h-[42px] flex items-center justify-center py-1">
+            {/* Script selector header with badges */}
+            <div className="border border-gray-200 dark:border-gray-800 border-b-0 rounded-t-lg bg-gray-50 dark:bg-gray-900 min-h-[42px] flex items-center justify-center gap-6 px-4 py-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-medium text-muted-foreground">Script:</span>
                 <Select
@@ -415,6 +424,19 @@ export function LearnChapterPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <Badge variant="secondary" className="flex items-center gap-1 h-6 bg-orange-50 text-orange-700 border-orange-100">
+                  <StretchHorizontal className="h-3 w-3 fill-orange-500 text-orange-600" />
+                  {textSegments.length} segments
+                </Badge>
+                {audioFiles.length > 0 && (
+                  <Badge variant="secondary" className="flex items-center gap-1 h-6 bg-blue-50 text-blue-700 border-blue-100">
+                    <Zap className="h-3 w-3 fill-blue-500 text-blue-600" />
+                    {mappedCount} mapped
+                  </Badge>
+                )}
               </div>
             </div>
 
