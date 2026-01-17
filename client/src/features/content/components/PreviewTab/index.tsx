@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { TiptapEditor } from '@/components/ui/tiptap-editor';
 import { SelectableTextPanel } from '../TextSegmentationTab/SelectableTextPanel';
 import { useChapterEditor } from '../../context/ChapterEditorContext';
@@ -109,15 +110,15 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
     // Segmented Mode (Learn Mode ON)
     return (
         <div className="h-full flex flex-col">
-            {/* Script selector header */}
-            <div className="px-4 py-3 border border-gray-200 dark:border-gray-800 rounded-t-lg bg-gray-50 dark:bg-gray-900">
+            {/* Script selector header - Polished height to match Tiptap toolbar */}
+            <div className="flex items-center px-4 py-1 border border-gray-200 dark:border-gray-800 border-b-0 rounded-t-lg bg-gray-50 dark:bg-gray-900 min-h-[42px]">
                 <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-muted-foreground">Script:</span>
                     <Select
                         value={contentScript}
                         onValueChange={(value) => setContentScript(value as typeof contentScript)}
                     >
-                        <SelectTrigger className="h-8 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <SelectTrigger className="h-7 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700 shadow-sm">
                             <SelectValue placeholder="Script" />
                         </SelectTrigger>
                         <SelectContent className="text-sm">
@@ -132,7 +133,7 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
             </div>
 
             {/* Segmented text view */}
-            <div className="flex-1 min-h-0 border-x border-b border-gray-200 dark:border-gray-800 rounded-b-lg bg-white dark:bg-black overflow-hidden">
+            <div className="flex-1 min-h-0 border border-gray-200 dark:border-gray-800 rounded-b-lg bg-white dark:bg-black overflow-hidden relative">
                 {chapter?.content?.[contentScript] ? (
                     <SelectableTextPanel
                         content={chapter.content}
