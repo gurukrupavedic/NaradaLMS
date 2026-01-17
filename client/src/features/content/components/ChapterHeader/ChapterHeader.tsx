@@ -145,8 +145,8 @@ export function ChapterHeader({
                                             onPause={onPause}
                                             onSeek={onSeek}
                                             showSkipButtons={false}
-                                            showPlaybackRate={false}
-                                            className="w-56 border-0 shadow-none bg-transparent p-0 gap-2"
+                                            showPlaybackRate={true}
+                                            className="w-72 border-0 shadow-none bg-transparent p-0 gap-2"
                                         />
                                         <div className="h-4 w-px bg-border mx-1" />
                                     </>
@@ -158,7 +158,7 @@ export function ChapterHeader({
                                     <Switch
                                         checked={learnMode}
                                         onCheckedChange={onLearnModeChange}
-                                        className="scale-90 border border-gray-300 dark:border-gray-600"
+                                        className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
                                     />
                                 </div>
 

@@ -73,7 +73,11 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
     }, [selectedAudioFileId, audioFiles, setAudioSource]);
 
     // Handle segment click in Segmented mode
-    const handleSegmentClick = useCallback((segmentId: number) => {
+    const handleSegmentClick = useCallback((segmentId: number | undefined) => {
+        if (segmentId === undefined) {
+            setSelectedSegmentId(undefined);
+            return;
+        }
         const mapping = mappings.find(m => m.textSegmentId === segmentId);
         if (mapping) {
             playSegment(mapping.startTime, mapping.endTime);
@@ -118,7 +122,7 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
                         value={contentScript}
                         onValueChange={(value) => setContentScript(value as typeof contentScript)}
                     >
-                        <SelectTrigger className="h-7 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <SelectTrigger className="h-7 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700">
                             <SelectValue placeholder="Script" />
                         </SelectTrigger>
                         <SelectContent className="text-sm">

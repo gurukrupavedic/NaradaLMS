@@ -282,7 +282,7 @@ export function MappingTab() {
                                                 value={selectedScript}
                                                 onValueChange={(value) => setSelectedScript(value as Script)}
                                             >
-                                                <SelectTrigger className="h-7 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700 shadow-sm">
+                                                <SelectTrigger className="h-7 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700">
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent className="text-sm">
