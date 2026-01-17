@@ -35,14 +35,13 @@ export const MenuBar = ({ currentScript, onScriptChange, disabled }: MenuBarProp
       {/* Script Selector - First group */}
       {currentScript && onScriptChange && (
         <>
-          <ToolbarGroup className="pl-3 gap-2">
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Script</span>
+          <ToolbarGroup className="pl-4 gap-2">
+            <span className="text-xs font-medium text-muted-foreground">Script:</span>
             <Select
               value={currentScript}
               onValueChange={onScriptChange}
-              disabled={disabled}
             >
-              <SelectTrigger className="w-32 h-7 text-xs bg-white dark:bg-gray-950 shadow-none border-input">
+              <SelectTrigger className="w-40 h-7 text-xs bg-white dark:bg-gray-950 shadow-none border-input">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -58,50 +57,55 @@ export const MenuBar = ({ currentScript, onScriptChange, disabled }: MenuBarProp
       )}
 
       {/* Formatting Tools */}
-      <ToolbarGroup>
-        <UndoButton />
-        <RedoButton />
-      </ToolbarGroup>
+      {/* Formatting Tools - Hidden in read-only mode */}
+      {!disabled && (
+        <>
+          <ToolbarGroup>
+            <UndoButton />
+            <RedoButton />
+          </ToolbarGroup>
 
-      <ToolbarDivider />
+          <ToolbarDivider />
 
-      <ToolbarGroup>
-        <HeadingDropdown />
-      </ToolbarGroup>
+          <ToolbarGroup>
+            <HeadingDropdown />
+          </ToolbarGroup>
 
-      <ToolbarDivider />
+          <ToolbarDivider />
 
-      <ToolbarGroup>
-        <BoldButton />
-        <ItalicButton />
-        <UnderlineButton />
-        <MoreFormatPopover />
-      </ToolbarGroup>
+          <ToolbarGroup>
+            <BoldButton />
+            <ItalicButton />
+            <UnderlineButton />
+            <MoreFormatPopover />
+          </ToolbarGroup>
 
-      <ToolbarDivider />
+          <ToolbarDivider />
 
-      <ToolbarGroup>
-        <TextColorPopover />
-        <TextBackgroundPopover />
-      </ToolbarGroup>
+          <ToolbarGroup>
+            <TextColorPopover />
+            <TextBackgroundPopover />
+          </ToolbarGroup>
 
-      <ToolbarDivider />
+          <ToolbarDivider />
 
-      <ToolbarGroup>
-        <TextAlignPopover />
-        <BulletListButton />
-        <OrderedListButton />
-      </ToolbarGroup>
+          <ToolbarGroup>
+            <TextAlignPopover />
+            <BulletListButton />
+            <OrderedListButton />
+          </ToolbarGroup>
 
-      <ToolbarDivider />
+          <ToolbarDivider />
 
-      <ToolbarGroup>
-        <LinkButton />
-        <ImageButton />
-        <BlockquoteButton />
-        <YoutubeButton />
-        <InsertDropdown />
-      </ToolbarGroup>
+          <ToolbarGroup>
+            <LinkButton />
+            <ImageButton />
+            <BlockquoteButton />
+            <YoutubeButton />
+            <InsertDropdown />
+          </ToolbarGroup>
+        </>
+      )}
     </Toolbar>
   );
 };
