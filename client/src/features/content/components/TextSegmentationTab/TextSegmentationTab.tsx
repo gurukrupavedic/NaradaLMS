@@ -161,13 +161,13 @@ function SegmentationMode() {
                                     Content Text ({selectedScript.toUpperCase()})
                                 </h2>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Script</span>
+                                    <span className="text-xs font-medium text-muted-foreground">Script:</span>
                                     <Select
                                         value={selectedScript}
                                         onValueChange={(value) => setSelectedScript(value as 'te' | 'hi' | 'en')}
                                         disabled={isPublished}
                                     >
-                                        <SelectTrigger className="h-7 w-32 text-xs bg-background border-input shadow-none">
+                                        <SelectTrigger className="h-7 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700 shadow-sm">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="text-sm">

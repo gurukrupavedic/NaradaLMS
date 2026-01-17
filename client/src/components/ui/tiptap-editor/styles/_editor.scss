@@ -66,9 +66,10 @@
 
     &>.ProseMirror {
       flex-grow: 1;
-      width: 100%;
+      max-width: $editor-max-width;
+      margin-inline: auto;
       padding-block: 2.5rem;
-      padding-inline: max(2.75rem, (100% - $editor-max-width) / 2);
+      padding-inline: 2rem;
 
       // Force font inheritance for text elements to respect the script-based font set on the container
       h1,
@@ -114,7 +115,7 @@
   border-bottom: 1px solid $border-color;
   border-top-left-radius: $radius;
   border-top-right-radius: $radius;
-  padding-inline: max(2.75rem, (100% - $editor-max-width) / 2);
+  justify-content: center;
 }
 
 .rte-status-bar {

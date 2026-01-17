@@ -111,7 +111,7 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
     return (
         <div className="h-full flex flex-col">
             {/* Script selector header - Polished height to match Tiptap toolbar */}
-            <div className="flex items-center px-4 py-1 border border-gray-200 dark:border-gray-800 border-b-0 rounded-t-lg bg-gray-50 dark:bg-gray-900 min-h-[42px]">
+            <div className="border border-gray-200 dark:border-gray-800 border-b-0 rounded-t-lg bg-gray-50 dark:bg-gray-900 min-h-[42px] flex items-center justify-center py-1">
                 <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-muted-foreground">Script:</span>
                     <Select

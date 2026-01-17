@@ -277,15 +277,15 @@ export function MappingTab() {
                                 <div className="px-4 h-11 bg-gray-50/50 dark:bg-gray-900/50 border-b flex-shrink-0 flex items-center">
                                     <div className="flex items-center justify-between w-full">
                                         <div className="flex items-center gap-3">
-                                            <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Script</label>
+                                            <span className="text-xs font-medium text-muted-foreground">Script:</span>
                                             <Select
                                                 value={selectedScript}
                                                 onValueChange={(value) => setSelectedScript(value as Script)}
                                             >
-                                                <SelectTrigger className="w-32 h-7 text-xs bg-background border-input shadow-none">
+                                                <SelectTrigger className="h-7 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700 shadow-sm">
                                                     <SelectValue />
                                                 </SelectTrigger>
-                                                <SelectContent>
+                                                <SelectContent className="text-sm">
                                                     <SelectItem value="te">Telugu</SelectItem>
                                                     <SelectItem value="hi">Devanagari (Hindi)</SelectItem>
                                                     <SelectItem value="en">English (IAST)</SelectItem>
