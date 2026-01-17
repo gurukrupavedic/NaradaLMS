@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { FilePenLine, Scissors } from 'lucide-react';
+import { FilePenLine, Scissors, Music } from 'lucide-react';
 import { AudioPlayerControls } from '@/components/common/AudioPlayerControls';
 import {
     AlertDialog,
@@ -80,24 +80,24 @@ export function ChapterHeader({
     return (
         <>
             <div className="bg-white/95 dark:bg-black/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
-                <div className="px-6 py-2 flex items-center justify-between">
+                <div className="px-4 h-14 flex items-center justify-between">
                     {/* Left: Tabs */}
                     <TabsList className="h-9 bg-transparent p-0">
                         <TabsTrigger
                             value="text-segmentation"
-                            className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
+                            className="h-9 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4 text-sm font-medium"
                         >
                             Step 1: Text Segmentation
                         </TabsTrigger>
                         <TabsTrigger
                             value="mapping"
-                            className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
+                            className="h-9 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4 text-sm font-medium"
                         >
                             Step 2: Audio Mapping
                         </TabsTrigger>
                         <TabsTrigger
                             value="preview"
-                            className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4"
+                            className="h-9 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4 text-sm font-medium"
                         >
                             Step 3: Preview
                         </TabsTrigger>
@@ -110,16 +110,18 @@ export function ChapterHeader({
                             <>
                                 {/* Audio File Selector */}
                                 {audioFiles.length > 0 && (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs font-medium text-muted-foreground">Audio:</span>
+                                    <div className="flex items-center">
                                         <Select
                                             value={selectedAudioFileId?.toString() || ''}
                                             onValueChange={(value) => onAudioFileChange?.(parseInt(value))}
                                         >
-                                            <SelectTrigger className="h-8 w-40 text-xs">
-                                                <SelectValue placeholder="Select audio" />
+                                            <SelectTrigger className="h-8 w-48 text-xs border-0 shadow-none bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 focus:ring-0 px-2 gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                                                <div className="flex items-center gap-2 truncate">
+                                                    <Music className="h-3.5 w-3.5 opacity-70" />
+                                                    <SelectValue placeholder="Select audio" />
+                                                </div>
                                             </SelectTrigger>
-                                            <SelectContent>
+                                            <SelectContent className="text-xs">
                                                 {audioFiles.map((file) => (
                                                     <SelectItem key={file.id} value={file.id.toString()}>
                                                         {file.displayName || file.filename}
@@ -127,36 +129,40 @@ export function ChapterHeader({
                                                 ))}
                                             </SelectContent>
                                         </Select>
+                                        <div className="h-4 w-px bg-border mx-1" />
                                     </div>
                                 )}
 
                                 {/* Audio Player Controls (minimal) */}
                                 {selectedAudioFileId && (
-                                    <AudioPlayerControls
-                                        variant="minimal"
-                                        isPlaying={isPlaying}
-                                        currentTime={currentTime}
-                                        duration={duration}
-                                        onPlay={onPlay}
-                                        onPause={onPause}
-                                        onSeek={onSeek}
-                                        showSkipButtons={false}
-                                        showPlaybackRate={false}
-                                        className="w-64"
-                                    />
+                                    <>
+                                        <AudioPlayerControls
+                                            variant="minimal"
+                                            isPlaying={isPlaying}
+                                            currentTime={currentTime}
+                                            duration={duration}
+                                            onPlay={onPlay}
+                                            onPause={onPause}
+                                            onSeek={onSeek}
+                                            showSkipButtons={false}
+                                            showPlaybackRate={false}
+                                            className="w-56 border-0 shadow-none bg-transparent p-0 gap-2"
+                                        />
+                                        <div className="h-4 w-px bg-border mx-1" />
+                                    </>
                                 )}
 
                                 {/* Learn Mode Toggle */}
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 px-2">
                                     <span className="text-xs font-medium text-muted-foreground">Learn Mode:</span>
                                     <Switch
                                         checked={learnMode}
                                         onCheckedChange={onLearnModeChange}
-                                        className="border border-gray-300 dark:border-gray-600"
+                                        className="scale-90 border border-gray-300 dark:border-gray-600"
                                     />
                                 </div>
 
-                                <div className="h-4 w-px bg-border" />
+                                <div className="h-4 w-px bg-border mx-1" />
                             </>
                         )}
 
