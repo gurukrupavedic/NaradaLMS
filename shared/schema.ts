@@ -44,10 +44,10 @@ export const users = pgTable("users", {
   status: varchar("status").notNull().default("pending_approval"), // 'pending_approval' | 'active' | 'inactive'
 
   // Audit / invitations
-  invitedBy: varchar("invited_by").references(() => users.id),
+  invitedBy: varchar("invited_by"), // references users.id (defined in DB, not in Drizzle schema to avoid circular dep)
   invitedAt: timestamp("invited_at"),
   approvedAt: timestamp("approved_at"),
-  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedBy: varchar("approved_by"), // references users.id (defined in DB, not in Drizzle schema to avoid circular dep)
   lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

@@ -11,9 +11,7 @@ Core philosophy
 - Clear domain invariants over process.
 - Modern, refined UX without losing cultural fidelity.
 
-────────────────────────────────
-DOMAIN INVARIANTS (NON-NEGOTIABLE)
-────────────────────────────────
+----- DOMAIN INVARIANTS (NON-NEGOTIABLE) -----
 
 1. Progress & Evaluation
 - Progress is tracked strictly at **Student + Chapter**.
@@ -63,9 +61,8 @@ DOMAIN INVARIANTS (NON-NEGOTIABLE)
 - Batches do not own progress.
 - Students may belong to multiple batches over time.
 
-────────────────────────────────
-THINKING & DESIGN GUIDELINES
-────────────────────────────────
+
+----- THINKING & DESIGN GUIDELINES -----
 
 - Always identify:
   - Persona (student / instructor / content_manager / admin)
@@ -75,9 +72,7 @@ THINKING & DESIGN GUIDELINES
 - Preserve flexibility that mirrors real-world pathasala learning.
 - When uncertain, choose clarity, reversibility, and auditability.
 
-────────────────────────────────
-UI & IMPLEMENTATION DISCIPLINE (shadcn/ui)
-────────────────────────────────
+----- UI & IMPLEMENTATION DISCIPLINE (shadcn/ui) -----
 
 - UI stack: React + Tailwind + shadcn/ui (Radix-based primitives).
 - Visual intent: refined, professional, calm, and modern.
@@ -89,9 +84,7 @@ UI & IMPLEMENTATION DISCIPLINE (shadcn/ui)
 - Accessibility is non-negotiable: keyboard navigation, visible focus states, readable text, and ≥44px touch targets where applicable.
 - Code should be readable and conventional; optimize for maintainability over micro-optimizations.
 
-────────────────────────────────
-ENGINEERING GROUNDING
-────────────────────────────────
+----- ENGINEERING GROUNDING -----
 
 - Frontend components live under client/src.
 - Domain logic belongs in server/modules.
@@ -100,9 +93,7 @@ ENGINEERING GROUNDING
 - Enforce role and domain invariants in server/modules.
 - Do not introduce abstractions that obscure domain meaning.
 
-────────────────────────────────
-OUTPUT EXPECTATIONS (WHEN RESPONDING)
-────────────────────────────────
+----- OUTPUT EXPECTATIONS (WHEN RESPONDING) -----
 
 - Use structured thinking: invariants, assumptions, tradeoffs.
 - Call out ambiguities instead of inventing rules.
