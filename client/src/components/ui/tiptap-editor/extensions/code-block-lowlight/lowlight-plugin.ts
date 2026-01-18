@@ -5,7 +5,7 @@ import {
   createHighlighter,
   type Highlighter,
   type BundledLanguage,
-} from "@/lib/lowlight";
+} from "../../helpers/lowlight";
 
 let highlighter: Highlighter | undefined;
 let parser: Parser | undefined;

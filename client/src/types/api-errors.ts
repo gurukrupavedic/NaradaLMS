@@ -9,7 +9,7 @@ export interface ApiError extends Error {
   status: number;
   message: string;
   code?: string;
-  details?: any;
+  details?: Record<string, unknown>;
   isNetworkError?: boolean;
   isServerError?: boolean;
   isClientError?: boolean;
@@ -21,7 +21,7 @@ export interface ApiErrorResponse {
   error: {
     message: string;
     code?: string;
-    details?: any;
+    details?: Record<string, unknown>;
     timestamp: string;
     requestId: string;
   };
@@ -52,7 +52,7 @@ export function createApiError(
   status: number,
   message: string,
   code?: string,
-  details?: any
+  details?: Record<string, unknown>
 ): ApiError {
   const error = new Error(message) as ApiError;
   error.status = status;
@@ -62,33 +62,33 @@ export function createApiError(
   error.isServerError = status >= 500 && status < 600;
   error.isClientError = status >= 400 && status < 500;
   error.timestamp = new Date().toISOString();
-  
+
   return error;
 }
 
 export function isRetryableError(
-  error: ApiError, 
+  error: ApiError,
   config: RetryConfig = DEFAULT_RETRY_CONFIG
 ): boolean {
   // Network errors are always retryable
   if (error.isNetworkError) return true;
-  
+
   // Check status codes
   if (config.retryableStatusCodes.includes(error.status)) return true;
-  
+
   // Check error codes
   if (error.code && config.retryableErrorCodes.includes(error.code)) return true;
-  
+
   // Client errors (4xx) are generally not retryable except for specific cases
   if (error.isClientError) {
     return error.status === 408 || error.status === 429; // Timeout or Rate limit
   }
-  
+
   return false;
 }
 
 export function calculateRetryDelay(
-  attemptIndex: number, 
+  attemptIndex: number,
   config: RetryConfig = DEFAULT_RETRY_CONFIG
 ): number {
   // Exponential backoff with jitter
@@ -96,48 +96,48 @@ export function calculateRetryDelay(
     config.baseDelay * Math.pow(2, attemptIndex),
     config.maxDelay
   );
-  
+
   // Add jitter to prevent thundering herd
   const jitter = delay * 0.1 * Math.random();
-  
+
   return Math.floor(delay + jitter);
 }
 
 export function getErrorCategory(error: ApiError): 'network' | 'server' | 'client' | 'validation' | 'auth' | 'unknown' {
   if (error.isNetworkError) return 'network';
   if (error.isServerError) return 'server';
-  
+
   if (error.isClientError) {
     if (error.status === 401 || error.status === 403) return 'auth';
     if (error.status === 400 || error.status === 422) return 'validation';
     return 'client';
   }
-  
+
   return 'unknown';
 }
 
 export function getUserFriendlyMessage(error: ApiError, operation?: string): string {
   const category = getErrorCategory(error);
   const context = operation ? ` ${operation}` : '';
-  
+
   switch (category) {
     case 'network':
       return `Network connection lost while${context}. Please check your internet connection and try again.`;
-    
+
     case 'server':
       if (error.code === 'DATABASE_CONNECTION_ERROR') {
         return `Service temporarily unavailable${context}. Please try again in a few moments.`;
       }
       return `Server error occurred while${context}. Please try again later.`;
-    
+
     case 'auth':
-      return error.status === 401 
+      return error.status === 401
         ? 'Your session has expired. Please log in again.'
         : 'You do not have permission to perform this action.';
-    
+
     case 'validation':
       return error.details?.message || error.message || `Invalid input data${context}. Please check your inputs and try again.`;
-    
+
     case 'client':
       switch (error.status) {
         case 404:
@@ -153,7 +153,7 @@ export function getUserFriendlyMessage(error: ApiError, operation?: string): str
         default:
           return error.message || `An error occurred while${context}.`;
       }
-    
+
     default:
       return error.message || `An unexpected error occurred while${context}.`;
   }
@@ -184,13 +184,13 @@ export function logError(error: ApiError, context?: string) {
     },
     stack: error.stack,
   };
-  
+
   if (process.env.NODE_ENV === 'development') {
     console.group(`🚨 API Error${context ? ` (${context})` : ''}`);
     console.error('Error Details:', logData);
     console.groupEnd();
   }
-  
+
   // In production, you might want to send this to an error tracking service
   // Example: ErrorTrackingService.captureError(logData);
 }

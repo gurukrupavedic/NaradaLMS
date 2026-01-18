@@ -15,6 +15,9 @@ import { eq, and, or, inArray } from 'drizzle-orm';
 export class LearningService {
   /**
    * Get student progress (students can only see own progress)
+   * 
+   * @domain_invariant Progress is strictly tracked at the Student + Chapter level.
+   * It is NOT batch-scoped or track-scoped.
    */
   async getStudentProgress(
     requestingUserId: string,
@@ -77,7 +80,14 @@ export class LearningService {
 
   /**
    * Facade: Unified chapter bundle (opt-in sections)
-   * Defaults: include = ['chapter','progress'] to keep payload light
+   * 
+   * Fetches chapter content, segments, audio, mappings, and progress in parallel
+   * to optimize initial load time.
+   * 
+   * @param requestingUserId - The student requesting the bundle
+   * @param chapterId - ID of the chapter to fetch
+   * @param query - Configuration for what parts of the bundle to include
+   * @returns Comprehensive chapter payload
    */
   async getChapterBundle(
     requestingUserId: string,
@@ -166,8 +176,15 @@ export class LearningService {
 
   /**
    * Get student's proficiency history organized by track (for track-wise progress view)
-   * Returns all tracks the student has studied across their batch enrollments
-   * Only instructors can view their students
+   * 
+   * Aggregates progress across ALL tracks, regardless of current enrollment.
+   * Calculates "Chapters Completed" based on proficiency >= 2 (medium).
+   * 
+   * Permissions:
+   * - Admins see all.
+   * - Instructors can only see students who are in one of their active batches.
+   * 
+   * @returns Nested structure: Student -> Tracks -> Chapters + Proficiency
    */
   async getStudentTrackProgress(
     requestingUserId: string,
@@ -287,7 +304,11 @@ export class LearningService {
 
   /**
    * Build track progress data for a specific student and track
-   * Includes all chapters and their proficiency levels
+   * 
+   * Helper that joins Chapters with StudentProgress.
+   * - Matches progress by `chapterId`
+   * - Computes "completed" count (proficiency >= 2)
+   * - Resolves evaluator names
    */
   private async buildTrackProgress(
     studentId: string,

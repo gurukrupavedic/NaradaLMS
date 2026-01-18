@@ -1,6 +1,6 @@
 import plaintext from "highlight.js/lib/languages/plaintext";
 import xml from "highlight.js/lib/languages/xml";
-import { createLowlight, type LanguageFn } from "lowlight";
+import { createLowlight } from "lowlight";
 
 export const loader: Record<string, () => Promise<any>> = {
   bash: () => import("highlight.js/lib/languages/bash"),
@@ -127,7 +127,7 @@ export class LowlightService {
     }
   }
 
-  register(syntax: string, language: LanguageFn): void {
+  register(syntax: string, language: any): void {
     this.lowlight.register(syntax, language);
   }
 

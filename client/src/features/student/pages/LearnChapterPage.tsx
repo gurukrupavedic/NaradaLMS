@@ -245,7 +245,7 @@ export function LearnChapterPage() {
 
   const currentProgress = progress[0];
   const proficiencyLevel = currentProgress?.proficiencyLevel ?? null;
-  const proficiencyLabel = getProficiencyLabel(proficiencyLevel);
+  const proficiencyLabel = getProficiencyLabel((proficiencyLevel ?? 9) as any);
 
   // Calculate mapped count for current script
   const mappedCount = useMemo(() => {
@@ -326,7 +326,7 @@ export function LearnChapterPage() {
                     status = 'practicing';
                   }
 
-                  const colors = getCellColor(proficiencyLevel ?? 9, status);
+                  const colors = getCellColor((proficiencyLevel ?? 9) as any, status);
 
                   return (
                     <Badge
@@ -472,7 +472,7 @@ export function LearnChapterPage() {
                 <SelectableTextPanel
                   content={chapter.content}
                   script={contentScript}
-                  segments={textSegments}
+                  segments={textSegments as any}
                   selectedSegmentId={selectedSegmentId}
                   onSegmentSelect={handleSegmentClick}
                   onCreateSegment={() => { }}

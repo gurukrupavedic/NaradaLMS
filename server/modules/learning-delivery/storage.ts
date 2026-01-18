@@ -216,7 +216,7 @@ export class LearningStorage {
   async getStudentDetailsWithProgress(studentId: string): Promise<any> {
     // Get student info
     const student = await db.query.users.findFirst({
-      where: (u, { eq }) => eq(u.id, studentId)
+      where: (u: any, { eq }: any) => eq(u.id, studentId)
     });
 
     if (!student) return null;

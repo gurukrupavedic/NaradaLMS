@@ -47,6 +47,12 @@ export class ContentService {
     await this.storage.deleteTrack(trackId);
   }
 
+  /**
+   * Reorder tracks by swapping order values.
+   * 
+   * Current implementation swaps with adjacent track.
+   * TODO: Consider "move to position" logic if drag-and-drop becomes complex.
+   */
   async moveTrack(trackId: number, direction: 'up' | 'down'): Promise<void> {
     const tracks = await this.storage.getAllTracks();
     const sortedTracks = tracks.sort((a, b) => a.order - b.order);
@@ -132,6 +138,11 @@ export class ContentService {
     return chapter;
   }
 
+  /**
+   * Publishes a chapter, making it visible to students.
+   * - Updates status to 'published'
+   * - Emits CHAPTER_PUBLISHED event
+   */
   async publishChapter(chapterId: number, userId: string): Promise<Chapter> {
     const chapter = await this.storage.updateChapter(chapterId, { status: 'published' });
 
@@ -158,6 +169,12 @@ export class ContentService {
     return chapter;
   }
 
+  /**
+   * Delete a chapter.
+   * 
+   * @domain_invariant Published content CANNOT be deleted. using soft-delete or 
+   * unpublish-then-delete is required to prevent data integrity issues for students.
+   */
   async deleteChapter(chapterId: number): Promise<void> {
     const chapter = await this.storage.getChapter(chapterId);
 

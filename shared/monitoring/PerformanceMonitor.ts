@@ -23,9 +23,9 @@
  * @since 2025-06-24
  */
 
-import { 
-  PerformanceMetric, 
-  MetricType, 
+import {
+  PerformanceMetric,
+  MetricType,
   MonitoringConfig,
   PerformanceReport,
   ComponentLoadMetric,
@@ -71,7 +71,7 @@ class PerformanceMonitor {
   initialize(customConfig?: Partial<MonitoringConfig>): void {
     try {
       this.config = { ...this.config, ...customConfig };
-      
+
       if (this.config.enabled) {
         this.startPeriodicFlush();
         console.log('Performance monitoring initialized');
@@ -212,6 +212,16 @@ class PerformanceMonitor {
   }
 
   /**
+   * Track custom performance metric
+   * @param metricType - Type of metric to track
+   * @param value - Metric value
+   * @param metadata - Additional metadata
+   */
+  trackCustomMetric(metricType: MetricType, value: number, metadata?: Record<string, any>): void {
+    this.recordMetric(metricType, value, metadata);
+  }
+
+  /**
    * Track error occurrences
    * @param error - Error object or message
    * @param context - Context where error occurred
@@ -245,12 +255,12 @@ class PerformanceMonitor {
     const loadTimes = filteredMetrics
       .filter(m => m.type === 'component_load')
       .map(m => m.value);
-    
+
     const errorCount = filteredMetrics.filter(m => m.type === 'error_rate').length;
     const totalOperations = filteredMetrics.length;
-    
+
     const operationTimes = new Map<string, { total: number; count: number }>();
-    
+
     filteredMetrics.forEach(metric => {
       const key = metric.type;
       if (!operationTimes.has(key)) {
@@ -351,7 +361,7 @@ class PerformanceMonitor {
       };
 
       this.metrics.push(metric);
-      
+
       // Notify listeners
       this.listeners.forEach(listener => {
         try {
@@ -381,7 +391,7 @@ class PerformanceMonitor {
         const recentMetrics = this.metrics.filter(
           m => Date.now() - m.timestamp < this.config.flushInterval
         );
-        
+
         if (recentMetrics.length > 0) {
           console.debug(`Performance metrics: ${recentMetrics.length} events recorded`);
         }

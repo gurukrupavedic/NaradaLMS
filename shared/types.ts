@@ -18,7 +18,7 @@ export interface UserWithRoles extends User {
   lastLoginAt?: Date;
 }
 
-export interface TrackWithChapters extends Omit<Track, 'createdBy'> {
+export interface TrackWithChapters extends Omit<Track, 'createdBy' | 'createdAt' | 'updatedAt'> {
   chapters: Chapter[];
   chapterCount: number;
   lastModified?: string;
@@ -34,7 +34,7 @@ export interface ChapterWithProgress extends Chapter {
   audioFiles?: AudioFile[];
 }
 
-export interface ChapterWithMetadata extends Omit<Chapter, 'publishedAt'> {
+export interface ChapterWithMetadata extends Omit<Chapter, 'publishedAt' | 'lastEditedBy'> {
   trackId: number;
   textReferences: {
     te?: string[];
@@ -140,7 +140,7 @@ export interface ApiErrorResponse {
   error: {
     message: string;
     code?: string;
-    details?: any;
+    details?: Record<string, unknown>;
     timestamp: string;
     requestId: string;
   };

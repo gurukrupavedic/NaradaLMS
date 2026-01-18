@@ -11,7 +11,7 @@ export interface PerformanceMetric {
   metadata?: Record<string, any>;
 }
 
-export type MetricType = 
+export type MetricType =
   | 'component_load'
   | 'route_change'
   | 'bundle_size'
@@ -25,7 +25,10 @@ export type MetricType =
   | 'api_response'
   | 'error_rate'
   | 'memory_usage'
-  | 'network_timing';
+  | 'network_timing'
+  | 'component_session'
+  | 'component_renders'
+  | 'user_interaction';
 
 export interface ComponentLoadMetric extends PerformanceMetric {
   type: 'component_load';
