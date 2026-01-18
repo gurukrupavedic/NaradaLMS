@@ -12,7 +12,7 @@ export function configurePassport() {
       try {
         const user = await identityStorage.getUserByEmail(email.toLowerCase());
         if (!user) {
-          return done(null, false, { message: "User not found" });
+          return done(null, false, { message: "Invalid email or password" }); // S-08 prevent enumeration
         }
 
         if (user.status === "pending_approval") {
@@ -23,12 +23,12 @@ export function configurePassport() {
         }
 
         if (!user.passwordHash) {
-          return done(null, false, { message: "Use social login for this account" });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         const isValid = await bcrypt.compare(password, user.passwordHash);
         if (!isValid) {
-          return done(null, false, { message: "Invalid credentials" });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         return done(null, user);

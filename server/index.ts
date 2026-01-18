@@ -14,7 +14,20 @@ import { initAdminService } from "./modules/system-admin/service";
 import { AdminStorage } from "./modules/system-admin/storage";
 import { initializeEventHandlers } from "./modules/system-admin/events";
 
+import helmet from "helmet";
+import cors from "cors";
+
 const app = express();
+
+// Security Middleware (S-03, S-04)
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled for now to avoid breaking scripts; enable in future
+}));
+app.use(cors({
+  origin: process.env.NODE_ENV === "production" ? false : "*", // Strict in PROD, open in DEV
+  credentials: true,
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -25,6 +38,10 @@ const sessionStore = new PgStore({
   tableName: "sessions",
   createTableIfMissing: true,
 });
+
+if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
+  throw new Error("FATAL: SESSION_SECRET is required in production");
+}
 
 app.use(session({
   secret: process.env.SESSION_SECRET || "change_me",
@@ -87,9 +104,10 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
+      // FIX S-01: Removed JSON body logging to prevent PII leak
+      // if (capturedJsonResponse) {
+      //   logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      // }
 
       if (logLine.length > LOG_TRUNCATE_LENGTH) {
         logLine = logLine.slice(0, LOG_TRUNCATE_LENGTH - 1) + "…";

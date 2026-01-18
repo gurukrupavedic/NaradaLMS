@@ -6,6 +6,8 @@ import path from 'path';
 import fs from 'fs';
 import { parseFile } from 'music-metadata';
 import { FILE_UPLOAD } from '../../shared/constants';
+import { validateRequest } from '../utils/validation';
+import { z } from 'zod';
 
 const router = Router();
 
@@ -75,7 +77,18 @@ router.post('/audio-files/:chapterId/upload', requireContentManager, upload.sing
     try {
       const meta = await parseFile(req.file.path);
       duration = meta.format.duration || 0;
-    } catch { }
+
+      // S-07: Strict validation - if music-metadata can't parse it, reject it
+      if (!meta.format.container && duration === 0) {
+        throw new Error("Could not determine audio format");
+      }
+    } catch (err) {
+      // Security: Remove invalid file immediately
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+      return res.status(400).json(createErrorResponse('Invalid audio file content', 'INVALID_AUDIO_FILE'));
+    }
 
     const created = await mediaService.uploadAudioFile({
       chapterId,
@@ -117,12 +130,30 @@ router.get('/media-segments/:audioFileId', async (req: Request, res: Response, n
   } catch (error) { next(error); }
 });
 
-router.post('/media-segments/bulk', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+const bulkSegmentsSchema = z.object({
+  body: z.object({
+    segments: z.array(z.object({
+      audioFileId: z.number(),
+      startTime: z.number(),
+      endTime: z.number(),
+      name: z.string(),
+    })),
+  }),
+});
+
+const segmentSchema = z.object({
+  body: z.object({
+    audioFileId: z.number(),
+    startTimestamp: z.number(),
+    endTimestamp: z.number(),
+    segmentName: z.string(),
+  }),
+});
+
+router.post('/media-segments/bulk', requireContentManager, validateRequest(bulkSegmentsSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { segments } = req.body;
-    if (!Array.isArray(segments)) {
-      return res.status(400).json(createErrorResponse('Segments array is required'));
-    }
+    // Array check redundant with Zod but harmless
     const created = [] as any[];
     for (const s of segments) {
       const seg = await mediaService.createMediaSegment({
@@ -138,7 +169,7 @@ router.post('/media-segments/bulk', requireContentManager, async (req: Request, 
   } catch (error) { next(error); }
 });
 
-router.post('/media-segments', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/media-segments', requireContentManager, validateRequest(segmentSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const seg = await mediaService.createMediaSegment({
       audioFileId: req.body.audioFileId,
@@ -147,14 +178,6 @@ router.post('/media-segments', requireContentManager, async (req: Request, res: 
       segmentName: req.body.segmentName,
       createdBy: (req as any).user.id,
     });
-    res.json(seg);
-  } catch (error) { next(error); }
-});
-
-router.patch('/media-segments/:id', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const id = parseInt(req.params.id);
-    const seg = await mediaService.updateMediaSegment(id, req.body);
     res.json(seg);
   } catch (error) { next(error); }
 });

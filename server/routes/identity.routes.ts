@@ -2,6 +2,18 @@ import { Router, Request, Response, NextFunction } from "express";
 import passport from "passport";
 import { identityService } from "../modules/identity-access/service";
 import { authMiddleware, requireAdmin } from "../shared/middleware/auth";
+import rateLimit from "express-rate-limit";
+import { validateRequest } from "../utils/validation";
+import { z } from "zod";
+
+// S-06: Rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 requests per windowMs
+  message: "Too many login attempts, please try again later",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 /**
  * Identity & Access Routes
@@ -13,34 +25,46 @@ export const identityRouter = Router();
 // Public Routes
 // ======================
 
+const registerSchema = z.object({
+  body: z.object({
+    email: z.string().email(),
+    password: z.string().min(8),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+  }),
+});
+
 /**
  * POST /api/auth/register
  * Register a new user (pending approval unless admin email)
  */
-identityRouter.post("/register", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { email, password, firstName, lastName } = req.body;
+identityRouter.post(
+  "/register",
+  authLimiter,
+  validateRequest(registerSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, password, firstName, lastName } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
+      // Note: Manual check removed as Zod handles it
+
+      const result = await identityService.registerUser({
+        email,
+        password,
+        firstName,
+        lastName,
+        adminEmail: process.env.ADMIN_EMAIL,
+      });
+
+      return res.json(result);
+    } catch (err: any) {
+      console.error("Register error:", err);
+      return res
+        .status(400)
+        .json({ error: err.message || "Registration failed" });
     }
-
-    const result = await identityService.registerUser({
-      email,
-      password,
-      firstName,
-      lastName,
-      adminEmail: process.env.ADMIN_EMAIL,
-    });
-
-    return res.json(result);
-  } catch (err: any) {
-    console.error("Register error:", err);
-    return res
-      .status(400)
-      .json({ error: err.message || "Registration failed" });
   }
-});
+);
 
 /**
  * POST /api/auth/login
@@ -48,6 +72,7 @@ identityRouter.post("/register", async (req: Request, res: Response, next: NextF
  */
 identityRouter.post(
   "/login",
+  authLimiter,
   passport.authenticate("local"),
   (req: Request, res: Response) => {
     return res.json({ user: req.user });
