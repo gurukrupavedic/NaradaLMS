@@ -406,7 +406,7 @@ export class BatchStorage {
       const existingIds = new Set(current.map(c => c.instructorId));
       const nextIds = new Set(instructorIds);
 
-      const toAdd = [...nextIds].filter(id => !existingIds.has(id));
+      const toAdd = Array.from(nextIds).filter(id => !existingIds.has(id));
       const toRemove = current.filter(c => !nextIds.has(c.instructorId)).map(c => c.id);
 
       // Remove assignments no longer present

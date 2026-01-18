@@ -48,8 +48,8 @@ export class LearningStorage {
       lastEvaluatedAt: row.lastEvaluatedAt,
       evaluatedBy: row.evaluatedBy,
       notes: row.notes,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
+      createdAt: row.createdAt || new Date(),
+      updatedAt: row.updatedAt || new Date(),
       // Joined fields removed - can be added back with separate queries if needed
       chapterTitle: undefined,
       trackName: undefined,
@@ -215,9 +215,11 @@ export class LearningStorage {
    */
   async getStudentDetailsWithProgress(studentId: string): Promise<any> {
     // Get student info
-    const student = await db.query.users.findFirst({
-      where: (u: any, { eq }: any) => eq(u.id, studentId)
-    });
+    const [student] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, studentId))
+      .limit(1);
 
     if (!student) return null;
 
