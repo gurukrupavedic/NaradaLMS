@@ -392,7 +392,7 @@ export class LearningService {
           chapterId: ch.id,
           chapterOrder: ch.order,
           chapterTitle: ch.title,
-          chapterCode: ch.code || `CH${ch.order}`,
+          chapterCode: `CH${ch.order}`,
           proficiencyLevel: progress?.proficiencyLevel ?? null,
           lastEvaluatedAt: progress?.lastEvaluatedAt
             ? progress.lastEvaluatedAt.toISOString()
