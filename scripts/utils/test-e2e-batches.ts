@@ -2,6 +2,18 @@ import { db } from "../../server/db";
 import { users, batches, batchCoInstructors } from "@shared/schema";
 import { eq, or, inArray } from "drizzle-orm";
 
+/**
+ * End-to-End Batch Management Test Utility
+ * 
+ * Usage: npx tsx scripts/utils/test-e2e-batches.ts
+ * 
+ * Simulates and verifies the logic used in batch endpoints:
+ * 1. Finds 'kashyap' user
+ * 2. Queries batches by primary instructor
+ * 3. Queries co-instructor assignments
+ * 4. Verifies the combined query logic returns the expected batch set
+ */
+
 async function testEndToEnd() {
   console.log("\n=== COMPREHENSIVE E2E TEST ===\n");
 

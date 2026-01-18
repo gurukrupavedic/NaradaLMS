@@ -2,6 +2,17 @@ import { db } from "../../server/db";
 import { sessions, users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
+/**
+ * Session Debugging Utility
+ * 
+ * Usage: npx tsx scripts/utils/test-session.ts
+ * 
+ * Helps debug authentication issues by:
+ * - Searching for active sessions for 'kashyap.kuchipudi@gmail.com'
+ * - Parsing session JSON to verify passport user ID
+ * - Confirming if the user feels "logged in" from the database perspective
+ */
+
 async function testAPIEndpoint() {
   console.log("\n=== TESTING API ENDPOINT ===\n");
 
@@ -17,22 +28,22 @@ async function testAPIEndpoint() {
       console.log(`✅ Found session: ${kashyapSessions[0].sid}`);
     } else {
       console.log("⚠️  No exact session found, checking user...");
-      
+
       const kashyapUser = await db
         .select()
         .from(users)
         .where(eq(users.email, "kashyap.kuchipudi@gmail.com"));
-      
+
       if (kashyapUser.length > 0) {
         const user = kashyapUser[0];
         console.log(`✅ Found user: ${user.firstName} ${user.lastName}`);
         console.log(`   ID: ${user.id}`);
         console.log(`   Email: ${user.email}`);
-        
+
         // Get all sessions and filter by user ID in session data
         const allSessions = await db.select().from(sessions);
         console.log(`\n   Checking ${allSessions.length} sessions for user ID...`);
-        
+
         let foundSession = false;
         for (const session of allSessions) {
           try {
@@ -46,7 +57,7 @@ async function testAPIEndpoint() {
             // Invalid JSON, skip
           }
         }
-        
+
         if (!foundSession) {
           console.log("❌ No active session found for Kashyap in database");
           console.log("   User is likely logged in via browser session, not stored in DB");
