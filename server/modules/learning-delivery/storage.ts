@@ -124,7 +124,7 @@ export class LearningStorage {
       .select({
         chapterId: chapters.id,
         chapterTitle: chapters.title,
-        chapterNumber: chapters.chapterNumber,
+        chapterNumber: chapters.order,
         trackId: chapters.trackId,
         trackName: tracks.title,
         status: chapters.status,

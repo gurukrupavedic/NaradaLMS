@@ -41,7 +41,7 @@ export { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 export { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 
 // Specialized Components
-export { Calendar } from "./calendar";
+
 export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator, CommandShortcut } from "./command";
 export { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./accordion";
 export { Slider } from "./slider";
@@ -51,4 +51,3 @@ export { Toggle } from "./toggle";
 // Custom Components
 export { LoadingSpinner, LoadingButton, LoadingCard, LoadingSkeleton } from "./loading";
 export { ErrorBoundary } from "./error-boundary";
-export { RichTextEditor } from "./rich-text-editor";
