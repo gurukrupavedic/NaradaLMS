@@ -164,8 +164,9 @@ export class AdminStorage {
 
     const [{ activeBatches }] = await db
       .select({ activeBatches: sql<number>`count(*)` })
-      .from(batches)
-      .where(eq(batches.status, 'active'));
+      .from(batches);
+    // Note: batches table doesn't have a status column yet
+    // All batches are considered in this count
 
     const [{ totalTracks }] = await db
       .select({ totalTracks: sql<number>`count(*)` })
