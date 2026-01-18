@@ -255,7 +255,7 @@ export class LearningService {
 
     // Get ALL tracks in the system (not just enrolled ones)
     const allTracks = await db.query.tracks.findMany({
-      orderBy: (t) => t.order,
+      orderBy: (t: typeof tracks.$inferSelect) => t.order,
     });
 
     if (allTracks.length === 0) {
@@ -315,15 +315,15 @@ export class LearningService {
     trackId: number
   ): Promise<any> {
     const track = await db.query.tracks.findFirst({
-      where: (t, { eq }) => eq(t.id, trackId),
+      where: (t: typeof tracks.$inferSelect, { eq }: any) => eq(t.id, trackId),
     });
 
     if (!track) return null;
 
     // Get all chapters in the track
     const chapterList = await db.query.chapters.findMany({
-      where: (c, { eq }) => eq(c.trackId, trackId),
-      orderBy: (c) => c.order,
+      where: (c: typeof chapters.$inferSelect, { eq }: any) => eq(c.trackId, trackId),
+      orderBy: (c: typeof chapters.$inferSelect) => c.order,
     });
 
     // Get all student progress for this track's chapters
@@ -332,7 +332,7 @@ export class LearningService {
 
     if (chapterIds.length > 0) {
       const progress = await db.query.studentProgress.findMany({
-        where: (sp, { eq, and, inArray }) =>
+        where: (sp: typeof studentProgress.$inferSelect, { eq, and, inArray }: any) =>
           and(
             eq(sp.studentId, studentId),
             inArray(sp.chapterId, chapterIds)
@@ -362,7 +362,7 @@ export class LearningService {
     let evaluatorNames: Record<string, string> = {};
     if (evaluatorIds.size > 0) {
       const evaluators = await db.query.users.findMany({
-        where: (u, { inArray }) => inArray(u.id, Array.from(evaluatorIds)),
+        where: (u: typeof users.$inferSelect, { inArray }: any) => inArray(u.id, Array.from(evaluatorIds)),
       });
       evaluators.forEach((user) => {
         evaluatorNames[user.id] = `${user.firstName} ${user.lastName}`;
