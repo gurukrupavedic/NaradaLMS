@@ -8,26 +8,26 @@ import { AppLayout } from '@/components/layout/app-layout';
 import { SkipLink } from '@/components/ui/skip-link';
 
 // Admin pages
-import UserManagement from '@/features/admin/pages/UserManagement';
-import AuditLogs from '@/features/admin/pages/AuditLogs';
-import BatchManagement from '@/features/admin/pages/BatchManagement';
-import SystemSettings from '@/features/admin/pages/SystemSettings';
+const UserManagement = React.lazy(() => import('@/features/admin/pages/UserManagement'));
+const AuditLogs = React.lazy(() => import('@/features/admin/pages/AuditLogs'));
+const BatchManagement = React.lazy(() => import('@/features/admin/pages/BatchManagement'));
+const SystemSettings = React.lazy(() => import('@/features/admin/pages/SystemSettings'));
 
 // Batch pages (unified)
-import MyBatchesList from '@/features/batches/pages/MyBatchesList';
-import BatchDetails from '@/features/batches/pages/BatchDetails';
+const MyBatchesList = React.lazy(() => import('@/features/batches/pages/MyBatchesList'));
+const BatchDetails = React.lazy(() => import('@/features/batches/pages/BatchDetails'));
 
 // Instructor pages
-import { MyStudentsPage } from '@/features/instructor/pages/MyStudentsPage';
-import { StudentDetailsPage } from '@/features/instructor/pages/StudentDetailsPage';
+const MyStudentsPage = React.lazy(() => import('@/features/instructor/pages/MyStudentsPage').then(module => ({ default: module.MyStudentsPage })));
+const StudentDetailsPage = React.lazy(() => import('@/features/instructor/pages/StudentDetailsPage').then(module => ({ default: module.StudentDetailsPage })));
 
 // Learning & Content
-import { VedicLearningPage } from '@/features/student/pages/VedicLearningPage';
-import { LearnChapterPage } from '@/features/student/pages/LearnChapterPage';
+const VedicLearningPage = React.lazy(() => import('@/features/student/pages/VedicLearningPage').then(module => ({ default: module.VedicLearningPage })));
+const LearnChapterPage = React.lazy(() => import('@/features/student/pages/LearnChapterPage').then(module => ({ default: module.LearnChapterPage })));
 
 // Content pages
-import TracksAndChapters from '@/features/content/pages/TracksAndChaptersPage';
-import ChapterContent from '@/features/content/pages/ChapterContentPage';
+const TracksAndChapters = React.lazy(() => import('@/features/content/pages/TracksAndChaptersPage'));
+const ChapterContent = React.lazy(() => import('@/features/content/pages/ChapterContentPage'));
 
 export default function AppShell() {
   const { user } = useAuth();

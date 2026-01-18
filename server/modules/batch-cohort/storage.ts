@@ -53,37 +53,45 @@ export class BatchStorage {
       .groupBy(batches.id, users.id, tracks.id)
       .orderBy(batches.createdAt);
 
-    // Enrich with instructor names and co-instructors
-    return Promise.all(
-      batchRows.map(async (batch) => {
-        const coInstructors = await db
-          .select({
-            firstName: users.firstName,
-            lastName: users.lastName,
-          })
-          .from(batchCoInstructors)
-          .leftJoin(users, eq(users.id, batchCoInstructors.instructorId))
-          .where(eq(batchCoInstructors.batchId, batch.id));
+    // OPTIMIZATION: Eliminate N+1 Query
+    // Fetch ALL co-instructors for these batches in one query
+    const fetchedBatchIds = batchRows.map(b => b.id);
+    let allCoInstructors: { batchId: number; firstName: string | null; lastName: string | null }[] = [];
 
-        const coInstructorNames = coInstructors
-          .filter(ci => ci.firstName && ci.lastName)
-          .map(ci => `${ci.firstName} ${ci.lastName}`)
-          .join(", ");
+    if (fetchedBatchIds.length > 0) {
+      allCoInstructors = await db
+        .select({
+          batchId: batchCoInstructors.batchId,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        })
+        .from(batchCoInstructors)
+        .leftJoin(users, eq(users.id, batchCoInstructors.instructorId))
+        .where(inArray(batchCoInstructors.batchId, fetchedBatchIds));
+    }
 
-        const primaryInstructorName = batch.primaryInstructorFirstName && batch.primaryInstructorLastName
-          ? `${batch.primaryInstructorFirstName} ${batch.primaryInstructorLastName}`
-          : null;
+    // Map co-instructors to batches in memory
+    return batchRows.map((batch) => {
+      const batchCoInstructorsList = allCoInstructors.filter(ci => ci.batchId === batch.id);
 
-        // Remove the individual name fields and add the combined name
-        const { primaryInstructorFirstName, primaryInstructorLastName, ...rest } = batch;
+      const coInstructorNames = batchCoInstructorsList
+        .filter(ci => ci.firstName && ci.lastName)
+        .map(ci => `${ci.firstName} ${ci.lastName}`)
+        .join(", ");
 
-        return {
-          ...rest,
-          primaryInstructorName,
-          coInstructorNames: coInstructorNames || null,
-        };
-      })
-    );
+      const primaryInstructorName = batch.primaryInstructorFirstName && batch.primaryInstructorLastName
+        ? `${batch.primaryInstructorFirstName} ${batch.primaryInstructorLastName}`
+        : null;
+
+      // Remove the individual name fields and add the combined name
+      const { primaryInstructorFirstName, primaryInstructorLastName, ...rest } = batch;
+
+      return {
+        ...rest,
+        primaryInstructorName,
+        coInstructorNames: coInstructorNames || null,
+      };
+    });
   }
 
   async getBatchById(id: number) {

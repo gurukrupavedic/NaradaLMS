@@ -81,7 +81,9 @@ export const chapters = pgTable("chapters", {
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_chapters_track").on(table.trackId),
+]);
 
 // Audio files for chapters
 export const audioFiles = pgTable("audio_files", {
@@ -155,12 +157,13 @@ export const enrollments = pgTable("enrollments", {
   droppedAt: timestamp("dropped_at"),
   droppedReason: text("dropped_reason"),
   updatedAt: timestamp("updated_at").defaultNow(),
-}, (table) => ({
+}, (table) => [
   // Partial unique index: Only one active enrollment per student
-  uniqueActiveEnrollment: index("unique_active_enrollment_idx")
+  index("unique_active_enrollment_idx")
     .on(table.studentId)
     .where(sql`status = 'active'`),
-}));
+  index("idx_enrollments_batch").on(table.batchId),
+]);
 
 // Batch Co-Instructors - Additional instructors/TAs for a batch
 export const batchCoInstructors = pgTable("batch_co_instructors", {
@@ -170,7 +173,10 @@ export const batchCoInstructors = pgTable("batch_co_instructors", {
   role: varchar("role").default("co_instructor").notNull(), // 'co_instructor', 'ta'
   assignedAt: timestamp("assigned_at").defaultNow(),
   assignedBy: varchar("assigned_by").notNull().references(() => users.id),
-});
+}, (table) => [
+  index("idx_co_instructors_batch").on(table.batchId),
+  index("idx_co_instructors_instructor").on(table.instructorId),
+]);
 
 // Student progress tracking
 export const studentProgress = pgTable("student_progress", {
@@ -185,7 +191,11 @@ export const studentProgress = pgTable("student_progress", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_progress_student").on(table.studentId),
+  index("idx_progress_chapter").on(table.chapterId),
+  index("idx_progress_batch").on(table.batchId),
+]);
 
 // Proficiency Evaluation Log - Audit trail for proficiency changes
 export const proficiencyEvaluationLog = pgTable("proficiency_evaluation_log", {
