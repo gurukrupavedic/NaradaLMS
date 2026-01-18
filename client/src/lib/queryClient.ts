@@ -5,7 +5,7 @@ import { performanceMonitor } from "@shared/monitoring/PerformanceMonitor";
 async function throwIfResNotOk(res: Response): Promise<void> {
   if (!res.ok) {
     let errorData: any = {};
-    
+
     try {
       const contentType = res.headers.get('content-type');
       if (contentType?.includes('application/json')) {
@@ -17,11 +17,16 @@ async function throwIfResNotOk(res: Response): Promise<void> {
       errorData = { message: res.statusText };
     }
 
+    // Handle new standardized error format: { success: false, error: { message, code, details } }
+    const message = errorData.error?.message || errorData.message || `HTTP ${res.status}: ${res.statusText}`;
+    const code = errorData.error?.code || errorData.code;
+    const details = errorData.error?.details || errorData.details;
+
     const apiError: ApiError = createApiError(
       res.status,
-      errorData.message || `HTTP ${res.status}: ${res.statusText}`,
-      errorData.code,
-      errorData.details
+      message,
+      code,
+      details
     );
 
     throw apiError;
@@ -49,18 +54,18 @@ export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
-    });
+    async ({ queryKey }) => {
+      const res = await fetch(queryKey[0] as string, {
+        credentials: "include",
+      });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
-    }
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
 
-    await throwIfResNotOk(res);
-    return await res.json();
-  };
+      await throwIfResNotOk(res);
+      return await res.json();
+    };
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,11 +77,11 @@ export const queryClient = new QueryClient({
       retry: (failureCount, error: any) => {
         // Maximum 3 retry attempts
         if (failureCount >= 3) return false;
-        
+
         // Don't retry client errors (4xx) or auth failures
         if (error?.status >= 400 && error?.status < 500) return false;
         if (error?.message?.includes('401') || error?.message?.includes('403')) return false;
-        
+
         // Retry network and server errors
         return error?.isNetworkError || error?.isServerError || error?.status >= 500;
       },
@@ -86,10 +91,10 @@ export const queryClient = new QueryClient({
       retry: (failureCount, error: any) => {
         // Maximum 2 retry attempts for mutations
         if (failureCount >= 2) return false;
-        
+
         // Don't retry client errors (4xx)
         if (error?.status >= 400 && error?.status < 500) return false;
-        
+
         // Only retry network and server errors
         return error?.isNetworkError || error?.isServerError;
       },

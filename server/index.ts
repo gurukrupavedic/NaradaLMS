@@ -4,7 +4,7 @@ import session from "express-session";
 import connectPg from "connect-pg-simple";
 import passport from "passport";
 import { createServer } from "http";
-import { setupVite, serveStatic, log } from "./vite";
+import { setupVite, serveStatic } from "./vite";
 import { LOG_TRUNCATE_LENGTH, DEFAULT_ERROR_STATUS } from "@shared/constants";
 import path from "path";
 import { configurePassport } from "./auth/passport-config";
@@ -13,6 +13,8 @@ import { adminRouter } from "./routes/admin.routes";
 import { initAdminService } from "./modules/system-admin/service";
 import { AdminStorage } from "./modules/system-admin/storage";
 import { initializeEventHandlers } from "./modules/system-admin/events";
+import { Logger } from "./utils/logger";
+import { errorHandler } from "./middleware/error.middleware";
 
 import helmet from "helmet";
 import cors from "cors";
@@ -103,17 +105,7 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      // FIX S-01: Removed JSON body logging to prevent PII leak
-      // if (capturedJsonResponse) {
-      //   logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      // }
-
-      if (logLine.length > LOG_TRUNCATE_LENGTH) {
-        logLine = logLine.slice(0, LOG_TRUNCATE_LENGTH - 1) + "…";
-      }
-
-      log(logLine);
+      Logger.http(req.method, path, res.statusCode, duration);
     }
   });
 
@@ -128,13 +120,8 @@ app.use((req, res, next) => {
 
   const server = createServer(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || DEFAULT_ERROR_STATUS;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
+  // Replace custom inline error handler with standardized middleware
+  app.use(errorHandler);
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
@@ -150,6 +137,6 @@ app.use((req, res, next) => {
   // It is the only port that is not firewalled.
   const port = 5000;
   server.listen(port, "127.0.0.1", () => {
-    log(`serving on port ${port}`);
+    Logger.info(`serving on port ${port}`);
   });
 })();
