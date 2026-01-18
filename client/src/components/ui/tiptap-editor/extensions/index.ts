@@ -50,19 +50,12 @@ export function createExtensions({ placeholder }: ExtensionConfig) {
     CharacterCount,
     CellAlign,
     Table.configure({
-      table: {
-        cellMinWidth: 35,
-        resizable: true,
-      },
+      resizable: true,
     }),
     TableRow,
     TableHeader,
     TableCell,
-    TextStyle.configure({
-      lineHeight: false,
-      fontFamily: false,
-      fontSize: false,
-    }),
+    TextStyle,
     Color,
     Highlight.configure({ multicolor: true }),
     ImageFigure,

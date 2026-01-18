@@ -27,7 +27,7 @@ export const Link = TiptapLink.extend({
       ...this.parent?.(),
       autolink: false,
       openOnClick: false,
-    };
+    } as any;
   },
 
   addStorage() {

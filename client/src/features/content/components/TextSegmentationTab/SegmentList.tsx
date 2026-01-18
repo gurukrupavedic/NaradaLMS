@@ -8,14 +8,7 @@ import { getSegmentText } from '@shared/utils/text-segmentation';
 import type { ContentMap, Script } from '@shared/types/text-segmentation';
 import { cn } from '@/lib/utils';
 
-interface TextSegment {
-    id: number;
-    chapterId: number;
-    script: 'te' | 'hi' | 'en';
-    startPosition: number;
-    endPosition: number;
-    order: number;
-}
+import type { TextSegment } from '@shared/schema';
 
 interface AudioMapping {
     id: number;

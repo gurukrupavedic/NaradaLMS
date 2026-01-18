@@ -155,7 +155,7 @@ export function getCellColor(
 /**
  * Get human-readable label for a proficiency level
  */
-export function getProficiencyLabel(level: ProficiencyLevel): string {
+export function getProficiencyLabel(level: ProficiencyLevel | null): string {
   switch (level) {
     case 8:
       return 'Absent';
