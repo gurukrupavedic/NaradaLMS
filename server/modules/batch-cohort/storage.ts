@@ -7,7 +7,7 @@ export class BatchStorage {
   async listBatches() {
     return db
       .select({
-        ...batches,
+        ...getTableColumns(batches),
         studentCount: sql<number>`COALESCE(COUNT(*) FILTER (WHERE ${enrollments.status} = 'active'), 0)::int`,
       })
       .from(batches)
@@ -38,7 +38,7 @@ export class BatchStorage {
 
     const batchRows = await db
       .select({
-        ...batches,
+        ...getTableColumns(batches),
         studentCount: sql<number>`COALESCE(COUNT(*) FILTER (WHERE ${enrollments.status} = 'active'), 0)::int`,
         primaryInstructorFirstName: users.firstName,
         primaryInstructorLastName: users.lastName,
@@ -97,7 +97,7 @@ export class BatchStorage {
   async getBatchById(id: number) {
     const baseRows = await db
       .select({
-        ...batches,
+        ...getTableColumns(batches),
         studentCount: sql<number>`COALESCE(COUNT(*) FILTER (WHERE ${enrollments.status} = 'active'), 0)::int`,
       })
       .from(batches)
