@@ -39,7 +39,7 @@
     text-align: inherit;
   }
 
-  * + &__text {
+  *+&__text {
     margin-left: 0.5rem;
   }
 
@@ -158,6 +158,7 @@
   background-color: $bg-color;
   border-radius: $radius;
   box-shadow: $shadow-1;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 
   &__item {
     position: relative;

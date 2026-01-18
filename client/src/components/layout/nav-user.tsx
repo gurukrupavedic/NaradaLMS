@@ -28,6 +28,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { useAuth } from '@/features/shared/hooks/useAuth';
 
 export function NavUser({
   user,
@@ -39,6 +40,7 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const { logout } = useAuth();
 
   // Get initials for avatar fallback
   const initials = user.name
@@ -106,11 +108,9 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                <a href="/api/auth/logout">
-                  <LogOut className="h-4 w-4" />
-                  Log out
-                </a>
+              <DropdownMenuItem onClick={() => logout()} className="cursor-pointer gap-2">
+                <LogOut className="h-4 w-4" />
+                Log out
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>

@@ -38,6 +38,7 @@ export const StatusBar = ({ autoSaveStatus }: StatusBarProps) => {
         <MenuButton
           icon="Maximize"
           text="Fullscreen"
+          hideText={false}
           active={isFullScreen}
           onClick={toggleFullScreen}
         />

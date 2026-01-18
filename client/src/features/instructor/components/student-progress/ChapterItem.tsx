@@ -110,7 +110,7 @@ export function ChapterItem({ chapter, onClick }: ChapterItemProps) {
               <TooltipContent
                 side="top"
                 align="center"
-                className="max-w-[280px] p-3 bg-popover text-popover-foreground border shadow-md"
+                className="max-w-[280px] p-3 bg-white dark:bg-black text-popover-foreground border shadow-md"
               >
                 <div className="space-y-2">
                   {chapter.lastEvaluatedAt && (

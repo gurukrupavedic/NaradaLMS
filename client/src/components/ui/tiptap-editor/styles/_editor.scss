@@ -61,7 +61,12 @@
     font-size: $editor-font-size;
     line-height: $editor-line-height;
     overflow: auto;
-    cursor: text;
+    cursor: default;
+
+    .rte-editor--readonly & {
+      cursor: default;
+    }
+
     @include custom-scrollbar;
 
     &>.ProseMirror {

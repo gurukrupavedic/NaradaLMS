@@ -9,6 +9,7 @@ import { SelectableTextPanel } from '../TextSegmentationTab/SelectableTextPanel'
 import { useChapterEditor } from '../../context/ChapterEditorContext';
 import { useAudioPlayer } from '../../context/AudioPlayerContext';
 import '@/components/ui/tiptap-editor/styles/index.scss';
+import { cn } from '@/lib/utils';
 
 interface PreviewTabProps {
     learnMode: boolean;
@@ -39,6 +40,7 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
 
     const [contentScript, setContentScript] = useState<'te' | 'hi' | 'en'>('te');
     const [selectedSegmentId, setSelectedSegmentId] = useState<number | undefined>(undefined);
+    const [isFullScreen, setIsFullScreen] = useState(false);
 
     // Fetch data for Segmented mode
     const { data: textSegments = [] } = useQuery<TextSegment[]>({
@@ -102,10 +104,14 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
         { value: 'en' as const, label: 'English (IAST)' },
     ];
 
+    const toggleFullScreen = useCallback(() => {
+        setIsFullScreen(prev => !prev);
+    }, []);
+
     // HTML Mode (Learn Mode OFF)
     if (!learnMode) {
         return (
-            <div className="h-full flex flex-col">
+            <div className={cn("h-full flex flex-col", { "rte-editor--fullscreen": isFullScreen })}>
                 <TiptapEditor
                     content={chapter?.content?.[contentScript] || ''}
                     onChange={() => { }} // No-op (read-only)
@@ -124,9 +130,9 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
 
     // Segmented Mode (Learn Mode ON)
     return (
-        <div className="h-full flex flex-col">
-            {/* Script selector header - Polished height to match Tiptap toolbar */}
-            <div className="border border-gray-200 dark:border-gray-800 border-b-0 rounded-t-lg bg-gray-50 dark:bg-gray-900 min-h-[42px] flex items-center justify-center gap-6 px-4 py-1">
+        <div className={cn("h-full flex flex-col", { "rte-editor--fullscreen": isFullScreen })}>
+            {/* Script selector header - Match Tiptap toolbar height (44px / 2.75rem) */}
+            <div className="border border-gray-200 dark:border-gray-800 border-b-0 rounded-t-lg bg-gray-50 dark:bg-gray-900 min-h-[2.75rem] flex items-center justify-center gap-6 px-4 py-0.5">
                 <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-muted-foreground">Script:</span>
                     <Select
@@ -161,7 +167,7 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
             </div>
 
             {/* Segmented text view */}
-            <div className="flex-1 min-h-0 border border-gray-200 dark:border-gray-800 rounded-b-lg bg-white dark:bg-black overflow-hidden relative">
+            <div className="flex-1 min-h-0 border border-gray-200 dark:border-gray-800 border-b-0 bg-white dark:bg-black overflow-hidden relative">
                 {chapter?.content?.[contentScript] ? (
                     <SelectableTextPanel
                         content={chapter.content}
@@ -177,6 +183,46 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
                         <p>No content available for this script</p>
                     </div>
                 )}
+            </div>
+
+            {/* StatusBar with fullscreen toggle - Match Tiptap status bar exactly */}
+            <div className="rte-status-bar border border-gray-200 dark:border-gray-800 rounded-b-lg">
+                <button
+                    onClick={toggleFullScreen}
+                    aria-label={isFullScreen ? "Exit Fullscreen" : "Fullscreen"}
+                    className="rte-button rte-button--ghost rte-menu__button"
+                    title={isFullScreen ? "Exit Fullscreen" : "Fullscreen"}
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="rte-button-icon"
+                    >
+                        {isFullScreen ? (
+                            <>
+                                <path d="M8 3v3a2 2 0 0 1-2 2H3" />
+                                <path d="M21 8h-3a2 2 0 0 1-2-2V3" />
+                                <path d="M3 16h3a2 2 0 0 1 2 2v3" />
+                                <path d="M16 21v-3a2 2 0 0 1 2-2h3" />
+                            </>
+                        ) : (
+                            <>
+                                <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                                <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                                <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                                <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                            </>
+                        )}
+                    </svg>
+                    <span className="rte-button__text">Fullscreen</span>
+                </button>
             </div>
         </div>
     );

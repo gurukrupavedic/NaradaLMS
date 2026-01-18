@@ -63,8 +63,9 @@ export function useAuth() {
         method: "POST",
         credentials: "include",
       });
-      
+
       // Clear auth cache and navigate to landing
+      queryClient.setQueryData(["auth", "me"], null); // Optimistic update for immediate UI switch
       queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
       navigate("/");
     } catch (err) {

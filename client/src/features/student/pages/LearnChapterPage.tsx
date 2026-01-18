@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Music, Info, StretchHorizontal, Zap } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading";
 import { SelectableTextPanel } from "@/features/content/components/TextSegmentationTab/SelectableTextPanel";
-import { getProficiencyLabel } from "@/features/batches/utils/matrix-utils";
+import { getProficiencyLabel, getCellColor } from "@/features/batches/utils/matrix-utils";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AudioPlayerControls } from "@/components/common/AudioPlayerControls";
@@ -74,7 +74,10 @@ interface StudentProgressDTO {
   updatedAt: string;
 }
 
+import { useAuth } from "@/features/shared/hooks/useAuth";
+
 export function LearnChapterPage() {
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/app/learning/chapter/:chapterId");
   const chapterId = params?.chapterId;
@@ -86,6 +89,7 @@ export function LearnChapterPage() {
     const stored = localStorage.getItem("study-learn-mode");
     return stored ? JSON.parse(stored) : true;
   });
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   const scriptOptions = useMemo(() => ([
     { value: "te" as const, label: "Telugu" },
@@ -124,8 +128,8 @@ export function LearnChapterPage() {
   });
 
   const { data: progress = [] } = useQuery<StudentProgressDTO[]>({
-    queryKey: [`/api/learning/progress?chapterId=${chapterId}`],
-    enabled: !!chapterId,
+    queryKey: [`/api/learning/progress?chapterId=${chapterId}&studentId=${user?.id}`],
+    enabled: !!chapterId && !!user,
   });
 
   // Track chapter access once on mount
@@ -235,6 +239,10 @@ export function LearnChapterPage() {
     }
   }, [mappings, selectedAudioFileId, audioFiles]);
 
+  const toggleFullScreen = useCallback(() => {
+    setIsFullScreen(prev => !prev);
+  }, []);
+
   const currentProgress = progress[0];
   const proficiencyLevel = currentProgress?.proficiencyLevel ?? null;
   const proficiencyLabel = getProficiencyLabel(proficiencyLevel);
@@ -303,44 +311,62 @@ export function LearnChapterPage() {
               </div>
 
               <div className="w-40 flex justify-end">
-                <Badge
-                  className={cn(
-                    "h-7 w-full justify-between text-xs font-medium border flex items-center px-3",
-                    proficiencyLevel === null || proficiencyLevel === 9 ? "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600" :
-                      proficiencyLevel === 8 ? "bg-gray-200 text-gray-700 border-gray-400 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500" :
-                        proficiencyLevel === 0 ? "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-700" :
-                          proficiencyLevel === 1 ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-200 dark:border-green-700" :
-                            proficiencyLevel === 2 ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-200 dark:border-green-700" :
-                              proficiencyLevel === 3 ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:text-purple-200 dark:border-purple-700" :
-                                proficiencyLevel === 4 ? "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:text-purple-200 dark:border-purple-700" :
-                                  "bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"
-                  )}
-                >
-                  <span className="truncate">{proficiencyLabel}</span>
-                  {currentProgress && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-3 w-3 flex-shrink-0 ml-1" />
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="bg-slate-900 text-slate-50 border-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-300">
-                          <div className="space-y-1">
-                            <p className="text-xs">
-                              <span className="font-semibold">Last Evaluated:</span>{" "}
-                              {currentProgress.lastEvaluatedAt
-                                ? new Date(currentProgress.lastEvaluatedAt).toLocaleDateString()
-                                : "Never"}
-                            </p>
-                            <p className="text-xs">
-                              <span className="font-semibold">Evaluated By:</span>{" "}
-                              {currentProgress.evaluatedBy || "—"}
-                            </p>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                </Badge>
+                {(() => {
+                  let status: 'practicing' | 'completed' | 'absent' | 'not_started' = 'not_started';
+
+                  if (proficiencyLevel === null) {
+                    status = 'not_started';
+                  } else if (proficiencyLevel === 8) {
+                    status = 'absent';
+                  } else if (proficiencyLevel === 9) {
+                    status = 'not_started';
+                  } else if (proficiencyLevel >= 4) {
+                    status = 'completed';
+                  } else {
+                    status = 'practicing';
+                  }
+
+                  const colors = getCellColor(proficiencyLevel ?? 9, status);
+
+                  return (
+                    <Badge
+                      className={cn(
+                        "h-7 w-full justify-between text-xs font-medium border flex items-center px-3",
+                        colors.bgColor,
+                        colors.textColor,
+                        colors.borderColor,
+                        colors.darkBgColor,
+                        colors.darkTextColor,
+                        colors.darkBorderColor
+                      )}
+                    >
+                      <span className="truncate">{proficiencyLabel}</span>
+                      {currentProgress && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className={cn("h-3 w-3 flex-shrink-0 ml-1 opacity-70", colors.textColor, colors.darkTextColor)} />
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="bg-slate-900 text-slate-50 border-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-300">
+                              <div className="space-y-1">
+                                <p className="text-xs">
+                                  <span className="font-semibold">Last Evaluated:</span>{" "}
+                                  {currentProgress.lastEvaluatedAt
+                                    ? new Date(currentProgress.lastEvaluatedAt).toLocaleDateString()
+                                    : "Never"}
+                                </p>
+                                <p className="text-xs">
+                                  <span className="font-semibold">Evaluated By:</span>{" "}
+                                  {currentProgress.evaluatedBy || "—"}
+                                </p>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </Badge>
+                  );
+                })()}
               </div>
             </div>
 
@@ -385,7 +411,7 @@ export function LearnChapterPage() {
         </div>
       </div>
       {/* Content Area */}
-      <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950 p-4">
+      <div className={cn("flex-1 overflow-auto bg-gray-50 dark:bg-gray-950 p-4", { "rte-editor--fullscreen": isFullScreen })}>
         {!learnMode ? (
           // Learn Mode OFF - Tiptap HTML view
           <div className="h-full flex flex-col">
@@ -441,7 +467,7 @@ export function LearnChapterPage() {
             </div>
 
             {/* Segmented text view */}
-            <div className="flex-1 min-h-0 border border-gray-200 dark:border-gray-800 rounded-b-lg bg-white dark:bg-black overflow-hidden relative">
+            <div className="flex-1 min-h-0 border border-gray-200 dark:border-gray-800 border-b-0 bg-white dark:bg-black overflow-hidden relative">
               {chapter?.content?.[contentScript] ? (
                 <SelectableTextPanel
                   content={chapter.content}
@@ -457,6 +483,46 @@ export function LearnChapterPage() {
                   <p>No content available for this script</p>
                 </div>
               )}
+            </div>
+
+            {/* StatusBar with fullscreen toggle for Segmented mode */}
+            <div className="rte-status-bar border border-gray-200 dark:border-gray-800 rounded-b-lg">
+              <button
+                onClick={toggleFullScreen}
+                aria-label={isFullScreen ? "Exit Fullscreen" : "Fullscreen"}
+                className="rte-button rte-button--ghost rte-menu__button"
+                title={isFullScreen ? "Exit Fullscreen" : "Fullscreen"}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="rte-button-icon"
+                >
+                  {isFullScreen ? (
+                    <>
+                      <path d="M8 3v3a2 2 0 0 1-2 2H3" />
+                      <path d="M21 8h-3a2 2 0 0 1-2-2V3" />
+                      <path d="M3 16h3a2 2 0 0 1 2 2v3" />
+                      <path d="M16 21v-3a2 2 0 0 1 2-2h3" />
+                    </>
+                  ) : (
+                    <>
+                      <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                      <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                      <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                      <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                    </>
+                  )}
+                </svg>
+                <span className="rte-button__text">Fullscreen</span>
+              </button>
             </div>
           </div>
         )

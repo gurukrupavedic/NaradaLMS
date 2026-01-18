@@ -35,7 +35,7 @@ export const MenuBar = ({ currentScript, onScriptChange, disabled }: MenuBarProp
       {/* Script Selector - First group */}
       {currentScript && onScriptChange && (
         <>
-          <ToolbarGroup className="pl-4 gap-2">
+          <ToolbarGroup className="pl-4 gap-2 min-h-[2.75rem]">
             <span className="text-xs font-medium text-muted-foreground">Script:</span>
             <Select
               value={currentScript}

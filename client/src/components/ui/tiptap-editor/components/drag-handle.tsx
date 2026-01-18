@@ -13,6 +13,7 @@ import {
 } from "./ui/dropdown";
 import { getSelectedDOM, moveNode } from "../helpers/tiptap";
 
+import { offset } from "@floating-ui/dom";
 import type { Middleware } from "@floating-ui/dom";
 import type { Node as TiptapNode } from "@tiptap/pm/model";
 
@@ -36,22 +37,17 @@ export const DragHandle = () => {
   const menuPosition = useMemo(() => {
     return {
       middleware: [
-        {
-          name: "customPosition",
-          fn: ({ rects }) => {
-            const contentEl = editor.view.dom;
-            const contentStyle = getComputedStyle(contentEl);
-            const paddingLeft = parseFloat(contentStyle.paddingLeft);
-
-            return {
-              x: paddingLeft - rects.floating.width - 8,
-              y: rects.reference.y,
-            };
-          },
-        },
+        offset(({ rects }) => {
+          // Position handle to the left of the reference element (hovered paragraph)
+          // crossAxis shifts perpendicular to the main placement side
+          return {
+            mainAxis: 0,
+            crossAxis: -(rects.floating.width + 8),
+          };
+        }),
       ] as Middleware[],
     };
-  }, [editor]);
+  }, []);
 
   const handleNodeChange = useCallback((data: any) => {
     if (data.node) setNode(data.node);

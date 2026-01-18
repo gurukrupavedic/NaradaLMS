@@ -7,10 +7,20 @@
   position: relative;
   user-select: text !important;
   -webkit-user-select: text !important;
-  cursor: text;
+  cursor: default;
+
+  // Editable content styles
+  &[contenteditable="false"] {
+    cursor: default;
+  }
 
   // Editable content styles
   &[contenteditable="true"] {
+
+    // Only show I-beam on text content
+    &>* {
+      cursor: text;
+    }
 
     :is(img, iframe).ProseMirror-selectednode,
     .ProseMirror-selectednode :is(img, iframe) {

@@ -67,6 +67,7 @@ export type TiptapEditorProps = {
   currentScript?: "te" | "hi" | "en";
   onScriptChange?: (script: "te" | "hi" | "en") => void;
   autoSaveStatus?: 'clean' | 'dirty' | 'saving' | 'saved';
+  showStatusBar?: boolean;
 };
 
 export type TiptapEditorRef = Editor | null;
@@ -91,6 +92,7 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
       currentScript,
       onScriptChange,
       autoSaveStatus,
+      showStatusBar = true,
     } = props;
     const isEditable = !readonly && !disabled;
 
@@ -171,7 +173,7 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
 
     // Unified Render
     return (
-      <div className={cn("rte-editor-wrapper", className)}>
+      <div className={cn("rte-editor-wrapper", { "rte-editor--readonly": !isEditable }, className)}>
         <TiptapProvider
           editor={editor}
           slotBefore={
@@ -182,9 +184,11 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
             />
           }
           slotAfter={
-            <StatusBar
-              autoSaveStatus={autoSaveStatus}
-            />
+            showStatusBar ? (
+              <StatusBar
+                autoSaveStatus={autoSaveStatus}
+              />
+            ) : undefined
           }
           fontClassName={getFontClass(language)}
         >
