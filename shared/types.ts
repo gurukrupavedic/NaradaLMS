@@ -15,7 +15,7 @@ export type AudioFile = typeof audioFiles.$inferSelect;
 // Extended types for specific use cases
 export interface UserWithRoles extends User {
   roles: string[];
-  lastLoginAt?: Date | null;
+  // lastLoginAt inherited from User (Date | null, non-optional)
 }
 
 export interface TrackWithChapters extends Omit<Track, 'createdBy' | 'createdAt' | 'updatedAt'> {
