@@ -1,6 +1,6 @@
 export * from './useAudioManagement';
 export * from './useAudioMapping';
-export * from './useChapterQuery';
+
 export * from './useContentEditor';
 export * from './useLocalStorage';
 export * from './useTextSegmentationEditor';

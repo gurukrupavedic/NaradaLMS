@@ -66,7 +66,7 @@ export type TiptapEditorProps = {
   language: "te" | "hi" | "en";
   currentScript?: "te" | "hi" | "en";
   onScriptChange?: (script: "te" | "hi" | "en") => void;
-  autoSaveStatus?: 'clean' | 'dirty' | 'saving' | 'saved';
+  autoSaveStatus?: 'clean' | 'dirty' | 'saving' | 'saved' | 'error';
   showStatusBar?: boolean;
 };
 

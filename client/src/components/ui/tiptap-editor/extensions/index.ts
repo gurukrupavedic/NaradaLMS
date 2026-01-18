@@ -9,7 +9,7 @@ import { CharacterCount, Placeholder, Selection } from "@tiptap/extensions";
 import { StarterKit } from "@tiptap/starter-kit";
 
 import { CellAlign } from "./cell-align";
-import { CodeBlockLowlight } from "./code-block-lowlight";
+
 // import { CodeBlockShiki } from "./code-block-shiki";
 import { ImageFigure } from "./image";
 import { Link } from "./link";
