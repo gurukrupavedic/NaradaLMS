@@ -126,7 +126,7 @@ export class LearningStorage {
         chapterTitle: chapters.title,
         chapterNumber: chapters.chapterNumber,
         trackId: chapters.trackId,
-        trackName: tracks.name,
+        trackName: tracks.title,
         status: chapters.status,
       })
       .from(chapters)
