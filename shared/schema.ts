@@ -27,7 +27,7 @@ export const sessions = pgTable(
 );
 
 // User storage table with multi-role support and social login
-export const users: any = pgTable("users", {
+export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull().default(sql`gen_random_uuid()`),
   email: varchar("email").unique().notNull(),
   firstName: varchar("first_name"),
