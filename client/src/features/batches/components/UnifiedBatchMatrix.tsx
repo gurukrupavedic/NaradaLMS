@@ -313,11 +313,7 @@ export function UnifiedBatchMatrix({
     data: students,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    columnSizeDefaults: {
-      size: 80,
-      minSize: 50,
-      maxSize: 500,
-    },
+
   });
 
   // Loading state

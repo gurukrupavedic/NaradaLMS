@@ -10,6 +10,10 @@ import { cn } from '@/lib/utils';
 
 import type { TextSegment } from '@shared/schema';
 
+type FrontendTextSegment = Omit<TextSegment, 'createdAt'> & {
+    createdAt: string | Date | null;
+};
+
 interface AudioMapping {
     id: number;
     textSegmentId: number;
@@ -19,7 +23,7 @@ interface AudioMapping {
 }
 
 interface SegmentListProps {
-    segments: TextSegment[];
+    segments: FrontendTextSegment[];
     mappings: AudioMapping[];
     onDelete: (id: number) => void;
     getMappingStatus: (segmentId: number) => 'mapped' | 'unmapped';
@@ -31,7 +35,7 @@ interface SegmentListProps {
 }
 
 interface SortableSegmentItemProps extends Omit<SegmentListProps, 'segments' | 'mappings'> {
-    segment: TextSegment;
+    segment: FrontendTextSegment;
     index: number;
 }
 
@@ -59,7 +63,7 @@ function SortableSegmentItem({
     const isSelected = selectedSegmentId === segment.id;
     // Use shared utility to properly extract plain text from HTML content
     const segmentText = content && script
-        ? getSegmentText(segment, content, script)
+        ? getSegmentText({ ...segment, script: segment.script as Script } as TextSegment, content, script)
         : '';
 
     return (

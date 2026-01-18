@@ -45,6 +45,7 @@ export default function TiptapV3TestPage() {
                         onChange={(newContent) => setContent(newContent as string)}
                         output="html"
                         placeholder="Start typing..."
+                        language="en"
                     />
 
 

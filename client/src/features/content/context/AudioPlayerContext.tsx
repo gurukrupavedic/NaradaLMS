@@ -21,6 +21,7 @@ interface AudioPlayerContextValue {
     setVolume: (volume: number) => void;
     setPlaybackRate: (rate: number) => void;
     toggleMute: () => void;
+    togglePlayPause: () => void;
     setAudioSource: (src: string) => Promise<void>;
 
     // Segment Playback (for Mapping/Preview)
@@ -105,6 +106,14 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
 
     const pause = () => {
         if (audioRef.current) audioRef.current.pause();
+    };
+
+    const togglePlayPause = () => {
+        if (isPlaying) {
+            pause();
+        } else {
+            play();
+        }
     };
 
     const stop = () => {
@@ -209,6 +218,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
                 currentSrc,
                 play,
                 pause,
+                togglePlayPause,
                 stop,
                 seek,
                 setVolume,
