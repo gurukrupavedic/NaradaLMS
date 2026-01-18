@@ -44,7 +44,7 @@ type UnifiedBatch = {
   updatedAt?: string;
 };
 
-export default function BatchDetails() {
+export default function BatchDetailsPage() {
   useRoleGuard(['instructor']);
   const { toast } = useToast();
 

@@ -8,14 +8,14 @@ import { AppLayout } from '@/components/layout/app-layout';
 import { SkipLink } from '@/components/ui/skip-link';
 
 // Admin pages
-const UserManagement = React.lazy(() => import('@/features/admin/pages/UserManagement'));
-const AuditLogs = React.lazy(() => import('@/features/admin/pages/AuditLogs'));
-const BatchManagement = React.lazy(() => import('@/features/admin/pages/BatchManagement'));
-const SystemSettings = React.lazy(() => import('@/features/admin/pages/SystemSettings'));
+const UserManagementPage = React.lazy(() => import('@/features/admin/pages/UserManagementPage'));
+const AuditLogsPage = React.lazy(() => import('@/features/admin/pages/AuditLogsPage'));
+const BatchManagementPage = React.lazy(() => import('@/features/admin/pages/BatchManagementPage'));
+const SystemSettingsPage = React.lazy(() => import('@/features/admin/pages/SystemSettingsPage'));
 
 // Batch pages (unified)
-const MyBatchesList = React.lazy(() => import('@/features/batches/pages/MyBatchesList'));
-const BatchDetails = React.lazy(() => import('@/features/batches/pages/BatchDetails'));
+const MyBatchesListPage = React.lazy(() => import('@/features/batches/pages/MyBatchesListPage'));
+const BatchDetailsPage = React.lazy(() => import('@/features/batches/pages/BatchDetailsPage'));
 
 // Instructor pages
 const MyStudentsPage = React.lazy(() => import('@/features/instructor/pages/MyStudentsPage').then(module => ({ default: module.MyStudentsPage })));
@@ -58,16 +58,16 @@ export default function AppShell() {
             <Route path="/app/learning/chapter/:chapterId" component={LearnChapterPage} />
             <Route path="/app/instructor/students/:studentId" component={StudentDetailsPage} />
             <Route path="/app/instructor/students" component={MyStudentsPage} />
-            <Route path="/app/instructor/batches/:id" component={BatchDetails} />
-            <Route path="/app/instructor/batches" component={MyBatchesList} />
+            <Route path="/app/instructor/batches/:id" component={BatchDetailsPage} />
+            <Route path="/app/instructor/batches" component={MyBatchesListPage} />
             <Route path="/app/content" component={TracksAndChapters} />
             <Route path="/app/content/tracks/:trackId/chapters/:chapterId" component={ChapterContent} />
             <Route path="/app/admin" component={() => { window.location.href = '/app/admin/users'; return null; }} />
-            <Route path="/app/admin/users" component={UserManagement} />
-            <Route path="/app/admin/logs" component={AuditLogs} />
-            <Route path="/app/admin/settings" component={SystemSettings} />
-            <Route path="/app/admin/batches/:id" component={BatchDetails} />
-            <Route path="/app/admin/batches" component={BatchManagement} />
+            <Route path="/app/admin/users" component={UserManagementPage} />
+            <Route path="/app/admin/logs" component={AuditLogsPage} />
+            <Route path="/app/admin/settings" component={SystemSettingsPage} />
+            <Route path="/app/admin/batches/:id" component={BatchDetailsPage} />
+            <Route path="/app/admin/batches" component={BatchManagementPage} />
 
 
             <Route component={() => <div className="p-8">Not Found</div>} />

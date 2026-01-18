@@ -18,7 +18,7 @@ import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
 type Track = { id: number; title?: string; name?: string };
 type Instructor = { id: string; firstName?: string; lastName?: string; email: string };
 
-export default function BatchManagement() {
+export default function BatchManagementPage() {
   useRoleGuard(['admin']);
   const { toast } = useToast();
   const [, setLocation] = useLocation();

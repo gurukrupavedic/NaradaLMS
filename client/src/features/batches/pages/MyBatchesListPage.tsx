@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { GraduationCap, AlertCircle } from "lucide-react";
 import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
 
-export default function MyBatchesList() {
+export default function MyBatchesListPage() {
   useRoleGuard(['instructor']);
   const { data, isLoading, error, refetch, isRefetching } = useBatches();
 

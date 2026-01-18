@@ -35,7 +35,7 @@ const STATUS_FILTERS = [
   { value: "inactive", label: "Inactive" },
 ];
 
-export default function UserManagement() {
+export default function UserManagementPage() {
   useRoleGuard(['admin']);
   const { toast } = useToast();
 

@@ -2,7 +2,7 @@ import React from "react";
 import { Settings } from "lucide-react";
 import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
 
-export default function SystemSettings() {
+export default function SystemSettingsPage() {
   useRoleGuard(['admin']);
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">

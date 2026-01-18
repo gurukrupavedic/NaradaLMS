@@ -126,7 +126,7 @@ function ChangesCell({ changes }: { changes: any }) {
   );
 }
 
-export default function AuditLogs() {
+export default function AuditLogsPage() {
   useRoleGuard(['admin']);
   const { toast } = useToast();
   const [filters, setFilters] = useState<AuditLogFilters>({ limit: 25, offset: 0 });
