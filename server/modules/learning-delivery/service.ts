@@ -9,7 +9,7 @@ import { LEARNING_DELIVERY_EVENTS } from './events';
 import { contentService } from '../content-publishing';
 import { mediaService } from '../media-pipeline';
 import { db } from '../../db';
-import { batches, batchCoInstructors, enrollments, chapters, studentProgress } from '@shared/schema';
+import { batches, batchCoInstructors, enrollments, chapters, studentProgress, users, tracks } from '@shared/schema';
 import { eq, and, or, inArray } from 'drizzle-orm';
 
 export class LearningService {
@@ -193,7 +193,7 @@ export class LearningService {
   ): Promise<any> {
     // Get student basic info
     const student = await db.query.users.findFirst({
-      where: (u, { eq }) => eq(u.id, studentId),
+      where: (u: typeof users.$inferSelect, { eq }: any) => eq(u.id, studentId),
     });
 
     if (!student) return null;
