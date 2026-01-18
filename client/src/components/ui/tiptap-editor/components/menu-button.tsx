@@ -89,7 +89,9 @@ export const MenuButton = React.forwardRef<HTMLButtonElement, MenuButtonProps>(
         }
         onFocusCapture={(e) => e.stopPropagation()}
         data-active={active || undefined}
-        aria-label={typeof tooltip === "string" ? tooltip : text}
+        aria-label={
+          typeof tooltip === "string" ? tooltip : text ? text : "Menu Button"
+        }
         disabled={disabled}
         {...props}
       >
@@ -100,7 +102,7 @@ export const MenuButton = React.forwardRef<HTMLButtonElement, MenuButtonProps>(
     const renderContent = tooltipContent ? (
       <Tooltip
         content={tooltipContent}
-        // options={{ collisionBoundary: editor?.view.dom.parentElement }}
+      // options={{ collisionBoundary: editor?.view.dom.parentElement }}
       >
         {renderButton}
       </Tooltip>

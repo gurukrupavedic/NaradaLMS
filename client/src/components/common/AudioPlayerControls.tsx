@@ -137,10 +137,10 @@ export function AudioPlayerControls({
                     {/* Skip Buttons (Simplified) */}
                     {showSkipButtons && (
                         <>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 hidden md:flex text-muted-foreground hover:text-foreground" onClick={onSkipBackward} disabled={disabled}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 hidden md:flex text-muted-foreground hover:text-foreground" onClick={onSkipBackward} disabled={disabled} aria-label="Skip backward">
                                 <SkipBack className="h-3.5 w-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 hidden md:flex text-muted-foreground hover:text-foreground" onClick={onSkipForward} disabled={disabled}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 hidden md:flex text-muted-foreground hover:text-foreground" onClick={onSkipForward} disabled={disabled} aria-label="Skip forward">
                                 <SkipForward className="h-3.5 w-3.5" />
                             </Button>
                         </>

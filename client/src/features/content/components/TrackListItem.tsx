@@ -82,6 +82,7 @@ export function TrackListItem({ track, index, isSelected, onSelect, onEdit, onDe
                 onEdit(track);
               }}
               title="Edit Track"
+              aria-label="Edit Track"
             >
               <Edit2 className="w-3.5 h-3.5" />
             </Button>
@@ -94,6 +95,7 @@ export function TrackListItem({ track, index, isSelected, onSelect, onEdit, onDe
                 onDelete(track);
               }}
               title="Delete Track"
+              aria-label="Delete Track"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </Button>

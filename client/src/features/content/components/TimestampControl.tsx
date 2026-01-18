@@ -152,6 +152,7 @@ export function TimestampControl({
                         variant="ghost"
                         className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-50"
                         onClick={handleSave}
+                        aria-label="Save timestamp"
                     >
                         <Check className="h-3.5 w-3.5" />
                     </Button>
@@ -160,6 +161,7 @@ export function TimestampControl({
                         variant="ghost"
                         className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         onClick={onEditCancel}
+                        aria-label="Cancel edit"
                     >
                         <X className="h-3.5 w-3.5" />
                     </Button>
@@ -186,6 +188,7 @@ export function TimestampControl({
                         onPlay?.(startTime, endTime);
                     }}
                     title="Play segment"
+                    aria-label="Play segment"
                 >
                     <Play className="h-3.5 w-3.5 fill-current" />
                 </Button>
@@ -216,6 +219,7 @@ export function TimestampControl({
                             onDelete?.(segmentId);
                         }}
                         title="Remove mapping"
+                        aria-label="Remove mapping"
                     >
                         <Trash2 className="h-3.5 w-3.5" />
                     </Button>

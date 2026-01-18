@@ -140,7 +140,7 @@ export function TopNav({ user }: TopNavProps) {
       {/* Right side - Actions */}
       <div className="flex items-center gap-2 flex-shrink-0">
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
           <Bell className="h-4 w-4" />
           <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
         </Button>
