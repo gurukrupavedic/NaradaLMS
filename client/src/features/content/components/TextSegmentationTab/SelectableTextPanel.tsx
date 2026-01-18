@@ -7,7 +7,7 @@ import { getDisplayText } from '@shared/utils/text-segmentation';
 interface SelectableTextPanelProps {
     content: ContentMap;
     script: Script;
-    segments: (Omit<TextSegment, 'createdAt'> & { createdAt?: string | Date | null })[];
+    segments: (Omit<TextSegment, 'createdAt' | 'createdBy' | 'script'> & { createdAt?: string | Date | null; createdBy?: string; script: string | Script })[];
     selectedSegmentId?: number;
     onSegmentSelect?: (segmentId: number | undefined) => void;
     onCreateSegment: (data: { script: string; startPosition: number; endPosition: number }) => void;

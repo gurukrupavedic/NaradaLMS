@@ -63,7 +63,7 @@ function SortableSegmentItem({
     const isSelected = selectedSegmentId === segment.id;
     // Use shared utility to properly extract plain text from HTML content
     const segmentText = content && script
-        ? getSegmentText({ ...segment, script: segment.script as Script } as TextSegment, content, script)
+        ? getSegmentText(segment as any, content, script)
         : '';
 
     return (
