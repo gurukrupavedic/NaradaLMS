@@ -1,0 +1,196 @@
+client/src/components/ui/index.ts(18,97): error TS2307: Cannot find module './form' or its corresponding type declarations.
+client/src/components/ui/index.ts(20,26): error TS2307: Cannot find module './checkbox' or its corresponding type declarations.
+client/src/components/ui/index.ts(21,44): error TS2307: Cannot find module './radio-group' or its corresponding type declarations.
+client/src/components/ui/index.ts(31,138): error TS2307: Cannot find module './navigation-menu' or its corresponding type declarations.
+client/src/components/ui/index.ts(39,63): error TS2307: Cannot find module './hover-card' or its corresponding type declarations.
+client/src/components/ui/index.ts(46,26): error TS2307: Cannot find module './calendar' or its corresponding type declarations.
+client/src/components/ui/index.ts(56,32): error TS2307: Cannot find module './rich-text-editor' or its corresponding type declarations.
+client/src/components/ui/orb.tsx(4,28): error TS2307: Cannot find module '@react-three/drei' or its corresponding type declarations.
+client/src/components/ui/orb.tsx(5,44): error TS2307: Cannot find module '@react-three/fiber' or its corresponding type declarations.
+client/src/components/ui/orb.tsx(6,24): error TS2307: Cannot find module 'three' or its corresponding type declarations.
+client/src/components/ui/orb.tsx(164,13): error TS7006: Parameter '_' implicitly has an 'any' type.
+client/src/components/ui/orb.tsx(254,5): error TS2339: Property 'mesh' does not exist on type 'JSX.IntrinsicElements'.
+client/src/components/ui/orb.tsx(255,7): error TS2339: Property 'circleGeometry' does not exist on type 'JSX.IntrinsicElements'.
+client/src/components/ui/orb.tsx(256,7): error TS2339: Property 'shaderMaterial' does not exist on type 'JSX.IntrinsicElements'.
+client/src/components/ui/orb.tsx(262,5): error TS2339: Property 'mesh' does not exist on type 'JSX.IntrinsicElements'.
+client/src/components/ui/tiptap-editor/components/tiptap-editor.tsx(165,55): error TS2559: Type 'false' has no properties in common with type 'SetContentOptions'.
+client/src/components/ui/tiptap-editor/extensions/code-block-lowlight/code-block-lowlight.ts(3,33): error TS2307: Cannot find module '@/lib/lowlight' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/extensions/code-block-lowlight/code-block-lowlight.ts(8,3): error TS2322: Type '(this: { name: string; parent: (() => CodeBlockOptions) | undefined; }) => { defaultLanguage: any; languageClassPrefix?: string | null | undefined; exitOnTripleEnter?: boolean | ... 1 more ... | undefined; exitOnArrowDown?: boolean | ... 1 more ... | undefined; enableTabIndentation?: boolean | ... 1 more ... | undef...' is not assignable to type '(this: { name: string; parent: (() => CodeBlockOptions) | undefined; }) => CodeBlockOptions'.
+  Type '{ defaultLanguage: any; languageClassPrefix?: string | null | undefined; exitOnTripleEnter?: boolean | null | undefined; exitOnArrowDown?: boolean | null | undefined; enableTabIndentation?: boolean | null | undefined; tabSize?: number | null | undefined; HTMLAttributes?: Record<...> | undefined; }' is not assignable to type 'CodeBlockOptions'.
+    Property 'languageClassPrefix' is optional in type '{ defaultLanguage: any; languageClassPrefix?: string | null | undefined; exitOnTripleEnter?: boolean | null | undefined; exitOnArrowDown?: boolean | null | undefined; enableTabIndentation?: boolean | ... 1 more ... | undefined; tabSize?: number | ... 1 more ... | undefined; HTMLAttributes?: Record<...> | undefined; }' but required in type 'CodeBlockOptions'.
+client/src/components/ui/tiptap-editor/extensions/code-block-lowlight/lowlight-plugin.ts(8,8): error TS2307: Cannot find module '@/lib/lowlight' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/extensions/code-block-shiki/code-block-shiki.ts(3,33): error TS2307: Cannot find module '@/lib/shiki' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/extensions/code-block-shiki/code-block-shiki.ts(8,3): error TS2322: Type '(this: { name: string; parent: (() => CodeBlockOptions) | undefined; }) => { defaultLanguage: any; languageClassPrefix?: string | null | undefined; exitOnTripleEnter?: boolean | ... 1 more ... | undefined; exitOnArrowDown?: boolean | ... 1 more ... | undefined; enableTabIndentation?: boolean | ... 1 more ... | undef...' is not assignable to type '(this: { name: string; parent: (() => CodeBlockOptions) | undefined; }) => CodeBlockOptions'.
+  Type '{ defaultLanguage: any; languageClassPrefix?: string | null | undefined; exitOnTripleEnter?: boolean | null | undefined; exitOnArrowDown?: boolean | null | undefined; enableTabIndentation?: boolean | null | undefined; tabSize?: number | null | undefined; HTMLAttributes?: Record<...> | undefined; }' is not assignable to type 'CodeBlockOptions'.
+    Property 'languageClassPrefix' is optional in type '{ defaultLanguage: any; languageClassPrefix?: string | null | undefined; exitOnTripleEnter?: boolean | null | undefined; exitOnArrowDown?: boolean | null | undefined; enableTabIndentation?: boolean | ... 1 more ... | undefined; tabSize?: number | ... 1 more ... | undefined; HTMLAttributes?: Record<...> | undefined; }' but required in type 'CodeBlockOptions'.
+client/src/components/ui/tiptap-editor/extensions/code-block-shiki/shiki-plugin.tsx(4,54): error TS2307: Cannot find module '@/lib/shiki' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/extensions/code-block-shiki/shiki-plugin.tsx(6,51): error TS2307: Cannot find module '@/lib/shiki' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/extensions/code-block-shiki/shiki-plugin.tsx(16,14): error TS7006: Parameter 'h' implicitly has an 'any' type.
+client/src/components/ui/tiptap-editor/extensions/index.ts(53,7): error TS2353: Object literal may only specify known properties, and 'table' does not exist in type 'Partial<TableOptions>'.
+client/src/components/ui/tiptap-editor/extensions/index.ts(62,7): error TS2353: Object literal may only specify known properties, and 'lineHeight' does not exist in type 'Partial<TextStyleOptions>'.
+client/src/components/ui/tiptap-editor/extensions/link/link.ts(25,3): error TS2322: Type '(this: { name: string; parent: (() => LinkOptions) | undefined; }) => { autolink: false; openOnClick: false; protocols?: (string | LinkProtocolOptions)[] | undefined; ... 5 more ...; shouldAutoLink?: ((url: string) => boolean) | undefined; }' is not assignable to type '(this: { name: string; parent: (() => LinkOptions) | undefined; }) => LinkOptions'.
+  Call signature return types '{ autolink: false; openOnClick: false; protocols?: (string | LinkProtocolOptions)[] | undefined; defaultProtocol?: string | undefined; linkOnPaste?: boolean | undefined; HTMLAttributes?: Record<...> | undefined; validate?: ((url: string) => boolean) | undefined; isAllowedUri?: ((url: string, ctx: { ...; }) => boolea...' and 'LinkOptions' are incompatible.
+    The types of 'protocols' are incompatible between these types.
+      Type '(string | LinkProtocolOptions)[] | undefined' is not assignable to type '(string | LinkProtocolOptions)[]'.
+        Type 'undefined' is not assignable to type '(string | LinkProtocolOptions)[]'.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(1,23): error TS2307: Cannot find module 'highlight.js/lib/languages/plaintext' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(2,17): error TS2307: Cannot find module 'highlight.js/lib/languages/xml' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(3,49): error TS2307: Cannot find module 'lowlight' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(6,22): error TS2307: Cannot find module 'highlight.js/lib/languages/bash' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(7,19): error TS2307: Cannot find module 'highlight.js/lib/languages/c' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(8,24): error TS2307: Cannot find module 'highlight.js/lib/languages/csharp' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(9,21): error TS2307: Cannot find module 'highlight.js/lib/languages/css' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(10,20): error TS2307: Cannot find module 'highlight.js/lib/languages/go' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(11,25): error TS2307: Cannot find module 'highlight.js/lib/languages/graphql' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(12,22): error TS2307: Cannot find module 'highlight.js/lib/languages/java' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(13,28): error TS2307: Cannot find module 'highlight.js/lib/languages/javascript' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(14,22): error TS2307: Cannot find module 'highlight.js/lib/languages/json' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(15,24): error TS2307: Cannot find module 'highlight.js/lib/languages/kotlin' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(16,22): error TS2307: Cannot find module 'highlight.js/lib/languages/less' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(17,26): error TS2307: Cannot find module 'highlight.js/lib/languages/makefile' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(18,26): error TS2307: Cannot find module 'highlight.js/lib/languages/markdown' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(19,28): error TS2307: Cannot find module 'highlight.js/lib/languages/objectivec' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(20,21): error TS2307: Cannot find module 'highlight.js/lib/languages/php' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(21,27): error TS2307: Cannot find module 'highlight.js/lib/languages/plaintext' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(22,24): error TS2307: Cannot find module 'highlight.js/lib/languages/python' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(23,22): error TS2307: Cannot find module 'highlight.js/lib/languages/scss' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(24,23): error TS2307: Cannot find module 'highlight.js/lib/languages/shell' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(25,21): error TS2307: Cannot find module 'highlight.js/lib/languages/sql' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(26,28): error TS2307: Cannot find module 'highlight.js/lib/languages/typescript' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(27,23): error TS2307: Cannot find module 'highlight.js/lib/languages/vbnet' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/helpers/lowlight.ts(28,21): error TS2307: Cannot find module 'highlight.js/lib/languages/xml' or its corresponding type declarations.
+client/src/components/ui/tiptap-editor/test-page.tsx(2,8): error TS2613: Module '"C:/Users/kashy/Projects/VedicLMS/client/src/components/ui/tiptap-editor/index"' has no default export. Did you mean to use 'import { TiptapEditor } from "C:/Users/kashy/Projects/VedicLMS/client/src/components/ui/tiptap-editor/index"' instead?
+client/src/components/ui/tiptap-editor/test-page.tsx(45,36): error TS7006: Parameter 'newContent' implicitly has an 'any' type.
+client/src/features/admin/pages/BatchManagement.tsx(372,38): error TS2552: Cannot find name 'refetch'. Did you mean 'fetch'?
+client/src/features/batches/components/UnifiedBatchMatrix.tsx(324,5): error TS2353: Object literal may only specify known properties, and 'columnSizeDefaults' does not exist in type 'TableOptions<StudentMatrixRow>'.
+client/src/features/content/components/MappingTab/MappingTab.tsx(122,46): error TS2339: Property 'togglePlayPause' does not exist on type 'AudioPlayerContextValue'.
+client/src/features/content/components/PreviewTab/index.tsx(175,25): error TS2322: Type 'TextSegment[]' is not assignable to type 'import("C:/Users/kashy/Projects/VedicLMS/shared/types/text-segmentation").TextSegment[]'.
+  Type 'TextSegment' is missing the following properties from type 'TextSegment': createdBy, createdAt
+client/src/features/content/components/TextSegmentationTab/SegmentList.tsx(69,26): error TS2345: Argument of type 'TextSegment' is not assignable to parameter of type 'import("C:/Users/kashy/Projects/VedicLMS/shared/types/text-segmentation").TextSegment'.
+  Type 'TextSegment' is missing the following properties from type 'TextSegment': createdBy, createdAt
+client/src/features/content/components/TextSegmentationTab/TextSegmentationTab.tsx(86,21): error TS2322: Type 'SaveStatus' is not assignable to type '"clean" | "dirty" | "saving" | "saved" | undefined'.
+  Type '"error"' is not assignable to type '"clean" | "dirty" | "saving" | "saved" | undefined'.
+client/src/features/content/hooks/index.ts(3,15): error TS2307: Cannot find module './useChapterQuery' or its corresponding type declarations.
+client/src/features/instructor/components/student-progress/ChapterItem.tsx(43,31): error TS2345: Argument of type 'number' is not assignable to parameter of type 'ProficiencyLevel'.
+client/src/features/instructor/components/student-progress/ChapterItem.tsx(44,37): error TS2345: Argument of type 'number | null' is not assignable to parameter of type 'ProficiencyLevel'.
+  Type 'null' is not assignable to type 'ProficiencyLevel'.
+client/src/features/shared/components/SimpleDashboard.tsx(2,75): error TS2307: Cannot find module '@/components/design-system/Card' or its corresponding type declarations.
+client/src/features/shared/components/SimpleDashboard.tsx(3,24): error TS2307: Cannot find module '@/components/design-system/Button' or its corresponding type declarations.
+client/src/features/shared/components/SimpleDashboard.tsx(82,66): error TS2322: Type 'unknown[] | [any, ...any[]] | null' is not assignable to type 'ReactNode'.
+  Type 'unknown[]' is not assignable to type 'ReactNode'.
+    Type 'unknown[]' is not assignable to type 'Iterable<ReactNode>'.
+      The types returned by '[Symbol.iterator]().next(...)' are incompatible between these types.
+        Type 'IteratorResult<unknown, undefined>' is not assignable to type 'IteratorResult<ReactNode, any>'.
+          Type 'IteratorYieldResult<unknown>' is not assignable to type 'IteratorResult<ReactNode, any>'.
+            Type 'IteratorYieldResult<unknown>' is not assignable to type 'IteratorYieldResult<ReactNode>'.
+              Type 'unknown' is not assignable to type 'ReactNode'.
+client/src/features/shared/components/SimpleDashboard.tsx(131,31): error TS7006: Parameter 'e' implicitly has an 'any' type.
+client/src/features/shared/hooks/useNetworkStatus.ts(190,43): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+client/src/features/shared/hooks/usePerformanceMonitor.ts(146,28): error TS2339: Property 'trackCustomMetric' does not exist on type 'PerformanceMonitor'.
+client/src/features/shared/hooks/usePerformanceMonitor.ts(163,28): error TS2339: Property 'trackCustomMetric' does not exist on type 'PerformanceMonitor'.
+client/src/features/shared/hooks/usePerformanceMonitor.ts(208,28): error TS2339: Property 'trackCustomMetric' does not exist on type 'PerformanceMonitor'.
+client/src/features/shared/hooks/usePerformanceMonitor.ts(232,24): error TS2339: Property 'trackCustomMetric' does not exist on type 'PerformanceMonitor'.
+client/src/features/shared/hooks/usePerformanceMonitor.ts(333,28): error TS2339: Property 'trackCustomMetric' does not exist on type 'PerformanceMonitor'.
+client/src/features/student/pages/LearnChapterPage.tsx(248,48): error TS2345: Argument of type 'number | null' is not assignable to parameter of type 'ProficiencyLevel'.
+  Type 'null' is not assignable to type 'ProficiencyLevel'.
+client/src/features/student/pages/LearnChapterPage.tsx(329,47): error TS2345: Argument of type 'number' is not assignable to parameter of type 'ProficiencyLevel'.
+client/src/features/student/pages/LearnChapterPage.tsx(475,19): error TS2322: Type 'TextSegment[]' is not assignable to type 'import("C:/Users/kashy/Projects/VedicLMS/shared/types/text-segmentation").TextSegment[]'.
+  Type 'TextSegment' is not assignable to type 'import("C:/Users/kashy/Projects/VedicLMS/shared/types/text-segmentation").TextSegment'.
+    Types of property 'script' are incompatible.
+      Type 'string' is not assignable to type 'Script'.
+server/add-tracks-4-8.ts(16,43): error TS2339: Property 'users' does not exist on type '{}'.
+server/add-tracks-4-8.ts(38,50): error TS2339: Property 'tracks' does not exist on type '{}'.
+server/add-tracks-4-8.ts(39,25): error TS7006: Parameter 'tracks' implicitly has an 'any' type.
+server/add-tracks-4-8.ts(39,35): error TS7031: Binding element 'or' implicitly has an 'any' type.
+server/add-tracks-4-8.ts(39,39): error TS7031: Binding element 'eq' implicitly has an 'any' type.
+server/add-tracks-4-8.ts(71,52): error TS2339: Property 'chapters' does not exist on type '{}'.
+server/add-tracks-4-8.ts(72,25): error TS7006: Parameter 'chapters' implicitly has an 'any' type.
+server/add-tracks-4-8.ts(72,37): error TS7031: Binding element 'and' implicitly has an 'any' type.
+server/add-tracks-4-8.ts(72,42): error TS7031: Binding element 'eq' implicitly has an 'any' type.
+server/modules/batch-cohort/service.ts(15,5): error TS2322: Type '{ track: { id: number; title: string; name: string; order: number; } | null; primaryInstructor: { id: any; firstName: any; lastName: any; email: any; } | null; coInstructors: ({ id: number; instructorId: string; role: string; firstName: any; lastName: any; email: any; } | { ...; })[]; } | null' is not assignable to type 'BatchDetail | null'.
+  Type '{ track: { id: number; title: string; name: string; order: number; } | null; primaryInstructor: { id: any; firstName: any; lastName: any; email: any; } | null; coInstructors: ({ id: number; instructorId: string; role: string; firstName: any; lastName: any; email: any; } | { ...; })[]; }' is missing the following properties from type 'BatchDetail': id, batchCode, batchName, trackId, and 5 more.
+server/modules/batch-cohort/storage.ts(9,15): error TS2345: Argument of type '{ studentCount: SQL<number>; _: { readonly brand: "Table"; readonly config: { name: "batches"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "batches"; dataType: "number"; columnType: "PgSerial"; ... 10 more ...; generated: undefined; }, {}, {}>; ... 8 more ...; createdBy: PgColumn<...>; }; dia...' is not assignable to parameter of type 'SelectedFields'.
+  Property '_' is incompatible with index signature.
+    Type '{ readonly brand: "Table"; readonly config: { name: "batches"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "batches"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; ... 8 more ...; generated: undefined; }, {}, {}>; ... 8 more ...; createdBy: PgColumn<...>; }; d...' is not assignable to type 'SQL<unknown> | Aliased<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | PgTable<TableConfig> | SelectedFieldsFlat<...>'.
+      Type '{ readonly brand: "Table"; readonly config: { name: "batches"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "batches"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; ... 8 more ...; generated: undefined; }, {}, {}>; ... 8 more ...; createdBy: PgColumn<...>; }; d...' is not assignable to type 'SelectedFieldsFlat<PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}>>'.
+        Property 'brand' is incompatible with index signature.
+          Type 'string' is not assignable to type 'SQL<unknown> | Aliased<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}>'.
+server/modules/batch-cohort/storage.ts(40,15): error TS2345: Argument of type '{ studentCount: SQL<number>; primaryInstructorFirstName: any; primaryInstructorLastName: any; trackName: PgColumn<{ name: "title"; tableName: "tracks"; dataType: "string"; columnType: "PgText"; ... 10 more ...; generated: undefined; }, {}, {}>; ... 16 more ...; enableRLS: () => Omit<...>; }' is not assignable to parameter of type 'SelectedFields'.
+  Property '_' is incompatible with index signature.
+    Type '{ readonly brand: "Table"; readonly config: { name: "batches"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "batches"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; ... 8 more ...; generated: undefined; }, {}, {}>; ... 8 more ...; createdBy: PgColumn<...>; }; d...' is not assignable to type 'SQL<unknown> | Aliased<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | PgTable<TableConfig> | SelectedFieldsFlat<...>'.
+      Type '{ readonly brand: "Table"; readonly config: { name: "batches"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "batches"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; ... 8 more ...; generated: undefined; }, {}, {}>; ... 8 more ...; createdBy: PgColumn<...>; }; d...' is not assignable to type 'SelectedFieldsFlat<PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}>>'.
+        Property 'brand' is incompatible with index signature.
+          Type 'string' is not assignable to type 'SQL<unknown> | Aliased<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}>'.
+server/modules/batch-cohort/storage.ts(66,18): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(left: PgColumn<{ name: "batch_id"; tableName: "batch_co_instructors"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: true; hasDefault: false; isPrimaryKey: false; ... 5 more ...; generated: undefined; }, {}, {}>, right: number | SQLWrapper): SQL<...>', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'number | SQLWrapper'.
+  Overload 2 of 3, '(left: Aliased<unknown>, right: unknown): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "batch_id"; tableName: "batch_co_instructors"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: true; hasDefault: false; isPrimaryKey: false; ... 5 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'Aliased<unknown>'.
+      Type 'PgColumn<{ name: "batch_id"; tableName: "batch_co_instructors"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: true; hasDefault: false; isPrimaryKey: false; ... 5 more ...; generated: undefined; }, {}, {}>' is missing the following properties from type 'Aliased<unknown>': sql, fieldAlias
+  Overload 3 of 3, '(left: never, right: unknown): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "batch_id"; tableName: "batch_co_instructors"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: true; hasDefault: false; isPrimaryKey: false; ... 5 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'never'.
+server/modules/batch-cohort/storage.ts(91,15): error TS2345: Argument of type '{ studentCount: SQL<number>; _: { readonly brand: "Table"; readonly config: { name: "batches"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "batches"; dataType: "number"; columnType: "PgSerial"; ... 10 more ...; generated: undefined; }, {}, {}>; ... 8 more ...; createdBy: PgColumn<...>; }; dia...' is not assignable to parameter of type 'SelectedFields'.
+  Property '_' is incompatible with index signature.
+    Type '{ readonly brand: "Table"; readonly config: { name: "batches"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "batches"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; ... 8 more ...; generated: undefined; }, {}, {}>; ... 8 more ...; createdBy: PgColumn<...>; }; d...' is not assignable to type 'SQL<unknown> | Aliased<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | PgTable<TableConfig> | SelectedFieldsFlat<...>'.
+      Type '{ readonly brand: "Table"; readonly config: { name: "batches"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "batches"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; ... 8 more ...; generated: undefined; }, {}, {}>; ... 8 more ...; createdBy: PgColumn<...>; }; d...' is not assignable to type 'SelectedFieldsFlat<PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}>>'.
+        Property 'brand' is incompatible with index signature.
+          Type 'string' is not assignable to type 'SQL<unknown> | Aliased<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}>'.
+server/modules/batch-cohort/storage.ts(107,16): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(left: PgColumn<{ name: "id"; tableName: "tracks"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>, right: number | SQLWrapper): SQL<...>', gave the following error.
+    Argument of type '{}' is not assignable to parameter of type 'number | SQLWrapper'.
+  Overload 2 of 3, '(left: Aliased<{}>, right: {} | SQLWrapper): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "id"; tableName: "tracks"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'Aliased<{}>'.
+      Type 'PgColumn<{ name: "id"; tableName: "tracks"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is missing the following properties from type 'Aliased<{}>': sql, fieldAlias
+  Overload 3 of 3, '(left: never, right: unknown): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "id"; tableName: "tracks"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'never'.
+server/modules/batch-cohort/storage.ts(305,40): error TS2551: Property 'primaryInstructorId' does not exist on type '{ track: { id: number; title: string; name: string; order: number; } | null; primaryInstructor: { id: any; firstName: any; lastName: any; email: any; } | null; coInstructors: ({ id: number; instructorId: string; role: string; firstName: any; lastName: any; email: any; } | { ...; })[]; }'. Did you mean 'primaryInstructor'?
+server/modules/batch-cohort/storage.ts(401,25): error TS2802: Type 'Set<string>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+server/modules/batch-cohort/storage.ts(468,30): error TS2339: Property 'batchName' does not exist on type '{ track: { id: number; title: string; name: string; order: number; } | null; primaryInstructor: { id: any; firstName: any; lastName: any; email: any; } | null; coInstructors: ({ id: number; instructorId: string; role: string; firstName: any; lastName: any; email: any; } | { ...; })[]; }'.
+server/modules/batch-cohort/storage.ts(469,28): error TS2551: Property 'trackId' does not exist on type '{ track: { id: number; title: string; name: string; order: number; } | null; primaryInstructor: { id: any; firstName: any; lastName: any; email: any; } | null; coInstructors: ({ id: number; instructorId: string; role: string; firstName: any; lastName: any; email: any; } | { ...; })[]; }'. Did you mean 'track'?
+server/modules/batch-cohort/storage.ts(530,28): error TS2339: Property 'batchName' does not exist on type '{ track: { id: number; title: string; name: string; order: number; } | null; primaryInstructor: { id: any; firstName: any; lastName: any; email: any; } | null; coInstructors: ({ id: number; instructorId: string; role: string; firstName: any; lastName: any; email: any; } | { ...; })[]; }'.
+server/modules/batch-cohort/storage.ts(531,26): error TS2551: Property 'trackId' does not exist on type '{ track: { id: number; title: string; name: string; order: number; } | null; primaryInstructor: { id: any; firstName: any; lastName: any; email: any; } | null; coInstructors: ({ id: number; instructorId: string; role: string; firstName: any; lastName: any; email: any; } | { ...; })[]; }'. Did you mean 'track'?
+server/modules/learning-delivery/service.ts(178,36): error TS2339: Property 'users' does not exist on type '{}'.
+server/modules/learning-delivery/service.ts(179,15): error TS7006: Parameter 'u' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(179,20): error TS7031: Binding element 'eq' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(240,38): error TS2339: Property 'tracks' does not exist on type '{}'.
+server/modules/learning-delivery/service.ts(241,17): error TS7006: Parameter 't' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(258,22): error TS7006: Parameter 'track' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(269,10): error TS7006: Parameter 'track' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(296,34): error TS2339: Property 'tracks' does not exist on type '{}'.
+server/modules/learning-delivery/service.ts(297,15): error TS7006: Parameter 't' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(297,20): error TS7031: Binding element 'eq' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(303,40): error TS2339: Property 'chapters' does not exist on type '{}'.
+server/modules/learning-delivery/service.ts(304,15): error TS7006: Parameter 'c' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(304,20): error TS7031: Binding element 'eq' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(305,17): error TS7006: Parameter 'c' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(309,41): error TS7006: Parameter 'ch' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(313,39): error TS2339: Property 'studentProgress' does not exist on type '{}'.
+server/modules/learning-delivery/service.ts(314,17): error TS7006: Parameter 'sp' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(314,23): error TS7031: Binding element 'eq' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(314,27): error TS7031: Binding element 'and' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(314,32): error TS7031: Binding element 'inArray' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(322,25): error TS7006: Parameter 'p' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(343,41): error TS2339: Property 'users' does not exist on type '{}'.
+server/modules/learning-delivery/service.ts(344,17): error TS7006: Parameter 'u' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(344,22): error TS7031: Binding element 'inArray' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(346,27): error TS7006: Parameter 'user' implicitly has an 'any' type.
+server/modules/learning-delivery/service.ts(358,34): error TS7006: Parameter 'ch' implicitly has an 'any' type.
+server/modules/learning-delivery/storage.ts(41,5): error TS2322: Type '{ id: number; studentId: string; chapterId: number; batchId: number | null; proficiencyLevel: ProficiencyLevel; lastAccessed: Date | null; lastEvaluatedAt: Date | null; ... 6 more ...; batchName: undefined; }[]' is not assignable to type 'StudentProgressDTO[]'.
+  Type '{ id: number; studentId: string; chapterId: number; batchId: number | null; proficiencyLevel: ProficiencyLevel; lastAccessed: Date | null; lastEvaluatedAt: Date | null; ... 6 more ...; batchName: undefined; }' is not assignable to type 'StudentProgressDTO'.
+    Types of property 'createdAt' are incompatible.
+      Type 'Date | null' is not assignable to type 'Date'.
+        Type 'null' is not assignable to type 'Date'.
+server/modules/learning-delivery/storage.ts(127,33): error TS2339: Property 'chapterNumber' does not exist on type 'PgTableWithColumns<{ name: "chapters"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "chapters"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; notNull: true; hasDefault: true; ... 6 more ...; generated: undefined; }, {}, {}>; ... 9 more ...; updatedAt: PgColumn<...'.
+server/modules/learning-delivery/storage.ts(129,27): error TS2339: Property 'name' does not exist on type 'PgTableWithColumns<{ name: "tracks"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "tracks"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; notNull: true; hasDefault: true; ... 6 more ...; generated: undefined; }, {}, {}>; ... 5 more ...; updatedAt: PgColumn<...>...'.
+server/modules/learning-delivery/storage.ts(218,36): error TS2339: Property 'users' does not exist on type '{}'.
+server/modules/learning-delivery/storage.ts(219,15): error TS7006: Parameter 'u' implicitly has an 'any' type.
+server/modules/learning-delivery/storage.ts(219,20): error TS7031: Binding element 'eq' implicitly has an 'any' type.
+server/modules/system-admin/storage.ts(168,25): error TS2339: Property 'status' does not exist on type 'PgTableWithColumns<{ name: "batches"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "batches"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; notNull: true; hasDefault: true; ... 6 more ...; generated: undefined; }, {}, {}>; ... 8 more ...; createdBy: PgColumn<.....'.
+shared/types.ts(21,18): error TS2430: Interface 'TrackWithChapters' incorrectly extends interface 'Omit<{ id: number; title: string; description: string; order: number; createdBy: string; createdAt: Date | null; updatedAt: Date | null; }, "createdBy">'.
+  Types of property 'createdAt' are incompatible.
+    Type 'Date | null | undefined' is not assignable to type 'Date | null'.
+      Type 'undefined' is not assignable to type 'Date | null'.
+shared/types.ts(37,18): error TS2430: Interface 'ChapterWithMetadata' incorrectly extends interface 'Omit<{ id: number; title: string; order: number; createdBy: string; createdAt: Date | null; updatedAt: Date | null; trackId: number; status: string; content: { te?: string | undefined; hi?: string | undefined; en?: string | undefined; }; publishedAt: Date | null; lastEditedBy: string | null; }, "publishedAt">'.
+  Types of property 'lastEditedBy' are incompatible.
+    Type 'string | null | undefined' is not assignable to type 'string | null'.
+      Type 'undefined' is not assignable to type 'string | null'.

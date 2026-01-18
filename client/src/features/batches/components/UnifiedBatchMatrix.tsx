@@ -132,20 +132,12 @@ export function UnifiedBatchMatrix({
       // Set loading state for this specific cell
       setUpdatingCell({ studentId: selectedCell.studentId, chapterId: selectedCell.chapterId });
 
-      console.log('🔵 handleUpdateProficiency called:', {
-        studentId: selectedCell.studentId,
-        chapterId: selectedCell.chapterId,
-        newLevel: level,
-      });
-
       await onUpdateProficiency(selectedCell.studentId, selectedCell.chapterId, level);
 
-      console.log('🟢 Update succeeded, closing modal');
       toast({ title: 'Proficiency updated' });
       setModalOpen(false);
       setSelectedCell(null);
     } catch (error: any) {
-      console.log('🔴 Update failed:', error.message);
       toast({
         title: 'Failed to update proficiency',
         description: error?.message || 'An error occurred',

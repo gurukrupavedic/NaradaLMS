@@ -86,7 +86,6 @@ export function updateImageAttributes(
 export function removeImage(editor: Editor | null): boolean {
   if (!editor || !editor.isEditable) return false;
   if (!isImageActive(editor)) return false;
-  console.log(123);
 
   return editor.chain().focus().removeImage().run();
 }

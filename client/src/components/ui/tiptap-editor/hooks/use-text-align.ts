@@ -39,12 +39,6 @@ export function useTextAlign(alignment: TextAlignType) {
     editor,
     selector({ editor }) {
       const canAlign = canSetTextAlign(editor, alignment);
-      console.log(`useTextAlign(${alignment}): canAlign=${canAlign}`, {
-        isEditable: editor.isEditable,
-        selection: editor.state.selection,
-        nodeType: editor.state.selection.$from.parent.type.name,
-        canSetLeft: editor.can().setTextAlign('left'),
-      });
       return {
         isActive: isTextAlignActive(editor, alignment),
         canAlign,
