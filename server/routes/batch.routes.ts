@@ -4,6 +4,9 @@ import { authMiddleware, requireInstructor } from "../shared/middleware/auth";
 
 const router = Router();
 
+// Protect all batch routes - authentication required
+router.use(authMiddleware);
+
 interface ApiErrorResponse {
   error: {
     message: string;
@@ -31,7 +34,7 @@ function createErrorResponse(message: string, code?: string, details?: any): Api
 }
 
 // GET /api/batches - List batches with pagination (admins and instructors can view all)
-router.get('/batches', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/batches', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
     const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
@@ -45,7 +48,7 @@ router.get('/batches', authMiddleware, async (req: Request, res: Response, next:
 });
 
 // GET /api/batches/my-batches - List batches for current instructor (must come BEFORE :id route)
-router.get('/batches/my-batches', authMiddleware, requireInstructor, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/batches/my-batches', requireInstructor, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user as any;
     const instructorId = user?.id;
@@ -66,7 +69,7 @@ router.get('/batches/my-batches', authMiddleware, requireInstructor, async (req:
 });
 
 // GET /api/batches/my-students - List all students from instructor's batches (must come BEFORE :id route)
-router.get('/batches/my-students', authMiddleware, requireInstructor, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/batches/my-students', requireInstructor, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user as any;
     const instructorId = user?.id;

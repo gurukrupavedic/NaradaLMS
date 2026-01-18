@@ -1,7 +1,11 @@
 import { Router, Request, Response } from "express";
 import { learningService } from "../modules/learning-delivery";
+import { authMiddleware } from "../shared/middleware/auth";
 
 const router = Router();
+
+// Protect all student routes - authentication required
+router.use(authMiddleware);
 
 /**
  * GET /api/students/:studentId/progress
@@ -23,7 +27,7 @@ router.get('/students/:studentId/progress', async (req: Request, res: Response) 
 
     const studentId = req.params.studentId;
     const studentDetails = await learningService.getStudentDetails(user.id, studentId, isInstructorOrAdmin);
-    
+
     if (!studentDetails) {
       return res.status(404).json({ error: 'Student not found or you do not have access' });
     }
