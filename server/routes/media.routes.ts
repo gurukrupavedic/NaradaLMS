@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { mediaService } from '../modules/media-pipeline';
+import { authMiddleware, requireContentManager } from '../shared/middleware/auth';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -7,6 +8,9 @@ import { parseFile } from 'music-metadata';
 import { FILE_UPLOAD } from '../../shared/constants';
 
 const router = Router();
+
+// Protect all media routes - authentication required
+router.use(authMiddleware);
 
 // Error response interface
 interface ApiErrorResponse {
@@ -60,7 +64,7 @@ router.get('/audio-files/:chapterId', async (req: Request, res: Response, next: 
   } catch (error) { next(error); }
 });
 
-router.post('/audio-files/:chapterId/upload', upload.single('audio'), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/audio-files/:chapterId/upload', requireContentManager, upload.single('audio'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.file) {
       return res.status(400).json(createErrorResponse('No audio file provided', 'NO_FILE_PROVIDED'));
@@ -71,7 +75,7 @@ router.post('/audio-files/:chapterId/upload', upload.single('audio'), async (req
     try {
       const meta = await parseFile(req.file.path);
       duration = meta.format.duration || 0;
-    } catch {}
+    } catch { }
 
     const created = await mediaService.uploadAudioFile({
       chapterId,
@@ -80,13 +84,13 @@ router.post('/audio-files/:chapterId/upload', upload.single('audio'), async (req
       fileSize: req.file.size,
       duration: Math.round(duration),
       mimeType: req.file.mimetype,
-      uploadedBy: 'system',
+      uploadedBy: (req as any).user.id,
     });
     res.json(created);
   } catch (error) { next(error); }
 });
 
-router.patch('/audio-files/:audioFileId', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/audio-files/:audioFileId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.audioFileId);
     const file = await mediaService.updateAudioFile(id, req.body);
@@ -94,7 +98,7 @@ router.patch('/audio-files/:audioFileId', async (req: Request, res: Response, ne
   } catch (error) { next(error); }
 });
 
-router.delete('/audio-files/:audioFileId', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/audio-files/:audioFileId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.audioFileId);
     await mediaService.deleteAudioFile(id);
@@ -113,7 +117,7 @@ router.get('/media-segments/:audioFileId', async (req: Request, res: Response, n
   } catch (error) { next(error); }
 });
 
-router.post('/media-segments/bulk', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/media-segments/bulk', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { segments } = req.body;
     if (!Array.isArray(segments)) {
@@ -126,7 +130,7 @@ router.post('/media-segments/bulk', async (req: Request, res: Response, next: Ne
         startTimestamp: s.startTime,
         endTimestamp: s.endTime,
         segmentName: s.name,
-        createdBy: 'system',
+        createdBy: (req as any).user.id,
       });
       created.push(seg);
     }
@@ -134,20 +138,20 @@ router.post('/media-segments/bulk', async (req: Request, res: Response, next: Ne
   } catch (error) { next(error); }
 });
 
-router.post('/media-segments', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/media-segments', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const seg = await mediaService.createMediaSegment({
       audioFileId: req.body.audioFileId,
       startTimestamp: req.body.startTimestamp,
       endTimestamp: req.body.endTimestamp,
       segmentName: req.body.segmentName,
-      createdBy: req.body.createdBy || 'system',
+      createdBy: (req as any).user.id,
     });
     res.json(seg);
   } catch (error) { next(error); }
 });
 
-router.patch('/media-segments/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/media-segments/:id', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.id);
     const seg = await mediaService.updateMediaSegment(id, req.body);
@@ -155,7 +159,7 @@ router.patch('/media-segments/:id', async (req: Request, res: Response, next: Ne
   } catch (error) { next(error); }
 });
 
-router.delete('/media-segments/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/media-segments/:id', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.id);
     await mediaService.deleteMediaSegment(id);
@@ -198,7 +202,7 @@ router.get('/mappings/audio/:audioFileId/count', async (req: Request, res: Respo
   } catch (error) { next(error); }
 });
 
-router.post('/mappings', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/mappings', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { audioFileId, textSegmentId, startTime, endTime } = req.body;
     const mapping = await mediaService.createMapping({
@@ -206,13 +210,13 @@ router.post('/mappings', async (req: Request, res: Response, next: NextFunction)
       textSegmentId,
       startTime,
       endTime,
-      createdBy: 'system',
+      createdBy: (req as any).user.id,
     });
     res.json(mapping);
   } catch (error) { next(error); }
 });
 
-router.delete('/mappings/:audioFileId/:segmentId', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/mappings/:audioFileId/:segmentId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const audioFileId = parseInt(req.params.audioFileId);
     const segmentId = parseInt(req.params.segmentId);

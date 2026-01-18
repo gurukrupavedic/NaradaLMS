@@ -2,6 +2,18 @@ import { db } from "../../server/db";
 import { users, batches, batchCoInstructors } from "@shared/schema";
 import { eq, or, inArray } from "drizzle-orm";
 
+/**
+ * Utility to visualize instructor batch assignments
+ * 
+ * Usage: npx tsx scripts/utils/check-instructor-batches.ts
+ * 
+ * Displays:
+ * - Details of the hardcoded 'kashyap.kuchipudi@gmail.com' user
+ * - List of batches where user is Primary Instructor
+ * - List of batches where user is Co-Instructor
+ * - Total unique batch count
+ */
+
 async function checkInstructorBatches() {
   try {
     // Find the Kashyap user
