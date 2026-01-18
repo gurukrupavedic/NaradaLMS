@@ -81,7 +81,7 @@ export function SelectableTextPanel({
             const offset = 8;
 
             let top = rect.top - toolbarHeight - offset;
-            let left = rect.left + (rect.width / 2);
+            const left = rect.left + (rect.width / 2);
 
             if (top < 0) {
                 top = rect.bottom + offset;

@@ -27,14 +27,7 @@ import {
   PerformanceMetric,
   MetricType,
   MonitoringConfig,
-  PerformanceReport,
-  ComponentLoadMetric,
-  RouteChangeMetric,
-  UserInteractionMetric,
-  DatabaseMetric,
-  AudioMetric,
-  ApiMetric,
-  SystemMetric
+  PerformanceReport
 } from './types';
 
 class PerformanceMonitor {

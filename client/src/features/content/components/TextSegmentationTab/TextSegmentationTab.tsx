@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useChapterEditor } from '../../context/ChapterEditorContext';
 import { useContentEditor } from '../../hooks/useContentEditor';
 import { useTextSegmentationEditor } from '../../hooks/useTextSegmentationEditor';
@@ -11,7 +10,7 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from '@/components/ui/resizable';
-import { PencilLine, Slice, FileText, StretchHorizontal, RotateCcw } from 'lucide-react';
+import { FileText, StretchHorizontal, RotateCcw } from 'lucide-react';
 import { TiptapEditor } from '@/components/ui/tiptap-editor';
 
 import { SelectableTextPanel } from './SelectableTextPanel';
@@ -49,8 +48,6 @@ interface TextSegmentationTabProps {
 }
 
 export function TextSegmentationTab({ mode }: TextSegmentationTabProps) {
-    const { isPublished } = useChapterEditor();
-
     return (
         mode === 'editor' ? (
             <EditorMode />
@@ -85,7 +82,6 @@ function EditorMode() {
                     onScriptChange={setContentScript}
                     autoSaveStatus={saveStatus}
                     className="h-full"
-                    maxHeight="100%"
                     minHeight="100%"
                 />
             </div>

@@ -1,11 +1,8 @@
 import React from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/features/shared/hooks/useAuth";
-
 export function PendingApproval() {
   const [, navigate] = useLocation();
-  const { logout } = useAuth() as any;
 
   const handleLogout = async () => {
     try {

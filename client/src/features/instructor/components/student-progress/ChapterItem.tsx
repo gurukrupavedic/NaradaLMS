@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import { Info } from 'lucide-react';
 
+import { ProficiencyLevel } from '@shared/constants';
 import {
   Tooltip,
   TooltipContent,

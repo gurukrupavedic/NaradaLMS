@@ -8,7 +8,6 @@
  */
 
 import type { TextSegment, AudioMapping, Script, ContentMap } from '../types/text-segmentation';
-import { isContentEntry } from '../types/text-segmentation';
 
 /**
  * Extracts text content for a segment in the specified script
@@ -27,17 +26,17 @@ export const getSegmentText = (
   maxLength: number = 50
 ): string => {
   const text = getDisplayText(content, script);
-  
+
   if (!text) {
     return `Segment ${segment.order}`;
   }
-  
+
   const segmentText = text.slice(segment.startPosition, segment.endPosition);
-  
+
   if (truncate && segmentText.length > maxLength) {
     return segmentText.slice(0, maxLength) + '...';
   }
-  
+
   return segmentText;
 };
 
@@ -77,32 +76,32 @@ export const getSegmentsAtPosition = (
  * @returns Formatted time string (e.g., "1:23", "0:05.2", "1:02:30")
  */
 export const formatDuration = (
-  seconds: number, 
+  seconds: number,
   options: {
     showDecimal?: boolean;
-    showHours?: boolean; 
+    showHours?: boolean;
     padMinutes?: boolean;
   } = {}
 ): string => {
-  const { showDecimal = false, showHours = false, padMinutes = true } = options;
-  
+  const { showDecimal = false, showHours = false } = options;
+
   const totalSeconds = Math.max(0, seconds);
   const hours = Math.floor(totalSeconds / 3600);
   const mins = Math.floor((totalSeconds % 3600) / 60);
   const secsValue = totalSeconds % 60;
-  
+
   if (showHours || hours > 0) {
     const paddedMins = mins.toString().padStart(2, '0');
-    const secsStr = showDecimal 
+    const secsStr = showDecimal
       ? secsValue.toFixed(1)
       : Math.floor(secsValue).toString();
     const paddedSecs = secsStr.padStart(showDecimal ? 4 : 2, '0');
     return `${hours}:${paddedMins}:${paddedSecs}`;
   }
-  
+
   const formattedMins = mins.toString();
-  const secsStr = showDecimal 
-    ? secsValue.toFixed(1) 
+  const secsStr = showDecimal
+    ? secsValue.toFixed(1)
     : Math.floor(secsValue).toString();
   const paddedSecs = secsStr.padStart(showDecimal ? 4 : 2, '0');
   return `${formattedMins}:${paddedSecs}`;
@@ -124,7 +123,7 @@ export const normalizeLineBreaks = (text: string): string => {
  */
 export const htmlToPlainText = (htmlContent: string): string => {
   if (!htmlContent) return '';
-  
+
   return htmlContent
     .replace(/<h[1-6][^>]*>/gi, '')
     .replace(/<\/h[1-6]>/gi, '\n\n')
@@ -161,21 +160,21 @@ const isContentEntryLocal = (content: any): content is { display: string; segmen
  */
 export const getDisplayText = (content: ContentMap, script: Script): string => {
   const entry = content[script];
-  
+
   if (!entry) {
     return '';
   }
-  
+
   // Handle new structured format
   if (isContentEntryLocal(entry)) {
     return normalizeLineBreaks(entry.display);
   }
-  
+
   // Handle legacy string format
   if (typeof entry === 'string') {
     return normalizeLineBreaks(htmlToPlainText(entry));
   }
-  
+
   return '';
 };
 
@@ -187,21 +186,21 @@ export const getDisplayText = (content: ContentMap, script: Script): string => {
  */
 export const getSegmentationText = (content: ContentMap, script: Script): string => {
   const entry = content[script];
-  
+
   if (!entry) {
     return '';
   }
-  
+
   // Handle new structured format
   if (isContentEntryLocal(entry)) {
     return normalizeLineBreaks(entry.segmentation);
   }
-  
+
   // Handle legacy string format - use display text as fallback
   if (typeof entry === 'string') {
     return normalizeLineBreaks(entry);
   }
-  
+
   return '';
 };
 
@@ -218,13 +217,13 @@ export const segmentsOverlap = (
   language?: Script
 ): boolean => {
   const languagesToCheck = language ? [language] : (['te', 'hi', 'en'] as Script[]);
-  
+
   return languagesToCheck.some(lang => {
     const range1 = segment1.textReferences?.[lang];
     const range2 = segment2.textReferences?.[lang];
-    
+
     if (!range1 || !range2) return false;
-    
+
     return !(range1.end <= range2.start || range2.end <= range1.start);
   });
 };
@@ -242,9 +241,9 @@ export const isValidTextRange = (
   language: Script
 ): boolean => {
   const text = getDisplayText(content, language);
-  return range.start >= 0 && 
-         range.end <= text.length && 
-         range.start <= range.end;
+  return range.start >= 0 &&
+    range.end <= text.length &&
+    range.start <= range.end;
 };
 
 /**

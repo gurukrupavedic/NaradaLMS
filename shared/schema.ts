@@ -7,9 +7,7 @@ import {
   index,
   serial,
   integer,
-  boolean,
   real,
-  primaryKey,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";

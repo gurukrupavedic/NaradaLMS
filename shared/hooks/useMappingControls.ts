@@ -33,13 +33,11 @@ export const useMappingControls = ({
   sessionStartTime,
   segments,
   mappings,
-  selectedAudioFileId,
   onMappingCreate,
   onMappingDelete,
   onSessionChange,
   onActiveSegmentChange,
   onSessionStartTimeChange,
-  onSessionStartRequest
 }: MappingControlsProps) => {
 
   // Define handleSegmentEnd first (no dependencies on other local functions)

@@ -148,13 +148,18 @@ export function LearnChapterPage() {
   useEffect(() => {
     if (audioFiles.length > 0 && !selectedAudioFileId) {
       setSelectedAudioFileId(audioFiles[0].id);
-      previewAudioRef.current.src = `/uploads/${audioFiles[0].filename}`;
+      if (previewAudioRef.current) {
+        previewAudioRef.current.src = `/uploads/${audioFiles[0].filename}`;
+      }
     }
   }, [audioFiles, selectedAudioFileId]);
 
   // Audio event listeners
   useEffect(() => {
     const audio = previewAudioRef.current;
+
+    if (!audio) return;
+
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
     const handleLoadedMetadata = () => setDuration(audio.duration);
     const handleEnded = () => setIsPlaying(false);

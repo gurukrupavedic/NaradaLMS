@@ -115,7 +115,7 @@ export function TimestampControl({
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isEditing]);
+    }, [isEditing, onEditCancel]);
 
 
     // --- Render ---

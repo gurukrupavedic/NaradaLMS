@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Trash2, FileText, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSortable } from '@dnd-kit/sortable';
@@ -70,7 +70,7 @@ function SortableSegmentItem({
         <div
             ref={setNodeRef}
             style={style}
-            id={`segment-${segment.id}`}
+            id={`segment - ${segment.id} `}
             onClick={() => onSelect?.(segment.id)}
             className={cn(
                 "group pt-1.5 pb-0 px-2 border rounded-lg transition-colors cursor-pointer relative",
@@ -159,7 +159,7 @@ export function SegmentList(props: SegmentListProps) {
     // Auto-scroll to selected segment
     useEffect(() => {
         if (selectedSegmentId) {
-            const element = document.getElementById(`segment-${selectedSegmentId}`);
+            const element = document.getElementById(`segment - ${selectedSegmentId} `);
             if (element) {
                 element.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }

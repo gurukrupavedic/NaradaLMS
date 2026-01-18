@@ -1,8 +1,8 @@
-// @ts-nocheck
+// @ts-check
 import 'dotenv/config';
 import { db } from './db';
 import { users, tracks, chapters } from '../shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, or, and } from 'drizzle-orm';
 import newTracksData from './seeds/tracks-4-8.json';
 
 /**
@@ -14,15 +14,20 @@ async function addNewTracks() {
 
     try {
         // 1. Ensure system user exists
-        const systemUser = await db.query.users.findFirst({
-            where: (u, { eq }) => eq(u.id, "system")
-        });
+        const [systemUser] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, "system"))
+            .limit(1);
 
         if (!systemUser) {
             console.log('Creating system user...');
             await db.insert(users).values({
                 id: "system",
                 email: "system@vediclms.local",
+                firstName: "System",
+                lastName: "Admin",
+                passwordHash: "system_placeholder_hash",
                 roles: ["admin"],
                 status: "active",
                 createdAt: new Date(),
@@ -32,13 +37,18 @@ async function addNewTracks() {
 
         // 2. Insert tracks
         console.log(`Processing ${newTracksData.tracks.length} tracks...`);
-        const insertedTracks: any[] = [];
+        const insertedTracks: typeof tracks.$inferSelect[] = [];
 
         for (const trackData of newTracksData.tracks) {
             // Check if track exists by order or title
-            const existingTrack = await db.query.tracks.findFirst({
-                where: (tracks: any, { or, eq }: any) => or(eq(tracks.order, trackData.order), eq(tracks.title, trackData.title))
-            });
+            const [existingTrack] = await db
+                .select()
+                .from(tracks)
+                .where(or(
+                    eq(tracks.order, trackData.order),
+                    eq(tracks.title, trackData.title)
+                ))
+                .limit(1);
 
             if (existingTrack) {
                 console.log(`- Skipped existing track: ${trackData.title} (Order: ${trackData.order})`);
@@ -62,19 +72,21 @@ async function addNewTracks() {
 
         for (const chapterData of newTracksData.chapters) {
             // Find the track by its order number
-            const track = insertedTracks.find(t => t.order === chapterData.trackOrder);
+            const track = insertedTracks.find((t) => t.order === chapterData.trackOrder);
             if (!track) {
                 console.error(`! Warning: Track with order ${chapterData.trackOrder} not found for chapter "${chapterData.title}"`);
                 continue;
             }
 
             // Check if chapter exists in this track with same order or title
-            const existingChapter = await db.query.chapters.findFirst({
-                where: (chapters: any, { and, eq }: any) => and(
+            const [existingChapter] = await db
+                .select()
+                .from(chapters)
+                .where(and(
                     eq(chapters.trackId, track.id),
                     eq(chapters.order, chapterData.order)
-                )
-            });
+                ))
+                .limit(1);
 
             if (existingChapter) {
                 skippedChaptersCount++;

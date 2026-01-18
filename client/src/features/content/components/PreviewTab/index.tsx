@@ -35,7 +35,7 @@ interface AudioTextMapping {
 }
 
 export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }: PreviewTabProps) {
-    const { chapter, chapterId, isPublished } = useChapterEditor();
+    const { chapter, chapterId } = useChapterEditor();
     const { playSegment, setAudioSource } = useAudioPlayer();
 
     const [contentScript, setContentScript] = useState<'te' | 'hi' | 'en'>('te');
