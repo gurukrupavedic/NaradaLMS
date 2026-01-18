@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/design-system/Card";
-import { Button } from "@/components/design-system/Button";
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { BookOpen, Edit, Users, Layers } from "lucide-react";
 import type { User } from "@shared/schema";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -23,7 +23,7 @@ const FEATURES: FeatureCard[] = [
     color: "blue"
   },
   {
-    title: "Manage Content", 
+    title: "Manage Content",
     description: "Create and edit learning content",
     icon: Edit,
     route: "/manage",
@@ -81,22 +81,22 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
               <h1 className="text-2xl font-bold text-gray-900">Vedic Learning Platform</h1>
               <p className="text-sm text-gray-600 mt-1">Welcome, {user.email}</p>
             </div>
-                        <div className="flex items-center gap-2">
-                          <ThemeToggle />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                await fetch("/api/auth/logout", {
-                  method: "POST",
-                  credentials: "include",
-                });
-                window.location.href = "/";
-              }}
-            >
-              Sign Out
-            </Button>
-                      </div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  await fetch("/api/auth/logout", {
+                    method: "POST",
+                    credentials: "include",
+                  });
+                  window.location.href = "/";
+                }}
+              >
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -108,7 +108,7 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
           {visibleFeatures.map((feature) => {
             const Icon = feature.icon;
             return (
-              <Card 
+              <Card
                 key={feature.title}
                 variant={feature.color as any}
                 interactive
@@ -124,7 +124,7 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button 
+                  <Button
                     className="w-full"
                     color={feature.color as any}
                     variant="outline"

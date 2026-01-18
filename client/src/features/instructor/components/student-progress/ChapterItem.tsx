@@ -40,8 +40,8 @@ export function ChapterItem({ chapter, onClick }: ChapterItemProps) {
     status = 'practicing';
   }
 
-  const colors = getCellColor(chapter.proficiencyLevel ?? 9, status);
-  const label = getProficiencyLabel(chapter.proficiencyLevel);
+  const colors = getCellColor((chapter.proficiencyLevel ?? 9) as ProficiencyLevel, status);
+  const label = getProficiencyLabel(chapter.proficiencyLevel as ProficiencyLevel | null);
 
   const hasInfo = Boolean(chapter.notes || chapter.lastEvaluatedAt);
 

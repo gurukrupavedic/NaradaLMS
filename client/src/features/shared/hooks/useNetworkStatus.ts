@@ -53,7 +53,7 @@ export function useNetworkStatus(): UseNetworkStatusReturn {
 
     try {
       const startTime = Date.now();
-      
+
       // Try to fetch a small resource to test connection
       const response = await fetch(CONNECTION_TEST_CONFIG.testUrl, {
         method: 'HEAD',
@@ -65,18 +65,18 @@ export function useNetworkStatus(): UseNetworkStatusReturn {
       const responseTime = Date.now() - startTime;
 
       if (!response.ok) return 'poor';
-      
+
       if (responseTime <= CONNECTION_TEST_CONFIG.goodThreshold) return 'good';
       if (responseTime <= CONNECTION_TEST_CONFIG.poorThreshold) return 'poor';
-      
+
       return 'poor';
     } catch (error) {
       clearTimeout(timeoutId);
-      
+
       if (error instanceof Error && error.name === 'AbortError') {
         return 'poor'; // Timeout indicates poor connection
       }
-      
+
       return 'offline';
     }
   }, []);
@@ -85,7 +85,7 @@ export function useNetworkStatus(): UseNetworkStatusReturn {
   const updateNetworkStatus = useCallback(async () => {
     const isOnline = navigator.onLine;
     const quality = await testConnectionQuality();
-    
+
     setStatus(prev => ({
       ...prev,
       isOnline,
@@ -102,7 +102,7 @@ export function useNetworkStatus(): UseNetworkStatusReturn {
       lastOnline: new Date(),
       retryCount: 0,
     }));
-    
+
     // Test connection quality after coming online
     if (qualityTestRef.current) {
       clearTimeout(qualityTestRef.current);
@@ -164,7 +164,7 @@ export function useNetworkStatus(): UseNetworkStatusReturn {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       clearInterval(qualityCheckInterval);
-      
+
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
@@ -187,7 +187,7 @@ export function useRequestRetry() {
   const [failedRequests, setFailedRequests] = useState<Set<string>>(new Set());
 
   const markRequestFailed = useCallback((requestId: string) => {
-    setFailedRequests(prev => new Set([...prev, requestId]));
+    setFailedRequests(prev => new Set(Array.from(prev).concat(requestId)));
   }, []);
 
   const markRequestSuccess = useCallback((requestId: string) => {
@@ -219,20 +219,20 @@ export function useRequestRetry() {
 // Utility hook for showing network status indicators
 export function useNetworkIndicator() {
   const networkStatus = useNetworkStatus();
-  
-  const shouldShowIndicator = 
-    !networkStatus.isOnline || 
+
+  const shouldShowIndicator =
+    !networkStatus.isOnline ||
     networkStatus.connectionQuality === 'poor' ||
     networkStatus.retryCount > 0;
 
-  const indicatorColor = 
+  const indicatorColor =
     !networkStatus.isOnline ? 'red' :
-    networkStatus.connectionQuality === 'poor' ? 'yellow' : 'green';
+      networkStatus.connectionQuality === 'poor' ? 'yellow' : 'green';
 
-  const indicatorText = 
+  const indicatorText =
     !networkStatus.isOnline ? 'Offline' :
-    networkStatus.connectionQuality === 'poor' ? 'Poor Connection' :
-    networkStatus.retryCount > 0 ? 'Reconnected' : 'Online';
+      networkStatus.connectionQuality === 'poor' ? 'Poor Connection' :
+        networkStatus.retryCount > 0 ? 'Reconnected' : 'Online';
 
   return {
     shouldShow: shouldShowIndicator,
