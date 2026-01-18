@@ -108,35 +108,35 @@ export default function SimpleDashboard({ user }: SimpleDashboardProps) {
           {visibleFeatures.map((feature) => {
             const Icon = feature.icon;
             return (
-              <Card
+              <div
                 key={feature.title}
-                variant={feature.color as any}
-                interactive
+                className="cursor-pointer transition-shadow hover:shadow-md"
                 onClick={() => handleFeatureClick(feature.route)}
               >
-                <CardHeader className="text-center">
-                  <div className="mx-auto mb-4">
-                    <Icon className={`h-12 w-12 ${iconColors[feature.color]}`} />
-                  </div>
-                  <CardTitle className="text-lg">{feature.title}</CardTitle>
-                  <CardDescription className="text-sm">
-                    {feature.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    className="w-full"
-                    color={feature.color as any}
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleFeatureClick(feature.route);
-                    }}
-                  >
-                    Get Started
-                  </Button>
-                </CardContent>
-              </Card>
+                <Card className="h-full">
+                  <CardHeader className="text-center">
+                    <div className="mx-auto mb-4">
+                      <Icon className={`h-12 w-12 ${iconColors[feature.color]}`} />
+                    </div>
+                    <CardTitle className="text-lg">{feature.title}</CardTitle>
+                    <CardDescription className="text-sm">
+                      {feature.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFeatureClick(feature.route);
+                      }}
+                    >
+                      Get Started
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             );
           })}
         </div>

@@ -136,7 +136,7 @@ export function getUserFriendlyMessage(error: ApiError, operation?: string): str
         : 'You do not have permission to perform this action.';
 
     case 'validation':
-      return error.details?.message || error.message || `Invalid input data${context}. Please check your inputs and try again.`;
+      return (error.details?.message as string) || error.message || `Invalid input data${context}. Please check your inputs and try again.`;
 
     case 'client':
       switch (error.status) {

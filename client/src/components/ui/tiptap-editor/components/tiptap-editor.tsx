@@ -162,7 +162,7 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
     // Update editor content when value changes externally
     useEffect(() => {
       if (editor && content !== editor.getHTML()) {
-        editor.commands.setContent(content as string, false);
+        editor.commands.setContent(content as string, { emitUpdate: false });
       }
     }, [content, editor]);
 
