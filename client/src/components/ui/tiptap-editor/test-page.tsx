@@ -1,5 +1,5 @@
 import { useState } from "react";
-import TiptapEditor from "./index";
+import { TiptapEditor } from "./index";
 
 export default function TiptapV3TestPage() {
     const [isDarkMode, setIsDarkMode] = useState(false);

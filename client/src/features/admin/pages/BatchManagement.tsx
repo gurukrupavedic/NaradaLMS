@@ -31,7 +31,7 @@ export default function BatchManagement() {
 
   const offset = (page - 1) * limit;
 
-  const { data, isLoading, error } = useBatches({ limit, offset });
+  const { data, isLoading, error, refetch } = useBatches({ limit, offset });
   const createBatch = useCreateBatch();
   const updateBatch = useUpdateBatch();
   const deleteBatch = useDeleteBatch();
