@@ -25,7 +25,7 @@ docs/
 
 | Document | Purpose |
 |----------|---------|
-| [product-guide.md](./essentials/product-guide.md) | **📖 PRODUCT BIBLE** - Single source of truth combining vision, features, implementation, and current state. |
+| [product-guide.md](./essentials/product-guide.md) | **Product Basics** - Single source of truth combining vision, features, implementation, and current state. |
 | [domain-requirements.md](./essentials/domain-requirements.md) | **Domain Requirements** - Real-world workflows, what's built, gaps. |
 | [project-structure.md](./essentials/project-structure.md) | **Project Structure** - Comprehensive guide to codebase organization and patterns. |
 | [module-contracts.md](./architecture/module-contracts.md) | **Module Contracts** - Domain boundaries, ownership, public APIs, and events. |
