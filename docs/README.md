@@ -1,6 +1,6 @@
-# Vedic Learning Management System - Documentation
+# NaradaLMS - Documentation
 
-This is the central documentation hub for the Vedic LMS project.
+This is the central documentation hub for the NaradaLMS project.
 
 ---
 
@@ -75,7 +75,7 @@ docs/
 
 **Date:** December 18, 2025
 
-VedicLMS completed a comprehensive modular refactoring initiative, transforming from a monolithic codebase (1253 lines in 2 files) into a domain-driven architecture with 6 independent modules:
+NaradaLMS completed a comprehensive modular refactoring initiative, transforming from a monolithic codebase (1253 lines in 2 files) into a domain-driven architecture with 6 independent modules:
 
 - ✅ Identity & Access
 - ✅ Content Publishing
@@ -94,6 +94,7 @@ VedicLMS completed a comprehensive modular refactoring initiative, transforming 
 
 | Date | Change |
 |------|--------|
+| Jan 19, 2026 | Rebranded to NaradaLMS; updated documentation structure |
 | Jan 13, 2026 | New UI architecture introduced (AppShell, role-based pages, dark mode) |
 | Jan 2026 | Chapter Content Page refinements (tab renaming, dark mode fixes, standardized read-only UX) |
 | Dec 18, 2025 | Archived modular refactoring docs (2025 initiative complete); updated structure |
@@ -120,4 +121,4 @@ VedicLMS completed a comprehensive modular refactoring initiative, transforming 
 
 ---
 
-**Last Updated:** January 13, 2026
+**Last Updated:** January 19, 2026

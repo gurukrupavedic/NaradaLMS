@@ -1,4 +1,4 @@
-# Architecture (why) and module contracts
+# Architecture and NaradaLMS Module Contracts
 
 **Why this shape (plain English):** We chose a modular monolith so everything stays in one deploy, but each domain has a clear boundary: one owner per table, thin public APIs between modules, and events for cross-module reactions. That keeps code changes safer now and lets us split services later without rewrites.
 

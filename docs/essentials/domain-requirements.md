@@ -1,4 +1,4 @@
-# Domain Requirements & Real-World Workflows
+# NaradaLMS Domain Requirements & Real-World Workflows
 
 **Purpose:** Living document capturing how Veda Pathasala operates today and how it maps to system implementation  
 **Audience:** Development team, future contributors, stakeholders  
@@ -6,7 +6,7 @@
 
 ---
 
-## Overview: Vedic Learning Model
+## Overview: NaradaLMS Learning Model
 
 ### Educational Structure
 - **8 Sequential Tracks** (self-paced, like semesters but flexible)
