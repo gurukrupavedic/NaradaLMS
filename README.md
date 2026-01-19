@@ -39,10 +39,34 @@ The project follows a **Modular Monolith** architecture with 6 domain modules:
 - **System Admin**: Audit logging and system settings.
 
 ## 🛠️ Tech Stack
-- **Frontend**: React, Vite, Tailwind CSS, shadcn/ui
-- **Backend**: Node.js, Express
-- **Database**: PostgreSQL with Drizzle ORM
-- **API**: OpenAPI (Swagger) documented
+
+NaradaLMS uses a modern, high-performance tech stack focused on type safety, modularity, and smooth user experiences.
+
+### Frontend
+- **Framework**: [React 18](https://react.dev/) with [Vite](https://vitejs.dev/) for fast builds.
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) for utility-first design.
+- **UI Components**: [shadcn/ui](https://ui.shadcn.com/) (built on [Radix UI](https://www.radix-ui.com/) primitives).
+- **State & Data**: [TanStack Query v5](https://tanstack.com/query) for server state and caching.
+- **Rich Text**: [TipTap](https://tiptap.dev/) (ProseMirror) with custom Vedic script extensions.
+- **Routing**: [Wouter](https://github.com/molefrog/wouter) for lightweight, standard-compliant routing.
+- **Animation**: [Framer Motion](https://www.framer.com/motion/) for micro-interactions and transitions.
+
+### Backend
+- **Runtime**: [Node.js](https://nodejs.org/) with [TypeScript](https://www.typescriptlang.org/).
+- **Web Framework**: [Express](https://expressjs.com/).
+- **Authentication**: [Passport.js](https://www.passportjs.org/) (Local Strategy & Google OAuth 2.0).
+- **Security**: [Helmet](https://helmetjs.github.io/), BCrypt, and [express-rate-limit](https://www.npmjs.com/package/express-rate-limit).
+- **Media**: Multer for file uploads and [music-metadata](https://www.npmjs.com/package/music-metadata) for audio processing.
+
+### Database & Storage
+- **Database**: [PostgreSQL](https://www.postgresql.org/) (powered by [Neon](https://neon.tech/) Serverless).
+- **ORM**: [Drizzle ORM](https://orm.drizzle.team/) for lightweight, type-safe database access.
+- **Validation**: [Zod](https://zod.dev/) for schema-driven validation and Type safety.
+
+### Architecture & Standards
+- **Pattern**: Domain-Driven Modular Monolith.
+- **API**: [OpenAPI 3.0.3](https://swagger.io/specification/) documented.
+- **Linting**: [ESLint](https://eslint.org/) with React-specific plugins.
 
 ## 📖 Documentation
 
