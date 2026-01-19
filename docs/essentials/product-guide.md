@@ -465,7 +465,7 @@ router.use(authMiddleware, requireRole('instructor', 'admin'));
 **Frontend Protection (MANDATORY for all protected pages):**
 ```typescript
 // Standard pattern - use at top of every protected page component
-import { useRoleGuard } from '@/new-ui/hooks/useRoleGuard';
+import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
 
 export default function ProtectedPage() {
   // Route guard - only specified roles can access
@@ -491,7 +491,7 @@ export default function ProtectedPage() {
 - Standard pattern reduces human error
 
 **Implementation Details:**
-- `useRoleGuard` hook location: `client/src/new-ui/hooks/useRoleGuard.ts`
+- `useRoleGuard` hook location: `client/src/features/shared/hooks/useRoleGuard.ts`
 - Redirects unauthorized users to `/app/learning`
 - Shows descriptive toast notification
 - Supports multi-role access (OR logic)
@@ -929,7 +929,7 @@ client/src/
 ### 7.4 Future Enhancements
 
 **Near-Term (Next 3-6 months):**
-1. **Complete New UI Migration:** Finish migrating all pages from legacy to new-ui architecture
+1. **Stabilize Unified Architecture:** Complete final refinements for role-based features and stabilization.
 2. **Student Dashboard:** Dedicated student view with progress visualization
 3. **Instructor Dashboard:** Batch roster, progress overview, evaluation tools
 4. **Admin Dashboard:** System health, user analytics, audit log browser

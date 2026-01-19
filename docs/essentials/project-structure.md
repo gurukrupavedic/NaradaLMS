@@ -169,9 +169,9 @@ Located in `client/src/components/ui/`, these are shadcn/ui components:
 - Form controls, sidebar components
 - Styling via Tailwind CSS
 
-### Chapter Editor (Content Studio)
+### Chapter Content Page (Content Studio)
 
-The `new-ui/content/pages/ChapterContentPage.tsx` contains the modern 4-tab interface for editing chapters:
+The `features/content/pages/ChapterContentPage.tsx` contains the modern 4-tab interface for editing chapters:
 
 1. **Content Tab** - Rich text editor (TipTap WYSIWYG)
    - Three-script editing (Telugu, Devanagari, IAST)
@@ -398,11 +398,11 @@ const chapter = await storage.chapters.get(chapterId);
 1. **Determine role context:** admin, instructor, student, or content
 2. **Create page file:**
    ```
-   client/src/new-ui/{role}/pages/NewPage.tsx
+   client/src/features/{role}/pages/NewPage.tsx
    ```
 3. **Implement with AppShell context:**
    ```typescript
-   import { useRoleGuard } from '@/new-ui/hooks/useRoleGuard';
+   import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
    
    export function NewPage() {
      const isAuthorized = useRoleGuard(['required_role']);
