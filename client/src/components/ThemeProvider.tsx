@@ -10,7 +10,7 @@ interface ThemeProviderProps {
 export function ThemeProvider({
   children,
   defaultTheme = "light",
-  storageKey = "vediclms-theme",
+  storageKey = "naradalms-theme",
   ...props
 }: ThemeProviderProps) {
   return (

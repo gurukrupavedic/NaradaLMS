@@ -17,7 +17,7 @@ export function BrandHeader() {
               <BookOpen className="size-4" />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">VedicLMS</span>
+              <span className="truncate font-semibold">Narada LMS</span>
               <span className="truncate text-xs">Learning Platform</span>
             </div>
           </a>

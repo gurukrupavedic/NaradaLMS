@@ -22,7 +22,7 @@ const MyStudentsPage = React.lazy(() => import('@/features/instructor/pages/MySt
 const StudentDetailsPage = React.lazy(() => import('@/features/instructor/pages/StudentDetailsPage').then(module => ({ default: module.StudentDetailsPage })));
 
 // Learning & Content
-const VedicLearningPage = React.lazy(() => import('@/features/student/pages/VedicLearningPage').then(module => ({ default: module.VedicLearningPage })));
+const LearningDashboardPage = React.lazy(() => import('@/features/student/pages/LearningDashboardPage').then(module => ({ default: module.LearningDashboardPage })));
 const LearnChapterPage = React.lazy(() => import('@/features/student/pages/LearnChapterPage').then(module => ({ default: module.LearnChapterPage })));
 
 // Content pages
@@ -53,8 +53,8 @@ export default function AppShell() {
 
         <Suspense fallback={<LoadingScreen message="Loading..." />}>
           <Switch>
-            <Route path="/app" component={VedicLearningPage} />
-            <Route path="/app/learning" component={VedicLearningPage} />
+            <Route path="/app" component={LearningDashboardPage} />
+            <Route path="/app/learning" component={LearningDashboardPage} />
             <Route path="/app/learning/chapter/:chapterId" component={LearnChapterPage} />
             <Route path="/app/instructor/students/:studentId" component={StudentDetailsPage} />
             <Route path="/app/instructor/students" component={MyStudentsPage} />

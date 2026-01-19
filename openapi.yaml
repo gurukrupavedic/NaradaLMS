@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: VedicLMS API
+  title: Narada LMS API
   description: |
-    Comprehensive API for VedicLMS - A multilingual Learning Management System for Vedic education.
+    Comprehensive API for Narada LMS - A multilingual Learning Management System for Vedic education.
     
     **Architecture:** Modular backend with 6 domain modules:
     - Identity & Access: User management, authentication, authorization

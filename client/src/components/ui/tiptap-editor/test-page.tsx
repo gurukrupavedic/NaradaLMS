@@ -29,7 +29,7 @@ export default function TiptapV3TestPage() {
                                 Tiptap v3 Editor Prototype
                             </h1>
                             <p className="text-gray-600 dark:text-gray-400">
-                                Testing Tiptap v3.10.0 with React 18 in VedicLMS
+                                Testing Tiptap v3.10.0 with React 18 in Narada LMS
                             </p>
                         </div>
                         <button

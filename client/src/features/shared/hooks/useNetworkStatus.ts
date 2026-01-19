@@ -5,7 +5,7 @@
  * with automatic retry mechanisms and user notifications. Integrates with
  * offline storage for seamless user experience during connectivity issues.
  * 
- * @author Vedic LMS Team
+ * @author Narada LMS Team
  * @since 2025-06-24
  */
 

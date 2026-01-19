@@ -10,7 +10,7 @@ import { useMyDetails } from '../hooks/useMyDetails';
 import { useMyTrackProgress } from '../hooks/useMyTrackProgress';
 import { Separator } from '@/components/ui/separator';
 
-export function VedicLearningPage() {
+export function LearningDashboardPage() {
   const [, navigate] = useLocation();
 
   const {

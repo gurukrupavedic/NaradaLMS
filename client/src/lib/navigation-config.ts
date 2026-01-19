@@ -28,7 +28,7 @@ export interface NavSection {
 }
 
 /**
- * VedicLMS Navigation Configuration
+ * Narada LMS Navigation Configuration
  * Role-based navigation structure for the application
  */
 

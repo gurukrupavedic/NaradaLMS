@@ -5,7 +5,7 @@
  * handling text highlighting, segment boundary detection, and validation.
  * Supports multi-script content with intelligent script boundary detection.
  * 
- * @author Vedic LMS Team
+ * @author Narada LMS Team
  * @since 2025-06-24
  */
 
@@ -154,8 +154,8 @@ export function useTextSegmentation() {
                 React.createElement("span", {
                     key: `segment-${segment.id}`,
                     className: `px-1 py-0.5 rounded cursor-pointer transition-colors ${hasAudioMapping
-                            ? "bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700"
-                            : "bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700"
+                        ? "bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700"
+                        : "bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700"
                         } hover:opacity-80`,
                     title: `${segment.conceptualName || `Segment ${segment.id}`}${hasAudioMapping ? " (Audio Mapped)" : " (No Audio)"
                         }`,

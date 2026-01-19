@@ -24,7 +24,7 @@
  * }
  * ```
  * 
- * @author Vedic LMS Team
+ * @author Narada LMS Team
  * @since 2025-06-24
  */
 
@@ -39,14 +39,14 @@ interface UsePerformanceMonitorReturn {
    * @param customLoadTime - Optional custom load time, uses automatic detection if not provided
    */
   trackComponentLoad: (customLoadTime?: number) => void;
-  
+
   /**
    * Track user interaction performance
    * @param interactionType - Type of interaction being tracked
    * @returns Function to end tracking and record the interaction time
    */
   trackUserInteraction: (interactionType: string) => () => void;
-  
+
   /**
    * Track custom performance metric
    * @param metricType - Type of metric to track
@@ -54,20 +54,20 @@ interface UsePerformanceMonitorReturn {
    * @param metadata - Additional metadata
    */
   trackCustomMetric: (metricType: MetricType, value: number, metadata?: Record<string, any>) => void;
-  
+
   /**
    * Get performance metrics for this component
    * @param timeRangeMs - Time range to retrieve metrics for
    */
   getMetrics: (timeRangeMs?: number) => PerformanceMetric[];
-  
+
   /**
    * Get performance trends for this component
    * @param metricType - Type of metric to analyze
    * @param timeRangeMs - Time range for trend analysis
    */
   getTrends: (metricType: MetricType, timeRangeMs?: number) => any;
-  
+
   /**
    * Current performance status
    */
@@ -83,17 +83,17 @@ interface PerformanceHookOptions {
    * Whether to automatically track component mount/unmount
    */
   autoTrackLifecycle?: boolean;
-  
+
   /**
    * Whether to track render performance
    */
   trackRenders?: boolean;
-  
+
   /**
    * Minimum interaction time to track (ms)
    */
   minInteractionTime?: number;
-  
+
   /**
    * Custom metadata to include with all metrics
    */
@@ -120,7 +120,7 @@ export function usePerformanceMonitor(
   const mountTimeRef = useRef<number>(Date.now());
   const renderCountRef = useRef<number>(0);
   const activeInteractionsRef = useRef<Map<string, number>>(new Map());
-  
+
   const [performanceStatus, setPerformanceStatus] = useState({
     isTracking: true,
     activeInteractions: 0,
@@ -132,7 +132,7 @@ export function usePerformanceMonitor(
     if (autoTrackLifecycle) {
       const loadTime = Date.now() - mountTimeRef.current;
       performanceMonitor.trackComponentLoad(componentName, loadTime);
-      
+
       setPerformanceStatus(prev => ({
         ...prev,
         lastMetricTime: Date.now()
@@ -157,7 +157,7 @@ export function usePerformanceMonitor(
   useEffect(() => {
     if (trackRenders) {
       renderCountRef.current += 1;
-      
+
       // Track render performance every 10 renders to avoid spam
       if (renderCountRef.current % 10 === 0) {
         performanceMonitor.trackCustomMetric('component_renders', renderCountRef.current, {
@@ -175,7 +175,7 @@ export function usePerformanceMonitor(
   const trackComponentLoad = useCallback((customLoadTime?: number) => {
     const loadTime = customLoadTime || (Date.now() - mountTimeRef.current);
     performanceMonitor.trackComponentLoad(componentName, loadTime);
-    
+
     setPerformanceStatus(prev => ({
       ...prev,
       lastMetricTime: Date.now()
@@ -188,9 +188,9 @@ export function usePerformanceMonitor(
   const trackUserInteraction = useCallback((interactionType: string) => {
     const startTime = Date.now();
     const interactionId = `${interactionType}_${startTime}`;
-    
+
     activeInteractionsRef.current.set(interactionId, startTime);
-    
+
     setPerformanceStatus(prev => ({
       ...prev,
       activeInteractions: activeInteractionsRef.current.size
@@ -200,9 +200,9 @@ export function usePerformanceMonitor(
     return () => {
       const endTime = Date.now();
       const duration = endTime - startTime;
-      
+
       activeInteractionsRef.current.delete(interactionId);
-      
+
       // Only track if above minimum threshold
       if (duration >= minInteractionTime) {
         performanceMonitor.trackCustomMetric('user_interaction', duration, {
@@ -211,7 +211,7 @@ export function usePerformanceMonitor(
           duration,
           ...metadata
         });
-        
+
         setPerformanceStatus(prev => ({
           ...prev,
           activeInteractions: activeInteractionsRef.current.size,
@@ -225,8 +225,8 @@ export function usePerformanceMonitor(
    * Track custom performance metric
    */
   const trackCustomMetric = useCallback((
-    metricType: MetricType, 
-    value: number, 
+    metricType: MetricType,
+    value: number,
     customMetadata?: Record<string, any>
   ) => {
     performanceMonitor.trackCustomMetric(metricType, value, {
@@ -234,7 +234,7 @@ export function usePerformanceMonitor(
       ...metadata,
       ...customMetadata
     });
-    
+
     setPerformanceStatus(prev => ({
       ...prev,
       lastMetricTime: Date.now()
@@ -246,7 +246,7 @@ export function usePerformanceMonitor(
    */
   const getMetrics = useCallback((timeRangeMs: number = 3600000) => {
     const report = performanceMonitor.generateReport(Date.now() - timeRangeMs);
-    return report.metrics.filter(metric => 
+    return report.metrics.filter(metric =>
       metric.metadata?.componentName === componentName
     );
   }, [componentName]);
@@ -276,7 +276,7 @@ export function usePerformanceMonitor(
 export function useApiPerformanceTracking(apiName: string) {
   return useCallback((endpoint: string, method: string = 'GET') => {
     const startTime = Date.now();
-    
+
     return {
       /**
        * Complete the API tracking with response information
@@ -287,7 +287,7 @@ export function useApiPerformanceTracking(apiName: string) {
         const duration = Date.now() - startTime;
         performanceMonitor.trackApiResponse(endpoint, method, statusCode, duration, bodySize);
       },
-      
+
       /**
        * Mark API call as failed
        * @param error - Error that occurred

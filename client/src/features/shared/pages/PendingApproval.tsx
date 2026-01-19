@@ -26,7 +26,7 @@ export function PendingApproval() {
               <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-2xl">ॐ</span>
               </div>
-              <h1 className="text-3xl font-bold text-blue-800">Vedic LMS</h1>
+              <h1 className="text-3xl font-bold text-blue-800">Narada LMS</h1>
             </div>
 
             {/* Hourglass animation */}

@@ -5,16 +5,16 @@ import bcrypt from 'bcrypt';
 config();
 
 const sampleUsers = [
-  { firstName: 'Arjun', lastName: 'Sharma', email: 'test1@vediclms.com' },
-  { firstName: 'Priya', lastName: 'Patel', email: 'test2@vediclms.com' },
-  { firstName: 'Vikram', lastName: 'Reddy', email: 'test3@vediclms.com' },
-  { firstName: 'Anjali', lastName: 'Gupta', email: 'test4@vediclms.com' },
-  { firstName: 'Rahul', lastName: 'Iyer', email: 'test5@vediclms.com' },
-  { firstName: 'Kavya', lastName: 'Menon', email: 'test6@vediclms.com' },
-  { firstName: 'Aditya', lastName: 'Nair', email: 'test7@vediclms.com' },
-  { firstName: 'Sneha', lastName: 'Verma', email: 'test8@vediclms.com' },
-  { firstName: 'Kiran', lastName: 'Kumar', email: 'test9@vediclms.com' },
-  { firstName: 'Deepa', lastName: 'Rao', email: 'test10@vediclms.com' },
+  { firstName: 'Arjun', lastName: 'Sharma', email: 'test1@narada-lms.com' },
+  { firstName: 'Priya', lastName: 'Patel', email: 'test2@narada-lms.com' },
+  { firstName: 'Vikram', lastName: 'Reddy', email: 'test3@narada-lms.com' },
+  { firstName: 'Anjali', lastName: 'Gupta', email: 'test4@narada-lms.com' },
+  { firstName: 'Rahul', lastName: 'Iyer', email: 'test5@narada-lms.com' },
+  { firstName: 'Kavya', lastName: 'Menon', email: 'test6@narada-lms.com' },
+  { firstName: 'Aditya', lastName: 'Nair', email: 'test7@narada-lms.com' },
+  { firstName: 'Sneha', lastName: 'Verma', email: 'test8@narada-lms.com' },
+  { firstName: 'Kiran', lastName: 'Kumar', email: 'test9@narada-lms.com' },
+  { firstName: 'Deepa', lastName: 'Rao', email: 'test10@narada-lms.com' },
 ];
 
 async function createSampleUsers() {
@@ -42,7 +42,7 @@ async function createSampleUsers() {
            RETURNING id, email, first_name, last_name`,
           [user.email, user.firstName, user.lastName, passwordHash]
         );
-        
+
         console.log(`✅ Created: ${result.rows[0].first_name} ${result.rows[0].last_name} (${result.rows[0].email})`);
         created++;
       } catch (error: any) {

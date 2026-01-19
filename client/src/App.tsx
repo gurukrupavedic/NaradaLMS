@@ -143,7 +143,7 @@ function Router() {
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" storageKey="vediclms-theme">
+      <ThemeProvider defaultTheme="light" storageKey="naradalms-theme">
         <TooltipProvider>
           <Toaster />
           <ErrorBoundary fallback={<AppErrorFallback />}>

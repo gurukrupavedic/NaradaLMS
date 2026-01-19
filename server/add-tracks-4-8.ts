@@ -24,7 +24,7 @@ async function addNewTracks() {
             console.log('Creating system user...');
             await db.insert(users).values({
                 id: "system",
-                email: "system@vediclms.local",
+                email: "system@naradalms.local",
                 firstName: "System",
                 lastName: "Admin",
                 passwordHash: "system_placeholder_hash",

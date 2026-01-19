@@ -62,7 +62,7 @@ export type TiptapEditorProps = {
   onChange?: (value: Content) => void;
   className?: string;
 
-  // VedicLMS-specific props
+  // Narada LMS-specific props
   language: "te" | "hi" | "en";
   currentScript?: "te" | "hi" | "en";
   onScriptChange?: (script: "te" | "hi" | "en") => void;

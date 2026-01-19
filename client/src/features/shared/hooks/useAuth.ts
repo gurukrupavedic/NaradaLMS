@@ -5,7 +5,7 @@
  * user session detection via /api/auth/me endpoint, role-based access
  * control, and logout functionality.
  * 
- * @author Vedic LMS Team
+ * @author Narada LMS Team
  * @since 2025-06-24
  */
 

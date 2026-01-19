@@ -6,7 +6,7 @@
  * with a toast notification if unauthorized.
  * 
  * @param requiredRoles - Array of roles, user must have at least ONE
- * @author Vedic LMS Team
+ * @author Narada LMS Team
  * @since 2026-01-08
  */
 

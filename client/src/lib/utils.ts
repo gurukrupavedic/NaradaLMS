@@ -5,7 +5,7 @@
  * string formatting, date handling, and validation helpers optimized
  * for the Vedic LMS application.
  * 
- * @author Vedic LMS Team
+ * @author Narada LMS Team
  * @since 2025-06-24
  */
 

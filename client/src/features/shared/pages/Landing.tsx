@@ -12,22 +12,22 @@ export function Landing() {
             <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg">
               <span className="text-white font-bold text-3xl">ॐ</span>
             </div>
-            <h1 className="text-4xl font-bold text-blue-800">Vedic LMS</h1>
+            <h1 className="text-4xl font-bold text-blue-800">Narada LMS</h1>
           </div>
-          
+
           <p className="text-xl text-gray-600 max-w-md">
             Traditional Vedic learning with modern technology
           </p>
-          
+
           <div className="flex gap-4 justify-center">
-            <Button 
+            <Button
               size="lg"
               onClick={() => navigate("/login")}
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300"
             >
               Sign In
             </Button>
-            <Button 
+            <Button
               size="lg"
               onClick={() => navigate("/register")}
               variant="outline"

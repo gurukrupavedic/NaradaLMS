@@ -8,7 +8,7 @@ export async function initializeDatabase(): Promise<void> {
   // Create system user for seeding
   const systemUser = await identityStorage.upsertUser({
     id: "system",
-    email: "system@vediclms.local",
+    email: "system@naradalms.local",
     firstName: "System",
     lastName: "Admin",
     roles: ["instructor", "admin"],

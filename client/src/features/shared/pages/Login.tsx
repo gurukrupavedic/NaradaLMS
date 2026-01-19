@@ -44,7 +44,7 @@ export function Login() {
 
       // Invalidate auth query to refetch user and trigger redirect
       await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
-      
+
       // Navigate after cache is invalidated
       setTimeout(() => navigate("/"), 300);
     } catch (err) {
@@ -68,7 +68,7 @@ export function Login() {
               <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-2xl">ॐ</span>
               </div>
-              <h1 className="text-3xl font-bold text-blue-800">Vedic LMS</h1>
+              <h1 className="text-3xl font-bold text-blue-800">Narada LMS</h1>
             </div>
             <p className="text-gray-600">Sign in to your account</p>
           </div>
