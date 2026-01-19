@@ -75,7 +75,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [email, password, fullName]
+              required: [email, password]
               properties:
                 email:
                   type: string
@@ -83,7 +83,9 @@ paths:
                 password:
                   type: string
                   minLength: 8
-                fullName:
+                firstName:
+                  type: string
+                lastName:
                   type: string
       responses:
         '201':
@@ -180,28 +182,50 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/auth/users:
+
+  /api/auth/admin/users:
     get:
       tags: [Users]
       summary: List all users
-      description: Get all users (pending and active) - Admin only
+      description: Get all users (pending + active) with pagination and filtering - Admin only
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending_approval, active, inactive]
       responses:
         '200':
           description: List of users
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/auth/users/{userId}:
+  /api/auth/admin/users/{userId}:
     get:
       tags: [Users]
       summary: Get user by ID
-      description: Retrieve specific user details - Admin only
+      description: Retrieve details of a specific user - Admin only
       parameters:
         - $ref: '#/components/parameters/UserId'
       responses:
@@ -227,7 +251,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -257,7 +286,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
 
   /api/auth/admin/users/{userId}/disable:
     post:
@@ -272,7 +306,68 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      email:
+                        type: string
+                      status:
+                        type: string
+
+  /api/auth/admin/users/{userId}/enable:
+    post:
+      tags: [Users]
+      summary: Enable user account
+      description: Set user status to active - Admin only
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: User enabled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      email:
+                        type: string
+                      status:
+                        type: string
+
+  /api/auth/admin/users/{userId}/reject:
+    post:
+      tags: [Users]
+      summary: Reject pending user
+      description: Delete user from database - Admin only
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: User rejected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
 
   # =============================================================================
   # CONTENT PUBLISHING (content-publishing module)
@@ -380,27 +475,6 @@ paths:
         '200':
           description: Track order updated
 
-  /api/chapters:
-    get:
-      tags: [Chapters]
-      summary: List chapters by track
-      description: Get all chapters for a track (specify trackId in query)
-      security: []
-      parameters:
-        - name: trackId
-          in: query
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: List of chapters
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Chapter'
     
     post:
       tags: [Chapters]
@@ -420,12 +494,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/Chapter'
 
-  /api/chapters/{chapterId}:
+  /api/chapters/{chapterId}/details:
     get:
       tags: [Chapters]
       summary: Get chapter details
       description: Retrieve specific chapter
-      security: []
       parameters:
         - $ref: '#/components/parameters/ChapterId'
       responses:
@@ -494,11 +567,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/Chapter'
 
+
   /api/chapters/{chapterId}/move:
     post:
       tags: [Chapters]
-      summary: Reorder chapter
-      description: Move chapter up or down within track - Content managers/Admin only
+      summary: Reorder or move chapter
+      description: Move chapter up/down or to another track - Content managers/Admin only
       parameters:
         - $ref: '#/components/parameters/ChapterId'
       requestBody:
@@ -507,14 +581,88 @@ paths:
           application/json:
             schema:
               type: object
-              required: [direction]
               properties:
                 direction:
                   type: string
                   enum: [up, down]
+                toTrackId:
+                  type: integer
       responses:
         '200':
-          description: Chapter order updated
+          description: Chapter moved successfully
+
+
+  # -----------------------------------------------------------------------------
+  # NAMESPACED CONTENT STUDIO ROUTES (/api/content)
+  # -----------------------------------------------------------------------------
+
+  /api/content/tracks/{trackId}/chapters:
+    get:
+      tags: [Chapters]
+      summary: List chapters for a track
+      description: Get all chapters within a specific track - Namespaced
+      parameters:
+        - $ref: '#/components/parameters/TrackId'
+      responses:
+        '200':
+          description: List of chapters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Chapter'
+    
+    post:
+      tags: [Chapters]
+      summary: Create chapter under track
+      description: Create a new chapter directly within a track - Content managers/Admin only
+      parameters:
+        - $ref: '#/components/parameters/TrackId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChapterRequest'
+      responses:
+        '201':
+          description: Chapter created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chapter'
+
+  /api/content/chapters/{chapterId}:
+    put:
+      tags: [Chapters]
+      summary: Update chapter
+      description: Update chapter content or metadata - Namespaced
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateChapterRequest'
+      responses:
+        '200':
+          description: Chapter updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chapter'
+    
+    delete:
+      tags: [Chapters]
+      summary: Delete chapter
+      description: Delete chapter - Namespaced
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
+      responses:
+        '200':
+          description: Chapter deleted successfully
 
   /api/segments:
     get:
@@ -543,23 +691,6 @@ paths:
                 items:
                   $ref: '#/components/schemas/TextSegment'
     
-    post:
-      tags: [Text Segments]
-      summary: Create text segment
-      description: Create new text segment with position boundaries - Content managers/Admin only
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateTextSegmentRequest'
-      responses:
-        '201':
-          description: Segment created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TextSegment'
 
   /api/segments/{segmentId}:
     patch:
@@ -592,11 +723,100 @@ paths:
         '200':
           description: Segment deleted successfully
 
-  /api/segments/{chapterId}/reorder:
-    patch:
+
+  /api/content/chapters/{chapterId}/segments:
+    get:
+      tags: [Text Segments]
+      summary: Get segments for chapter
+      description: Retrieve all segments for a chapter with optional script filter - Namespaced
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
+        - name: script
+          in: query
+          schema:
+            type: string
+            enum: [te, hi, en]
+      responses:
+        '200':
+          description: List of text segments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TextSegment'
+    
+    post:
+      tags: [Text Segments]
+      summary: Create text segment
+      description: Create new text segment under chapter - Namespaced
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTextSegmentRequest'
+      responses:
+        '201':
+          description: Segment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TextSegment'
+
+  /api/content/chapters/{chapterId}/segments/{segmentId}:
+    put:
+      tags: [Text Segments]
+      summary: Update text segment
+      description: Update segment boundaries - Namespaced
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
+        - $ref: '#/components/parameters/SegmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTextSegmentRequest'
+      responses:
+        '200':
+          description: Segment updated successfully
+    
+    delete:
+      tags: [Text Segments]
+      summary: Delete text segment
+      description: Delete segment - Namespaced
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
+        - $ref: '#/components/parameters/SegmentId'
+      responses:
+        '200':
+          description: Segment deleted successfully
+
+  /api/content/chapters/{chapterId}/segments/all/clear:
+    delete:
+      tags: [Text Segments]
+      summary: Clear all segments
+      description: Delete all segments for a specific script within a chapter - Namespaced
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
+        - name: script
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [te, hi, en]
+      responses:
+        '200':
+          description: All segments cleared successfully
+
+  /api/content/chapters/{chapterId}/segments/reorder:
+    post:
       tags: [Text Segments]
       summary: Reorder segments
-      description: Bulk reorder segments within chapter - Content managers/Admin only
+      description: Bulk reorder segments within chapter - Namespaced
       parameters:
         - $ref: '#/components/parameters/ChapterId'
       requestBody:
@@ -605,33 +825,29 @@ paths:
           application/json:
             schema:
               type: object
-              required: [segmentIds]
+              required: [segmentOrders]
               properties:
-                segmentIds:
+                segmentOrders:
                   type: array
                   items:
-                    type: integer
-                  description: Ordered array of segment IDs
+                    type: object
+                    required: [id, order]
+                    properties:
+                      id:
+                        type: integer
+                      order:
+                        type: integer
       responses:
         '200':
           description: Segments reordered successfully
 
-  # =============================================================================
-  # MEDIA PIPELINE (media-pipeline module)
-  # =============================================================================
-
-  /api/audio-files:
+  /api/content/chapters/{chapterId}/audio:
     get:
       tags: [Audio Files]
       summary: List audio files for chapter
-      description: Get all audio files for a chapter (filter by chapterId)
-      security: []
+      description: Get all audio files for a specific chapter - Namespaced
       parameters:
-        - name: chapterId
-          in: query
-          required: true
-          schema:
-            type: integer
+        - $ref: '#/components/parameters/ChapterId'
       responses:
         '200':
           description: List of audio files
@@ -645,25 +861,20 @@ paths:
     post:
       tags: [Audio Files]
       summary: Upload audio file
-      description: Upload audio file with automatic metadata extraction - Content managers/Admin only
+      description: Upload audio file for chapter - Namespaced
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
               type: object
-              required: [audio, chapterId]
+              required: [audio]
               properties:
                 audio:
                   type: string
                   format: binary
-                  description: Audio file (max 50MB)
-                chapterId:
-                  type: integer
-                reciter:
-                  type: string
-                displayName:
-                  type: string
       responses:
         '201':
           description: Audio file uploaded successfully
@@ -672,12 +883,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/AudioFile'
 
-  /api/audio-files/{audioFileId}:
-    patch:
+  /api/content/chapters/{chapterId}/audio/{audioFileId}:
+    put:
       tags: [Audio Files]
       summary: Update audio metadata
-      description: Update audio file metadata - Content managers/Admin only
+      description: Update audio file metadata - Namespaced
       parameters:
+        - $ref: '#/components/parameters/ChapterId'
         - $ref: '#/components/parameters/AudioFileId'
       requestBody:
         required: true
@@ -693,60 +905,140 @@ paths:
       responses:
         '200':
           description: Audio file updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AudioFile'
     
     delete:
       tags: [Audio Files]
       summary: Delete audio file
-      description: Delete audio file and all mappings - Content managers/Admin only
+      description: Delete audio file - Namespaced
       parameters:
+        - $ref: '#/components/parameters/ChapterId'
         - $ref: '#/components/parameters/AudioFileId'
       responses:
         '200':
           description: Audio file deleted successfully
 
-  /api/media-segments:
+  /api/content/chapters/{chapterId}/mappings:
     get:
-      tags: [Media Segments]
-      summary: List media segments for audio
-      description: Get all media segments for an audio file
-      security: []
+      tags: [Segment Mappings]
+      summary: List segment mappings
+      description: Get mappings for a chapter, optionally filtered by audio file - Namespaced
       parameters:
+        - $ref: '#/components/parameters/ChapterId'
         - name: audioFileId
           in: query
-          required: true
           schema:
             type: integer
       responses:
         '200':
-          description: List of media segments
+          description: List of segment mappings
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/MediaSegment'
+                  $ref: '#/components/schemas/SegmentMapping'
     
     post:
-      tags: [Media Segments]
-      summary: Create media segment
-      description: Create single media segment - Content managers/Admin only
+      tags: [Segment Mappings]
+      summary: Create segment mapping
+      description: Map text segment to audio timestamps - Namespaced
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateMediaSegmentRequest'
+              $ref: '#/components/schemas/CreateSegmentMappingRequest'
       responses:
         '201':
-          description: Media segment created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MediaSegment'
+          description: Mapping created successfully
+
+  /api/content/chapters/{chapterId}/mappings/{mappingId}:
+    put:
+      tags: [Segment Mappings]
+      summary: Update mapping
+      description: Update mapping timestamps - Namespaced
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
+        - name: mappingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [startTime, endTime]
+              properties:
+                startTime:
+                  type: number
+                endTime:
+                  type: number
+      responses:
+        '200':
+          description: Mapping updated successfully
+    
+    delete:
+      tags: [Segment Mappings]
+      summary: Delete mapping
+      description: Delete mapping - Namespaced
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
+        - name: mappingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Mapping deleted successfully
+
+  /api/content/chapters/{chapterId}/mappings/audio/{audioFileId}/segment/{segmentId}:
+    delete:
+      tags: [Segment Mappings]
+      summary: Delete mapping by natural key
+      description: Delete mapping by audio file and segment ID - Namespaced
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
+        - $ref: '#/components/parameters/AudioFileId'
+        - $ref: '#/components/parameters/SegmentId'
+      responses:
+        '200':
+          description: Mapping deleted successfully
+    
+    patch:
+      tags: [Segment Mappings]
+      summary: Update mapping by natural key
+      description: Update mapping timestamps by audio file and segment ID - Namespaced
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
+        - $ref: '#/components/parameters/AudioFileId'
+        - $ref: '#/components/parameters/SegmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [startTime, endTime]
+              properties:
+                startTime:
+                  type: number
+                endTime:
+                  type: number
+      responses:
+        '200':
+          description: Mapping updated successfully
+
+  # =============================================================================
+  # MEDIA PIPELINE (media-pipeline module)
+  # =============================================================================
+
+
 
   /api/media-segments/bulk:
     post:
@@ -777,135 +1069,7 @@ paths:
         '201':
           description: Media segments created successfully
 
-  /api/media-segments/{mediaSegmentId}:
-    patch:
-      tags: [Media Segments]
-      summary: Update media segment
-      description: Update media segment timestamps - Content managers/Admin only
-      parameters:
-        - name: mediaSegmentId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                startTime:
-                  type: number
-                endTime:
-                  type: number
-      responses:
-        '200':
-          description: Media segment updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MediaSegment'
-    
-    delete:
-      tags: [Media Segments]
-      summary: Delete media segment
-      description: Delete media segment - Content managers/Admin only
-      parameters:
-        - name: mediaSegmentId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Media segment deleted successfully
 
-  /api/mappings:
-    get:
-      tags: [Segment Mappings]
-      summary: List segment mappings
-      description: Get mappings by chapter or audio file
-      security: []
-      parameters:
-        - name: chapterId
-          in: query
-          schema:
-            type: integer
-        - name: audioFileId
-          in: query
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: List of segment mappings
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SegmentMapping'
-    
-    post:
-      tags: [Segment Mappings]
-      summary: Create segment mapping
-      description: Map text segment to audio timestamps - Content managers/Admin only
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateSegmentMappingRequest'
-      responses:
-        '201':
-          description: Mapping created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SegmentMapping'
-
-  /api/mappings/count:
-    get:
-      tags: [Segment Mappings]
-      summary: Count mappings for audio file
-      description: Get mapping count for an audio file
-      security: []
-      parameters:
-        - name: audioFileId
-          in: query
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Mapping count
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  count:
-                    type: integer
-
-  /api/mappings/{textSegmentId}/{audioFileId}:
-    delete:
-      tags: [Segment Mappings]
-      summary: Delete mapping
-      description: Delete mapping by text segment and audio file - Content managers/Admin only
-      parameters:
-        - name: textSegmentId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: audioFileId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Mapping deleted successfully
 
   # =============================================================================
   # BATCH & COHORT (batch-cohort module)
@@ -944,6 +1108,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/Batch'
 
+  /api/batches/my-batches:
+    get:
+      tags: [Batches]
+      summary: List my batches
+      description: Get batches where the current user is an instructor
+      responses:
+        '200':
+          description: List of batches
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Batch'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /api/batches/my-students:
+    get:
+      tags: [Batches]
+      summary: List my students
+      description: Get students across all batches managed by the current instructor
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: batchId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, dropped, completed]
+      responses:
+        '200':
+          description: List of students
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
   /api/batches/{id}:
     get:
       tags: [Batches]
@@ -972,16 +1190,23 @@ paths:
             schema:
               type: object
               properties:
-                name:
+                batchCode:
                   type: string
-                startDate:
+                batchName:
                   type: string
-                  format: date
-                endDate:
-                  type: string
-                  format: date
                 trackId:
                   type: integer
+                primaryInstructorId:
+                  type: integer
+                cohortType:
+                  type: string
+                  enum: [bramhachari, grihasta]
+                description:
+                  type: string
+                secondaryInstructorIds:
+                  type: array
+                  items:
+                    type: integer
       responses:
         '200':
           description: Batch updated successfully
@@ -1031,34 +1256,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/Enrollment'
 
-  /api/enrollments/{enrollmentId}/drop:
-    patch:
+  /api/batches/{id}/eligible-students:
+    get:
       tags: [Batches]
-      summary: Drop student enrollment
-      description: Mark enrollment as dropped with reason - Instructors/Admin only
+      summary: List eligible students
+      description: Get students eligible for enrollment in this batch
       parameters:
-        - name: enrollmentId
-          in: path
-          required: true
+        - $ref: '#/components/parameters/BatchId'
+        - name: search
+          in: query
           schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [dropReason]
-              properties:
-                dropReason:
-                  type: string
+            type: string
       responses:
         '200':
-          description: Enrollment dropped successfully
+          description: List of eligible students
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Enrollment'
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
 
   /api/batches/{id}/co-instructors:
     get:
@@ -1105,18 +1322,13 @@ paths:
         '201':
           description: Co-instructor assigned successfully
 
-  /api/batches/{batchId}/co-instructors/{instructorId}:
+  /api/co-instructors/{assignmentId}:
     delete:
       tags: [Batches]
       summary: Remove co-instructor
-      description: Remove co-instructor from batch - Admin only
+      description: Remove co-instructor assignment - Admin only
       parameters:
-        - name: batchId
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: instructorId
+        - name: assignmentId
           in: path
           required: true
           schema:
@@ -1124,6 +1336,35 @@ paths:
       responses:
         '200':
           description: Co-instructor removed successfully
+
+  /api/enrollments/{enrollmentId}/drop:
+    patch:
+      tags: [Batches]
+      summary: Drop student enrollment
+      description: Mark enrollment as dropped with reason - Instructors/Admin only
+      parameters:
+        - name: enrollmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dropReason]
+              properties:
+                dropReason:
+                  type: string
+      responses:
+        '200':
+          description: Enrollment dropped successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
 
   /api/batches/{batchId}/progress:
     get:
@@ -1203,6 +1444,32 @@ paths:
   # =============================================================================
   # LEARNING DELIVERY (learning-delivery module)
   # =============================================================================
+
+  /api/learning/my-progress:
+    get:
+      tags: [Learning Delivery]
+      summary: Get my progress
+      description: Student self-service track-wise progress
+      responses:
+        '200':
+          description: Track-wise progress for current student
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/learning/my-details:
+    get:
+      tags: [Learning Delivery]
+      summary: Get my student details
+      description: Student self-service profile + proficiency matrix
+      responses:
+        '200':
+          description: Student profile and proficiency details
+          content:
+            application/json:
+              schema:
+                type: object
 
   /api/learning/progress:
     get:
@@ -1336,9 +1603,66 @@ paths:
                   progress:
                     $ref: '#/components/schemas/StudentProgress'
 
-  # =============================================================================
-  # SYSTEM ADMIN (system-admin module)
-  # =============================================================================
+  /api/learning/chapter/{chapterId}:
+    get:
+      tags: [Learning Delivery]
+      summary: Get unified chapter bundle
+      description: Retrieve chapter content, progress, audio, and mappings in one call.
+      parameters:
+        - $ref: '#/components/parameters/ChapterId'
+        - name: include
+          in: query
+          schema:
+            type: string
+            description: Comma-separated list (chapter,segments,audio,mappings,progress)
+        - name: script
+          in: query
+          schema:
+            type: string
+            enum: [te, hi, en]
+      responses:
+        '200':
+          description: Unified chapter bundle
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/students/{studentId}/progress:
+    get:
+      tags: [Students]
+      summary: Get student progress details
+      description: Get detailed student proficiency matrix - Instructors/Admin only
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Student progress details
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/students/{studentId}/track-progress:
+    get:
+      tags: [Students]
+      summary: Get student track-wise progress history
+      description: Get proficiency history organized by track - Instructors/Admin only
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Student track-wise progress
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/admin/audit-logs:
     get:
@@ -1362,22 +1686,22 @@ paths:
           in: query
           schema:
             type: string
-            format: date
+            format: date-time
         - name: endDate
           in: query
           schema:
             type: string
-            format: date
-        - name: page
+            format: date-time
+        - name: limit
           in: query
           schema:
             type: integer
-            default: 1
-        - name: perPage
+            default: 100
+        - name: offset
           in: query
           schema:
             type: integer
-            default: 50
+            default: 0
       responses:
         '200':
           description: List of audit logs
@@ -1386,12 +1710,19 @@ paths:
               schema:
                 type: object
                 properties:
-                  logs:
+                  success:
+                    type: boolean
+                  data:
                     type: array
                     items:
                       $ref: '#/components/schemas/AuditLog'
                   pagination:
-                    $ref: '#/components/schemas/Pagination'
+                    type: object
+                    properties:
+                      limit:
+                        type: integer
+                      offset:
+                        type: integer
 
   /api/admin/settings:
     get:
@@ -1407,6 +1738,46 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SystemSetting'
+
+  /api/admin/stats:
+    get:
+      tags: [System Admin]
+      summary: Get admin dashboard stats
+      description: Aggregated metrics for Admin Dashboard - Admin only
+      parameters:
+        - name: recentLimit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Admin dashboard statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      users:
+                        type: object
+                        properties:
+                          total:
+                            type: integer
+                          pending:
+                            type: integer
+                      batches:
+                        type: integer
+                      tracks:
+                        type: integer
+                      auditLogs:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AuditLog'
 
   /api/admin/settings/{key}:
     get:
@@ -1425,7 +1796,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SystemSetting'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  key:
+                    type: string
+                  value:
+                    type: string
     
     put:
       tags: [System Admin]
@@ -1453,7 +1831,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SystemSetting'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  key:
+                    type: string
+                  value:
+                    type: string
 
 # =============================================================================
 # COMPONENTS
@@ -1468,6 +1853,26 @@ components:
       description: PostgreSQL-backed session cookie (Passport.js)
 
   schemas:
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [message, timestamp, requestId]
+          properties:
+            message:
+              type: string
+            code:
+              type: string
+            details:
+              type: object
+            timestamp:
+              type: string
+              format: date-time
+            requestId:
+              type: string
+
     User:
       type: object
       properties:
@@ -1476,7 +1881,9 @@ components:
         email:
           type: string
           format: email
-        fullName:
+        firstName:
+          type: string
+        lastName:
           type: string
         roles:
           type: array
@@ -1699,16 +2106,6 @@ components:
           type: string
           format: date-time
 
-    CreateMediaSegmentRequest:
-      type: object
-      required: [audioFileId, startTime, endTime]
-      properties:
-        audioFileId:
-          type: integer
-        startTime:
-          type: number
-        endTime:
-          type: number
 
     SegmentMapping:
       type: object
@@ -1747,38 +2144,49 @@ components:
       properties:
         id:
           type: integer
-        name:
+        batchCode:
+          type: string
+        batchName:
           type: string
         trackId:
           type: integer
-        leadInstructorId:
+        primaryInstructorId:
           type: integer
-        startDate:
+        cohortType:
           type: string
-          format: date
-        endDate:
+          enum: [bramhachari, grihasta]
+        description:
           type: string
-          format: date
+        createdBy:
+          type: string
         createdAt:
+          type: string
+          format: date-time
+        updatedAt:
           type: string
           format: date-time
 
     CreateBatchRequest:
       type: object
-      required: [name, trackId, leadInstructorId, startDate]
+      required: [batchCode, batchName, primaryInstructorId]
       properties:
-        name:
+        batchCode:
+          type: string
+        batchName:
           type: string
         trackId:
           type: integer
-        leadInstructorId:
+        primaryInstructorId:
           type: integer
-        startDate:
+        cohortType:
           type: string
-          format: date
-        endDate:
+          enum: [bramhachari, grihasta]
+        description:
           type: string
-          format: date
+        secondaryInstructorIds:
+          type: array
+          items:
+            type: integer
 
     Enrollment:
       type: object
@@ -1919,47 +2327,32 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              message:
-                type: string
+            $ref: '#/components/schemas/ApiError'
 
     Unauthorized:
       description: Unauthorized - Authentication required
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              message:
-                type: string
+            $ref: '#/components/schemas/ApiError'
 
     Forbidden:
       description: Forbidden - Insufficient permissions
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              message:
-                type: string
+            $ref: '#/components/schemas/ApiError'
 
     NotFound:
       description: Resource not found
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              message:
-                type: string
+            $ref: '#/components/schemas/ApiError'
 
     InternalServerError:
       description: Internal server error
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              message:
-                type: string
+            $ref: '#/components/schemas/ApiError'
