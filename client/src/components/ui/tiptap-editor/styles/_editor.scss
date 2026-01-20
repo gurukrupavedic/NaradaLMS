@@ -53,11 +53,9 @@
     flex-direction: column;
     flex: 1;
     position: relative;
-    min-height: $editor-min-height;
-    max-height: $editor-max-height;
+    max-height: none;
     background-color: $bg-color;
     color: $fg-color;
-    font-size: $editor-font-size;
     font-size: $editor-font-size;
     line-height: $editor-line-height;
     overflow: auto;
@@ -70,10 +68,10 @@
     @include custom-scrollbar;
 
     &>.ProseMirror {
-      flex-grow: 1;
+      flex: 0 1 auto;
       max-width: $editor-max-width;
       margin-inline: auto;
-      padding-block: 2.5rem;
+      padding-block: 1rem;
       padding-inline: 2rem;
 
       // Force font inheritance for text elements to respect the script-based font set on the container

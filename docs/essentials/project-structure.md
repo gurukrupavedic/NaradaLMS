@@ -1,6 +1,6 @@
-# VedicLMS Project Structure
+# NaradaLMS Project Structure
 
-A comprehensive guide to the VedicLMS codebase organization, file locations, and architecture patterns.
+A comprehensive guide to the NaradaLMS codebase organization, file locations, and architecture patterns.
 
 ## Quick Navigation
 
@@ -47,91 +47,44 @@ client/src/
 │   ├── dark-theme-showcase.html
 │   └── docs/
 │
-├── features/                  # Feature-based modules (LEGACY - maintenance mode)
-│   ├── learning/              # Student learning experiences
-│   │   ├── pages/
-│   │   │   ├── LearnTracks.tsx       # Track selection page
-│   │   │   ├── LearnChapters.tsx     # Chapter list for track
-│   │   │   └── StudyChapter.tsx      # Interactive chapter learning
-│   │   ├── components/
-│   │   │   ├── AudioPlayer.tsx
-│   │   │   ├── TrackCard.tsx
-│   │   │   ├── InteractiveSegment.tsx
-│   │   │   └── InteractiveSegments.tsx
-│   │   └── hooks/
-│   │       ├── useAudioPlayer.ts
-│   │       ├── useChapterData.ts
-│   │       ├── useSegmentData.ts
-│   │       └── useTextSegmentation.ts
-│   │
-│   ├── content-management/    # Instructor content authoring
-│   │   ├── pages/
-│   │   │   ├── ManageTracks.tsx       # Track CRUD and ordering
-│   │   │   ├── ManageChapters.tsx     # Chapter list and management
-│   │   │   └── EditChapter.tsx        # (legacy - see new-ui/content)
-│   │   ├── components/
-│   │   └── hooks/
-│   │
-│   ├── batch-management/      # Batch and cohort management
-│   │   ├── pages/
-│   │   │   └── ManageBatches.tsx
-│   │   ├── components/
-│   │   └── hooks/
-│   │
-│   ├── user-management/       # User administration
-│   │   ├── pages/
-│   │   │   └── ManageUsers.tsx
-│   │   ├── components/
-│   │   └── hooks/
-│   │
-│   └── shared-features/       # Shared across all features
-│       ├── pages/
-│       │   ├── Landing.tsx            # Home page
-│       │   ├── Login.tsx              # Authentication
-│       │   ├── Register.tsx           # User registration
-│       │   ├── PendingApproval.tsx    # Account approval page
-│       │   └── NotFound.tsx           # 404 page
-│       ├── components/
-│       │   ├── AdminPanel.tsx
-│       │   ├── Dashboard.tsx
-│       │   ├── InstructorPanel.tsx
-│       │   ├── SimpleDashboard.tsx
-│       │   ├── StudentDashboard.tsx
-│       │   ├── RoleTabs.tsx
-│       │   └── LanguageSwitcher.tsx
-│       └── hooks/
-│           ├── useAuth.ts
-│           ├── use-toast.ts
-│           ├── use-mobile.tsx
-│           ├── useNetworkStatus.ts
-│           └── usePerformanceMonitor.ts
-│
-├── new-ui/                    # NEW UI - Role-based architecture (ACTIVE)
-│   ├── AppShell.tsx           # Main shell with sidebar, header, theming
+├── features/                  # Role-based architecture (ACTIVE)
 │   ├── admin/                 # Admin-specific pages and components
-│   │   ├── pages/
+│   │   ├── pages/             # User management, audit logs, etc.
 │   │   ├── components/
 │   │   └── hooks/
-│   ├── instructor/            # Instructor-specific pages
-│   │   ├── pages/
+│   ├── batches/               # Batch and enrollment management (Unified)
+│   │   ├── pages/             # Batch list, details
 │   │   ├── components/
 │   │   └── hooks/
-│   ├── student/               # Student learning pages
-│   │   ├── pages/
-│   │   └── hooks/
-│   ├── content/               # Content management (Content Studio)
-│   │   ├── pages/
+│   ├── content/               # Content Studio (Tracks, Chapters, Mapping)
+│   │   ├── pages/             # TracksAndChapters, ChapterContent
 │   │   ├── components/
 │   │   ├── context/
-│   │   ├── hooks/
-│   │   └── utils/
-│   ├── batches/               # Shared batch components
-│   ├── components/            # Shared new-ui components
-│   ├── hooks/                 # New UI hooks (useRoleGuard, etc.)
-│   └── lib/                   # New UI utilities
+│   │   └── hooks/
+│   ├── instructor/            # Instructor-specific pages
+│   │   ├── pages/             # MyStudents, StudentDetails
+│   │   ├── components/
+│   │   └── hooks/
+│   ├── student/               # Student learning experience
+│   │   ├── pages/             # LearningDashboard, LearnChapter
+│   │   └── hooks/
+│   └── shared/                # Shared across all features
+│       ├── pages/             # Landing, Login, Register, NotFound
+│       ├── components/        # AppLayout, Sidebar, etc.
+│       └── hooks/             # useAuth, use-toast, etc.
 │
-├── legacy/                    # Deprecated experiment pages (11 files)
-│   └── *Experiment.tsx        # Old prototype and experimental pages
+├── components/                # Reusable component groups
+│   ├── ui/                    # shadcn/ui base components
+│   ├── layout/                # Main layout components (AppLayout, Sidebar)
+│   ├── design-system/         # Domain-specific design system
+│   ├── common/                # Shared utility components
+│   └── error-boundary/        # Error handling components
+│
+├── hooks/                     # Common hooks
+├── lib/                       # Global utilities and configurations
+├── services/                  # API integration layer
+├── styles/                    # Global styles and themes
+└── types/                     # Shared TypeScript types
 │
 ├── lib/                       # Utility functions and helpers
 │   ├── queryClient.ts         # TanStack Query setup
@@ -216,9 +169,9 @@ Located in `client/src/components/ui/`, these are shadcn/ui components:
 - Form controls, sidebar components
 - Styling via Tailwind CSS
 
-### Chapter Editor (Content Studio)
+### Chapter Content Page (Content Studio)
 
-The `new-ui/content/pages/ChapterContentPage.tsx` contains the modern 4-tab interface for editing chapters:
+The `features/content/pages/ChapterContentPage.tsx` contains the modern 4-tab interface for editing chapters:
 
 1. **Content Tab** - Rich text editor (TipTap WYSIWYG)
    - Three-script editing (Telugu, Devanagari, IAST)
@@ -445,11 +398,11 @@ const chapter = await storage.chapters.get(chapterId);
 1. **Determine role context:** admin, instructor, student, or content
 2. **Create page file:**
    ```
-   client/src/new-ui/{role}/pages/NewPage.tsx
+   client/src/features/{role}/pages/NewPage.tsx
    ```
 3. **Implement with AppShell context:**
    ```typescript
-   import { useRoleGuard } from '@/new-ui/hooks/useRoleGuard';
+   import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
    
    export function NewPage() {
      const isAuthorized = useRoleGuard(['required_role']);
@@ -588,6 +541,6 @@ All imports have been updated. The old `pages/` and `hooks/` directories are emp
   - If it's a data hook, use TanStack Query patterns
 
 **Last Updated**: January 13, 2026  
-**Project**: VedicLMS  
+**Project**: NaradaLMS  
 **Version**: Dual UI Architecture (New UI + Legacy)  
 **Target**: Complete migration to New UI before MVP 1.0 (Mid-March 2026)

@@ -1,10 +1,10 @@
-# VedicLMS Product Guide
+# NaradaLMS Product Guide
 
 **Version:** 2.0  
 **Last Updated:** January 13, 2026  
 **Status:** Production - Modular Architecture + New UI
 
-> This is the single source of truth for understanding VedicLMS: what we're building, why we built it this way, and how it works. Feed this to any LLM to get complete product context.
+> This is the single source of truth for understanding NaradaLMS: what we're building, why we built it this way, and how it works. Feed this to any LLM to get complete product context.
 
 ---
 
@@ -78,7 +78,7 @@ Create a modern, multilingual Learning Management System specifically designed f
 
 ### 2.1 What We Offer
 
-VedicLMS is a full-stack web application with three integrated subsystems:
+NaradaLMS is a full-stack web application with three integrated subsystems:
 
 1. **Content Management System**: Create and organize learning tracks, chapters, audio, and text segments
 2. **Interactive Learning Platform**: Students access synchronized audio-text content with dual learning modes
@@ -465,7 +465,7 @@ router.use(authMiddleware, requireRole('instructor', 'admin'));
 **Frontend Protection (MANDATORY for all protected pages):**
 ```typescript
 // Standard pattern - use at top of every protected page component
-import { useRoleGuard } from '@/new-ui/hooks/useRoleGuard';
+import { useRoleGuard } from '@/features/shared/hooks/useRoleGuard';
 
 export default function ProtectedPage() {
   // Route guard - only specified roles can access
@@ -491,7 +491,7 @@ export default function ProtectedPage() {
 - Standard pattern reduces human error
 
 **Implementation Details:**
-- `useRoleGuard` hook location: `client/src/new-ui/hooks/useRoleGuard.ts`
+- `useRoleGuard` hook location: `client/src/features/shared/hooks/useRoleGuard.ts`
 - Redirects unauthorized users to `/app/learning`
 - Shows descriptive toast notification
 - Supports multi-role access (OR logic)
@@ -622,7 +622,7 @@ export default function ProtectedPage() {
 ### 5.1 Why Modern & Colorful
 
 **Rationale:**
-Traditional Vedic LMS designs use brown/gold/saffron colors to evoke ancient manuscripts. We intentionally rejected this:
+Traditional NaradaLMS designs use brown/gold/saffron colors to evoke ancient manuscripts. We intentionally rejected this:
 
 - **Target younger generations:** Modern aesthetics attract students accustomed to contemporary UIs
 - **Professional credibility:** Bootstrap 5-inspired design signals seriousness
@@ -929,7 +929,7 @@ client/src/
 ### 7.4 Future Enhancements
 
 **Near-Term (Next 3-6 months):**
-1. **Complete New UI Migration:** Finish migrating all pages from legacy to new-ui architecture
+1. **Stabilize Unified Architecture:** Complete final refinements for role-based features and stabilization.
 2. **Student Dashboard:** Dedicated student view with progress visualization
 3. **Instructor Dashboard:** Batch roster, progress overview, evaluation tools
 4. **Admin Dashboard:** System health, user analytics, audit log browser
@@ -983,7 +983,7 @@ client/src/
 ### Quick Links
 
 - **Production App:** [Your deployment URL]
-- **Repository:** [https://github.com/kashyapkuchipudi/VedicLMS](https://github.com/kashyapkuchipudi/VedicLMS)
+- **Repository:** [https://github.com/kashyapkuchipudi/NaradaLMS](https://github.com/kashyapkuchipudi/NaradaLMS)
 - **Design System:** `/experiments/design-system`
 - **Experiments:** `/experiments`
 
