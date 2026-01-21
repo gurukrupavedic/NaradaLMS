@@ -19,6 +19,7 @@ const Register = lazy(() => import("@/features/shared/pages/Register").then(modu
 const PendingApproval = lazy(() => import("@/features/shared/pages/PendingApproval").then(module => ({ default: module.PendingApproval })));
 const NotFound = lazy(() => import("@/features/shared/pages/NotFound").then(module => ({ default: module.NotFound })));
 const AppShell = lazy(() => import("@/components/AppShell"));
+const GayatriValidationPage = lazy(() => import("@/features/content/components/GayatriValidationPage"));
 
 // Simple inline NotFound component
 const SimpleNotFound = () => {
@@ -86,6 +87,7 @@ function Router() {
           <Route path="/" component={Landing} />
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
+          <Route path="/gayatri-concept" component={GayatriValidationPage} />
 
           {/* Redirect unauthenticated /app attempts to login */}
           <Route path="/app" component={RedirectToLogin} />
