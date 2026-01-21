@@ -103,7 +103,7 @@ export function BatchDetailsCard({ batch, batches = [], currentBatchId, onBatchC
                 <ArrowLeftRight className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-white dark:bg-black border border-border shadow-lg min-w-56">
+            <DropdownMenuContent align="end" className="bg-popover border border-border shadow-lg min-w-56">
               {batches.map((b) => (
                 <DropdownMenuItem
                   key={b.id}

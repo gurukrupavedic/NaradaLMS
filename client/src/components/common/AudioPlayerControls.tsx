@@ -94,8 +94,8 @@ export function AudioPlayerControls({
                     variant="ghost"
                     size="icon"
                     className={cn(
-                        "h-8 w-8 rounded-full transition-all hover:bg-slate-100 dark:hover:bg-slate-800 flex-shrink-0",
-                        isPlaying && "bg-slate-100 dark:bg-slate-800 text-foreground"
+                        "h-8 w-8 rounded-full transition-all hover:bg-accent flex-shrink-0",
+                        isPlaying && "bg-accent text-accent-foreground"
                     )}
                     onClick={isPlaying ? onPause : onPlay}
                     disabled={disabled}
@@ -223,7 +223,7 @@ export function AudioPlayerControls({
                     <Button
                         variant="default"
                         size="icon"
-                        className="h-10 w-10 rounded-full shadow-md hover:scale-105 transition-transform bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+                        className="h-10 w-10 rounded-full shadow-md hover:scale-105 transition-transform"
                         onClick={isPlaying ? onPause : onPlay}
                         disabled={disabled}
                     >

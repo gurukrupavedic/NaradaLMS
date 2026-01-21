@@ -113,13 +113,13 @@ export function FocusMappingView({
     if (!currentSegment) {
         return (
             <div className="h-full flex flex-col items-center justify-center p-8 text-center space-y-4">
-                <div className="bg-blue-50 p-4 rounded-full">
-                    <MapPin className="w-8 h-8 text-blue-600" />
+                <div className="bg-primary/10 p-4 rounded-full">
+                    <MapPin className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold">Ready to Map</h3>
                 <p className="text-muted-foreground max-w-md">
-                    Press <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-mono">SPACE</kbd> to start the audio.
-                    Then press <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-mono">SPACE</kbd> again at the end of each sentence to mark the timestamp.
+                    Press <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">SPACE</kbd> to start the audio.
+                    Then press <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">SPACE</kbd> again at the end of each sentence to mark the timestamp.
                 </p>
                 <Button onClick={onTogglePlayPause} size="lg" className="mt-4">
                     <Play className="w-4 h-4 mr-2" /> Start Session

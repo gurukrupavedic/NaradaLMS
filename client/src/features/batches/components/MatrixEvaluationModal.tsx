@@ -64,7 +64,7 @@ export function MatrixEvaluationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-white dark:bg-black">
+      <DialogContent className="sm:max-w-[500px] bg-background">
         <DialogHeader>
           <DialogTitle>Update Proficiency</DialogTitle>
           <DialogDescription className="sr-only">

@@ -117,7 +117,7 @@ export function TopNav({ user }: TopNavProps) {
   }
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-border bg-white dark:bg-black px-4">
+    <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur px-4">
       {/* Left side - Sidebar trigger + Breadcrumbs */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <SidebarTrigger className="-ml-1" />
@@ -142,7 +142,7 @@ export function TopNav({ user }: TopNavProps) {
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
           <Bell className="h-4 w-4" />
-          <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
+          <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full" />
         </Button>
 
         {/* Theme toggle */}

@@ -92,7 +92,7 @@ export function BatchDetailsCard({
         {!collapsed && batches.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button 
+              <button
                 onClick={(e) => e.stopPropagation()}
                 className="p-0.5 text-foreground/60 hover:text-foreground hover:bg-muted/30 rounded-md transition-colors flex-shrink-0"
                 title="Switch batch"
@@ -100,16 +100,15 @@ export function BatchDetailsCard({
                 <ArrowLeftRight className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-white dark:bg-black border border-border shadow-lg min-w-56">
+            <DropdownMenuContent align="end" className="bg-popover border border-border shadow-lg min-w-56">
               {batches.map((b) => (
                 <DropdownMenuItem
                   key={b.id}
                   onClick={() => onBatchChange(b.id)}
-                  className={`py-1.5 cursor-pointer ${
-                    b.id === batch.id
+                  className={`py-1.5 cursor-pointer ${b.id === batch.id
                       ? "bg-muted/50 text-foreground font-medium"
                       : ""
-                  }`}
+                    }`}
                 >
                   <span className="font-mono text-sm text-muted-foreground">{b.batchCode}</span>
                   <span className="text-sm text-foreground ml-2">-</span>
@@ -122,7 +121,7 @@ export function BatchDetailsCard({
 
         {/* Expand/Collapse Icon - purely decorative, parent handles interaction */}
         <div className="p-0.5 text-foreground/60 pointer-events-none flex-shrink-0">
-          <ChevronDown 
+          <ChevronDown
             className={`w-4 h-4 transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`}
           />
         </div>

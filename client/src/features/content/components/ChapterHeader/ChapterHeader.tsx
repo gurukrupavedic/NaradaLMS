@@ -69,9 +69,9 @@ export function ChapterHeader({
 
     if (isLoading) {
         return (
-            <div className="bg-white dark:bg-gray-800 border-b">
+            <div className="bg-background border-b">
                 <div className="px-4 py-3">
-                    <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
+                    <div className="h-6 w-48 bg-muted rounded animate-pulse mb-2" />
                 </div>
             </div>
         );
@@ -79,25 +79,25 @@ export function ChapterHeader({
 
     return (
         <>
-            <div className="bg-white/95 dark:bg-black/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+            <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur border-b border-border flex-shrink-0">
                 <div className="px-4 h-14 flex items-center justify-between">
                     {/* Left: Tabs */}
                     <TabsList className="h-9 bg-transparent p-0">
                         <TabsTrigger
                             value="text-segmentation"
-                            className="h-9 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4 text-sm font-medium"
+                            className="h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4 text-sm font-medium"
                         >
                             Step 1: Text Segmentation
                         </TabsTrigger>
                         <TabsTrigger
                             value="mapping"
-                            className="h-9 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4 text-sm font-medium"
+                            className="h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4 text-sm font-medium"
                         >
                             Step 2: Audio Mapping
                         </TabsTrigger>
                         <TabsTrigger
                             value="preview"
-                            className="h-9 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4 text-sm font-medium"
+                            className="h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary rounded-none px-4 text-sm font-medium"
                         >
                             Step 3: Preview
                         </TabsTrigger>
@@ -158,7 +158,7 @@ export function ChapterHeader({
                                     <Switch
                                         checked={learnMode}
                                         onCheckedChange={onLearnModeChange}
-                                        className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                                        className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
                                     />
                                 </div>
 
@@ -168,14 +168,14 @@ export function ChapterHeader({
 
                         {/* Mode Toggle (Only visible on Step 5) */}
                         {activeTab === 'text-segmentation' && (
-                            <div className="flex items-center bg-gray-100 dark:bg-gray-800 p-1 rounded-md h-9 mr-4 ring-1 ring-inset ring-gray-200 dark:ring-gray-700">
+                            <div className="flex items-center bg-muted p-1 rounded-md h-9 mr-4 ring-1 ring-inset ring-border">
                                 <button
                                     onClick={() => onTextSegModeChange('editor')}
                                     className={`
                                         flex items-center gap-2 px-3 py-1 rounded-sm text-xs font-semibold transition-all
                                         ${textSegMode === 'editor'
-                                            ? 'bg-white dark:bg-gray-900 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10'
-                                            : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100'}
+                                            ? 'bg-background text-primary shadow-sm'
+                                            : 'text-muted-foreground hover:text-foreground'}
                                     `}
                                 >
                                     <FilePenLine className="h-3.5 w-3.5" />
@@ -186,8 +186,8 @@ export function ChapterHeader({
                                     className={`
                                         flex items-center gap-2 px-3 py-1 rounded-sm text-xs font-semibold transition-all
                                         ${textSegMode === 'segmentation'
-                                            ? 'bg-white dark:bg-gray-900 text-orange-600 shadow-sm ring-1 ring-black/5 dark:ring-white/10'
-                                            : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-100'}
+                                            ? 'bg-background text-orange-600 shadow-sm'
+                                            : 'text-muted-foreground hover:text-foreground'}
                                     `}
                                 >
                                     <Scissors className="h-3.5 w-3.5" />

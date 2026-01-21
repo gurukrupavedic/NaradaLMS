@@ -195,7 +195,7 @@ export function AudioFileManager({
                         "flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg transition-all cursor-pointer",
                         dragActive
                             ? "border-primary bg-primary/5 scale-[0.98]"
-                            : "border-gray-300 bg-gray-50/50 hover:border-gray-400 hover:bg-gray-50",
+                            : "border-border bg-muted/30 hover:border-primary/50 hover:bg-muted/50",
                         disabled && "opacity-50 cursor-not-allowed"
                     )}
                     onDragEnter={handleDrag}
@@ -205,13 +205,13 @@ export function AudioFileManager({
                     onClick={handleUploadClick}
                 >
                     <div className={cn(
-                        "bg-white p-4 rounded-full shadow-sm mb-4 transition-transform",
+                        "bg-background p-4 rounded-full shadow-sm mb-4 transition-transform",
                         dragActive && "scale-110"
                     )}>
                         <Music className="w-10 h-10 text-primary/40" />
                     </div>
 
-                    <p className="text-base font-semibold text-gray-900 mb-1">No Audio Files</p>
+                    <p className="text-base font-semibold text-foreground mb-1">No Audio Files</p>
                     <p className="text-sm text-muted-foreground mb-6 max-w-[280px]">
                         {dragActive ? "Drop to upload" : "Drag & drop an audio file here or click to browse"}
                     </p>
@@ -299,7 +299,7 @@ export function AudioFileManager({
 
                     {/* Upload Indicator */}
                     {isUploading && (
-                        <div className="flex items-center gap-2 text-xs text-blue-600 animate-pulse">
+                        <div className="flex items-center gap-2 text-xs text-primary animate-pulse">
                             <Loader2 className="h-3 w-3 animate-spin" />
                             <span>Uploading...</span>
                         </div>
@@ -312,7 +312,7 @@ export function AudioFileManager({
                         {...audioPlayerProps}
                         title={selectedAudioFile.displayName || selectedAudioFile.filename}
                         headerContent={formatBytes(selectedAudioFile.fileSize)}
-                        className="border-gray-200 shadow-sm"
+                        className="border-border shadow-sm"
                     />
                 )}
 
