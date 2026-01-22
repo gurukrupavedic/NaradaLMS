@@ -75,6 +75,7 @@ Detailed documentation is available in the `docs/` directory:
 - [Project Structure](docs/essentials/project-structure.md): Codebase organization and patterns.
 - [Module Contracts](docs/architecture/module-contracts.md): Technical boundaries and service APIs.
 - [Domain Requirements](docs/essentials/domain-requirements.md): Real-world workflows.
+- [Gayatri Design System](docs/design-system/gayatri-ds.md): The "Sacred & Professional" design language system.
 
 ## ⚖️ License
 MIT
