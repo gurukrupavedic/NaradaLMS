@@ -2,90 +2,82 @@
 
 > **A Blueprint for Concept-Driven Design Engineering**
 
-This document details the methodology used to build the **Gayatri Design System** for NaradaLMS. It is not just a technical guide, but a case study in how to translate abstract spiritual concepts (*Guru-Shishya Parampara*) into rigid engineering constraints without losing the "soul" of the application.
+This document details the methodology used to build the **Gayatri Design System** for NaradaLMS. It translates abstract spiritual concepts (*Guru-Shishya Parampara*) into rigid engineering constraints without losing the "soul" of the application.
+
+## 📖 How to Use This Document
+
+| If you are... | Read this to... |
+| :--- | :--- |
+| **Starting a New System** | Copy the [Mental Model](#-mental-model-to-system-mapping) and [Concept Phase](#-phase-0-conceptualization-the-soul-spike) to build your foundation. |
+| **Refactoring Legacy UI** | Follow the [5-Phase Journey](#-the-5-phase-implementation-journey) to safely migrate component-by-component without breaking the app. |
+| **Debugging Issues** | Check [Phase 3.5](#phase-35-remediation-visual-coherence-audit) for common "legacy override" patterns. |
+| **Adding New Tokens** | Skip to [Guardrail Philosophy](#-guardrail-philosophy) to understand where they must live. |
 
 ---
 
-## 🗺️ Phase 0: Conceptualization (The "Soul" Spike)
+## 🗺️ Mental Model to System Mapping
 
-### The Challenge
-NaradaLMS had a functional UI but lacked a "voice." It looked like a generic SaaS product. The user requested a "Sacred & Professional" aesthetic that respected the content (Vedic texts).
+The journey follows a strict hierarchy of abstraction:
 
-### The Solution: "Soul Language" vs. "System Language"
-We explicitly separated the **Brand (Soul)** from the **Data (System)**.
-- **System Language**: The existing Proficiency Matrix colors (Emerald, Green, Amber, Violet) were declared **Immutable**. They are objective data.
-- **Soul Language**: We introduced a new layer based on the **Gayatri Devi** (Veda Mātā) to hold the atmosphere.
+### 1. The Core Concept (Ideation)
+Identify the "Spirit" of the application before choosing colors.
+- **NaradaLMS**: "Guru-Shishya Parampara" → Stability (Nīla) + Illumination (Hema).
 
-### The Palette Definition (Artifact: `design_spike_gayatri.md`)
-We mapped 5 spiritual concepts to 5 UI Roles:
+### 2. Primitive Primitives (The Palette)
+Define colors as raw values (OKLCH). Don't assign meaning yet.
+- **OKLCH vs HSL**: Always use OKLCH for consistent perceptual lightness across different hues.
 
-| Concept | Color | UI Role | Emotional Result |
-| :--- | :--- | :--- | :--- |
-| **Mukta** (Pearl) | Luminescence | **Canvas** | "My eyes are calm; the content is pure." |
-| **Nīla** (Sapphire) | Infinity | **Structure** | "I am in a safe, established space." |
-| **Hema** (Gold) | Illumination | **Action** | "I am actively illuminating my understanding." |
-| **Vidruma** (Coral) | Vitality | **Feedback** | "I am being corrected by a energetic guide." |
-| **Dhavala** (Clear) | Clarity | **Contrast** | "I can see clearly." |
+### 3. Semantic Mapping (The Strategy)
+Map Primitives to Roles (`Background`, `Primary`, `Muted`). 
+- **Rule of One**: Exactly one primary action per view (Hema). 
+- **Structure Over Surface**: Structural elements (Sidebar/Header) use a different depth (Nīla) than the active canvas (Mukta).
 
 ---
 
 ## 🚀 The 5-Phase Implementation Journey
 
-We executed this vision using a **Surgical, Phased Rollout**. This prevented "Big Bang" refactors which often break functionality.
+We executed this vision using a **Surgical, Phased Rollout**.
+
+### Phase 0: Conceptualization (The "Soul" Spike)
+**Goal**: Define the "Soul Language" distinct from the "System Language."
+- **Win**: Defined 5 Roles: Canvas (Mukta), Structure (Nīla), Action (Hema), Feedback (Vidruma), Contrast (Dhavala).
+- **Exit Criteria**: You have a table mapping *Emotion* → *Role* → *Color Concept*.
 
 ### Phase 1: Shell & Surfaces (The Canvas)
-**Goal**: Establish the "New Identity" immediately.
-- **Action**: We repainted the largest surfaces first—The Sidebar (`Nīla`) and the Main Canvas (`Mukta`).
-- **Technical Strategy**:
-    - Introduced **OKLCH** primitives in `tailwind.config.ts`.
-    - **Why OKLCH?** It allows us to separate *Luminosity* from *Chroma*. We could create a Dark Mode that felt "conceptually consistent" (swapping Lightness values but keeping Chroma) rather than just "inverted colors."
-- **Win**: The app *felt* different on Day 1, even if buttons were still the old blue.
+**Goal**: Establish the "New Identity" immediately by painting the largest surfaces first.
+- **Action**: Sidebar (`Nīla`) and Main Canvas (`Mukta`).
+- **Anti-Pattern**: Trying to change every button in this phase. Focus ONLY on the shell.
+- **Exit Criteria**: The app "looks different" on login, even if buttons are wrong.
 
 ### Phase 2: Actions & Focus (The Interaction)
 **Goal**: Guide the user's eye and hand.
-- **Action**: We mapped `--primary` to **Hema** (Gold) and `--destructive` to **Vidruma** (Coral).
-- **The "Contrast Trap"**: Gold is notoriously hard for accessibility. White text on Gold fails WCAG AA.
-- **Correction**: We enforced `primary-foreground` to be **Nīla** (Deep Navy). This created a high-contrast "Bee/Tiger" look that feels premium and readable.
-- **Focus Rings**: We replaced the browser's blue glow with a thin **Hema** ring. This made keyboard navigation feel like "touching gold."
+- **Action**: Map `--primary` to Gold and `--destructive` to Coral. 
+- **Critical Fix**: Enforced `primary-foreground` to **Nīla** (Navy) because White-on-Gold fails contrast checks.
+- **Exit Criteria**: All primary actions are visible, readable, and distinct from the background.
 
-### Phase 3: Feedback & Operations (The Response)
-**Goal**: Speak efficiently when things happen.
-- **Action**: Mapped form errors and warnings to **Vidruma**.
-- **Constraint**: We established the **"Quiet Depth" Rule**. Never place a glowing element on a warning surface.
-- **Feedback Loop (Validation)**:
-    - We noticed that "Success" green clashed with the prestigious Gold tone.
-    - **Adjustment**: We decided success states should yield to the Gold. Mastery (Gold) is higher than Success (Green).
-
-### Phase 3.5: Remediation (Visual Coherence Audit)
-**The Bug**: During verification, we noticed Dark Mode backgrounds were "Pure Black" `oklch(0 0 0)` instead of our intended `Nīla-Infinite` `oklch(0.15 0.04 260)`.
-- **Root Cause**: Legacy CSS in `index.css` contained HSL overrides (`--background: 222 47% 11%`) that were stronger than our new OKLCH tokens due to cascade order.
-- **The Fix**: We surgically removed the legacy blocks. This proved the importance of **Canonicalization**.
+### Phase 3: Remediation (The Audit)
+**Goal**: Remove legacy overrides and fix dark mode coherence.
+- **Common Failure Mode**: Legacy CSS (using HSL) overriding new OKLCH tokens due to cascade specificity.
+- **Action**: Surgically remove old variables from `index.css`.
+- **Exit Criteria**: Dark mode is "Deep Navy," not "Pure Black."
 
 ### Phase 4: Hardening (Canonicalization)
 **Goal**: Single Source of Truth.
-- **Problem**: Tokens were scattered between `index.css`, `globals.css`, and inline styles.
-- **Solution**:
-    1.  Created `client/src/styles/design-system/tokens.css`.
-    2.  Moved ALL color definitions there.
-    3.  Stripped `index.css` down to only imports and utilities.
-- **Guardrail**: We wrote `scripts/check-theme-integrity.js`. This script fails the build if it detects `:root` or token definitions inside `index.css`.
-    - *Why?* To prevent future developers from "quick fixing" styles in the wrong place.
+- **Action**: Move all tokens to `tokens.css`. Clean `index.css`.
+- **Guardrail**: Add a script (`check-theme-integrity.js`) that fails the build if tokens are defined inline.
+- **Exit Criteria**: `index.css` contains zero token definitions. Script passes.
 
-### Phase 5: Refinement (The "Luminous" Polish)
-**Goal**: Perfect the "Feel."
-- **Feedback**: "Hema feels too amber/orange. It looks like a pigment, not a light."
-- **Adjustment**:
-    - **Hue Shift**: Moved from `70` (Amber) to `85` (Yellow-Gold).
-    - **Luminosity Lift**: Increased Lightness by 3% and reduced Chroma by 2%.
-- **Result**: The buttons now look like they are "glowing" rather than "painted." This micro-adjustment was only possible because we had a canonical token file—we changed 2 numbers, and the entire app updated.
+### Phase 5: Refinement (The polish)
+**Goal**: Perfect the "Feel" based on usage.
+- **Feedback**: "Hema is too amber/pigmented."
+- **Adjustment**: Shifted Hue (`70`→`85`) and Lightness (`+3%`) for a "Luminous" look.
+- **Exit Criteria**: User sign-off on the "vibe."
 
 ---
 
 ## 🧠 Approach Summary: Reusable Principles
 
-If you are building a design system for another product, copy this mental model:
-
-1.  **Concept First, Color Second**: Define *Roles* (e.g., "Illumination") before you pick hex codes.
+1.  **Concept First, Color Second**: Define *Roles* before you pick hex codes.
 2.  **Primitives vs. Semantics**:
     - `hema-base` (Primitive)
     - `primary-action` (Semantic)
@@ -99,7 +91,7 @@ If you are building a design system for another product, copy this mental model:
 
 ## 🔗 Key Artifacts
 
-- **The Spike**: @[design_spike_gayatri.md]
-- **The Rules**: @[design_system_guardrails.md]
+- **The Spike**: `design_spike_gayatri.md`
+- **The Rules**: `design_system_guardrails.md`
 - **The Tokens**: `tokens.css`
-- **The Verification**: @[gayatri_validation_report.md]
+- **The Verification**: `gayatri_validation_report.md`
