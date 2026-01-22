@@ -156,20 +156,21 @@ export function FocusSessionSetup({
     return (
         <div className="h-full flex flex-col p-1 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
             {/* Presets Container */}
-            <div className="h-full w-full border rounded-xl bg-background shadow-sm flex flex-col overflow-hidden">
+            <div className="h-full w-full border rounded-xl bg-card flex flex-col overflow-hidden">
                 {/* Header */}
-                <div className="pt-6 px-6 text-center space-y-2 shrink-0 max-w-3xl mx-auto w-full">
-                    <h1 className="text-2xl font-semibold tracking-tight">Mapping presets</h1>
-                    <p className="text-muted-foreground">Verify or change the settings before the session starts</p>
-                </div>
+                <CardHeader className="text-center space-y-2 shrink-0 border-b bg-muted py-4">
+                    <CardTitle className="text-2xl font-semibold tracking-tight font-vedic-title text-foreground">Mapping presets</CardTitle>
+                    <CardDescription className="text-muted-foreground text-sm">Verify or change the settings before the session starts</CardDescription>
+                </CardHeader>
 
                 {/* Scrollable Content */}
                 <div className="p-6 space-y-6 flex-1 overflow-y-auto max-w-3xl mx-auto w-full">
 
                     {/* 1. Audio Source */}
                     <div className="space-y-2">
-                        <Label className="uppercase text-xs font-semibold text-muted-foreground tracking-wide">
-                            1 Audio Source
+                        <Label className="uppercase text-[10px] font-bold text-vidyut-base/70 tracking-widest flex items-center gap-2">
+                            <span className="flex items-center justify-center w-4 h-4 rounded bg-vidyut-base/10 text-[10px]">1</span>
+                            Audio Source
                         </Label>
                         <div className="flex gap-3">
                             <Select
@@ -200,8 +201,9 @@ export function FocusSessionSetup({
 
                     {/* 2. Script Language */}
                     <div className="space-y-3">
-                        <Label className="uppercase text-xs font-semibold text-muted-foreground tracking-wide">
-                            2 Script Language
+                        <Label className="uppercase text-[10px] font-bold text-vidyut-base/70 tracking-widest flex items-center gap-2">
+                            <span className="flex items-center justify-center w-4 h-4 rounded bg-vidyut-base/10 text-[10px]">2</span>
+                            Script Language
                         </Label>
                         <Select
                             value={selectedScript}
@@ -220,8 +222,9 @@ export function FocusSessionSetup({
 
                     {/* 3. Start Segment */}
                     <div className="space-y-3">
-                        <Label className="uppercase text-xs font-semibold text-muted-foreground tracking-wide">
-                            3 Start Segment
+                        <Label className="uppercase text-[10px] font-bold text-vidyut-base/70 tracking-widest flex items-center gap-2">
+                            <span className="flex items-center justify-center w-4 h-4 rounded bg-vidyut-base/10 text-[10px]">3</span>
+                            Start Segment
                         </Label>
                         <Popover open={openSegmentCombo} onOpenChange={setOpenSegmentCombo}>
                             <PopoverTrigger asChild>
@@ -229,7 +232,7 @@ export function FocusSessionSetup({
                                     variant="outline"
                                     role="combobox"
                                     aria-expanded={openSegmentCombo}
-                                    className="w-full justify-between h-11 font-normal px-4"
+                                    className="w-full justify-between h-11 font-normal px-4 py-2 text-left transition-all"
                                 >
                                     {startSegmentId
                                         ? (() => {
@@ -239,12 +242,19 @@ export function FocusSessionSetup({
                                             const truncated = txt.length > 60 ? txt.substring(0, 60) + '...' : txt;
                                             const index = segments.indexOf(s);
                                             return (
-                                                <span className="flex items-center gap-3">
-                                                    <span className="font-mono text-sm text-slate-400">#{index + 1}</span>
-                                                    <span className={cn(
-                                                        "truncate",
-                                                        selectedScript === 'te' || selectedScript === 'hi' ? 'font-telugu text-lg' : ''
-                                                    )}>{truncated}</span>
+                                                <span className="flex items-center gap-4">
+                                                    <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider bg-mantra-base text-white shrink-0">#{index + 1}</span>
+                                                    <span
+                                                        className={cn(
+                                                            "whitespace-normal leading-relaxed py-1 block",
+                                                            selectedScript === 'en' ? 'text-sm' : 'text-[1.25rem]'
+                                                        )}
+                                                        style={{
+                                                            fontFamily: selectedScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
+                                                                selectedScript === 'hi' ? "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif" :
+                                                                    "'AdishilaSan', 'Noto Sans', sans-serif"
+                                                        }}
+                                                    >{truncated}</span>
                                                 </span>
                                             );
                                         })()
@@ -252,9 +262,12 @@ export function FocusSessionSetup({
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-30" />
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[700px] p-0" align="start">
+                            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 !ring-0 !ring-offset-0 !outline-none !shadow-2xl border-none" align="start">
                                 <Command>
-                                    <CommandInput placeholder="Search segment..." className="h-10" />
+                                    <CommandInput
+                                        placeholder="Search segment..."
+                                        className="h-14 text-base !ring-0 !ring-offset-0 !outline-none !border-none !shadow-none focus:!ring-0 focus-visible:!ring-0 focus-visible:!ring-offset-0"
+                                    />
                                     <CommandList>
                                         <CommandEmpty>No segment found.</CommandEmpty>
                                         <CommandGroup>
@@ -269,7 +282,7 @@ export function FocusSessionSetup({
                                                             setStartSegmentId(segment.id);
                                                             setOpenSegmentCombo(false);
                                                         }}
-                                                        className="py-2.5 px-3"
+                                                        className="py-4 px-3 data-[selected='true']:bg-accent/50"
                                                     >
                                                         <Check
                                                             className={cn(
@@ -277,11 +290,18 @@ export function FocusSessionSetup({
                                                                 startSegmentId === segment.id ? "opacity-100" : "opacity-0"
                                                             )}
                                                         />
-                                                        <span className="font-mono text-muted-foreground w-8 shrink-0">#{index + 1}</span>
-                                                        <span className={cn(
-                                                            "truncate",
-                                                            selectedScript === 'te' || selectedScript === 'hi' ? 'font-telugu text-lg' : ''
-                                                        )}>{truncated}</span>
+                                                        <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider bg-mantra-base text-white w-10 shrink-0 text-center">#{index + 1}</span>
+                                                        <span
+                                                            className={cn(
+                                                                "whitespace-normal leading-relaxed py-1.5 block",
+                                                                selectedScript === 'en' ? 'text-base' : 'text-[1.5rem]'
+                                                            )}
+                                                            style={{
+                                                                fontFamily: selectedScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
+                                                                    selectedScript === 'hi' ? "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif" :
+                                                                        "'AdishilaSan', 'Noto Sans', sans-serif"
+                                                            }}
+                                                        >{truncated}</span>
                                                     </CommandItem>
                                                 )
                                             })}
@@ -294,8 +314,9 @@ export function FocusSessionSetup({
 
                     {/* 4. Start Timestamp */}
                     <div className="space-y-3">
-                        <Label className="uppercase text-xs font-semibold text-muted-foreground tracking-wide">
-                            4 Start Timestamp
+                        <Label className="uppercase text-[10px] font-bold text-vidyut-base/70 tracking-widest flex items-center gap-2">
+                            <span className="flex items-center justify-center w-4 h-4 rounded bg-vidyut-base/10 text-[10px]">4</span>
+                            Start Timestamp
                         </Label>
 
                         <div className="flex items-center gap-4">
@@ -340,12 +361,12 @@ export function FocusSessionSetup({
                     <div className="pt-4 flex flex-col items-center gap-4">
                         <Button
                             size="lg"
-                            className="w-full h-20 text-xl font-bold rounded-xl shadow-lg shadow-blue-900/20 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 transition-all transform active:scale-95 text-white"
+                            className="w-full h-16 text-lg font-bold rounded-xl shadow-lg shadow-vidyut-base/10 bg-vidyut-base hover:bg-vidyut-base/90 active:bg-vidyut-base/80 transition-all transform active:scale-[0.98] text-vidyut-foreground group"
                             disabled={!canStart}
                             onClick={() => onStartSession({ startSegmentId, startTimestamp })}
                         >
-                            START SESSION
-                            <ArrowRight className="ml-2 h-6 w-6 opacity-80" />
+                            START MAPPING SESSION
+                            <ArrowRight className="ml-2 h-5 w-5 opacity-80 group-hover:translate-x-1 transition-transform" />
                         </Button>
 
                         {/* Back Link */}
