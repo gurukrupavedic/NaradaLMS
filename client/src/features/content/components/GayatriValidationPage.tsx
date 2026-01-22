@@ -268,6 +268,76 @@ export default function GayatriValidationPage() {
 
                         </div>
 
+                        {/* 5. PHASE 3: FEEDBACK & OPERATIONS LAB */}
+                        <div className="border-t pt-8 mt-8" style={{ borderColor: COLORS.muktaBorder }}>
+                            <h2 className="text-xl font-bold mb-6" style={{ color: COLORS.nilaText }}>Phase 3: Operational States Lab</h2>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                                {/* A. Inputs & Focus */}
+                                <div className="space-y-4">
+                                    <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: COLORS.nilaMuted }}>Idle vs Focus</h3>
+                                    <div className="space-y-3">
+                                        <input
+                                            type="text"
+                                            placeholder="Idle Input (Mukta Border)"
+                                            className="w-full px-3 py-2 rounded-md border text-sm transition-all outline-none focus:ring-2 focus:ring-offset-2"
+                                            style={{
+                                                backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : 'white',
+                                                borderColor: COLORS.muktaBorder,
+                                                color: COLORS.nilaText,
+                                                // Note: Tailwind classes usually handle focus ring color via --ring variable
+                                                // We will rely on global CSS for ring color, simulating standard input behavior
+                                            }}
+                                        />
+                                        <div className="text-xs" style={{ color: COLORS.nilaMuted }}>
+                                            *Focus ring should be thin Gold (Hema). Border should be Calm (Mukta).
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* B. Destructive & Critical */}
+                                <div className="space-y-4">
+                                    <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: COLORS.nilaMuted }}>Critical Feedback</h3>
+
+                                    {/* Destructive Button */}
+                                    <div className="flex gap-4 items-center">
+                                        <button
+                                            className="px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                                            style={{ backgroundColor: COLORS.vidrumaWarn, color: '#FFFFFF' }}
+                                        >
+                                            Delete Batch
+                                        </button>
+                                        <span className="text-xs" style={{ color: COLORS.nilaMuted }}>Vidruma (Coral) for Destructive</span>
+                                    </div>
+
+                                    {/* Error Alert */}
+                                    <div className="p-4 rounded-md flex items-start gap-3 border" style={{
+                                        backgroundColor: isDark ? 'rgba(154, 52, 18, 0.1)' : '#FFF7ED',
+                                        borderColor: 'rgba(249, 115, 22, 0.2)'
+                                    }}>
+                                        <AlertCircle size={18} style={{ color: COLORS.vidrumaWarn }} />
+                                        <div className="text-sm">
+                                            <strong style={{ color: COLORS.vidrumaText }}>Connection Error</strong>
+                                            <p className="mt-1" style={{ color: COLORS.vidrumaText }}>Unable to sync student progress. Retrying...</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* C. Muted / Empty State */}
+                                <div className="col-span-1 md:col-span-2 p-8 rounded-lg border border-dashed text-center" style={{ borderColor: COLORS.muktaBorder }}>
+                                    <div className="inline-flex p-3 rounded-full mb-3" style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#F1F5F9' }}>
+                                        <Search size={24} style={{ color: COLORS.nilaMuted }} />
+                                    </div>
+                                    <h4 className="font-medium" style={{ color: COLORS.nilaText }}>No Curriculum Found</h4>
+                                    <p className="text-sm mt-1 max-w-sm mx-auto" style={{ color: COLORS.nilaMuted }}>
+                                        This is a muted state example. The text should be distinct but de-emphasized without becoming unreadable.
+                                    </p>
+                                </div>
+
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </main>

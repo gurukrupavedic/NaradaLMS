@@ -13,6 +13,30 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+
+        // GAYATRI PRIMITIVES (Phase 1)
+        nila: {
+          base: "oklch(var(--nila-base))",
+          surface: "oklch(var(--nila-surface))",
+          text: "oklch(var(--nila-text))",
+          muted: "oklch(var(--nila-muted))",
+          infinite: "oklch(var(--nila-infinite))", // Dark mode
+          elevated: "oklch(var(--nila-elevated))", // Dark mode
+        },
+        mukta: {
+          canvas: "oklch(var(--mukta-canvas))",
+          card: "oklch(var(--mukta-card))",
+          border: "oklch(var(--mukta-border))",
+        },
+        // GAYATRI ACTIONS (Phase 2)
+        hema: {
+          base: "oklch(var(--hema-base))",
+          surface: "oklch(var(--hema-surface))",
+        },
+        vidruma: {
+          warn: "oklch(var(--vidruma-warn))",
+        },
+
         card: {
           DEFAULT: "var(--card)",
           foreground: "var(--card-foreground)",
