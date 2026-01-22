@@ -67,7 +67,7 @@ const SortableSegmentItem = memo(function SortableSegmentItem({
         <div
             ref={setNodeRef}
             style={style}
-            id={`segment - ${segment.id} `}
+            id={`segment-${segment.id}`}
             onClick={() => onSelect?.(segment.id)}
             className={cn(
                 "group pt-1.5 pb-0 px-2 border rounded-lg transition-all duration-200 cursor-pointer relative",
@@ -163,7 +163,7 @@ export function SegmentList(props: SegmentListProps) {
     // Auto-scroll to selected segment
     useEffect(() => {
         if (selectedSegmentId) {
-            const element = document.getElementById(`segment - ${selectedSegmentId} `);
+            const element = document.getElementById(`segment-${selectedSegmentId}`);
             if (element) {
                 element.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }

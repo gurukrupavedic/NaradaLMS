@@ -9,6 +9,17 @@ import {
     ResizablePanelGroup,
 } from '@/components/ui/resizable';
 import { StretchHorizontal, Zap, RotateCcw } from 'lucide-react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/AlertDialog';
 import { AudioFileManager } from '@/features/content/components/AudioFileManager';
 import { ProgressiveMapper } from './ProgressiveMapper';
 import { SegmentMappingGrid } from './SegmentMappingGrid';
@@ -305,15 +316,37 @@ export function MappingTab() {
                                                 </Badge>
                                             )}
                                             {mappedCount > 0 && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={state.clearSessionData}
-                                                    className="h-6 text-xs text-muted-foreground hover:bg-vidruma-warn/10 hover:text-vidruma-warn px-2 ml-2 transition-colors"
-                                                >
-                                                    <RotateCcw className="h-3 w-3 mr-1" />
-                                                    Clear All
-                                                </Button>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-6 text-xs text-muted-foreground hover:bg-vidruma-warn/10 hover:text-vidruma-warn px-2 ml-2 transition-colors"
+                                                        >
+                                                            <RotateCcw className="h-3 w-3 mr-1" />
+                                                            Clear All
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Clear All Mappings?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This action cannot be undone. This will permanently remove all {mappedCount} audio-to-segment mappings for this session.
+                                                                <br /><br />
+                                                                Note: The underlying text segments will remain intact.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction
+                                                                onClick={state.clearSessionData}
+                                                                className="bg-destructive hover:bg-destructive/90"
+                                                            >
+                                                                Yes, clear all mappings
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             )}
                                         </div>
                                     </div>

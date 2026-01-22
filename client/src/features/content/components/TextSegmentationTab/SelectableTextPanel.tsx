@@ -140,6 +140,7 @@ export function SelectableTextPanel({
             parts.push(
                 <span
                     key={`segment-${segment.id}`}
+                    id={`segment-${segment.id}`}
                     className={`px-1.5 py-0.5 rounded-sm cursor-pointer transition-all ${isSelected
                         ? 'bg-mantra-base text-white font-medium'
                         : 'bg-mantra-base/[0.08] border-l-2 border-r-2 border-y border-mantra-base/20 hover:bg-mantra-base/15 hover:border-mantra-base/50 text-foreground'
@@ -192,6 +193,16 @@ export function SelectableTextPanel({
             return () => document.removeEventListener('mousedown', handleClickOutside);
         }
     }, [showToolbar]);
+
+    // Auto-scroll to selected segment
+    useEffect(() => {
+        if (selectedSegmentId) {
+            const element = document.getElementById(`segment-${selectedSegmentId}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }, [selectedSegmentId]);
 
     // Update toolbar position on scroll
     useEffect(() => {
