@@ -68,7 +68,7 @@ export function SegmentCard({
                 "cursor-pointer transition-all duration-200",
                 status === 'ready' && "border-border hover:border-muted-foreground/50 hover:bg-muted/50",
                 status === 'recording' && "border-mantra-base bg-mantra-surface shadow-md animate-subtle-pulse",
-                status === 'mapped' && "border-vidyut-base bg-vidyut-surface/50 hover:bg-vidyut-surface shadow-none",
+                status === 'mapped' && "border-vidyut-base bg-vidyut-surface/50 shadow-none",
                 className
             )}
             onClick={onClick}

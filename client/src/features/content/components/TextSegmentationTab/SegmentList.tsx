@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, memo } from 'react';
 import { Trash2, FileText, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSortable } from '@dnd-kit/sortable';
@@ -34,12 +34,13 @@ interface SegmentListProps {
     script?: Script;
 }
 
-interface SortableSegmentItemProps extends Omit<SegmentListProps, 'segments' | 'mappings'> {
+interface SortableSegmentItemProps extends Omit<SegmentListProps, 'segments' | 'mappings' | 'content'> {
     segment: FrontendTextSegment;
     index: number;
+    segmentText: string;
 }
 
-function SortableSegmentItem({
+const SortableSegmentItem = memo(function SortableSegmentItem({
     segment,
     index,
     onDelete,
@@ -47,7 +48,7 @@ function SortableSegmentItem({
     isPublished,
     selectedSegmentId,
     onSelect,
-    content,
+    segmentText,
     script,
 }: SortableSegmentItemProps) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -56,15 +57,11 @@ function SortableSegmentItem({
 
     const style = {
         transform: CSS.Transform.toString(transform),
-        transition,
+        transition: isDragging ? 'none' : transition,
         opacity: isDragging ? 0.5 : 1,
     };
 
     const isSelected = selectedSegmentId === segment.id;
-    // Use shared utility to properly extract plain text from HTML content
-    const segmentText = content && script
-        ? getSegmentText(segment as any, content, script)
-        : '';
 
     return (
         <div
@@ -73,9 +70,9 @@ function SortableSegmentItem({
             id={`segment - ${segment.id} `}
             onClick={() => onSelect?.(segment.id)}
             className={cn(
-                "group pt-1.5 pb-0 px-2 border rounded-lg transition-colors cursor-pointer relative",
+                "group pt-1.5 pb-0 px-2 border rounded-lg transition-all duration-200 cursor-pointer relative",
                 isSelected
-                    ? "bg-mantra-base border-mantra-base shadow-md ring-1 ring-mantra-base text-white"
+                    ? "bg-card border-mantra-base text-foreground"
                     : "bg-card border-border hover:bg-muted/50 transition-all text-foreground"
             )}
         >
@@ -88,7 +85,7 @@ function SortableSegmentItem({
                         className={cn(
                             "self-center -ml-1 p-1 cursor-grab active:cursor-grabbing",
                             isSelected
-                                ? "text-white opacity-80"
+                                ? "text-mantra-base opacity-100"
                                 : "text-muted-foreground/30 hover:text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
                         )}
                         onClick={(e) => e.stopPropagation()}
@@ -101,13 +98,13 @@ function SortableSegmentItem({
                     <div className="flex items-center gap-2 mb-0.5">
                         <span className={cn(
                             "text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider",
-                            isSelected ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+                            isSelected ? "bg-mantra-base text-white" : "bg-muted text-muted-foreground"
                         )}>
                             #{index + 1}
                         </span>
                         <span className={cn(
                             "text-[10px]",
-                            isSelected ? "text-white/70" : "text-muted-foreground"
+                            isSelected ? "text-muted-foreground font-medium" : "text-muted-foreground"
                         )}>
                             {segment.startPosition}-{segment.endPosition}
                         </span>
@@ -122,10 +119,10 @@ function SortableSegmentItem({
                             fontFamily: script === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
                                 script === 'hi' ? "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif" :
                                     "'AdishilaSan', 'Noto Sans', sans-serif",
-                            fontSize: script === 'en' ? 'var(--font-size-standard)' : '1.2rem',
+                            fontSize: script === 'en' ? 'var(--font-size-standard)' : '1.875rem',
                             fontWeight: script === 'hi' ? 'var(--font-weight-devanagari)' : 400,
                             lineHeight: 1.8,
-                            color: isSelected ? 'white' : undefined
+                            color: 'inherit'
                         }}
                     >
                         {segmentText || "No text content"}
@@ -158,10 +155,10 @@ function SortableSegmentItem({
             </div>
         </div>
     );
-}
+});
 
 export function SegmentList(props: SegmentListProps) {
-    const { segments, selectedSegmentId } = props;
+    const { segments, selectedSegmentId, content, script } = props;
 
     // Auto-scroll to selected segment
     useEffect(() => {
@@ -185,14 +182,20 @@ export function SegmentList(props: SegmentListProps) {
 
     return (
         <div className="space-y-2">
-            {segments.map((segment, index) => (
-                <SortableSegmentItem
-                    key={segment.id}
-                    segment={segment}
-                    index={index}
-                    {...props}
-                />
-            ))}
+            {segments.map((segment, index) => {
+                const segmentText = content && script
+                    ? getSegmentText(segment as any, content, script)
+                    : '';
+                return (
+                    <SortableSegmentItem
+                        key={segment.id}
+                        segment={segment}
+                        index={index}
+                        segmentText={segmentText}
+                        {...props}
+                    />
+                );
+            })}
         </div>
     );
 }

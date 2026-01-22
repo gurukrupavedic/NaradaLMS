@@ -185,7 +185,7 @@ export function ChapterHeader({
                                     className={`
                                         flex items-center gap-2 px-3 py-1 rounded-sm text-xs font-semibold transition-all
                                         ${textSegMode === 'segmentation'
-                                            ? 'bg-background text-mantra-base shadow-sm'
+                                            ? 'bg-background text-primary shadow-sm'
                                             : 'text-muted-foreground hover:text-foreground'}
                                     `}
                                 >

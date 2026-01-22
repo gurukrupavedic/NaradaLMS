@@ -141,7 +141,7 @@ export function SelectableTextPanel({
                 <span
                     key={`segment-${segment.id}`}
                     className={`px-1.5 py-0.5 rounded-sm cursor-pointer transition-all ${isSelected
-                        ? 'bg-mantra-base text-white shadow-sm font-medium ring-1 ring-mantra-base'
+                        ? 'bg-mantra-base text-white font-medium'
                         : 'bg-mantra-base/[0.08] border-l-2 border-r-2 border-y border-mantra-base/20 hover:bg-mantra-base/15 hover:border-mantra-base/50 text-foreground'
                         }`}
                     onClick={(e) => {

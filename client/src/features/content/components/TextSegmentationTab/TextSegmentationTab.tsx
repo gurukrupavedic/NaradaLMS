@@ -219,7 +219,7 @@ function SegmentationMode() {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="h-6 text-xs text-muted-foreground hover:text-destructive px-2"
+                                                    className="h-6 text-xs text-muted-foreground hover:bg-vidruma-warn/10 hover:text-vidruma-warn px-2 transition-colors"
                                                     disabled={isClearing}
                                                 >
                                                     <RotateCcw className="h-3 w-3 mr-1" />
