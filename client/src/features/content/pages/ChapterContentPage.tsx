@@ -44,8 +44,8 @@ function ChapterContentPageContent() {
     // Loading state
     if (isLoading) {
         return (
-            <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
-                <div className="bg-white dark:bg-gray-800 border-b px-4 py-3">
+            <div className="flex flex-col h-screen bg-background">
+                <div className="bg-card border-b px-4 py-3">
                     <Skeleton className="h-8 w-64 mb-2" />
                     <Skeleton className="h-4 w-96" />
                 </div>
@@ -59,8 +59,8 @@ function ChapterContentPageContent() {
     // Error state
     if (error) {
         return (
-            <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
-                <div className="bg-white dark:bg-gray-800 border-b px-4 py-3">
+            <div className="flex flex-col h-screen bg-background">
+                <div className="bg-card border-b px-4 py-3">
                     <h1 className="text-xl font-semibold">Chapter Content Editor</h1>
                 </div>
                 <div className="flex-1 p-4 flex items-center justify-center">
@@ -76,7 +76,7 @@ function ChapterContentPageContent() {
 
     // Main render
     return (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className={`flex flex-col bg-gray-50 dark:bg-gray-900 h-[calc(100dvh-4rem)] ${isPublished ? 'cursor-not-allowed' : ''}`}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className={`flex flex-col bg-background h-[calc(100dvh-4rem)] ${isPublished ? 'cursor-not-allowed' : ''}`}>
             {/* AudioPlayerProvider wraps everything so ChapterHeader can access audio context */}
             <AudioPlayerProvider>
                 {/* ChapterHeader with integrated tabs / actions */}

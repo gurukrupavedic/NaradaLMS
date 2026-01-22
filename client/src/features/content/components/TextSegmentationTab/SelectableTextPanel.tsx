@@ -28,6 +28,7 @@ export function SelectableTextPanel({
     const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
     const textContainerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const toolbarRef = useRef<HTMLDivElement>(null);
 
     // Get plain text for this script
     const plainText = getDisplayText(content, script);
@@ -139,9 +140,9 @@ export function SelectableTextPanel({
             parts.push(
                 <span
                     key={`segment-${segment.id}`}
-                    className={`px-1 py-0.5 rounded-md cursor-pointer transition-all box-decoration-clone ${isSelected
-                        ? 'bg-orange-200 text-orange-900 dark:bg-orange-900 dark:text-orange-100 shadow-sm font-medium ring-1 ring-orange-300 dark:ring-orange-700'
-                        : 'bg-slate-100 hover:bg-orange-100 dark:bg-slate-800 dark:hover:bg-orange-900/50 text-foreground hover:text-orange-900 dark:hover:text-orange-100'
+                    className={`px-1.5 py-0.5 rounded-sm cursor-pointer transition-all ${isSelected
+                        ? 'bg-mantra-base text-white shadow-sm font-medium ring-1 ring-mantra-base'
+                        : 'bg-mantra-base/[0.08] border-l-2 border-r-2 border-y border-mantra-base/20 hover:bg-mantra-base/15 hover:border-mantra-base/50 text-foreground'
                         }`}
                     onClick={(e) => {
                         e.stopPropagation();
@@ -168,6 +169,29 @@ export function SelectableTextPanel({
         return <div className="whitespace-pre-wrap">{parts}</div>;
     };
 
+
+    // Global click-away listener for "The Singularity" dismissal
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            // Dismiss if click is outside both the toolbar AND the text container
+            if (
+                showToolbar &&
+                toolbarRef.current &&
+                !toolbarRef.current.contains(event.target as Node) &&
+                textContainerRef.current &&
+                !textContainerRef.current.contains(event.target as Node)
+            ) {
+                setShowToolbar(false);
+                setSelectedRange(null);
+                window.getSelection()?.removeAllRanges();
+            }
+        };
+
+        if (showToolbar) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [showToolbar]);
 
     // Update toolbar position on scroll
     useEffect(() => {
@@ -210,7 +234,8 @@ export function SelectableTextPanel({
             {/* Floating Toolbar */}
             {showToolbar && selectedRange && !disabled && (
                 <div
-                    className="fixed z-50 flex items-center gap-1 bg-gray-900/95 backdrop-blur-md border border-gray-700/80 rounded-lg shadow-xl p-1.5"
+                    ref={toolbarRef}
+                    className="fixed z-50 flex items-center gap-1 bg-sidebar backdrop-blur-md border border-sidebar-border rounded-lg shadow-xl p-1.5"
                     style={{
                         top: `${toolbarPosition.top}px`,
                         left: `${toolbarPosition.left}px`,
@@ -220,20 +245,11 @@ export function SelectableTextPanel({
                     <Button
                         size="sm"
                         variant="ghost"
-                        className="h-8 w-8 p-0 text-white hover:bg-green-500/20 hover:text-green-300"
+                        className="h-8 w-8 p-0 text-white hover:bg-mantra-base hover:text-white"
                         onClick={handleCreateSegment}
                         title="Create Segment"
                     >
                         <Plus className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 w-8 p-0 text-white hover:bg-red-500/20 hover:text-red-300"
-                        onClick={handleCancel}
-                        title="Cancel"
-                    >
-                        <X className="h-4 w-4" />
                     </Button>
                 </div>
             )}

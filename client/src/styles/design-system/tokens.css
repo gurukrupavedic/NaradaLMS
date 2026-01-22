@@ -31,6 +31,13 @@
   --vidruma-warn: 0.65 0.20 30;
   /* Coral Red */
 
+  /* Vidyut (Lightning Blue) - Mapping & Transmission */
+  --vidyut-base: 0.70 0.12 250;
+  --vidyut-surface: 0.96 0.05 250;
+  /* Mantra (Sacred Orange) - Segmentation & Recitation */
+  --mantra-base: 0.75 0.15 45;
+  --mantra-surface: 0.97 0.04 45;
+
   /* BASE TOKENS */
   --background: oklch(var(--mukta-canvas));
   --foreground: oklch(var(--nila-text));

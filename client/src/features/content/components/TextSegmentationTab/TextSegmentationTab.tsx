@@ -150,7 +150,7 @@ function SegmentationMode() {
                     maxSize={80}
                 >
                     <Card className="h-full flex flex-col overflow-hidden">
-                        <div className="px-4 h-11 bg-gray-50/50 dark:bg-gray-900/50 border-b flex-shrink-0 flex items-center">
+                        <div className="px-4 h-11 bg-muted border-b flex-shrink-0 flex items-center">
                             <div className="flex items-center justify-between w-full">
                                 <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                                     <FileText className="w-4 h-4" />
@@ -162,7 +162,7 @@ function SegmentationMode() {
                                         value={selectedScript}
                                         onValueChange={(value) => setSelectedScript(value as 'te' | 'hi' | 'en')}
                                     >
-                                        <SelectTrigger className="h-7 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700">
+                                        <SelectTrigger className="h-7 w-40 text-xs bg-background border border-border">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="text-sm">
@@ -206,10 +206,10 @@ function SegmentationMode() {
                     maxSize={60}
                 >
                     <Card className="h-full flex flex-col overflow-hidden">
-                        <div className="px-4 h-11 bg-gray-50/50 dark:bg-gray-900/50 border-b flex-shrink-0 flex items-center">
+                        <div className="px-4 h-11 bg-muted border-b flex-shrink-0 flex items-center">
                             <div className="flex items-center justify-between w-full">
                                 <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                                    <StretchHorizontal className="w-4 h-4 text-orange-600/70 fill-orange-500/70" />
+                                    <StretchHorizontal className="w-4 h-4 text-mantra-base fill-mantra-base/70" />
                                     Text Segments ({scriptSegments.length})
                                 </h2>
                                 <div>

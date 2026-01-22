@@ -148,7 +148,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                 <div className="mt-6 pt-4 border-t">
                   <Button
                     onClick={onEndSession}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-medium"
+                    className="w-full bg-vidyut-base hover:bg-vidyut-base/90 text-white py-6 text-lg font-medium shadow-md border-0"
                     disabled={!activeSegmentId && mappingSession !== 'paused'}
                   >
                     <Square className="h-5 w-5 mr-2" />

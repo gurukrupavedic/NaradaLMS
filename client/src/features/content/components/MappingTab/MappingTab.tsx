@@ -274,7 +274,7 @@ export function MappingTab() {
                                 className="bg-card border rounded-lg overflow-hidden flex flex-col"
                             >
                                 {/* Header with Script Selector + Stats */}
-                                <div className="px-4 h-11 bg-gray-50/50 dark:bg-gray-900/50 border-b flex-shrink-0 flex items-center">
+                                <div className="px-4 h-11 bg-muted border-b flex-shrink-0 flex items-center">
                                     <div className="flex items-center justify-between w-full">
                                         <div className="flex items-center gap-3">
                                             <span className="text-xs font-medium text-muted-foreground">Script:</span>
@@ -282,7 +282,7 @@ export function MappingTab() {
                                                 value={selectedScript}
                                                 onValueChange={(value) => setSelectedScript(value as Script)}
                                             >
-                                                <SelectTrigger className="h-7 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700">
+                                                <SelectTrigger className="h-7 w-40 text-xs bg-background border border-border">
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent className="text-sm">
@@ -293,14 +293,14 @@ export function MappingTab() {
                                             </Select>
                                         </div>
 
-                                        <div className="flex bg-card items-center gap-4">
-                                            <Badge variant="secondary" className="flex items-center gap-1 h-6 bg-orange-50 text-orange-700 border-orange-100">
-                                                <StretchHorizontal className="h-3 w-3 fill-orange-500 text-orange-600" />
+                                        <div className="flex bg-transparent items-center gap-4">
+                                            <Badge variant="secondary" className="flex items-center gap-1 h-6 bg-mantra-base/10 text-mantra-base border-mantra-base/20">
+                                                <StretchHorizontal className="h-3 w-3 fill-mantra-base text-mantra-base" />
                                                 {currentScriptSegments.length} segments
                                             </Badge>
                                             {audioFiles.length > 0 && (
-                                                <Badge variant="secondary" className="flex items-center gap-1 h-6 bg-blue-50 text-blue-700 border-blue-100">
-                                                    <Zap className="h-3 w-3 fill-blue-500 text-blue-600" />
+                                                <Badge variant="secondary" className="flex items-center gap-1 h-6 bg-vidyut-base/10 text-vidyut-base border-vidyut-base/20">
+                                                    <Zap className="h-3 w-3 fill-vidyut-base text-vidyut-base" />
                                                     {mappedCount} mapped
                                                 </Badge>
                                             )}
@@ -379,7 +379,7 @@ export function MappingTab() {
 
                                             <Button
                                                 onClick={state.startMappingSession}
-                                                className="w-full h-11 shadow-md bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-0 font-semibold tracking-wide"
+                                                className="w-full h-11 shadow-md bg-vidyut-base hover:bg-vidyut-base/90 text-primary-foreground border-0 font-semibold tracking-wide"
                                                 disabled={isPublished}
                                             >
                                                 START MAPPING

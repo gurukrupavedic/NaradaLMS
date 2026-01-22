@@ -79,7 +79,7 @@ export function ChapterHeader({
 
     return (
         <>
-            <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur border-b border-border flex-shrink-0">
+            <div className="bg-card border-b border-border flex-shrink-0">
                 <div className="px-4 h-14 flex items-center justify-between">
                     {/* Left: Tabs */}
                     <TabsList className="h-9 bg-transparent p-0">
@@ -115,7 +115,7 @@ export function ChapterHeader({
                                             value={selectedAudioFileId?.toString() || ''}
                                             onValueChange={(value) => onAudioFileChange?.(parseInt(value))}
                                         >
-                                            <SelectTrigger className="h-8 w-48 text-xs border-0 shadow-none bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 focus:ring-0 px-2 gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                                            <SelectTrigger className="h-8 w-48 text-xs border-0 shadow-none bg-transparent hover:bg-accent focus:ring-2 focus:ring-ring px-2 gap-2 text-muted-foreground hover:text-foreground transition-colors">
                                                 <div className="flex items-center gap-2 truncate">
                                                     <Music className="h-3.5 w-3.5 opacity-70" />
                                                     <SelectValue placeholder="Select audio" />
@@ -158,7 +158,6 @@ export function ChapterHeader({
                                     <Switch
                                         checked={learnMode}
                                         onCheckedChange={onLearnModeChange}
-                                        className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
                                     />
                                 </div>
 
@@ -186,7 +185,7 @@ export function ChapterHeader({
                                     className={`
                                         flex items-center gap-2 px-3 py-1 rounded-sm text-xs font-semibold transition-all
                                         ${textSegMode === 'segmentation'
-                                            ? 'bg-background text-orange-600 shadow-sm'
+                                            ? 'bg-background text-mantra-base shadow-sm'
                                             : 'text-muted-foreground hover:text-foreground'}
                                     `}
                                 >
@@ -199,7 +198,7 @@ export function ChapterHeader({
                         <div className="h-4 w-px bg-border" />
 
                         <div className="flex items-center gap-2">
-                            <span className={isPublished ? "h-2 w-2 rounded-full bg-green-500" : "h-2 w-2 rounded-full bg-yellow-500"} />
+                            <span className={isPublished ? "h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]" : "h-2 w-2 rounded-full bg-mantra-base shadow-[0_0_8px_rgba(var(--mantra-base),0.3)]"} />
                             <span className="text-sm font-medium text-muted-foreground">
                                 {isPublished ? 'Published' : 'Draft'}
                             </span>

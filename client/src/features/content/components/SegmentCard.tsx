@@ -67,8 +67,8 @@ export function SegmentCard({
             className={cn(
                 "cursor-pointer transition-all duration-200",
                 status === 'ready' && "border-border hover:border-muted-foreground/50 hover:bg-muted/50",
-                status === 'recording' && "border-orange-500 bg-orange-500/10 dark:bg-orange-500/20 shadow-md animate-subtle-pulse",
-                status === 'mapped' && "border-blue-400 bg-blue-400/5 dark:bg-blue-400/10 hover:bg-blue-400/10 dark:hover:bg-blue-400/20",
+                status === 'recording' && "border-mantra-base bg-mantra-surface shadow-md animate-subtle-pulse",
+                status === 'mapped' && "border-vidyut-base bg-vidyut-surface/50 hover:bg-vidyut-surface shadow-none",
                 className
             )}
             onClick={onClick}
@@ -80,8 +80,8 @@ export function SegmentCard({
                         <span className={cn(
                             "text-xs font-medium px-1.5 py-0.5 rounded",
                             status === 'mapped'
-                                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                                : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                                ? "bg-vidyut-base/20 text-vidyut-base"
+                                : "bg-muted text-muted-foreground"
                         )}>
                             #{segmentNumber}
                         </span>
@@ -98,7 +98,7 @@ export function SegmentCard({
                         className="text-foreground leading-relaxed whitespace-pre-wrap break-words"
                         style={{
                             fontFamily,
-                            fontSize,
+                            fontSize: (script === 'te' || script === 'hi') ? '2rem' : fontSize,
                             lineHeight: '1.4'
                         }}
                     >

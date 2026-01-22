@@ -1,5 +1,6 @@
 // Colors
 $bg-color: var(--rte-bg, #ffffff);
+$toolbar-bg: var(--rte-toolbar-bg, $bg-color);
 $fg-color: var(--rte-fg, #1f2328);
 $border-color: var(--rte-border);
 $primary-color: var(--rte-primary);

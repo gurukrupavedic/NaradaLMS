@@ -71,8 +71,7 @@
       flex: 0 1 auto;
       max-width: $editor-max-width;
       margin-inline: auto;
-      padding-block: 1rem;
-      padding-inline: 2rem;
+      padding: 2rem;
 
       // Force font inheritance for text elements to respect the script-based font set on the container
       h1,
@@ -108,9 +107,9 @@
 .rte-status-bar {
   display: flex;
   align-items: center;
-  min-height: 2.75rem;
-  padding: 0.125rem;
-  background-color: $bg-color;
+  height: 2.75rem;
+  padding: 0;
+  background-color: $toolbar-bg;
   line-height: 1.5;
 }
 

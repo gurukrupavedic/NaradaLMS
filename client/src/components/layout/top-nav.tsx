@@ -117,7 +117,7 @@ export function TopNav({ user }: TopNavProps) {
   }
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur px-4">
+    <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-4">
       {/* Left side - Sidebar trigger + Breadcrumbs */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <SidebarTrigger className="-ml-1" />

@@ -276,14 +276,14 @@ export function LearnChapterPage() {
   return (
     <div className="flex flex-col h-[calc(100dvh-4rem)]">
       {/* Header */}
-      <div className="bg-white/95 dark:bg-black/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+      <div className="bg-card border-b border-border flex-shrink-0">
         <div className="px-6 py-3 flex items-start justify-between">
           {/* Left: Titles aligned with rows */}
           <div className="flex flex-col gap-3">
-            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 h-7 flex items-center">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground h-7 flex items-center">
               {trackName ? `Track ${chapter?.track?.order || chapter?.track?.id || '?'} - ${trackName}` : 'Learn Chapter'}
             </p>
-            <h1 className="text-lg font-bold text-gray-900 dark:text-white leading-tight h-7 flex items-center">
+            <h1 className="text-lg font-bold text-foreground leading-tight h-7 flex items-center">
               {chapterNumber ? `Chapter ${chapterNumber} - ${displayTitle}` : displayTitle}
             </h1>
           </div>
@@ -298,7 +298,7 @@ export function LearnChapterPage() {
                     value={selectedAudioFileId?.toString() || ''}
                     onValueChange={(value) => setSelectedAudioFileId(parseInt(value))}
                   >
-                    <SelectTrigger className="h-7 w-full text-xs border-0 shadow-none bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 focus:ring-0 px-2 gap-2 text-muted-foreground hover:text-foreground transition-colors justify-start">
+                    <SelectTrigger className="h-7 w-full text-xs border-0 shadow-none bg-transparent hover:bg-accent focus:ring-2 focus:ring-ring px-2 gap-2 text-muted-foreground hover:text-foreground transition-colors justify-start">
                       <div className="flex items-center gap-2 truncate w-full">
                         <Music className="h-3.5 w-3.5 opacity-70 flex-shrink-0" />
                         <SelectValue placeholder="Select audio" />
@@ -408,7 +408,7 @@ export function LearnChapterPage() {
                 <Switch
                   checked={learnMode}
                   onCheckedChange={setLearnMode}
-                  className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600"
+                  className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
                 />
               </div>
             </div>
@@ -416,7 +416,7 @@ export function LearnChapterPage() {
         </div>
       </div>
       {/* Content Area */}
-      <div className={cn("flex-1 overflow-auto bg-gray-50 dark:bg-gray-950 p-4", { "rte-editor--fullscreen": isFullScreen })}>
+      <div className={cn("flex-1 overflow-auto bg-background p-4", { "rte-editor--fullscreen": isFullScreen })}>
         {!learnMode ? (
           // Learn Mode OFF - Tiptap HTML view
           <div className="h-full flex flex-col">
@@ -437,14 +437,14 @@ export function LearnChapterPage() {
           // Learn Mode ON - Segmented view
           <div className="h-full flex flex-col">
             {/* Script selector header with badges */}
-            <div className="border border-gray-200 dark:border-gray-800 border-b-0 rounded-t-lg bg-gray-50 dark:bg-gray-900 min-h-[42px] flex items-center justify-center gap-6 px-4 py-1">
+            <div className="border border-border border-b-0 rounded-t-lg bg-muted h-11 flex items-center justify-center gap-6 px-4 py-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-medium text-muted-foreground">Script:</span>
                 <Select
                   value={contentScript}
                   onValueChange={(value) => setContentScript(value as typeof contentScript)}
                 >
-                  <SelectTrigger className="h-7 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700">
+                  <SelectTrigger className="h-7 w-40 text-xs bg-background border border-border">
                     <SelectValue placeholder="Script" />
                   </SelectTrigger>
                   <SelectContent className="text-sm">
@@ -463,8 +463,8 @@ export function LearnChapterPage() {
                   {textSegments.length} segments
                 </Badge>
                 {audioFiles.length > 0 && (
-                  <Badge variant="secondary" className="flex items-center gap-1 h-6 bg-blue-50 text-blue-700 border-blue-100">
-                    <Zap className="h-3 w-3 fill-blue-500 text-blue-600" />
+                  <Badge variant="secondary" className="flex items-center gap-1 h-6 bg-vidyut-base/10 text-vidyut-base border-vidyut-base/20">
+                    <Zap className="h-3 w-3 fill-vidyut-base text-vidyut-base" />
                     {mappedCount} mapped
                   </Badge>
                 )}
@@ -472,7 +472,7 @@ export function LearnChapterPage() {
             </div>
 
             {/* Segmented text view */}
-            <div className="flex-1 min-h-0 border border-gray-200 dark:border-gray-800 border-b-0 bg-white dark:bg-black overflow-hidden relative">
+            <div className="flex-1 min-h-0 border border-border border-b-0 bg-card overflow-hidden relative">
               {chapter?.content?.[contentScript] ? (
                 <SelectableTextPanel
                   content={chapter.content}
@@ -491,7 +491,7 @@ export function LearnChapterPage() {
             </div>
 
             {/* StatusBar with fullscreen toggle for Segmented mode */}
-            <div className="rte-status-bar border border-gray-200 dark:border-gray-800 rounded-b-lg">
+            <div className="rte-status-bar border border-border rounded-b-lg h-11">
               <button
                 onClick={toggleFullScreen}
                 aria-label={isFullScreen ? "Exit Fullscreen" : "Fullscreen"}

@@ -41,7 +41,7 @@ export const MenuBar = ({ currentScript, onScriptChange, disabled }: MenuBarProp
               value={currentScript}
               onValueChange={onScriptChange}
             >
-              <SelectTrigger className="w-40 h-7 text-xs bg-white dark:bg-gray-950 shadow-none border-input">
+              <SelectTrigger className="w-40 h-7 text-xs bg-background shadow-none border-input">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

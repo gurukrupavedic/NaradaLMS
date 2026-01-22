@@ -75,8 +75,8 @@ function SortableSegmentItem({
             className={cn(
                 "group pt-1.5 pb-0 px-2 border rounded-lg transition-colors cursor-pointer relative",
                 isSelected
-                    ? "bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800 ring-1 ring-orange-300 dark:ring-orange-700 shadow-md transform scale-[1.01]"
-                    : "bg-card hover:bg-accent/50 hover:border-orange-100 dark:hover:border-orange-900 transition-all"
+                    ? "bg-mantra-base border-mantra-base shadow-md ring-1 ring-mantra-base text-white"
+                    : "bg-card border-border hover:bg-muted/50 transition-all text-foreground"
             )}
         >
             <div className="flex items-start gap-2">
@@ -88,8 +88,8 @@ function SortableSegmentItem({
                         className={cn(
                             "self-center -ml-1 p-1 cursor-grab active:cursor-grabbing",
                             isSelected
-                                ? "text-orange-400 hover:text-orange-600 opacity-100"
-                                : "text-muted-foreground/50 hover:text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                                ? "text-white opacity-80"
+                                : "text-muted-foreground/30 hover:text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
                         )}
                         onClick={(e) => e.stopPropagation()}
                     >
@@ -100,12 +100,15 @@ function SortableSegmentItem({
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                         <span className={cn(
-                            "text-xs font-medium px-1.5 py-0.5 rounded",
-                            isSelected ? "bg-orange-100 text-orange-700 dark:bg-orange-800 dark:text-orange-200" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                            "text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider",
+                            isSelected ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
                         )}>
                             #{index + 1}
                         </span>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className={cn(
+                            "text-[10px]",
+                            isSelected ? "text-white/70" : "text-muted-foreground"
+                        )}>
                             {segment.startPosition}-{segment.endPosition}
                         </span>
                     </div>
@@ -119,9 +122,10 @@ function SortableSegmentItem({
                             fontFamily: script === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
                                 script === 'hi' ? "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif" :
                                     "'AdishilaSan', 'Noto Sans', sans-serif",
-                            fontSize: 'var(--font-size-standard)',
+                            fontSize: script === 'en' ? 'var(--font-size-standard)' : '1.2rem',
                             fontWeight: script === 'hi' ? 'var(--font-weight-devanagari)' : 400,
-                            lineHeight: 1.85
+                            lineHeight: 1.8,
+                            color: isSelected ? 'white' : undefined
                         }}
                     >
                         {segmentText || "No text content"}
@@ -141,7 +145,10 @@ function SortableSegmentItem({
                                 e.stopPropagation(); // Prevent selection when deleting
                                 onDelete(segment.id);
                             }}
-                            className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                            className={cn(
+                                "h-6 w-6 p-0 hover:bg-destructive/10",
+                                isSelected ? "text-white/80 hover:text-white" : "text-muted-foreground hover:text-destructive"
+                            )}
                             title="Delete segment"
                         >
                             <Trash2 className="w-3 h-3" />

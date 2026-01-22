@@ -36,6 +36,14 @@ export default {
         vidruma: {
           warn: "oklch(var(--vidruma-warn))",
         },
+        vidyut: {
+          base: "oklch(var(--vidyut-base))",
+          surface: "oklch(var(--vidyut-surface))",
+        },
+        mantra: {
+          base: "oklch(var(--mantra-base))",
+          surface: "oklch(var(--mantra-surface))",
+        },
 
         card: {
           DEFAULT: "var(--card)",

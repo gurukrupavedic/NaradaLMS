@@ -132,14 +132,14 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
     return (
         <div className={cn("h-full flex flex-col", { "rte-editor--fullscreen": isFullScreen })}>
             {/* Script selector header - Match Tiptap toolbar height (44px / 2.75rem) */}
-            <div className="border border-gray-200 dark:border-gray-800 border-b-0 rounded-t-lg bg-gray-50 dark:bg-gray-900 min-h-[2.75rem] flex items-center justify-center gap-6 px-4 py-0.5">
+            <div className="border border-border border-b-0 rounded-t-lg bg-muted min-h-[2.75rem] flex items-center justify-center gap-6 px-4 py-0.5">
                 <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-muted-foreground">Script:</span>
                     <Select
                         value={contentScript}
                         onValueChange={(value) => setContentScript(value as typeof contentScript)}
                     >
-                        <SelectTrigger className="h-7 w-40 text-xs bg-white dark:bg-black border border-gray-200 dark:border-gray-700">
+                        <SelectTrigger className="h-7 w-40 text-xs bg-background border border-border">
                             <SelectValue placeholder="Script" />
                         </SelectTrigger>
                         <SelectContent className="text-sm">
@@ -167,7 +167,7 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
             </div>
 
             {/* Segmented text view */}
-            <div className="flex-1 min-h-0 border border-gray-200 dark:border-gray-800 border-b-0 bg-white dark:bg-black overflow-hidden relative">
+            <div className="flex-1 min-h-0 border border-border border-b-0 bg-card overflow-hidden relative">
                 {chapter?.content?.[contentScript] ? (
                     <SelectableTextPanel
                         content={chapter.content}
@@ -186,7 +186,7 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
             </div>
 
             {/* StatusBar with fullscreen toggle - Match Tiptap status bar exactly */}
-            <div className="rte-status-bar border border-gray-200 dark:border-gray-800 rounded-b-lg">
+            <div className="rte-status-bar border border-border rounded-b-lg">
                 <button
                     onClick={toggleFullScreen}
                     aria-label={isFullScreen ? "Exit Fullscreen" : "Fullscreen"}
