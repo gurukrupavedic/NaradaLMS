@@ -48,6 +48,10 @@
   --popover: oklch(var(--mukta-card));
   --popover-foreground: oklch(var(--nila-text));
 
+  /* Scrollbar - Slick Translucent (Gayatri System) */
+  --scrollbar-thumb: oklch(0.20 0.08 265 / 0.2);
+  --scrollbar-track: transparent;
+
   /* ACTIONS (Phase 2) */
   /* PRIMARY = HEMA (GOLD) */
   --primary: oklch(var(--hema-base));
@@ -123,6 +127,10 @@
 
   --popover: oklch(var(--nila-elevated));
   --popover-foreground: oklch(var(--dhavala-text));
+
+  /* Scrollbar - Slick Translucent (Dark) */
+  --scrollbar-thumb: oklch(0.98 0.01 260 / 0.2);
+  --scrollbar-track: transparent;
 
   /* ACTIONS (Phase 2 - Dark) */
   --primary: oklch(var(--hema-base-dark));
