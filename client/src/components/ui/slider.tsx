@@ -5,8 +5,11 @@ import { cn } from "@/lib/utils"
 
 const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> & { thumbClassName?: string }
->(({ className, thumbClassName, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> & {
+    thumbClassName?: string;
+    rangeClassName?: string;
+  }
+>(({ className, thumbClassName, rangeClassName, ...props }, ref) => (
   <SliderPrimitive.Root
     ref={ref}
     className={cn(
@@ -16,7 +19,7 @@ const Slider = React.forwardRef<
     {...props}
   >
     <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
-      <SliderPrimitive.Range className="absolute h-full bg-primary" />
+      <SliderPrimitive.Range className={cn("absolute h-full bg-primary", rangeClassName)} />
     </SliderPrimitive.Track>
     <SliderPrimitive.Thumb className={cn(
       "block h-5 w-5 rounded-full bg-background border-2 border-primary shadow-md ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",

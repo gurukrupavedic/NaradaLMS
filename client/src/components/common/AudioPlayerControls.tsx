@@ -88,7 +88,7 @@ export function AudioPlayerControls({
 
     if (variant === 'minimal') {
         return (
-            <div className={cn("w-full flex items-center gap-3 bg-card border rounded-lg shadow-sm px-3 py-2", className)}>
+            <div className={cn("w-full flex items-center gap-3 bg-background border rounded-lg px-3 py-2", className)}>
                 {/* Play/Pause Button */}
                 <Button
                     variant="ghost"
@@ -124,6 +124,8 @@ export function AudioPlayerControls({
                         onValueChange={(val) => onSeek?.(val[0])}
                         disabled={disabled}
                         className="cursor-pointer"
+                        rangeClassName="bg-primary"
+                        thumbClassName="border-primary"
                     />
                 </div>
 
@@ -170,7 +172,7 @@ export function AudioPlayerControls({
 
     // Default Layout (Card)
     return (
-        <div className={cn("w-full bg-card rounded-xl border shadow-sm p-4 space-y-4", className)}>
+        <div className={cn("w-full bg-background rounded-xl border p-4 space-y-4", className)}>
             {/* Title & Header Content */}
             {(title || headerContent) && (
                 <div className="flex items-center justify-between gap-4">
@@ -195,6 +197,8 @@ export function AudioPlayerControls({
                     onValueChange={(val) => onSeek?.(val[0])}
                     disabled={disabled}
                     className="cursor-pointer"
+                    rangeClassName="bg-primary"
+                    thumbClassName="border-primary"
                 />
                 <div className="flex justify-between text-xs font-mono text-muted-foreground tabular-nums">
                     <span>{formatTime(currentTime)}</span>
@@ -223,7 +227,7 @@ export function AudioPlayerControls({
                     <Button
                         variant="default"
                         size="icon"
-                        className="h-10 w-10 rounded-full shadow-md hover:scale-105 transition-transform"
+                        className="h-10 w-10 rounded-full shadow-md bg-primary hover:bg-primary/90 text-primary-foreground hover:scale-105 transition-all"
                         onClick={isPlaying ? onPause : onPlay}
                         disabled={disabled}
                     >
@@ -275,6 +279,8 @@ export function AudioPlayerControls({
                                     step={1}
                                     onValueChange={(val) => onVolumeChange?.(val[0])}
                                     disabled={disabled}
+                                    rangeClassName="bg-primary"
+                                    thumbClassName="border-primary"
                                 />
                             </div>
                         </div>

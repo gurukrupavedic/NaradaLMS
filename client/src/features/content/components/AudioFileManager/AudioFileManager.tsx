@@ -180,7 +180,9 @@ export function AudioFileManager({
     // Empty State (Full Panel Drag-and-Drop)
     if (audioFiles.length === 0 && !isUploading) {
         return (
-            <div className="h-full flex flex-col p-4">
+            <div className="h-full flex flex-col bg-card">
+                <div className="h-11 bg-muted border-b shrink-0" />
+
                 <input
                     ref={fileInputRef}
                     type="file"
@@ -190,35 +192,37 @@ export function AudioFileManager({
                     disabled={disabled}
                 />
 
-                <div
-                    className={cn(
-                        "flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg transition-all cursor-pointer",
-                        dragActive
-                            ? "border-primary bg-primary/5 scale-[0.98]"
-                            : "border-border bg-muted/30 hover:border-primary/50 hover:bg-muted/50",
-                        disabled && "opacity-50 cursor-not-allowed"
-                    )}
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
-                    onClick={handleUploadClick}
-                >
-                    <div className={cn(
-                        "bg-background p-4 rounded-full shadow-sm mb-4 transition-transform",
-                        dragActive && "scale-110"
-                    )}>
-                        <Music className="w-10 h-10 text-primary/40" />
-                    </div>
+                <div className="flex-1 overflow-auto p-4 flex flex-col">
+                    <div
+                        className={cn(
+                            "flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg transition-all cursor-pointer",
+                            dragActive
+                                ? "border-primary bg-primary/5 scale-[0.98]"
+                                : "border-border bg-muted/30 hover:border-primary/50 hover:bg-muted/50",
+                            disabled && "opacity-50 cursor-not-allowed"
+                        )}
+                        onDragEnter={handleDrag}
+                        onDragLeave={handleDrag}
+                        onDragOver={handleDrag}
+                        onDrop={handleDrop}
+                        onClick={handleUploadClick}
+                    >
+                        <div className={cn(
+                            "bg-background p-4 rounded-full shadow-sm mb-4 transition-transform",
+                            dragActive && "scale-110"
+                        )}>
+                            <Music className="w-10 h-10 text-primary/40" />
+                        </div>
 
-                    <p className="text-base font-semibold text-foreground mb-1">No Audio Files</p>
-                    <p className="text-sm text-muted-foreground mb-6 max-w-[280px]">
-                        {dragActive ? "Drop to upload" : "Drag & drop an audio file here or click to browse"}
-                    </p>
+                        <p className="text-base font-semibold text-foreground mb-1">No Audio Files</p>
+                        <p className="text-sm text-muted-foreground mb-6 max-w-[280px]">
+                            {dragActive ? "Drop to upload" : "Drag & drop an audio file here or click to browse"}
+                        </p>
 
-                    <div className="space-y-2 text-xs text-muted-foreground">
-                        <p>Supports: MP3, WAV, M4A</p>
-                        <p>Maximum: 100 MB</p>
+                        <div className="space-y-2 text-xs text-muted-foreground">
+                            <p>Supports: MP3, WAV, M4A</p>
+                            <p>Maximum: 100 MB</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -227,7 +231,9 @@ export function AudioFileManager({
 
     // Active State
     return (
-        <div className="flex flex-col h-full bg-background">
+        <div className="flex flex-col h-full bg-card">
+            <div className="h-11 bg-muted border-b shrink-0" />
+
             <input
                 ref={fileInputRef}
                 type="file"
@@ -237,7 +243,7 @@ export function AudioFileManager({
                 disabled={disabled}
             />
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-auto p-4 space-y-4">
                 {/* File Selector + Action Buttons */}
                 <div className="space-y-2">
                     <div className="flex flex-wrap gap-2">
@@ -262,7 +268,7 @@ export function AudioFileManager({
                             <Button
                                 size="icon"
                                 variant="outline"
-                                className="h-9 w-9 flex-shrink-0"
+                                className="h-9 w-9 flex-shrink-0 hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
                                 onClick={handleUploadClick}
                                 disabled={disabled || isUploading}
                                 title="Upload new file"
@@ -274,7 +280,7 @@ export function AudioFileManager({
                             <Button
                                 size="icon"
                                 variant="outline"
-                                className="h-9 w-9 flex-shrink-0"
+                                className="h-9 w-9 flex-shrink-0 hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
                                 onClick={handleEditClick}
                                 disabled={disabled || !selectedAudioFile}
                                 title="Rename file"
@@ -286,7 +292,7 @@ export function AudioFileManager({
                             <Button
                                 size="icon"
                                 variant="outline"
-                                className="h-9 w-9 flex-shrink-0"
+                                className="h-9 w-9 flex-shrink-0 hover:bg-vidruma-warn/10 hover:text-vidruma-warn hover:border-vidruma-warn/20 transition-all"
                                 onClick={handleDeleteClick}
                                 disabled={disabled || !selectedAudioFile}
                                 title="Delete file"
