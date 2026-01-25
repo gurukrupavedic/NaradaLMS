@@ -152,7 +152,7 @@ export function AuthPage() {
 const LightInput = (props: React.ComponentProps<typeof Input>) => (
     <Input
         {...props}
-        className={`bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-slate-400 [&:-webkit-autofill]:bg-white [&:-webkit-autofill]:shadow-[0_0_0_1000px_white_inset] [&:-webkit-autofill]:-webkit-text-fill-color:rgb(15_23_42) ${props.className}`}
+        className={`bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-hema-base focus-visible:border-hema-base [&:-webkit-autofill]:bg-white [&:-webkit-autofill]:shadow-[0_0_0_1000px_white_inset] [&:-webkit-autofill]:-webkit-text-fill-color:rgb(15_23_42) ${props.className}`}
     />
 );
 const LightLabel = (props: React.ComponentProps<typeof Label>) => (
