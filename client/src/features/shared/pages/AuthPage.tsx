@@ -73,11 +73,11 @@ export function AuthPage() {
                     {/* Mobile Logo */}
                     <div className="lg:hidden text-center mb-8 shrink-0">
                         <img src="/icon-contained-dark.svg" className="w-16 h-16 mx-auto mb-4" alt="Logo" />
-                        <h1 className="text-2xl font-bold font-iast text-slate-900">Narada LMS</h1>
+                        <h1 className="text-2xl font-bold text-slate-900">Narada LMS</h1>
                     </div>
 
                     <div className="text-center space-y-2 shrink-0 mb-8">
-                        <h1 className="text-2xl font-bold font-iast tracking-tight text-slate-900">Welcome</h1>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome</h1>
                         <p className="text-sm text-slate-500">Sign in to your account to continue</p>
                     </div>
 
@@ -152,7 +152,7 @@ export function AuthPage() {
 const LightInput = (props: React.ComponentProps<typeof Input>) => (
     <Input
         {...props}
-        className={`bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-nila-base focus-visible:border-nila-base ${props.className}`}
+        className={`bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-slate-400 [&:-webkit-autofill]:bg-white [&:-webkit-autofill]:shadow-[0_0_0_1000px_white_inset] [&:-webkit-autofill]:-webkit-text-fill-color:rgb(15_23_42) ${props.className}`}
     />
 );
 const LightLabel = (props: React.ComponentProps<typeof Label>) => (
@@ -210,7 +210,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
                         <LightLabel htmlFor="password">Password</LightLabel>
                         <LightInput id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={loading} />
                     </div>
-                    <Button type="submit" className="w-full bg-nila-base hover:bg-nila-surface text-white" disabled={loading}>
+                    <Button type="submit" className="w-full bg-hema-base hover:opacity-80 transition-opacity text-white" disabled={loading}>
                         {loading ? "Signing in..." : "Sign In"}
                     </Button>
                 </form>
@@ -305,7 +305,7 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
                         <LightLabel htmlFor="confirmPassword">Confirm Password</LightLabel>
                         <LightInput id="confirmPassword" type="password" required value={formData.confirmPassword} onChange={handleChange} disabled={loading} />
                     </div>
-                    <Button type="submit" className="w-full bg-nila-base hover:bg-nila-surface text-white" disabled={loading}>
+                    <Button type="submit" className="w-full bg-hema-base hover:opacity-80 transition-opacity text-white" disabled={loading}>
                         {loading ? "Creating account..." : "Create Account"}
                     </Button>
                 </form>
