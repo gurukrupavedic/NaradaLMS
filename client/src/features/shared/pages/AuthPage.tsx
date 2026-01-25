@@ -34,17 +34,25 @@ export function AuthPage() {
             <div className="hidden lg:flex w-1/2 relative bg-nila-base overflow-hidden items-center justify-center">
                 {/* ... (keep existing left panel) ... */}
                 {/* Kolam Background Layer */}
+                {/* Kolam Geometric Overlay */}
                 <div
-                    className="absolute inset-0 opacity-15 pointer-events-none"
+                    className="absolute inset-0 pointer-events-none"
                     style={{
-                        backgroundImage: `url(${kolamPattern})`,
-                        backgroundSize: "120%",
-                        backgroundPosition: "center",
-                        filter: "drop-shadow(0 0 2px rgba(255, 215, 0, 0.3))", // Subtle gold glow
+                        maskImage: `url(${kolamPattern})`,
+                        maskSize: "180%",
+                        maskPosition: "center",
+                        maskRepeat: "no-repeat",
+                        WebkitMaskImage: `url(${kolamPattern})`,
+                        WebkitMaskSize: "180%",
+                        WebkitMaskPosition: "center",
+                        WebkitMaskRepeat: "no-repeat",
                     }}
                 >
-                    {/* CSS-based Shimmer Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-hema-base/20 to-transparent -translate-x-full animate-shimmer" />
+                    {/* Layer 1: Base Etching (Static Gold Lines) */}
+                    <div className="absolute inset-0 bg-hema-base opacity-20" />
+
+                    {/* Layer 2: The Shimmer Beam (Moving Light) */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-hema-base/40 to-transparent -translate-x-full animate-shimmer" />
                 </div>
 
                 {/* Central Hero Logo */}
@@ -52,7 +60,7 @@ export function AuthPage() {
                     <img
                         src={logoStacked}
                         alt="Narada LMS"
-                        className="w-72 h-auto drop-shadow-2xl mb-8"
+                        className="w-96 h-auto drop-shadow-2xl mb-8"
                     />
                     <div className="space-y-2">
                         <h2 className="text-2xl font-semibold text-dhavala-text tracking-wide">
