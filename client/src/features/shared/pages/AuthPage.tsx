@@ -52,7 +52,7 @@ export function AuthPage() {
                     <img
                         src={logoStacked}
                         alt="Narada LMS"
-                        className="w-48 h-auto drop-shadow-2xl mb-6"
+                        className="w-72 h-auto drop-shadow-2xl mb-8"
                     />
                     <div className="space-y-2">
                         <h2 className="text-2xl font-semibold text-dhavala-text tracking-wide">
