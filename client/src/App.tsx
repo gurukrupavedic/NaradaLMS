@@ -13,9 +13,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 
 
 // Phase 5A: Bundle Optimization - Route-based code splitting
-const Landing = lazy(() => import("@/features/shared/pages/Landing").then(module => ({ default: module.Landing })));
-const Login = lazy(() => import("@/features/shared/pages/Login").then(module => ({ default: module.Login })));
-const Register = lazy(() => import("@/features/shared/pages/Register").then(module => ({ default: module.Register })));
+const AuthPage = lazy(() => import("@/features/shared/pages/AuthPage").then(module => ({ default: module.AuthPage })));
 const PendingApproval = lazy(() => import("@/features/shared/pages/PendingApproval").then(module => ({ default: module.PendingApproval })));
 const NotFound = lazy(() => import("@/features/shared/pages/NotFound").then(module => ({ default: module.NotFound })));
 const AppShell = lazy(() => import("@/components/AppShell"));
@@ -26,16 +24,19 @@ const SimpleNotFound = () => {
   const [, navigate] = useLocation();
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen w-full flex items-center justify-center bg-mukta-canvas dark:bg-nila-infinite">
       <div className="text-center">
-        <h1 className="text-6xl font-bold text-gray-900 mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-8">Page not found</p>
-        <button
-          onClick={() => navigate("/")}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Go Home
-        </button>
+        <h1 className="text-9xl font-bold text-nila-base dark:text-nila-surface opacity-10 mb-4">404</h1>
+        <div className="relative -mt-16 z-10 space-y-4">
+          <h2 className="text-2xl font-semibold text-nila-text dark:text-dhavala-text">Page Not Found</h2>
+          <p className="text-nila-muted dark:text-nila-muted-dark">The wisdom you seek lies elsewhere.</p>
+          <button
+            onClick={() => navigate("/")}
+            className="px-6 py-2 bg-nila-base text-white rounded-lg hover:bg-nila-surface transition-colors border border-nila-surface"
+          >
+            Return Home
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -84,9 +85,9 @@ function Router() {
     return (
       <Suspense fallback={<LoadingScreen message="Loading..." />}>
         <Switch>
-          <Route path="/" component={Landing} />
-          <Route path="/login" component={Login} />
-          <Route path="/register" component={Register} />
+          <Route path="/" component={AuthPage} />
+          <Route path="/login" component={AuthPage} />
+          <Route path="/register" component={AuthPage} />
 
 
           {/* Redirect unauthenticated /app attempts to login */}

@@ -33,61 +33,61 @@ function DefaultErrorFallback({ error, errorInfo, errorId, resetError, goHome }:
   const isDevelopment = process.env.NODE_ENV === 'development';
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-lg">
+    <div className="min-h-screen flex items-center justify-center bg-mukta-canvas dark:bg-nila-infinite p-4">
+      <Card className="w-full max-w-lg border-vidruma-warn/30 bg-card text-card-foreground">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-            <AlertTriangle className="h-6 w-6 text-red-600" />
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-vidruma-warn/10">
+            <AlertTriangle className="h-6 w-6 text-vidruma-warn" />
           </div>
-          <CardTitle className="text-xl font-semibold text-gray-900">
+          <CardTitle className="text-xl font-semibold text-nila-text dark:text-dhavala-text">
             Something went wrong
           </CardTitle>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-nila-muted dark:text-nila-muted-dark">
             We apologize for the inconvenience. The application encountered an unexpected error.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           {isDevelopment && error && (
-            <div className="rounded-md bg-gray-50 p-3">
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Error Details (Development)</h4>
-              <p className="text-xs text-gray-700 font-mono break-all">
+            <div className="rounded-md bg-nila-surface/50 p-3">
+              <h4 className="text-sm font-medium text-nila-text dark:text-dhavala-text mb-2">Error Details (Development)</h4>
+              <p className="text-xs text-nila-text dark:text-nila-muted-dark font-mono break-all">
                 {error.message}
               </p>
               {errorInfo && (
                 <details className="mt-2">
-                  <summary className="text-xs text-gray-600 cursor-pointer">
+                  <summary className="text-xs text-nila-muted cursor-pointer dark:text-nila-muted-dark">
                     Component Stack
                   </summary>
-                  <pre className="text-xs text-gray-600 mt-1 overflow-auto">
+                  <pre className="text-xs text-nila-muted dark:text-nila-muted-dark mt-1 overflow-auto max-h-32">
                     {errorInfo.componentStack}
                   </pre>
                 </details>
               )}
             </div>
           )}
-          
-          <div className="rounded-md bg-blue-50 p-3">
-            <p className="text-xs text-blue-700">
-              Error ID: <span className="font-mono">{errorId}</span>
+
+          <div className="rounded-md bg-nila-surface/50 p-3">
+            <p className="text-xs text-nila-text dark:text-dhavala-text">
+              Error ID: <span className="font-mono text-hema-base">{errorId}</span>
             </p>
-            <p className="text-xs text-blue-600 mt-1">
+            <p className="text-xs text-nila-muted dark:text-nila-muted-dark mt-1">
               Please include this ID when reporting the issue.
             </p>
           </div>
 
           <div className="flex gap-3 flex-col sm:flex-row">
-            <Button onClick={resetError} className="flex-1">
+            <Button onClick={resetError} className="flex-1 bg-nila-base hover:bg-nila-surface text-white">
               <RefreshCw className="w-4 h-4 mr-2" />
               Try Again
             </Button>
-            <Button variant="outline" onClick={goHome} className="flex-1">
+            <Button variant="outline" onClick={goHome} className="flex-1 border-nila-muted/30 hover:bg-nila-surface/10">
               <Home className="w-4 h-4 mr-2" />
               Go Home
             </Button>
           </div>
 
           <div className="text-center">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-nila-muted dark:text-nila-muted-dark">
               If this problem persists, please contact support.
             </p>
           </div>
@@ -170,7 +170,7 @@ export class ErrorBoundary extends Component<PropsWithChildren<ErrorBoundaryProp
   goHome = () => {
     // Clear error state first
     this.resetError();
-    
+
     // Navigate to home with a small delay to allow state to clear
     this.resetTimeoutId = window.setTimeout(() => {
       if (typeof window !== 'undefined' && window.location) {
@@ -226,8 +226,8 @@ export function AppErrorFallback() {
           </p>
         </CardHeader>
         <CardContent>
-          <Button 
-            onClick={() => window.location.reload()} 
+          <Button
+            onClick={() => window.location.reload()}
             className="w-full"
           >
             <RefreshCw className="w-4 h-4 mr-2" />

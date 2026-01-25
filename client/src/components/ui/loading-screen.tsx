@@ -6,10 +6,13 @@ interface LoadingScreenProps {
 
 export function LoadingScreen({ message = "Loading..." }: LoadingScreenProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-400 text-sm">{message}</p>
+    <div className="min-h-screen flex items-center justify-center bg-mukta-canvas dark:bg-nila-infinite">
+      <div className="text-center space-y-4">
+        <div className="relative mx-auto size-12 flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-hema-base animate-spin" />
+          <div className="absolute inset-2 rounded-full border-b-2 border-l-2 border-nila-base dark:border-vidyut-base animate-spin-slow-reverse opacity-70" />
+        </div>
+        <p className="text-nila-text dark:text-nila-elevated text-sm font-medium animate-pulse">{message}</p>
       </div>
     </div>
   );

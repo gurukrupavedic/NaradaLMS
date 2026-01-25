@@ -12,29 +12,29 @@
   /* Subtle Warm Gray */
 
   /* Nīla (Sapphire) - Structure */
-  --nila-base: 0.20 0.06 265;
-  /* Deep Navy */
-  --nila-surface: 0.25 0.05 260;
-  /* Lighter Navy for cards/hovers */
-  --nila-text: 0.20 0.08 265;
-  /* Main Text (Dark Blue) */
-  --nila-muted: 0.55 0.06 260;
-  /* Muted Text */
+  --nila-base: 0.20 0.06 270;
+  /* Deep Indigo (Primary Brand) */
+  --nila-surface: 0.25 0.05 265;
+  /* Slightly lighter for cards */
+  --nila-text: 0.20 0.08 270;
+  /* Deep text */
+  --nila-muted: 0.55 0.06 265;
+  /* Muted indigo-gray */
 
   /* Hema (Gold) - Primary Action / Illumination */
-  --hema-base: 0.76 0.13 85;
-  /* Luminous Yellow-Gold (More Glow, Less Pigment) */
+  --hema-base: 0.76 0.14 85;
+  /* Rich Gold */
   --hema-surface: 0.97 0.05 85;
-  /* Very Pale Gold Surface */
+  /* Pale gold wash */
 
   /* Vidruma (Coral) - Vitality / Warning */
   --vidruma-warn: 0.65 0.20 30;
-  /* Coral Red */
 
-  /* Vidyut (Lightning Blue) - Mapping & Transmission */
+  /* Vidyut (Lightning Blue) - Mapping */
   --vidyut-base: 0.70 0.12 250;
   --vidyut-surface: 0.96 0.05 250;
-  /* Mantra (Sacred Orange) - Segmentation & Recitation */
+
+  /* Mantra (Sacred Orange) - Segmentation */
   --mantra-base: 0.75 0.15 45;
   --mantra-surface: 0.97 0.04 45;
 
@@ -105,19 +105,17 @@
 
 .dark {
   /* GAYATRI DARK PRIMITIVES (Inner Sanctum) */
-  --nila-infinite: 0.15 0.04 260;
-  /* Deepest Navy */
-  --nila-elevated: 0.20 0.05 260;
-  /* Card Surface */
-  --dhavala-text: 0.98 0.01 260;
-  /* White with blue tint */
-  --nila-muted-dark: 0.65 0.05 260;
-  /* Muted */
+  --nila-infinite: 0.15 0.04 270;
+  /* Deepest Void Indigo */
+  --nila-elevated: 0.20 0.05 270;
+  /* Floating Surface */
+  --dhavala-text: 0.98 0.01 270;
+  /* Pure White with tiny indigo tint */
+  --nila-muted-dark: 0.65 0.05 270;
 
-  --hema-base-dark: 0.80 0.14 85;
-  /* High Luminosity Gold (More Glow) */
+  --hema-base-dark: 0.80 0.16 85;
+  /* Radiant Glowing Gold */
   --vidruma-warn-dark: 0.68 0.22 30;
-  /* Brighter Coral */
 
   --background: oklch(var(--nila-infinite));
   --foreground: oklch(var(--dhavala-text));
