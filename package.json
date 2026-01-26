@@ -10,8 +10,8 @@
     "check": "tsc",
     "db:push": "drizzle-kit push",
     "db:seed": "tsx server/seed-vedic-curriculum.ts",
-    "db:reset": "powershell -ExecutionPolicy Bypass -File scripts/db-reset.ps1",
-    "auth:test": "tsx scripts/run-auth-smoke-with-server.ts",
+    "db:reset": "powershell -ExecutionPolicy Bypass -File scripts/test/db-reset.ps1",
+    "auth:test": "tsx scripts/test/auth-test.ts",
     "smoke:batches": "tsx tests/admin-batches-smoke.ts",
     "lint": "eslint ."
   },
