@@ -212,23 +212,24 @@ export function useErrorHandler() {
 }
 
 // App-level error fallback component
+// App-level error fallback component
 export function AppErrorFallback() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-mukta-canvas dark:bg-nila-infinite p-4">
+      <Card className="w-full max-w-md bg-white dark:bg-nila-surface border-nila-muted/20 dark:border-hema-base/20">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-            <AlertTriangle className="h-6 w-6 text-red-600" />
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-vidruma-warn/10">
+            <AlertTriangle className="h-6 w-6 text-vidruma-warn" />
           </div>
-          <CardTitle>Application Error</CardTitle>
-          <p className="text-sm text-gray-600">
+          <CardTitle className="text-nila-text dark:text-dhavala-text">Application Error</CardTitle>
+          <p className="text-sm text-nila-muted dark:text-nila-muted-dark">
             The application encountered a critical error and needs to be restarted.
           </p>
         </CardHeader>
         <CardContent>
           <Button
             onClick={() => window.location.reload()}
-            className="w-full"
+            className="w-full bg-hema-base hover:bg-hema-light text-nila-infinite font-semibold"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Restart Application

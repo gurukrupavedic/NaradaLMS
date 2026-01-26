@@ -6,7 +6,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import logoHorizontal from '@/assets/branding/logo-horizontal-dark.svg';
+import wordmark from '@/assets/branding/wordmark-dark.svg';
 import symbol from '@/assets/branding/symbol-dark.svg';
 
 export function BrandHeader() {
@@ -16,16 +16,19 @@ export function BrandHeader() {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <SidebarMenuButton size="lg" asChild className="group-data-[collapsible=icon]:!p-0">
-          <a href="/app" className="flex items-center gap-2 overflow-hidden transition-all duration-300">
-            {/* Symbol (Always visible, but transitions position) */}
-            <div className={`flex aspect-square size-8 items-center justify-center rounded-lg transition-transform duration-300 ${isCollapsed ? 'scale-110' : ''}`}>
-              <img src={symbol} alt="Narada Symbol" className="size-6 object-contain" />
+        <SidebarMenuButton size="lg" asChild className="group-data-[collapsible=icon]:!p-0 hover:bg-transparent active:bg-transparent group-data-[collapsible=icon]:!size-12">
+          <a href="/app" className="flex items-center gap-3 transition-all duration-300 py-1">
+            <div className={`flex shrink-0 items-center justify-center transition-all duration-300 ${isCollapsed ? 'size-10' : 'size-9'}`}>
+              <img
+                src={symbol}
+                alt="Narada Symbol"
+                className={`object-contain transition-all duration-300 ${isCollapsed ? 'h-full w-full' : 'h-full w-full p-0.5'}`}
+              />
             </div>
 
-            {/* Wordmark (Hidden when collapsed) */}
-            <div className={`grid flex-1 text-left leading-tight transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-              <img src={logoHorizontal} alt="Narada LMS" className="h-8 object-contain object-left" />
+            {/* Wordmark (Reveal Animation) */}
+            <div className={`flex flex-col justify-center transition-all duration-300 origin-left ${isCollapsed ? 'w-0 opacity-0 scale-90' : 'w-auto opacity-100 scale-100'}`}>
+              <img src={wordmark} alt="Narada LMS" className="h-5 object-contain object-left" />
             </div>
           </a>
         </SidebarMenuButton>

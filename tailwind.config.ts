@@ -28,6 +28,9 @@ export default {
           card: "oklch(var(--mukta-card))",
           border: "oklch(var(--mukta-border))",
         },
+        dhavala: {
+          text: "oklch(var(--dhavala-text))",
+        },
         // GAYATRI ACTIONS (Phase 2)
         hema: {
           base: "oklch(var(--hema-base))",
@@ -112,15 +115,14 @@ export default {
           },
         },
         shimmer: {
-          "0%": { transform: "translateX(-150%)" },
-          "50%": { transform: "translateX(150%)" },
-          "100%": { transform: "translateX(150%)" },
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        shimmer: "shimmer 8s infinite linear",
+        shimmer: "shimmer 6s infinite linear",
       },
       transitionTimingFunction: {
         keyboard: "cubic-bezier(0.22, 1, 0.36, 1)",

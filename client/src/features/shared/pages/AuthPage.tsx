@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 
 // Assets
-import kolamPattern from "@/assets/branding/kolam-1.svg";
+import kolamPattern from "@/assets/branding/kolam-2.svg";
 import logoStacked from "@/assets/branding/logo-stacked-dark-notag.svg";
 
 import { FcGoogle } from "react-icons/fc";
@@ -36,24 +36,29 @@ export function AuthPage() {
                 {/* Kolam Background Layer */}
                 {/* Kolam Geometric Overlay */}
                 <div
-                    className="absolute inset-0 pointer-events-none"
+                    className="absolute inset-0 pointer-events-none opacity-60"
                     style={{
                         maskImage: `url(${kolamPattern})`,
-                        maskSize: "180%",
-                        maskPosition: "center",
+                        maskSize: "200%",
+                        maskPosition: "25% 8%",
                         maskRepeat: "no-repeat",
                         WebkitMaskImage: `url(${kolamPattern})`,
-                        WebkitMaskSize: "180%",
-                        WebkitMaskPosition: "center",
+                        WebkitMaskSize: "200%",
+                        WebkitMaskPosition: "25% 8%",
                         WebkitMaskRepeat: "no-repeat",
                     }}
                 >
                     {/* Layer 1: Base Etching (Static Gold Lines) */}
                     <div className="absolute inset-0 bg-hema-base opacity-20" />
 
-                    {/* Layer 2: The Shimmer Beam (Moving Light) */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-hema-base/40 to-transparent -translate-x-full animate-shimmer" />
+                    {/* Layer 2: The Blade Sheen (Intense Moving Highlight) */}
+                    <div className="absolute inset-0 overflow-hidden -skew-x-12">
+                        <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: 'linear-gradient(to right, transparent 0%, oklch(0.76 0.14 85 / 0.9) 50%, transparent 100%)' }} />
+                    </div>
                 </div>
+
+                {/* Atmospheric Fade Overlay (Fix: Use correct 'nila-base') */}
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-nila-base pointer-events-none" />
 
                 {/* Central Hero Logo */}
                 <div className="relative z-10 p-12 flex flex-col items-center text-center">
@@ -66,7 +71,7 @@ export function AuthPage() {
                         <h2 className="text-2xl font-semibold text-dhavala-text tracking-wide">
                             Vedic Wisdom. Modern Learning.
                         </h2>
-                        <p className="text-nila-muted-dark max-w-sm mx-auto">
+                        <p className="text-dhavala-text opacity-70 max-w-sm mx-auto">
                             Access your batches, track progress, and master the ancient arts.
                         </p>
                     </div>
