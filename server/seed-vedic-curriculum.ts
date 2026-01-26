@@ -22,47 +22,50 @@ async function seedVedicCurriculum() {
       updatedAt: new Date()
     }).onConflictDoNothing();
 
-    // 2. Insert tracks
-    console.log(`Inserting ${curriculumData.tracks.length} tracks...`);
-    const trackValues = curriculumData.tracks.map(track => ({
-      ...track,
-      createdBy: "system",
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }));
-    
-    const insertedTracks = await db.insert(tracks).values(trackValues).returning();
-    console.log(`✓ Created ${insertedTracks.length} tracks`);
+    // 2. Insert tracks and chapters hierarchically
+    console.log(`Processing ${curriculumData.tracks.length} tracks...`);
 
-    // 3. Insert chapters (linking to tracks by order)
-    console.log(`Inserting ${curriculumData.chapters.length} chapters...`);
-    const chapterValues = curriculumData.chapters.map(chapter => {
-      // Find the track by its order number
-      const track = insertedTracks.find(t => t.order === chapter.trackOrder);
-      if (!track) {
-        throw new Error(`Track with order ${chapter.trackOrder} not found`);
-      }
+    let totalTracks = 0;
+    let totalChapters = 0;
 
-      return {
-        trackId: track.id,
-        title: chapter.title,
-        order: chapter.order,
-        status: chapter.status as "draft" | "published",
-        content: {}, // Empty - content added via UI
+    for (const trackData of curriculumData.tracks) {
+      // Insert track
+      const [insertedTrack] = await db.insert(tracks).values({
+        title: trackData.title,
+        description: trackData.description,
+        order: (trackData as any).number,
         createdBy: "system",
         createdAt: new Date(),
         updatedAt: new Date()
-      };
-    });
+      }).returning();
 
-    await db.insert(chapters).values(chapterValues);
-    console.log(`✓ Created ${chapterValues.length} chapters`);
+      totalTracks++;
+      console.log(`✓ Created track: ${insertedTrack.title}`);
+
+      // Insert chapters for this track
+      if ((trackData as any).chapters && (trackData as any).chapters.length > 0) {
+        const chapterValues = (trackData as any).chapters.map((chapter: any) => ({
+          trackId: insertedTrack.id,
+          title: chapter.title,
+          order: chapter.number,
+          status: chapter.status || "published",
+          content: chapter.content || {},
+          createdBy: "system",
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }));
+
+        await db.insert(chapters).values(chapterValues);
+        totalChapters += chapterValues.length;
+        console.log(`  ✓ Created ${chapterValues.length} chapters`);
+      }
+    }
 
     console.log('\n✅ Vedic curriculum seeded successfully!');
-    console.log(`   ${insertedTracks.length} tracks`);
-    console.log(`   ${chapterValues.length} chapters`);
-    console.log('\n📝 Content (multilingual text, audio, segments) should be added via the UI.');
-    
+    console.log(`   ${totalTracks} tracks`);
+    console.log(`   ${totalChapters} chapters`);
+    console.log('\n📝 Content (multilingual text, audio, segments) is now included in the seed!');
+
     process.exit(0);
   } catch (error) {
     console.error('❌ Error seeding curriculum:', error);
