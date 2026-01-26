@@ -68,11 +68,10 @@ export function AuthPage() {
                         className="w-96 h-auto drop-shadow-2xl mb-8"
                     />
                     <div className="space-y-2">
-                        <h2 className="text-2xl font-semibold text-dhavala-text tracking-wide">
+                        <h2 className="text-2xl font-semibold text-white tracking-wide">
                             Vedic Wisdom. Modern Learning.
                         </h2>
-                        <p className="text-dhavala-text opacity-70 max-w-sm mx-auto">
-                            Access your batches, track progress, and master the ancient arts.
+                        <p className="text-white/80 max-w-sm mx-auto">
                         </p>
                     </div>
                 </div>
@@ -90,7 +89,7 @@ export function AuthPage() {
                     </div>
 
                     <div className="text-center space-y-2 shrink-0 mb-8">
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome</h1>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome to SLMTS Learning</h1>
                         <p className="text-sm text-slate-500">Sign in to your account to continue</p>
                     </div>
 
