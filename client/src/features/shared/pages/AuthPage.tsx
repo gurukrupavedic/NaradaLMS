@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 // Assets
 import kolamPattern from "@/assets/branding/kolam-2.svg";
 import logoStacked from "@/assets/branding/logo-stacked-dark-notag.svg";
+import slmtsLogo from "@/assets/branding/SLMTS LOGO 01-2025 FINAL.png";
 
 import { FcGoogle } from "react-icons/fc";
 
@@ -29,7 +30,7 @@ export function AuthPage() {
     };
 
     return (
-        <div className="min-h-screen w-full flex overflow-hidden bg-background">
+        <div className="h-screen w-full flex overflow-hidden bg-background">
             {/* LEFT PANEL: Sacred Illumination */}
             <div className="hidden lg:flex w-1/2 relative bg-nila-base overflow-hidden items-center justify-center">
                 {/* ... (keep existing left panel) ... */}
@@ -79,7 +80,7 @@ export function AuthPage() {
 
             {/* RIGHT PANEL: Authentication Forms */}
             {/* FORCE LIGHT THEME: Explicit slate colors to override global dark mode interactions */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white h-full overflow-y-auto">
                 <div className="w-full max-w-md space-y-6">
 
                     {/* Mobile Logo */}
@@ -89,8 +90,12 @@ export function AuthPage() {
                     </div>
 
                     <div className="text-center space-y-2 shrink-0 mb-8">
+                        <img
+                            src={slmtsLogo}
+                            alt="SLMTS Learning"
+                            className="h-32 w-auto mx-auto mb-4"
+                        />
                         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome to SLMTS Learning</h1>
-                        <p className="text-sm text-slate-500">Sign in to your account to continue</p>
                     </div>
 
                     {/* Social Login */}
@@ -207,11 +212,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
     };
 
     return (
-        <Card className="border-slate-200 bg-white shadow-sm">
-            <CardHeader className="pb-4">
-                <CardTitle className="text-slate-900">Login</CardTitle>
-                <CardDescription className="text-slate-500">Enter your email below to login</CardDescription>
-            </CardHeader>
+        <Card className="border-slate-200 bg-white shadow-sm pt-6">
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
@@ -288,11 +289,7 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
     };
 
     return (
-        <Card className="border-slate-200 bg-white shadow-sm">
-            <CardHeader className="pb-4">
-                <CardTitle className="text-slate-900">Create an account</CardTitle>
-                <CardDescription className="text-slate-500">Enter your details to register</CardDescription>
-            </CardHeader>
+        <Card className="border-slate-200 bg-white shadow-sm pt-6">
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
