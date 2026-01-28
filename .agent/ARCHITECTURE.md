@@ -8,7 +8,7 @@
 
 Antigravity Kit is a modular system consisting of:
 
-- **19 Specialist Agents** - Role-based AI personas
+- **20 Specialist Agents** - Role-based AI personas
 - **36 Skills** - Domain-specific knowledge modules
 - **11 Workflows** - Slash command procedures
 
@@ -19,7 +19,7 @@ Antigravity Kit is a modular system consisting of:
 ```plaintext
 .agent/
 ├── ARCHITECTURE.md          # This file
-├── agents/                  # 19 Specialist Agents
+├── agents/                  # 20 Specialist Agents
 ├── skills/                  # 36 Skills
 ├── workflows/               # 11 Slash Commands
 ├── rules/                   # Global Rules
@@ -28,7 +28,7 @@ Antigravity Kit is a modular system consisting of:
 
 ---
 
-## 🤖 Agents (19)
+## 🤖 Agents (20)
 
 Specialist AI personas for different domains.
 
@@ -36,7 +36,7 @@ Specialist AI personas for different domains.
 | ----- | ----- | ----------- |
 | `orchestrator` | Multi-agent coordination | parallel-agents, behavioral-modes |
 | `project-planner` | Discovery, task planning | brainstorming, plan-writing, architecture |
-| `frontend-specialist` | Web UI/UX | frontend-design, react-patterns, tailwind-patterns |
+| `frontend-specialist` | Web UI/UX | frontend-design, nextjs-react-expert, tailwind-patterns |
 | `backend-specialist` | API, business logic | api-patterns, nodejs-best-practices, database-design |
 | `database-architect` | Schema, SQL | database-design, prisma-expert |
 | `mobile-developer` | iOS, Android, RN | mobile-design |
@@ -50,6 +50,7 @@ Specialist AI personas for different domains.
 | `seo-specialist` | Ranking, visibility | seo-fundamentals, geo-fundamentals |
 | `documentation-writer` | Manuals, docs | documentation-templates |
 | `product-manager` | Requirements, user stories | plan-writing, brainstorming |
+| `product-owner` | Strategy, backlog, MVP | plan-writing, brainstorming |
 | `qa-automation-engineer` | E2E testing, CI pipelines | webapp-testing, testing-patterns |
 | `code-archaeologist` | Legacy code, refactoring | clean-code, code-review-checklist |
 | `explorer-agent` | Codebase analysis | - |
@@ -64,8 +65,8 @@ Modular knowledge domains that agents can load on-demand. based on task context.
 
 | Skill | Description |
 | ----- | ----------- |
-| `react-patterns` | React hooks, state, performance |
-| `nextjs-best-practices` | App Router, Server Components |
+| `nextjs-react-expert` | React & Next.js performance optimization (Vercel - 57 rules) |
+| `web-design-guidelines` | Web UI audit - 100+ rules for accessibility, UX, performance (Vercel) |
 | `tailwind-patterns` | Tailwind CSS v4 utilities |
 | `frontend-design` | UI/UX patterns, design systems |
 | `ui-ux-pro-max` | 50 styles, 21 palettes, 50 fonts |
@@ -266,7 +267,7 @@ For details, see [scripts/README.md](scripts/README.md)
 
 | Metric | Value |
 | ------ | ----- |
-| **Total Agents** | 19 |
+| **Total Agents** | 20 |
 | **Total Skills** | 36 |
 | **Total Workflows** | 11 |
 | **Total Scripts** | 2 (master) + 18 (skill-level) |
@@ -278,7 +279,7 @@ For details, see [scripts/README.md](scripts/README.md)
 
 | Need | Agent | Skills |
 | ---- | ----- | ------ |
-| Web App | `frontend-specialist` | react-patterns, nextjs-best-practices |
+| Web App | `frontend-specialist` | nextjs-react-expert, frontend-design |
 | API | `backend-specialist` | api-patterns, nodejs-best-practices |
 | Mobile | `mobile-developer` | mobile-design |
 | Database | `database-architect` | database-design, prisma-expert |
