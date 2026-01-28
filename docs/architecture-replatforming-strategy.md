@@ -26,19 +26,19 @@ The core philosophy is that the **Student Portal** is a generic shell. It knows 
 ```mermaid
 graph TD
     subgraph "Docker Image Registry"
-        Image[Student Portal Image<br/>(v2.0.0)]
+        Image["Student Portal Image<br/>(v2.0.0)"]
     end
 
     subgraph "Deployment: SLMTS"
         ContainerA[SLMTS Container]
-        ConfigA[Env Vars:<br/>ORG_ID=slmts<br/>THEME=orange]
+        ConfigA["Env Vars:<br/>ORG_ID=slmts<br/>THEME=orange"]
         ContainerA -.-> Image
         ContainerA --- ConfigA
     end
 
     subgraph "Deployment: RR"
         ContainerB[RR Container]
-        ConfigB[Env Vars:<br/>ORG_ID=rr<br/>THEME=blue]
+        ConfigB["Env Vars:<br/>ORG_ID=rr<br/>THEME=blue"]
         ContainerB -.-> Image
         ContainerB --- ConfigB
     end
@@ -52,27 +52,27 @@ graph TD
 This diagram illustrates how the three proposed core components interact with each other and the shared database.
 
 ```mermaid
-C4Context
-    title System Context Diagram (Target State)
-    
-    Person(Student, "Student", "Learner (SLMTS or RR)")
-    Person(Admin, "Admin/Instructor", "Teachers & Content Managers")
-    
-    System_Boundary(NaradaSystem, "Narada LMS Platform") {
-        Container(StudentApp, "Student Portal", "Next.js / React", "Optimized for learning experience. Config-driven identity.")
-        Container(AdminApp, "Admin Portal", "Next.js / React", "Unified dashboard for all operations.")
-        Container(API, "Core API", "Node.js / Express", "Stateless REST API handling logic and security.")
-        
-        SystemDb(DB, "Primary Database", "PostgreSQL", "Single instance with Row-Level Security via OrgID.")
-    }
+graph TB
+    %% Nodes
+    Student("Student<br/>(Learner)")
+    Admin("Admin/Instructor<br/>(Teachers & Managers)")
 
+    subgraph "Narada LMS Platform"
+        direction TB
+        StudentApp["Student Portal<br/>(Optimized for Learning)"]
+        AdminApp["Admin Portal<br/>(Unified Dashboard)"]
+        API["Core API<br/>(Stateless Node.js)"]
+        DB[("Primary Database<br/>(PostgreSQL)")]
+    end
+
+    %% Relations
     Student --> StudentApp
     Admin --> AdminApp
     
-    StudentApp --> API : "JSON / HTTPS"
-    AdminApp --> API : "JSON / HTTPS"
+    StudentApp -->|JSON/HTTPS| API
+    AdminApp -->|JSON/HTTPS| API
     
-    API --> DB : "Reads/Writes"
+    API -->|Reads/Writes| DB
 ```
 
 ---
