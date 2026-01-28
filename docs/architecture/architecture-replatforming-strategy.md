@@ -215,7 +215,41 @@ The transition requires introducing specific tools to manage complexity. Here is
 
 ---
 
-## 6. Risk Assessment (Architect Level)
+## 6. Containerization & Production Deployment Strategy
+
+This diagram illustrates the lifecycle from code commit to running container, highlighting the "Build Once" guarantee.
+
+```mermaid
+graph TD
+    subgraph "CI/CD Pipeline (GitHub Actions)"
+        Code[Code Commit] --> Build[Turborepo Build]
+        Build -->|Cache Hit| UI[packages/ui]
+        Build -->|Cache Hit| Types[packages/types]
+        UI & Types --> BuildApp[Build Student App]
+        BuildApp --> DockerBuild[Docker Build (Multi-stage)]
+        DockerBuild --> Push[Push to Registry]
+    end
+
+    subgraph "Artifact Storage"
+        Registry[(Docker Hub / GCR)]
+        Push --> Registry
+    end
+
+    subgraph "Production Environment (GCP/AWS)"
+        Registry -->|Pull Image| ServiceA[SLMTS Service]
+        Registry -->|Pull Image| ServiceB[RR Service]
+        
+        ConfigMapA["Config Map (SLMTS)<br/>ORG_ID=slmts<br/>THEME=orange"] -.-> ServiceA
+        ConfigMapB["Config Map (RR)<br/>ORG_ID=rr<br/>THEME=blue"] -.-> ServiceB
+        
+        ServiceA -->|Runtime| PodA[Container Instance A]
+        ServiceB -->|Runtime| PodB[Container Instance B]
+    end
+```
+
+---
+
+## 7. Risk Assessment (Architect Level)
 
 | Risk | Probability | Severity | Mitigation Strategy |
 | :--- | :--- | :--- | :--- |
