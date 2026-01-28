@@ -39,23 +39,27 @@
 
 ### Phase 2: Backend Transformation (Week 2)
 
-**Goal:** Create the standalone API service with multi-tenancy awareness.
+**Goal:** Create the standalone API service with multi-tenancy awareness and strict security.
 
 - [ ] **2.1 Initialize `apps/api`**
   - [ ] Setup Express + TypeScript project.
-  - [ ] Install dependencies (`express`, `cors`, `@narada/database`, `@narada/types`).
+  - [ ] Install dependencies (`express`, `cors`, `helmet`, `cookie-parser`, `@narada/database`, `@narada/types`).
 
-- [ ] **2.2 Implement Multi-Tenancy (The Gatekeeper)**
+- [ ] **2.2 Implement Security Layer**
+  - [ ] **CORS Strategy:** Implement strict whitelisting middleware using `process.env.ALLOWED_ORIGINS`.
+  - [ ] **Headers:** Configure `helmet` for strict security headers.
+  - [ ] **Auth:** Implement JWT logic (Access Token in header, Refresh Token in HttpOnly cookie).
+
+- [ ] **2.3 Implement Multi-Tenancy (The Gatekeeper)**
   - [ ] Add `organization_id` column to `users`, `courses`, `batches` tables (migration in `packages/database`).
   - [ ] Create `OrganizationGuard` middleware.
     - [ ] Read `x-org-id` header.
     - [ ] Validate against allowed list (`slmts`, `rr`).
     - [ ] Mount to `req.ctx`.
 
-- [ ] **2.3 Port & Refactor Endpoints**
+- [ ] **2.4 Port & Refactor Endpoints**
   - [ ] Move controller logic from legacy server to `apps/api`.
   - [ ] **CRITICAL:** Find and Replace all DB queries to include `where(eq(schema.table.orgId, req.ctx.orgId))`.
-  - [ ] Verify Authentication (adjust JWT/Session to work across subdomains if needed).
 
 ---
 
@@ -96,9 +100,11 @@
   - [ ] Setup GitHub Actions with `turbo build`.
   - [ ] Implement caching to prevent rebuilding unchanged apps.
 
-- [ ] **4.3 Verification**
-  - [ ] **Testing:** Run "Cross-Pollination" tests (SLMTS user trying to access RR data).
-  - [ ] **Audit:** Decommission `apps/temp-legacy`.
+- [ ] **4.3 Verification & Security Audit**
+  - [ ] **CORS Check:** Verify API rejects requests from unauthorized domains.
+  - [ ] **Isolation Check:** Run "Cross-Pollination" tests (SLMTS user trying to access RR data).
+  - [ ] **Data Leak Test:** Ensure API returns empty list for RR batches when queried with SLMTS context.
+  - [ ] **Cleanup:** Decommission `apps/temp-legacy`.
 
 ---
 

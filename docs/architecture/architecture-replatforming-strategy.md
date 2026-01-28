@@ -160,7 +160,53 @@ We produce **Immutable Artifacts**. The Docker image for `student-portal:v1.0` i
 
 ---
 
-## 4. Phase-by-Phase Execution Plan
+## 4. Security Architecture
+
+With the separation of Frontend (Student/Admin Apps) and Backend (API), strict security boundaries are mandatory.
+
+### 4.1 CORS Strategy (Cross-Origin Resource Sharing)
+
+Since the frontend runtimes and API will inevitably potentially run on different subdomains (e.g., `api.slmts.org` vs `portal.slmts.org` or `api.vedam.org`), we cannot rely on "Same Origin".
+
+* **Strict Whitelisting:** The API will **NOT** use `Access-Control-Allow-Origin: *`.
+* **Dynamic Policy:** The API will check the `Origin` header against a strict allowed list injected via Environment Variables.
+
+    ```typescript
+    // cors-options.ts
+    const whitelist = process.env.ALLOWED_ORIGINS.split(','); // ['https://slmts.vedam.org', 'https://rr.vedam.org']
+    const corsOptions = {
+        credentials: true, // Allow cookies
+        origin: (origin, callback) => {
+            if (whitelist.indexOf(origin) !== -1) {
+                callback(null, true)
+            } else {
+                callback(new Error('Not allowed by CORS'))
+            }
+        }
+    }
+    ```
+
+### 4.2 Authentication & Token Management
+
+Moving away from "Sticky Sessions" (which fail in auto-scaling container environments), we will adopt a stateless Auth pattern.
+
+* **JWT (JSON Web Tokens):**
+  * **Access Token:** Short-lived (15 mins). Sent in Authorization Header.
+  * **Refresh Token:** Long-lived. Stored in **HttpOnly, Secure cookie**.
+* **Cookie Domain Strategy:**
+  * If hosted on `*.vedam.org`: Set cookie domain to `.vedam.org`.
+  * If hosted on entirely different TLDs: Use header-based auth or independent login sessions per portal.
+
+### 4.3 Data Isolation Verification
+
+* **Row-Level Security (RLS) Pattern:** We enforce `organization_id` checks at the ORM layer, not just the Controller layer.
+* **Penetration Test Requirement:** Automated tests must specifically try to "spoof" the Organization Header.
+  * *Test:* Authenticate as Student A (SLMTS), manually force `x-org-id: rr`, request `/api/courses`.
+  * *Expected Result:* **403 Forbidden** (Guard must validate token claims against requested Org ID).
+
+---
+
+## 5. Phase-by-Phase Execution Plan
 
 ### Phase 1: Foundation (The Skeleton)
 
@@ -193,7 +239,7 @@ We produce **Immutable Artifacts**. The Docker image for `student-portal:v1.0` i
 
 ---
 
-## 5. Technology Stack & Tooling Impact
+## 6. Technology Stack & Tooling Impact
 
 The transition requires introducing specific tools to manage complexity. Here is the breakdown of the Current vs. Future state.
 
@@ -207,7 +253,7 @@ The transition requires introducing specific tools to manage complexity. Here is
 | **Validation** | Zod (Scattered) | **Zod (Shared Package)** | Critical to move all Zod schemas to `packages/types` so the Frontend and Backend guarantee they are speaking the same language. |
 | **Infrastructure** | Manual / Simple Docker | **Docker Compose / K8s** | The deployment complexity increases (3 containers vs 1). Requires a robust `docker-compose.yml` for local dev. |
 
-### 5.1 Critical Toolkit decisions
+### 6.1 Critical Toolkit decisions
 
 * **Turborepo:** Selected for its ease of adoption and "zero config" caching.
 * **Next.js:** Recommended for the Student Portal to support future AI/Assessment features that may need server-side security or easy API routes.
@@ -215,7 +261,7 @@ The transition requires introducing specific tools to manage complexity. Here is
 
 ---
 
-## 6. Containerization & Production Deployment Strategy
+## 7. Containerization & Production Deployment Strategy
 
 This diagram illustrates the lifecycle from code commit to running container, highlighting the "Build Once" guarantee.
 
@@ -249,7 +295,7 @@ graph TD
 
 ---
 
-## 7. Risk Assessment (Architect Level)
+## 8. Risk Assessment (Architect Level)
 
 | Risk | Probability | Severity | Mitigation Strategy |
 | :--- | :--- | :--- | :--- |
