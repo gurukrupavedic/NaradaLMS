@@ -41,13 +41,18 @@ graph TD
     UserB[Puranokta Student] --> ContainerB
 ```
 
-### 2.2 System Context Diagram
+### 2.2 System Context & Persona Map
 
 ```mermaid
 graph TB
     %% Nodes
     Student("Student<br/>(Learner)")
-    Admin("Admin/Instructor<br/>(Teachers & Managers)")
+    
+    subgraph "Unified Admin Team"
+        Admin("Admin<br/>(System Owner)")
+        Instructor("Instructor<br/>(Evaluator)")
+        ContentMgr("Content Manager<br/>(Creator)")
+    end
 
     subgraph "Narada LMS Platform"
         direction TB
@@ -59,7 +64,7 @@ graph TB
 
     %% Relations
     Student --> StudentApp
-    Admin --> AdminApp
+    Admin & Instructor & ContentMgr --> AdminApp
     
     StudentApp -->|JSON/HTTPS| API
     AdminApp -->|JSON/HTTPS| API
@@ -124,37 +129,19 @@ const organizationGuard = (req, res, next) => {
 };
 ```
 
-#### B. Controller Logic
-
-Controllers *never* accept an `orgId` from the request body. They *always* read from `req.ctx`.
-
-* ❌ `db.find({ orgId: req.body.orgId })` (Security Risk)
-* ✅ `db.find({ orgId: req.ctx.orgId })` (Secure)
-
 ---
 
-### 3.3 🗄️ Database Architect: Multi-Tenancy Schema
+### 3.3 👥 Access Control Architect: The "Unified Admin" Pattern
 
-**Challenge:** Performance and data integrity in a shared table.
-**Solution:** **Partitioning Strategy** (Logical) and **Composite Indexing**.
+**Clarification:** Moving features to a separate "Admin Portal" does **NOT** change the roles.
 
-#### A. Schema Changes
+* **Goal:** Consolidation. Instead of "Content Manager" logging into the student app to upload files, they log into the Admin Portal.
+* **RBAC (Role-Based Access Control):** The backend logic remains identical.
+  * **Admins:** Full access to Settings, Users, Finance.
+  * **Instructors:** Restricted access to 'Evaluations' & 'Batches'.
+  * **Content Managers:** Restricted access to 'Library' & 'Curriculum'.
 
-Every "tenant-aware" table (`users`, `batches`, `enrollments`) gets a discriminated union column.
-
-```sql
--- Example Schema Update
-ALTER TABLE "users" 
-ADD COLUMN "organization_id" VARCHAR(10) NOT NULL CHECK (organization_id IN ('slmts', 'rr'));
-
--- Composite Index for Performance
--- Standard queries will ALWAYS filter by org_id first.
-CREATE INDEX "idx_users_org_email" ON "users" ("organization_id", "email");
-```
-
-#### B. Super-Admin Visibility
-
-The **Admin Portal** users will have a special role (`SUPER_ADMIN`) or specific permissions that allow them to bypass the `OrganizationGuard` or query with `organization_id = ALL`, enabling unified dashboards.
+**Benefit:** We optimize the Admin Portal for *Desktop* usage (data grids, rich text editors), while the Student Portal can be aggressively optimized for *Mobile* usage (video player, simple lists), without compromise.
 
 ---
 
@@ -172,13 +159,6 @@ We produce **Immutable Artifacts**. The Docker image for `student-portal:v1.0` i
 1. **Builder Stage:** Uses Turbo to prune and build only the necessary app.
 2. **Runner Stage:** Minimal Node.js alpine image.
 3. **Entrypoint:** A shell script `docker-entrypoint.sh` that detects `ORG_ID` environment variable and generates the runtime config `env.js` before starting the node process.
-
-#### B. Monorepo Tooling (Turborepo)
-
-* **Caching:** If you only change the `admin-portal` code, Turborepo detects this. The CI pipeline will:
-  * Build `admin-portal` (Cache Miss -> Rebuild)
-  * Build `student-portal` (Cache Hit -> Restore from cache -> Instant)
-* **Dependency Graph:** Ensures `packages/ui` is built before the apps.
 
 ---
 
@@ -205,11 +185,12 @@ We produce **Immutable Artifacts**. The Docker image for `student-portal:v1.0` i
 * [ ] **Runtime Config:** Implement `ConfigProvider` and environment injection logic.
 * [ ] **Port Features:** Move "Student-facing" pages (Curriculum, Test) from legacy.
 * [ ] **Admin App Setup:** Create `apps/admin-portal`.
-* [ ] **Port Features:** Move "Admin-facing" pages (User Management, Batch Management).
+* [ ] **Feature Consolidation:** Move all Admin, Instructor, and Content Manager features to this app.
+* [ ] **RBAC Verification:** Ensure 'Content Manager' features are only visible to Content Managers.
 
 ### Phase 4: Verification
 
-* [ ] **Docker Compose:** Spin up full stack locally.
+* [ ] **Docker Compose:** Spin up full stack locally with Mock SLMTS & RR.
 * [ ] **Cross-Pollination Test:** Ensure SLMTS student cannot login to RR student portal.
 * [ ] **Data Leak Test:** Ensure API returns empty list for RR batches when queried with SLMTS context.
 
