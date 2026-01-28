@@ -1,7 +1,7 @@
 # 🏗️ Narada LMS: Architecture Re-Platforming Strategy
 
 **Date:** January 28, 2026
-**Status:** DRAFT (For Architectural Review)
+**Status:** DRAFT (Detailed Technical Spec)
 
 ## 1. Executive Summary: The "Golden Path"
 
@@ -141,8 +141,6 @@ const organizationGuard = (req, res, next) => {
   * **Instructors:** Restricted access to 'Evaluations' & 'Batches'.
   * **Content Managers:** Restricted access to 'Library' & 'Curriculum'.
 
-**Benefit:** We optimize the Admin Portal for *Desktop* usage (data grids, rich text editors), while the Student Portal can be aggressively optimized for *Mobile* usage (video player, simple lists), without compromise.
-
 ---
 
 ### 3.4 🛠️ DevOps Engineer: The "Build Once" Pipeline
@@ -186,7 +184,6 @@ We produce **Immutable Artifacts**. The Docker image for `student-portal:v1.0` i
 * [ ] **Port Features:** Move "Student-facing" pages (Curriculum, Test) from legacy.
 * [ ] **Admin App Setup:** Create `apps/admin-portal`.
 * [ ] **Feature Consolidation:** Move all Admin, Instructor, and Content Manager features to this app.
-* [ ] **RBAC Verification:** Ensure 'Content Manager' features are only visible to Content Managers.
 
 ### Phase 4: Verification
 
@@ -196,7 +193,29 @@ We produce **Immutable Artifacts**. The Docker image for `student-portal:v1.0` i
 
 ---
 
-## 5. Risk Assessment (Architect Level)
+## 5. Technology Stack & Tooling Impact
+
+The transition requires introducing specific tools to manage complexity. Here is the breakdown of the Current vs. Future state.
+
+| Domain | Current State | Future State | Impact / Rationale |
+| :--- | :--- | :--- | :--- |
+| **Orchestration** | None (Single Folder) | **Turborepo** (or Nx) | Essential for managing dependencies between the shared UI library and the 3 apps. Handles strict build caching to speed up CI. |
+| **Frontend Runtime** | Vite SPA (React) | **Next.js** (Proposed) | Migration allows for better SEO, Server Components, and easier standard configuration. *Alternative: Keep Vite if team is strictly SPA-oriented.* |
+| **Backend Runtime** | Node/Express (Monolith) | **Node/Express (Micro-service)** | The core tech remains Node.js/Express but architecture shifts to "Stateless API" mode (JWT preferred over sticky sessions). |
+| **Database** | PostgreSQL + Drizzle | **PostgreSQL + Drizzle** (No Change) | Drizzle is perfect for this. We only need to utilize Drizzle's "schema separation" or standard migration tools for the new columns. |
+| **Styling** | Tailwind CSS (Utility) | **Tailwind + Variables** (Semantic) | Moving from hardcoded `bg-orange-500` to Semantic `bg-primary` variables defined in CSS to allow switching themes at runtime. |
+| **Validation** | Zod (Scattered) | **Zod (Shared Package)** | Critical to move all Zod schemas to `packages/types` so the Frontend and Backend guarantee they are speaking the same language. |
+| **Infrastructure** | Manual / Simple Docker | **Docker Compose / K8s** | The deployment complexity increases (3 containers vs 1). Requires a robust `docker-compose.yml` for local dev. |
+
+### 5.1 Critical Toolkit decisions
+
+* **Turborepo:** Selected for its ease of adoption and "zero config" caching.
+* **Next.js:** Recommended for the Student Portal to support future AI/Assessment features that may need server-side security or easy API routes.
+* **Drizzle ORM:** Retained. It is best-in-class.
+
+---
+
+## 6. Risk Assessment (Architect Level)
 
 | Risk | Probability | Severity | Mitigation Strategy |
 | :--- | :--- | :--- | :--- |
