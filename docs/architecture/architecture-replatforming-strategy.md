@@ -223,11 +223,11 @@ This diagram illustrates the lifecycle from code commit to running container, hi
 graph TD
     subgraph "CI/CD Pipeline (GitHub Actions)"
         Code[Code Commit] --> Build[Turborepo Build]
-        Build -->|Cache Hit| UI[packages/ui]
-        Build -->|Cache Hit| Types[packages/types]
-        UI & Types --> BuildApp[Build Student App]
-        BuildApp --> DockerBuild[Docker Build (Multi-stage)]
-        DockerBuild --> Push[Push to Registry]
+        Build -->|Cache Hit| UI["packages/ui"]
+        Build -->|Cache Hit| Types["packages/types"]
+        UI & Types --> BuildApp["Build Student App"]
+        BuildApp --> DockerBuild["Docker Build (Multi-stage)"]
+        DockerBuild --> Push["Push to Registry"]
     end
 
     subgraph "Artifact Storage"
