@@ -5,15 +5,9 @@
 
 ## 1. Executive Summary: The "Golden Path"
 
-The proposed re-architecture aims to transition Narada LMS from a monolithic structure to a **Managed Monorepo with Micro-Frontend characteristics**. This approach favors **Configuration over Duplication**.
+The proposed re-architecture transits Narada LMS from a monolithic structure to a **Managed Monorepo with Micro-Frontend characteristics**, favoring **Configuration over Duplication**.
 
-Instead of physically forking the codebase for each pathasala (SLMTS vs. RR), which leads to code drift and quadrupled maintenance, we propose a **"Build Once, Deploy Many"** strategy. We will build a single, highly flexible "Chameleon" application that adapts its identity, curriculum, and theming based on runtime configuration.
-
-### Key Benefits
-
-* **Zero Drift:** A bug fixed for one school is fixed for all.
-* **Unified Management:** A single Admin Portal manages all organizations.
-* **Optimization:** The Student Portal is optimized purely for learning (mobile-first), while the Admin Portal is optimized for management (desktop-heavy).
+We employ a **"Build Once, Deploy Many"** strategy to support SLMTS and RR pathasalas from a single codebase.
 
 ---
 
@@ -21,7 +15,7 @@ Instead of physically forking the codebase for each pathasala (SLMTS vs. RR), wh
 
 ### 2.1 The "Chameleon" Concept
 
-The core philosophy is that the **Student Portal** is a generic shell. It knows how to render a "Course" or a "Test", but it doesn't know *which* course or test until it wakes up.
+The **Student Portal** is a generic shell that adapts its identity, curriculum, and theming based on runtime configuration.
 
 ```mermaid
 graph TD
@@ -49,8 +43,6 @@ graph TD
 
 ### 2.2 System Context Diagram
 
-This diagram illustrates how the three proposed core components interact with each other and the shared database.
-
 ```mermaid
 graph TB
     %% Nodes
@@ -59,9 +51,9 @@ graph TB
 
     subgraph "Narada LMS Platform"
         direction TB
-        StudentApp["Student Portal<br/>(Optimized for Learning)"]
-        AdminApp["Admin Portal<br/>(Unified Dashboard)"]
-        API["Core API<br/>(Stateless Node.js)"]
+        StudentApp["Student Portal<br/>(Next.js Client)"]
+        AdminApp["Admin Portal<br/>(Next.js Admin)"]
+        API["Core API<br/>(Express/Node.js)"]
         DB[("Primary Database<br/>(PostgreSQL)")]
     end
 
@@ -77,104 +69,156 @@ graph TB
 
 ---
 
-## 3. Technical Strategy
+## 3. Deep-Dive Technical Strategy
 
-### 3.1 The Monorepo Structure
+### 3.1 🎨 Frontend Specialist: The "Chameleon" Implementation
 
-We will utilize a Monorepo tool (like **Turborepo** or **Nx**) to manage the codebase. This allows us to separate concerns without losing type safety.
+**Challenge:** How do we make one Next.js build serve two different brands without rebuilding?
+**Solution:** **Runtime Configuration** + **React Context**.
 
-**Proposed Directory Structure:**
+#### A. Runtime Configuration Pattern
 
-```text
-/narada-lms
-├── apps/
-│   ├── api/                 # Node.js Express Server (The Brain)
-│   ├── student-portal/      # Next.js App (The Learning Interface)
-│   └── admin-portal/        # Next.js App (The Management Interface)
-├── packages/
-│   ├── ui/                  # "Gayatri" Design System (Shared Components)
-│   ├── database/            # Drizzle ORM Schema & Migrations
-│   ├── types/               # Shared Zod Schemas & TS Interfaces
-│   └── config/              # Shared ESLint/TSConfig
-```
+Next.js hardcodes `NEXT_PUBLIC_` env vars at build time. To avoid rebuilding for every school, we will inject configuration at *runtime*.
 
-**Why this matters:**
+* **Mechanism:** Docker entrypoint script writes a `window.__ENV__` object to `public/env.js`.
+* **Usage:** A `ConfigProvider` reads this global object on initialization.
 
-* **Shared "Gayatri":** When you update the `Button` component in `packages/ui`, both the Student and Admin portals get the update instantly.
-* **Shared Types:** If the API changes the `User` object structure, the Frontend apps will fail to build *immediately*, preventing runtime bugs.
+#### B. Component Sharing (Monorepo)
 
-### 3.2 Data Strategy: Logical Separation
+* `packages/ui`: Contains generic atoms (Button, Card, Modal) styled with Tailwind.
+* `apps/student-portal`: Consumes `packages/ui`.
+* `apps/admin-portal`: Consumes `packages/ui`.
 
-To support the "Unified Admin Portal", all data will reside in a single database schema, segregated by an `organization_id`.
+#### C. Theme Implementation
 
-**Schema Logic:**
+We won't just hardcode colors. We will use CSS Variables mapped to a Semantic Token layer.
 
-* **Table:** `users`
-  * `id`: UUID
-  * `organization_id`: 'slmts' | 'rr'
-  * `email`: ...
-* **Table:** `courses`
-  * `id`: UUID
-  * `organization_id`: 'slmts' | 'rr'
-
-**Security:**
-The API Layer serves as the **Gatekeeper**. middleware will strictly enforce:
-`SELECT * FROM courses WHERE organization_id = req.user.organization_id`
-
-### 3.3 Deployment Infrastructure
-
-We will move to a fully containerized (Docker) workflow.
-
-1. **API Container:** Scalable, stateless. Connected to Postgres.
-2. **Admin Container:** Single deployment. protected by strict RBAC.
-3. **Student Containers:**
-    * **Scale:** Can autoscale based on load independently of Admin.
-    * **Isolation:** If "SLMTS" has a massive exam event, we can spin up 10 extra containers for SLMTS without touching the RR deployment.
+* **SLMTS:** Inject `--primary: 246 101 22` (Orange)
+* **RR:** Inject `--primary: 30 64 175` (Blue)
+* **Code:** `tailwind.config.ts` refers to `var(--primary)`, not hex codes.
 
 ---
 
-## 4. Detailed Implementation & Migration Plan
+### 3.2 ⚙️ Backend Specialist: The "Gatekeeper" Middleware
 
-This is a **non-destructive** migration path. We build the new structure alongside the old one.
+**Challenge:** How do we ensure strict data isolation without physical database separation?
+**Solution:** **Middleware-Driven Request Context**.
+
+#### A. The `OrganizationGuard` Middleware
+
+Every request must arrive with an identifying header (e.g., `x-org-id` or via JWT claim).
+
+```typescript
+// Pseudo-code for Gatekeeper Middleware
+const organizationGuard = (req, res, next) => {
+  const orgId = req.user?.orgId || req.headers['x-org-id'];
+  
+  // 1. Validate
+  if (!['slmts', 'rr'].includes(orgId)) {
+    return res.status(403).json({ error: "Invalid Organization" });
+  }
+
+  // 2. Mount to Request Context
+  req.ctx = { orgId }; 
+  next();
+};
+```
+
+#### B. Controller Logic
+
+Controllers *never* accept an `orgId` from the request body. They *always* read from `req.ctx`.
+
+* ❌ `db.find({ orgId: req.body.orgId })` (Security Risk)
+* ✅ `db.find({ orgId: req.ctx.orgId })` (Secure)
+
+---
+
+### 3.3 🗄️ Database Architect: Multi-Tenancy Schema
+
+**Challenge:** Performance and data integrity in a shared table.
+**Solution:** **Partitioning Strategy** (Logical) and **Composite Indexing**.
+
+#### A. Schema Changes
+
+Every "tenant-aware" table (`users`, `batches`, `enrollments`) gets a discriminated union column.
+
+```sql
+-- Example Schema Update
+ALTER TABLE "users" 
+ADD COLUMN "organization_id" VARCHAR(10) NOT NULL CHECK (organization_id IN ('slmts', 'rr'));
+
+-- Composite Index for Performance
+-- Standard queries will ALWAYS filter by org_id first.
+CREATE INDEX "idx_users_org_email" ON "users" ("organization_id", "email");
+```
+
+#### B. Super-Admin Visibility
+
+The **Admin Portal** users will have a special role (`SUPER_ADMIN`) or specific permissions that allow them to bypass the `OrganizationGuard` or query with `organization_id = ALL`, enabling unified dashboards.
+
+---
+
+### 3.4 🛠️ DevOps Engineer: The "Build Once" Pipeline
+
+**Challenge:** Preventing "Drift" and optimizing build times.
+**Solution:** **Docker Multi-Stage Builds** + **Turborepo**.
+
+#### A. Application Container Strategy
+
+We produce **Immutable Artifacts**. The Docker image for `student-portal:v1.0` is exactly the same byte-for-byte for SLMTS and RR.
+
+**Dockerfile Concept:**
+
+1. **Builder Stage:** Uses Turbo to prune and build only the necessary app.
+2. **Runner Stage:** Minimal Node.js alpine image.
+3. **Entrypoint:** A shell script `docker-entrypoint.sh` that detects `ORG_ID` environment variable and generates the runtime config `env.js` before starting the node process.
+
+#### B. Monorepo Tooling (Turborepo)
+
+* **Caching:** If you only change the `admin-portal` code, Turborepo detects this. The CI pipeline will:
+  * Build `admin-portal` (Cache Miss -> Rebuild)
+  * Build `student-portal` (Cache Hit -> Restore from cache -> Instant)
+* **Dependency Graph:** Ensures `packages/ui` is built before the apps.
+
+---
+
+## 4. Phase-by-Phase Execution Plan
 
 ### Phase 1: Foundation (The Skeleton)
 
-* [ ] **Init Monorepo:** Initialize Turborepo in the root.
-* [ ] **Create Packages:**
-  * Move `shared` folder contents to `packages/types` and `packages/utils`.
-  * Extract Design System components to `packages/ui`.
-* [ ] **Setup Apps:**
-  * Create `apps/api` and move `server` code there.
-  * Create `apps/student-portal` and move `client` code there (temporarily includes everything).
+* [ ] **Repo Restructure:** Initialize Turborepo. Move current code to `apps/temp-legacy`.
+* [ ] **Package Extraction:**
+  * `packages/types`: Move Zod schemas and Typscript interfaces.
+  * `packages/database`: Move Drizzle config and schema.
+* [ ] **UI Library:** Create `packages/ui`.  Move `Button`, `Input`, `Card` components there.
 
-### Phase 2: Separation (The Surgery)
+### Phase 2: Backend Transformation
 
-* [ ] **Create Admin App:** Initialize `apps/admin-portal`.
-* [ ] **Port Admin Features:** Move all `/admin` routes and "Manager" related pages from `student-portal` to `admin-portal`.
-* [ ] **Clean Student App:** Delete all admin-related code, dependencies, and complex routing from `student-portal`.
-  * *Result:* A lightweight, focused Student App.
+* [ ] **API Abstraction:** Create `apps/api`.
+* [ ] **Schema Migration:** Add `organization_id` column to Database.
+* [ ] **Middleware:** Implement `OrganizationGuard`.
+* [ ] **Endpoint Update:** Refactor all endpoints to use `req.ctx.orgId`.
 
-### Phase 3: The Chameleon (Configuration)
+### Phase 3: Frontend Splitting
 
-* [ ] **Env Variable Logic:** distinct configuration for:
-  * `NEXT_PUBLIC_APP_TITLE`
-  * `NEXT_PUBLIC_THEME_COLOR`
-  * `NEXT_PUBLIC_LOGO_URL`
-  * `NEXT_PUBLIC_ORG_ID`
-* [ ] **Database Migration:** Add `organization_id` column to all relevant tables.
-* [ ] **API Middleware:** Implement `OrganizationGuard` middleware to filter data based on the Request/User context.
+* [ ] **Student App Setup:** Create `apps/student-portal`.
+* [ ] **Runtime Config:** Implement `ConfigProvider` and environment injection logic.
+* [ ] **Port Features:** Move "Student-facing" pages (Curriculum, Test) from legacy.
+* [ ] **Admin App Setup:** Create `apps/admin-portal`.
+* [ ] **Port Features:** Move "Admin-facing" pages (User Management, Batch Management).
 
-### Phase 4: Verification & Dockerize
+### Phase 4: Verification
 
-* [ ] **Docker Compose:** Create a local stack running 1 API, 1 Admin, and 2 Student instances (mocking SLMTS and RR).
-* [ ] **E2E Testing:** Verify that data created in SLMTS does not appear in RR.
+* [ ] **Docker Compose:** Spin up full stack locally.
+* [ ] **Cross-Pollination Test:** Ensure SLMTS student cannot login to RR student portal.
+* [ ] **Data Leak Test:** Ensure API returns empty list for RR batches when queried with SLMTS context.
 
 ---
 
-## 5. Potential Risks & Mitigations
+## 5. Risk Assessment (Architect Level)
 
-| Risk | Impact | Mitigation Strategy |
-| :--- | :--- | :--- |
-| **Data Leakage** | Critical | Strict API middleware (Row Level Security) + Automated Tests ensuring cross-org access fails. |
-| **Complexity** | Moderate | Use Turborepo tooling to simplify "Build All" and "Dev All" commands. |
-| **Shared Lib Versioning** | Low | In a Monorepo, all apps use the *head* version of shared libs. No version mismatch issues. |
+| Risk | Probability | Severity | Mitigation Strategy |
+| :--- | :--- | :--- | :--- |
+| **"Leakage" of Data** | Low | High | Automated Integration Tests must attempt to fetch 'RR' data while authenticated as 'SLMTS'. |
+| **Design System Divergence** | Medium | Low | Strict Code Review policy: No one-off styles in Apps. All UI changes must happen in `packages/ui`. |
+| **Monorepo Complexity** | Medium | Medium | Developer Onboarding Docs (Environment setup is harder than single repo). Service scripts provided in `package.json` |
