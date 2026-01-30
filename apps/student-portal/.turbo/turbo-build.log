@@ -1,0 +1,61 @@
+
+> student-portal@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+Error: Can't resolve 'tailwindcss' in 'C:\Users\kashy\Projects\NaradaLMS\apps\student-portal\app'
+    [2m[at finishWithoutResolve (C:\Users\kashy\Projects\NaradaLMS\node_modules\enhanced-resolve\lib\Resolver.js:565:18)][0m
+    [2m[at C:\Users\kashy\Projects\NaradaLMS\node_modules\enhanced-resolve\lib\Resolver.js:657:14][0m
+    [2m[at C:\Users\kashy\Projects\NaradaLMS\node_modules\enhanced-resolve\lib\Resolver.js:718:5][0m
+    [2m[at eval (eval at create (C:\Users\kashy\Projects\NaradaLMS\node_modules\tapable\lib\HookCodeFactory.js:33:10), <anonymous>:15:1)][0m
+    [2m[at C:\Users\kashy\Projects\NaradaLMS\node_modules\enhanced-resolve\lib\Resolver.js:718:5][0m
+    [2m[at eval (eval at create (C:\Users\kashy\Projects\NaradaLMS\node_modules\tapable\lib\HookCodeFactory.js:33:10), <anonymous>:27:1)][0m
+    [2m[at C:\Users\kashy\Projects\NaradaLMS\node_modules\enhanced-resolve\lib\DescriptionFilePlugin.js:89:43][0m
+    [2m[at C:\Users\kashy\Projects\NaradaLMS\node_modules\enhanced-resolve\lib\Resolver.js:718:5][0m
+    [2m[at eval (eval at create (C:\Users\kashy\Projects\NaradaLMS\node_modules\tapable\lib\HookCodeFactory.js:33:10), <anonymous>:15:1)][0m
+    [2m[at C:\Users\kashy\Projects\NaradaLMS\node_modules\enhanced-resolve\lib\Resolver.js:718:5][0m {
+  details: "resolve 'tailwindcss' in 'C:\\Users\\kashy\\Projects\\NaradaLMS\\apps\\student-portal\\app'\n" +
+    '  Parsed request is a module\n' +
+    '  using description file: C:\\Users\\kashy\\Projects\\NaradaLMS\\apps\\student-portal\\package.json (relative path: ./app)\n' +
+    '    resolve as module\n' +
+    "      C:\\Users\\kashy\\Projects\\NaradaLMS\\apps\\student-portal\\app\\node_modules doesn't exist or is not a directory\n" +
+    '      looking for modules in C:\\Users\\kashy\\Projects\\NaradaLMS\\apps\\student-portal\\node_modules\n' +
+    '        single file module\n' +
+    '          using description file: C:\\Users\\kashy\\Projects\\NaradaLMS\\apps\\student-portal\\package.json (relative path: ./node_modules/tailwindcss)\n' +
+    '            no extension\n' +
+    "              C:\\Users\\kashy\\Projects\\NaradaLMS\\apps\\student-portal\\node_modules\\tailwindcss doesn't exist\n" +
+    '            .css\n' +
+    "              C:\\Users\\kashy\\Projects\\NaradaLMS\\apps\\student-portal\\node_modules\\tailwindcss.css doesn't exist\n" +
+    "        C:\\Users\\kashy\\Projects\\NaradaLMS\\apps\\student-portal\\node_modules\\tailwindcss doesn't exist\n" +
+    "      C:\\Users\\kashy\\Projects\\NaradaLMS\\apps\\node_modules doesn't exist or is not a directory\n" +
+    '      looking for modules in C:\\Users\\kashy\\Projects\\NaradaLMS\\node_modules\n' +
+    '        single file module\n' +
+    '          using description file: C:\\Users\\kashy\\Projects\\NaradaLMS\\package.json (relative path: ./node_modules/tailwindcss)\n' +
+    '            no extension\n' +
+    '              C:\\Users\\kashy\\Projects\\NaradaLMS\\node_modules\\tailwindcss is not a file\n' +
+    '            .css\n' +
+    "              C:\\Users\\kashy\\Projects\\NaradaLMS\\node_modules\\tailwindcss.css doesn't exist\n" +
+    '        existing directory C:\\Users\\kashy\\Projects\\NaradaLMS\\node_modules\\tailwindcss\n' +
+    '          using description file: C:\\Users\\kashy\\Projects\\NaradaLMS\\node_modules\\tailwindcss\\package.json (relative path: .)\n' +
+    '            using description file: C:\\Users\\kashy\\Projects\\NaradaLMS\\package.json (relative path: ./node_modules/tailwindcss)\n' +
+    '              no extension\n' +
+    '                C:\\Users\\kashy\\Projects\\NaradaLMS\\node_modules\\tailwindcss is not a file\n' +
+    '              .css\n' +
+    "                C:\\Users\\kashy\\Projects\\NaradaLMS\\node_modules\\tailwindcss.css doesn't exist\n" +
+    '              as directory\n' +
+    '                existing directory C:\\Users\\kashy\\Projects\\NaradaLMS\\node_modules\\tailwindcss\n' +
+    '                  using description file: C:\\Users\\kashy\\Projects\\NaradaLMS\\node_modules\\tailwindcss\\package.json (relative path: .)\n' +
+    '                    using path: C:\\Users\\kashy\\Projects\\NaradaLMS\\node_modules\\tailwindcss\\index\n' +
+    '                      using description file: C:\\Users\\kashy\\Projects\\NaradaLMS\\node_modules\\tailwindcss\\package.json (relative path: ./index)\n' +
+    '                        no extension\n' +
+    "                          C:\\Users\\kashy\\Projects\\NaradaLMS\\node_modules\\tailwindcss\\index doesn't exist\n" +
+    '                        .css\n' +
+    "                          C:\\Users\\kashy\\Projects\\NaradaLMS\\node_modules\\tailwindcss\\index.css doesn't exist\n" +
+    "      C:\\Users\\kashy\\Projects\\node_modules doesn't exist or is not a directory\n" +
+    "      C:\\Users\\kashy\\node_modules doesn't exist or is not a directory\n" +
+    "      C:\\Users\\node_modules doesn't exist or is not a directory\n" +
+    "      C:\\node_modules doesn't exist or is not a directory"
+}
