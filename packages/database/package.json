@@ -1,0 +1,34 @@
+{
+    "name": "@narada/database",
+    "version": "1.0.0",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./schema": {
+            "types": "./dist/schema.d.ts",
+            "default": "./dist/schema.js"
+        }
+    },
+    "type": "module",
+    "scripts": {
+        "build": "tsc",
+        "db:push": "drizzle-kit push",
+        "db:generate": "drizzle-kit generate"
+    },
+    "dependencies": {
+        "drizzle-orm": "^0.39.1",
+        "pg": "^8.16.3",
+        "@neondatabase/serverless": "^0.10.4",
+        "dotenv": "^16.4.5"
+    },
+    "devDependencies": {
+        "drizzle-kit": "^0.31.8",
+        "typescript": "^5.6.3",
+        "ws": "^8.18.0",
+        "@types/ws": "^8.5.13"
+    }
+}
