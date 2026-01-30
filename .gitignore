@@ -20,3 +20,6 @@ uploads/
 
 # Prevent nested repo-in-repo from being re-added
 VedicLMS/
+
+# Turborepo artifacts
+.turbo/
