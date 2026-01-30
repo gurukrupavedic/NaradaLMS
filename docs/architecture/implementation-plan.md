@@ -1,126 +1,84 @@
-# 📋 Narada LMS: Re-Platforming Implementation Plan
+# 📋 Narada LMS: Parallel Implementation Plan
 
-**Reference:** [Architecture Strategy](../architecture-replatforming-strategy.md)
-**Objective:** Execute the transition to Monorepo Micro-services ("Golden Path").
+**Reference:** [Architecture Strategy](../architecture-replatforming-strategy.md) | [Codebase Analysis](./codebase-analysis.md)
+
+This plan models the re-platforming as four parallel tracks to optimize execution velocity.
 
 ---
 
-## 📅 Phased Execution Roadmap
+## 🏗️ Stream 1: Infrastructure & Shared Core (Track A)
 
-### Phase 1: Foundation & Monorepo Setup (Week 1)
+**Goal:** Establish the foundation for all other tracks.
+*Expected Duration: Week 1*
 
-**Goal:** Establish the Turborepo structure and extract shared code without breaking the existing app.
-
-- [ ] **1.1 Initialize Turborepo**
-  - [ ] Install `turbo` and setup workspace root `package.json`.
+- [ ] **A.1 Monorepo Initialization**
+  - [ ] Setup **Turborepo** + **pnpm** workspace in the root.
   - [ ] Configure `pnpm-workspace.yaml`.
-  - [ ] Move existing `client`, `server`, `shared` into `apps/temp-legacy` (to keep reference).
-
-- [ ] **1.2 Extract `packages/types`**
-  - [ ] Create `packages/types` workspace.
-  - [ ] Move all Zod schemas from `shared` to this package.
-  - [ ] Move global TS interfaces to this package.
-  - [ ] Publish internal package `@narada/types`.
-
-- [ ] **1.3 Extract `packages/database`**
-  - [ ] Create `packages/database` workspace.
-  - [ ] Move Drizzle Config, Schema definitions, and DB connection logic here.
-  - [ ] Ensure migrations can run from this package.
-  - [ ] Publish internal package `@narada/database`.
-
-- [ ] **1.4 Extract `packages/ui` (Gayatri vNext)**
-  - [ ] Create `packages/ui` workspace.
-  - [ ] Setup Tailwind + PostCSS config in this package.
-  - [ ] Move core atoms (Button, Card, Input) from legacy client.
-  - [ ] Set up "Theme Provider" dummy context (prep for Chameleon mode).
-  - [ ] Publish internal package `@narada/ui`.
+- [ ] **A.2 Package Extraction**
+  - [ ] **`packages/types`**: Extract Zod schemas/TS interfaces.
+  - [ ] **`packages/database`**: Extract Drizzle schema + migration logic.
+  - [ ] **`packages/utils`**: Extract shared helper functions.
+- [ ] **A.3 Base Docker Configuration**
+  - [ ] Define base multi-stage Dockerfiles for Node/Next environments.
 
 ---
 
-### Phase 2: Backend Transformation (Week 2)
+## ⚙️ Stream 2: Backend & Security (Track B)
 
-**Goal:** Create the standalone API service with multi-tenancy awareness and strict security.
+**Goal:** Deliver the standalone API with multi-tenancy and JWT Auth.
+*Expected Duration: Week 1-2 (Starts after A.2)*
 
-- [ ] **2.1 Initialize `apps/api`**
-  - [ ] Setup Express + TypeScript project.
-  - [ ] Install dependencies (`express`, `cors`, `helmet`, `cookie-parser`, `@narada/database`, `@narada/types`).
-
-- [ ] **2.2 Implement Security Layer**
-  - [ ] **CORS Strategy:** Implement strict whitelisting middleware using `process.env.ALLOWED_ORIGINS`.
-  - [ ] **Headers:** Configure `helmet` for strict security headers.
-  - [ ] **Auth:** Implement JWT logic (Access Token in header, Refresh Token in HttpOnly cookie).
-
-- [ ] **2.3 Implement Multi-Tenancy (The Gatekeeper)**
-  - [ ] Add `organization_id` column to `users`, `courses`, `batches` tables (migration in `packages/database`).
-  - [ ] Create `OrganizationGuard` middleware.
-    - [ ] Read `x-org-id` header.
-    - [ ] Validate against allowed list (`slmts`, `rr`).
-    - [ ] Mount to `req.ctx`.
-
-- [ ] **2.4 Port & Refactor Endpoints**
-  - [ ] Move controller logic from legacy server to `apps/api`.
-  - [ ] **CRITICAL:** Find and Replace all DB queries to include `where(eq(schema.table.orgId, req.ctx.orgId))`.
+- [ ] **B.1 App Setup: `apps/api`**
+  - [ ] Initialize Express service linked to `@narada/database` and `@narada/types`.
+- [ ] **B.2 Identity & Security Rewrite**
+  - [ ] Replace Session Auth with **JWT** (Access/Refresh pattern).
+  - [ ] Implement strict **CORS whitelist middleware** via environment injection.
+- [ ] **B.3 The Gatekeeper (Multi-Tenancy)**
+  - [ ] Deploy `organization_id` column migration.
+  - [ ] Implement `OrganizationGuard` to lock all requests to the tenant context.
+- [ ] **B.4 Route Migration**
+  - [ ] Port controllers and logic from `server/routes` and `server/modules`.
 
 ---
 
-### Phase 3: Frontend Splitting (Weeks 3-4)
+## 🎨 Stream 3: UI & Student Experience (Track C)
 
-**Goal:** Create distinct Student and Admin portals using the shared packages.
+**Goal:** Extract the Design System and launch the "Chameleon" Student Portal.
+*Expected Duration: Week 2-3 (Starts after A.2)*
 
-- [ ] **3.1 Initialize `apps/student-portal`**
-  - [ ] Setup Next.js (or Vite) project.
-  - [ ] Link `@narada/ui`, `@narada/types`.
-
-- [ ] **3.2 Implement "Chameleon" Config**
-  - [ ] Create `ConfigContext`.
-  - [ ] Implement `public/env.js` loader in `_document.tsx` (Next.js) or `index.html` (Vite).
-  - [ ] Setup Tailwind to read colors from CSS variables injected by Config.
-
-- [ ] **3.3 Port Student Features**
-  - [ ] Port "Curriculum View", "Tests", "Profile" pages.
-  - [ ] Ensure all API calls verify the endpoint using the Config's Org ID.
-
-- [ ] **3.4 Initialize `apps/admin-portal`**
-  - [ ] Setup Next.js project (Desktop optimized).
-  - [ ] Port all "Admin", "Instructor", "Content Manager" pages here.
-  - [ ] **Refinement:** Unify the navigation to support the consolidated personas.
+- [ ] **C.1 Package Extraction: `packages/ui`**
+  - [ ] Move **Gayatri DS** components (Shadcn/UI base).
+  - [ ] Implement CSS Variable-based semantic token system.
+- [ ] **C.2 App Setup: `apps/student-portal`**
+  - [ ] Initialize Next.js app linked to `@narada/ui` and `@narada/types`.
+- [ ] **C.3 Chameleon Engine**
+  - [ ] Implement **Runtime Environment Injection** (`env.js` pattern).
+  - [ ] Implement Theme/Branding switcher based on local environment.
+- [ ] **C.4 Port Student Features**
+  - [ ] Port Curriculum, Learning, and Profile features.
 
 ---
 
-### Phase 4: Infrastructure & Cleanup (Week 5)
+## 🏢 Stream 4: Admin & Management (Track D)
 
-**Goal:** Dockerize and Verify.
+**Goal:** Consolidate Admin, instructor, and Content Manager personas into one portal.
+*Expected Duration: Week 3-4 (Starts after C.1)*
 
-- [ ] **4.1 Docker Strategy**
-  - [ ] Create `Dockerfile` for `apps/api`.
-  - [ ] Create `Dockerfile` for `apps/student-portal` (The Chameleon Build).
-  - [ ] Create `docker-entrypoint.sh` script to generate `env.js` at runtime.
-
-- [ ] **4.2 CI/CD Pipeline**
-  - [ ] Setup GitHub Actions with `turbo build`.
-  - [ ] Implement caching to prevent rebuilding unchanged apps.
-
-- [ ] **4.3 Verification & Security Audit**
-  - [ ] **CORS Check:** Verify API rejects requests from unauthorized domains.
-  - [ ] **Isolation Check:** Run "Cross-Pollination" tests (SLMTS user trying to access RR data).
-  - [ ] **Data Leak Test:** Ensure API returns empty list for RR batches when queried with SLMTS context.
-  - [ ] **Cleanup:** Decommission `apps/temp-legacy`.
+- [ ] **D.1 App Setup: `apps/admin-portal`**
+  - [ ] Initialize Next.js app optimized for desktop productivity.
+- [ ] **D.2 Persona Consolidation**
+  - [ ] Integrate features from `admin`, `instructor`, `batches`, and `content` folders.
+  - [ ] Unify navigation and UI patterns for professional operators.
+- [ ] **D.3 RBAC Validation**
+  - [ ] Ensure the portal treats a "Content Manager" differently than a "Super Admin" via frontend gating.
 
 ---
 
-## 🛠️ Developer Workflow (Post-Migration)
+## 🏁 Phase 5: Verification & Integration
 
-### starting the project
-
-```bash
-# Start everything in dev mode
-pnpm dev
-
-# Start only student portal
-pnpm dev --filter=student-portal
-```
-
-### Making Changes
-
-1. **Modify UI:** Update `packages/ui` -> Changes reflect in both apps instantly.
-2. **Modify DB:** Update `packages/database` -> Run migration -> Update `apps/api`.
+- [ ] **V.1 End-to-End Orchestration**
+  - [ ] Validate full flow via Docker Compose.
+- [ ] **V.2 Data Leak Audit**
+  - [ ] Verify Org A cannot access Org B data via the common API.
+- [ ] **V.3 Deployment Readiness**
+  - [ ] CI/CD pipeline verification including Turborepo remote caching.
