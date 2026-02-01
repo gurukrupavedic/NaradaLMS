@@ -49,6 +49,9 @@ function createErrorResponse(message: string, code?: string, details?: any): Api
 // GET /api/tracks - List all tracks
 router.get('/tracks', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Note: batchId parameter is ignored because tracks don't belong to batches
+    // Instead, batches belong to ONE track (batch.trackId)
+    // The client should use batch.trackId to identify the current track
     const tracks = await contentService.listTracks();
     res.json(tracks);
   } catch (error) {

@@ -31,7 +31,8 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'"], // unsafe-inline needed for some dev tools
       connectSrc: ["'self'", "ws:", "wss:"], // Allow WebSocket
       imgSrc: ["'self'", "data:", "https:"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
     },
   },
 }));
@@ -50,7 +51,7 @@ app.use(cookieParser());
 const csrfProtection = csrf({
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: config.env === 'production',
     sameSite: 'strict'
   }
 });
@@ -142,7 +143,7 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  if (config.env === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);

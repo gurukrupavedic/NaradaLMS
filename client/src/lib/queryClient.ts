@@ -43,8 +43,16 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  // Strip /api prefix if present (consistent with getQueryFn)
+  // Example: '/api/tracks' → '/tracks' (keep leading slash!)
+  // baseApiRequest (from apiClient) will add '/api' back: '/api' + '/tracks' = '/api/tracks'
+  let processedUrl = url;
+  if (processedUrl.startsWith('/api/')) {
+    processedUrl = processedUrl.substring(4); // Remove '/api' (4 chars), keep leading slash
+  }
+
   // Use the new apiClient which handles cookies and CSRF
-  const res = await baseApiRequest(url, {
+  const res = await baseApiRequest(processedUrl, {
     method: method.toUpperCase(),
     body: data ? JSON.stringify(data) : undefined,
   });

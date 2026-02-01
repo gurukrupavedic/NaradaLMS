@@ -96,7 +96,7 @@ identityRouter.post(
       // Set HttpOnly cookie (prevents XSS attacks)
       res.cookie('auth_token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: config.env === 'production',
         sameSite: 'strict',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
@@ -149,7 +149,7 @@ identityRouter.get(
     // Set HttpOnly cookie
     res.cookie('auth_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: config.env === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -168,7 +168,7 @@ identityRouter.post("/logout", (req: Request, res: Response) => {
   // Clear the HttpOnly cookie
   res.clearCookie('auth_token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: config.env === 'production',
     sameSite: 'strict',
   });
 

@@ -326,16 +326,6 @@ export function UnifiedBatchMatrix({
     );
   }
 
-  // Empty state
-  if (students.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-        <div className="text-sm font-medium text-gray-700">No students in this batch</div>
-        <div className="mt-2 text-sm text-gray-600">Add students below to get started</div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       {/* Matrix Table */}
@@ -371,56 +361,68 @@ export function UnifiedBatchMatrix({
           </thead>
 
           <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className="border-b border-border hover:bg-muted/50 transition-colors"
-              >
-                {row.getVisibleCells().map((cell) => {
-                  const isSticky = cell.column.id === 'student' || cell.column.id === 'actions';
-                  const stickyCellLeftStyle = isSticky ? `${cell.column.getStart()}px` : '0';
-
-                  return (
-                    // eslint-disable-next-line @stylistic/no-non-null-assertion
-                    <td
-                      key={cell.id}
-                      className={`align-middle ${isSticky ? 'sticky z-20 bg-card p-0' : 'p-0 text-center'
-                        }`}
-                      style={{
-                        width: `${cell.column.getSize()}px`,
-                        maxWidth: `${cell.column.getSize()}px`, // Prevent expansion
-                        ...(isSticky && { left: stickyCellLeftStyle }),
-                      } as any}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  );
-                })}
+            {table.getRowModel().rows.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="p-12 text-center text-muted-foreground border-b border-border">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="text-sm font-medium">No students in this batch</div>
+                    <div className="text-xs">Add students below to get started</div>
+                  </div>
+                </td>
               </tr>
-            ))}
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  {row.getVisibleCells().map((cell) => {
+                    const isSticky = cell.column.id === 'student' || cell.column.id === 'actions';
+                    const stickyCellLeftStyle = isSticky ? `${cell.column.getStart()}px` : '0';
+
+                    return (
+                      <td
+                        key={cell.id}
+                        className={`align-middle ${isSticky ? 'sticky z-20 bg-card p-0' : 'p-0 text-center'
+                          }`}
+                        style={{
+                          width: `${cell.column.getSize()}px`,
+                          maxWidth: `${cell.column.getSize()}px`, // Prevent expansion
+                          ...(isSticky && { left: stickyCellLeftStyle }),
+                        } as any}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Modal for updating proficiency */}
-      {selectedCell && (
-        <MatrixEvaluationModal
-          isOpen={modalOpen}
-          student={students.find((s) => s.id === selectedCell.studentId)}
-          chapter={chapters.find((c) => c.id === selectedCell.chapterId)}
-          currentProficiency={
-            progressMap.get(`${selectedCell.studentId}-${selectedCell.chapterId}`)?.proficiencyLevel
-          }
-          onClose={() => {
-            setModalOpen(false);
-            setSelectedCell(null);
-          }}
-          onUpdate={handleUpdateProficiency}
-          isUpdating={isUpdating}
-        />
-      )}
+      {
+        selectedCell && (
+          <MatrixEvaluationModal
+            isOpen={modalOpen}
+            student={students.find((s) => s.id === selectedCell.studentId)}
+            chapter={chapters.find((c) => c.id === selectedCell.chapterId)}
+            currentProficiency={
+              progressMap.get(`${selectedCell.studentId}-${selectedCell.chapterId}`)?.proficiencyLevel
+            }
+            onClose={() => {
+              setModalOpen(false);
+              setSelectedCell(null);
+            }}
+            onUpdate={handleUpdateProficiency}
+            isUpdating={isUpdating}
+          />
+        )
+      }
 
 
-    </div>
+    </div >
   );
 }

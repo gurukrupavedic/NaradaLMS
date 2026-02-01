@@ -11,9 +11,9 @@ export type ChapterListItem = {
 
 export function useChaptersByTrack(trackId: number | undefined) {
   return useQuery<ChapterListItem[]>({
-    queryKey: [`/api/chapters/${trackId}`],
+    queryKey: [`/api/content/tracks/${trackId}/chapters`],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/chapters/${trackId}`);
+      const res = await apiRequest("GET", `/api/content/tracks/${trackId}/chapters`);
       return await res.json();
     },
     enabled: !!trackId && trackId > 0,

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -108,24 +109,21 @@ export function LearnChapterPage() {
   }, [learnMode]);
 
   const { data: chapter, isLoading: chapterLoading } = useQuery<ChapterData>({
-    queryKey: [`/api/chapters/${chapterId}/details`],
+    queryKey: [`/api/content/chapters/${chapterId}/details`],
     enabled: !!chapterId,
     queryFn: async () => {
-      const response = await fetch(`/api/chapters/${chapterId}/details`, {
-        credentials: 'include'
-      });
+      // Using apiRequest to ensure cookies/CSRF are handled
+      const response = await apiRequest('GET', `/api/content/chapters/${chapterId}/details`);
       if (!response.ok) throw new Error('Failed to fetch chapter details');
       return response.json();
     }
   });
 
   const { data: textSegments = [] } = useQuery<TextSegment[]>({
-    queryKey: [`/api/segments/${chapterId}/${contentScript}`],
+    queryKey: [`/api/content/segments/${chapterId}/${contentScript}`],
     enabled: !!chapterId && !!contentScript && learnMode,
     queryFn: async () => {
-      const response = await fetch(`/api/segments/${chapterId}/${contentScript}`, {
-        credentials: 'include'
-      });
+      const response = await apiRequest('GET', `/api/content/segments/${chapterId}/${contentScript}`);
       if (!response.ok) throw new Error('Failed to fetch text segments');
       return response.json();
     }
@@ -172,14 +170,10 @@ export function LearnChapterPage() {
   useEffect(() => {
     if (!chapterId || hasTrackedAccessRef.current) return;
     hasTrackedAccessRef.current = true;
-    fetch(`/api/learning/chapters/${chapterId}/access`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      credentials: 'include',
-      body: JSON.stringify({}),
-    }).catch(() => { });
+
+    // Use apiRequest to include CSRF token (Pattern B instead of Pattern C)
+    apiRequest('POST', `/api/learning/chapters/${chapterId}/access`, {})
+      .catch(() => { }); // Silent fail - non-critical tracking
   }, [chapterId]);
 
   // Auto-select first audio file

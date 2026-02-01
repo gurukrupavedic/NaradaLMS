@@ -13,9 +13,9 @@ export type Track = {
 
 export function useTracks() {
   return useQuery<Track[]>({
-    queryKey: ["/api/tracks"],
+    queryKey: ["/api/content/tracks"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/tracks");
+      const res = await apiRequest("GET", "/api/content/tracks");
       return await res.json();
     },
   });

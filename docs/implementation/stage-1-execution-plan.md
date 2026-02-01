@@ -229,7 +229,21 @@ export const SCHEMA_VERSION = '1.0.0';
 
 Create Dockerfiles for all 3 apps + docker-compose.yml (see full plan for details).
 
-### Part C: Package Setup (30m)
+### Part C: Codebase Sanitation (Audit Findings) (1.5h)
+
+#### 9. Legacy Cleanup (30m)
+
+- Remove `session-file-store`, `express-session` dependencies.
+- Audit `mediaRouter`, `batchRouter`, `studentRouter` for flat routing issues.
+- Consolidate legacy middleware.
+
+#### 10. Configuration & Storage (1h)
+
+- Centralize all env vars in `server/config.ts`.
+- Implement startup validation for `JWT_SECRET`.
+- Create `StorageService` interface to abstract `uploads/` logic (pre-req for Ops Portal).
+
+### Part D: Package Setup (30m)
 
 Initialize `@narada/database`, `@narada/types`, `@narada/ui` stub packages.
 
