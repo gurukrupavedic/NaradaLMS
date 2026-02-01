@@ -18,6 +18,8 @@ import { config } from "./config";
 
 import helmet from "helmet";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+import csrf from "csurf";
 
 const app = express();
 
@@ -40,6 +42,32 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Cookie parser for JWT cookies
+app.use(cookieParser());
+
+// CSRF Protection
+const csrfProtection = csrf({
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  }
+});
+
+// Apply CSRF to state-changing routes (POST, PUT, DELETE, PATCH)
+// GET routes don't need CSRF protection
+app.use((req, res, next) => {
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+    return csrfProtection(req, res, next);
+  }
+  next();
+});
+
+// CSRF token endpoint (GET, no CSRF needed)
+app.get('/api/csrf-token', (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
 
 
 

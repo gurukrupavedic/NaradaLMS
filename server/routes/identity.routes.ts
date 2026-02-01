@@ -93,8 +93,16 @@ identityRouter.post(
         status: user.status || 'active',
       });
 
+      // Set HttpOnly cookie (prevents XSS attacks)
+      res.cookie('auth_token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      // Don't send token in response body - it's in the cookie
       return res.json({
-        token,
         user: {
           id: user.id,
           email: user.email,
@@ -138,9 +146,17 @@ identityRouter.get(
       status: user.status || 'active',
     });
 
-    // Redirect to frontend with token
+    // Set HttpOnly cookie
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    // Redirect to frontend without token in URL (it's in the cookie)
     const frontendUrl = config.frontendUrl;
-    return res.redirect(`${frontendUrl}?token=${token}`);
+    return res.redirect(frontendUrl);
   }
 );
 
@@ -149,8 +165,13 @@ identityRouter.get(
  * Logout current user
  */
 identityRouter.post("/logout", (req: Request, res: Response) => {
-  // In stateless JWT, logout is primarily handled by the client (deleting the token).
-  // We can just return success here.
+  // Clear the HttpOnly cookie
+  res.clearCookie('auth_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+  });
+
   res.json({ message: "Logged out" });
 });
 
