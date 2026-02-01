@@ -1,6 +1,7 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { createApiError, type ApiError } from "@/types/api-errors";
 import { performanceMonitor } from "@shared/monitoring/PerformanceMonitor";
+import { apiRequest as baseApiRequest } from "./apiClient";
 
 async function throwIfResNotOk(res: Response): Promise<void> {
   if (!res.ok) {
@@ -33,21 +34,18 @@ async function throwIfResNotOk(res: Response): Promise<void> {
   }
 }
 
+/**
+ * API request wrapper with error handling
+ * Uses HttpOnly cookies for authentication (no localStorage)
+ */
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const token = localStorage.getItem('jwt_token');
-  const headers: Record<string, string> = data ? { "Content-Type": "application/json" } : {};
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const res = await fetch(url, {
+  // Use the new apiClient which handles cookies and CSRF
+  const res = await baseApiRequest(url, {
     method: method.toUpperCase(),
-    headers,
     body: data ? JSON.stringify(data) : undefined,
   });
 
@@ -61,16 +59,8 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
     async ({ queryKey }) => {
-      const token = localStorage.getItem('jwt_token');
-      const headers: Record<string, string> = {};
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const res = await fetch(queryKey[0] as string, {
-        headers
-      });
+      // Use apiClient (handles cookies automatically)
+      const res = await baseApiRequest(queryKey[0] as string);
 
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
         return null;
