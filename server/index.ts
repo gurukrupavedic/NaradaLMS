@@ -55,13 +55,19 @@ const csrfProtection = csrf({
   }
 });
 
-// Apply CSRF middleware globally (it only enforces on state-changing methods)
-// This makes req.csrfToken() available on all routes
-app.use(csrfProtection);
-
-// CSRF token endpoint (GET, no CSRF validation but token generation works)
-app.get('/api/csrf-token', (req, res) => {
+// CSRF token endpoint - defined BEFORE middleware to avoid chicken-egg problem
+// This endpoint generates the initial CSRF token
+app.get('/api/csrf-token', csrfProtection, (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
+});
+
+// Apply CSRF middleware to all other routes (only validates on POST/PUT/DELETE/PATCH)
+app.use((req, res, next) => {
+  // Skip CSRF token endpoint (already handled above)
+  if (req.path === '/api/csrf-token') {
+    return next();
+  }
+  csrfProtection(req, res, next);
 });
 
 
