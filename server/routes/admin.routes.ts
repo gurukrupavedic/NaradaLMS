@@ -5,6 +5,8 @@
 
 import { Router, Request, Response } from 'express';
 import { requireAdmin } from '../shared/middleware/auth';
+
+import { jwtAuth } from '../middleware/jwt-auth.middleware';
 import { getAdminService } from '../modules/system-admin/service';
 
 const router = Router();
@@ -13,10 +15,10 @@ const router = Router();
  * GET /api/admin/audit-logs
  * List audit logs with pagination and filters
  */
-router.get('/audit-logs', requireAdmin, async (req: Request, res: Response) => {
+router.get('/audit-logs', jwtAuth, requireAdmin, async (req: Request, res: Response) => {
   try {
     const adminService = getAdminService();
-    
+
     const filters = {
       userId: req.query.userId as string | undefined,
       action: req.query.action as string | undefined,
@@ -50,7 +52,7 @@ router.get('/audit-logs', requireAdmin, async (req: Request, res: Response) => {
  * GET /api/admin/settings
  * Get all system settings
  */
-router.get('/settings', requireAdmin, async (req: Request, res: Response) => {
+router.get('/settings', jwtAuth, requireAdmin, async (req: Request, res: Response) => {
   try {
     const adminService = getAdminService();
     const settings = await adminService.getAllSettings();
@@ -72,7 +74,7 @@ router.get('/settings', requireAdmin, async (req: Request, res: Response) => {
  * GET /api/admin/settings/:key
  * Get single setting
  */
-router.get('/settings/:key', requireAdmin, async (req: Request, res: Response) => {
+router.get('/settings/:key', jwtAuth, requireAdmin, async (req: Request, res: Response) => {
   try {
     const adminService = getAdminService();
     const value = await adminService.getSetting(req.params.key);
@@ -102,10 +104,10 @@ router.get('/settings/:key', requireAdmin, async (req: Request, res: Response) =
  * PUT /api/admin/settings/:key
  * Update system setting
  */
-router.put('/settings/:key', requireAdmin, async (req: Request, res: Response) => {
+router.put('/settings/:key', jwtAuth, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { value } = req.body;
-    
+
     if (!value) {
       return res.status(400).json({
         success: false,
@@ -138,7 +140,7 @@ export const adminRouter = router;
  * GET /api/admin/stats
  * Aggregated metrics for Admin Dashboard
  */
-router.get('/stats', requireAdmin, async (req: Request, res: Response) => {
+router.get('/stats', jwtAuth, requireAdmin, async (req: Request, res: Response) => {
   try {
     const adminService = getAdminService();
     const recentLimit = req.query.recentLimit ? parseInt(req.query.recentLimit as string) : 10;

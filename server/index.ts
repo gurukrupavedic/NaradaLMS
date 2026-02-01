@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
-import session from "express-session";
-import connectPg from "connect-pg-simple";
+
 import passport from "passport";
 import { createServer } from "http";
 import { setupVite, serveStatic } from "./vite";
@@ -15,6 +14,7 @@ import { AdminStorage } from "./modules/system-admin/storage";
 import { initializeEventHandlers } from "./modules/system-admin/events";
 import { Logger } from "./utils/logger";
 import { errorHandler } from "./middleware/error.middleware";
+import { config } from "./config";
 
 import helmet from "helmet";
 import cors from "cors";
@@ -23,45 +23,30 @@ const app = express();
 
 // Security Middleware (S-03, S-04)
 app.use(helmet({
-  contentSecurityPolicy: false, // Disabled for now to avoid breaking scripts; enable in future
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"], // unsafe-inline needed for some dev tools
+      connectSrc: ["'self'", "ws:", "wss:"], // Allow WebSocket
+      imgSrc: ["'self'", "data:", "https:"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+    },
+  },
 }));
 app.use(cors({
-  origin: process.env.NODE_ENV === "production" ? false : "*", // Strict in PROD, open in DEV
+  origin: config.frontendUrl || true,
   credentials: true,
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Sessions (PostgreSQL store)
-const PgStore = connectPg(session);
-const sessionStore = new PgStore({
-  conString: process.env.DATABASE_URL,
-  tableName: "sessions",
-  createTableIfMissing: true,
-});
 
-if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
-  throw new Error("FATAL: SESSION_SECRET is required in production");
-}
-
-app.use(session({
-  secret: process.env.SESSION_SECRET || "change_me",
-  resave: false,
-  saveUninitialized: false,
-  store: sessionStore,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  },
-}));
 
 // Passport
 configurePassport();
 app.use(passport.initialize());
-app.use(passport.session());
+
 
 
 
@@ -79,15 +64,21 @@ app.use('/api/admin', adminRouter);
 
 // Content & Publishing routes (Phase 2 module)
 import { contentRouter } from "./routes/content.routes";
-// Mount content routes under both legacy '/api' and new namespaced '/api/content'
-app.use('/api', contentRouter);
 app.use('/api/content', contentRouter);
+app.use('/api', contentRouter); // Legacy alias
+
 import { mediaRouter } from "./routes/media.routes";
-app.use('/api', mediaRouter);
+app.use('/api/media', mediaRouter);
+app.use('/api', mediaRouter); // Legacy alias
+
 import { batchRouter } from "./routes/batch.routes";
-app.use('/api', batchRouter);
+app.use('/api/batches', batchRouter);
+app.use('/api', batchRouter); // Legacy alias
+
 import { studentRouter } from "./routes/student.routes";
-app.use('/api', studentRouter);
+app.use('/api/students', studentRouter);
+app.use('/api', studentRouter); // Legacy alias
+
 import { learningRouter } from "./routes/learning.routes";
 app.use('/api/learning', learningRouter);
 
@@ -132,10 +123,7 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  const port = config.port;
   server.listen(port, "127.0.0.1", () => {
     Logger.info(`serving on port ${port}`);
   });

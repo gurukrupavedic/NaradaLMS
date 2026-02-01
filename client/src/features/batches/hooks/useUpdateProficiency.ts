@@ -39,14 +39,15 @@ export function useUpdateProficiency() {
 
   return useMutation<UpdateProficiencyResponse, Error, UpdateProficiencyInput>({
     mutationFn: async (input) => {
+      const token = localStorage.getItem('jwt_token');
       const response = await fetch(
         `/api/batches/${input.batchId}/students/${input.studentId}/evaluate`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
-          credentials: 'include',
           body: JSON.stringify({
             chapterId: input.chapterId,
             proficiencyLevel: input.proficiencyLevel,
@@ -65,7 +66,7 @@ export function useUpdateProficiency() {
     },
     onSuccess: (data, variables) => {
       const queryKey = `/api/batches/${variables.batchId}/progress`;
-      
+
       // Immediately update cache with backend response (eliminates race conditions)
       queryClient.setQueryData([queryKey], (oldData: any) => {
         if (!oldData) return oldData;
@@ -75,12 +76,12 @@ export function useUpdateProficiency() {
           ...oldData,
           rows: oldData.rows.map((row: any) => {
             if (row.studentId !== data.studentId) return row;
-            
+
             return {
               ...row,
               cells: row.cells.map((cell: any) => {
                 if (cell.chapterId !== data.chapterId) return cell;
-                
+
                 // Update with actual backend response values
                 return {
                   ...cell,

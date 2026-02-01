@@ -37,7 +37,18 @@ export function buildQueryString(filters: AuditLogFilters): string {
 
 export function useAuditLogs(filters: AuditLogFilters) {
   const qs = buildQueryString(filters);
+  const url = "/api/admin/audit-logs?" + qs;
+
   return useQuery<{ success: boolean; data: AuditLogItem[]; pagination: { limit: number; offset: number } }>({
-    queryKey: ["/api/admin/audit-logs?" + qs],
+    queryKey: [url],
+    queryFn: async () => {
+      const token = localStorage.getItem('jwt_token');
+      const response = await fetch(url, { // Changed URL to 'url' variable
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return await response.json(); // Added missing return and json parsing
+    }
   });
 }

@@ -6,6 +6,7 @@ import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
 import ws from "ws";
 import * as schema from "@shared/schema";
 import { DB_MAX_CONNECTIONS, DB_CONNECTION_TIMEOUT_MS } from "@shared/constants";
+import { config } from "./config";
 
 // Configure WebSocket for Neon in Node.js environment
 if (typeof window === 'undefined') {
@@ -15,25 +16,27 @@ if (typeof window === 'undefined') {
   neonConfig.fetchConnectionCache = true;
 }
 
-// Build DATABASE_URL from individual PG* vars if DATABASE_URL is stale/missing
-const buildDatabaseUrl = (): string => {
-  if (process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD && process.env.PGDATABASE) {
-    const port = process.env.PGPORT || '5432';
-    const encodedPassword = encodeURIComponent(process.env.PGPASSWORD);
-    const host = process.env.PGHOST;
-    const isLocal = host === 'localhost' || host === '127.0.0.1';
-    const sslSuffix = isLocal ? '?sslmode=disable' : '?sslmode=require';
-    console.log('Using PG* environment variables for database connection');
-    return `postgresql://${process.env.PGUSER}:${encodedPassword}@${host}:${port}/${process.env.PGDATABASE}${sslSuffix}`;
+// Database Connection String resolution logic
+function getConnectionString(): string {
+  if (config.database.url) {
+    console.log('Using config.database.url for database connection');
+    return config.database.url;
   }
-  if (process.env.DATABASE_URL) {
-    console.log('Using DATABASE_URL environment variable for database connection');
-    return process.env.DATABASE_URL;
-  }
-  throw new Error("DATABASE_URL or PG* environment variables must be set. Did you forget to provision a database?");
-};
 
-const DATABASE_URL = buildDatabaseUrl();
+  // Fallback to individual PG* vars if config.database.url is not set
+  const { PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE } = process.env;
+  if (PGHOST && PGUSER && PGPASSWORD && PGDATABASE) {
+    console.log('Using PG* environment variables for database connection');
+    const port = PGPORT || '5432';
+    const encodedPassword = encodeURIComponent(PGPASSWORD);
+    const sslSuffix = config.env === 'production' ? "?sslmode=require" : "";
+    return `postgresql://${PGUSER}:${encodedPassword}@${PGHOST}:${port}/${PGDATABASE}${sslSuffix}`;
+  }
+
+  throw new Error("config.database.url or PG* environment variables must be set. Did you forget to provision a database?");
+}
+
+const DATABASE_URL = getConnectionString();
 
 // Decide driver based on host: use pg for localhost, neon for remote
 const isLocalHost = (() => {

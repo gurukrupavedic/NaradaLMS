@@ -4,14 +4,14 @@
  */
 
 import { Router } from 'express';
-import { authMiddleware } from '../shared/middleware/auth';
+import { jwtAuth } from '../middleware/jwt-auth.middleware';
 import { learningService } from '../modules/learning-delivery';
 import type { ChapterAccessDTO, ProgressQueryFilters, ChapterInclude } from '../modules/learning-delivery/types';
 
 const router = Router();
 
 // Protect all learning routes - users must be authenticated
-router.use(authMiddleware);
+router.use(jwtAuth);
 
 /**
  * GET /api/learning/my-progress

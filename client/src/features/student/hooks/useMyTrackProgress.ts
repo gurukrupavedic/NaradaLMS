@@ -5,10 +5,13 @@ export const useMyTrackProgress = () => {
   return useQuery({
     queryKey: ['myTrackProgress'],
     queryFn: async () => {
+      const token = localStorage.getItem('jwt_token');
       const response = await fetch('/api/learning/my-progress', {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
       });
 
       if (!response.ok) {

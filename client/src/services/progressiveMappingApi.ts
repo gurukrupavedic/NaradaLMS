@@ -16,8 +16,11 @@ export const progressiveMappingApi = {
    * Get all mappings for a specific chapter (legacy - for learning interface)
    */
   async getMappingsByChapter(chapterId: number): Promise<MappingWithTimestamps[]> {
+    const token = localStorage.getItem('jwt_token');
     const response = await fetch(`/api/mappings/chapter/${chapterId}`, {
-      credentials: 'include'
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
     if (!response.ok) {
       throw new Error(`Failed to fetch chapter mappings: ${response.statusText}`);
@@ -51,8 +54,11 @@ export const progressiveMappingApi = {
    * Get mappings by audio file (primary method for content management)
    */
   async getMappingsByAudioFile(audioFileId: number): Promise<MappingWithTimestamps[]> {
+    const token = localStorage.getItem('jwt_token');
     const response = await fetch(`/api/mappings/audio/${audioFileId}`, {
-      credentials: 'include'
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
     if (!response.ok) {
       throw new Error(`Failed to fetch audio mappings: ${response.statusText}`);
@@ -64,8 +70,11 @@ export const progressiveMappingApi = {
    * Get mapping count for specific audio file
    */
   async getMappingCountByAudioFile(audioFileId: number): Promise<{ count: number }> {
+    const token = localStorage.getItem('jwt_token');
     const response = await fetch(`/api/mappings/audio/${audioFileId}/count`, {
-      credentials: 'include'
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
     if (!response.ok) {
       throw new Error(`Failed to fetch audio mappings count: ${response.statusText}`);
@@ -77,8 +86,11 @@ export const progressiveMappingApi = {
    * Get mappings by segment (existing endpoint)
    */
   async getMappingsBySegment(segmentId: number): Promise<MappingWithTimestamps[]> {
+    const token = localStorage.getItem('jwt_token');
     const response = await fetch(`/api/mappings/segment/${segmentId}`, {
-      credentials: 'include'
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
     if (!response.ok) {
       throw new Error(`Failed to fetch segment mappings: ${response.statusText}`);

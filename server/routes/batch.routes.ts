@@ -1,11 +1,12 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { batchService } from "../modules/batch-cohort";
-import { authMiddleware, requireInstructor } from "../shared/middleware/auth";
+import { requireInstructor } from "../shared/middleware/auth";
+import { jwtAuth } from "../middleware/jwt-auth.middleware";
 
 const router = Router();
 
 // Protect all batch routes - authentication required
-router.use(authMiddleware);
+router.use(jwtAuth);
 
 interface ApiErrorResponse {
   error: {

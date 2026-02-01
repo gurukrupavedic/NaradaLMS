@@ -2,9 +2,12 @@ import { Router, Request, Response, NextFunction } from "express";
 import passport from "passport";
 import { identityService } from "../modules/identity-access/service";
 import { authMiddleware, requireAdmin } from "../shared/middleware/auth";
+import { jwtAuth } from "../middleware/jwt-auth.middleware";
+import { generateToken, type JWTPayload } from "../auth/jwt.utils";
 import rateLimit from "express-rate-limit";
 import { validateRequest } from "../utils/validation";
 import { z } from "zod";
+import { config } from "../config";
 
 // S-06: Rate limiting for auth endpoints
 const authLimiter = rateLimit({
@@ -53,7 +56,7 @@ identityRouter.post(
         password,
         firstName,
         lastName,
-        adminEmail: process.env.ADMIN_EMAIL,
+        adminEmail: config.adminEmail,
       });
 
       return res.json(result);
@@ -73,9 +76,35 @@ identityRouter.post(
 identityRouter.post(
   "/login",
   authLimiter,
-  passport.authenticate("local"),
-  (req: Request, res: Response) => {
-    return res.json({ user: req.user });
+  (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate("local", { session: false }, (err: any, user: any, info: any) => {
+      if (err) {
+        return next(err);
+      }
+      if (!user) {
+        return res.status(401).json({ error: info?.message || "Invalid credentials" });
+      }
+
+      // Generate token
+      const token = generateToken({
+        id: user.id || user._id,
+        email: user.email,
+        roles: user.roles || [],
+        status: user.status || 'active',
+      });
+
+      return res.json({
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          roles: user.roles,
+          status: user.status
+        }
+      });
+    })(req, res, next);
   }
 );
 
@@ -85,7 +114,7 @@ identityRouter.post(
  */
 identityRouter.get(
   "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate("google", { session: false, scope: ["profile", "email"] })
 );
 
 /**
@@ -94,12 +123,24 @@ identityRouter.get(
  */
 identityRouter.get(
   "/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login?error=auth_failed" }),
+  passport.authenticate("google", { session: false, failureRedirect: "/login?error=auth_failed" }),
   (req: Request, res: Response) => {
     if (!req.user) {
       return res.redirect("/login?error=pending_approval");
     }
-    return res.redirect("/");
+
+    const user = req.user as any;
+
+    const token = generateToken({
+      id: user.id,
+      email: user.email,
+      roles: user.roles || [],
+      status: user.status || 'active',
+    });
+
+    // Redirect to frontend with token
+    const frontendUrl = config.frontendUrl;
+    return res.redirect(`${frontendUrl}?token=${token}`);
   }
 );
 
@@ -107,18 +148,17 @@ identityRouter.get(
  * POST /api/auth/logout
  * Logout current user
  */
-identityRouter.post("/logout", (req: Request, res: Response, next: NextFunction) => {
-  req.logout((err) => {
-    if (err) return next(err);
-    res.json({ message: "Logged out" });
-  });
+identityRouter.post("/logout", (req: Request, res: Response) => {
+  // In stateless JWT, logout is primarily handled by the client (deleting the token).
+  // We can just return success here.
+  res.json({ message: "Logged out" });
 });
 
 /**
  * GET /api/auth/me
  * Get current authenticated user
  */
-identityRouter.get("/me", (req: Request, res: Response) => {
+identityRouter.get("/me", jwtAuth, (req: Request, res: Response) => {
   if (!req.user) {
     return res.status(401).json({ error: "Not authenticated" });
   }
@@ -137,7 +177,7 @@ identityRouter.get("/me", (req: Request, res: Response) => {
  */
 identityRouter.get(
   "/admin/users",
-  authMiddleware,
+  jwtAuth,
   requireAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -183,7 +223,7 @@ identityRouter.get(
  */
 identityRouter.post(
   "/admin/users/:userId/approve",
-  authMiddleware,
+  jwtAuth,
   requireAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -213,7 +253,7 @@ identityRouter.post(
  */
 identityRouter.post(
   "/admin/users/:userId/roles",
-  authMiddleware,
+  jwtAuth,
   requireAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -251,7 +291,7 @@ identityRouter.post(
  */
 identityRouter.post(
   "/admin/users/:userId/disable",
-  authMiddleware,
+  jwtAuth,
   requireAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -283,7 +323,7 @@ identityRouter.post(
  */
 identityRouter.post(
   "/admin/users/:userId/enable",
-  authMiddleware,
+  jwtAuth,
   requireAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -315,7 +355,7 @@ identityRouter.post(
  */
 identityRouter.post(
   "/admin/users/:userId/reject",
-  authMiddleware,
+  jwtAuth,
   requireAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -338,7 +378,7 @@ identityRouter.post(
  */
 identityRouter.get(
   "/admin/users/:userId",
-  authMiddleware,
+  jwtAuth,
   requireAdmin,
   async (req: Request, res: Response, next: NextFunction) => {
     try {

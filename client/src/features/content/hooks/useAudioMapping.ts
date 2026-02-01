@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/features/shared/hooks/use-toast';
 import { useChapterEditor } from '../context/ChapterEditorContext';
 
@@ -23,16 +24,11 @@ export function useAudioMapping() {
     // Create mapping mutation
     const createMappingMutation = useMutation({
         mutationFn: async (mapping: CreateMappingInput) => {
-            const response = await fetch(`/api/content/chapters/${chapterId}/mappings`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({
-                    textSegmentId: mapping.textSegmentId,
-                    audioFileId: mapping.audioFileId,
-                    startTime: mapping.startTime,
-                    endTime: mapping.endTime,
-                }),
+            const response = await apiRequest('POST', `/api/content/chapters/${chapterId}/mappings`, {
+                textSegmentId: mapping.textSegmentId,
+                audioFileId: mapping.audioFileId,
+                startTime: mapping.startTime,
+                endTime: mapping.endTime,
             });
 
             if (!response.ok) {
@@ -59,12 +55,7 @@ export function useAudioMapping() {
     // Update mapping mutation
     const updateMappingMutation = useMutation({
         mutationFn: async ({ audioFileId, segmentId, updates }: { audioFileId: number; segmentId: number; updates: UpdateMappingInput }) => {
-            const response = await fetch(`/api/content/chapters/${chapterId}/mappings/audio/${audioFileId}/segment/${segmentId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify(updates),
-            });
+            const response = await apiRequest('PATCH', `/api/content/chapters/${chapterId}/mappings/audio/${audioFileId}/segment/${segmentId}`, updates);
 
             if (!response.ok) {
                 throw new Error('Failed to update mapping');
@@ -88,10 +79,7 @@ export function useAudioMapping() {
     // Delete mapping mutation
     const deleteMappingMutation = useMutation({
         mutationFn: async ({ audioFileId, segmentId }: { audioFileId: number; segmentId: number }) => {
-            const response = await fetch(`/api/content/chapters/${chapterId}/mappings/audio/${audioFileId}/segment/${segmentId}`, {
-                method: 'DELETE',
-                credentials: 'include',
-            });
+            const response = await apiRequest('DELETE', `/api/content/chapters/${chapterId}/mappings/audio/${audioFileId}/segment/${segmentId}`);
 
             if (!response.ok) {
                 throw new Error('Failed to delete mapping');
