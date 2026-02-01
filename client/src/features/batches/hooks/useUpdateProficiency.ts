@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/apiClient';
 
 interface UpdateProficiencyInput {
   batchId: number;
@@ -39,15 +40,10 @@ export function useUpdateProficiency() {
 
   return useMutation<UpdateProficiencyResponse, Error, UpdateProficiencyInput>({
     mutationFn: async (input) => {
-      const token = localStorage.getItem('jwt_token');
-      const response = await fetch(
-        `/api/batches/${input.batchId}/students/${input.studentId}/evaluate`,
+      const response = await apiRequest(
+        `/batches/${input.batchId}/students/${input.studentId}/evaluate`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
           body: JSON.stringify({
             chapterId: input.chapterId,
             proficiencyLevel: input.proficiencyLevel,

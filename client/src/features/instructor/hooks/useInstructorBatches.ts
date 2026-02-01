@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/apiClient';
 
 interface Batch {
   id: number;
@@ -19,13 +20,8 @@ export const useInstructorBatches = () => {
   return useQuery({
     queryKey: ['instructorBatches'],
     queryFn: async () => {
-      const token = localStorage.getItem('jwt_token');
-      const response = await fetch('/api/batches/my-batches', {
+      const response = await apiRequest('/batches/my-batches', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
       });
 
       if (!response.ok) {

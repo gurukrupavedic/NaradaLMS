@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { GetMyStudentsResponse } from '@shared/types';
+import { apiRequest } from '@/lib/apiClient';
 
 interface FetchParams {
   limit?: number;
@@ -22,13 +23,8 @@ export const useMyStudents = ({ limit = 50, offset = 0, search, batchId, status 
       if (batchId) params.append('batchId', String(batchId));
       if (status) params.append('status', status);
 
-      const token = localStorage.getItem('jwt_token');
-      const response = await fetch(`/api/batches/my-students?${params}`, {
+      const response = await apiRequest(`/batches/my-students?${params}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
       });
 
       if (!response.ok) {

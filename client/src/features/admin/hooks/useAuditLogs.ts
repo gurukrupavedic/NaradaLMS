@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from '@/lib/apiClient';
 
 export type AuditLogFilters = {
   userId?: string;
@@ -42,13 +43,8 @@ export function useAuditLogs(filters: AuditLogFilters) {
   return useQuery<{ success: boolean; data: AuditLogItem[]; pagination: { limit: number; offset: number } }>({
     queryKey: [url],
     queryFn: async () => {
-      const token = localStorage.getItem('jwt_token');
-      const response = await fetch(url, { // Changed URL to 'url' variable
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      return await response.json(); // Added missing return and json parsing
+      const response = await apiRequest(url.replace('/api', ''));
+      return await response.json();
     }
   });
 }
