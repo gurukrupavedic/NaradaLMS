@@ -3,6 +3,7 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy, type Profile as GoogleProfile } from "passport-google-oauth20";
 import bcrypt from "bcrypt";
 import { identityStorage } from "../modules/identity-access/storage";
+import { config } from '../config';
 
 // Configure all passport strategies
 export function configurePassport() {
@@ -39,13 +40,15 @@ export function configurePassport() {
   );
 
   // Google OAuth strategy
-  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  if (config.google.clientId && config.google.clientSecret) {
     passport.use(
       new GoogleStrategy(
         {
-          clientID: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          clientID: config.google.clientId || "DUMMY_ID",
+          clientSecret: config.google.clientSecret || "DUMMY_SECRET",
           callbackURL: "/api/auth/google/callback",
+          passReqToCallback: true,
+          proxy: true,
         },
         async (_accessToken: string, _refreshToken: string, profile: GoogleProfile, done) => {
           try {
@@ -90,19 +93,13 @@ export function configurePassport() {
     );
   } else {
     console.warn("Google OAuth not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable.");
+    // Register a dummy strategy for "google" to prevent Passport from crashing when routes are hit
+    passport.use("google", {
+      authenticate: function () {
+        this.fail("Google OAuth is not configured on this server.", 400);
+      }
+    } as any);
   }
 
-  // Session serialization
-  passport.serializeUser((user: any, done) => {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async (id: string, done) => {
-    try {
-      const user = await identityStorage.getUser(id);
-      done(null, user || false);
-    } catch (err) {
-      done(err as Error);
-    }
-  });
+  // No session serialization needed for stateless JWT
 }
