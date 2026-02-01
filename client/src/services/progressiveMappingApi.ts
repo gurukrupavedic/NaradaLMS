@@ -16,15 +16,7 @@ export const progressiveMappingApi = {
    * Get all mappings for a specific chapter (legacy - for learning interface)
    */
   async getMappingsByChapter(chapterId: number): Promise<MappingWithTimestamps[]> {
-    const token = localStorage.getItem('jwt_token');
-    const response = await fetch(`/api/mappings/chapter/${chapterId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch chapter mappings: ${response.statusText}`);
-    }
+    const response = await apiRequest('GET', `/api/mappings/chapter/${chapterId}`);
     return response.json();
   },
 
@@ -54,15 +46,7 @@ export const progressiveMappingApi = {
    * Get mappings by audio file (primary method for content management)
    */
   async getMappingsByAudioFile(audioFileId: number): Promise<MappingWithTimestamps[]> {
-    const token = localStorage.getItem('jwt_token');
-    const response = await fetch(`/api/mappings/audio/${audioFileId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch audio mappings: ${response.statusText}`);
-    }
+    const response = await apiRequest('GET', `/api/mappings/audio/${audioFileId}`);
     return response.json();
   },
 
@@ -70,15 +54,7 @@ export const progressiveMappingApi = {
    * Get mapping count for specific audio file
    */
   async getMappingCountByAudioFile(audioFileId: number): Promise<{ count: number }> {
-    const token = localStorage.getItem('jwt_token');
-    const response = await fetch(`/api/mappings/audio/${audioFileId}/count`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch audio mappings count: ${response.statusText}`);
-    }
+    const response = await apiRequest('GET', `/api/mappings/audio/${audioFileId}/count`);
     return response.json();
   },
 
@@ -86,15 +62,7 @@ export const progressiveMappingApi = {
    * Get mappings by segment (existing endpoint)
    */
   async getMappingsBySegment(segmentId: number): Promise<MappingWithTimestamps[]> {
-    const token = localStorage.getItem('jwt_token');
-    const response = await fetch(`/api/mappings/segment/${segmentId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch segment mappings: ${response.statusText}`);
-    }
+    const response = await apiRequest('GET', `/api/mappings/segment/${segmentId}`);
     return response.json();
   }
 };
