@@ -93,7 +93,7 @@ app.use('/api/admin', adminRouter);
 
 // Content & Publishing routes (Phase 2 module)
 import { contentRouter } from "./routes/content.routes";
-app.use('/api', contentRouter);
+app.use('/api/content', contentRouter);
 
 import { mediaRouter } from "./routes/media.routes";
 app.use('/api', mediaRouter);
