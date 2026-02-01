@@ -93,20 +93,16 @@ app.use('/api/admin', adminRouter);
 
 // Content & Publishing routes (Phase 2 module)
 import { contentRouter } from "./routes/content.routes";
-app.use('/api/content', contentRouter);
-app.use('/api', contentRouter); // Legacy alias
+app.use('/api', contentRouter);
 
 import { mediaRouter } from "./routes/media.routes";
-app.use('/api/media', mediaRouter);
-app.use('/api', mediaRouter); // Legacy alias
+app.use('/api', mediaRouter);
 
 import { batchRouter } from "./routes/batch.routes";
-app.use('/api/batches', batchRouter);
-app.use('/api', batchRouter); // Legacy alias
+app.use('/api', batchRouter);
 
 import { studentRouter } from "./routes/student.routes";
-app.use('/api/students', studentRouter);
-app.use('/api', studentRouter); // Legacy alias
+app.use('/api', studentRouter);
 
 import { learningRouter } from "./routes/learning.routes";
 app.use('/api/learning', learningRouter);
