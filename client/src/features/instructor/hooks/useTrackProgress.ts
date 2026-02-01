@@ -1,17 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { StudentProgressData } from '@shared/types';
+import { apiRequest } from '@/lib/apiClient';
 
 export const useTrackProgress = (studentId: string) => {
   return useQuery({
     queryKey: ['studentTrackProgress', studentId],
     queryFn: async () => {
-      const token = localStorage.getItem('jwt_token');
-      const response = await fetch(`/api/students/${studentId}/track-progress`, {
+      const response = await apiRequest(`/students/${studentId}/track-progress`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
       });
 
       if (!response.ok) {

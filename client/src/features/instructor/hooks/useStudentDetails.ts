@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { StudentDetail } from '@shared/types';
+import { apiRequest } from '@/lib/apiClient';
 
 export const useStudentDetails = (studentId: string) => {
   return useQuery({

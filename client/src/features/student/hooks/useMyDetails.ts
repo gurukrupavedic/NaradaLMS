@@ -1,17 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { StudentDetail } from '@shared/types';
+import { apiRequest } from '@/lib/apiClient';
 
 export const useMyDetails = () => {
   return useQuery({
     queryKey: ['myDetails'],
     queryFn: async () => {
-      const token = localStorage.getItem('jwt_token');
-      const response = await fetch('/api/learning/my-details', {
+      const response = await apiRequest('/learning/my-details', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
       });
 
       if (!response.ok) {
