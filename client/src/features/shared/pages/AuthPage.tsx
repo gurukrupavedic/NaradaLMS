@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/features/shared/hooks/use-toast";
+import { apiRequest } from "@/lib/apiClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -29,25 +30,8 @@ export function AuthPage() {
         window.location.href = "/api/auth/google";
     };
 
-    // Phase 1: Handle OAuth Redirect & URL Cleanup
-    React.useEffect(() => {
-        const searchParams = new URLSearchParams(window.location.search);
-        const token = searchParams.get('token');
-
-        if (token) {
-            localStorage.setItem('jwt_token', token);
-
-            // Clean URL history (security best practice)
-            const newUrl = window.location.pathname;
-            window.history.replaceState({}, document.title, newUrl);
-
-            // Refetch user context
-            queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-
-            toast({ title: 'Login Successful', description: 'Authenticated via Google' });
-            navigate("/app");
-        }
-    }, [navigate, queryClient, toast]);
+    // Note: OAuth callback now sets HttpOnly cookie directly
+    // No need to handle token from URL params
 
     return (
         <div className="h-screen w-full flex overflow-hidden bg-background">
@@ -208,11 +192,9 @@ function LoginForm({ onSuccess, queryClient }: { onSuccess: () => void, queryCli
         setLoading(true);
 
         try {
-            const response = await fetch("/api/auth/login", {
+            const response = await apiRequest("/auth/login", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
-
             });
 
             if (!response.ok) {
@@ -222,10 +204,7 @@ function LoginForm({ onSuccess, queryClient }: { onSuccess: () => void, queryCli
 
             const data = await response.json();
 
-            // Store JWT token
-            if (data.token) {
-                localStorage.setItem('jwt_token', data.token);
-            }
+            // JWT is now in HttpOnly cookie - no localStorage storage needed
 
             // Update query cache immediately with user data
             if (data.user) {

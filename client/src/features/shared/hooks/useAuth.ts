@@ -5,12 +5,15 @@
  * user session detection via /api/auth/me endpoint, role-based access
  * control, and logout functionality.
  * 
+ * Uses HttpOnly cookies for secure JWT storage (prevents XSS attacks)
+ * 
  * @author Narada LMS Team
  * @since 2025-06-24
  */
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { apiRequest, clearCsrfToken } from "@/lib/apiClient";
 
 export interface AuthUser {
   id: string;
@@ -36,14 +39,8 @@ export function useAuth() {
     queryKey: ["auth", "me"],
     queryFn: async () => {
       try {
-        const token = localStorage.getItem('jwt_token');
-        if (!token) return null;
-
-        const response = await fetch("/api/auth/me", {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        // JWT is in HttpOnly cookie - no need to check localStorage
+        const response = await apiRequest("/auth/me");
 
         if (!response.ok) {
           if (response.status === 401) {
@@ -64,21 +61,14 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      const token = localStorage.getItem('jwt_token');
-      localStorage.removeItem('jwt_token');
+      // Call API to clear HttpOnly cookie
+      await apiRequest("/auth/logout", { method: "POST" });
 
-      // Optional: Call API to invalidate on server if needed
-      if (token) {
-        await fetch("/api/auth/logout", {
-          method: "POST",
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-      }
+      // Clear CSRF token cache
+      clearCsrfToken();
 
       // Clear auth cache and navigate to landing
-      queryClient.setQueryData(["auth", "me"], null); // Optimistic update for immediate UI switch
+      queryClient.setQueryData(["auth", "me"], null);
       queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
       navigate("/");
     } catch (err) {
