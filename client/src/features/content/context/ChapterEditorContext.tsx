@@ -43,11 +43,9 @@ export function ChapterEditorProvider({ children, chapterId, trackId }: ChapterE
     const { data: chapter, isLoading, error, refetch } = useQuery<ChapterData>({
         queryKey: ['content', 'chapters', chapterId, 'details'],
         queryFn: async () => {
-            const token = localStorage.getItem('jwt_token');
-            const headers: Record<string, string> = {};
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-
-            const response = await fetch(`/api/content/chapters/${chapterId}/details`, { headers });
+            const response = await fetch(`/api/content/chapters/${chapterId}/details`, {
+                credentials: 'include' // Use cookies for auth
+            });
             if (!response.ok) throw new Error('Failed to fetch chapter');
             return response.json();
         },

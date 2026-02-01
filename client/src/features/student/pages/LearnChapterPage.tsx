@@ -111,11 +111,8 @@ export function LearnChapterPage() {
     queryKey: [`/api/chapters/${chapterId}/details`],
     enabled: !!chapterId,
     queryFn: async () => {
-      const token = localStorage.getItem('jwt_token');
       const response = await fetch(`/api/chapters/${chapterId}/details`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch chapter details');
       return response.json();
@@ -126,11 +123,8 @@ export function LearnChapterPage() {
     queryKey: [`/api/segments/${chapterId}/${contentScript}`],
     enabled: !!chapterId && !!contentScript && learnMode,
     queryFn: async () => {
-      const token = localStorage.getItem('jwt_token');
       const response = await fetch(`/api/segments/${chapterId}/${contentScript}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch text segments');
       return response.json();
@@ -141,11 +135,8 @@ export function LearnChapterPage() {
     queryKey: [`/api/audio-files/${chapterId}`],
     enabled: !!chapterId,
     queryFn: async () => {
-      const token = localStorage.getItem('jwt_token');
       const response = await fetch(`/api/audio-files/${chapterId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch audio files');
       return response.json();
@@ -156,11 +147,8 @@ export function LearnChapterPage() {
     queryKey: [`/api/segment-mappings/${chapterId}`],
     enabled: !!chapterId && learnMode,
     queryFn: async () => {
-      const token = localStorage.getItem('jwt_token');
       const response = await fetch(`/api/segment-mappings/${chapterId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch mappings');
       return response.json();
@@ -171,11 +159,8 @@ export function LearnChapterPage() {
     queryKey: [`/api/learning/progress?chapterId=${chapterId}&studentId=${user?.id}`],
     enabled: !!chapterId && !!user,
     queryFn: async () => {
-      const token = localStorage.getItem('jwt_token');
       const response = await fetch(`/api/learning/progress?chapterId=${chapterId}&studentId=${user?.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch student progress');
       return response.json();
@@ -187,13 +172,12 @@ export function LearnChapterPage() {
   useEffect(() => {
     if (!chapterId || hasTrackedAccessRef.current) return;
     hasTrackedAccessRef.current = true;
-    const token = localStorage.getItem('jwt_token');
     fetch(`/api/learning/chapters/${chapterId}/access`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
       },
+      credentials: 'include',
       body: JSON.stringify({}),
     }).catch(() => { });
   }, [chapterId]);

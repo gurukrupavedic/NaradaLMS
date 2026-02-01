@@ -57,13 +57,11 @@ export function useAudioManagement(chapterId: string) {
             const formData = new FormData();
             formData.append('audio', file);
 
-            const token = localStorage.getItem('jwt_token');
-            const headers: Record<string, string> = {};
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-
+            // For file uploads, we need to use fetch directly because apiClient sets Content-Type to JSON
+            // But we still need cookies for auth
             const response = await fetch(`/api/content/chapters/${chapterId}/audio`, {
                 method: 'POST',
-                headers,
+                credentials: 'include', // Send cookies for auth
                 body: formData,
             });
 
