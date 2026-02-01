@@ -36,8 +36,13 @@ export function useAuth() {
     queryKey: ["auth", "me"],
     queryFn: async () => {
       try {
+        const token = localStorage.getItem('jwt_token');
+        if (!token) return null;
+
         const response = await fetch("/api/auth/me", {
-          credentials: "include",
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
 
         if (!response.ok) {
@@ -59,10 +64,18 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      const token = localStorage.getItem('jwt_token');
+      localStorage.removeItem('jwt_token');
+
+      // Optional: Call API to invalidate on server if needed
+      if (token) {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
 
       // Clear auth cache and navigate to landing
       queryClient.setQueryData(["auth", "me"], null); // Optimistic update for immediate UI switch

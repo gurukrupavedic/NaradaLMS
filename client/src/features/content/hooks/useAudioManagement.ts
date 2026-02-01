@@ -41,7 +41,7 @@ export function useAudioManagement(chapterId: string) {
 
     // Query audio files
     const { data: audioFiles = [] } = useQuery<AudioFile[]>({
-        queryKey: [`/api/audio-files/${chapterId}`],
+        queryKey: [`/api/content/chapters/${chapterId}/audio`],
         enabled: !!chapterId,
     });
 
@@ -57,8 +57,13 @@ export function useAudioManagement(chapterId: string) {
             const formData = new FormData();
             formData.append('audio', file);
 
-            const response = await fetch(`/api/audio-files/${chapterId}/upload`, {
+            const token = localStorage.getItem('jwt_token');
+            const headers: Record<string, string> = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const response = await fetch(`/api/content/chapters/${chapterId}/audio`, {
                 method: 'POST',
+                headers,
                 body: formData,
             });
 
@@ -71,7 +76,7 @@ export function useAudioManagement(chapterId: string) {
         },
         onSuccess: () => {
             toast({ title: 'Audio file uploaded successfully' });
-            queryClient.invalidateQueries({ queryKey: [`/api/audio-files/${chapterId}`] });
+            queryClient.invalidateQueries({ queryKey: [`/api/content/chapters/${chapterId}/audio`] });
         },
         onError: (error: any) => {
             toast({
@@ -85,12 +90,12 @@ export function useAudioManagement(chapterId: string) {
     // Delete mutation
     const deleteMutation = useMutation({
         mutationFn: async (fileId: number) => {
-            await apiRequest('DELETE', `/api/audio-files/${fileId}`);
+            await apiRequest('DELETE', `/api/content/chapters/${chapterId}/audio/${fileId}`);
             return fileId;
         },
         onSuccess: () => {
             toast({ title: 'Audio file deleted successfully' });
-            queryClient.invalidateQueries({ queryKey: [`/api/audio-files/${chapterId}`] });
+            queryClient.invalidateQueries({ queryKey: [`/api/content/chapters/${chapterId}/audio`] });
         },
         onError: (error: any) => {
             toast({
@@ -104,13 +109,13 @@ export function useAudioManagement(chapterId: string) {
     // Update filename mutation
     const updateFileNameMutation = useMutation({
         mutationFn: async ({ fileId, newName }: { fileId: number; newName: string }) => {
-            await apiRequest('PATCH', `/api/audio-files/${fileId}`, {
+            await apiRequest('PUT', `/api/content/chapters/${chapterId}/audio/${fileId}`, {
                 displayName: newName,
             });
         },
         onSuccess: () => {
             toast({ title: 'Filename updated successfully' });
-            queryClient.invalidateQueries({ queryKey: [`/api/audio-files/${chapterId}`] });
+            queryClient.invalidateQueries({ queryKey: [`/api/content/chapters/${chapterId}/audio`] });
             setEditingFileId(null);
             setEditingFileName('');
         },

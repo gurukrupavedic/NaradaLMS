@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { contentService } from "../modules/content-publishing";
-import { authMiddleware, requireContentManager } from "../shared/middleware/auth";
+import { requireContentManager } from "../shared/middleware/auth";
+import { jwtAuth } from "../middleware/jwt-auth.middleware";
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -12,7 +13,7 @@ const router = Router();
 
 // Protect all content routes: authenticated users can READ, content managers can WRITE
 // We'll apply requireContentManager selectively on POST/PUT/DELETE routes
-router.use(authMiddleware);
+router.use(jwtAuth);
 
 // Error response interface
 interface ApiErrorResponse {

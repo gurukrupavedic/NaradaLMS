@@ -19,12 +19,13 @@ export const useInstructorBatches = () => {
   return useQuery({
     queryKey: ['instructorBatches'],
     queryFn: async () => {
+      const token = localStorage.getItem('jwt_token');
       const response = await fetch('/api/batches/my-batches', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        credentials: 'include',
       });
 
       if (!response.ok) {

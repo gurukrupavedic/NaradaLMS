@@ -1,13 +1,13 @@
 import { Router, Request, Response } from "express";
 import { learningService } from "../modules/learning-delivery";
-import { authMiddleware } from "../shared/middleware/auth";
+import { jwtAuth } from "../middleware/jwt-auth.middleware";
 import { catchAsync } from "../utils/catchAsync";
 import { AppError } from "../utils/AppError";
 
 const router = Router();
 
 // Protect all student routes - authentication required
-router.use(authMiddleware);
+router.use(jwtAuth);
 
 /**
  * GET /api/students/:studentId/progress

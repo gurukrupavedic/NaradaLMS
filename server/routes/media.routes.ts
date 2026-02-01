@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { mediaService } from '../modules/media-pipeline';
-import { authMiddleware, requireContentManager } from '../shared/middleware/auth';
+import { requireContentManager } from '../shared/middleware/auth';
+import { jwtAuth } from '../middleware/jwt-auth.middleware';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -8,11 +9,12 @@ import { parseFile } from 'music-metadata';
 import { FILE_UPLOAD } from '../../shared/constants';
 import { validateRequest } from '../utils/validation';
 import { z } from 'zod';
+import { config } from '../config';
 
 const router = Router();
 
 // Protect all media routes - authentication required
-router.use(authMiddleware);
+router.use(jwtAuth);
 
 // Error response interface
 interface ApiErrorResponse {
@@ -42,13 +44,13 @@ function createErrorResponse(message: string, code?: string, details?: any): Api
 }
 
 // Multer setup (audio only)
-const uploadsDir = path.join(process.cwd(), 'uploads');
+const uploadsDir = path.join(process.cwd(), config.uploads.dir);
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 const upload = multer({
   dest: uploadsDir,
-  limits: { fileSize: FILE_UPLOAD.maxSize },
+  limits: { fileSize: config.uploads.maxSize },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith('audio/')) cb(null, true);
     else cb(new Error('Only audio files are allowed'));

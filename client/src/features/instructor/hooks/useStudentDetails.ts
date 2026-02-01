@@ -5,12 +5,13 @@ export const useStudentDetails = (studentId: string) => {
   return useQuery({
     queryKey: ['studentDetails', studentId],
     queryFn: async () => {
+      const token = localStorage.getItem('jwt_token');
       const response = await fetch(`/api/students/${studentId}/progress`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        credentials: 'include',
       });
 
       if (!response.ok) {

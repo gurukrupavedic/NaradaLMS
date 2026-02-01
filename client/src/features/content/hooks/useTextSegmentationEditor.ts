@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/features/shared/hooks/use-toast';
 import { useChapterEditor } from '@/features/content/context/ChapterEditorContext';
 import { useTextSegmentation } from './useTextSegmentation';
@@ -47,10 +48,7 @@ export function useTextSegmentationEditor() {
     const { data: textSegments = [], isLoading: isLoadingSegments } = useQuery<TextSegment[]>({
         queryKey: ['content', 'chapters', chapterId, 'segments'],
         queryFn: async () => {
-            const response = await fetch(`/api/content/chapters/${chapterId}/segments`, {
-                credentials: 'include',
-            });
-            if (!response.ok) throw new Error('Failed to fetch segments');
+            const response = await apiRequest('GET', `/api/content/chapters/${chapterId}/segments`);
             return response.json();
         },
         enabled: !!chapterId,
@@ -60,10 +58,7 @@ export function useTextSegmentationEditor() {
     const { data: allChapterMappings = [] } = useQuery<AudioMapping[]>({
         queryKey: ['content', 'chapters', chapterId, 'mappings'],
         queryFn: async () => {
-            const response = await fetch(`/api/content/chapters/${chapterId}/mappings`, {
-                credentials: 'include',
-            });
-            if (!response.ok) throw new Error('Failed to fetch mappings');
+            const response = await apiRequest('GET', `/api/content/chapters/${chapterId}/mappings`);
             return response.json();
         },
         enabled: !!chapterId,
@@ -98,15 +93,10 @@ export function useTextSegmentationEditor() {
                 throw new Error('Segment overlaps with existing segment. Adjacent segments are allowed.');
             }
 
-            const response = await fetch(`/api/content/chapters/${chapterId}/segments`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({
-                    script: selectedScript,
-                    startPosition: currentSelection.start,
-                    endPosition: currentSelection.end,
-                }),
+            const response = await apiRequest('POST', `/api/content/chapters/${chapterId}/segments`, {
+                script: selectedScript,
+                startPosition: currentSelection.start,
+                endPosition: currentSelection.end,
             });
 
             if (!response.ok) {
@@ -136,10 +126,7 @@ export function useTextSegmentationEditor() {
     // Mutation: Delete segment
     const deleteSegmentMutation = useMutation({
         mutationFn: async (segmentId: number) => {
-            const response = await fetch(`/api/content/segments/${segmentId}`, {
-                method: 'DELETE',
-                credentials: 'include',
-            });
+            const response = await apiRequest('DELETE', `/api/content/segments/${segmentId}`);
 
             if (!response.ok) {
                 throw new Error('Failed to delete segment');
@@ -172,12 +159,7 @@ export function useTextSegmentationEditor() {
                 order: index
             }));
 
-            const response = await fetch(`/api/content/segments/${chapterId}/reorder`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ segmentOrders }),
-            });
+            const response = await apiRequest('PATCH', `/api/content/segments/${chapterId}/reorder`, { segmentOrders });
 
             if (!response.ok) {
                 const error = await response.json();
@@ -246,10 +228,7 @@ export function useTextSegmentationEditor() {
     // Mutation: Delete all segments for script
     const clearAllSegmentsMutation = useMutation({
         mutationFn: async () => {
-            const response = await fetch(`/api/content/chapters/${chapterId}/segments/all/clear?script=${selectedScript}`, {
-                method: 'DELETE',
-                credentials: 'include',
-            });
+            const response = await apiRequest('DELETE', `/api/content/chapters/${chapterId}/segments/all/clear?script=${selectedScript}`);
 
             if (!response.ok) {
                 const error = await response.json();
@@ -312,12 +291,7 @@ export function useTextSegmentationEditor() {
 
         // Create segment directly with provided data
         const createMutation = async () => {
-            const response = await fetch(`/api/content/chapters/${chapterId}/segments`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify(segmentData),
-            });
+            const response = await apiRequest('POST', `/api/content/chapters/${chapterId}/segments`, segmentData);
 
             if (!response.ok) {
                 const error = await response.json();

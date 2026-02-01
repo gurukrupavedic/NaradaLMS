@@ -29,6 +29,26 @@ export function AuthPage() {
         window.location.href = "/api/auth/google";
     };
 
+    // Phase 1: Handle OAuth Redirect & URL Cleanup
+    React.useEffect(() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        const token = searchParams.get('token');
+
+        if (token) {
+            localStorage.setItem('jwt_token', token);
+
+            // Clean URL history (security best practice)
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+
+            // Refetch user context
+            queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+
+            toast({ title: 'Login Successful', description: 'Authenticated via Google' });
+            navigate("/app");
+        }
+    }, [navigate, queryClient, toast]);
+
     return (
         <div className="h-screen w-full flex overflow-hidden bg-background">
             {/* LEFT PANEL: Sacred Illumination */}
@@ -137,6 +157,7 @@ export function AuthPage() {
 
                         <TabsContent value="login" className="mt-0">
                             <LoginForm
+                                queryClient={queryClient}
                                 onSuccess={() => {
                                     queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
                                     setTimeout(() => navigate("/app"), 300);
@@ -176,7 +197,7 @@ const LightLabel = (props: React.ComponentProps<typeof Label>) => (
     <Label {...props} className={`text-slate-600 font-medium ${props.className}`} />
 );
 
-function LoginForm({ onSuccess }: { onSuccess: () => void }) {
+function LoginForm({ onSuccess, queryClient }: { onSuccess: () => void, queryClient: any }) {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState("");
@@ -191,12 +212,24 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
-                credentials: "include",
+
             });
 
             if (!response.ok) {
                 const error = await response.json();
                 throw new Error(error.error || "Invalid credentials");
+            }
+
+            const data = await response.json();
+
+            // Store JWT token
+            if (data.token) {
+                localStorage.setItem('jwt_token', data.token);
+            }
+
+            // Update query cache immediately with user data
+            if (data.user) {
+                queryClient.setQueryData(['auth', 'me'], data.user);
             }
 
             toast({ title: "Welcome back", description: "Logged in successfully" });

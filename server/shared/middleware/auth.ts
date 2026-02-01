@@ -1,13 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 
 /**
- * Authentication guard using the existing Passport session user (req.user).
+ * Authentication guard using the req.user populated by jwtAuth middleware.
  * Fails with 401 if no authenticated user is present.
  */
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as Express.User | undefined;
   if (!user) {
-    return res.status(401).json({ error: "Unauthorized - no session" });
+    return res.status(401).json({ error: "Unauthorized - missing or invalid token" });
   }
   next();
 };
