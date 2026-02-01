@@ -59,8 +59,14 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
     async ({ queryKey }) => {
+      // Strip /api prefix if present, since apiClient adds it automatically
+      let url = queryKey[0] as string;
+      if (url.startsWith('/api/')) {
+        url = url.substring(4); // Remove '/api' prefix
+      }
+
       // Use apiClient (handles cookies automatically)
-      const res = await baseApiRequest(queryKey[0] as string);
+      const res = await baseApiRequest(url);
 
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
         return null;
