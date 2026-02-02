@@ -1,0 +1,14 @@
+{
+    "name": "@narada/types",
+    "version": "0.0.0",
+    "private": true,
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "scripts": {
+        "lint": "eslint ."
+    },
+    "dependencies": {
+        "zod": "^3.24.2"
+    }
+}
