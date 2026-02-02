@@ -23,17 +23,7 @@ function getConnectionString(): string {
     return config.database.url;
   }
 
-  // Fallback to individual PG* vars if config.database.url is not set
-  const { PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE } = process.env;
-  if (PGHOST && PGUSER && PGPASSWORD && PGDATABASE) {
-    console.log('Using PG* environment variables for database connection');
-    const port = PGPORT || '5432';
-    const encodedPassword = encodeURIComponent(PGPASSWORD);
-    const sslSuffix = config.env === 'production' ? "?sslmode=require" : "";
-    return `postgresql://${PGUSER}:${encodedPassword}@${PGHOST}:${port}/${PGDATABASE}${sslSuffix}`;
-  }
-
-  throw new Error("config.database.url or PG* environment variables must be set. Did you forget to provision a database?");
+  throw new Error("config.database.url must be set. Did you forget to provision a database?");
 }
 
 const DATABASE_URL = getConnectionString();

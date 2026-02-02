@@ -1,0 +1,271 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list [ref=e4]:
+      - status [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e7]: Welcome back
+          - generic [ref=e8]: Logged in successfully
+        - button [ref=e9] [cursor=pointer]:
+          - img [ref=e10]
+  - link "Skip to content" [ref=e14] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e15]:
+    - generic [ref=e18]:
+      - list [ref=e20]:
+        - listitem [ref=e21]:
+          - link "Narada Symbol Narada LMS" [ref=e22] [cursor=pointer]:
+            - /url: /app
+            - img "Narada Symbol" [ref=e24]
+            - img "Narada LMS" [ref=e26]
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - generic [ref=e29]: Learn
+          - list [ref=e30]:
+            - listitem [ref=e31]:
+              - link "Vedic Learning" [ref=e32] [cursor=pointer]:
+                - /url: /app/learning
+                - img [ref=e33]
+                - generic [ref=e35]: Vedic Learning
+        - generic [ref=e36]:
+          - generic [ref=e37]: Batches & Progress
+          - list [ref=e38]:
+            - listitem [ref=e39]:
+              - link "My Batches" [ref=e40] [cursor=pointer]:
+                - /url: /app/instructor/batches
+                - img [ref=e41]
+                - generic [ref=e44]: My Batches
+            - listitem [ref=e45]:
+              - link "My Students" [ref=e46] [cursor=pointer]:
+                - /url: /app/instructor/students
+                - img [ref=e47]
+                - generic [ref=e51]: My Students
+        - generic [ref=e52]:
+          - generic [ref=e53]: Content Studio
+          - list [ref=e54]:
+            - listitem [ref=e55]:
+              - link "Tracks & Chapters" [ref=e56] [cursor=pointer]:
+                - /url: /app/content
+                - img [ref=e57]
+                - generic [ref=e60]: Tracks & Chapters
+        - generic [ref=e61]:
+          - generic [ref=e62]: Admin Center
+          - list [ref=e63]:
+            - listitem [ref=e64]:
+              - link "Users" [ref=e65] [cursor=pointer]:
+                - /url: /app/admin/users
+                - img [ref=e66]
+                - generic [ref=e78]: Users
+            - listitem [ref=e79]:
+              - link "Batches" [ref=e80] [cursor=pointer]:
+                - /url: /app/admin/batches
+                - img [ref=e81]
+                - generic [ref=e86]: Batches
+            - listitem [ref=e87]:
+              - link "Audit Logs" [ref=e88] [cursor=pointer]:
+                - /url: /app/admin/logs
+                - img [ref=e89]
+                - generic [ref=e90]: Audit Logs
+            - listitem [ref=e91]:
+              - link "Settings" [ref=e92] [cursor=pointer]:
+                - /url: /app/admin/settings
+                - img [ref=e93]
+                - generic [ref=e96]: Settings
+      - list [ref=e98]:
+        - listitem [ref=e99]:
+          - button "U User kashyap.kuchipudi@gmail.com" [ref=e100] [cursor=pointer]:
+            - generic [ref=e102]: U
+            - generic [ref=e103]:
+              - generic [ref=e104]: User
+              - generic [ref=e105]: kashyap.kuchipudi@gmail.com
+            - img [ref=e106]
+      - button "Toggle Sidebar" [ref=e109]
+    - main [ref=e110]:
+      - generic [ref=e111]:
+        - generic [ref=e112]:
+          - button "Toggle Sidebar" [ref=e113] [cursor=pointer]:
+            - img
+            - generic [ref=e114]: Toggle Sidebar
+          - navigation [ref=e115]:
+            - generic [ref=e116]: Vedic Learning
+        - generic [ref=e117]:
+          - button "Notifications" [ref=e118] [cursor=pointer]:
+            - img
+          - button "Toggle theme" [ref=e120] [cursor=pointer]:
+            - img
+            - img
+            - generic [ref=e121]: Toggle theme
+      - main [ref=e122]:
+        - generic [ref=e123]:
+          - generic [ref=e124]:
+            - button "Collapse student details" [expanded] [ref=e125] [cursor=pointer]:
+              - heading "Kashyap Kuchipudi" [level=3] [ref=e128]
+              - generic:
+                - img
+            - generic [ref=e130]:
+              - generic [ref=e131]:
+                - paragraph [ref=e132]: Email
+                - paragraph [ref=e133]: kashyap.kuchipudi@gmail.com
+              - generic [ref=e134]:
+                - paragraph [ref=e135]: User ID
+                - paragraph [ref=e136]: aa16ef34-0a95-4c76-91e3-9e5862eb43ff
+              - generic [ref=e137]:
+                - paragraph [ref=e138]: Batch Code
+                - paragraph [ref=e139]: BR04
+              - generic [ref=e140]:
+                - paragraph [ref=e141]: Batch Name
+                - paragraph [ref=e142]: Bramhachari Specialization
+              - generic [ref=e143]:
+                - paragraph [ref=e144]: Track
+                - paragraph [ref=e145]: Rudram, Shaakunadi, Ganapati Pooja, Punyaahavaachanam1
+              - generic [ref=e146]:
+                - paragraph [ref=e147]: Enrolled Since
+                - paragraph [ref=e148]: Jan 5, 2026
+              - generic [ref=e149]:
+                - paragraph [ref=e150]: Status
+                - generic [ref=e152]: active
+          - generic [ref=e153]:
+            - heading "Track 1 - Vaidika Nithya Karma 4/11 chapters" [level=3] [ref=e155]:
+              - button "Track 1 - Vaidika Nithya Karma 4/11 chapters" [ref=e156] [cursor=pointer]:
+                - generic [ref=e157]:
+                  - generic [ref=e158]:
+                    - heading "Track 1 - Vaidika Nithya Karma" [level=3] [ref=e160]
+                    - generic [ref=e161]: 4/11 chapters
+                  - progressbar [ref=e162]
+                - img [ref=e164]
+            - heading "Track 2 - Sookta Paatham 4/10 chapters" [level=3] [ref=e167]:
+              - button "Track 2 - Sookta Paatham 4/10 chapters" [ref=e168] [cursor=pointer]:
+                - generic [ref=e169]:
+                  - generic [ref=e170]:
+                    - heading "Track 2 - Sookta Paatham" [level=3] [ref=e172]
+                    - generic [ref=e173]: 4/10 chapters
+                  - progressbar [ref=e174]
+                - img [ref=e176]
+            - generic [ref=e178]:
+              - heading "Track 3 - Rudram, Shaakunadi, Ganapati Pooja, Punyaahavaachanam1 Current 5/9 chapters" [level=3] [ref=e179]:
+                - button "Track 3 - Rudram, Shaakunadi, Ganapati Pooja, Punyaahavaachanam1 Current 5/9 chapters" [expanded] [ref=e180] [cursor=pointer]:
+                  - generic [ref=e181]:
+                    - generic [ref=e182]:
+                      - generic [ref=e183]:
+                        - heading "Track 3 - Rudram, Shaakunadi, Ganapati Pooja, Punyaahavaachanam1" [level=3] [ref=e184]
+                        - generic [ref=e185]: Current
+                      - generic [ref=e186]: 5/9 chapters
+                    - progressbar [ref=e187]
+                  - img [ref=e189]
+              - region "Track 3 - Rudram, Shaakunadi, Ganapati Pooja, Punyaahavaachanam1 Current 5/9 chapters" [ref=e191]:
+                - generic [ref=e193]:
+                  - button "CH1 Jan 7 śrīrudrapraśnaḥ (namakaṃ) Practicing" [ref=e194] [cursor=pointer]:
+                    - generic [ref=e195]:
+                      - generic [ref=e196]: CH1
+                      - generic [ref=e197]: Jan 7
+                    - generic [ref=e198]: śrīrudrapraśnaḥ (namakaṃ)
+                    - generic [ref=e199]:
+                      - generic [ref=e200]: Practicing
+                      - img [ref=e202]
+                  - button "CH2 Jan 7 camakapraśnaḥ L2 (70%)" [ref=e204] [cursor=pointer]:
+                    - generic [ref=e205]:
+                      - generic [ref=e206]: CH2
+                      - generic [ref=e207]: Jan 7
+                    - generic [ref=e208]: camakapraśnaḥ
+                    - generic [ref=e209]:
+                      - generic [ref=e210]: L2 (70%)
+                      - img [ref=e212]
+                  - button "CH3 Jan 7 dīpa prajvālana & nīrājana mantrāh L1 (50%)" [ref=e214] [cursor=pointer]:
+                    - generic [ref=e215]:
+                      - generic [ref=e216]: CH3
+                      - generic [ref=e217]: Jan 7
+                    - generic [ref=e218]: dīpa prajvālana & nīrājana mantrāh
+                    - generic [ref=e219]:
+                      - generic [ref=e220]: L1 (50%)
+                      - img [ref=e222]
+                  - button "CH4 Jan 7 śākunādi mantrāḥ L3 (90%)" [ref=e224] [cursor=pointer]:
+                    - generic [ref=e225]:
+                      - generic [ref=e226]: CH4
+                      - generic [ref=e227]: Jan 7
+                    - generic [ref=e228]: śākunādi mantrāḥ
+                    - generic [ref=e229]:
+                      - generic [ref=e230]: L3 (90%)
+                      - img [ref=e232]
+                  - button "CH5 Jan 7 trisuparṇa mantrāḥ L4 (95%)" [ref=e234] [cursor=pointer]:
+                    - generic [ref=e235]:
+                      - generic [ref=e236]: CH5
+                      - generic [ref=e237]: Jan 7
+                    - generic [ref=e238]: trisuparṇa mantrāḥ
+                    - generic [ref=e239]:
+                      - generic [ref=e240]: L4 (95%)
+                      - img [ref=e242]
+                  - button "CH6 Jan 7 vighneśvara pūja Absent" [ref=e244] [cursor=pointer]:
+                    - generic [ref=e245]:
+                      - generic [ref=e246]: CH6
+                      - generic [ref=e247]: Jan 7
+                    - generic [ref=e248]: vighneśvara pūja
+                    - generic [ref=e249]:
+                      - generic [ref=e250]: Absent
+                      - img [ref=e252]
+                  - button "CH7 Jan 7 puṇyāhavācanaṃ L1 (50%)" [ref=e254] [cursor=pointer]:
+                    - generic [ref=e255]:
+                      - generic [ref=e256]: CH7
+                      - generic [ref=e257]: Jan 7
+                    - generic [ref=e258]: puṇyāhavācanaṃ
+                    - generic [ref=e259]:
+                      - generic [ref=e260]: L1 (50%)
+                      - img [ref=e262]
+                  - button "CH8 Jan 7 vighneśvara pūjā vidhānaṃ L2 (70%)" [ref=e264] [cursor=pointer]:
+                    - generic [ref=e265]:
+                      - generic [ref=e266]: CH8
+                      - generic [ref=e267]: Jan 7
+                    - generic [ref=e268]: vighneśvara pūjā vidhānaṃ
+                    - generic [ref=e269]:
+                      - generic [ref=e270]: L2 (70%)
+                      - img [ref=e272]
+                  - button "CH9 Jan 7 puṇyāhavācana pūjā vidhānaṃ L3 (90%)" [ref=e274] [cursor=pointer]:
+                    - generic [ref=e275]:
+                      - generic [ref=e276]: CH9
+                      - generic [ref=e277]: Jan 7
+                    - generic [ref=e278]: puṇyāhavācana pūjā vidhānaṃ
+                    - generic [ref=e279]:
+                      - generic [ref=e280]: L3 (90%)
+                      - img [ref=e282]
+            - heading "Track 4 - Mahaanyaasadhikam & Sakala Devataa Pooja Vidhaanam 0/8 chapters" [level=3] [ref=e285]:
+              - button "Track 4 - Mahaanyaasadhikam & Sakala Devataa Pooja Vidhaanam 0/8 chapters" [ref=e286] [cursor=pointer]:
+                - generic [ref=e287]:
+                  - generic [ref=e288]:
+                    - heading "Track 4 - Mahaanyaasadhikam & Sakala Devataa Pooja Vidhaanam" [level=3] [ref=e290]
+                    - generic [ref=e291]: 0/8 chapters
+                  - progressbar [ref=e292]
+                - img [ref=e294]
+            - heading "Track 5 - Upanishad Mantraah 0/5 chapters" [level=3] [ref=e297]:
+              - button "Track 5 - Upanishad Mantraah 0/5 chapters" [ref=e298] [cursor=pointer]:
+                - generic [ref=e299]:
+                  - generic [ref=e300]:
+                    - heading "Track 5 - Upanishad Mantraah" [level=3] [ref=e302]
+                    - generic [ref=e303]: 0/5 chapters
+                  - progressbar [ref=e304]
+                - img [ref=e306]
+            - heading "Track 6 - svasti mantrāḥ, prayojanārtha mantrāḥ, agni mukhaṃ, anna sūktaṃ 0/8 chapters" [level=3] [ref=e309]:
+              - button "Track 6 - svasti mantrāḥ, prayojanārtha mantrāḥ, agni mukhaṃ, anna sūktaṃ 0/8 chapters" [ref=e310] [cursor=pointer]:
+                - generic [ref=e311]:
+                  - generic [ref=e312]:
+                    - heading "Track 6 - svasti mantrāḥ, prayojanārtha mantrāḥ, agni mukhaṃ, anna sūktaṃ" [level=3] [ref=e314]
+                    - generic [ref=e315]: 0/8 chapters
+                  - progressbar [ref=e316]
+                - img [ref=e318]
+            - heading "Track 7 - Nakshatreshti & Pancha Kaatakam Part I 0/4 chapters" [level=3] [ref=e321]:
+              - button "Track 7 - Nakshatreshti & Pancha Kaatakam Part I 0/4 chapters" [ref=e322] [cursor=pointer]:
+                - generic [ref=e323]:
+                  - generic [ref=e324]:
+                    - heading "Track 7 - Nakshatreshti & Pancha Kaatakam Part I" [level=3] [ref=e326]
+                    - generic [ref=e327]: 0/4 chapters
+                  - progressbar [ref=e328]
+                - img [ref=e330]
+            - heading "Track 8 - Pancha Kaatakam Part II 0/2 chapters" [level=3] [ref=e333]:
+              - button "Track 8 - Pancha Kaatakam Part II 0/2 chapters" [ref=e334] [cursor=pointer]:
+                - generic [ref=e335]:
+                  - generic [ref=e336]:
+                    - heading "Track 8 - Pancha Kaatakam Part II" [level=3] [ref=e338]
+                    - generic [ref=e339]: 0/2 chapters
+                  - progressbar [ref=e340]
+                - img [ref=e342]
+```

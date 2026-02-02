@@ -13,7 +13,7 @@ function generateToken(payload: any): string {
     });
 }
 
-const BASE_URL = 'http://localhost:5173';
+const BASE_URL = 'http://localhost:5000';
 
 test.describe('Critical Flows Smoke Test', () => {
 
@@ -31,29 +31,16 @@ test.describe('Critical Flows Smoke Test', () => {
         await expect(page.getByLabel('First name')).toBeVisible();
     });
 
-    test('Student: Dashboard Loads', async ({ browser }) => {
-        const context = await browser.newContext();
+    test('Student: Dashboard Loads (UI Login)', async ({ page }) => {
+        await page.goto(`${BASE_URL}/login`);
 
-        const token = generateToken({
-            id: 'student-123',
-            email: 'student@vedam.org',
-            roles: ['student'],
-            status: 'active'
-        });
+        // Fill login form
+        await page.getByLabel('Email').fill('kashyap.kuchipudi@gmail.com');
+        await page.getByLabel('Password').fill('welcome123');
+        await page.getByRole('button', { name: /Sign In/i }).click();
 
-        // Cookie name must match server (auth_token)
-        await context.addCookies([{
-            name: 'auth_token',
-            value: token,
-            domain: 'localhost',
-            path: '/',
-            httpOnly: true,
-            secure: false,
-            sameSite: 'Strict'
-        }]);
-
-        const page = await context.newPage();
-        await page.goto(`${BASE_URL}/app/learning`);
+        // Wait for redirect
+        await expect(page).toHaveURL(/.*\/app/);
 
         // Verify we are logged in (Sidebar visible)
         await expect(page.locator('aside')).toBeVisible();

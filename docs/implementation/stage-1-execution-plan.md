@@ -67,79 +67,9 @@ git branch -d stage-1-phase-N-name
 **Branch**: `stage-1-phase-0-foundation`  
 **Goal**: Production-grade monorepo with security-first architecture
 
-### Part A: Security Hardening (2.5h)
+### Part A: Infrastructure (2.5h)
 
-#### 1. JWT Migration to HttpOnly Cookies (2h)
-
-**Backend Changes**:
-
-```typescript
-// apps/api/src/routes/identity.routes.ts
-router.post('/api/auth/login', async (req, res) => {
-  const user = await authenticateUser(req.body);
-  const token = generateJWT(user);
-  
-  res.cookie('auth_token', token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-  
-  res.json({ user });
-});
-
-// Update middleware
-export const jwtAuth = (req, res, next) => {
-  const token = req.cookies.auth_token;
-  if (!token) return res.status(401).json({ error: 'Unauthorized' });
-  try {
-    req.user = verifyJWT(token);
-    next();
-  } catch (err) {
-    res.status(403).json({ error: 'Invalid token' });
-  }
-};
-```
-
-**Frontend Changes**:
-
-- Remove ALL `localStorage.getItem('jwt_token')`
-- Remove ALL `Authorization: Bearer ${token}` headers
-- Add `credentials: 'include'` to all fetch calls
-
-#### 2. CSRF Protection (30m)
-
-```bash
-npm install csurf cookie-parser
-```
-
-```typescript
-// apps/api/src/index.ts
-import csrf from 'csurf';
-app.use(csrf({ cookie: { httpOnly: true, secure: true } }));
-
-app.get('/api/csrf-token', (req, res) => {
-  res.json({ csrfToken: req.csrfToken() });
-});
-
-// packages/ui/src/lib/apiClient.ts
-export async function apiRequest(endpoint, options = {}) {
-  const csrfToken = await getCsrfToken();
-  return fetch(`/api${endpoint}`, {
-    ...options,
-    credentials: 'include',
-    headers: {
-      'X-CSRF-Token': csrfToken,
-      ...options.headers,
-    },
-  });
-}
-```
-
-### Part B: Infrastructure (2.5h)
-
-#### 3. Turborepo Pipeline (45m)
+#### 1. Turborepo Pipeline (45m)
 
 ```json
 // turbo.json
@@ -229,21 +159,11 @@ export const SCHEMA_VERSION = '1.0.0';
 
 Create Dockerfiles for all 3 apps + docker-compose.yml (see full plan for details).
 
-### Part C: Codebase Sanitation (Audit Findings) (1.5h)
+### Part B: Codebase Sanitation (Moved to Monolith Baseline)
 
-#### 9. Legacy Cleanup (30m)
+*Completed in Stage 0.6*
 
-- Remove `session-file-store`, `express-session` dependencies.
-- Audit `mediaRouter`, `batchRouter`, `studentRouter` for flat routing issues.
-- Consolidate legacy middleware.
-
-#### 10. Configuration & Storage (1h)
-
-- Centralize all env vars in `server/config.ts`.
-- Implement startup validation for `JWT_SECRET`.
-- Create `StorageService` interface to abstract `uploads/` logic (pre-req for Ops Portal).
-
-### Part D: Package Setup (30m)
+### Part C: Package Setup (30m)
 
 Initialize `@narada/database`, `@narada/types`, `@narada/ui` stub packages.
 
