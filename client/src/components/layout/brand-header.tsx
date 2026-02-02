@@ -6,8 +6,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import wordmark from '@/assets/branding/wordmark-dark.svg';
-import symbol from '@/assets/branding/symbol-dark.svg';
+import wordmark from '@/assets/shared-branding/wordmark-dark.svg';
+import symbol from '@/assets/shared-branding/symbol-dark.svg';
 
 export function BrandHeader() {
   const { state } = useSidebar();

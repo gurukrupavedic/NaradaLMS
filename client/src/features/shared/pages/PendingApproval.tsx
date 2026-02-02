@@ -1,12 +1,13 @@
 import React from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { apiRequest } from "@/lib/apiClient";
 export function PendingApproval() {
   const [, navigate] = useLocation();
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", {
+      await apiRequest("/auth/logout", {
         method: "POST",
         credentials: "include",
       });

@@ -4,9 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/features/shared/hooks/use-toast";
 
+
+import { apiRequest } from "@/lib/apiClient";
+
 export function Register() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  // ... (keeping code above, assuming I use ReplaceContent carefully or multi)
+  // I need to be careful with ReplaceFileContent reusing lines.
+  // I'll use multi_replace for safer handling of separate blocks.
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -59,7 +65,7 @@ export function Register() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await apiRequest("/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

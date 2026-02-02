@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { apiRequest } from "@/lib/apiClient";
 
 interface NetworkStatus {
   isOnline: boolean;
@@ -27,7 +28,7 @@ interface UseNetworkStatusReturn extends NetworkStatus {
 // Connection quality test configuration
 const CONNECTION_TEST_CONFIG = {
   timeout: 5000,
-  testUrl: '/api/health', // Fallback to a simple endpoint
+  testUrl: '/health', // Fallback to a simple endpoint
   goodThreshold: 1000, // ms
   poorThreshold: 3000, // ms
 };
@@ -55,7 +56,7 @@ export function useNetworkStatus(): UseNetworkStatusReturn {
       const startTime = Date.now();
 
       // Try to fetch a small resource to test connection
-      const response = await fetch(CONNECTION_TEST_CONFIG.testUrl, {
+      const response = await apiRequest(CONNECTION_TEST_CONFIG.testUrl, {
         method: 'HEAD',
         signal: controller.signal,
         cache: 'no-cache',

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/apiClient";
 
 export type SystemSetting = {
   key: string;
@@ -7,7 +8,7 @@ export type SystemSetting = {
 };
 
 async function fetchSettings(): Promise<{ success: boolean; data: SystemSetting[] }> {
-  const res = await fetch("/api/admin/settings");
+  const res = await apiRequest("/admin/settings");
   if (!res.ok) throw new Error("Failed to load system settings");
   const json = await res.json();
   // Normalize: support either array of {key,value} or object map
@@ -27,7 +28,7 @@ export function useSystemSettings() {
 }
 
 async function putSetting(key: string, value: unknown) {
-  const res = await fetch(`/api/admin/settings/${encodeURIComponent(key)}`, {
+  const res = await apiRequest(`/admin/settings/${encodeURIComponent(key)}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ value }),

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { learningService } from "../modules/learning-delivery";
 import { jwtAuth } from "../middleware/jwt-auth.middleware";
+import { requireInstructor } from "../middleware/role-auth.middleware";
 import { catchAsync } from "../utils/catchAsync";
 import { AppError } from "../utils/AppError";
 
@@ -14,17 +15,14 @@ router.use(jwtAuth);
  * Get student details with proficiency matrix for instructor view
  * Only instructors can view their students, instructors can only see students in their batches
  */
-router.get('/students/:studentId/progress', catchAsync(async (req: Request, res: Response) => {
+router.get('/students/:studentId/progress', requireInstructor, catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
   if (!user) {
     throw new AppError('Unauthorized', 401);
   }
 
-  // Only instructors and admins can access student details
-  const isInstructorOrAdmin = user.roles?.includes('instructor') || user.roles?.includes('admin');
-  if (!isInstructorOrAdmin) {
-    throw new AppError('Forbidden: Instructors only', 403);
-  }
+  // User is guaranteed to be instructor or admin by middleware
+  const isInstructorOrAdmin = true;
 
   const studentId = req.params.studentId;
   const studentDetails = await learningService.getStudentDetails(user.id, studentId, isInstructorOrAdmin);
@@ -42,17 +40,14 @@ router.get('/students/:studentId/progress', catchAsync(async (req: Request, res:
  * Returns all tracks the student has studied across their batch enrollments
  * Only instructors can view their students
  */
-router.get('/students/:studentId/track-progress', catchAsync(async (req: Request, res: Response) => {
+router.get('/students/:studentId/track-progress', requireInstructor, catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
   if (!user) {
     throw new AppError('Unauthorized', 401);
   }
 
-  // Only instructors and admins can access student details
-  const isInstructorOrAdmin = user.roles?.includes('instructor') || user.roles?.includes('admin');
-  if (!isInstructorOrAdmin) {
-    throw new AppError('Forbidden: Instructors only', 403);
-  }
+  // User is guaranteed to be instructor or admin by middleware
+  const isInstructorOrAdmin = true;
 
   const studentId = req.params.studentId;
   const trackProgress = await learningService.getStudentTrackProgress(user.id, studentId, isInstructorOrAdmin);

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/features/shared/hooks/use-toast";
 
+import { apiRequest } from "@/lib/apiClient";
+
 export function Login() {
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
@@ -18,7 +20,7 @@ export function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await apiRequest("/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

@@ -66,11 +66,16 @@ async function seedVedicCurriculum() {
     console.log(`   ${totalChapters} chapters`);
     console.log('\n📝 Content (multilingual text, audio, segments) is now included in the seed!');
 
-    process.exit(0);
   } catch (error) {
     console.error('❌ Error seeding curriculum:', error);
-    process.exit(1);
+    throw error;
   }
 }
 
-seedVedicCurriculum();
+if (require.main === module) {
+  seedVedicCurriculum()
+    .then(() => process.exit(0))
+    .catch(() => process.exit(1));
+}
+
+export { seedVedicCurriculum };

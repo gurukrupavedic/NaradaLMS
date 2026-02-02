@@ -5,14 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/features/shared/hooks/use-toast";
 import { apiRequest } from "@/lib/apiClient";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 
+
 // Assets
-import kolamPattern from "@/assets/branding/kolam-2.svg";
-import logoStacked from "@/assets/branding/logo-stacked-dark-notag.svg";
-import slmtsLogo from "@/assets/branding/SLMTS LOGO 01-2025 FINAL.png";
+import kolamPattern from "@/assets/shared-branding/kolam-2.svg";
+import logoStacked from "@/assets/shared-branding/logo-stacked-dark-notag.svg";
+import slmtsLogo from "@/assets/shared-branding/SLMTS LOGO 01-2025 FINAL.png";
 
 import { FcGoogle } from "react-icons/fc";
 
@@ -268,7 +269,7 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
 
         setLoading(true);
         try {
-            const response = await fetch("/api/auth/register", {
+            const response = await apiRequest("/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

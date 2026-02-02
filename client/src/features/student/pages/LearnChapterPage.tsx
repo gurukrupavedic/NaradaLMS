@@ -133,9 +133,7 @@ export function LearnChapterPage() {
     queryKey: [`/api/audio-files/${chapterId}`],
     enabled: !!chapterId,
     queryFn: async () => {
-      const response = await fetch(`/api/audio-files/${chapterId}`, {
-        credentials: 'include'
-      });
+      const response = await apiRequest('GET', `/api/audio-files/${chapterId}`);
       if (!response.ok) throw new Error('Failed to fetch audio files');
       return response.json();
     }
@@ -145,9 +143,7 @@ export function LearnChapterPage() {
     queryKey: [`/api/segment-mappings/${chapterId}`],
     enabled: !!chapterId && learnMode,
     queryFn: async () => {
-      const response = await fetch(`/api/segment-mappings/${chapterId}`, {
-        credentials: 'include'
-      });
+      const response = await apiRequest('GET', `/api/segment-mappings/${chapterId}`);
       if (!response.ok) throw new Error('Failed to fetch mappings');
       return response.json();
     }
@@ -157,9 +153,7 @@ export function LearnChapterPage() {
     queryKey: [`/api/learning/progress?chapterId=${chapterId}&studentId=${user?.id}`],
     enabled: !!chapterId && !!user,
     queryFn: async () => {
-      const response = await fetch(`/api/learning/progress?chapterId=${chapterId}&studentId=${user?.id}`, {
-        credentials: 'include'
-      });
+      const response = await apiRequest('GET', `/api/learning/progress?chapterId=${chapterId}&studentId=${user?.id}`);
       if (!response.ok) throw new Error('Failed to fetch student progress');
       return response.json();
     }

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from "@/lib/apiClient";
 
 interface ChapterData {
     id: number;
@@ -43,9 +44,7 @@ export function ChapterEditorProvider({ children, chapterId, trackId }: ChapterE
     const { data: chapter, isLoading, error, refetch } = useQuery<ChapterData>({
         queryKey: ['content', 'chapters', chapterId, 'details'],
         queryFn: async () => {
-            const response = await fetch(`/api/content/chapters/${chapterId}/details`, {
-                credentials: 'include' // Use cookies for auth
-            });
+            const response = await apiRequest(`/content/chapters/${chapterId}/details`);
             if (!response.ok) throw new Error('Failed to fetch chapter');
             return response.json();
         },

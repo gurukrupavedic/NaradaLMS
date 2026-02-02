@@ -1,0 +1,286 @@
+client/src/components/ui/index.ts(14,58): error TS1149: File name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/Tabs.tsx' differs from already included file name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tabs.tsx' only in casing.
+  The file is in the program because:
+    Imported via "@/components/ui/tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/shared/pages/AuthPage.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/admin/pages/UserManagementPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/batches/components/TrackTabs.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/menu-bar.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/tiptap-editor.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/pages/ChapterContentPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/components/ChapterHeader/ChapterHeader.tsx'
+    Matched by include pattern 'client/src/**/*' in 'C:/Users/kashy/Projects/NaradaLMS/tsconfig.json'
+    Imported via "./Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/index.ts'
+client/src/components/ui/tiptap-editor/components/menu-bar.tsx(24,45): error TS1149: File name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/Tabs.tsx' differs from already included file name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tabs.tsx' only in casing.
+  The file is in the program because:
+    Imported via "@/components/ui/tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/shared/pages/AuthPage.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/admin/pages/UserManagementPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/batches/components/TrackTabs.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/menu-bar.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/tiptap-editor.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/pages/ChapterContentPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/components/ChapterHeader/ChapterHeader.tsx'
+    Matched by include pattern 'client/src/**/*' in 'C:/Users/kashy/Projects/NaradaLMS/tsconfig.json'
+    Imported via "./Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/index.ts'
+client/src/components/ui/tiptap-editor/components/tiptap-editor.tsx(21,45): error TS1149: File name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/Tabs.tsx' differs from already included file name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tabs.tsx' only in casing.
+  The file is in the program because:
+    Imported via "@/components/ui/tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/shared/pages/AuthPage.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/admin/pages/UserManagementPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/batches/components/TrackTabs.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/menu-bar.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/tiptap-editor.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/pages/ChapterContentPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/components/ChapterHeader/ChapterHeader.tsx'
+    Matched by include pattern 'client/src/**/*' in 'C:/Users/kashy/Projects/NaradaLMS/tsconfig.json'
+    Imported via "./Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/index.ts'
+client/src/features/admin/pages/UserManagementPage.tsx(19,45): error TS1149: File name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/Tabs.tsx' differs from already included file name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tabs.tsx' only in casing.
+  The file is in the program because:
+    Imported via "@/components/ui/tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/shared/pages/AuthPage.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/admin/pages/UserManagementPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/batches/components/TrackTabs.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/menu-bar.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/tiptap-editor.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/pages/ChapterContentPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/components/ChapterHeader/ChapterHeader.tsx'
+    Matched by include pattern 'client/src/**/*' in 'C:/Users/kashy/Projects/NaradaLMS/tsconfig.json'
+    Imported via "./Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/index.ts'
+client/src/features/batches/components/TrackTabs.tsx(3,58): error TS1149: File name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/Tabs.tsx' differs from already included file name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tabs.tsx' only in casing.
+  The file is in the program because:
+    Imported via "@/components/ui/tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/shared/pages/AuthPage.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/admin/pages/UserManagementPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/batches/components/TrackTabs.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/menu-bar.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/tiptap-editor.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/pages/ChapterContentPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/components/ChapterHeader/ChapterHeader.tsx'
+    Matched by include pattern 'client/src/**/*' in 'C:/Users/kashy/Projects/NaradaLMS/tsconfig.json'
+    Imported via "./Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/index.ts'
+client/src/features/content/components/ChapterHeader/ChapterHeader.tsx(4,39): error TS1149: File name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/Tabs.tsx' differs from already included file name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tabs.tsx' only in casing.
+  The file is in the program because:
+    Imported via "@/components/ui/tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/shared/pages/AuthPage.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/admin/pages/UserManagementPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/batches/components/TrackTabs.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/menu-bar.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/tiptap-editor.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/pages/ChapterContentPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/components/ChapterHeader/ChapterHeader.tsx'
+    Matched by include pattern 'client/src/**/*' in 'C:/Users/kashy/Projects/NaradaLMS/tsconfig.json'
+    Imported via "./Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/index.ts'
+client/src/features/content/pages/ChapterContentPage.tsx(4,35): error TS1149: File name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/Tabs.tsx' differs from already included file name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tabs.tsx' only in casing.
+  The file is in the program because:
+    Imported via "@/components/ui/tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/shared/pages/AuthPage.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/admin/pages/UserManagementPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/batches/components/TrackTabs.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/menu-bar.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/tiptap-editor.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/pages/ChapterContentPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/components/ChapterHeader/ChapterHeader.tsx'
+    Matched by include pattern 'client/src/**/*' in 'C:/Users/kashy/Projects/NaradaLMS/tsconfig.json'
+    Imported via "./Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/index.ts'
+client/src/features/shared/pages/AuthPage.tsx(8,58): error TS1261: Already included file name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tabs.tsx' differs from file name 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/Tabs.tsx' only in casing.
+  The file is in the program because:
+    Imported via "@/components/ui/tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/shared/pages/AuthPage.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/admin/pages/UserManagementPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/batches/components/TrackTabs.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/menu-bar.tsx'
+    Imported via "@/components/ui/Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/tiptap-editor/components/tiptap-editor.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/pages/ChapterContentPage.tsx'
+    Imported via '@/components/ui/Tabs' from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/features/content/components/ChapterHeader/ChapterHeader.tsx'
+    Matched by include pattern 'client/src/**/*' in 'C:/Users/kashy/Projects/NaradaLMS/tsconfig.json'
+    Imported via "./Tabs" from file 'C:/Users/kashy/Projects/NaradaLMS/client/src/components/ui/index.ts'
+client/src/lib/apiClient.ts(24,5): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+server/auth/jwt.utils.ts(15,14): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(payload: string | object | Buffer, secretOrPrivateKey: null, options?: (SignOptions & { algorithm: "none"; }) | undefined): string', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'null'.
+  Overload 2 of 5, '(payload: string | object | Buffer, secretOrPrivateKey: Secret | PrivateKeyInput | JsonWebKeyInput, options?: SignOptions | undefined): string', gave the following error.
+    Type 'string' is not assignable to type 'number | StringValue | undefined'.
+  Overload 3 of 5, '(payload: string | object | Buffer, secretOrPrivateKey: Secret | PrivateKeyInput | JsonWebKeyInput, callback: SignCallback): void', gave the following error.
+    Object literal may only specify known properties, and 'expiresIn' does not exist in type 'SignCallback'.
+server/auth/passport-config.ts(53,9): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(_accessToken: string, _refreshToken: string, profile: Profile, done: Profile) => Promise<any>' is not assignable to parameter of type '(req: Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>, accessToken: string, refreshToken: string, params: GoogleCallbackParameters, profile: Profile, done: VerifyCallback) => void'.
+      Types of parameters '_accessToken' and 'req' are incompatible.
+        Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'string'.
+server/auth/passport-config.ts(81,22): error TS2349: This expression is not callable.
+  Type 'Profile' has no call signatures.
+server/auth/passport-config.ts(84,22): error TS2349: This expression is not callable.
+  Type 'Profile' has no call signatures.
+server/auth/passport-config.ts(87,20): error TS2349: This expression is not callable.
+  Type 'Profile' has no call signatures.
+server/auth/passport-config.ts(89,20): error TS2349: This expression is not callable.
+  Type 'Profile' has no call signatures.
+server/index.ts(21,26): error TS7016: Could not find a declaration file for module 'cookie-parser'. 'C:/Users/kashy/Projects/NaradaLMS/node_modules/cookie-parser/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/cookie-parser` if it exists or add a new declaration (.d.ts) file containing `declare module 'cookie-parser';`
+server/index.ts(22,18): error TS7016: Could not find a declaration file for module 'csurf'. 'C:/Users/kashy/Projects/NaradaLMS/node_modules/csurf/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/csurf` if it exists or add a new declaration (.d.ts) file containing `declare module 'csurf';`
+server/index.ts(62,29): error TS2339: Property 'csrfToken' does not exist on type 'Request<{}, any, any, ParsedQs, Record<string, any>>'.
+server/routes/admin.routes.ts(18,27): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+            Types of property 'user' are incompatible.
+              Type 'User | undefined' is not assignable to type 'JWTPayload | undefined'.
+                Type 'User' is not assignable to type 'JWTPayload'.
+                  Types of property 'email' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'string'.
+                      Type 'undefined' is not assignable to type 'string'.
+server/routes/admin.routes.ts(55,25): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+            Types of property 'user' are incompatible.
+              Type 'User | undefined' is not assignable to type 'JWTPayload | undefined'.
+                Type 'User' is not assignable to type 'JWTPayload'.
+                  Types of property 'email' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'string'.
+                      Type 'undefined' is not assignable to type 'string'.
+server/routes/admin.routes.ts(77,30): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+            Types of property 'user' are incompatible.
+              Type 'User | undefined' is not assignable to type 'JWTPayload | undefined'.
+                Type 'User' is not assignable to type 'JWTPayload'.
+                  Types of property 'email' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'string'.
+                      Type 'undefined' is not assignable to type 'string'.
+server/routes/admin.routes.ts(107,30): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+            Types of property 'user' are incompatible.
+              Type 'User | undefined' is not assignable to type 'JWTPayload | undefined'.
+                Type 'User' is not assignable to type 'JWTPayload'.
+                  Types of property 'email' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'string'.
+                      Type 'undefined' is not assignable to type 'string'.
+server/routes/admin.routes.ts(143,22): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+            Types of property 'user' are incompatible.
+              Type 'User | undefined' is not assignable to type 'JWTPayload | undefined'.
+                Type 'User' is not assignable to type 'JWTPayload'.
+                  Types of property 'email' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'string'.
+                      Type 'undefined' is not assignable to type 'string'.
+server/routes/batch.routes.ts(9,12): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'PathParams'.
+server/routes/content.routes.ts(16,12): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'PathParams'.
+server/routes/identity.routes.ts(182,27): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+            Types of property 'user' are incompatible.
+              Type 'User | undefined' is not assignable to type 'JWTPayload | undefined'.
+                Type 'User' is not assignable to type 'JWTPayload'.
+                  Types of property 'email' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'string'.
+                      Type 'undefined' is not assignable to type 'string'.
+server/routes/identity.routes.ts(201,3): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+            Types of property 'user' are incompatible.
+              Type 'User | undefined' is not assignable to type 'JWTPayload | undefined'.
+                Type 'User' is not assignable to type 'JWTPayload'.
+                  Types of property 'email' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'string'.
+                      Type 'undefined' is not assignable to type 'string'.
+server/routes/identity.routes.ts(247,3): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+            Types of property 'user' are incompatible.
+              Type 'User | undefined' is not assignable to type 'JWTPayload | undefined'.
+                Type 'User' is not assignable to type 'JWTPayload'.
+                  Types of property 'email' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'string'.
+                      Type 'undefined' is not assignable to type 'string'.
+server/routes/identity.routes.ts(277,3): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+            Types of property 'user' are incompatible.
+              Type 'User | undefined' is not assignable to type 'JWTPayload | undefined'.
+                Type 'User' is not assignable to type 'JWTPayload'.
+                  Types of property 'email' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'string'.
+                      Type 'undefined' is not assignable to type 'string'.
+server/routes/identity.routes.ts(315,3): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+            Types of property 'user' are incompatible.
+              Type 'User | undefined' is not assignable to type 'JWTPayload | undefined'.
+                Type 'User' is not assignable to type 'JWTPayload'.
+                  Types of property 'email' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'string'.
+                      Type 'undefined' is not assignable to type 'string'.
+server/routes/identity.routes.ts(347,3): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+            Types of property 'user' are incompatible.
+              Type 'User | undefined' is not assignable to type 'JWTPayload | undefined'.
+                Type 'User' is not assignable to type 'JWTPayload'.
+                  Types of property 'email' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'string'.
+                      Type 'undefined' is not assignable to type 'string'.
+server/routes/identity.routes.ts(379,3): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+            Types of property 'user' are incompatible.
+              Type 'User | undefined' is not assignable to type 'JWTPayload | undefined'.
+                Type 'User' is not assignable to type 'JWTPayload'.
+                  Types of property 'email' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'string'.
+                      Type 'undefined' is not assignable to type 'string'.
+server/routes/identity.routes.ts(402,3): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+      Type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+        Types of parameters 'req' and 'req' are incompatible.
+          Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+            Types of property 'user' are incompatible.
+              Type 'User | undefined' is not assignable to type 'JWTPayload | undefined'.
+                Type 'User' is not assignable to type 'JWTPayload'.
+                  Types of property 'email' are incompatible.
+                    Type 'string | undefined' is not assignable to type 'string'.
+                      Type 'undefined' is not assignable to type 'string'.
+server/routes/learning.routes.ts(14,12): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'PathParams'.
+server/routes/media.routes.ts(17,12): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'PathParams'.
+server/routes/student.routes.ts(10,12): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '(req: AuthenticatedRequest, res: Response<any, Record<string, any>>, next: NextFunction) => Response<any, Record<string, any>> | undefined' is not assignable to parameter of type 'PathParams'.
