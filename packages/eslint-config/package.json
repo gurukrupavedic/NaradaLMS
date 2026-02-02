@@ -1,0 +1,11 @@
+{
+    "name": "@narada/eslint-config",
+    "version": "0.0.0",
+    "private": true,
+    "main": "index.js",
+    "dependencies": {
+        "eslint": "^9.39.2",
+        "eslint-config-next": "15.0.0",
+        "typescript-eslint": "^8.53.0"
+    }
+}
