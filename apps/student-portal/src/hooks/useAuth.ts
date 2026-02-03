@@ -50,7 +50,7 @@ export function useAuth() {
             await apiRequest("/auth/logout", { method: "POST" });
             queryClient.setQueryData(["auth", "me"], null);
             queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
-            router.push("/login"); // Need to figure out where login page is
+            router.push("/");
         } catch (err) {
             console.error("Logout error", err);
         }

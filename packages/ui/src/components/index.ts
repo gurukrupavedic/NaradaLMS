@@ -29,3 +29,5 @@ export * from "./layout/app-sidebar";
 export * from "./layout/nav-main";
 export * from "./layout/nav-user";
 export * from "./layout/brand-header";
+export * from "./theme-provider";
+export * from "./theme-toggle";

@@ -42,6 +42,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     userRoles: UserRole[];
     currentPath: string; // Passed from parent (AppShell)
     onLogout: () => void;
+    homeHref?: string;
 }
 
 export function AppSidebar({
@@ -49,6 +50,7 @@ export function AppSidebar({
     userRoles = ['student'],
     currentPath,
     onLogout,
+    homeHref = "/app",
     ...props
 }: AppSidebarProps) {
 
@@ -57,7 +59,7 @@ export function AppSidebar({
     return (
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader>
-                <BrandHeader />
+                <BrandHeader homeHref={homeHref} />
             </SidebarHeader>
             <SidebarContent>
                 {/* Render Sections based on Role Config */}

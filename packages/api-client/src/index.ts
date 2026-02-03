@@ -1,9 +1,43 @@
 
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export type FetchOptions = RequestInit & {
     headers?: Record<string, string>;
 };
+
+let csrfToken: string | null = null;
+
+/**
+ * Fetch CSRF token from the API
+ * Cached after first request on client-side
+ */
+async function getCsrfToken(): Promise<string | null> {
+    if (typeof window === "undefined") return null;
+    if (csrfToken) return csrfToken;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/csrf-token`, {
+            credentials: 'include', // Send cookies
+        });
+
+        if (!response.ok) return null;
+
+        const data = await response.json();
+        csrfToken = data.csrfToken;
+        return csrfToken;
+    } catch (error) {
+        console.error("Failed to fetch CSRF token", error);
+        return null;
+    }
+}
+
+/**
+ * Clear cached CSRF token (useful after logout)
+ */
+export function clearCsrfToken() {
+    csrfToken = null;
+}
 
 export async function apiRequest<T = any>(endpoint: string, options: FetchOptions = {}): Promise<T> {
     const headers: Record<string, string> = {
@@ -11,8 +45,23 @@ export async function apiRequest<T = any>(endpoint: string, options: FetchOption
         ...(options.headers as Record<string, string> || {}),
     };
 
+    // CSRF Protection for state-changing requests (Client-side only)
+    if (typeof window !== "undefined") {
+        const needsCsrf = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(
+            options.method?.toUpperCase() || 'GET'
+        );
+
+        if (needsCsrf) {
+            const token = await getCsrfToken();
+            if (token) {
+                headers['X-CSRF-Token'] = token;
+            }
+        }
+    }
+
     // Server-side: Pass cookies manually via dynamic import to avoid client bundle errors
     if (typeof window === "undefined") {
+        // ... unchanged code continues ...
         try {
             // Use standard dynamic import for Next.js server compatibility
             // This is a pattern used to avoid bundling server-only modules in client-side code

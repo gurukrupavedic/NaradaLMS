@@ -13,7 +13,7 @@ import {
 import wordmark from '../../assets/shared-branding/wordmark-dark.svg';
 import symbol from '../../assets/shared-branding/symbol-dark.svg';
 
-export function BrandHeader() {
+export function BrandHeader({ homeHref = "/app" }: { homeHref?: string }) {
     const { state } = useSidebar();
     const isCollapsed = state === "collapsed";
 
@@ -21,7 +21,7 @@ export function BrandHeader() {
         <SidebarMenu>
             <SidebarMenuItem>
                 <SidebarMenuButton size="lg" asChild className="group-data-[collapsible=icon]:!p-0 hover:bg-transparent active:bg-transparent group-data-[collapsible=icon]:!size-12">
-                    <Link href="/app" className="flex items-center gap-3 transition-all duration-300 py-1">
+                    <Link href={homeHref} className="flex items-center gap-3 transition-all duration-300 py-1">
                         <div className={`flex shrink-0 items-center justify-center transition-all duration-300 ${isCollapsed ? 'size-10' : 'size-9'}`}>
                             <Image
                                 src={symbol}

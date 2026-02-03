@@ -33,4 +33,11 @@ export default defineConfig({
       deny: ["**/.*"],
     },
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern',
+      },
+    },
+  },
 });

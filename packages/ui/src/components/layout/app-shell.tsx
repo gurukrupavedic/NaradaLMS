@@ -3,6 +3,7 @@
 import * as React from "react"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "../sidebar"
 import { AppSidebar } from "./app-sidebar"
+import { ThemeToggle } from "../theme-toggle"
 import { Separator } from "../separator"
 import {
     Breadcrumb,
@@ -24,9 +25,10 @@ interface AppShellProps {
     }
     userRoles: UserRole[]
     onLogout: () => void
+    homeHref?: string
 }
 
-export function AppShell({ children, user, userRoles, onLogout }: AppShellProps) {
+export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app" }: AppShellProps) {
     // We need to pass currentPath to Sidebar for active state
     // Since this is in @narada/ui, we assume usage in Next.js app context
     const pathname = usePathname()
@@ -38,9 +40,10 @@ export function AppShell({ children, user, userRoles, onLogout }: AppShellProps)
                 userRoles={userRoles}
                 onLogout={onLogout}
                 currentPath={pathname}
+                homeHref={homeHref}
             />
             <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b bg-background px-4">
+                <header className="flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b bg-background px-4">
                     <div className="flex items-center gap-2">
                         <SidebarTrigger className="-ml-1" />
                         <Separator orientation="vertical" className="mr-2 h-4" />
@@ -54,10 +57,13 @@ export function AppShell({ children, user, userRoles, onLogout }: AppShellProps)
                                 </BreadcrumbItem>
                                 <BreadcrumbSeparator className="hidden md:block" />
                                 <BreadcrumbItem>
-                                    <BreadcrumbPage>Dashboard</BreadcrumbPage>
+                                    <BreadcrumbPage>Vedic Learning</BreadcrumbPage>
                                 </BreadcrumbItem>
                             </BreadcrumbList>
                         </Breadcrumb>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <ThemeToggle />
                     </div>
                 </header>
                 <div className="flex flex-1 flex-col gap-4 p-4 pt-0">

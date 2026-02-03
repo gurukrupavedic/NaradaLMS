@@ -38,7 +38,7 @@ const learnSection: NavSection = {
     items: [
         {
             title: 'Vedic Learning',
-            url: '/app/learning',
+            url: '/vedic-learning',
             icon: BookOpenText,
             isActive: true,
         },
