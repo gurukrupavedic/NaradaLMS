@@ -7,8 +7,8 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@narada/ui/components/tooltip';
-import { Badge } from '@narada/ui/components/badge';
+  Badge
+} from '@narada/ui';
 import { getCellColor, getProficiencyLabel } from '@/lib/matrix-utils';
 
 import { ChapterProgress } from '@narada/types';

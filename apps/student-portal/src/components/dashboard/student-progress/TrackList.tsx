@@ -1,4 +1,4 @@
-import { Accordion } from '@narada/ui/components/accordion';
+import { Accordion } from '@narada/ui';
 import { TrackProgress, ChapterProgress } from '@narada/types';
 import { TrackCard } from './TrackCard';
 

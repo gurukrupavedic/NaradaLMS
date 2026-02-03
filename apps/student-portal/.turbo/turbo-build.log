@@ -2,32 +2,7 @@
 > student-portal@0.1.0 build
 > next build
 
- ⚠ Invalid next.config.ts options detected: 
- ⚠     Unrecognized key(s) in object: 'reactCompiler'
- ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
    ▲ Next.js 15.1.6
+   - Environments: .env.local
 
    Creating an optimized production build ...
- ✓ Compiled successfully
-   Linting and checking validity of types ...
- ⨯ ESLint: sharedConfig is not iterable
-   Collecting page data ...
-   Generating static pages (0/5) ...
-   Generating static pages (1/5) 
-   Generating static pages (2/5) 
-   Generating static pages (3/5) 
- ✓ Generating static pages (5/5)
-   Finalizing page optimization ...
-   Collecting build traces ...
-
-Route (app)                              Size     First Load JS
-┌ ○ /                                    5.58 kB         111 kB
-└ ○ /_not-found                          981 B           106 kB
-+ First Load JS shared by all            105 kB
-  ├ chunks/855-2e5fe3bd8df0c8d9.js       50.5 kB
-  ├ chunks/87c73c54-9449146b8a9f8dce.js  52.9 kB
-  └ other shared chunks (total)          1.95 kB
-
-
-○  (Static)  prerendered as static content
-

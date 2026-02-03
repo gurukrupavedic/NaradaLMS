@@ -1,0 +1,62 @@
+
+> ops-portal@0.1.0 build
+> next build
+
+   ▲ Next.js 15.1.6
+
+   Creating an optimized production build ...
+Failed to compile.
+
+../../packages/ui/src/components/data-table-pagination.tsx
+Module not found: Can't resolve '@narada/ui/components/button'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/components/admin/batch-list.tsx
+
+../../packages/ui/src/components/data-table-pagination.tsx
+Module not found: Can't resolve '@narada/ui/components/select'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/components/admin/batch-list.tsx
+
+../../packages/ui/src/components/layout/app-shell.tsx
+Module not found: Can't resolve '../breadcrumb'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/app/admin/layout.tsx
+
+../../packages/ui/src/components/layout/nav-main.tsx
+Module not found: Can't resolve '../collapsible'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+../../packages/ui/src/components/layout/app-sidebar.tsx
+../../packages/ui/src/components/layout/app-shell.tsx
+./src/app/admin/layout.tsx
+
+../../packages/ui/src/components/layout/nav-user.tsx
+Module not found: Can't resolve '../avatar'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+../../packages/ui/src/components/layout/app-sidebar.tsx
+../../packages/ui/src/components/layout/app-shell.tsx
+./src/app/admin/layout.tsx
+
+
+> Build failed because of webpack errors
+npm error Lifecycle script `build` failed with error:
+npm error code 1
+npm error path C:\Users\kashy\Projects\NaradaLMS\apps\ops-portal
+npm error workspace ops-portal@0.1.0
+npm error location C:\Users\kashy\Projects\NaradaLMS\apps\ops-portal
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c next build

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge } from '@narada/ui/components/badge';
+import { Badge } from '@narada/ui';
 import { ChevronDown, User } from 'lucide-react';
 import type { StudentDetail } from '@narada/types';
 

@@ -3,18 +3,20 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/api";
-import { Button } from "@narada/ui/components/button";
-import { Badge } from "@narada/ui/components/badge";
-import { Switch } from "@narada/ui/components/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@narada/ui/components/select";
+import {
+  Button,
+  Badge,
+  Switch,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  LoadingSpinner,
+  cn,
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+  TiptapEditor
+} from "@narada/ui";
 import { Music, Info, StretchHorizontal, Zap } from "lucide-react";
-import { LoadingSpinner } from "@narada/ui/components/loading";
 import { SelectableTextPanel } from "./text-segmentation/SelectableTextPanel";
 import { getProficiencyLabel, getCellColor } from "@/lib/matrix-utils";
-import { cn } from "@narada/ui";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@narada/ui/components/tooltip";
 import { AudioPlayerControls } from "@/components/common/AudioPlayerControls";
-import { TiptapEditor } from "@narada/ui";
 
 interface ChapterData {
   id: number;

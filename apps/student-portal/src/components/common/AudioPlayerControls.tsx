@@ -10,14 +10,14 @@ import {
 } from "lucide-react"
 
 import { cn } from "@narada/ui"
-import { Button } from "@narada/ui/components/button"
-import { Slider } from "@narada/ui/components/slider"
 import {
+    Button,
+    Slider,
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@narada/ui/components/dropdown-menu"
+} from "@narada/ui"
 
 export interface AudioPlayerControlsProps {
     // Audio state

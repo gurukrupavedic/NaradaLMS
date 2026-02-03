@@ -2,10 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
-import { Button } from '@narada/ui/components/button';
-import { Card, CardContent } from '@narada/ui/components/card';
-import { Skeleton } from '@narada/ui/components/skeleton';
-import { Separator } from '@narada/ui/components/separator';
+import { Button, Card, CardContent, Skeleton, Separator } from '@narada/ui';
 
 import { StudentDetailsCard } from '@/components/dashboard/StudentDetailsCard';
 import { TrackList } from '@/components/dashboard/student-progress/TrackList';

@@ -1,0 +1,11 @@
+
+> @narada/types@0.0.0 lint
+> eslint .
+
+
+C:\Users\kashy\Projects\NaradaLMS\packages\types\src\text-segmentation.ts
+  12:60  warning  'BaseAudioFile' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  12:86  warning  'BaseChapter' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+
+✖ 2 problems (0 errors, 2 warnings)
+

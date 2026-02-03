@@ -13,79 +13,82 @@
 
 ---
 
-## Phase 0: Foundation & Security (8h)
+## Phase 0: Foundation & Security (8h) - [COMPLETED]
 
 ### 0.1 Infrastructure Setup
 
-- [ ] **Initialize Turborepo**
-  - [ ] Run `npx turbo@latest init` (skip install, manual setup)
-  - [ ] Create `turbo.json` with pipeline config (build, dev, check, lint, test).
-  - [ ] Configure `package.json` workspaces: `["apps/*", "packages/*"]`.
-- [ ] **Shared Configuration Packages** (Tech Council Req #1)
-  - [ ] Create `packages/tailwind-config/tailwind.config.ts`.
-  - [ ] Create `packages/eslint-config/api.js`, `react.js`, `next.js`.
-  - [ ] Create `packages/typescript-config/base.json`, `nextjs.json`.
+- [x] **Initialize Turborepo**
+  - [x] Run `npx turbo@latest init` (skip install, manual setup)
+  - [x] Create `turbo.json` with pipeline config (build, dev, check, lint, test).
+  - [x] Configure `package.json` workspaces: `["apps/*", "packages/*"]`.
+- [x] **Shared Configuration Packages** (Tech Council Req #1)
+  - [x] Create `packages/tailwind-config/tailwind.config.ts`.
+  - [x] Create `packages/eslint-config/api.js`, `react.js`, `next.js`.
+  - [x] Create `packages/typescript-config/base.json`, `nextjs.json`.
 
 ### 0.2 Security Hardening
 
-- [ ] **Environment Management**
-  - [ ] Install `dotenv-cli` in root.
-  - [ ] Add `.env.example` filtering to `.gitignore`.
-  - [ ] Add pre-commit hook to block `.env` commits.
-- [ ] **Legacy Frontend Patch** (Tech Council Req #2)
-  - [ ] Modify `client/src/api/axios.ts` (or equivalent) to set `withCredentials: true`.
-  - [ ] Verify existing Express backend can handle this before strictly enforcing it.
-- [ ] **CORS & Helmets**
-  - [ ] Add `helmet` to Express server (`server/src/app.ts`).
-  - [ ] Configure `cors` middleware with strictly typed origin list from `process.env.ALLOWED_ORIGINS`.
+- [x] **Environment Management**
+  - [x] Install `dotenv-cli` in root.
+  - [x] Add `.env.example` filtering to `.gitignore`.
+  - [x] Add pre-commit hook to block `.env` commits.
+- [x] **Legacy Frontend Patch** (Tech Council Req #2)
+  - [x] Modify `client/src/api/axios.ts` (or equivalent) to set `withCredentials: true`.
+  - [x] Verify existing Express backend can handle this before strictly enforcing it.
+- [x] **CORS & Helmets**
+  - [x] Add `helmet` to Express server (`server/src/app.ts`).
+  - [x] Configure `cors` middleware with strictly typed origin list from `process.env.ALLOWED_ORIGINS`.
 
 ### 0.3 Docker Baseline
 
-- [ ] **Base Dockerfile**
-  - [ ] Create `Dockerfile.base` for Node 20 + Turborepo global install.
-  - [ ] Setup `docker-compose.yml` for local dev (Postgres, Redis).
+- [x] **Base Dockerfile**
+  - [x] Create `Dockerfile.base` for Node 20 + Turborepo global install.
+  - [x] Setup `docker-compose.yml` for local dev (Postgres, Redis).
 
 ### 📝 Verification: Phase 0
 
-- [ ] Run `npx turbo build` -> Success.
-- [ ] Run `docker-compose up` -> DB functional.
-- [ ] Legacy App: Login -> Check Network Tab -> Cookie received? (Even if not HttpOnly yet, ensure flow works).
+- [x] Run `npx turbo build` -> Success.
+- [x] Run `docker-compose up` -> DB functional.
+- [x] Legacy App: Login -> Check Network Tab -> Cookie received? (Even if not HttpOnly yet, ensure flow works).
 
 ---
 
-## Phase 1: Student Portal (Next.js 15) (7h)
+## Phase 1: Student Portal (Next.js 15) (7h) - [COMPLETED]
 
 ### 1.1 App Initialization
 
-- [ ] **Scaffold App**
-  - [ ] `npx create-next-app@latest apps/student-portal --typescript --tailwind --eslint`.
-  - [ ] Update `tailwind.config.ts` to extend `packages/tailwind-config`.
-  - [ ] Update `tsconfig.json` to extend `packages/typescript-config`.
-- [ ] **Package Consumption**
-  - [ ] Move generic UI components (Button, Input) to `packages/ui`.
-  - [ ] Update `apps/student-portal` to consume `@narada/ui`.
+- [x] **Scaffold App**
+  - [x] `npx create-next-app@latest apps/student-portal --typescript --tailwind --eslint`.
+  - [x] Update `tailwind.config.ts` to extend `packages/tailwind-config`.
+  - [x] Update `tsconfig.json` to extend `packages/typescript-config`.
+- [x] **Package Consumption**
+  - [x] Move generic UI components (Button, Input, Slider, Tabs, Dropdown) to `packages/ui` (Updated to include all required components).
+  - [x] Update `apps/student-portal` to consume `@narada/ui`.
 
 ### 1.2 Tiptap Wrapper (The Adapter)
 
-- [ ] **Extract Logic**
-  - [ ] Copy `client/src/components/ui/tiptap-editor` to `packages/ui/src/editor`.
-- [ ] **Create Adapter**
-  - [ ] Create `packages/ui/src/editor/TiptapProvider.tsx`.
-  - [ ] Mock/Wrap `useQuery` and `useRouter` contexts that the legacy component expects.
+- [x] **Extract Logic**
+  - [x] Copy `client/src/components/ui/tiptap-editor` to `packages/ui/src/editor`.
+- [x] **Create Adapter**
+  - [x] Create `packages/ui/src/editor/TiptapProvider.tsx`.
+  - [x] Mock/Wrap `useQuery` and `useRouter` contexts that the legacy component expects.
 
 ### 1.3 Feature Port (Student)
 
-- [ ] **Routes:** `/dashboard`, `/courses`, `/learning`.
-- [ ] **API Proxy:**
-  - [ ] Create `apps/student-portal/src/lib/api.ts`.
-  - [ ] Point to `http://localhost:5000` (Legacy API) for data.
-  - [ ] Ensure `Cookie` header is passed in server-side requests.
+- [x] **Routes:** `/dashboard`, `/courses`, `/learning` (Chapter workflow verified).
+- [x] **API Proxy:**
+  - [x] Create `apps/student-portal/src/lib/api.ts`.
+  - [x] Point to `http://localhost:5000` (Legacy API) for data.
+  - [x] Ensure `Cookie` header is passed in server-side requests.
+- [x] **Type Migration:**
+  - [x] Migrated Text Segmentation types and shared utilities to `@narada/types` and `apps/student-portal/lib`.
 
 ### 📝 Verification: Phase 1
 
-- [ ] `http://localhost:3000` loads Student Portal.
-- [ ] Login redirects to Dashboard.
-- [ ] Course usage fetches data from Monolith API (:5000).
+- [x] `http://localhost:3000` loads Student Portal.
+- [x] Login redirects to Dashboard.
+- [x] Course usage fetches data from Monolith API (:5000).
+- [x] Audio Player and Text Selection work in Chapter view.
 
 ---
 

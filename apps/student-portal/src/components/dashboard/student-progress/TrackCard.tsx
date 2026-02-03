@@ -2,9 +2,9 @@ import {
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
-} from '@narada/ui/components/accordion';
-import { Progress } from '@narada/ui/components/progress';
-import { Badge } from '@narada/ui/components/badge';
+  Progress,
+  Badge
+} from '@narada/ui';
 
 import { TrackProgress } from '@narada/types';
 import { ChapterList } from './ChapterList';
