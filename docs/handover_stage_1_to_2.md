@@ -40,3 +40,27 @@ The goal for the new chat is **Bit-by-Bit Refinement**:
 4. **Repeat**.
 
 **Do not assume functionality works just because the page loads.**
+
+## 🏃‍♂️ How to Run
+
+### Option 1: Run Everything (Terminal 1 & 2)
+
+**Terminal 1: Backend (Monolith)**
+
+```bash
+npm run dev
+# Runs on http://localhost:5000
+```
+
+**Terminal 2: Portals (Student & Ops)**
+
+```bash
+npx turbo dev --filter=student-portal --filter=ops-portal
+# Student Portal: http://localhost:3000
+# Ops Portal: http://localhost:3001
+```
+
+### Option 2: Run Individually
+
+- **Student Portal**: `npx turbo dev --filter=student-portal` (Runs on 3000)
+- **Ops Portal**: `npx turbo dev --filter=ops-portal` (Runs on 3001)
