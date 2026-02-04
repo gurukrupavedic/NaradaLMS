@@ -20,7 +20,7 @@ import logoStacked from "@/assets/branding/logo-stacked-dark-notag.svg";
 import slmtsLogo from "@/assets/branding/SLMTS LOGO 01-2025 FINAL.png";
 import Image from "next/image";
 
-export function AuthPage() {
+export function StudentAuthPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const initialTab = searchParams.get("tab") === "register" ? "register" : "login";
@@ -140,7 +140,10 @@ export function AuthPage() {
                             <LoginForm
                                 onSuccess={() => {
                                     queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
-                                    setTimeout(() => router.push("/vedic-learning"), 300);
+                                    // Force hard redirect to ensure fresh state/sidebar context
+                                    setTimeout(() => {
+                                        window.location.href = "/vedic-learning";
+                                    }, 500);
                                 }}
                             />
                         </TabsContent>
@@ -193,7 +196,13 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
                 body: JSON.stringify({ email, password }),
             });
 
-            toast({ title: "Welcome back", description: "Logged in successfully" });
+            toast({
+                title: "Welcome back",
+                description: "Logged in successfully",
+                duration: 3000
+            });
+
+            // Allow success toast to appear before navigation
             onSuccess();
         } catch (err: any) {
             toast({

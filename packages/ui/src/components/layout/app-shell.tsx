@@ -51,14 +51,44 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                         <Breadcrumb>
                             <BreadcrumbList>
                                 <BreadcrumbItem className="hidden md:block">
-                                    <BreadcrumbLink href="#">
+                                    <BreadcrumbLink href={homeHref}>
                                         App
                                     </BreadcrumbLink>
                                 </BreadcrumbItem>
                                 <BreadcrumbSeparator className="hidden md:block" />
-                                <BreadcrumbItem>
-                                    <BreadcrumbPage>Vedic Learning</BreadcrumbPage>
-                                </BreadcrumbItem>
+                                {(() => {
+                                    // Simple path-based breadcrumb generation
+                                    let segments: { label: string, href?: string }[] = [];
+
+                                    if (pathname === '/vedic-learning' || pathname === '/app/learning') {
+                                        segments = [{ label: 'Vedic Learning' }];
+                                    } else if (pathname.match(/\/learning\/chapter\/\d+/)) {
+                                        segments = [
+                                            { label: 'Vedic Learning', href: '/vedic-learning' },
+                                            { label: 'Learn Chapter' }
+                                        ];
+                                    } else {
+                                        // Fallback for unknown routes
+                                        segments = [{ label: 'Vedic Learning' }];
+                                    }
+
+                                    return segments.map((segment, index) => (
+                                        <React.Fragment key={index}>
+                                            <BreadcrumbItem>
+                                                {segment.href ? (
+                                                    <BreadcrumbLink href={segment.href}>
+                                                        {segment.label}
+                                                    </BreadcrumbLink>
+                                                ) : (
+                                                    <BreadcrumbPage>{segment.label}</BreadcrumbPage>
+                                                )}
+                                            </BreadcrumbItem>
+                                            {index < segments.length - 1 && (
+                                                <BreadcrumbSeparator className="hidden md:block" />
+                                            )}
+                                        </React.Fragment>
+                                    ));
+                                })()}
                             </BreadcrumbList>
                         </Breadcrumb>
                     </div>

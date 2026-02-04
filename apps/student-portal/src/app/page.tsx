@@ -1,10 +1,10 @@
-import { AuthPage } from '@/components/auth/AuthPage';
+import { StudentAuthPage } from '@/components/auth/StudentAuthPage';
 import { Suspense } from 'react';
 
 export default function Home() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <AuthPage />
+      <StudentAuthPage />
     </Suspense>
   );
 }

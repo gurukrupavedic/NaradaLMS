@@ -27,10 +27,28 @@ import { NavUser } from "./nav-user"
 import { BrandHeader } from "./brand-header"
 import { getNavigationForRole, UserRole, getSectionLabel } from "../../lib/navigation-config"
 
-// Helper to enhance items with contextual data if needed
-// For now, we just pass items through, but in future this would use current path to determine context
 const enhanceWithContextualItems = (items: any[], currentPath: string) => {
-    return items;
+    return items.map(item => {
+        // Student learning page - add contextual "Learn Chapter" when viewing a specific chapter
+        // Supports both Student Portal (/learning/chapter/X) and Monolith (/app/learning/chapter/X)
+        if (item.url === '/vedic-learning' || item.url === '/app/learning') {
+            const chapterMatch = currentPath.match(/\/learning\/chapter\/(\d+)/);
+            if (chapterMatch) {
+                const chapterId = chapterMatch[1];
+                return {
+                    ...item,
+                    items: [
+                        {
+                            title: 'Learn Chapter',
+                            url: currentPath,
+                            isContextual: true,
+                        },
+                    ],
+                };
+            }
+        }
+        return item;
+    });
 }
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {

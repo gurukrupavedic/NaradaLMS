@@ -22,6 +22,10 @@
         /* VIDRUMA (Coral) - Warning */
         --vidruma-warn: 0.65 0.20 30;
 
+        /* SCROLLBAR - Slick Translucent */
+        --scrollbar-thumb: oklch(0.20 0.08 265 / 0.2);
+        --scrollbar-track: transparent;
+
         /* OKLCH MAPPINGS */
         --background: oklch(var(--mukta-canvas));
         --foreground: oklch(var(--nila-text));
@@ -73,6 +77,10 @@
         --hema-base-dark: 0.80 0.16 85;
         --vidruma-warn-dark: 0.68 0.22 30;
 
+        /* SCROLLBAR - Dark */
+        --scrollbar-thumb: oklch(0.98 0.01 260 / 0.2);
+        --scrollbar-track: transparent;
+
         --background: oklch(var(--nila-infinite));
         --foreground: oklch(var(--dhavala-text));
 
@@ -115,6 +123,8 @@
 @layer base {
     * {
         @apply border-border;
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
     }
 
     body {
