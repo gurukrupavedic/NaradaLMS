@@ -7,7 +7,8 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-  Badge
+  Badge,
+  cn
 } from '@narada/ui';
 import { getCellColor, getProficiencyLabel } from '@/lib/matrix-utils';
 
@@ -37,12 +38,17 @@ export function ChapterItem({ chapter, onClick }: ChapterItemProps) {
   } else if (chapter.proficiencyLevel >= 4) {
     status = 'completed';
   } else {
-    // 0, 1, 2, 3 → practicing
+    // 0, 1, 2, 3 → 'practicing' status acts as a fallback, 
+    // but matrix-utils will use the specific level for coloring (Green/Violet).
     status = 'practicing';
   }
 
-  const colors = getCellColor((chapter.proficiencyLevel ?? 9) as ProficiencyLevel, status);
-  const label = getProficiencyLabel(chapter.proficiencyLevel as ProficiencyLevel | null);
+  // Ensure level is treated as a number to prevent string/type mismatches
+  const rawLevel = chapter.proficiencyLevel ?? 9;
+  const level = Number(rawLevel) as ProficiencyLevel;
+
+  const colors = getCellColor(level, status);
+  const label = getProficiencyLabel(level);
 
   const hasInfo = Boolean(chapter.notes || chapter.lastEvaluatedAt);
 
@@ -90,12 +96,15 @@ export function ChapterItem({ chapter, onClick }: ChapterItemProps) {
       <div className="flex items-center justify-between mt-auto pt-2 border-t border-border">
         <Badge
           variant="outline"
-          className={`
-            text-[10px] px-1.5 py-0 h-5 font-semibold border
-            ${colors.bgColor} ${colors.darkBgColor}
-            ${colors.textColor} ${colors.darkTextColor}
-            ${colors.borderColor} ${colors.darkBorderColor}
-          `}
+          className={cn(
+            "text-[10px] px-1.5 py-0 h-5 font-semibold border",
+            colors.bgColor,
+            colors.darkBgColor,
+            colors.textColor,
+            colors.darkTextColor,
+            colors.borderColor,
+            colors.darkBorderColor
+          )}
         >
           {label}
         </Badge>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@narada/ui/src/globals.css"; // Use shared globals
+import "./globals.css"; // Local globals (Fonts)
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

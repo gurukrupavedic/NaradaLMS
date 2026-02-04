@@ -351,6 +351,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
 
                   return (
                     <Badge
+                      variant="outline"
                       className={cn(
                         "h-7 w-full justify-between text-xs font-medium border flex items-center px-3",
                         colors.bgColor,

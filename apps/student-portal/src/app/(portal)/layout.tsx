@@ -39,7 +39,7 @@ export default function PortalLayout({
                 email: user.email,
                 avatar: user.profileImageUrl || ""
             }}
-            userRoles={user.roles as any}
+            userRoles={['student']}
             onLogout={logout}
             homeHref="/vedic-learning"
         >
