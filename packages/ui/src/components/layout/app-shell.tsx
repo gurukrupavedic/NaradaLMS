@@ -15,6 +15,7 @@ import {
 } from "../breadcrumb"
 import { UserRole } from "../../lib/navigation-config"
 import { usePathname } from "next/navigation"
+import { cn } from "../../lib/utils"
 
 interface AppShellProps {
     children: React.ReactNode
@@ -96,7 +97,9 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                         <ThemeToggle />
                     </div>
                 </header>
-                <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+                <div className={cn("flex flex-1 flex-col gap-4 p-4 pt-0", {
+                    "p-0 gap-0": pathname.match(/\/learning\/chapter\/\d+/) || pathname.match(/\/content\/tracks\/.+/)
+                })}>
                     {children}
                 </div>
             </SidebarInset>
