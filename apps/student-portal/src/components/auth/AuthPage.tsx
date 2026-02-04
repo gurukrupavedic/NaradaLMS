@@ -35,7 +35,7 @@ export function AuthPage() {
     return (
         <div className="h-screen w-full flex overflow-hidden bg-background">
             {/* LEFT PANEL: Sacred Illumination */}
-            <div className="hidden lg:flex w-1/2 relative bg-[#0f172a] overflow-hidden items-center justify-center">
+            <div className="hidden lg:flex w-1/2 relative bg-nila-base overflow-hidden items-center justify-center">
                 {/* Kolam Geometric Overlay */}
                 <div
                     className="absolute inset-0 pointer-events-none opacity-60"
@@ -51,16 +51,17 @@ export function AuthPage() {
                     }}
                 >
                     {/* Layer 1: Base Etching (Static Gold Lines) */}
-                    <div className="absolute inset-0 bg-[#d4af37] opacity-20" />
+                    <div className="absolute inset-0 bg-hema-base opacity-40" />
 
                     {/* Layer 2: The Blade Sheen (Intense Moving Highlight) */}
                     <div className="absolute inset-0 overflow-hidden -skew-x-12">
-                        <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: 'linear-gradient(to right, transparent 0%, oklch(0.76 0.14 85 / 0.9) 50%, transparent 100%)' }} />
+                        <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: 'linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)' }} />
+                        <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: 'linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)', animationDelay: '4s' }} />
                     </div>
                 </div>
 
                 {/* Atmospheric Fade Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0f172a] pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-nila-base pointer-events-none" />
 
                 {/* Central Hero Logo */}
                 <div className="relative z-10 p-12 flex flex-col items-center text-center">
@@ -216,7 +217,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
                         <LightLabel htmlFor="password">Password</LightLabel>
                         <LightInput id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={loading} />
                     </div>
-                    <Button type="submit" className="w-full bg-[#cc9933] hover:opacity-80 transition-opacity text-white" disabled={loading}>
+                    <Button type="submit" className="w-full bg-hema-base hover:opacity-80 transition-opacity text-white" disabled={loading}>
                         {loading ? "Signing in..." : "Sign In"}
                     </Button>
                 </form>
@@ -301,7 +302,7 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
                         <LightLabel htmlFor="confirmPassword">Confirm Password</LightLabel>
                         <LightInput id="confirmPassword" type="password" required value={formData.confirmPassword} onChange={handleChange} disabled={loading} />
                     </div>
-                    <Button type="submit" className="w-full bg-[#cc9933] hover:opacity-80 transition-opacity text-white" disabled={loading}>
+                    <Button type="submit" className="w-full bg-hema-base hover:opacity-80 transition-opacity text-white" disabled={loading}>
                         {loading ? "Creating account..." : "Create Account"}
                     </Button>
                 </form>
