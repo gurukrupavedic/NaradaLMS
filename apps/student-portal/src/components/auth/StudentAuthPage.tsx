@@ -224,7 +224,19 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
                     </div>
                     <div className="space-y-2">
                         <LightLabel htmlFor="password">Password</LightLabel>
-                        <LightInput id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={loading} />
+                        <LightInput
+                            id="password"
+                            type="password"
+                            required
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            disabled={loading}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !loading) {
+                                    handleSubmit(e as any);
+                                }
+                            }}
+                        />
                     </div>
                     <Button type="submit" className="w-full bg-hema-base hover:opacity-80 transition-opacity text-white" disabled={loading}>
                         {loading ? "Signing in..." : "Sign In"}
