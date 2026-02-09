@@ -102,7 +102,7 @@ const adminSection: NavSection = {
  * Get navigation sections for user roles (supports multi-role)
  */
 export function getNavigationForRole(roles?: UserRole[] | UserRole): {
-    learn: NavSection;
+    learn?: NavSection;
     batches?: NavSection;
     content?: NavSection;
     admin?: NavSection;
@@ -110,14 +110,12 @@ export function getNavigationForRole(roles?: UserRole[] | UserRole): {
     // Normalize to array
     const roleArray = Array.isArray(roles) ? roles : (roles ? [roles] : ['student']);
 
-    const nav: {
-        learn: NavSection;
-        batches?: NavSection;
-        content?: NavSection;
-        admin?: NavSection;
-    } = {
-        learn: learnSection,
-    };
+    const nav: any = {};
+
+    // Vedic Learning: Available to Students
+    if (roleArray.includes('student')) {
+        nav.learn = learnSection;
+    }
 
     // Instructor or Admin: can see batches + learn
     if (roleArray.includes('instructor') || roleArray.includes('admin')) {
