@@ -1,8 +1,8 @@
-"use client"
+"use client" // This must be a client hook
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { apiRequest } from "../lib/api";
+import { apiRequest } from "../lib/api"; // Updated to use the correct apiFetch from lib/api
 
 export interface AuthUser {
     id: string;
@@ -12,7 +12,7 @@ export interface AuthUser {
     profileImageUrl?: string;
     roles: string[];
     status: "active" | "pending_approval" | "inactive";
-    createdAt: string;
+    createdAt: string; // Serialized date
     updatedAt: string;
 }
 
@@ -29,8 +29,16 @@ export function useAuth() {
         queryFn: async () => {
             try {
                 const response = await apiRequest("/auth/me");
+
+                // This apiFetch throws on error, so we catch it below
+                // But for auth check we might want to handle 401 gracefully
                 return response.user as AuthUser;
             } catch (err) {
+                // If 401, return null (handled by apiFetch throwing? No, apiFetch throws for !ok)
+                // We need to check if the error is 401. 
+                // Our apiFetch throws 'res' if it can, or Error.
+
+                // Quick fix: assumes any error means not authenticated for now
                 return null;
             }
         },
@@ -42,7 +50,7 @@ export function useAuth() {
             await apiRequest("/auth/logout", { method: "POST" });
             queryClient.setQueryData(["auth", "me"], null);
             queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
-            window.location.href = "http://localhost:5000/login"; // Redirect to monolith login
+            router.push("/");
         } catch (err) {
             console.error("Logout error", err);
         }

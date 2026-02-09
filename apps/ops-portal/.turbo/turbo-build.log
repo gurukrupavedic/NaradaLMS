@@ -5,54 +5,22 @@
    ▲ Next.js 15.1.6
 
    Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
 Failed to compile.
 
-../../packages/ui/src/components/data-table-pagination.tsx
-Module not found: Can't resolve '@narada/ui/components/button'
+../../packages/ui/src/components/layout/brand-header.tsx:23:36
+Type error: Type '{ children: Element; size: string; asChild: true; className: string; }' is not assignable to type 'IntrinsicAttributes & Omit<ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & { ...; }, "ref"> & RefAttributes<...>'.
+  Property 'size' does not exist on type 'IntrinsicAttributes & Omit<ClassAttributes<HTMLButtonElement> & ButtonHTMLAttributes<HTMLButtonElement> & { ...; }, "ref"> & RefAttributes<...>'.
 
-https://nextjs.org/docs/messages/module-not-found
-
-Import trace for requested module:
-./src/components/admin/batch-list.tsx
-
-../../packages/ui/src/components/data-table-pagination.tsx
-Module not found: Can't resolve '@narada/ui/components/select'
-
-https://nextjs.org/docs/messages/module-not-found
-
-Import trace for requested module:
-./src/components/admin/batch-list.tsx
-
-../../packages/ui/src/components/layout/app-shell.tsx
-Module not found: Can't resolve '../breadcrumb'
-
-https://nextjs.org/docs/messages/module-not-found
-
-Import trace for requested module:
-./src/app/admin/layout.tsx
-
-../../packages/ui/src/components/layout/nav-main.tsx
-Module not found: Can't resolve '../collapsible'
-
-https://nextjs.org/docs/messages/module-not-found
-
-Import trace for requested module:
-../../packages/ui/src/components/layout/app-sidebar.tsx
-../../packages/ui/src/components/layout/app-shell.tsx
-./src/app/admin/layout.tsx
-
-../../packages/ui/src/components/layout/nav-user.tsx
-Module not found: Can't resolve '../avatar'
-
-https://nextjs.org/docs/messages/module-not-found
-
-Import trace for requested module:
-../../packages/ui/src/components/layout/app-sidebar.tsx
-../../packages/ui/src/components/layout/app-shell.tsx
-./src/app/admin/layout.tsx
-
-
-> Build failed because of webpack errors
+[0m [90m 21 |[39m         [33m<[39m[33mSidebarMenu[39m[33m>[39m[0m
+[0m [90m 22 |[39m             [33m<[39m[33mSidebarMenuItem[39m[33m>[39m[0m
+[0m[31m[1m>[22m[39m[90m 23 |[39m                 [33m<[39m[33mSidebarMenuButton[39m size[33m=[39m[32m"lg"[39m asChild className[33m=[39m[32m"group-data-[collapsible=icon]:!p-0 hover:bg-transparent active:bg-transparent group-data-[collapsible=icon]:!size-12"[39m[33m>[39m[0m
+[0m [90m    |[39m                                    [31m[1m^[22m[39m[0m
+[0m [90m 24 |[39m                     [33m<[39m[33mLink[39m href[33m=[39m{homeHref} className[33m=[39m[32m"flex items-center gap-3 transition-all duration-300 py-1"[39m[33m>[39m[0m
+[0m [90m 25 |[39m                         [33m<[39m[33mdiv[39m className[33m=[39m{[32m`flex shrink-0 items-center justify-center transition-all duration-300 ${isCollapsed ? 'size-10' : 'size-9'}`[39m}[33m>[39m[0m
+[0m [90m 26 |[39m                             [33m<[39m[33mImage[39m[0m
+Static worker exited with code: 1 and signal: null
 npm error Lifecycle script `build` failed with error:
 npm error code 1
 npm error path C:\Users\kashy\Projects\NaradaLMS\apps\ops-portal

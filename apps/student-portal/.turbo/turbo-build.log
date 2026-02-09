@@ -6,3 +6,25 @@
    - Environments: .env.local
 
    Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./src/components/learning/LearnChapter.tsx:159:66
+Type error: Expected 1-2 arguments, but got 3.
+
+[0m [90m 157 |[39m[0m
+[0m [90m 158 |[39m     [90m// Pattern B[39m[0m
+[0m[31m[1m>[22m[39m[90m 159 |[39m     apiRequest([32m'POST'[39m[33m,[39m [32m`/learning/chapters/${chapterId}/access`[39m[33m,[39m {})[0m
+[0m [90m     |[39m                                                                  [31m[1m^[22m[39m[0m
+[0m [90m 160 |[39m       [33m.[39m[36mcatch[39m(() [33m=>[39m { })[33m;[39m[0m
+[0m [90m 161 |[39m   }[33m,[39m [chapterId])[33m;[39m[0m
+[0m [90m 162 |[39m[0m
+Static worker exited with code: 1 and signal: null
+npm error Lifecycle script `build` failed with error:
+npm error code 1
+npm error path C:\Users\kashy\Projects\NaradaLMS\apps\student-portal
+npm error workspace student-portal@0.1.0
+npm error location C:\Users\kashy\Projects\NaradaLMS\apps\student-portal
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c next build
