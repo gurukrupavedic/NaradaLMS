@@ -27,9 +27,10 @@ interface AppShellProps {
     userRoles: UserRole[]
     onLogout: () => void
     homeHref?: string
+    customNavigation?: any
 }
 
-export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app" }: AppShellProps) {
+export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation }: AppShellProps) {
     // We need to pass currentPath to Sidebar for active state
     // Since this is in @narada/ui, we assume usage in Next.js app context
     const pathname = usePathname()
@@ -42,6 +43,7 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                 onLogout={onLogout}
                 currentPath={pathname}
                 homeHref={homeHref}
+                customNavigation={customNavigation}
             />
             <SidebarInset>
                 <header className="flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b bg-background px-4">
@@ -68,6 +70,23 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                                             { label: 'Vedic Learning', href: '/vedic-learning' },
                                             { label: 'Learn Chapter' }
                                         ];
+                                    } else if (pathname.startsWith('/admin')) {
+                                        segments = [{ label: 'Admin Center', href: '/admin' }];
+                                        if (pathname.includes('/users')) segments.push({ label: 'Users', href: '/admin/users' });
+                                        if (pathname.includes('/batches')) {
+                                            segments.push({ label: 'Batches', href: '/admin/batches' });
+                                            if (pathname.match(/\/batches\/\d+/)) {
+                                                segments.push({ label: 'Batch Details' });
+                                            }
+                                        }
+                                        if (pathname.includes('/logs')) segments.push({ label: 'Audit Logs', href: '/admin/logs' });
+                                        if (pathname.includes('/settings')) segments.push({ label: 'Settings', href: '/admin/settings' });
+                                    } else if (pathname.startsWith('/instructor')) {
+                                        segments = [{ label: 'Instructor Portal', href: '/instructor' }];
+                                        if (pathname.includes('/batches')) segments.push({ label: 'My Batches', href: '/instructor/batches' });
+                                        if (pathname.includes('/students')) segments.push({ label: 'My Students', href: '/instructor/students' });
+                                    } else if (pathname.startsWith('/content')) {
+                                        segments = [{ label: 'Content Studio', href: '/content' }];
                                     } else {
                                         // Fallback for unknown routes
                                         segments = [{ label: 'Vedic Learning' }];
@@ -97,8 +116,8 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                         <ThemeToggle />
                     </div>
                 </header>
-                <div className={cn("flex flex-1 flex-col gap-4 p-4 pt-0", {
-                    "p-0 gap-0": pathname.match(/\/learning\/chapter\/\d+/) || pathname.match(/\/content\/tracks\/.+/)
+                <div className={cn("flex flex-1 flex-col gap-4 p-4 pt-0 max-w-7xl mx-auto w-full", {
+                    "p-0 gap-0 max-w-none": pathname.match(/\/learning\/chapter\/\d+/) || pathname.match(/\/content\/tracks\/.+/)
                 })}>
                     {children}
                 </div>

@@ -47,6 +47,26 @@ const enhanceWithContextualItems = (items: any[], currentPath: string) => {
                 };
             }
         }
+
+        // Admin Batches page - add contextual "Batch Details" when viewing a specific batch
+        // Supports /admin/batches/{id} pattern
+        if (item.url === '/admin/batches') {
+            const batchDetailMatch = currentPath.match(/^\/admin\/batches\/(\d+)$/);
+            if (batchDetailMatch) {
+                const batchId = batchDetailMatch[1];
+                return {
+                    ...item,
+                    items: [
+                        {
+                            title: 'Batch Details',
+                            url: `/admin/batches/${batchId}`,
+                            isContextual: true,
+                        },
+                    ],
+                };
+            }
+        }
+
         return item;
     });
 }
@@ -61,6 +81,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     currentPath: string; // Passed from parent (AppShell)
     onLogout: () => void;
     homeHref?: string;
+    customNavigation?: any;
 }
 
 export function AppSidebar({
@@ -69,10 +90,11 @@ export function AppSidebar({
     currentPath,
     onLogout,
     homeHref = "/app",
+    customNavigation,
     ...props
 }: AppSidebarProps) {
 
-    const navSections = getNavigationForRole(userRoles);
+    const navSections = customNavigation || getNavigationForRole(userRoles);
 
     return (
         <Sidebar collapsible="icon" {...props}>
@@ -109,7 +131,7 @@ export function AppSidebar({
                 {navSections.admin && (
                     <NavMain
                         label={getSectionLabel('admin')}
-                        items={navSections.admin.items}
+                        items={enhanceWithContextualItems(navSections.admin.items as any, currentPath)}
                         currentPath={currentPath}
                     />
                 )}

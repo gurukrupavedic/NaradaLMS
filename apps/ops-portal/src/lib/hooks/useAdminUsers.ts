@@ -29,7 +29,7 @@ export function useAdminUsers(params: { limit: number; offset: number; status?: 
         });
         if (params.status) searchParams.append('status', params.status);
 
-        const response = await apiRequest<AdminUsersResponse>(`/admin/users?${searchParams.toString()}`);
+        const response = await apiRequest<AdminUsersResponse>(`/auth/admin/users?${searchParams.toString()}`);
         return response;
     };
 
@@ -42,7 +42,7 @@ export function useAdminUsers(params: { limit: number; offset: number; status?: 
 export function useApproveUser() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (userId: string) => apiRequest(`/admin/users/${userId}/approve`, { method: 'POST' }),
+        mutationFn: (userId: string) => apiRequest(`/auth/admin/users/${userId}/approve`, { method: 'POST' }),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
     });
 }
@@ -50,7 +50,7 @@ export function useApproveUser() {
 export function useRejectUser() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (userId: string) => apiRequest(`/admin/users/${userId}/reject`, { method: 'POST' }),
+        mutationFn: (userId: string) => apiRequest(`/auth/admin/users/${userId}/reject`, { method: 'POST' }),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
     });
 }
@@ -59,7 +59,7 @@ export function useAssignRoles() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: ({ userId, roles }: { userId: string; roles: string[] }) =>
-            apiRequest(`/admin/users/${userId}/roles`, {
+            apiRequest(`/auth/admin/users/${userId}/roles`, {
                 method: 'PUT',
                 body: JSON.stringify({ roles })
             }),
@@ -71,7 +71,7 @@ export function useUserStatusMutation() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: ({ userId, action }: { userId: string; action: 'enable' | 'disable' }) =>
-            apiRequest(`/admin/users/${userId}/${action}`, { method: 'POST' }),
+            apiRequest(`/auth/admin/users/${userId}/${action}`, { method: 'POST' }),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
     });
 }

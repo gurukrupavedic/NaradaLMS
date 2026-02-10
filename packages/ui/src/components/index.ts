@@ -11,6 +11,7 @@ export * from "./dropdown-menu";
 export * from "./input";
 export * from "./label";
 export * from "./loading";
+export * from "./popover";
 export * from "./progress";
 export * from "./select";
 export * from "./separator";

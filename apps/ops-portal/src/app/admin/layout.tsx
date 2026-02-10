@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { AppShell, UserRole } from "@narada/ui";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getOpsNavigationForRole } from "@/lib/ops-navigation-config";
 
 export default function AdminLayout({
     children,
@@ -32,10 +33,14 @@ export default function AdminLayout({
     // logic: instructor->batches, content_manager->content, admin->admin
     const portalRoles: UserRole[] = ['admin', 'instructor', 'content_manager'];
 
+    // Get portal-specific navigation with /admin/* prefixes
+    const opsNavigation = getOpsNavigationForRole(portalRoles);
+
     return (
         <AppShell
             user={user as any}
             userRoles={portalRoles}
+            customNavigation={opsNavigation}
             onLogout={logout}
         >
             {children}
