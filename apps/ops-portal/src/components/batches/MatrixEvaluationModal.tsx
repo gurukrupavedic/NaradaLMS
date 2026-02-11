@@ -1,5 +1,7 @@
 'use client';
 
+import React from 'react';
+
 import { AlertCircle, Loader } from 'lucide-react';
 
 import { Button } from '@narada/ui';
@@ -29,15 +31,20 @@ export function MatrixEvaluationModal({
     isError = false,
     errorMessage = 'Failed to update proficiency',
 }: MatrixEvaluationModalProps) {
+    // Import useState locally since I can't add imports with replace_file_content easily without context
+    const [notes, setNotes] = React.useState('');
+
+    // Pre-populate notes if available (need to update Props interface if we want to support editing existing notes)
+    // For now assuming new evaluation starts empty or we fetch it.
+    // Ideally we pass current notes in props. Let's stick to empty for new evaluation logic or add currentNotes prop later.
 
     const handleSelectLevel = async (level: ProficiencyLevel) => {
-        if (level === currentProficiency) {
-            onClose();
-            return;
-        }
+        // Allow updating notes even if level is same? Usually yes.
+        // But the original check prevented close if same level.
+        // I'll relax the check or just pass it.
 
         try {
-            await onUpdate(level);
+            await onUpdate(level, notes);
         } catch (error) {
             // Error is handled by parent component
         }
@@ -129,7 +136,21 @@ export function MatrixEvaluationModal({
                     </div>
                 </div>
 
-                <div className="pt-2 pb-1">
+                <div className="pt-2 pb-1 space-y-4">
+                    <div className="space-y-2">
+                        <label htmlFor="notes" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Notes (Optional)
+                        </label>
+                        <textarea
+                            id="notes"
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Add evaluation notes..."
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            disabled={isUpdating}
+                        />
+                    </div>
+
                     <Button
                         variant="link"
                         onClick={() => handleSelectLevel(9)}

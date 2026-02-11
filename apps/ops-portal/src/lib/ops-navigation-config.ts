@@ -88,6 +88,29 @@ const contentSection: NavSection = {
     ],
 };
 
+// Contextual navigation mapping for dynamic routes
+export const contextualNavigation = new Map([
+    // Student Progress Context
+    ['/instructor/students/:id', {
+        label: 'Student Progress',
+        parentPath: '/instructor/students',
+        breadcrumbs: [
+            { label: 'My Students', href: '/instructor/students' },
+            { label: 'Progress', href: '#' }
+        ]
+    }],
+
+    // Batch Progress Context
+    ['/instructor/batches/:id', {
+        label: 'Batch Details',
+        parentPath: '/instructor/batches',
+        breadcrumbs: [
+            { label: 'My Batches', href: '/instructor/batches' },
+            { label: 'Details', href: '#' }
+        ]
+    }],
+]);
+
 /**
  * Get navigation sections for ops-portal user roles
  */

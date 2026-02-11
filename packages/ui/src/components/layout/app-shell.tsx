@@ -28,9 +28,10 @@ interface AppShellProps {
     onLogout: () => void
     homeHref?: string
     customNavigation?: any
+    contextualNavigation?: Map<string, any>
 }
 
-export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation }: AppShellProps) {
+export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation }: AppShellProps) {
     // We need to pass currentPath to Sidebar for active state
     // Since this is in @narada/ui, we assume usage in Next.js app context
     const pathname = usePathname()
@@ -44,6 +45,7 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                 currentPath={pathname}
                 homeHref={homeHref}
                 customNavigation={customNavigation}
+                contextualNavigation={contextualNavigation}
             />
             <SidebarInset>
                 <header className="flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b bg-background px-4">
@@ -82,9 +84,19 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                                         if (pathname.includes('/logs')) segments.push({ label: 'Audit Logs', href: '/admin/logs' });
                                         if (pathname.includes('/settings')) segments.push({ label: 'Settings', href: '/admin/settings' });
                                     } else if (pathname.startsWith('/instructor')) {
-                                        segments = [{ label: 'Instructor Portal', href: '/instructor' }];
-                                        if (pathname.includes('/batches')) segments.push({ label: 'My Batches', href: '/instructor/batches' });
-                                        if (pathname.includes('/students')) segments.push({ label: 'My Students', href: '/instructor/students' });
+                                        segments = [{ label: 'Batches & Progress', href: '/instructor/batches' }];
+                                        if (pathname.includes('/batches')) {
+                                            segments.push({ label: 'My Batches', href: '/instructor/batches' });
+                                            if (pathname.match(/\/instructor\/batches\/[^/]+/)) {
+                                                segments.push({ label: 'Batch Details' });
+                                            }
+                                        }
+                                        if (pathname.includes('/students')) {
+                                            segments.push({ label: 'My Students', href: '/instructor/students' });
+                                            if (pathname.match(/\/instructor\/students\/[^/]+/)) {
+                                                segments.push({ label: 'Student Progress' });
+                                            }
+                                        }
                                     } else if (pathname.startsWith('/content')) {
                                         segments = [{ label: 'Content Studio', href: '/content' }];
                                     } else {

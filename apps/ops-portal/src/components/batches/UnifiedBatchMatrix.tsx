@@ -122,14 +122,14 @@ export function UnifiedBatchMatrix({
     };
 
     // Handle proficiency update from modal
-    const handleUpdateProficiency = async (level: ProficiencyLevel) => {
+    const handleUpdateProficiency = async (level: ProficiencyLevel, notes?: string) => {
         if (!selectedCell) return;
 
         try {
             // Set loading state for this specific cell
             setUpdatingCell({ studentId: selectedCell.studentId, chapterId: selectedCell.chapterId });
 
-            await onUpdateProficiency(selectedCell.studentId, selectedCell.chapterId, level);
+            await onUpdateProficiency(selectedCell.studentId, selectedCell.chapterId, level, notes);
 
             toast({ title: 'Proficiency updated' });
             setModalOpen(false);

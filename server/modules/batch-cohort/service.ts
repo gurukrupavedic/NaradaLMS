@@ -162,19 +162,26 @@ export class BatchService {
     }
   ) {
     const rawStudents = await batchStorage.listStudentsByInstructor(instructorId, filters);
-    
+
     // Format roll number as BATCH_CODE-XXX (using enrollment ID)
+    // IMPORTANT: Maintain backward compatibility with monolith frontend
+    // The monolith expects 'id' to be the User ID (string), not enrollment ID
     return rawStudents.map((student) => ({
-      id: student.id,
+      id: student.id, // User ID (preserves monolith compatibility)
       rollNumber: `${student.batchCode}-${String(student.rollNumber).padStart(3, '0')}`,
       name: `${student.firstName || ''} ${student.lastName || ''}`.trim(),
       email: student.email || '-',
-      phone: '-', // Field doesn't exist in schema yet - will be added in Phase E
-      timezone: '-', // Field doesn't exist in schema yet - will be added in Phase E
-      type: '-', // Field doesn't exist in schema yet - will be added in Phase E
+      phone: '-', // Placeholder for future use
+      timezone: '-', // Placeholder for future use
+      type: '-', // Placeholder for future use
+      batchId: student.batchId, // Safe addition - monolith can ignore
       batchCode: student.batchCode,
       batchName: student.batchName,
-      enrolledAt: student.enrolledAt,
+      enrolledAt: student.enrolledAt, // Keep original field name
+      status: student.status, // Safe addition - monolith can ignore
+      // Optional fields for ops-portal (monolith ignores these)
+      firstName: student.firstName,
+      lastName: student.lastName,
     }));
   }
 }

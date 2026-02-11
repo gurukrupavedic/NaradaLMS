@@ -7,7 +7,7 @@ import {
     Command,
     Frame,
     LifeBuoy,
-    Map,
+    Map as MapIcon,
     PieChart,
     Send,
     Settings2,
@@ -27,14 +27,44 @@ import { NavUser } from "./nav-user"
 import { BrandHeader } from "./brand-header"
 import { getNavigationForRole, UserRole, getSectionLabel } from "../../lib/navigation-config"
 
-const enhanceWithContextualItems = (items: any[], currentPath: string) => {
+const enhanceWithContextualItems = (items: any[], currentPath: string, contextualNav?: Map<string, any>) => {
+    if (!items) return [];
+
+    // Normalize path for matching (strip trailing slash and query params)
+    const normalizedPath = currentPath.split('?')[0].replace(/\/$/, "");
+
     return items.map(item => {
-        // Student learning page - add contextual "Learn Chapter" when viewing a specific chapter
-        // Supports both Student Portal (/learning/chapter/X) and Monolith (/app/learning/chapter/X)
+        // 1. Check dynamic contextual navigation Map if provided
+        if (contextualNav) {
+            for (const [pattern, config] of Array.from(contextualNav.entries())) {
+                // Check if current sidebar item is the parent for this contextual route
+                if (item.url === config.parentPath) {
+                    // Convert route pattern with :id to regex
+                    const regexPattern = pattern.replace(/:[a-zA-Z0-9_]+/g, '([^/]+)');
+                    const regex = new RegExp(`^${regexPattern}$`);
+                    const match = normalizedPath.match(regex);
+
+                    if (match) {
+                        return {
+                            ...item,
+                            items: [
+                                ...(item.items || []),
+                                {
+                                    title: config.label,
+                                    url: currentPath,
+                                    isContextual: true,
+                                }
+                            ]
+                        };
+                    }
+                }
+            }
+        }
+
+        // 2. Hardcoded fallbacks for existing patterns
         if (item.url === '/vedic-learning' || item.url === '/app/learning') {
             const chapterMatch = currentPath.match(/\/learning\/chapter\/(\d+)/);
             if (chapterMatch) {
-                const chapterId = chapterMatch[1];
                 return {
                     ...item,
                     items: [
@@ -48,8 +78,6 @@ const enhanceWithContextualItems = (items: any[], currentPath: string) => {
             }
         }
 
-        // Admin Batches page - add contextual "Batch Details" when viewing a specific batch
-        // Supports /admin/batches/{id} pattern
         if (item.url === '/admin/batches') {
             const batchDetailMatch = currentPath.match(/^\/admin\/batches\/(\d+)$/);
             if (batchDetailMatch) {
@@ -82,6 +110,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     onLogout: () => void;
     homeHref?: string;
     customNavigation?: any;
+    contextualNavigation?: Map<string, any>;
 }
 
 export function AppSidebar({
@@ -91,10 +120,12 @@ export function AppSidebar({
     onLogout,
     homeHref = "/app",
     customNavigation,
+    contextualNavigation,
     ...props
 }: AppSidebarProps) {
 
     const navSections = customNavigation || getNavigationForRole(userRoles);
+
 
     return (
         <Sidebar collapsible="icon" {...props}>
@@ -107,7 +138,7 @@ export function AppSidebar({
                 {navSections.learn && (
                     <NavMain
                         label={getSectionLabel('learn')}
-                        items={enhanceWithContextualItems(navSections.learn.items as any, currentPath)}
+                        items={enhanceWithContextualItems(navSections.learn.items as any, currentPath, contextualNavigation)}
                         currentPath={currentPath}
                     />
                 )}
@@ -115,7 +146,7 @@ export function AppSidebar({
                 {navSections.batches && (
                     <NavMain
                         label={getSectionLabel('batches')}
-                        items={navSections.batches.items}
+                        items={enhanceWithContextualItems(navSections.batches.items as any, currentPath, contextualNavigation)}
                         currentPath={currentPath}
                     />
                 )}
@@ -131,7 +162,7 @@ export function AppSidebar({
                 {navSections.admin && (
                     <NavMain
                         label={getSectionLabel('admin')}
-                        items={enhanceWithContextualItems(navSections.admin.items as any, currentPath)}
+                        items={enhanceWithContextualItems(navSections.admin.items as any, currentPath, contextualNavigation)}
                         currentPath={currentPath}
                     />
                 )}

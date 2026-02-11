@@ -54,7 +54,8 @@ export interface UnifiedBatchMatrixProps {
     onUpdateProficiency: (
         studentId: string,
         chapterId: string,
-        level: ProficiencyLevel
+        level: ProficiencyLevel,
+        notes?: string
     ) => Promise<void>;
     isLoading?: boolean;
     isUpdating?: boolean;
@@ -75,7 +76,7 @@ export interface MatrixEvaluationModalProps {
     chapter?: Chapter;
     currentProficiency?: ProficiencyLevel;
     onClose: () => void;
-    onUpdate: (level: ProficiencyLevel) => Promise<void>;
+    onUpdate: (level: ProficiencyLevel, notes?: string) => Promise<void>;
     isUpdating?: boolean;
     isError?: boolean;
     errorMessage?: string;

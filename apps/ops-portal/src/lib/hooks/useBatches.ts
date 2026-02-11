@@ -20,16 +20,17 @@ export type BatchPaginationParams = {
     offset?: number;
 };
 
-export function useBatches(params?: BatchPaginationParams) {
+export function useBatches(params?: BatchPaginationParams & { endpoint?: string }) {
     const limit = params?.limit ?? 50;
     const offset = params?.offset ?? 0;
+    const endpoint = params?.endpoint ?? '/batches';
 
     return useQuery({
-        queryKey: ["batches", limit, offset],
+        queryKey: ["batches", limit, offset, endpoint],
         queryFn: async () => {
             // Using the proxy at /api/batches which forwards to Monolith
             return apiRequest<{ items: Batch[]; pagination: { limit: number; offset: number; total: number } }>(
-                `/batches?limit=${limit}&offset=${offset}`
+                `${endpoint}?limit=${limit}&offset=${offset}`
             );
         },
     });
