@@ -24,6 +24,10 @@ export * from "./table";
 export * from "./tabs";
 export * from "./tooltip";
 export * from "./breadcrumb";
+export * from "./resizable";
+export * from "./scroll-area";
+export * from "./textarea";
+export * from "./alert-dialog";
 // Layout Components
 export * from "./layout/app-shell";
 export * from "./layout/app-sidebar";

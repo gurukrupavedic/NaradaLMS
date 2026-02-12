@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Edit2, Trash2, BookText } from 'lucide-react';
-import { Track } from '../../../../shared/types';
+import { Track } from '@shared/types';
 import { Card, CardContent } from '@narada/ui';
 import { Button } from '@narada/ui';
 import { Badge } from '@narada/ui';
