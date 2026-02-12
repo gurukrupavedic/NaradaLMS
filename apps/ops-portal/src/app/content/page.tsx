@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@narada/api-client';
+import { apiRequest } from '@/lib/api';
 import {
   DndContext,
   DragEndEvent,
@@ -95,7 +95,7 @@ export default function TracksAndChapters() {
   const tracksQuery = useQuery<TrackRow[]>({
     queryKey: ['content', 'tracks'],
     queryFn: async () => {
-      const res = await apiRequest('/api/content/tracks', { method: 'GET' });
+      const res = await apiRequest('/content/tracks', { method: 'GET' });
       return handleJsonResponse<TrackRow[]>(res, 'Failed to load tracks');
     },
   });
@@ -116,7 +116,7 @@ export default function TracksAndChapters() {
     queryKey: ['content', 'tracks', selectedTrackId, 'chapters'],
     enabled: !!selectedTrackId,
     queryFn: async () => {
-      const res = await apiRequest(`/api/content/tracks/${selectedTrackId}/chapters`, { method: 'GET' });
+      const res = await apiRequest(`/content/tracks/${selectedTrackId}/chapters`, { method: 'GET' });
       return handleJsonResponse<ChapterRow[]>(res, 'Failed to load chapters');
     },
   });
@@ -130,7 +130,7 @@ export default function TracksAndChapters() {
 
   const createTrackMutation = useMutation({
     mutationFn: async (payload: { title: string; description: string }) => {
-      const res = await apiRequest('/api/content/tracks', { method: 'POST', body: JSON.stringify(payload) });
+      const res = await apiRequest('/content/tracks', { method: 'POST', body: JSON.stringify(payload) });
       return handleJsonResponse<TrackRow>(res, 'Failed to create track');
     },
     onSuccess: (track) => {
@@ -145,7 +145,7 @@ export default function TracksAndChapters() {
 
   const updateTrackMutation = useMutation({
     mutationFn: async ({ trackId, title, description }: { trackId: number; title: string; description: string }) => {
-      const res = await apiRequest(`/api/content/tracks/${trackId}`, { method: 'PUT', body: JSON.stringify({ title, description }) });
+      const res = await apiRequest(`/content/tracks/${trackId}`, { method: 'PUT', body: JSON.stringify({ title, description }) });
       return handleJsonResponse<TrackRow>(res, 'Failed to update track');
     },
     onSuccess: (track) => {
@@ -159,7 +159,7 @@ export default function TracksAndChapters() {
 
   const deleteTrackMutation = useMutation({
     mutationFn: async (trackId: number) => {
-      const res = await apiRequest(`/api/content/tracks/${trackId}`, { method: 'DELETE' });
+      const res = await apiRequest(`/content/tracks/${trackId}`, { method: 'DELETE' });
       return handleJsonResponse<{ message: string }>(res, 'Failed to delete track');
     },
     onSuccess: () => {
@@ -174,7 +174,7 @@ export default function TracksAndChapters() {
   const moveTrackMutation = useMutation({
     mutationFn: async ({ trackId, direction, steps }: { trackId: number; direction: 'up' | 'down'; steps: number }) => {
       for (let i = 0; i < steps; i++) {
-        const res = await apiRequest(`/api/content/tracks/${trackId}/move`, { method: 'POST', body: JSON.stringify({ direction }) });
+        const res = await apiRequest(`/content/tracks/${trackId}/move`, { method: 'POST', body: JSON.stringify({ direction }) });
         await handleJsonResponse(res, 'Failed to reorder tracks');
       }
     },
@@ -188,7 +188,7 @@ export default function TracksAndChapters() {
 
   const createChapterMutation = useMutation({
     mutationFn: async ({ trackId, title, description }: { trackId: number; title: string, description: string }) => {
-      const res = await apiRequest(`/api/content/tracks/${trackId}/chapters`, { method: 'POST', body: JSON.stringify({ title, description, content: {} }) });
+      const res = await apiRequest(`/content/tracks/${trackId}/chapters`, { method: 'POST', body: JSON.stringify({ title, description, content: {} }) });
       return handleJsonResponse<ChapterRow>(res, 'Failed to create chapter');
     },
     onSuccess: (chapter) => {
@@ -203,7 +203,7 @@ export default function TracksAndChapters() {
 
   const updateChapterMutation = useMutation({
     mutationFn: async ({ chapterId, title, description }: { chapterId: number; title: string, description: string }) => {
-      const res = await apiRequest(`/api/content/chapters/${chapterId}`, { method: 'PUT', body: JSON.stringify({ title, description }) });
+      const res = await apiRequest(`/content/chapters/${chapterId}`, { method: 'PUT', body: JSON.stringify({ title, description }) });
       return handleJsonResponse<ChapterRow>(res, 'Failed to update chapter');
     },
     onSuccess: (chapter) => {
@@ -217,7 +217,7 @@ export default function TracksAndChapters() {
 
   const deleteChapterMutation = useMutation({
     mutationFn: async ({ chapterId }: { chapterId: number; trackId?: number }) => {
-      const res = await apiRequest(`/api/content/chapters/${chapterId}`, { method: 'DELETE' });
+      const res = await apiRequest(`/content/chapters/${chapterId}`, { method: 'DELETE' });
       return handleJsonResponse<{ message: string }>(res, 'Failed to delete chapter');
     },
     onSuccess: (_data, variables) => {
@@ -235,7 +235,7 @@ export default function TracksAndChapters() {
 
   const moveChapterMutation = useMutation({
     mutationFn: async ({ chapterId, toTrackId }: { chapterId: number; toTrackId: number }) => {
-      const res = await apiRequest(`/api/content/chapters/${chapterId}/move`, { method: 'POST', body: JSON.stringify({ toTrackId }) });
+      const res = await apiRequest(`/content/chapters/${chapterId}/move`, { method: 'POST', body: JSON.stringify({ toTrackId }) });
       return handleJsonResponse<{ message: string }>(res, 'Failed to move chapter');
     },
     onSuccess: (_data, variables) => {
@@ -251,7 +251,7 @@ export default function TracksAndChapters() {
   const reorderChapterMutation = useMutation({
     mutationFn: async ({ chapterId, direction, steps }: { chapterId: number; direction: 'up' | 'down'; steps: number }) => {
       for (let i = 0; i < steps; i++) {
-        const res = await apiRequest(`/api/content/chapters/${chapterId}/move`, { method: 'POST', body: JSON.stringify({ direction }) });
+        const res = await apiRequest(`/content/chapters/${chapterId}/move`, { method: 'POST', body: JSON.stringify({ direction }) });
         await handleJsonResponse(res, 'Failed to reorder chapters');
       }
     },
