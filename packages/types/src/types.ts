@@ -16,41 +16,7 @@ import type {
 // Re-export for convenience
 export type { User, Track, Chapter, TextSegment, AudioFile };
 
-// Extended types for specific use cases
-export interface UserWithRoles extends User {
-  roles: string[];
-  // lastLoginAt inherited from User (Date | null, non-optional)
-}
-
-export interface TrackWithChapters extends Omit<Track, 'createdBy' | 'createdAt' | 'updatedAt'> {
-  chapters: Chapter[];
-  chapterCount: number;
-  lastModified?: string;
-  createdBy?: string;
-  createdAt?: Date | null;
-  updatedAt?: Date | null;
-}
-
-export interface ChapterWithProgress extends Chapter {
-  progressPercentage?: number;
-  isCompleted?: boolean;
-  proficiencyLevel?: number;
-  audioFiles?: AudioFile[];
-}
-
-export interface ChapterWithMetadata extends Omit<Chapter, 'publishedAt' | 'lastEditedBy'> {
-  trackId: number;
-  textReferences: {
-    te?: string[];
-    hi?: string[];
-    en?: string[];
-  };
-  estimatedDuration?: number;
-  lastEditedBy?: string | null;
-  publishedAt?: Date | null;
-}
-
-// Normalized Mapping Types (from schema; MappingWithTimestamps for API layer)
+// Normalized Mapping Types (from schema; used by media pipeline and text-segmentation)
 export interface MappingWithTimestamps {
   mappingId: number;
   textSegmentId: number;
@@ -61,73 +27,8 @@ export interface MappingWithTimestamps {
   segmentName?: string;
 }
 
-export interface StudentStats {
-  totalChapters: number;
-  completedChapters: number;
-  averageProficiency: number;
-  progressPercentage: number;
-  currentStreak?: number;
-  highestLevel?: number;
-}
-
-// UI Component Props
-export interface DashboardProps {
-  onTrackSelect: (trackId: number) => void;
-  onChapterSelect: (chapterId: number) => void;
-}
-
-export interface TrackCardProps {
-  track: TrackWithChapters;
-  onClick?: () => void;
-  showProgress?: boolean;
-}
-
 // Content Script Types
 export type Script = 'te' | 'hi' | 'en';
-
-export interface MultiScriptContent {
-  te?: string;
-  hi?: string;
-  en?: string;
-}
-
-// Form and API Types
-export interface CreateTrackRequest {
-  title: string;
-  description: string;
-  order?: number;
-  estimatedHours?: number;
-}
-
-export interface CreateChapterRequest {
-  trackId: number;
-  title: string;
-  content: MultiScriptContent;
-  order?: number;
-}
-
-export interface UpdateChapterRequest {
-  title?: string;
-  content?: MultiScriptContent;
-  status?: 'draft' | 'published';
-}
-
-// Error and Response Types
-export interface ApiErrorResponse {
-  error: {
-    message: string;
-    code?: string;
-    details?: Record<string, unknown>;
-    timestamp: string;
-    requestId: string;
-  };
-}
-
-export interface ApiSuccessResponse<T = any> {
-  data: T;
-  message?: string;
-  timestamp: string;
-}
 
 // My Students / Instructor Student List Type
 export interface MyStudent {
@@ -141,15 +42,6 @@ export interface MyStudent {
   batchCode: string;
   batchName: string;
   enrolledAt: Date | string | null;
-}
-
-export interface GetMyStudentsResponse {
-  items: MyStudent[];
-  pagination: {
-    limit: number;
-    offset: number;
-    total: number;
-  };
 }
 
 // Student Details / Proficiency Types
@@ -182,11 +74,6 @@ export interface StudentDetail {
   email: string;
   enrollment: StudentEnrollment | null;
   proficiencyMatrix: ProficiencyRecord[];
-}
-
-export interface GetStudentDetailsResponse {
-  data: StudentDetail;
-  timestamp: string;
 }
 
 // Student Track Progress Types (Phase D: Track-wise Progress Visualization)

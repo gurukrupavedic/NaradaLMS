@@ -15,11 +15,9 @@ router.get('/batches', async (req: Request, res: Response, next: NextFunction) =
     const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
     const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
 
-    const allItems = await batchService.listBatches();
-    const total = allItems.length;
-    const paginatedItems = allItems.slice(offset, offset + limit);
+    const { items, total } = await batchService.listBatchesPaginated(limit, offset);
 
-    res.json({ items: paginatedItems, pagination: { limit, offset, total } });
+    res.json({ items, pagination: { limit, offset, total } });
   } catch (error) { next(error); }
 });
 

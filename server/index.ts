@@ -57,6 +57,7 @@ app.use(express.urlencoded({ extended: false }));
 // Cookie parser for JWT cookies
 app.use(cookieParser());
 
+// TODO: Replace deprecated csurf with csrf-csrf or lusca before production deployment
 // CSRF Protection
 const csrfProtection = csrf({
   cookie: {

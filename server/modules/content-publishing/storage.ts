@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { tracks, chapters, textSegments, audioFiles, mediaSegments } from "@narada/types";
-import { eq, and, asc, sql, max } from "drizzle-orm";
+import { eq, and, asc, sql, max, inArray } from "drizzle-orm";
 
 /**
  * ContentStorage
@@ -12,23 +12,26 @@ export class ContentStorage {
    * Track Operations
    */
   async getAllTracks(): Promise<any[]> {
-    const allTracks = await db.select().from(tracks).orderBy(tracks.order);
-
-    const tracksWithCounts = await Promise.all(
-      allTracks.map(async (track) => {
-        const chapterCount = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(chapters)
-          .where(eq(chapters.trackId, track.id));
-
-        return {
-          ...track,
-          chapterCount: Number(chapterCount[0]?.count || 0)
-        };
+    const result = await db
+      .select({
+        id: tracks.id,
+        title: tracks.title,
+        description: tracks.description,
+        order: tracks.order,
+        createdBy: tracks.createdBy,
+        createdAt: tracks.createdAt,
+        updatedAt: tracks.updatedAt,
+        chapterCount: sql<number>`count(${chapters.id})`.as('chapter_count'),
       })
-    );
+      .from(tracks)
+      .leftJoin(chapters, eq(chapters.trackId, tracks.id))
+      .groupBy(tracks.id)
+      .orderBy(tracks.order);
 
-    return tracksWithCounts;
+    return result.map(row => ({
+      ...row,
+      chapterCount: Number(row.chapterCount ?? 0),
+    }));
   }
 
   async getTrack(id: number): Promise<any | null> {
@@ -70,33 +73,59 @@ export class ContentStorage {
    * Chapter Operations
    */
   async getChaptersByTrack(trackId: number): Promise<any[]> {
-    const chapterList = await db.select().from(chapters).where(eq(chapters.trackId, trackId)).orderBy(chapters.order);
+    const chapterList = await db
+      .select()
+      .from(chapters)
+      .where(eq(chapters.trackId, trackId))
+      .orderBy(chapters.order);
 
-    const enrichedChapters = await Promise.all(chapterList.map(async (chapter) => {
+    if (chapterList.length === 0) return [];
+
+    const chapterIds = chapterList.map(c => c.id);
+
+    // Bulk query: audio file counts per chapter
+    const audioCountResults = await db
+      .select({
+        chapterId: audioFiles.chapterId,
+        audioFileCount: sql<number>`count(*)`.as('audio_file_count'),
+      })
+      .from(audioFiles)
+      .where(inArray(audioFiles.chapterId, chapterIds))
+      .groupBy(audioFiles.chapterId);
+
+    const audioCountMap = new Map(
+      audioCountResults.map(r => [r.chapterId, Number(r.audioFileCount)])
+    );
+
+    // Bulk query: segment counts per chapter (via audioFiles join)
+    const segmentCountResults = await db
+      .select({
+        chapterId: audioFiles.chapterId,
+        segmentCount: sql<number>`count(${mediaSegments.id})`.as('segment_count'),
+      })
+      .from(mediaSegments)
+      .innerJoin(audioFiles, eq(mediaSegments.audioFileId, audioFiles.id))
+      .where(inArray(audioFiles.chapterId, chapterIds))
+      .groupBy(audioFiles.chapterId);
+
+    const segmentCountMap = new Map(
+      segmentCountResults.map(r => [r.chapterId, Number(r.segmentCount)])
+    );
+
+    return chapterList.map(chapter => {
       const hasContent = Boolean(
         (chapter.content?.te && chapter.content.te.trim().length > 0) ||
         (chapter.content?.hi && chapter.content.hi.trim().length > 0) ||
         (chapter.content?.en && chapter.content.en.trim().length > 0)
       );
 
-      const audioFilesList = await db.select().from(audioFiles).where(eq(audioFiles.chapterId, chapter.id));
-      const audioFileCount = audioFilesList.length;
-
-      let segmentCount = 0;
-      for (const audioFile of audioFilesList) {
-        const mediaSegmentsList = await db.select().from(mediaSegments).where(eq(mediaSegments.audioFileId, audioFile.id));
-        segmentCount += mediaSegmentsList.length;
-      }
-
       return {
         ...chapter,
         hasContent,
-        audioFileCount,
-        segmentCount
+        audioFileCount: audioCountMap.get(chapter.id) ?? 0,
+        segmentCount: segmentCountMap.get(chapter.id) ?? 0,
       };
-    }));
-
-    return enrichedChapters;
+    });
   }
 
   async getChapter(id: number): Promise<any | null> {

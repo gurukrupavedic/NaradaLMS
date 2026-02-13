@@ -162,11 +162,10 @@ export class AdminStorage {
       .select({ totalBatches: sql<number>`count(*)` })
       .from(batches);
 
+    // Batches table has no status column; activeBatches equals totalBatches until status is added
     const [{ activeBatches }] = await db
       .select({ activeBatches: sql<number>`count(*)` })
       .from(batches);
-    // Note: batches table doesn't have a status column yet
-    // All batches are considered in this count
 
     const [{ totalTracks }] = await db
       .select({ totalTracks: sql<number>`count(*)` })
