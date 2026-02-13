@@ -158,8 +158,7 @@ export function AudioFileManager({
 
     const handleSaveEdit = () => {
         if (selectedAudioFileId && tempFileName.trim()) {
-            setEditingFileName(tempFileName);
-            saveFileName(selectedAudioFileId);
+            saveFileName(selectedAudioFileId, tempFileName);
             setIsEditDialogOpen(false);
         }
     };
@@ -237,10 +236,6 @@ export function AudioFileManager({
     // Active State
     return (
         <div className="flex flex-col h-full bg-card">
-            <div className="h-11 bg-muted border-b shrink-0 flex items-center px-4 md:hidden">
-                <span className="text-sm font-medium text-muted-foreground">Audio Files</span>
-            </div>
-
             <input
                 ref={fileInputRef}
                 type="file"
@@ -248,69 +243,63 @@ export function AudioFileManager({
                 className="hidden"
                 onChange={handleFileChange}
                 disabled={disabled}
+                aria-label="Upload audio file"
             />
+            {/* Desktop Header (Matches SegmentMappingGrid style but empty) */}
+            <div className="h-12 shrink-0 bg-muted/30 border-b" />
 
             <div className="flex-1 overflow-auto p-4 space-y-4">
-                {/* File Selector + Action Buttons */}
-                <div className="space-y-2">
-                    <div className="flex gap-2">
-                        <Select
-                            value={selectedAudioFileId?.toString() || ''}
-                            onValueChange={(val) => onAudioFileChange(parseInt(val))}
-                            disabled={disabled || isUploading}
-                        >
-                            <SelectTrigger className="flex-1 min-w-[140px] h-9 text-sm">
-                                <SelectValue placeholder="Select file..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {audioFiles?.map((file) => (
-                                    <SelectItem key={file.id} value={file.id.toString()}>
-                                        {file.displayName || file.filename}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                {/* Controls Toolbar */}
+                <div className="flex items-center gap-2">
+                    <Select
+                        value={selectedAudioFileId?.toString() || ''}
+                        onValueChange={(val) => onAudioFileChange(parseInt(val))}
+                        disabled={disabled || isUploading}
+                    >
+                        <SelectTrigger className="flex-1 h-9 text-sm">
+                            <SelectValue placeholder="Select file..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {audioFiles?.map((file) => (
+                                <SelectItem key={file.id} value={file.id.toString()}>
+                                    {file.displayName || file.filename}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
 
-                        <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-9 w-9 flex-shrink-0 hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
-                            onClick={handleUploadClick}
-                            disabled={disabled || isUploading}
-                            title="Upload new file"
-                            aria-label="Upload audio file"
-                        >
-                            <Plus className="h-4 w-4" />
-                        </Button>
-                    </div>
+                    <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-9 w-9 flex-shrink-0 hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
+                        onClick={handleUploadClick}
+                        disabled={disabled || isUploading}
+                        title="Upload new file"
+                    >
+                        <Plus className="h-4 w-4" />
+                    </Button>
 
-                    <div className="flex justify-between items-center px-0.5">
-                        <div className="flex gap-1">
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
-                                onClick={handleEditClick}
-                                disabled={disabled || !selectedAudioFile}
-                                title="Rename file"
-                            >
-                                <Pencil className="h-3 w-3 mr-1.5" />
-                                Rename
-                            </Button>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-9 w-9 text-muted-foreground hover:text-primary"
+                        onClick={handleEditClick}
+                        disabled={disabled || !selectedAudioFile}
+                        title="Rename file"
+                    >
+                        <Pencil className="h-4 w-4" />
+                    </Button>
 
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                onClick={handleDeleteClick}
-                                disabled={disabled || !selectedAudioFile}
-                                title="Delete file"
-                            >
-                                <Trash2 className="h-3 w-3 mr-1.5" />
-                                Delete
-                            </Button>
-                        </div>
-                    </div>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={handleDeleteClick}
+                        disabled={disabled || !selectedAudioFile}
+                        title="Delete file"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
                 </div>
 
                 {/* Upload Indicator */}

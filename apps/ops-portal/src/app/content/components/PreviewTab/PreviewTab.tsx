@@ -7,7 +7,8 @@ import {
     SelectTrigger,
     SelectValue,
     Badge,
-    cn
+    cn,
+    TiptapEditor
 } from '@narada/ui';
 import { StretchHorizontal, Zap, Maximize, Minimize } from 'lucide-react';
 import { apiRequest } from '@/lib/api';
@@ -113,45 +114,20 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
 
     if (!learnMode) {
         return (
-            <div className={cn("h-full flex flex-col bg-background", { "fixed inset-0 z-50 p-6": isFullScreen })}>
-                <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/40">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-muted-foreground">Script:</span>
-                        <Select
-                            value={contentScript}
-                            onValueChange={(value) => setContentScript(value as typeof contentScript)}
-                        >
-                            <SelectTrigger className="h-7 w-40 text-xs bg-background border border-border">
-                                <SelectValue placeholder="Script" />
-                            </SelectTrigger>
-                            <SelectContent className="text-sm">
-                                {scriptOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                        {option.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <button
-                        onClick={toggleFullScreen}
-                        className="text-muted-foreground hover:text-foreground p-1"
-                        title={isFullScreen ? "Exit Fullscreen" : "Fullscreen"}
-                    >
-                        {isFullScreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-                    </button>
-                </div>
-                <div className="flex-1 overflow-auto p-6">
-                    <div
-                        className="text-lg leading-relaxed whitespace-pre-wrap max-w-4xl mx-auto"
-                        style={{
-                            fontFamily: contentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
-                                contentScript === 'hi' ? "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif" :
-                                    "'AdishilaSan', 'Noto Sans', sans-serif"
-                        }}
-                    >
-                        {chapter?.content?.[contentScript] || 'No content available.'}
-                    </div>
+            <div className={cn("h-full flex flex-col", { "fixed inset-0 z-50 bg-background": isFullScreen })}>
+                <div className="flex-1 overflow-hidden">
+                    <TiptapEditor
+                        content={chapter?.content?.[contentScript] || ''}
+                        onChange={() => { }}
+                        disabled={true}
+                        output="html"
+                        language={contentScript}
+                        currentScript={contentScript}
+                        onScriptChange={setContentScript}
+                        className="h-full"
+                        maxHeight="100%"
+                        minHeight="100%"
+                    />
                 </div>
             </div>
         );

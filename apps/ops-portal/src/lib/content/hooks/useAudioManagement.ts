@@ -58,10 +58,17 @@ export function useAudioManagement(chapterId: string) {
             const formData = new FormData();
             formData.append('audio', file);
 
+            // Fetch CSRF token
+            const csrfResponse = await fetch('http://localhost:5000/api/csrf-token', { credentials: 'include' });
+            const { csrfToken } = await csrfResponse.json();
+
             // For file uploads, use fetch directly with absolute URL (bypasses Next.js proxy for multipart)
             const response = await fetch(`http://localhost:5000/api/content/chapters/${chapterId}/audio`, {
                 method: 'POST',
                 credentials: 'include', // Send cookies for auth
+                headers: {
+                    'X-CSRF-Token': csrfToken,
+                },
                 body: formData,
             });
 
@@ -146,8 +153,8 @@ export function useAudioManagement(chapterId: string) {
             setEditingFileId(null);
             setEditingFileName('');
         },
-        saveFileName: (fileId: number) => {
-            updateFileNameMutation.mutate({ fileId, newName: editingFileName });
+        saveFileName: (fileId: number, newName: string) => {
+            updateFileNameMutation.mutate({ fileId, newName });
         },
         isSaving: updateFileNameMutation.isPending,
     };

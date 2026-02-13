@@ -23,6 +23,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
+    TiptapEditor,
 } from '@narada/ui';
 import { FileText, StretchHorizontal, RotateCcw } from 'lucide-react';
 
@@ -71,58 +72,20 @@ function EditorMode() {
     const currentContent = content[contentScript] || '';
 
     return (
-        <div className="flex flex-col h-full gap-4">
-            <div className="flex items-center justify-between">
-                <div className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    Content Editor ({contentScript.toUpperCase()})
-                </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-muted-foreground">Script:</span>
-                    <Select
-                        value={contentScript}
-                        onValueChange={(value) => setContentScript(value as 'te' | 'hi' | 'en')}
-                    >
-                        <SelectTrigger className="h-7 w-40 text-xs bg-background border border-border">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="text-sm">
-                            <SelectItem value="te">Telugu</SelectItem>
-                            <SelectItem value="hi">Devanagari (Hindi)</SelectItem>
-                            <SelectItem value="en">English (IAST)</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-
-            <div className="flex-1 relative group">
-                <textarea
-                    className="w-full h-full bg-background border rounded-md p-6 resize-none focus:ring-2 focus:ring-primary focus:outline-none transition-shadow font-inherit text-xl leading-[1.8]"
-                    value={currentContent}
-                    onChange={(e) => updateContent(contentScript, e.target.value)}
+        <div className="flex flex-col h-full">
+            <div className="flex-1 overflow-hidden">
+                <TiptapEditor
+                    content={currentContent}
+                    onChange={(value) => updateContent(contentScript, value as string)}
                     disabled={isPublished}
-                    placeholder="Enter chapter content here..."
-                    style={{
-                        fontFamily: contentScript === 'te' ? "'JIMS', 'Noto Sans Telugu', sans-serif" :
-                            contentScript === 'hi' ? "'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif" :
-                                "'AdishilaSan', 'Noto Sans', sans-serif",
-                    }}
+                    output="html"
+                    language={contentScript}
+                    currentScript={contentScript}
+                    onScriptChange={setContentScript}
+                    autoSaveStatus={saveStatus}
+                    className="h-full"
+                    minHeight="100%"
                 />
-                <div className="absolute bottom-4 right-4 text-xs font-medium px-2 py-1 rounded bg-background/80 backdrop-blur border shadow-sm">
-                    {saveStatus === 'saving' ? (
-                        <span className="text-amber-500 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                            Saving...
-                        </span>
-                    ) : saveStatus === 'saved' ? (
-                        <span className="text-emerald-500 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            Saved
-                        </span>
-                    ) : (
-                        <span className="text-muted-foreground">Unsaved changes</span>
-                    )}
-                </div>
             </div>
         </div>
     );

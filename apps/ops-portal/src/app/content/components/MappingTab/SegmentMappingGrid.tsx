@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button, cn } from '@narada/ui';
-import { Square } from 'lucide-react';
+import { Button, cn, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@narada/ui';
+import { Square, RotateCcw } from 'lucide-react';
 import { TimestampControl } from './components/TimestampControl';
 import { SegmentCard } from '@/components/common/SegmentCard';
 import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
@@ -21,6 +21,8 @@ interface SegmentMappingGridProps {
     onMappingDelete: (segmentId: number) => void;
     onMappingCreate: (mapping: AudioMapping) => void;
     onEndSession: () => void;
+    onClearAll?: () => void;
+    onScriptChange?: (script: 'te' | 'hi' | 'en') => void;
     hideHeader?: boolean;
     className?: string;
     readOnly?: boolean;
@@ -40,6 +42,8 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
     onMappingDelete,
     onMappingCreate,
     onEndSession,
+    onClearAll,
+    onScriptChange,
     hideHeader,
     className,
     readOnly = false
@@ -63,8 +67,63 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                 className
             )}>
                 {!hideHeader && (
-                    <div className="px-4 h-11 bg-gray-50/50 dark:bg-gray-900/50 border-b flex-shrink-0 flex items-center">
-                        <h2 className="text-sm font-medium text-muted-foreground">Segment Mapping</h2>
+                    <div className="px-4 h-12 bg-muted/30 border-b flex-shrink-0 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-muted-foreground">Script:</span>
+                            {onScriptChange ? (
+                                <Select
+                                    value={currentScript}
+                                    onValueChange={(value) => onScriptChange(value as 'te' | 'hi' | 'en')}
+                                >
+                                    <SelectTrigger className="h-8 w-[140px] text-xs bg-background border border-border">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="te">Telugu</SelectItem>
+                                        <SelectItem value="hi">Devanagari</SelectItem>
+                                        <SelectItem value="en">English</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            ) : (
+                                <span className="text-sm font-bold text-foreground capitalize">{currentScript}</span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700 ring-1 ring-inset ring-orange-600/20">
+                                {segments.length} segments
+                            </span>
+                            <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                                {mappings.length} mapped
+                            </span>
+                            {mappings.length > 0 && onClearAll && !readOnly && (
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive px-2 transition-colors ml-2"
+                                        >
+                                            <RotateCcw className="h-3 w-3 mr-1" />
+                                            Clear All
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Clear All Mappings?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This action cannot be undone. This will permanently remove all audio mappings for the current audio file.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={onClearAll} className="bg-destructive hover:bg-destructive/90">
+                                                Yes, clear all
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            )}
+                        </div>
                     </div>
                 )}
 

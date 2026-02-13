@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     Button,
     Badge,
@@ -19,6 +19,14 @@ import { useTextSegmentationEditor } from '@/lib/content/hooks/useTextSegmentati
 import { useAudioMapping } from '@/lib/content/hooks/useAudioMapping';
 import { useLocalStorage } from '@/hooks/content/useLocalStorage';
 import type { Script } from '@shared/types/text-segmentation';
+
+// Type transformation utility
+const toSimplifiedMapping = (dbMapping: any) => ({
+    segmentId: dbMapping.textSegmentId,
+    audioFileId: dbMapping.audioFileId,
+    startTime: dbMapping.startTime,
+    endTime: dbMapping.endTime,
+});
 
 export function MappingTab({
     selectedAudioFileId,
@@ -51,7 +59,16 @@ export function MappingTab({
         createMapping,
         updateMapping,
         deleteMapping,
+        deleteMultipleMappings,
     } = useAudioMapping();
+
+    // Filter mappings by selected audio file and transform (Parity with Monolith)
+    const audioFileMappings = useMemo(() =>
+        chapterMappings
+            .filter(m => m.audioFileId === selectedAudioFileId)
+            .map(toSimplifiedMapping),
+        [chapterMappings, selectedAudioFileId]
+    );
 
     const [panelSizes, setPanelSizes] = useLocalStorage('mapping-tab-panel-sizes', {
         grid: 60,
@@ -64,6 +81,23 @@ export function MappingTab({
         }
     };
 
+    // Auto-select first audio file logic (Parity with Monolith)
+    useEffect(() => {
+        if (audioFiles?.length > 0 && !selectedAudioFileId) {
+            setSelectedAudioFileId?.(audioFiles[0].id);
+        } else if (audioFiles?.length === 0 && selectedAudioFileId) {
+            // Clear selection if no files remain (e.g. after deletion)
+            setSelectedAudioFileId?.(null);
+        }
+    }, [audioFiles, selectedAudioFileId, setSelectedAudioFileId]);
+
+    // Sync audio source with player context
+    useEffect(() => {
+        if (audioUrl) {
+            audioPlayer.setAudioSource(audioUrl);
+        }
+    }, [audioUrl, audioPlayer]);
+
     return (
         <div className="h-full">
             <ProgressiveMapper
@@ -71,17 +105,27 @@ export function MappingTab({
                 segments={scriptSegments}
                 currentScript={selectedScript}
                 content={chapter?.content || {}}
-                mappings={chapterMappings}
+                mappings={audioFileMappings}
                 selectedAudioFile={selectedAudioFile}
                 currentTime={audioPlayer.currentTime}
                 duration={audioPlayer.duration}
                 isPlaying={audioPlayer.isPlaying}
                 togglePlayPause={audioPlayer.togglePlayPause}
-                onMappingCreate={createMapping}
+                onSeek={audioPlayer.seek}
+                onMappingCreate={(mapping) => {
+                    if (selectedAudioFileId) {
+                        createMapping({
+                            textSegmentId: mapping.segmentId,
+                            audioFileId: selectedAudioFileId,
+                            startTime: mapping.startTime,
+                            endTime: mapping.endTime,
+                            silent: true
+                        });
+                    }
+                }}
                 onMappingUpdate={(segmentId, mapping) => {
-                    const audioFileId = mapping.audioFileId || selectedAudioFileId;
-                    if (audioFileId) {
-                        updateMapping(audioFileId, segmentId, {
+                    if (selectedAudioFileId) {
+                        updateMapping(selectedAudioFileId, segmentId, {
                             startTime: mapping.startTime,
                             endTime: mapping.endTime
                         });
@@ -95,19 +139,28 @@ export function MappingTab({
                 readOnly={isPublished}
             >
                 {(state) => {
-                    if (state.mappingSession === 'setup' || (audioFiles?.length > 0 && !selectedAudioFileId)) {
+                    if (state.mappingSession === 'setup' || !selectedAudioFileId) {
                         return (
                             <FocusSessionSetup
                                 audioFiles={audioFiles || []}
                                 segments={scriptSegments}
                                 content={chapter?.content || {}}
-                                mappings={chapterMappings}
+                                mappings={audioFileMappings}
                                 selectedAudioId={selectedAudioFileId || null}
                                 selectedScript={selectedScript}
                                 onAudioChange={(id) => setSelectedAudioFileId?.(id)}
                                 onScriptChange={setSelectedScript}
                                 onAudioUpload={() => {
-                                    toast({ title: "Please use the Audio Manager to upload files first." });
+                                    const input = document.createElement('input');
+                                    input.type = 'file';
+                                    input.accept = 'audio/*,video/*';
+                                    input.onchange = (e) => {
+                                        const file = (e.target as HTMLInputElement).files?.[0];
+                                        if (file) {
+                                            uploadFile(file);
+                                        }
+                                    };
+                                    input.click();
                                 }}
                                 onStartSession={({ startSegmentId, startTimestamp }) => {
                                     state.confirmStartSession(startSegmentId, startTimestamp);
@@ -123,7 +176,7 @@ export function MappingTab({
                                 segments={scriptSegments}
                                 currentScript={selectedScript}
                                 content={chapter?.content || {}}
-                                mappings={chapterMappings}
+                                mappings={audioFileMappings}
                                 activeSegmentId={state.activeSegmentId}
                                 currentTime={audioPlayer.currentTime}
                                 duration={audioPlayer.duration}
@@ -152,72 +205,77 @@ export function MappingTab({
                     }
 
                     return (
-                        <ResizablePanelGroup direction="horizontal" onLayout={handleLayoutChange}>
-                            <ResizablePanel defaultSize={panelSizes.grid} minSize={30}>
-                                <SegmentMappingGrid
-                                    segments={scriptSegments}
-                                    currentScript={selectedScript}
-                                    content={chapter?.content || {}}
-                                    mappings={chapterMappings}
-                                    mappingSession={state.mappingSession as any}
-                                    activeSegmentId={state.activeSegmentId}
-                                    duration={audioPlayer.duration}
-                                    onSegmentClick={state.handleSegmentClick}
-                                    onPlaySegment={(m, e) => {
-                                        e.stopPropagation();
-                                        audioPlayer.seek(m.startTime);
-                                        if (!audioPlayer.isPlaying) audioPlayer.togglePlayPause();
-                                    }}
-                                    onMappingUpdate={state.onMappingUpdate}
-                                    onMappingDelete={state.onMappingDelete}
-                                    onMappingCreate={state.onMappingCreate}
-                                    onEndSession={state.stopMappingSession}
-                                    readOnly={isPublished}
-                                />
-                            </ResizablePanel>
-                            <ResizableHandle withHandle />
-                            <ResizablePanel defaultSize={panelSizes.audio} minSize={20}>
-                                <AudioFileManager
-                                    chapterId={chapterId}
-                                    selectedAudioFileId={selectedAudioFileId || null}
-                                    onAudioFileChange={(id) => setSelectedAudioFileId?.(id)}
-                                    disabled={state.mappingSession !== 'idle'}
-                                    isPlaying={audioPlayer.isPlaying}
-                                    duration={audioPlayer.duration}
-                                    currentTime={audioPlayer.currentTime}
-                                    togglePlayPause={audioPlayer.togglePlayPause}
-                                    seek={audioPlayer.seek}
-                                    volume={audioPlayer.volume}
-                                    onVolumeChange={audioPlayer.setVolume}
-                                    isMuted={audioPlayer.isMuted}
-                                    toggleMute={audioPlayer.toggleMute}
-                                >
-                                    <div className="mt-4 p-4 border rounded-lg bg-muted/20">
-                                        <h4 className="text-sm font-medium mb-2">Mapping Session</h4>
-                                        <div className="flex flex-col gap-2">
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-muted-foreground">Mapped Segments:</span>
-                                                <span className="font-medium">{state.mappedCount} / {state.totalCount}</span>
-                                            </div>
-                                            <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-primary transition-all duration-300"
-                                                    style={{ width: `${state.progressPercentage}%` }}
-                                                />
-                                            </div>
-                                            <Button
-                                                onClick={state.startMappingSession}
-                                                disabled={isPublished || (audioFiles || []).length === 0 || !selectedAudioFileId}
-                                                className="w-full mt-2"
+                        <div className="h-full bg-muted/20 p-4">
+                            <ResizablePanelGroup direction="horizontal" onLayout={handleLayoutChange} className="gap-2">
+                                <ResizablePanel defaultSize={panelSizes.grid} minSize={30}>
+                                    <SegmentMappingGrid
+                                        segments={scriptSegments}
+                                        currentScript={selectedScript}
+                                        content={chapter?.content || {}}
+                                        mappings={audioFileMappings}
+                                        mappingSession={state.mappingSession as any}
+                                        activeSegmentId={state.activeSegmentId}
+                                        duration={audioPlayer.duration}
+                                        onSegmentClick={state.handleSegmentClick}
+                                        onPlaySegment={(m, e) => {
+                                            e.stopPropagation();
+                                            audioPlayer.playSegment(m.startTime, m.endTime);
+                                        }}
+                                        onMappingUpdate={state.onMappingUpdate}
+                                        onMappingDelete={state.onMappingDelete}
+                                        onMappingCreate={state.onMappingCreate}
+                                        onEndSession={state.stopMappingSession}
+                                        onClearAll={() => {
+                                            if (selectedAudioFileId && state.mappings.length > 0) {
+                                                const segmentIds = state.mappings.map(m => m.segmentId);
+                                                deleteMultipleMappings(selectedAudioFileId, segmentIds);
+                                            }
+                                        }}
+                                        onScriptChange={setSelectedScript}
+                                        readOnly={isPublished}
+                                    />
+                                </ResizablePanel>
+                                <ResizableHandle withHandle className="bg-transparent w-2 hover:bg-primary/10 transition-colors rounded-sm" />
+                                <ResizablePanel defaultSize={panelSizes.audio} minSize={20}>
+                                    <div className="h-full border rounded-lg overflow-hidden bg-card shadow-sm flex flex-col">
+                                        <div className="flex-1 overflow-hidden">
+                                            <AudioFileManager
+                                                chapterId={chapterId}
+                                                selectedAudioFileId={selectedAudioFileId || null}
+                                                onAudioFileChange={(id) => setSelectedAudioFileId?.(id)}
+                                                disabled={state.mappingSession !== 'idle'}
+                                                isPlaying={audioPlayer.isPlaying}
+                                                duration={audioPlayer.duration}
+                                                currentTime={audioPlayer.currentTime}
+                                                togglePlayPause={audioPlayer.togglePlayPause}
+                                                seek={audioPlayer.seek}
+                                                volume={audioPlayer.volume}
+                                                onVolumeChange={audioPlayer.setVolume}
+                                                isMuted={audioPlayer.isMuted}
+                                                toggleMute={audioPlayer.toggleMute}
+                                                playbackRate={audioPlayer.playbackRate}
+                                                onPlaybackRateChange={audioPlayer.setPlaybackRate}
                                             >
-                                                {state.mappedCount > 0 ? "Continue Mapping" : "Start Mapping Session"}
-                                            </Button>
+                                                <div className="mt-6 border-t pt-6">
+                                                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">Mapping Session</h4>
+                                                    <div className="flex flex-col gap-4">
+                                                        <Button
+                                                            onClick={state.startMappingSession}
+                                                            disabled={isPublished || (audioFiles || []).length === 0 || !selectedAudioFileId}
+                                                            className="w-full h-12 text-base font-bold uppercase tracking-wide bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                                                        >
+                                                            {state.mappedCount > 0 ? "CONTINUE MAPPING" : "START MAPPING"}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </AudioFileManager>
                                         </div>
                                     </div>
-                                </AudioFileManager>
-                            </ResizablePanel>
-                        </ResizablePanelGroup>
+                                </ResizablePanel>
+                            </ResizablePanelGroup>
+                        </div>
                     );
+
                 }}
             </ProgressiveMapper>
         </div>

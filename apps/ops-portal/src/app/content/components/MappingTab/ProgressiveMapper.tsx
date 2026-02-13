@@ -47,6 +47,7 @@ interface ProgressiveMapperProps {
     duration: number;
     isPlaying: boolean;
     togglePlayPause: () => void;
+    onSeek: (time: number) => void;
     onMappingCreate: (mapping: AudioMapping) => void;
     onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
     onMappingDelete: (segmentId: number) => void;
@@ -65,6 +66,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     duration,
     isPlaying,
     togglePlayPause,
+    onSeek,
     onMappingCreate,
     onMappingUpdate,
     onMappingDelete,
@@ -126,6 +128,9 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
 
     const proceedWithMappingSession = (startSegmentId?: number, startTime?: number) => {
         proceedWithSessionStart(startSegmentId, startTime);
+        if (startTime !== undefined) {
+            onSeek(startTime);
+        }
         if (!isPlaying) {
             togglePlayPause();
         }
@@ -137,6 +142,9 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
     };
 
     const stopMappingSession = () => {
+        if (isPlaying) {
+            togglePlayPause();
+        }
         baseMappingStop();
     };
 

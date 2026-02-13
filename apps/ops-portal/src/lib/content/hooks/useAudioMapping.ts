@@ -90,6 +90,30 @@ export function useAudioMapping() {
         },
     });
 
+    // Delete multiple mappings mutation (Batch)
+    const deleteMultipleMappingsMutation = useMutation({
+        mutationFn: async ({ audioFileId, segmentIds }: { audioFileId: number; segmentIds: number[] }) => {
+            // Execute deletions in parallel
+            const promises = segmentIds.map(segmentId =>
+                apiRequest(`/content/chapters/${chapterId}/mappings/audio/${audioFileId}/segment/${segmentId}`, {
+                    method: 'DELETE',
+                })
+            );
+            return await Promise.all(promises);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['content', 'chapters', chapterId, 'mappings'] });
+            toast({ title: 'All mappings cleared' });
+        },
+        onError: (error: Error) => {
+            toast({
+                title: 'Failed to clear mappings',
+                description: error.message,
+                variant: 'destructive',
+            });
+        },
+    });
+
     // Wrapper functions with published check
     const createMapping = (mapping: CreateMappingInput) => {
         if (isPublished) {
@@ -127,12 +151,25 @@ export function useAudioMapping() {
         deleteMappingMutation.mutate({ audioFileId, segmentId });
     };
 
+    const deleteMultipleMappings = (audioFileId: number, segmentIds: number[]) => {
+        if (isPublished) {
+            toast({
+                title: 'Cannot modify published chapter',
+                description: 'Unpublish the chapter first',
+                variant: 'destructive',
+            });
+            return;
+        }
+        deleteMultipleMappingsMutation.mutate({ audioFileId, segmentIds });
+    };
+
     return {
         createMapping,
         updateMapping,
         deleteMapping,
+        deleteMultipleMappings,
         isCreating: createMappingMutation.isPending,
         isUpdating: updateMappingMutation.isPending,
-        isDeleting: deleteMappingMutation.isPending,
+        isDeleting: deleteMappingMutation.isPending || deleteMultipleMappingsMutation.isPending,
     };
 }

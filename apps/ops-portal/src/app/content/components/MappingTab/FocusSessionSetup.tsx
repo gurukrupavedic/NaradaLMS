@@ -342,7 +342,7 @@ export function FocusSessionSetup({
                     <div className="pt-4 flex flex-col items-center gap-4">
                         <Button
                             size="lg"
-                            className="w-full h-16 text-lg font-bold rounded-xl shadow-lg shadow-vidyut-base/10 bg-vidyut-base hover:bg-vidyut-base/90 active:bg-vidyut-base/80 transition-all transform active:scale-[0.98] text-vidyut-foreground group"
+                            className="w-full h-16 text-lg font-bold rounded-xl shadow-lg shadow-blue-900/10 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-all transform active:scale-[0.98] text-white group"
                             disabled={!canStart}
                             onClick={() => onStartSession({ startSegmentId, startTimestamp })}
                         >
