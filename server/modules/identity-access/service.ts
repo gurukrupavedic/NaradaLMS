@@ -133,6 +133,17 @@ export class IdentityService {
   }
 
   /**
+   * Get users with database-level pagination and optional filters (admin only)
+   */
+  async listUsersPaginated(
+    limit: number,
+    offset: number,
+    filters?: { status?: string; role?: string }
+  ) {
+    return await identityStorage.listUsersPaginated(limit, offset, filters);
+  }
+
+  /**
    * Approve a pending user and add student role
    * Publishes UserApproved event
    */

@@ -10,6 +10,10 @@ export class BatchService {
     return batchStorage.listBatches();
   }
 
+  async listBatchesPaginated(limit: number, offset: number) {
+    return batchStorage.listBatchesPaginated(limit, offset);
+  }
+
   async listInstructorBatches(instructorId: string) {
     return batchStorage.listInstructorBatches(instructorId);
   }

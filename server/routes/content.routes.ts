@@ -111,18 +111,7 @@ router.post('/tracks/:id/move', requireContentManager, async (req: Request, res:
  * Chapter Routes
  */
 
-// Legacy: GET /api/chapters/:trackId - List chapters in track
-router.get('/chapters/:trackId', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const trackId = parseInt(req.params.trackId);
-    const chapters = await contentService.getChaptersByTrack(trackId);
-    res.json(chapters);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// New: GET /tracks/:trackId/chapters - List chapters for a track (namespaced)
+// GET /tracks/:trackId/chapters - List chapters for a track
 router.get('/tracks/:trackId/chapters', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const trackId = parseInt(req.params.trackId);
@@ -150,23 +139,7 @@ router.get('/chapters/:chapterId/details', async (req: Request, res: Response, n
   }
 });
 
-// Legacy: POST /api/chapters - Create new chapter
-router.post('/chapters', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const user = req.user as Express.User;
-    const chapter = await contentService.createChapter({
-      trackId: req.body.trackId,
-      title: req.body.title,
-      content: req.body.content,
-      createdBy: user.id
-    });
-    res.json(chapter);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// New: POST /tracks/:trackId/chapters - Create chapter under track
+// POST /tracks/:trackId/chapters - Create chapter under track
 router.post('/tracks/:trackId/chapters', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user as Express.User;
@@ -259,15 +232,6 @@ router.delete('/chapters/:id', requireContentManager, async (req: Request, res: 
   } catch (error) {
     next(error);
   }
-});
-
-// New: DELETE /chapters/:chapterId - Alias for consistency
-router.delete('/chapters/:chapterId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const chapterId = parseInt(req.params.chapterId);
-    await contentService.deleteChapter(chapterId);
-    res.json({ message: "Chapter deleted successfully" });
-  } catch (error) { next(error); }
 });
 
 /**
@@ -458,27 +422,7 @@ router.delete('/chapters/:chapterId/segments/all/clear', requireContentManager, 
   } catch (error) { next(error); }
 });
 
-// PATCH /api/segments/:chapterId/reorder - Reorder segments
-router.patch('/segments/:chapterId/reorder', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const chapterId = parseInt(req.params.chapterId);
-    const { segmentOrders } = req.body;
-
-    if (!segmentOrders || !Array.isArray(segmentOrders)) {
-      return res.status(400).json(createErrorResponse(
-        "segmentOrders array is required",
-        "MISSING_SEGMENT_ORDERS"
-      ));
-    }
-
-    await contentService.reorderSegments(chapterId, segmentOrders);
-    res.json({ message: "Segments reordered successfully" });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// New: POST /chapters/:chapterId/segments/reorder - Reorder segments (namespaced)
+// POST /chapters/:chapterId/segments/reorder - Reorder segments
 router.post('/chapters/:chapterId/segments/reorder', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);

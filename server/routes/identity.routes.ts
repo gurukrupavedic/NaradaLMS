@@ -205,17 +205,15 @@ identityRouter.get(
       const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
       const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
       const statusFilter = req.query.status as string | undefined;
+      const roleFilter = req.query.role as string | undefined;
 
-      const allUsers = await identityService.getAllUsers();
-
-      // Filter by status if provided
-      let filteredUsers = allUsers;
+      const filters: { status?: string; role?: string } = {};
       if (statusFilter && ["pending_approval", "active", "inactive"].includes(statusFilter)) {
-        filteredUsers = allUsers.filter((u: any) => u.status === statusFilter);
+        filters.status = statusFilter;
       }
+      if (roleFilter) filters.role = roleFilter;
 
-      const total = filteredUsers.length;
-      const paginatedUsers = filteredUsers.slice(offset, offset + limit);
+      const { items: paginatedUsers, total } = await identityService.listUsersPaginated(limit, offset, Object.keys(filters).length ? filters : undefined);
 
       const sanitized = paginatedUsers.map((u: any) => ({
         id: u.id,

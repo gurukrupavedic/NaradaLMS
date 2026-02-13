@@ -1,7 +1,6 @@
 import { db } from "../../db";
 import { users } from "@narada/types";
-import { eq, and } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 /**
  * Identity & Access - Data Access Layer
@@ -91,6 +90,34 @@ export class IdentityStorage {
    */
   async getAllUsers(): Promise<any[]> {
     return await db.select().from(users);
+  }
+
+  /**
+   * Get users with database-level pagination and optional filters
+   */
+  async listUsersPaginated(
+    limit: number,
+    offset: number,
+    filters?: { status?: string; role?: string }
+  ): Promise<{ items: any[]; total: number }> {
+    const conditions: any[] = [];
+    if (filters?.status && ["pending_approval", "active", "inactive"].includes(filters.status)) {
+      conditions.push(eq(users.status, filters.status));
+    }
+    if (filters?.role) {
+      conditions.push(sql`${filters.role} = ANY(${users.roles})`);
+    }
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const countQuery = db.select({ count: sql<number>`count(*)` }).from(users);
+    const [countRow] = whereClause ? await countQuery.where(whereClause) : await countQuery;
+    const total = Number(countRow?.count ?? 0);
+
+    const baseSelect = db.select().from(users);
+    const withWhere = whereClause ? baseSelect.where(whereClause) : baseSelect;
+    const items = await withWhere.orderBy(users.createdAt).limit(limit).offset(offset);
+
+    return { items, total };
   }
 
   /**
