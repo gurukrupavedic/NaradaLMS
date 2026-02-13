@@ -1,9 +1,9 @@
-// Batch & Cohort domain events
+// Batch & Cohort domain events (PascalCase to match system-admin subscriptions)
 export const BATCH_EVENTS = {
-  created: 'batch.created',
-  updated: 'batch.updated',
-  enrollmentAdded: 'batch.enrollment.added',
-  enrollmentDropped: 'batch.enrollment.dropped',
-  coInstructorAssigned: 'batch.coinstructor.assigned',
-  coInstructorRemoved: 'batch.coinstructor.removed',
+  created: 'BatchCreated',
+  updated: 'BatchUpdated',
+  enrollmentAdded: 'StudentEnrolled',
+  enrollmentDropped: 'StudentDropped',
+  coInstructorAssigned: 'CoInstructorAssigned',
+  coInstructorRemoved: 'CoInstructorRemoved',
 } as const;

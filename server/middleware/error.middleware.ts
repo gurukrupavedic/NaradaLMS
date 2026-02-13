@@ -1,74 +1,53 @@
 import { Request, Response, NextFunction } from 'express';
+import { ZodError } from 'zod';
 import { AppError } from '../utils/AppError';
 import { Logger } from '../utils/logger';
-import { ZodError } from 'zod';
 
-export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
-    let error = err;
-
-    // 1. Zod Error (Validation)
-    if (err instanceof ZodError) {
-        const message = 'Validation Error';
-        const details = err.errors.map(e => ({
-            path: e.path.join('.'),
-            message: e.message
-        }));
-        error = new AppError(message, 400, 'VALIDATION_ERROR', details);
+export function errorHandler(err: any, req: Request, res: Response, next: NextFunction) {
+    // Already sent response
+    if (res.headersSent) {
+        return next(err);
     }
 
-    // 2. JWT Errors
+    // AppError (our custom error class)
+    if (err instanceof AppError) {
+        return res.status(err.statusCode).json({
+            error: { message: err.message, code: err.code }
+        });
+    }
+
+    // Zod validation errors
+    if (err instanceof ZodError) {
+        return res.status(400).json({
+            error: {
+                message: 'Validation failed',
+                code: 'VALIDATION_ERROR',
+                details: err.errors,
+            }
+        });
+    }
+
+    // JWT errors
     if (err.name === 'JsonWebTokenError') {
-        error = new AppError('Invalid token. Please log in again.', 401, 'INVALID_TOKEN');
+        return res.status(401).json({
+            error: { message: 'Invalid token. Please log in again.', code: 'INVALID_TOKEN' }
+        });
     }
     if (err.name === 'TokenExpiredError') {
-        error = new AppError('Your token has expired. Please log in again.', 401, 'TOKEN_EXPIRED');
-    }
-
-    // 3. Handle AppError (Trusted operational errors)
-    if (error instanceof AppError) {
-        // Log trusted errors as warn/info depending on severity, or error if 500
-        if (error.statusCode >= 500) {
-            Logger.error(error.message, error);
-        } else {
-            Logger.warn(error.message, { code: error.code, path: req.path });
-        }
-
-        return res.status(error.statusCode).json({
-            success: false,
-            error: {
-                code: error.code || `HTTP_${error.statusCode}`,
-                message: error.message,
-                details: error.details || null
-            }
+        return res.status(401).json({
+            error: { message: 'Your token has expired. Please log in again.', code: 'TOKEN_EXPIRED' }
         });
     }
 
-    // 4. Handle Unknown Errors (Programming errors / Bugs)
-    // Log strictly
-    Logger.error('UNHANDLED EXCEPTION', err);
+    // Errors with .status or .statusCode (from Object.assign pattern)
+    const statusCode = err.statusCode ?? err.status ?? 500;
+    const message = err.message || 'Internal server error';
 
-    // Send generic response in Production to avoid leaking details
-    if (process.env.NODE_ENV === 'production') {
-        return res.status(500).json({
-            success: false,
-            error: {
-                code: 'INTERNAL_SERVER_ERROR',
-                message: 'Something went wrong.',
-                details: null
-            }
-        });
+    if (statusCode >= 500) {
+        Logger.error('Unhandled server error:', err);
     }
 
-    // Send detailed response in Development
-    return res.status(500).json({
-        success: false,
-        error: {
-            code: 'INTERNAL_SERVER_ERROR',
-            message: err.message,
-            details: {
-                stack: err.stack,
-                name: err.name
-            }
-        }
+    return res.status(statusCode).json({
+        error: { message, code: err.code || 'SERVER_ERROR' }
     });
-};
+}

@@ -69,9 +69,8 @@ export class IdentityStorage {
         updatedAt: new Date(),
       })
       .onConflictDoUpdate({
-        target: users.id,
+        target: users.email,
         set: {
-          email: userData.email,
           firstName: userData.firstName,
           lastName: userData.lastName,
           profileImageUrl: userData.profileImageUrl,
@@ -79,7 +78,6 @@ export class IdentityStorage {
           status: userData.status ?? sql`excluded.status`,
           provider: userData.provider ?? sql`excluded.provider`,
           providerId: userData.providerId ?? sql`excluded.provider_id`,
-          passwordHash: userData.passwordHash ?? sql`excluded.password_hash`,
           updatedAt: new Date(),
         },
       })
