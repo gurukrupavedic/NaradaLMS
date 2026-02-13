@@ -1,68 +1,33 @@
 import { db } from "../../server/db";
-import { sessions, users } from "@shared/schema";
+import { users } from "@narada/types";
 import { eq } from "drizzle-orm";
 
 /**
  * Session Debugging Utility
- * 
+ *
  * Usage: npx tsx scripts/utils/test-session.ts
- * 
- * Helps debug authentication issues by:
- * - Searching for active sessions for 'kashyap.kuchipudi@gmail.com'
- * - Parsing session JSON to verify passport user ID
- * - Confirming if the user feels "logged in" from the database perspective
+ *
+ * Verifies the test user exists in the database. The app uses stateless JWT;
+ * there is no session table in @narada/types schema.
  */
 
 async function testAPIEndpoint() {
   console.log("\n=== TESTING API ENDPOINT ===\n");
 
   try {
-    // Find Kashyap's session
-    console.log("STEP 1: Looking for Kashyap's session...");
-    const kashyapSessions = await db
+    console.log("STEP 1: Checking user...");
+    const kashyapUser = await db
       .select()
-      .from(sessions)
-      .where(eq(sessions.sess, JSON.stringify({ passport: { user: "9d0262d8-d5b0-47fb-8464-76aa52a4672c" } })));
+      .from(users)
+      .where(eq(users.email, "kashyap.kuchipudi@gmail.com"));
 
-    if (kashyapSessions.length > 0) {
-      console.log(`✅ Found session: ${kashyapSessions[0].sid}`);
+    if (kashyapUser.length > 0) {
+      const user = kashyapUser[0];
+      console.log(`✅ Found user: ${user.firstName} ${user.lastName}`);
+      console.log(`   ID: ${user.id}`);
+      console.log(`   Email: ${user.email}`);
     } else {
-      console.log("⚠️  No exact session found, checking user...");
-
-      const kashyapUser = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, "kashyap.kuchipudi@gmail.com"));
-
-      if (kashyapUser.length > 0) {
-        const user = kashyapUser[0];
-        console.log(`✅ Found user: ${user.firstName} ${user.lastName}`);
-        console.log(`   ID: ${user.id}`);
-        console.log(`   Email: ${user.email}`);
-
-        // Get all sessions and filter by user ID in session data
-        const allSessions = await db.select().from(sessions);
-        console.log(`\n   Checking ${allSessions.length} sessions for user ID...`);
-
-        let foundSession = false;
-        for (const session of allSessions) {
-          try {
-            const sessData = JSON.parse(session.sess);
-            if (sessData.passport?.user === user.id) {
-              console.log(`✅ Found session for user: ${session.sid}`);
-              foundSession = true;
-              break;
-            }
-          } catch (e) {
-            // Invalid JSON, skip
-          }
-        }
-
-        if (!foundSession) {
-          console.log("❌ No active session found for Kashyap in database");
-          console.log("   User is likely logged in via browser session, not stored in DB");
-        }
-      }
+      console.log("⚠️  User not found");
     }
 
     console.log("\n✨ API should work if user is logged in via browser session");

@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { contentService } from '../../server/modules/content-publishing';
 import { mediaService } from '../../server/modules/media-pipeline/service';
 import { db } from '../../server/db';
-import { tracks, chapters, textSegments, audioFiles, mediaSegments, segmentMappings } from '../../shared/schema';
+import { tracks, chapters, textSegments, audioFiles, mediaSegments, segmentMappings } from '@narada/types';
 import { eq } from 'drizzle-orm';
 
 async function run() {
@@ -81,3 +81,4 @@ async function run() {
 }
 
 run();
+

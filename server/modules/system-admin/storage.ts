@@ -4,7 +4,7 @@
  */
 
 import { db } from '../../db';
-import { auditLogs, systemSettings, users, batches, tracks, chapters } from '@shared/schema';
+import { auditLogs, systemSettings, users, batches, tracks, chapters } from '@narada/types';
 import { eq, gte, lte, and, sql, desc } from 'drizzle-orm';
 
 export interface AuditLogFilter {

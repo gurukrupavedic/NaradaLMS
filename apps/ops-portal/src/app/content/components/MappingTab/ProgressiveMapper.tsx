@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MappingWarningDialog } from './components/MappingWarningDialog';
 import { useMappingControls } from '@shared/hooks/useMappingControls';
-import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
+import type { TextSegment, AudioMapping, Script, ContentMap } from '@narada/types';
 
 export interface MappingState {
     audioRef: React.RefObject<HTMLAudioElement>;

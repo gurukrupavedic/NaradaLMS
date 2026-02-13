@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Badge, cn } from '@narada/ui';
 import { Play, Square, MapPin, Zap, Moon, Sun } from 'lucide-react';
 import { AudioPlayerControls } from '@/components/common/AudioPlayerControls';
-import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
+import type { TextSegment, AudioMapping, Script, ContentMap } from '@narada/types';
 import { getSegmentText } from '@shared/utils/text-segmentation';
 
 interface FocusMappingViewProps {

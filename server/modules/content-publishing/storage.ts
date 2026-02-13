@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { tracks, chapters, textSegments, audioFiles, mediaSegments } from "../../../shared/schema";
+import { tracks, chapters, textSegments, audioFiles, mediaSegments } from "@narada/types";
 import { eq, and, asc, sql, max } from "drizzle-orm";
 
 /**

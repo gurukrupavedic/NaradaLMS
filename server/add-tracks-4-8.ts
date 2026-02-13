@@ -1,7 +1,7 @@
 // @ts-check
 import 'dotenv/config';
 import { db } from './db';
-import { users, tracks, chapters } from '../shared/schema';
+import { users, tracks, chapters } from '@narada/types';
 import { eq, or, and } from 'drizzle-orm';
 import newTracksData from './seeds/tracks-4-8.json';
 

@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { contentService } from '../../server/modules/content-publishing';
 import { mediaService } from '../../server/modules/media-pipeline/service';
 import { db } from '../../server/db';
-import { tracks } from '../../shared/schema';
+import { tracks } from '@narada/types';
 
 const unique = Date.now();
 
@@ -246,3 +246,4 @@ async function run() {
 }
 
 run();
+

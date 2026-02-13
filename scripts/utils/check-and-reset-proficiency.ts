@@ -5,7 +5,7 @@
  */
 
 import { db } from '../../server/db';
-import { studentProgress, enrollments, chapters } from '@shared/schema';
+import { studentProgress, enrollments, chapters } from '@narada/types';
 import { inArray } from 'drizzle-orm';
 
 async function checkAndResetProficiency() {
@@ -102,3 +102,4 @@ async function checkAndResetProficiency() {
 }
 
 checkAndResetProficiency();
+

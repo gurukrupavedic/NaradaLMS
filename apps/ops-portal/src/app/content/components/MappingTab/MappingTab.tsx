@@ -18,7 +18,7 @@ import { useAudioManagement } from '@/lib/content/hooks/useAudioManagement';
 import { useTextSegmentationEditor } from '@/lib/content/hooks/useTextSegmentationEditor';
 import { useAudioMapping } from '@/lib/content/hooks/useAudioMapping';
 import { useLocalStorage } from '@/hooks/content/useLocalStorage';
-import type { Script } from '@shared/types/text-segmentation';
+import type { Script } from '@narada/types';
 
 // Type transformation utility
 const toSimplifiedMapping = (dbMapping: any) => ({

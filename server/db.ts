@@ -4,8 +4,8 @@ import { Pool as PgPool } from 'pg';
 import { drizzle as drizzleNeon } from 'drizzle-orm/neon-serverless';
 import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
 import ws from "ws";
-import * as schema from "@shared/schema";
-import { DB_MAX_CONNECTIONS, DB_CONNECTION_TIMEOUT_MS } from "@shared/constants";
+import * as schema from "@narada/types";
+import { DB_MAX_CONNECTIONS, DB_CONNECTION_TIMEOUT_MS } from "@narada/types";
 import { config } from "./config";
 
 // Configure WebSocket for Neon in Node.js environment

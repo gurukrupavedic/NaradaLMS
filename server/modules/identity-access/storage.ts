@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { users } from "@shared/schema";
+import { users } from "@narada/types";
 import { eq, and } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 

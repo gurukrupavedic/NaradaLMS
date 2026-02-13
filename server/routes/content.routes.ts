@@ -6,7 +6,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { parseFile } from 'music-metadata';
-import { FILE_UPLOAD } from "../../shared/constants";
+import { FILE_UPLOAD } from "@narada/types";
 import { mediaService } from "../modules/media-pipeline";
 
 const router = Router();
