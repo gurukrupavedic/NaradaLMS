@@ -1,3 +1,4 @@
+/// <reference path="./types.d.ts" />
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 
@@ -68,7 +69,7 @@ const csrfProtection = csrf({
 // CSRF token endpoint - defined BEFORE middleware to avoid chicken-egg problem
 // This endpoint generates the initial CSRF token
 app.get('/api/csrf-token', csrfProtection, (req, res) => {
-  res.json({ csrfToken: req.csrfToken() });
+  res.json({ csrfToken: (req as Request & { csrfToken(): string }).csrfToken() });
 });
 
 // Apply CSRF middleware to all other routes (only validates on POST/PUT/DELETE/PATCH)

@@ -1,3 +1,4 @@
+import type { Request } from "express";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy, type Profile as GoogleProfile } from "passport-google-oauth20";
@@ -50,7 +51,8 @@ export function configurePassport() {
           passReqToCallback: true,
           proxy: true,
         },
-        async (_accessToken: string, _refreshToken: string, profile: GoogleProfile, done) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        async (req: Request, _accessToken: string, _refreshToken: string, _params: unknown, profile: GoogleProfile, done: (err: Error | null, user?: any, info?: { message?: string }) => void) => {
           try {
             const provider = "google";
             const providerId = profile.id;

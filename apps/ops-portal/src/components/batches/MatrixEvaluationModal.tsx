@@ -5,7 +5,6 @@ import React from 'react';
 import { AlertCircle, Loader } from 'lucide-react';
 
 import { Button } from '@narada/ui';
-// import { Separator } from '@narada/ui'; // Unused in original but kept if needed
 
 import {
     MatrixEvaluationModalProps,
@@ -31,18 +30,9 @@ export function MatrixEvaluationModal({
     isError = false,
     errorMessage = 'Failed to update proficiency',
 }: MatrixEvaluationModalProps) {
-    // Import useState locally since I can't add imports with replace_file_content easily without context
     const [notes, setNotes] = React.useState('');
 
-    // Pre-populate notes if available (need to update Props interface if we want to support editing existing notes)
-    // For now assuming new evaluation starts empty or we fetch it.
-    // Ideally we pass current notes in props. Let's stick to empty for new evaluation logic or add currentNotes prop later.
-
     const handleSelectLevel = async (level: ProficiencyLevel) => {
-        // Allow updating notes even if level is same? Usually yes.
-        // But the original check prevented close if same level.
-        // I'll relax the check or just pass it.
-
         try {
             await onUpdate(level, notes);
         } catch (error) {

@@ -136,7 +136,7 @@ export type Instructor = {
 
 export function useInstructors() {
     return useQuery<Instructor[]>({
-        queryKey: ["/api/auth/admin/users?role=instructor"],
+        queryKey: ["/auth/admin/users?role=instructor"],
         queryFn: async () => {
             // Re-using the admin users endpoint with role filtering if supported, 
             // or fetching all and filtering client side if the API text search usage implies limited filtering.

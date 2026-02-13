@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@narada/ui';
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { EnrichedTextSegment as TextSegment, Script, ContentMap } from '@narada/types';
-import { getDisplayText } from '@/lib/text-segmentation-utils';
+import { getDisplayText } from '@narada/types';
 
 interface SelectableTextPanelProps {
     content: ContentMap;

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button, Input, cn } from '@narada/ui';
 import { Play, Trash2, Check, X, Plus } from 'lucide-react';
-import { formatDuration } from '@shared/utils/text-segmentation';
+import { formatDuration } from '@narada/types';
 import type { AudioMapping } from '@narada/types';
 
 interface TimestampControlProps {

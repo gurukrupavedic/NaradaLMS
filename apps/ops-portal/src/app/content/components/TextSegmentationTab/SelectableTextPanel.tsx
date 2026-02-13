@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Button, cn } from '@narada/ui';
 import { Plus } from 'lucide-react';
 import type { TextSegment, Script, ContentMap } from '@narada/types';
-import { getDisplayText } from '@shared/utils/text-segmentation';
+import { getDisplayText } from '@narada/types';
 
 interface SelectableTextPanelProps {
     content: ContentMap;

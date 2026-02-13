@@ -1,4 +1,4 @@
-import jwt, { type JwtPayload } from 'jsonwebtoken';
+import jwt, { type JwtPayload, type SignOptions } from 'jsonwebtoken';
 import { config } from '../config';
 
 const JWT_SECRET = config.jwt.secret;
@@ -11,12 +11,14 @@ export interface JWTPayload extends JwtPayload {
   status: string;
 }
 
+const signOptions: SignOptions = {
+  expiresIn: JWT_EXPIRY,
+  algorithm: 'HS256',
+  issuer: 'narada-lms',
+} as SignOptions;
+
 export function generateToken(payload: JWTPayload): string {
-  return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRY,
-    algorithm: 'HS256', // Explicit algorithm
-    issuer: 'narada-lms',
-  });
+  return jwt.sign(payload, JWT_SECRET, signOptions);
 }
 
 export function verifyToken(token: string): JWTPayload | null {

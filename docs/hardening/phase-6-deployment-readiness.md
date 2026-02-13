@@ -2,7 +2,7 @@
 
 > **Objective**: Make the application deployable to a real environment where people other than you can test it. This includes environment configuration, Docker setup, build verification, and production safety checks.
 >
-> **Prerequisites**: Phases 0–5 completed and merged into `hardening`. You must be on the `hardening` branch.
+> **Prerequisites**: Phases 0–5 completed and merged into `hardening`. You must be on the `hardening` branch. **All build-blocking type errors must be resolved** (Phase 4 wrap-up and Phase 5 Task 5.8): root `npx tsc --noEmit`, student-portal build, and ops-portal build must pass, and `npm run verify` must pass. Phase 6 Task 6.4 (production build script) and Task 6.8 (final verification) depend on this.
 >
 > **Risk**: Low. This phase adds configuration; it doesn't change application logic.
 

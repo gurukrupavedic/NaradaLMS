@@ -28,6 +28,7 @@ export * from "./resizable";
 export * from "./scroll-area";
 export * from "./textarea";
 export * from "./alert-dialog";
+export * from "./student-progress";
 // Layout Components
 export * from "./layout/app-shell";
 export * from "./layout/app-sidebar";

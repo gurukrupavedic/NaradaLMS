@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
 import { Button, Card, CardContent, Skeleton, Separator } from '@narada/ui';
 
-import { StudentDetailsCard } from '@/components/dashboard/StudentDetailsCard';
-import { TrackList } from '@/components/dashboard/student-progress/TrackList';
+import { StudentDetailsCard, TrackList } from '@narada/ui';
 import { useMyDetails } from '@/hooks/useMyDetails';
 import { useMyTrackProgress } from '@/hooks/useMyTrackProgress';
 import type { ChapterProgress, TrackProgress } from '@narada/types';

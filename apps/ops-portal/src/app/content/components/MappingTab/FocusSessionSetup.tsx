@@ -18,8 +18,9 @@ import {
     cn
 } from '@narada/ui';
 import { ChevronsUpDown, Check, Plus, ArrowRight } from 'lucide-react';
-import type { TextSegment, AudioMapping, Script, ContentMap } from '@narada/types';
-import { getSegmentText } from '@shared/utils/text-segmentation';
+import type { AudioMapping, Script, ContentMap } from '@narada/types';
+import { getSegmentText } from '@narada/types';
+import type { SegmentForMapper } from './ProgressiveMapper';
 
 export interface SessionConfig {
     startSegmentId: number;
@@ -28,7 +29,7 @@ export interface SessionConfig {
 
 interface FocusSessionSetupProps {
     audioFiles: Array<{ id: number; filename: string; displayName?: string }>;
-    segments: TextSegment[];
+    segments: SegmentForMapper[];
     content: ContentMap;
     mappings: AudioMapping[];
     selectedAudioId: number | null;
@@ -66,7 +67,7 @@ export function FocusSessionSetup({
         });
     }, [segments, segmentSearchTerm, content, selectedScript]);
 
-    const getSmartStartSegmentId = React.useCallback((currentSegments: TextSegment[], currentMappings: AudioMapping[]) => {
+    const getSmartStartSegmentId = React.useCallback((currentSegments: SegmentForMapper[], currentMappings: AudioMapping[]) => {
         if (!currentSegments.length) return 0;
         const mappedIds = new Set(currentMappings.map(m => m.segmentId));
         const firstUnmapped = currentSegments.find(s => !mappedIds.has(s.id));
