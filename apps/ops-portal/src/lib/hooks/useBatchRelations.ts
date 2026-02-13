@@ -115,12 +115,12 @@ export function useDropEnrollment(batchId: number) {
     return useMutation({
         mutationFn: async ({ enrollmentId }: { enrollmentId: number }) => {
             return apiRequest(
-                `/api/enrollments/${enrollmentId}/drop`,
+                `/enrollments/${enrollmentId}/drop`,
                 { method: "PATCH" }
             );
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: [`/api/batches/${batchId}/enrollments`] });
+            qc.invalidateQueries({ queryKey: [`/batches/${batchId}/enrollments`] });
         },
     });
 }

@@ -16,7 +16,7 @@ export default function InstructorLayout({
 
     useEffect(() => {
         if (!isLoading && !user) {
-            window.location.href = "http://localhost:5000/login";
+            router.push("/");
             return;
         }
 

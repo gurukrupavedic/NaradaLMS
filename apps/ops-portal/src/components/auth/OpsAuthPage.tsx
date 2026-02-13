@@ -26,7 +26,11 @@ export function OpsAuthPage() {
     const { toast } = useToast();
 
     const handleGoogleLogin = () => {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!apiUrl) {
+            console.error('NEXT_PUBLIC_API_URL environment variable is not set');
+            return;
+        }
         window.location.href = `${apiUrl}/auth/google`;
     };
 
@@ -135,9 +139,18 @@ export function OpsAuthPage() {
 
                             // User has additional roles - allow access
                             queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
-                            // Force hard redirect to ensure fresh state/sidebar context
+                            // Redirect based on user's primary role (use userData from login response)
+                            const roles = userData?.roles || [];
                             setTimeout(() => {
-                                window.location.href = "/admin";
+                                if (roles.includes('admin')) {
+                                    window.location.href = "/admin";
+                                } else if (roles.includes('instructor')) {
+                                    window.location.href = "/instructor";
+                                } else if (roles.includes('content_manager')) {
+                                    window.location.href = "/content";
+                                } else {
+                                    window.location.href = "/admin";
+                                }
                             }, 500);
                         }}
                     />

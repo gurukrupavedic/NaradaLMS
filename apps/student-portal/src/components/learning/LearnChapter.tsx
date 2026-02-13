@@ -87,10 +87,16 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
   const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
   const [selectedAudioFileId, setSelectedAudioFileId] = useState<number | null>(null);
   const [selectedSegmentId, setSelectedSegmentId] = useState<number | undefined>(undefined);
-  const [learnMode, setLearnMode] = useState<boolean>(() => {
+  const [learnMode, setLearnMode] = useState<boolean>(true);
+
+  // Hydrate from localStorage on client mount
+  useEffect(() => {
     const stored = localStorage.getItem("study-learn-mode");
-    return stored ? JSON.parse(stored) : true;
-  });
+    if (stored !== null) {
+      setLearnMode(JSON.parse(stored));
+    }
+  }, []);
+
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   const scriptOptions = useMemo(() => ([
@@ -99,7 +105,19 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
     { value: "en" as const, label: "English (IAST)" },
   ]), []);
 
-  const previewAudioRef = useRef<HTMLAudioElement>(new Audio());
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize Audio on client mount
+  useEffect(() => {
+    previewAudioRef.current = new Audio();
+    return () => {
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+        previewAudioRef.current.src = '';
+        previewAudioRef.current = null;
+      }
+    };
+  }, []);
   const timeUpdateCleanupRef = useRef<(() => void) | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -156,24 +174,21 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
     hasTrackedAccessRef.current = true;
 
     // Pattern B
-    apiRequest('POST', `/learning/chapters/${chapterId}/access`, {})
+    apiRequest(`/learning/chapters/${chapterId}/access`, { method: 'POST' })
       .catch(() => { });
   }, [chapterId]);
 
   // Auto-select first audio file
   useEffect(() => {
-    if (audioFiles.length > 0 && !selectedAudioFileId) {
+    if (audioFiles.length > 0 && !selectedAudioFileId && previewAudioRef.current) {
       setSelectedAudioFileId(audioFiles[0].id);
-      if (previewAudioRef.current) {
-        previewAudioRef.current.src = `/uploads/${audioFiles[0].filename}`;
-      }
+      previewAudioRef.current.src = `/uploads/${audioFiles[0].filename}`;
     }
   }, [audioFiles, selectedAudioFileId]);
 
   // Audio event listeners
   useEffect(() => {
     const audio = previewAudioRef.current;
-
     if (!audio) return;
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
@@ -193,7 +208,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
 
   // Handle audio file change
   useEffect(() => {
-    if (selectedAudioFileId) {
+    if (selectedAudioFileId && previewAudioRef.current) {
       const audioFile = audioFiles.find(f => f.id === selectedAudioFileId);
       if (audioFile) {
         previewAudioRef.current.src = `/uploads/${audioFile.filename}`;
@@ -225,6 +240,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
     }
 
     const audio = previewAudioRef.current;
+    if (!audio) return;
 
     const playSegment = () => {
       audio.currentTime = mapping.startTime;
@@ -250,10 +266,10 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
 
     if (selectedAudioFileId !== mapping.audioFileId) {
       const audioFile = audioFiles.find((f) => f.id === mapping.audioFileId);
-      if (audioFile) {
-        audio.src = `/uploads/${audioFile.filename}`;
+      if (audioFile && previewAudioRef.current) {
+        previewAudioRef.current.src = `/uploads/${audioFile.filename}`;
         setSelectedAudioFileId(mapping.audioFileId);
-        audio.addEventListener("loadedmetadata", () => playSegment(), { once: true });
+        previewAudioRef.current.addEventListener("loadedmetadata", () => playSegment(), { once: true });
       }
     } else {
       playSegment();
@@ -402,16 +418,22 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
                     currentTime={currentTime}
                     duration={duration}
                     onPlay={() => {
-                      previewAudioRef.current.play().catch(console.error);
-                      setIsPlaying(true);
+                      if (previewAudioRef.current) {
+                        previewAudioRef.current.play().catch(console.error);
+                        setIsPlaying(true);
+                      }
                     }}
                     onPause={() => {
-                      previewAudioRef.current.pause();
-                      setIsPlaying(false);
+                      if (previewAudioRef.current) {
+                        previewAudioRef.current.pause();
+                        setIsPlaying(false);
+                      }
                     }}
                     onSeek={(time) => {
-                      previewAudioRef.current.currentTime = time;
-                      setCurrentTime(time);
+                      if (previewAudioRef.current) {
+                        previewAudioRef.current.currentTime = time;
+                        setCurrentTime(time);
+                      }
                     }}
                     showSkipButtons={false}
                     showPlaybackRate={true}
