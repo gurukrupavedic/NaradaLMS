@@ -18,6 +18,10 @@
     "db:reset": "powershell -ExecutionPolicy Bypass -File scripts/test/db-reset.ps1",
     "auth:test": "tsx scripts/test/auth-test.ts",
     "smoke:batches": "tsx tests/admin-batches-smoke.ts",
+    "test:smoke": "tsx scripts/test/api-smoke-test.ts",
+    "test:content": "tsx scripts/test/content-smoke.ts",
+    "test:build": "powershell -ExecutionPolicy Bypass -File scripts/test/build-check.ps1",
+    "verify": "powershell -ExecutionPolicy Bypass -File scripts/test/verify.ps1",
     "lint": "eslint ."
   },
   "dependencies": {
