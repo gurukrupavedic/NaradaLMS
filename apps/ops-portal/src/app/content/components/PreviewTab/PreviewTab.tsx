@@ -21,6 +21,7 @@ interface PreviewTabProps {
     learnMode: boolean;
     selectedAudioFileId: number | null;
     onAudioFileChange: (id: number) => void;
+    audioFiles: Array<{ id: number; filename: string; displayName?: string }>;
 }
 
 interface TextSegment {
@@ -40,7 +41,7 @@ interface AudioTextMapping {
     endTime: number;
 }
 
-export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }: PreviewTabProps) {
+export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange, audioFiles }: PreviewTabProps) {
     const { chapter, chapterId } = useChapterEditor();
     const { playSegment, setAudioSource } = useAudioPlayer();
 
@@ -48,23 +49,19 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
     const [selectedSegmentId, setSelectedSegmentId] = useState<number | undefined>(undefined);
     const [isFullScreen, setIsFullScreen] = useState(false);
 
-    const { data: textSegments = [] } = useQuery<TextSegment[]>({
-        queryKey: [`/content/chapters/${chapterId}/segments/${contentScript}`],
-        queryFn: () => apiRequest<TextSegment[]>(`/content/chapters/${chapterId}/segments/${contentScript}`, { method: 'GET' }),
+    const { data: rawTextSegments } = useQuery<TextSegment[]>({
+        queryKey: [`/content/chapters/${chapterId}/segments/${contentScript}`], // Keep key for caching
+        queryFn: () => apiRequest<TextSegment[]>(`/content/segments/${chapterId}/${contentScript}`, { method: 'GET' }), // Fix API path
         enabled: !!chapterId && learnMode,
     });
+    const textSegments = Array.isArray(rawTextSegments) ? rawTextSegments : [];
 
-    const { data: audioFiles = [] } = useQuery<Array<{ id: number; filename: string; displayName?: string }>>({
-        queryKey: [`/content/chapters/${chapterId}/audio`],
-        queryFn: () => apiRequest<Array<{ id: number; filename: string; displayName?: string }>>(`/content/chapters/${chapterId}/audio`, { method: 'GET' }),
-        enabled: !!chapterId,
-    });
-
-    const { data: mappings = [] } = useQuery<AudioTextMapping[]>({
+    const { data: rawMappings } = useQuery<AudioTextMapping[]>({
         queryKey: [`/content/chapters/${chapterId}/mappings`],
         queryFn: () => apiRequest<AudioTextMapping[]>(`/content/chapters/${chapterId}/mappings`, { method: 'GET' }),
         enabled: !!chapterId && learnMode,
     });
+    const mappings = Array.isArray(rawMappings) ? rawMappings : [];
 
     useEffect(() => {
         if (audioFiles.length > 0 && !selectedAudioFileId) {
@@ -72,6 +69,7 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
             setAudioSource(`/uploads/${audioFiles[0].filename}`);
         }
     }, [audioFiles, selectedAudioFileId, onAudioFileChange, setAudioSource]);
+
 
     useEffect(() => {
         if (selectedAudioFileId) {
@@ -167,16 +165,9 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
                         </Badge>
                     )}
                 </div>
-                <button
-                    onClick={toggleFullScreen}
-                    className="absolute right-4 text-muted-foreground hover:text-foreground p-1"
-                    title={isFullScreen ? "Exit Fullscreen" : "Fullscreen"}
-                >
-                    {isFullScreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-                </button>
             </div>
 
-            <div className="flex-1 min-h-0 border border-border bg-card overflow-hidden relative rounded-b-lg">
+            <div className="flex-1 min-h-0 border border-border border-y-0 bg-card overflow-hidden relative">
                 {chapter?.content?.[contentScript] ? (
                     <SelectableTextPanel
                         content={chapter.content}
@@ -192,6 +183,17 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange }
                         <p>No content available for this script</p>
                     </div>
                 )}
+            </div>
+
+            <div className="border border-border border-t-0 rounded-b-lg bg-background min-h-[2.5rem] flex items-center px-4 py-1">
+                <button
+                    onClick={toggleFullScreen}
+                    className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    title={isFullScreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                >
+                    {isFullScreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                    <span>{isFullScreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
+                </button>
             </div>
         </div>
     );

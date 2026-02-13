@@ -4,6 +4,7 @@ import { FilePenLine, Scissors, Music } from 'lucide-react';
 import { AudioPlayerControls } from '@/components/common/AudioPlayerControls';
 import { useChapterEditor } from '@/lib/content/context/ChapterEditorContext';
 import { useChapterMetadata } from '@/lib/content/hooks/useChapterMetadata';
+import { useAudioPlayer } from '@/lib/content/context/AudioPlayerContext';
 
 interface ChapterHeaderProps {
     activeTab: string;
@@ -16,14 +17,6 @@ interface ChapterHeaderProps {
     audioFiles?: Array<{ id: number; filename: string; displayName?: string }>;
     selectedAudioFileId?: number | null;
     onAudioFileChange?: (audioFileId: number) => void;
-
-    // Audio player props (from AudioPlayerContext)
-    isPlaying?: boolean;
-    currentTime?: number;
-    duration?: number;
-    onPlay?: () => void;
-    onPause?: () => void;
-    onSeek?: (time: number) => void;
 }
 
 export function ChapterHeader({
@@ -36,14 +29,22 @@ export function ChapterHeader({
     audioFiles = [],
     selectedAudioFileId,
     onAudioFileChange,
-    isPlaying,
-    currentTime,
-    duration,
-    onPlay,
-    onPause,
-    onSeek,
 }: ChapterHeaderProps) {
     const { chapter, isLoading } = useChapterEditor();
+    const audioPlayer = useAudioPlayer();
+
+    // Destructure audio player state
+    const {
+        isPlaying,
+        currentTime,
+        duration,
+        playbackRate,
+        play: onPlay,
+        pause: onPause,
+        seek: onSeek,
+        setPlaybackRate
+    } = audioPlayer;
+
     const {
         isPublished,
         showUnpublishConfirm,
@@ -127,9 +128,11 @@ export function ChapterHeader({
                                             isPlaying={isPlaying}
                                             currentTime={currentTime}
                                             duration={duration}
+                                            playbackRate={playbackRate}
                                             onPlay={onPlay}
                                             onPause={onPause}
                                             onSeek={onSeek}
+                                            onPlaybackRateChange={setPlaybackRate}
                                             showSkipButtons={false}
                                             showPlaybackRate={true}
                                             className="w-72 border-0 shadow-none bg-transparent p-0 gap-2"

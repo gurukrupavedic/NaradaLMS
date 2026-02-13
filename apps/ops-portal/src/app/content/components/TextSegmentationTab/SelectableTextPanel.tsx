@@ -121,7 +121,7 @@ export function SelectableTextPanel({
             return <div className="whitespace-pre-wrap">{plainText || ''}</div>;
         }
 
-        const sortedSegments = [...segments].sort((a, b) => a.startPosition - b.startPosition);
+        const sortedSegments = [...(segments || [])].sort((a, b) => a.startPosition - b.startPosition);
         const parts: React.ReactNode[] = [];
         let lastEnd = 0;
 

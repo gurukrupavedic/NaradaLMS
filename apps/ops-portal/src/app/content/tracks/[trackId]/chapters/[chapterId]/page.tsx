@@ -12,6 +12,7 @@ import { ChapterHeader } from '@/app/content/components/ChapterHeader/ChapterHea
 import { TextSegmentationTab } from '@/app/content/components/TextSegmentationTab/TextSegmentationTab';
 import { MappingTab } from '@/app/content/components/MappingTab/MappingTab';
 import { PreviewTab } from '@/app/content/components/PreviewTab/PreviewTab';
+import { useAudioManagement } from '@/lib/content/hooks/useAudioManagement';
 
 export default function ChapterContentPage() {
     // Role guard - only content managers can access this page
@@ -31,7 +32,7 @@ export default function ChapterContentPage() {
 }
 
 function ChapterContentPageContent() {
-    const { isLoading, error } = useChapterEditor();
+    const { isLoading, error, chapterId } = useChapterEditor();
     const [activeTab, setActiveTab] = useState('text-segmentation');
     const [textSegMode, setTextSegMode] = useState<'editor' | 'segmentation'>('editor');
     const router = useRouter();
@@ -39,6 +40,8 @@ function ChapterContentPageContent() {
     // Preview tab state
     const [learnMode, setLearnMode] = useState(false);
     const [selectedAudioFileId, setSelectedAudioFileId] = useState<number | null>(null);
+
+    const { audioFiles } = useAudioManagement(chapterId);
 
     // Loading state
     if (isLoading) {
@@ -85,6 +88,8 @@ function ChapterContentPageContent() {
                         learnMode={learnMode}
                         onLearnModeChange={setLearnMode}
                         selectedAudioFileId={selectedAudioFileId}
+                        onAudioFileChange={setSelectedAudioFileId}
+                        audioFiles={audioFiles}
                     />
 
                     {/* Tabs Content Area */}
@@ -103,6 +108,7 @@ function ChapterContentPageContent() {
                                 learnMode={learnMode}
                                 selectedAudioFileId={selectedAudioFileId}
                                 onAudioFileChange={setSelectedAudioFileId}
+                                audioFiles={audioFiles}
                             />
                         </TabsContent>
                     </div>
