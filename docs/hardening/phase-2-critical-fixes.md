@@ -463,19 +463,31 @@ setTimeout(() => {
 
 ## Phase 2 Completion Checklist
 
-- [ ] SSR crash: `localStorage` access guarded
-- [ ] SSR crash: `new Audio()` guarded with cleanup
-- [ ] Wrong `apiRequest` call signature fixed in LearnChapter
-- [ ] `useDropEnrollment` double `/api/` prefix fixed
-- [ ] `QueryClient` SSR leak fixed in ops portal
-- [ ] `useAuth` error handling improved in both portals
-- [ ] Hardcoded `localhost:5000` redirects replaced with `router.push("/")`
-- [ ] Google OAuth URL made environment-driven
-- [ ] `.env.local` and `.env.example` files created for both portals
-- [ ] Post-login redirect in ops portal is role-aware
-- [ ] `npm run verify` passes
-- [ ] Both portals build and function correctly
-- [ ] All work committed on `hardening-phase-2`
+- [x] SSR crash: `localStorage` access guarded
+- [x] SSR crash: `new Audio()` guarded with cleanup
+- [x] Wrong `apiRequest` call signature fixed in LearnChapter
+- [x] `useDropEnrollment` double `/api/` prefix fixed
+- [x] `QueryClient` SSR leak fixed in ops portal
+- [x] `useAuth` error handling improved in both portals
+- [x] Hardcoded `localhost:5000` redirects replaced with `router.push("/")`
+- [x] Google OAuth URL made environment-driven
+- [x] `.env.local` and `.env.example` files created for both portals
+- [x] Post-login redirect in ops portal is role-aware
+- [ ] `npm run verify` passes *(blocked by pre-existing `@narada/ui` type errors — see Phase 4 Task 4.7)*
+- [ ] Both portals build and function correctly *(same blocker)*
+- [x] All work committed on `hardening-phase-2`
+
+---
+
+## Post-Phase 2: Follow-ups for Later Phases
+
+These do not block Phase 2 completion; they are documented so later phases run smoothly.
+
+1. **Ops portal queryKeys**: `useInstructors` and `useSearchStudents` use queryKeys with a leading `/api/` (e.g. `["/api/auth/admin/users?role=instructor"]`). The actual `apiRequest()` calls are correct (no double prefix). The queryKey is cosmetic only; Phase 4 Task 4.5 will clean these up for consistency.
+
+2. **`@narada/ui` build blocker**: `SidebarMenuButton` in `packages/ui/src/components/sidebar.tsx` uses `variant` and `size` props but they are not declared on the component's type. This causes `npx tsc --noEmit` and portal builds to fail. Phase 4 Task 4.7 includes fixing this (add `variant?: string` and `size?: string` to the component's props type).
+
+3. **Next.js rewrites**: `apps/ops-portal/next.config.ts` (and similar) may hardcode `localhost:5000` for dev proxies. Phase 6 addresses environment-driven configuration.
 
 ---
 
@@ -490,4 +502,4 @@ git tag hardening-phase-2-complete   # optional
 git push origin hardening --tags    # if using a remote
 ```
 
-Proceed to [Phase 3](phase-3-server-hardening.md) or [Phase 4](phase-4-portal-refactoring.md): create `hardening-phase-3` or `hardening-phase-4` from `hardening` when starting the next phase.
+**Phase 2 complete.** Proceed to [Phase 3](phase-3-server-hardening.md) or [Phase 4](phase-4-portal-refactoring.md): create `hardening-phase-3` or `hardening-phase-4` from `hardening` when starting the next phase.
