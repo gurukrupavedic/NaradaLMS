@@ -14,12 +14,16 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 
 /**
  * Role guard using the roles array attached to req.user by Passport.
- * Fails with 403 when none of the required roles are present.
+ * Fails with 401 when no user; 403 when none of the required roles are present.
  */
 export const requireRole = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as Express.User | undefined;
-    const userRoles = user?.roles ?? [];
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized - missing or invalid token" });
+    }
+
+    const userRoles = user.roles ?? [];
     const allowed = roles.length === 0 || roles.some((role) => userRoles.includes(role));
 
     if (!allowed) {
@@ -30,6 +34,7 @@ export const requireRole = (...roles: string[]) => {
   };
 };
 
+// Role hierarchy: admin has access to everything
 export const requireAdmin = requireRole("admin");
-export const requireInstructor = requireRole("instructor");
-export const requireContentManager = requireRole("content_manager");
+export const requireInstructor = requireRole("instructor", "admin");
+export const requireContentManager = requireRole("content_manager", "admin");

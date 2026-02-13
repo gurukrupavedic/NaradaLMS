@@ -86,8 +86,27 @@ app.use((req, res, next) => {
 configurePassport();
 app.use(passport.initialize());
 
+// Request Logger (must be before routes)
+app.use((req, res, next) => {
+  const start = Date.now();
+  const path = req.path;
+  let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
+  const originalResJson = res.json;
+  res.json = function (bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
 
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (path.startsWith("/api")) {
+      Logger.http(req.method, path, res.statusCode, duration);
+    }
+  });
+
+  next();
+});
 
 // Serve uploaded files (audio, etc.)
 app.use('/uploads', express.static('uploads'));
@@ -116,27 +135,6 @@ app.use('/api', studentRouter);
 
 import { learningRouter } from "./routes/learning.routes";
 app.use('/api/learning', learningRouter);
-
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      Logger.http(req.method, path, res.statusCode, duration);
-    }
-  });
-
-  next();
-});
 
 (async () => {
   // Initialize System Admin module

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { learningService } from "../modules/learning-delivery";
 import { jwtAuth } from "../middleware/jwt-auth.middleware";
-import { requireInstructor } from "../middleware/role-auth.middleware";
+import { requireInstructor } from "../shared/middleware/auth";
 import { catchAsync } from "../utils/catchAsync";
 import { AppError } from "../utils/AppError";
 
@@ -25,13 +25,10 @@ router.get('/students/:studentId/progress', requireInstructor, catchAsync(async 
   const isInstructorOrAdmin = true;
 
   const studentId = req.params.studentId;
-  console.log(`[DEBUG] GET /students/${studentId}/progress - Requesting User: ${user.id}`);
 
   const studentDetails = await learningService.getStudentDetails(user.id, studentId, isInstructorOrAdmin);
-  console.log(`[DEBUG] Result for ${studentId}:`, studentDetails ? 'Found' : 'NULL');
 
   if (!studentDetails) {
-    console.log(`[DEBUG] Student details not found for ID: ${studentId}`);
     throw new AppError('Student not found or you do not have access', 404);
   }
 
