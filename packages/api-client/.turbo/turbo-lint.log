@@ -1,0 +1,11 @@
+
+> @narada/api-client@0.0.0 lint
+> eslint .
+
+
+C:\Users\kashy\Projects\NaradaLMS\packages\api-client\src\index.ts
+   83:18  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+  118:14  warning  'e' is defined but never used. Allowed unused caught errors must match /^_/u      @typescript-eslint/no-unused-vars
+
+✖ 2 problems (0 errors, 2 warnings)
+

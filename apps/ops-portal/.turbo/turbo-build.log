@@ -1,0 +1,29 @@
+
+> ops-portal@0.1.0 build
+> next build
+
+   ▲ Next.js 15.1.6
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./src/app/instructor/students/[id]/page.tsx:17:53
+Type error: Cannot find module '../../../../../../shared/types' or its corresponding type declarations.
+
+[0m [90m 15 |[39m [36mimport[39m { [33mMatrixEvaluationModal[39m } [36mfrom[39m [32m"@/components/batches/MatrixEvaluationModal"[39m[33m;[39m[0m
+[0m [90m 16 |[39m [36mimport[39m { [33mProficiencyLevel[39m[33m,[39m [33mChapter[39m[33m,[39m [33mStudentMatrixRow[39m } [36mfrom[39m [32m"@/components/batches/types"[39m[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 17 |[39m [36mimport[39m type { [33mChapterProgress[39m[33m,[39m [33mTrackProgress[39m } [36mfrom[39m [32m"../../../../../../shared/types"[39m[33m;[39m[0m
+[0m [90m    |[39m                                                     [31m[1m^[22m[39m[0m
+[0m [90m 18 |[39m[0m
+[0m [90m 19 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mStudentProgressPage[39m() {[0m
+[0m [90m 20 |[39m     [36mconst[39m params [33m=[39m useParams()[33m;[39m[0m
+Static worker exited with code: 1 and signal: null
+npm error Lifecycle script `build` failed with error:
+npm error code 1
+npm error path C:\Users\kashy\Projects\NaradaLMS\apps\ops-portal
+npm error workspace ops-portal@0.1.0
+npm error location C:\Users\kashy\Projects\NaradaLMS\apps\ops-portal
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c next build

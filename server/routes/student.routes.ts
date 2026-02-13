@@ -25,9 +25,13 @@ router.get('/students/:studentId/progress', requireInstructor, catchAsync(async 
   const isInstructorOrAdmin = true;
 
   const studentId = req.params.studentId;
+  console.log(`[DEBUG] GET /students/${studentId}/progress - Requesting User: ${user.id}`);
+
   const studentDetails = await learningService.getStudentDetails(user.id, studentId, isInstructorOrAdmin);
+  console.log(`[DEBUG] Result for ${studentId}:`, studentDetails ? 'Found' : 'NULL');
 
   if (!studentDetails) {
+    console.log(`[DEBUG] Student details not found for ID: ${studentId}`);
     throw new AppError('Student not found or you do not have access', 404);
   }
 

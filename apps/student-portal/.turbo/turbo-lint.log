@@ -1,0 +1,27 @@
+
+> student-portal@0.1.0 lint
+> eslint
+
+
+Oops! Something went wrong! :(
+
+ESLint: 9.39.2
+
+TypeError: sharedConfig is not iterable
+    at file:///C:/Users/kashy/Projects/NaradaLMS/apps/student-portal/eslint.config.mjs?mtime=1770058100496:5:6
+    at ModuleJob.run (node:internal/modules/esm/module_job:274:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26)
+    at async dynamicImportConfig (C:\Users\kashy\Projects\NaradaLMS\node_modules\eslint\lib\config\config-loader.js:186:17)
+    at async loadConfigFile (C:\Users\kashy\Projects\NaradaLMS\node_modules\eslint\lib\config\config-loader.js:276:9)
+    at async ConfigLoader.calculateConfigArray (C:\Users\kashy\Projects\NaradaLMS\node_modules\eslint\lib\config\config-loader.js:589:23)
+    at async #calculateConfigArray (C:\Users\kashy\Projects\NaradaLMS\node_modules\eslint\lib\config\config-loader.js:743:23)
+    at async entryFilter (C:\Users\kashy\Projects\NaradaLMS\node_modules\eslint\lib\eslint\eslint-helpers.js:322:5)
+    at async NodeHfs.<anonymous> (file:///C:/Users/kashy/Projects/NaradaLMS/node_modules/@humanfs/core/src/hfs.js:574:24)
+    at async NodeHfs.walk (file:///C:/Users/kashy/Projects/NaradaLMS/node_modules/@humanfs/core/src/hfs.js:614:3)
+npm error Lifecycle script `lint` failed with error:
+npm error code 2
+npm error path C:\Users\kashy\Projects\NaradaLMS\apps\student-portal
+npm error workspace student-portal@0.1.0
+npm error location C:\Users\kashy\Projects\NaradaLMS\apps\student-portal
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c eslint

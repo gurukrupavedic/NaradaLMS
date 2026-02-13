@@ -1,0 +1,200 @@
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+    Badge,
+    cn,
+    TiptapEditor
+} from '@narada/ui';
+import { StretchHorizontal, Zap, Maximize, Minimize } from 'lucide-react';
+import { apiRequest } from '@/lib/api';
+
+import { SelectableTextPanel } from '../TextSegmentationTab/SelectableTextPanel';
+import { useChapterEditor } from '@/lib/content/context/ChapterEditorContext';
+import { useAudioPlayer } from '@/lib/content/context/AudioPlayerContext';
+
+interface PreviewTabProps {
+    learnMode: boolean;
+    selectedAudioFileId: number | null;
+    onAudioFileChange: (id: number) => void;
+    audioFiles: Array<{ id: number; filename: string; displayName?: string }>;
+}
+
+interface TextSegment {
+    id: number;
+    chapterId: number;
+    script: string;
+    startPosition: number;
+    endPosition: number;
+    order: number;
+}
+
+interface AudioTextMapping {
+    mappingId: number;
+    audioFileId: number;
+    textSegmentId: number;
+    startTime: number;
+    endTime: number;
+}
+
+export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange, audioFiles }: PreviewTabProps) {
+    const { chapter, chapterId } = useChapterEditor();
+    const { playSegment, setAudioSource } = useAudioPlayer();
+
+    const [contentScript, setContentScript] = useState<'te' | 'hi' | 'en'>('te');
+    const [selectedSegmentId, setSelectedSegmentId] = useState<number | undefined>(undefined);
+    const [isFullScreen, setIsFullScreen] = useState(false);
+
+    const { data: rawTextSegments } = useQuery<TextSegment[]>({
+        queryKey: [`/content/chapters/${chapterId}/segments/${contentScript}`], // Keep key for caching
+        queryFn: () => apiRequest<TextSegment[]>(`/content/segments/${chapterId}/${contentScript}`, { method: 'GET' }), // Fix API path
+        enabled: !!chapterId && learnMode,
+    });
+    const textSegments = Array.isArray(rawTextSegments) ? rawTextSegments : [];
+
+    const { data: rawMappings } = useQuery<AudioTextMapping[]>({
+        queryKey: [`/content/chapters/${chapterId}/mappings`],
+        queryFn: () => apiRequest<AudioTextMapping[]>(`/content/chapters/${chapterId}/mappings`, { method: 'GET' }),
+        enabled: !!chapterId && learnMode,
+    });
+    const mappings = Array.isArray(rawMappings) ? rawMappings : [];
+
+    useEffect(() => {
+        if (audioFiles.length > 0 && !selectedAudioFileId) {
+            onAudioFileChange(audioFiles[0].id);
+            setAudioSource(`/uploads/${audioFiles[0].filename}`);
+        }
+    }, [audioFiles, selectedAudioFileId, onAudioFileChange, setAudioSource]);
+
+
+    useEffect(() => {
+        if (selectedAudioFileId) {
+            const audioFile = audioFiles.find(f => f.id === selectedAudioFileId);
+            if (audioFile) {
+                setAudioSource(`/uploads/${audioFile.filename}`);
+            }
+        }
+    }, [selectedAudioFileId, audioFiles, setAudioSource]);
+
+    const handleSegmentClick = useCallback((segmentId: number | undefined) => {
+        if (segmentId === undefined) {
+            setSelectedSegmentId(undefined);
+            return;
+        }
+        const mapping = mappings.find(m => m.textSegmentId === segmentId);
+        if (mapping) {
+            playSegment(mapping.startTime, mapping.endTime);
+            setSelectedSegmentId(segmentId);
+        }
+    }, [mappings, playSegment]);
+
+    const mappedCount = useMemo(() => {
+        if (!selectedAudioFileId || !mappings.length) return 0;
+        const currentAudioMappings = mappings.filter(m => m.audioFileId === selectedAudioFileId);
+        return textSegments.filter(seg =>
+            currentAudioMappings.some(m => m.textSegmentId === seg.id)
+        ).length;
+    }, [textSegments, mappings, selectedAudioFileId]);
+
+    const scriptOptions = [
+        { value: 'te' as const, label: 'Telugu' },
+        { value: 'hi' as const, label: 'Devanagari (Hindi)' },
+        { value: 'en' as const, label: 'English (IAST)' },
+    ];
+
+    const toggleFullScreen = useCallback(() => {
+        setIsFullScreen(prev => !prev);
+    }, []);
+
+    if (!learnMode) {
+        return (
+            <div className={cn("h-full flex flex-col", { "fixed inset-0 z-50 bg-background": isFullScreen })}>
+                <div className="flex-1 overflow-hidden">
+                    <TiptapEditor
+                        content={chapter?.content?.[contentScript] || ''}
+                        onChange={() => { }}
+                        disabled={true}
+                        output="html"
+                        language={contentScript}
+                        currentScript={contentScript}
+                        onScriptChange={setContentScript}
+                        className="h-full"
+                        maxHeight="100%"
+                        minHeight="100%"
+                    />
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className={cn("h-full flex flex-col bg-background", { "fixed inset-0 z-50": isFullScreen })}>
+            <div className="border border-border border-b-0 rounded-t-lg bg-muted min-h-[2.75rem] flex items-center justify-center gap-6 px-4 py-0.5 relative">
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">Script:</span>
+                    <Select
+                        value={contentScript}
+                        onValueChange={(value) => setContentScript(value as typeof contentScript)}
+                    >
+                        <SelectTrigger className="h-7 w-40 text-xs bg-background border border-border">
+                            <SelectValue placeholder="Script" />
+                        </SelectTrigger>
+                        <SelectContent className="text-sm">
+                            {scriptOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <Badge variant="secondary" className="flex items-center gap-1 h-6 bg-orange-50 text-orange-700 border-orange-100">
+                        <StretchHorizontal className="h-3 w-3 fill-orange-500 text-orange-600" />
+                        {textSegments.length} segments
+                    </Badge>
+                    {audioFiles.length > 0 && (
+                        <Badge variant="secondary" className="flex items-center gap-1 h-6 bg-blue-50 text-blue-700 border-blue-100">
+                            <Zap className="h-3 w-3 fill-blue-500 text-blue-600" />
+                            {mappedCount} mapped
+                        </Badge>
+                    )}
+                </div>
+            </div>
+
+            <div className="flex-1 min-h-0 border border-border border-y-0 bg-card overflow-hidden relative">
+                {chapter?.content?.[contentScript] ? (
+                    <SelectableTextPanel
+                        content={chapter.content}
+                        script={contentScript}
+                        segments={textSegments}
+                        selectedSegmentId={selectedSegmentId}
+                        onSegmentSelect={handleSegmentClick}
+                        onCreateSegment={() => { }}
+                        disabled={true}
+                    />
+                ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                        <p>No content available for this script</p>
+                    </div>
+                )}
+            </div>
+
+            <div className="border border-border border-t-0 rounded-b-lg bg-background min-h-[2.5rem] flex items-center px-4 py-1">
+                <button
+                    onClick={toggleFullScreen}
+                    className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    title={isFullScreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                >
+                    {isFullScreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                    <span>{isFullScreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
+                </button>
+            </div>
+        </div>
+    );
+}

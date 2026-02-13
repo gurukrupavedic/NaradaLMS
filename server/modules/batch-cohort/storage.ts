@@ -665,9 +665,11 @@ export class BatchStorage {
         firstName: users.firstName,
         lastName: users.lastName,
         email: users.email,
+        batchId: batches.id,
         batchCode: batches.batchCode,
         batchName: batches.batchName,
         enrolledAt: enrollments.enrolledAt,
+        status: enrollments.status,
       })
       .from(enrollments)
       .innerJoin(users, eq(users.id, enrollments.studentId))

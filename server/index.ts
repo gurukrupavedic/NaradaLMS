@@ -37,7 +37,17 @@ app.use(helmet({
   },
 }));
 app.use(cors({
-  origin: config.frontendUrl || true,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    // Check strict whitelist
+    if (config.corsOrigins.includes(origin) || origin === config.frontendUrl) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
@@ -52,7 +62,7 @@ const csrfProtection = csrf({
   cookie: {
     httpOnly: true,
     secure: config.env === 'production',
-    sameSite: 'strict'
+    sameSite: config.env === 'production' ? 'strict' : 'lax'
   }
 });
 

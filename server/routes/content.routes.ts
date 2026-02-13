@@ -531,8 +531,8 @@ const upload = multer({
   dest: uploadsDir,
   limits: { fileSize: FILE_UPLOAD.maxSize },
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype.startsWith('audio/')) cb(null, true);
-    else cb(new Error('Only audio files are allowed'));
+    if (file.mimetype.startsWith('audio/') || file.mimetype.startsWith('video/')) cb(null, true);
+    else cb(new Error('Only audio and video files are allowed'));
   },
 });
 
