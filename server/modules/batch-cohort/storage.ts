@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { eq, sql, and, inArray, or, getTableColumns } from "drizzle-orm";
-import { batches, enrollments, batchCoInstructors, users, tracks, studentProgress, chapters, proficiencyEvaluationLog } from "@shared/schema";
+import { batches, enrollments, batchCoInstructors, users, tracks, studentProgress, chapters, proficiencyEvaluationLog } from "@narada/types";
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput } from "./types";
 
 export class BatchStorage {

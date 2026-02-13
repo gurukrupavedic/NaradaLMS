@@ -9,7 +9,7 @@
  * @since 2025-06-24
  */
 
-import { performanceMonitor } from '@shared/monitoring/PerformanceMonitor';
+import { performanceMonitor } from '../../shared/monitoring/PerformanceMonitor';
 
 interface QueryMetrics {
   operation: string;

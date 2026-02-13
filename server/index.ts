@@ -3,8 +3,7 @@ import express, { type Request, Response, NextFunction } from "express";
 
 import passport from "passport";
 import { createServer } from "http";
-import { setupVite, serveStatic } from "./vite";
-import { LOG_TRUNCATE_LENGTH, DEFAULT_ERROR_STATUS } from "@shared/constants";
+import { LOG_TRUNCATE_LENGTH, DEFAULT_ERROR_STATUS } from "@narada/types";
 import path from "path";
 import { configurePassport } from "./auth/passport-config";
 import { identityRouter } from "./routes/identity.routes";
@@ -150,14 +149,8 @@ app.use((req, res, next) => {
   // Replace custom inline error handler with standardized middleware
   app.use(errorHandler);
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (config.env === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+  // No more Vite SPA serving — the API server is a pure API now.
+  // Portals are served separately via Next.js.
 
   const port = config.port;
   server.listen(port, "127.0.0.1", () => {

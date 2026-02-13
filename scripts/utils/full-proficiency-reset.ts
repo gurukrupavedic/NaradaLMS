@@ -5,7 +5,7 @@
  */
 
 import { db } from '../../server/db';
-import { studentProgress, users, chapters } from '@shared/schema';
+import { studentProgress, users, chapters } from '@narada/types';
 import { sql } from 'drizzle-orm';
 
 async function fullProficiencyReset() {
@@ -107,3 +107,4 @@ async function fullProficiencyReset() {
 }
 
 fullProficiencyReset();
+

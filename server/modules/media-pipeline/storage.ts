@@ -1,5 +1,5 @@
 import { db } from '../../db';
-import { audioFiles, mediaSegments, segmentMappings, textSegments } from '@shared/schema';
+import { audioFiles, mediaSegments, segmentMappings, textSegments } from '@narada/types';
 import { eq, and, asc } from 'drizzle-orm';
 import type { AudioFile, MediaSegment, MappingWithTimestamps, CreateAudioFileData, CreateMediaSegmentData, CreateMappingData } from './types';
 

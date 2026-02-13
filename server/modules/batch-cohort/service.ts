@@ -1,5 +1,5 @@
 import { batchStorage } from "./storage";
-import { VALID_PROFICIENCY_LEVELS } from "@shared/constants";
+import { VALID_PROFICIENCY_LEVELS } from "@narada/types";
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput, BatchDetail } from "./types";
 
 export class BatchService {

@@ -3,14 +3,18 @@
  * Single source of truth for all data structures across frontend and backend
  */
 
-import { type users, type tracks, type chapters, type textSegments, type audioFiles } from './schema';
+// Import base types from schema (single source of truth)
+// MediaSegment, SegmentMapping, StudentProgress are exported only from schema to avoid index collision
+import type {
+  User,
+  Track,
+  Chapter,
+  TextSegment,
+  AudioFile,
+} from './schema';
 
-// Base types from schema
-export type User = typeof users.$inferSelect;
-export type Track = typeof tracks.$inferSelect;
-export type Chapter = typeof chapters.$inferSelect;
-export type TextSegment = typeof textSegments.$inferSelect;
-export type AudioFile = typeof audioFiles.$inferSelect;
+// Re-export for convenience
+export type { User, Track, Chapter, TextSegment, AudioFile };
 
 // Extended types for specific use cases
 export interface UserWithRoles extends User {
@@ -46,25 +50,7 @@ export interface ChapterWithMetadata extends Omit<Chapter, 'publishedAt' | 'last
   publishedAt?: Date | null;
 }
 
-// Normalized Mapping Types (new system)
-export interface MediaSegment {
-  id: number;
-  audioFileId: number;
-  startTimestamp: number;
-  endTimestamp: number;
-  segmentName?: string;
-  createdBy?: string;
-  createdAt?: Date;
-}
-
-export interface SegmentMapping {
-  id: number;
-  mediaSegmentId: number;
-  textSegmentId: number;
-  createdBy?: string;
-  createdAt?: Date;
-}
-
+// Normalized Mapping Types (from schema; MappingWithTimestamps for API layer)
 export interface MappingWithTimestamps {
   mappingId: number;
   textSegmentId: number;
@@ -73,15 +59,6 @@ export interface MappingWithTimestamps {
   startTime: number;
   endTime: number;
   segmentName?: string;
-}
-
-// Learning Progress Types
-export interface StudentProgress {
-  studentId: string;
-  chapterId: number;
-  proficiencyLevel: number;
-  completionDate?: Date;
-  timeSpent: number;
 }
 
 export interface StudentStats {

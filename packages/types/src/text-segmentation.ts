@@ -9,7 +9,7 @@
  */
 
 // Re-export or extend base types to avoid conflicts
-import type { TextSegment as BaseTextSegment, AudioFile as BaseAudioFile, Chapter as BaseChapter, Script } from './types';
+import type { TextSegment as BaseTextSegment, AudioFile as BaseAudioFile, Chapter as BaseChapter, Script, MappingWithTimestamps } from './types';
 
 export interface EnrichedTextSegment extends BaseTextSegment {
   textReferences?: Record<Script, { start: number; end: number }>;

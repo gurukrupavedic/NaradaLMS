@@ -1,4 +1,4 @@
-import { LOG_TRUNCATE_LENGTH } from "@shared/constants";
+import { LOG_TRUNCATE_LENGTH } from "@narada/types";
 
 // Simple logic to colorize output in development
 const colors = {

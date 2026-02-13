@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Badge } from '@narada/ui';
 import { ChevronDown } from 'lucide-react';
-import { StudentDetail } from '../../../../../shared/types';
+import { StudentDetail } from '@narada/types';
 
 interface StudentDetailsCardProps {
     student: StudentDetail;

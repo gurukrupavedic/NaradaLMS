@@ -7,7 +7,7 @@
  * Updated: December 2025 - Migrated to normalized mapping system
  */
 
-import type { MappingWithTimestamps } from '@shared/types/text-segmentation';
+import type { MappingWithTimestamps } from '@narada/types';
 
 export type MappingStatus = 'mapped' | 'unmapped';
 

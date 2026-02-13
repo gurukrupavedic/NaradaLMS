@@ -18,7 +18,7 @@ import {
     cn
 } from '@narada/ui';
 import { ChevronsUpDown, Check, Plus, ArrowRight } from 'lucide-react';
-import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
+import type { TextSegment, AudioMapping, Script, ContentMap } from '@narada/types';
 import { getSegmentText } from '@shared/utils/text-segmentation';
 
 export interface SessionConfig {

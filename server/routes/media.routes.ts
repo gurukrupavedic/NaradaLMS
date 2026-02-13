@@ -6,7 +6,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { parseFile } from 'music-metadata';
-import { FILE_UPLOAD } from '../../shared/constants';
+import { FILE_UPLOAD } from '@narada/types';
 import { validateRequest } from '../utils/validation';
 import { z } from 'zod';
 import { config } from '../config';

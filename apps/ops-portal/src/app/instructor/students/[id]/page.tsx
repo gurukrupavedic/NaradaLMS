@@ -14,7 +14,7 @@ import { StudentDetailsCard } from "@/components/instructor/StudentDetailsCard";
 import { TrackList } from "@/components/instructor/student-progress/TrackList";
 import { MatrixEvaluationModal } from "@/components/batches/MatrixEvaluationModal";
 import { ProficiencyLevel, Chapter, StudentMatrixRow } from "@/components/batches/types";
-import type { ChapterProgress, TrackProgress } from "../../../../../../shared/types";
+import type { ChapterProgress, TrackProgress } from "@narada/types";
 
 export default function StudentProgressPage() {
     const params = useParams();

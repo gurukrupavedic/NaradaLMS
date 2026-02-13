@@ -1,7 +1,7 @@
 import { mediaStorage } from './storage';
 import type { CreateAudioFileData, CreateMediaSegmentData, CreateMappingData, MappingWithTimestamps } from './types';
 import { db } from '../../db';
-import { audioFiles, textSegments } from '@shared/schema';
+import { audioFiles, textSegments } from '@narada/types';
 import { eq } from 'drizzle-orm';
 
 export const mediaService = {

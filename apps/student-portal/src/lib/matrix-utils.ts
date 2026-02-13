@@ -4,7 +4,7 @@
  * Color mapping, label formatting, and helper functions for the unified batch matrix
  */
 
-import { ProficiencyLevel } from '../types/matrix';
+import { ProficiencyLevel } from '@narada/types';
 
 /**
  * Get Tailwind CSS classes for a proficiency cell based on level and status
