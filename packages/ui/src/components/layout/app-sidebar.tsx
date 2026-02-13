@@ -1,18 +1,6 @@
 "use client"
 
 import * as React from "react"
-import {
-    BookOpen,
-    Bot,
-    Command,
-    Frame,
-    LifeBuoy,
-    Map as MapIcon,
-    PieChart,
-    Send,
-    Settings2,
-    SquareTerminal,
-} from "lucide-react"
 
 import {
     Sidebar,

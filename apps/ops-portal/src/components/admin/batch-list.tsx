@@ -1,7 +1,8 @@
 'use client';
 import React, { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ColumnDef, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
-import Link from "next/link"; // Next.js Link
 import { useBatches, useCreateBatch, useUpdateBatch, useDeleteBatch, Batch } from "@/lib/hooks/useBatches";
 import { useCoInstructors, useInstructors, Instructor } from "@/lib/hooks/useBatchRelations";
 import { Button } from "@narada/ui";
@@ -64,10 +65,6 @@ function LabeledInput({ label, value, onChange }: { label: string; value: string
 // --- Supporting Types ---
 
 type Track = { id: number; title?: string; name?: string };
-
-// No changes needed, just verifying.
-// Actually, I can't leave this empty.
-// I'll update the comment block for BatchDialog to be more explicit about it being the full version.
 
 function BatchDialog({
     open,
@@ -338,8 +335,6 @@ function BatchDialog({
         </Dialog>
     );
 }
-
-import { useRouter } from "next/navigation";
 
 export default function BatchList() {
     const router = useRouter();

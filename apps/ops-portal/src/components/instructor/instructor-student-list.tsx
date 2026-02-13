@@ -56,12 +56,6 @@ export default function InstructorStudentList() {
     });
 
     const students = data?.items ?? [];
-
-    // DEBUG: Log first student to see structure
-    if (students.length > 0) {
-        console.log('First student data:', students[0]);
-    }
-
     const pagination = data?.pagination;
     const total = pagination?.total ?? students.length;
     const totalPages = Math.max(1, Math.ceil(total / limit));

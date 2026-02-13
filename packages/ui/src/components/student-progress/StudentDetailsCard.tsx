@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Badge } from '@narada/ui';
-import { ChevronDown, User } from 'lucide-react';
-import type { StudentDetail } from '@narada/types';
+import { useState } from "react";
+import { Badge } from "../badge";
+import { ChevronDown } from "lucide-react";
+import type { StudentDetail } from "@narada/types";
 
 interface StudentDetailsCardProps {
   student: StudentDetail;
@@ -10,23 +10,16 @@ interface StudentDetailsCardProps {
 export function StudentDetailsCard({ student }: StudentDetailsCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const fullName = [student.firstName, student.lastName]
-    .filter(Boolean)
-    .join(' ') || 'Student';
-
-  // Generate roll number from enrollment (if available)
-  const rollNumber = student.enrollment
-    ? `${student.enrollment.batchCode}-${student.id.slice(0, 3).toUpperCase()}`
-    : 'N/A';
+  const fullName =
+    [student.firstName, student.lastName].filter(Boolean).join(" ") || "Student";
 
   return (
     <div className="rounded-lg border border-border bg-card px-4 pb-4 pt-2 relative">
-      {/* Collapsible Header */}
       <div
         className="flex items-center gap-2.5 cursor-pointer hover:bg-muted/30 -mx-4 px-4 py-2 rounded-t-lg transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             setIsExpanded(!isExpanded);
           }
@@ -36,9 +29,6 @@ export function StudentDetailsCard({ student }: StudentDetailsCardProps) {
         aria-expanded={isExpanded ? "true" : "false"}
         aria-label={isExpanded ? "Collapse student details" : "Expand student details"}
       >
-
-
-        {/* Header Content - Always visible name, conditional collapsed summary */}
         {isExpanded ? (
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
@@ -58,40 +48,29 @@ export function StudentDetailsCard({ student }: StudentDetailsCardProps) {
             )}
           </div>
         )}
-
-        {/* Expand/Collapse Icon - purely decorative, parent handles interaction */}
         <div className="p-0.5 text-foreground/60 pointer-events-none flex-shrink-0">
           <ChevronDown
             className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
           />
         </div>
       </div>
-
-      {/* Expanded Content */}
       {isExpanded && (
         <div className="pt-2">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6 text-sm">
-
-
-            {/* Email */}
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
                 Email
               </p>
               <p className="text-sm text-foreground mt-1">{student.email}</p>
             </div>
-
-            {/* User ID */}
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
                 User ID
               </p>
               <p className="text-sm font-mono text-muted-foreground mt-1">{student.id}</p>
             </div>
-
             {student.enrollment ? (
               <>
-                {/* Batch Code */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
                     Batch Code
@@ -100,8 +79,6 @@ export function StudentDetailsCard({ student }: StudentDetailsCardProps) {
                     {student.enrollment.batchCode}
                   </p>
                 </div>
-
-                {/* Batch Name */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
                     Batch Name
@@ -110,40 +87,36 @@ export function StudentDetailsCard({ student }: StudentDetailsCardProps) {
                     {student.enrollment.batchName}
                   </p>
                 </div>
-
-                {/* Track */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
                     Track
                   </p>
                   <p className="text-sm text-foreground mt-1">
-                    {student.enrollment.trackName || '—'}
+                    {student.enrollment.trackName || "—"}
                   </p>
                 </div>
-
-                {/* Enrolled Since */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
                     Enrolled Since
                   </p>
                   <p className="text-sm text-foreground mt-1">
                     {student.enrollment.enrolledAt
-                      ? new Date(student.enrollment.enrolledAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })
-                      : '—'}
+                      ? new Date(student.enrollment.enrolledAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "—"}
                   </p>
                 </div>
-
-                {/* Status */}
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tight">
                     Status
                   </p>
                   <div className="mt-1">
-                    <Badge variant={student.enrollment.status === 'active' ? 'default' : 'secondary'}>
+                    <Badge
+                      variant={student.enrollment.status === "active" ? "default" : "secondary"}
+                    >
                       {student.enrollment.status}
                     </Badge>
                   </div>

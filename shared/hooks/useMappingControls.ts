@@ -8,14 +8,19 @@
  */
 
 import { useCallback } from 'react';
-import type { TextSegment, AudioMapping } from '../types/text-segmentation';
+import type { AudioMapping } from '../types/text-segmentation';
+
+/** Minimal segment shape used by the hook (id only required). */
+interface SegmentWithId {
+  id: number;
+}
 
 interface MappingControlsProps {
   mappingSession: 'idle' | 'setup' | 'active' | 'paused';
   activeSegmentId: number | null;
   currentTime: number;
   sessionStartTime: number;
-  segments: TextSegment[];
+  segments: SegmentWithId[];
   mappings: AudioMapping[];
   selectedAudioFileId?: number;
   onMappingCreate: (mapping: AudioMapping) => void;

@@ -10,8 +10,7 @@ import { Button } from "@narada/ui";
 import { Skeleton } from "@narada/ui";
 import { ChevronLeft } from "lucide-react";
 
-import { StudentDetailsCard } from "@/components/instructor/StudentDetailsCard";
-import { TrackList } from "@/components/instructor/student-progress/TrackList";
+import { StudentDetailsCard, TrackList } from "@narada/ui";
 import { MatrixEvaluationModal } from "@/components/batches/MatrixEvaluationModal";
 import { ProficiencyLevel, Chapter, StudentMatrixRow } from "@/components/batches/types";
 import type { ChapterProgress, TrackProgress } from "@narada/types";

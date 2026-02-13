@@ -591,6 +591,19 @@ icon: React.ComponentType<{ className?: string }>;
 
 ---
 
+## Phase 4 Wrap-Up (pre-existing fixes)
+
+The following issues were identified during Phase 4 verification and fixed so that `npm run verify` and all builds pass. They are documented in Phase 5 as optional to re-do if merging Phase 4 before doing them:
+
+1. **`shared/utils/text-segmentation.ts`**: Added `TextSegment` to the import from `../types/text-segmentation`.
+2. **Ops-portal MappingTab / ProgressiveMapper**: Introduced `SegmentForMapper` (and `SegmentForDisplay` in `@narada/types` utils) so API response segments (`createdAt: string`, `script: string`) are accepted; updated FocusSessionSetup, FocusMappingView, SegmentMappingGrid to use it; relaxed `useMappingControls` to accept `SegmentWithId[]`.
+3. **Root server type errors**: Added `server/types.d.ts` for `cookie-parser` and `csurf`; fixed `server/auth/jwt.utils.ts` sign options; fixed `server/auth/passport-config.ts` Google strategy callback signature (6-arg with `done`); fixed `server/index.ts` CSRF token access.
+4. **MatrixEvaluationModal**: Removed "thinking aloud" comments (Task 4.5).
+
+Optional leftovers for Phase 5 Task 5.9: matrix-utils unused function audit, LearnChapter `onCreateSegment` no-op, AudioPlayerControls playback rate wiring.
+
+---
+
 ## Merge (end of Phase 4)
 
 Merge this phase into `hardening` only. **Do not merge into `main`.**

@@ -1,7 +1,19 @@
 import React, { useState } from 'react';
 import { MappingWarningDialog } from './components/MappingWarningDialog';
 import { useMappingControls } from '@shared/hooks/useMappingControls';
-import type { TextSegment, AudioMapping, Script, ContentMap } from '@narada/types';
+import type { AudioMapping, Script, ContentMap } from '@narada/types';
+
+/** Segment shape from API (createdAt string) or schema (createdAt Date); both accepted. */
+export interface SegmentForMapper {
+    id: number;
+    chapterId: number;
+    script: string;
+    startPosition: number;
+    endPosition: number;
+    order: number;
+    createdBy: string;
+    createdAt: string | Date | null;
+}
 
 export interface MappingState {
     audioRef: React.RefObject<HTMLAudioElement>;
@@ -16,7 +28,7 @@ export interface MappingState {
     mappedCount: number;
     totalCount: number;
 
-    segments: TextSegment[];
+    segments: SegmentForMapper[];
     currentScript: Script;
     content: ContentMap;
     mappings: AudioMapping[];
@@ -38,7 +50,7 @@ export interface MappingState {
 
 interface ProgressiveMapperProps {
     audioUrl: string;
-    segments: TextSegment[];
+    segments: SegmentForMapper[];
     currentScript: Script;
     content: ContentMap;
     mappings: AudioMapping[];

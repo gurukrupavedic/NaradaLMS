@@ -6,8 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
     Button,
     Input,
-    Tabs, TabsContent, TabsList, TabsTrigger,
-    Card, CardContent, CardDescription, CardHeader, CardTitle,
+    Card, CardContent,
     Label,
     useToast
 } from "@narada/ui";
@@ -90,7 +89,6 @@ export function OpsAuthPage() {
                         <h1 className="text-2xl font-bold text-slate-900">Narada LMS</h1>
                     </div>
 
-                    {/* CHANGE 1 & 2: Removed SLMTS logo, changed text to "Operations Portal" */}
                     <div className="text-center space-y-2 shrink-0 mb-8">
                         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome to Operations Portal</h1>
                     </div>
@@ -116,7 +114,6 @@ export function OpsAuthPage() {
                         </div>
                     </div>
 
-                    {/* CHANGE 3: Removed Tabs - Login only */}
                     <LoginForm
                         onSuccess={(userData) => {
                             // RBAC Check: Block student-only users
@@ -157,9 +154,10 @@ export function OpsAuthPage() {
 
                     <p className="px-8 text-center text-sm text-slate-400 mt-8 shrink-0">
                         By clicking continue, you agree to our{" "}
-                        <a href="#" className="underline hover:text-slate-600 transition-colors">Terms of Service</a>{" "}
+                        {/* Terms of Service and Privacy Policy links to be added when pages exist */}
+<span className="text-slate-500 text-sm">Terms of Service</span>{" "}
                         and{" "}
-                        <a href="#" className="underline hover:text-slate-600 transition-colors">Privacy Policy</a>.
+                        <span className="text-slate-500 text-sm">Privacy Policy</span>.
                     </p>
                 </div>
             </div>

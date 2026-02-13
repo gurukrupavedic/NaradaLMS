@@ -12,3 +12,6 @@ export * from "./constants";
 // Text Segmentation: Enriched types for the segmentation system
 export * from "./text-segmentation";
 
+// Text Segmentation utilities
+export * from "./utils/text-segmentation";
+

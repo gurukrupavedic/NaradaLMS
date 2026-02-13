@@ -17,6 +17,8 @@ import { Music, Info, StretchHorizontal, Zap } from "lucide-react";
 import { SelectableTextPanel } from "./text-segmentation/SelectableTextPanel";
 import { getProficiencyLabel, getCellColor } from "@/lib/matrix-utils";
 import { AudioPlayerControls } from "@/components/common/AudioPlayerControls";
+import type { EnrichedTextSegment as TextSegment, ContentMap } from "@narada/types";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ChapterData {
   id: number;
@@ -24,28 +26,13 @@ interface ChapterData {
   title: string;
   description?: string;
   status: "draft" | "published";
-  content: {
-    te?: string;
-    hi?: string;
-    en?: string;
-  };
+  content: ContentMap;
   track?: {
     id: number;
     title: string;
     order?: number;
   };
   order?: number;
-}
-
-interface TextSegment {
-  id: number;
-  chapterId: number;
-  script: string;
-  startPosition: number;
-  endPosition: number;
-  order: number;
-  createdBy: string;
-  createdAt: string;
 }
 
 interface AudioFile {
@@ -78,11 +65,8 @@ interface StudentProgressDTO {
   updatedAt: string;
 }
 
-import { useAuth } from "@/hooks/useAuth";
-
 export default function LearnChapter({ chapterId }: { chapterId: number }) {
   const { user } = useAuth();
-  // Removed wouter hooks
 
   const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
   const [selectedAudioFileId, setSelectedAudioFileId] = useState<number | null>(null);

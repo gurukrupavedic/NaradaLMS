@@ -7,7 +7,7 @@
  * Purpose: Centralized utilities for text processing and segment management
  */
 
-import type { AudioMapping, Script, ContentMap } from '../types/text-segmentation';
+import type { AudioMapping, Script, ContentMap, TextSegment } from '../types/text-segmentation';
 
 /** Segment shape needed for getSegmentText; accepts API/DB shape (script may be string). */
 type SegmentForText = { order: number; startPosition: number; endPosition: number; script: Script | string };

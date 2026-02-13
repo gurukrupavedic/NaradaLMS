@@ -3,12 +3,12 @@ import { Button, cn, Select, SelectContent, SelectItem, SelectTrigger, SelectVal
 import { Square, RotateCcw } from 'lucide-react';
 import { TimestampControl } from './components/TimestampControl';
 import { SegmentCard } from '@/components/common/SegmentCard';
-import type { TextSegment, AudioMapping, Script, ContentMap } from '@narada/types';
-import { getSegmentText } from '@shared/utils/text-segmentation';
-
+import type { AudioMapping, Script, ContentMap } from '@narada/types';
+import { getSegmentText } from '@narada/types';
+import type { SegmentForMapper } from './ProgressiveMapper';
 
 interface SegmentMappingGridProps {
-    segments: TextSegment[];
+    segments: SegmentForMapper[];
     currentScript: Script;
     content: ContentMap;
     mappings: AudioMapping[];

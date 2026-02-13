@@ -4,7 +4,7 @@ import { Button, cn } from '@narada/ui';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { LinkStatusIcon } from '@shared/components/LinkStatusIcon';
-import { getSegmentText } from '@shared/utils/text-segmentation';
+import { getSegmentText } from '@narada/types';
 import type { ContentMap, Script } from '@narada/types';
 
 import type { TextSegment } from '@narada/types';

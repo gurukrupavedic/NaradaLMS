@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Button, Badge, cn } from '@narada/ui';
 import { Play, Square, MapPin, Zap, Moon, Sun } from 'lucide-react';
 import { AudioPlayerControls } from '@/components/common/AudioPlayerControls';
-import type { TextSegment, AudioMapping, Script, ContentMap } from '@narada/types';
-import { getSegmentText } from '@shared/utils/text-segmentation';
+import type { AudioMapping, Script, ContentMap } from '@narada/types';
+import { getSegmentText } from '@narada/types';
+import type { SegmentForMapper } from './ProgressiveMapper';
 
 interface FocusMappingViewProps {
-    segments: TextSegment[];
+    segments: SegmentForMapper[];
     currentScript: Script;
     content: ContentMap;
     mappings: AudioMapping[];
