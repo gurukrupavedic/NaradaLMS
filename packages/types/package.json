@@ -1,14 +1,27 @@
 {
-    "name": "@narada/types",
-    "version": "0.0.0",
-    "private": true,
-    "exports": {
-        ".": "./src/index.ts"
+  "name": "@narada/types",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
-    "scripts": {
-        "lint": "eslint ."
-    },
-    "dependencies": {
-        "zod": "^3.24.2"
+    "./constants": {
+      "types": "./dist/constants.d.ts",
+      "import": "./dist/constants.js",
+      "default": "./dist/constants.js"
     }
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint ."
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "zod": "^3.24.2"
+  }
 }

@@ -11,7 +11,7 @@ import type {
   Chapter,
   TextSegment,
   AudioFile,
-} from './schema';
+} from './schema.js';
 
 // Re-export for convenience
 export type { User, Track, Chapter, TextSegment, AudioFile };

@@ -5,8 +5,11 @@ import { drizzle as drizzleNeon } from 'drizzle-orm/neon-serverless';
 import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
 import ws from "ws";
 import * as schema from "@narada/types";
-import { DB_MAX_CONNECTIONS, DB_CONNECTION_TIMEOUT_MS } from "@narada/types";
 import { config } from "./config";
+
+// DB pool settings (aligned with @narada/types; local to avoid ESM resolution with tsx)
+const DB_MAX_CONNECTIONS = 20;
+const DB_CONNECTION_TIMEOUT_MS = 10000;
 
 // Configure WebSocket for Neon in Node.js environment
 if (typeof window === 'undefined') {

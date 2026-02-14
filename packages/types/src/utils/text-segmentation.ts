@@ -3,12 +3,12 @@
  * Shared by student-portal and ops-portal.
  */
 
-import type { Script } from "../types";
+import type { Script } from "../types.js";
 import type {
   EnrichedTextSegment,
   AudioMapping,
   ContentMap,
-} from "../text-segmentation";
+} from "../text-segmentation.js";
 
 type TextSegment = EnrichedTextSegment;
 
