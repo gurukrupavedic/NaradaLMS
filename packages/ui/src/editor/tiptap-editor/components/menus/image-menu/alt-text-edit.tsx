@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 import { MenuButton } from "../../menu-button";
 import Input from "../../ui/input";
+import { useIsMobile } from "../../../../../hooks/use-mobile";
 
 interface AltTextEditProps {
   initialText?: string;
@@ -10,6 +11,7 @@ interface AltTextEditProps {
 }
 
 const AltTextEdit = ({ initialText, onApply, onCancel }: AltTextEditProps) => {
+  const isMobile = useIsMobile();
   const [text, setText] = useState(initialText || "");
 
   const onSubmit = (event: React.FormEvent) => {
@@ -23,7 +25,7 @@ const AltTextEdit = ({ initialText, onApply, onCancel }: AltTextEditProps) => {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Text alternative"
-        autoFocus
+        autoFocus={!isMobile}
       />
       <MenuButton buttonType="submit" icon={"Check"} tooltip={false} />
       <MenuButton icon={"Close"} tooltip={false} onClick={onCancel} />

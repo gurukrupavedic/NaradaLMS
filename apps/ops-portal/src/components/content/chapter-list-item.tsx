@@ -31,13 +31,13 @@ export function ChapterListItem({ chapter, index, onEdit, onMove, onDelete, onOp
             }}
             className={`mb-3 group relative ${isDragging ? 'opacity-80 z-20' : 'opacity-100 z-auto'}`}
         >
-            <Card className="relative overflow-hidden hover:shadow-md transition-all duration-200 border hover:border-border/80">
+            <Card className="relative overflow-hidden hover:shadow-md transition-shadow duration-200 border hover:border-border/80">
                 <div className="absolute left-0 top-0 bottom-0 w-1 transition-colors bg-transparent group-hover:bg-primary/50" />
 
                 <div
                     {...attributes}
                     {...listeners}
-                    className="absolute left-1 top-1/2 -translate-y-1/2 z-20 p-2 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    className="absolute left-1 top-1/2 -translate-y-1/2 z-20 p-2 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                 >
                     <GripVertical className="w-5 h-5 bg-card/80 backdrop-blur-[1px] rounded" />
                 </div>

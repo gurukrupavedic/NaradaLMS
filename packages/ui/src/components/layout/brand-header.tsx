@@ -21,12 +21,12 @@ export function BrandHeader({ homeHref = "/app" }: { homeHref?: string }) {
         <SidebarMenu>
             <SidebarMenuItem>
                 <SidebarMenuButton asChild className="group-data-[collapsible=icon]:!p-0 hover:bg-transparent active:bg-transparent group-data-[collapsible=icon]:!size-12">
-                    <Link href={homeHref} className="flex items-center gap-3 transition-all duration-300 py-1">
-                        <div className={`flex shrink-0 items-center justify-center transition-all duration-300 ${isCollapsed ? 'size-10' : 'size-9'}`}>
+                    <Link href={homeHref} className="flex items-center gap-3 transition-colors duration-300 py-1">
+                        <div className={`flex shrink-0 items-center justify-center transition-transform duration-300 ${isCollapsed ? 'size-10' : 'size-9'}`}>
                             <Image
                                 src={symbol}
                                 alt="Narada Symbol"
-                                className={`object-contain transition-all duration-300 ${isCollapsed ? 'h-full w-full' : 'h-full w-full p-0.5'}`}
+                                className={`object-contain transition-transform duration-300 ${isCollapsed ? 'h-full w-full' : 'h-full w-full p-0.5'}`}
                             />
                         </div>
 

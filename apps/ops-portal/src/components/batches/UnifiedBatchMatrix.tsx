@@ -240,7 +240,7 @@ export function UnifiedBatchMatrix({
                                     onClick={() =>
                                         handleDropStudent(student.enrollmentId, `${student.firstName} ${student.lastName}`)
                                     }
-                                    className="text-destructive focus:text-destructive"
+                                    className="text-destructive focus-visible:text-destructive"
                                 >
                                     Drop Student
                                 </DropdownMenuItem>
@@ -283,7 +283,7 @@ export function UnifiedBatchMatrix({
                                 disabled={isUpdating || !canEditProficiency || isCellUpdating}
                                 className={`
                   h-14 w-20 flex items-center justify-center rounded-lg
-                  border-2 transition-all relative
+                  border-2 transition-colors relative
                   ${colors.bgColor} ${colors.darkBgColor} ${colors.textColor} ${colors.darkTextColor} ${colors.borderColor} ${colors.darkBorderColor}
                   ${canEditProficiency && !isCellUpdating ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}
                   ${isCellUpdating ? 'opacity-60' : ''}

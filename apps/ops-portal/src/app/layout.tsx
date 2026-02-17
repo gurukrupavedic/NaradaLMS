@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "@narada/ui/src/globals.css"; // Use shared globals
 import "./globals.css"; // Local globals (Fonts)
 import { Providers } from "@/components/providers";
+import { SkipLink } from "@narada/ui";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,10 +32,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <SkipLink />
         <Providers>
-          {children}
+          <main id="main-content">
+            {children}
+          </main>
         </Providers>
       </body>
     </html>

@@ -7,6 +7,7 @@ import {
     DropdownMenuTrigger,
     DropdownMenuItem
 } from "@narada/ui";
+import { formatDate } from "@shared/utils/date";
 
 // Minimal interface for batch item in dropdown
 export interface BatchItem {
@@ -39,16 +40,6 @@ export function BatchDetailsCard({
     onBatchChange,
 }: BatchDetailsCardProps) {
     const [collapsed, setCollapsed] = React.useState(false);
-
-    const formatDate = (dateStr?: string | Date) => {
-        if (!dateStr) return "—";
-        const date = new Date(dateStr);
-        return date.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-        });
-    };
 
     const formatCohortType = (value?: string | null) => {
         if (!value) return "—";

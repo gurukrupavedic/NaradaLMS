@@ -219,8 +219,8 @@ export default function BatchDetailsPage() {
             <div className="p-4 text-center">
                 <h2 className="text-xl font-semibold text-destructive">Error Loading Batch</h2>
                 <p className="text-muted-foreground">{batchDetail.error.message}</p>
-                <Button onClick={() => router.push('/admin/batches')} className="mt-4">
-                    Back to Batches
+                <Button asChild className="mt-4">
+                    <a href="/admin/batches">Back to Batches</a>
                 </Button>
             </div>
         );

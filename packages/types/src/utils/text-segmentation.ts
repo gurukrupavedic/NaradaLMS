@@ -4,6 +4,8 @@
  */
 
 import type { Script } from "../types.js";
+
+export const ELLIPSIS = "…";
 import type {
   EnrichedTextSegment,
   AudioMapping,
@@ -38,7 +40,7 @@ export const getSegmentText = (
   }
   const segmentText = text.slice(segment.startPosition, segment.endPosition);
   if (truncate && segmentText.length > maxLength) {
-    return segmentText.slice(0, maxLength) + "...";
+    return segmentText.slice(0, maxLength) + ELLIPSIS;
   }
   return segmentText;
 };

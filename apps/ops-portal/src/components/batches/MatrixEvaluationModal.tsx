@@ -86,7 +86,7 @@ export function MatrixEvaluationModal({
                                         onClick={() => handleSelectLevel(option.value)}
                                         disabled={isUpdating}
                                         className={`
-                      group relative flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-all
+                      group relative flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors transition-shadow
                       hover:bg-muted/50 hover:shadow-sm
                       ${isSelected
                                                 ? 'border-2 shadow-sm bg-muted/20'
@@ -134,7 +134,7 @@ export function MatrixEvaluationModal({
                         <textarea
                             id="notes"
                             className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="Add evaluation notes..."
+                                    placeholder="Add evaluation notes…"
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             disabled={isUpdating}

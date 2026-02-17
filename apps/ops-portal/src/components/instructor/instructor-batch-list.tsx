@@ -182,23 +182,31 @@ export default function InstructorBatchList() {
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
-                            <TableRow><TableCell colSpan={columns.length} className="text-center h-24">Loading...</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={columns.length} className="text-center h-24">Loading…</TableCell></TableRow>
                         ) : batches.length === 0 ? (
                             <TableRow><TableCell colSpan={columns.length} className="text-center h-24">No batches found.</TableCell></TableRow>
                         ) : (
-                            table.getRowModel().rows.map(row => (
-                                <TableRow
-                                    key={row.id}
-                                    className="cursor-pointer hover:bg-muted/50"
-                                    onClick={() => router.push(`/instructor/batches/${row.original.id}`)}
-                                >
-                                    {row.getVisibleCells().map(cell => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
+                            table.getRowModel().rows.map(row => {
+                                const href = `/instructor/batches/${row.original.id}`;
+                                return (
+                                    <TableRow
+                                        key={row.id}
+                                        className="hover:bg-muted/50"
+                                    >
+                                        {row.getVisibleCells().map(cell => (
+                                            <TableCell key={cell.id}>
+                                                {cell.column.id === "batchCode" ? (
+                                                    <Link href={href} className="block w-full h-full">
+                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                    </Link>
+                                                ) : (
+                                                    flexRender(cell.column.columnDef.cell, cell.getContext())
+                                                )}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                );
+                            })
                         )}
                     </TableBody>
                 </Table>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, Input, cn } from '@narada/ui';
+import { Button, Input, cn, useIsMobile } from '@narada/ui';
 import { Play, Trash2, Check, X, Plus } from 'lucide-react';
 import { formatDuration } from '@narada/types';
 import type { AudioMapping } from '@narada/types';
@@ -41,6 +41,7 @@ export function TimestampControl({
     readOnly = false,
     className
 }: TimestampControlProps) {
+    const isMobile = useIsMobile();
     const [editStartStr, setEditStartStr] = useState('');
     const [editEndStr, setEditEndStr] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
@@ -117,7 +118,7 @@ export function TimestampControl({
                     onKeyDown={handleKeyDown}
                     className="h-7 w-16 px-1 text-xs text-center font-mono border-muted-foreground/30 focus-visible:ring-0 focus-visible:border-primary"
                     placeholder="0:00.0"
-                    autoFocus
+                    autoFocus={!isMobile}
                 />
                 <span className="text-muted-foreground text-[10px]">–</span>
                 <Input
@@ -154,7 +155,7 @@ export function TimestampControl({
     if (isMapped) {
         return (
             <div className={cn(
-                "group flex items-center bg-background border rounded-md shadow-sm h-10 overflow-hidden hover:border-primary/50 transition-all min-w-[180px]",
+                "group flex items-center bg-background border rounded-md shadow-sm h-10 overflow-hidden hover:border-primary/50 transition-colors transition-shadow min-w-[180px]",
                 readOnly && "hover:border-border opacity-80",
                 className
             )}>
@@ -219,7 +220,7 @@ export function TimestampControl({
     return (
         <button
             className={cn(
-                "flex items-center justify-center gap-2 w-32 h-9 rounded-md border border-dashed border-border bg-muted/20 hover:bg-muted/50 hover:border-primary/50 hover:text-primary text-muted-foreground transition-all text-xs font-medium",
+                "flex items-center justify-center gap-2 w-32 h-9 rounded-md border border-dashed border-border bg-muted/20 hover:bg-muted/50 hover:border-primary/50 hover:text-primary text-muted-foreground transition-colors transition-shadow text-xs font-medium",
                 className
             )}
             onClick={handleStartEdit}

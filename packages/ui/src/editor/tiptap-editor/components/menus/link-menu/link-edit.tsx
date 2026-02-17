@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Button from "../../ui/button";
 import Input from "../../ui/input";
 import Label from "../../ui/label";
+import { useIsMobile } from "../../../../../hooks/use-mobile";
 
 interface LinkEditProps {
   initialUrl?: string;
@@ -19,6 +20,7 @@ const LinkEdit = ({
   onSubmit,
   onCancel,
 }: LinkEditProps) => {
+  const isMobile = useIsMobile();
   const [url, setUrl] = useState(initialUrl || "");
   const [text, setText] = useState(initialText || "");
   const [canSubmit, setCanSubmit] = useState(isCreate);
@@ -44,7 +46,7 @@ const LinkEdit = ({
         placeholder="Paste link"
         type="url"
         required
-        autoFocus
+        autoFocus={!isMobile}
       />
 
       <Label className="rte-link__label">Display Text</Label>

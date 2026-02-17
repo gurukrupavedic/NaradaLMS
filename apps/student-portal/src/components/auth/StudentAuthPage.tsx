@@ -201,13 +201,6 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
                 body: JSON.stringify({ email, password }),
             });
 
-            toast({
-                title: "Welcome back",
-                description: "Logged in successfully",
-                duration: 3000
-            });
-
-            // Allow success toast to appear before navigation
             onSuccess();
         } catch (err: any) {
             toast({
@@ -225,7 +218,17 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
                         <LightLabel htmlFor="email">Email</LightLabel>
-                        <LightInput id="email" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={loading} />
+                        <LightInput
+                            id="email"
+                            type="email"
+                            placeholder="m@example.com"
+                            required
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            disabled={loading}
+                            autoComplete="email"
+                            spellCheck={false}
+                        />
                     </div>
                     <div className="space-y-2">
                         <LightLabel htmlFor="password">Password</LightLabel>
@@ -236,6 +239,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                             disabled={loading}
+                            autoComplete="current-password"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !loading) {
                                     handleSubmit(e as any);
@@ -244,7 +248,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
                         />
                     </div>
                     <Button type="submit" className="w-full bg-hema-base hover:opacity-80 transition-opacity text-white" disabled={loading}>
-                        {loading ? "Signing in..." : "Sign In"}
+                        {loading ? "Signing in…" : "Sign In"}
                     </Button>
                 </form>
             </CardContent>
@@ -318,18 +322,44 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
                     </div>
                     <div className="space-y-2">
                         <LightLabel htmlFor="email">Email</LightLabel>
-                        <LightInput id="email" type="email" placeholder="m@example.com" required value={formData.email} onChange={handleChange} disabled={loading} />
+                        <LightInput
+                            id="email"
+                            type="email"
+                            placeholder="m@example.com"
+                            required
+                            value={formData.email}
+                            onChange={handleChange}
+                            disabled={loading}
+                            autoComplete="email"
+                            spellCheck={false}
+                        />
                     </div>
                     <div className="space-y-2">
                         <LightLabel htmlFor="password">Password</LightLabel>
-                        <LightInput id="password" type="password" required value={formData.password} onChange={handleChange} disabled={loading} />
+                        <LightInput
+                            id="password"
+                            type="password"
+                            required
+                            value={formData.password}
+                            onChange={handleChange}
+                            disabled={loading}
+                            autoComplete="new-password"
+                        />
                     </div>
                     <div className="space-y-2">
                         <LightLabel htmlFor="confirmPassword">Confirm Password</LightLabel>
-                        <LightInput id="confirmPassword" type="password" required value={formData.confirmPassword} onChange={handleChange} disabled={loading} />
+                        <LightInput
+                            id="confirmPassword"
+                            type="password"
+                            required
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            disabled={loading}
+                            autoComplete="new-password"
+                        />
                     </div>
                     <Button type="submit" className="w-full bg-hema-base hover:opacity-80 transition-opacity text-white" disabled={loading}>
-                        {loading ? "Creating account..." : "Create Account"}
+                        {loading ? "Creating account…" : "Create Account"}
                     </Button>
                 </form>
             </CardContent>

@@ -192,13 +192,6 @@ function LoginForm({ onSuccess }: { onSuccess: (userData: AuthUser) => void }) {
                 body: JSON.stringify({ email, password }),
             });
 
-            toast({
-                title: "Welcome back",
-                description: "Logged in successfully",
-                duration: 3000
-            });
-
-            // Allow success toast to appear before navigation
             // Pass user data to onSuccess for RBAC check
             onSuccess(response.user);
         } catch (err: any) {
@@ -217,7 +210,17 @@ function LoginForm({ onSuccess }: { onSuccess: (userData: AuthUser) => void }) {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
                         <LightLabel htmlFor="email">Email</LightLabel>
-                        <LightInput id="email" type="email" placeholder="m@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={loading} />
+                        <LightInput
+                            id="email"
+                            type="email"
+                            placeholder="m@example.com"
+                            required
+                            value={email}
+                            onChange={e => setEmail(e.target.value)}
+                            disabled={loading}
+                            autoComplete="email"
+                            spellCheck={false}
+                        />
                     </div>
                     <div className="space-y-2">
                         <LightLabel htmlFor="password">Password</LightLabel>
@@ -228,6 +231,7 @@ function LoginForm({ onSuccess }: { onSuccess: (userData: AuthUser) => void }) {
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                             disabled={loading}
+                            autoComplete="current-password"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !loading) {
                                     handleSubmit(e as any);
@@ -236,7 +240,7 @@ function LoginForm({ onSuccess }: { onSuccess: (userData: AuthUser) => void }) {
                         />
                     </div>
                     <Button type="submit" className="w-full bg-hema-base hover:opacity-80 transition-opacity text-white" disabled={loading}>
-                        {loading ? "Signing in..." : "Sign In"}
+                        {loading ? "Signing in…" : "Sign In"}
                     </Button>
                 </form>
             </CardContent>

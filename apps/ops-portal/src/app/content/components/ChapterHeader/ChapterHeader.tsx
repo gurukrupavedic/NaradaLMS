@@ -102,7 +102,7 @@ export function ChapterHeader({
                                             value={selectedAudioFileId?.toString() || ''}
                                             onValueChange={(value) => onAudioFileChange?.(parseInt(value))}
                                         >
-                                            <SelectTrigger className="h-8 w-48 text-xs border-0 shadow-none bg-transparent hover:bg-accent focus:ring-2 focus:ring-ring px-2 gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                                            <SelectTrigger className="h-8 w-48 text-xs border-0 shadow-none bg-transparent hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring px-2 gap-2 text-muted-foreground hover:text-foreground transition-colors">
                                                 <div className="flex items-center gap-2 truncate">
                                                     <Music className="h-3.5 w-3.5 opacity-70" />
                                                     <SelectValue placeholder="Select audio" />
@@ -160,7 +160,7 @@ export function ChapterHeader({
                                 <button
                                     onClick={() => onTextSegModeChange('editor')}
                                     className={`
-                                        flex items-center gap-2 px-3 py-1 rounded-sm text-xs font-semibold transition-all
+                                        flex items-center gap-2 px-3 py-1 rounded-sm text-xs font-semibold transition-colors
                                         ${textSegMode === 'editor'
                                             ? 'bg-background text-primary shadow-sm'
                                             : 'text-muted-foreground hover:text-foreground'}
@@ -172,7 +172,7 @@ export function ChapterHeader({
                                 <button
                                     onClick={() => onTextSegModeChange('segmentation')}
                                     className={`
-                                        flex items-center gap-2 px-3 py-1 rounded-sm text-xs font-semibold transition-all
+                                        flex items-center gap-2 px-3 py-1 rounded-sm text-xs font-semibold transition-colors
                                         ${textSegMode === 'segmentation'
                                             ? 'bg-background text-primary shadow-sm'
                                             : 'text-muted-foreground hover:text-foreground'}

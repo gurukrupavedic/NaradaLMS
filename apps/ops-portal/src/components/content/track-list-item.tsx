@@ -30,7 +30,7 @@ export function TrackListItem({ track, index, isSelected, onSelect, onEdit, onDe
             className={`mb-3 group relative ${isDragging ? 'opacity-80 z-20' : 'opacity-100 z-auto'}`}
         >
             <Card
-                className={`relative overflow-hidden cursor-pointer transition-all duration-200 ${isSelected
+                className={`relative overflow-hidden cursor-pointer transition-colors transition-shadow duration-200 ${isSelected
                     ? 'bg-primary/5 border-primary border-l-4 shadow-md'
                     : 'border hover:border-primary/50 hover:shadow-sm bg-card'
                     }`}
@@ -41,7 +41,7 @@ export function TrackListItem({ track, index, isSelected, onSelect, onEdit, onDe
                     <div
                         {...attributes}
                         {...listeners}
-                        className="absolute left-1 top-1/2 -translate-y-1/2 z-20 p-2 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        className="absolute left-1 top-1/2 -translate-y-1/2 z-20 p-2 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                     >
                         <GripVertical className="w-5 h-5 bg-card/80 backdrop-blur-[1px] rounded" />
                     </div>

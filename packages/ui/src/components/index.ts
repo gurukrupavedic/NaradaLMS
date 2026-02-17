@@ -21,6 +21,7 @@ export * from "./skeleton";
 export * from "./slider";
 export * from "./switch";
 export * from "./table";
+export * from "./virtualized-list";
 export * from "./tabs";
 export * from "./tooltip";
 export * from "./breadcrumb";
@@ -29,6 +30,7 @@ export * from "./scroll-area";
 export * from "./textarea";
 export * from "./alert-dialog";
 export * from "./student-progress";
+export * from "./skip-link";
 // Layout Components
 export * from "./layout/app-shell";
 export * from "./layout/app-sidebar";

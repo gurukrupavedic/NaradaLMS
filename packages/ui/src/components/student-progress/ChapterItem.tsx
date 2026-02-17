@@ -25,7 +25,7 @@ export function ChapterItem({ chapter, onClick }: ChapterItemProps) {
   return (
     <div
       className={cn(
-        "relative flex flex-col justify-between p-3 rounded-lg border transition-all bg-card/80",
+        "relative flex flex-col justify-between p-3 rounded-lg border transition-colors transition-shadow bg-card/80",
         onClick ? "cursor-pointer hover:shadow-md hover:border-primary/40" : "cursor-default hover:shadow-sm"
       )}
       onClick={handleClick}

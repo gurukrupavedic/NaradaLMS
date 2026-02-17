@@ -20,7 +20,7 @@ import {
 } from "@narada/ui";
 import { Filter, AlertCircle, ChevronDown, RotateCcw, ChevronUp, ArrowUpDown, FileSearch } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@narada/ui";
+import { cn, useIsMobile } from "@narada/ui";
 import {
     ColumnDef,
     flexRender,
@@ -128,6 +128,7 @@ function ChangesCell({ changes }: { changes: any }) {
 
 export default function AuditLogsPage() {
     const { toast } = useToast();
+    const isMobile = useIsMobile();
     const [filters, setFilters] = useState<AuditLogFilters>({ limit: 25, offset: 0 });
     const [startDate, setStartDate] = useState<string>("");
     const [endDate, setEndDate] = useState<string>("");
@@ -247,8 +248,8 @@ export default function AuditLogsPage() {
             accessorKey: "resourceId",
             header: "ID",
             cell: ({ row }) => (
-                <span className="text-xs font-mono text-muted-foreground" title={row.original.resourceId}>
-                    {row.original.resourceId?.substring(0, 8)}...
+                    <span className="text-xs font-mono text-muted-foreground" title={row.original.resourceId}>
+                    {row.original.resourceId?.substring(0, 8)}…
                 </span>
             ),
             size: 100,
@@ -343,7 +344,8 @@ export default function AuditLogsPage() {
                                 placeholder="Search user..."
                                 value={userSearchInput}
                                 onChange={(e) => setUserSearchInput(e.target.value)}
-                                autoFocus
+                                aria-label="Search logs by user"
+                                autoFocus={!isMobile}
                             />
                             <div className="max-h-[200px] overflow-y-auto space-y-1">
                                 <button

@@ -1,7 +1,10 @@
+"use client";
+
 import { useState } from "react";
 import { Badge } from "../badge";
 import { ChevronDown } from "lucide-react";
 import type { StudentDetail } from "@narada/types";
+import { formatDate } from "@shared/utils/date";
 
 interface StudentDetailsCardProps {
   student: StudentDetail;
@@ -100,13 +103,7 @@ export function StudentDetailsCard({ student }: StudentDetailsCardProps) {
                     Enrolled Since
                   </p>
                   <p className="text-sm text-foreground mt-1">
-                    {student.enrollment.enrolledAt
-                      ? new Date(student.enrollment.enrolledAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })
-                      : "—"}
+                    {formatDate(student.enrollment.enrolledAt)}
                   </p>
                 </div>
                 <div>

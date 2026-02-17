@@ -213,7 +213,7 @@ export default function UserList() {
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
-                            <TableRow><TableCell colSpan={columns.length} className="text-center h-24">Loading...</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={columns.length} className="text-center h-24">Loading…</TableCell></TableRow>
                         ) : users.length === 0 ? (
                             <TableRow><TableCell colSpan={columns.length} className="text-center h-24">No users found.</TableCell></TableRow>
                         ) : (

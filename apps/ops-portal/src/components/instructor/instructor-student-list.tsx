@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
     ColumnDef,
     SortingState,
@@ -20,6 +20,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
+    VirtualizedTableBody,
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
@@ -28,6 +29,7 @@ import {
     Badge
 } from "@narada/ui";
 import { MoreVertical, RefreshCw, Search, X } from "lucide-react";
+import { formatDate } from "@shared/utils/date";
 
 import { useMyStudents, StudentSummary } from "@/lib/hooks/useMyStudents";
 import { useBatches } from "@/lib/hooks/useBatches";
@@ -95,7 +97,7 @@ export default function InstructorStudentList() {
             header: "ENROLLED",
             cell: ({ row }) => {
                 if (!row.original.enrolledAt) return <span className="text-muted-foreground">—</span>;
-                return new Date(row.original.enrolledAt).toLocaleDateString();
+                return formatDate(row.original.enrolledAt);
             }
         },
         {
@@ -147,6 +149,33 @@ export default function InstructorStudentList() {
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
     });
+
+    const tableScrollRef = useRef<HTMLDivElement>(null);
+    const rowModel = table.getRowModel().rows;
+    const useVirtualized = rowModel.length > 30;
+    const columnCount = columns.length;
+
+    const renderTableRow = useCallback(
+        (row: (typeof rowModel)[number]) => {
+            const href = `/instructor/students/${row.original.id}`;
+            return (
+                <TableRow key={row.id} className="hover:bg-muted/50">
+                    {row.getVisibleCells().map(cell => (
+                        <TableCell key={cell.id}>
+                            {cell.column.id === "firstName" ? (
+                                <Link href={href} className="block w-full h-full">
+                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </Link>
+                            ) : (
+                                flexRender(cell.column.columnDef.cell, cell.getContext())
+                            )}
+                        </TableCell>
+                    ))}
+                </TableRow>
+            );
+        },
+        []
+    );
 
     return (
         <div className="space-y-4">
@@ -201,7 +230,10 @@ export default function InstructorStudentList() {
 
             {/* Table */}
             <div className="rounded-md border">
-                <Table>
+                <Table
+                    scrollContainerRef={useVirtualized ? tableScrollRef : undefined}
+                    scrollContainerStyle={useVirtualized ? { height: 400 } : undefined}
+                >
                     <TableHeader>
                         {table.getHeaderGroups().map(headerGroup => (
                             <TableRow key={headerGroup.id}>
@@ -213,27 +245,28 @@ export default function InstructorStudentList() {
                             </TableRow>
                         ))}
                     </TableHeader>
-                    <TableBody>
-                        {isLoading ? (
-                            <TableRow><TableCell colSpan={columns.length} className="text-center h-24">Loading...</TableCell></TableRow>
-                        ) : students.length === 0 ? (
-                            <TableRow><TableCell colSpan={columns.length} className="text-center h-24">No students found.</TableCell></TableRow>
-                        ) : (
-                            table.getRowModel().rows.map(row => (
-                                <TableRow
-                                    key={row.id}
-                                    className="cursor-pointer hover:bg-muted/50"
-                                    onClick={() => router.push(`/instructor/students/${row.original.id}`)}
-                                >
-                                    {row.getVisibleCells().map(cell => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
+                    {isLoading ? (
+                        <TableBody>
+                            <TableRow><TableCell colSpan={columnCount} className="text-center h-24">Loading…</TableCell></TableRow>
+                        </TableBody>
+                    ) : students.length === 0 ? (
+                        <TableBody>
+                            <TableRow><TableCell colSpan={columnCount} className="text-center h-24">No students found.</TableCell></TableRow>
+                        </TableBody>
+                    ) : useVirtualized ? (
+                        <VirtualizedTableBody
+                            rows={rowModel}
+                            renderRow={renderTableRow}
+                            rowHeight={52}
+                            height={400}
+                            columnCount={columnCount}
+                            scrollContainerRef={tableScrollRef}
+                        />
+                    ) : (
+                        <TableBody>
+                            {rowModel.map(row => renderTableRow(row))}
+                        </TableBody>
+                    )}
                 </Table>
             </div>
 

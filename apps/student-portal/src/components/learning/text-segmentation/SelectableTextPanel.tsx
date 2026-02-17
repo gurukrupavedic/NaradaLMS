@@ -141,7 +141,7 @@ export function SelectableTextPanel({
                 <span
                     key={`segment-${segment.id}`}
                     id={`left-segment-${segment.id}`}
-                    className={`px-1.5 py-0.5 rounded-sm cursor-pointer transition-all ${isSelected
+                    className={`px-1.5 py-0.5 rounded-sm cursor-pointer transition-colors transition-shadow ${isSelected
                         ? 'bg-mantra-base text-white font-medium'
                         : 'bg-mantra-base/[0.08] border-l-2 border-r-2 border-y border-mantra-base/20 hover:bg-mantra-base/15 hover:border-mantra-base/50 text-foreground'
                         }`}
@@ -222,7 +222,7 @@ export function SelectableTextPanel({
 
     return (
         <div className="h-full flex flex-col" ref={scrollContainerRef}>
-            <div className="flex-1 overflow-auto" onClick={() => onSegmentSelect?.(undefined)}>
+            <div className="flex-1 overflow-auto">
                 <div
                     ref={textContainerRef}
                     className="p-8 tiptap-content max-w-4xl mx-auto"
@@ -241,6 +241,21 @@ export function SelectableTextPanel({
                     {renderSegmentedText()}
                 </div>
             </div>
+
+            {/* Clear selection control for accessibility */}
+            {onSegmentSelect && (
+                <div className="border-t border-border bg-muted/40 px-4 py-2 flex justify-end">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onSegmentSelect(undefined)}
+                        disabled={disabled}
+                    >
+                        Clear selection
+                    </Button>
+                </div>
+            )}
 
             {/* Floating Toolbar */}
             {showToolbar && selectedRange && !disabled && (

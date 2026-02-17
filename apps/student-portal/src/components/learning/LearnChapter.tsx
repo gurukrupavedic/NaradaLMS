@@ -19,6 +19,7 @@ import { getProficiencyLabel, getCellColor } from "@/lib/matrix-utils";
 import { AudioPlayerControls } from "@/components/common/AudioPlayerControls";
 import type { EnrichedTextSegment as TextSegment, ContentMap } from "@narada/types";
 import { useAuth } from "@/hooks/useAuth";
+import { formatDate } from "@shared/utils/date";
 
 interface ChapterData {
   id: number;
@@ -374,7 +375,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
                                 <p className="text-xs">
                                   <span className="font-semibold">Last Evaluated:</span>{" "}
                                   {currentProgress.lastEvaluatedAt
-                                    ? new Date(currentProgress.lastEvaluatedAt).toLocaleDateString()
+                                    ? formatDate(currentProgress.lastEvaluatedAt)
                                     : "Never"}
                                 </p>
                                 <p className="text-xs">

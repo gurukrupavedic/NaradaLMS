@@ -59,13 +59,13 @@ export const StatusBar = ({ autoSaveStatus }: StatusBarProps) => {
           )}
           {autoSaveStatus === 'dirty' && (
             <span className="text-yellow-600 dark:text-yellow-500">
-              Unsaved changes...
+              Unsaved changes…
             </span>
           )}
           {autoSaveStatus === 'saving' && (
             <>
               <Loader2 className="h-3 w-3 animate-spin text-blue-600 dark:text-blue-500" />
-              <span className="text-blue-600 dark:text-blue-500">Saving...</span>
+              <span className="text-blue-600 dark:text-blue-500">Saving…</span>
             </>
           )}
           {autoSaveStatus === 'saved' && (

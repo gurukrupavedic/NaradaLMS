@@ -9,6 +9,7 @@ import Button from "../ui/button";
 import Icon from "../ui/icon";
 import Input from "../ui/input";
 import Label from "../ui/label";
+import { useIsMobile } from "../../../../hooks/use-mobile";
 
 interface ColorPickerProps {
   color: string;
@@ -17,6 +18,7 @@ interface ColorPickerProps {
 }
 
 const ColorPicker = (props: ColorPickerProps) => {
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<"swatches" | "custom">("swatches");
   const [color, setColor] = useState(props.color);
 
@@ -95,7 +97,7 @@ const ColorPicker = (props: ColorPickerProps) => {
                 value={color!}
                 style={{ textTransform: "uppercase" }}
                 onChange={(e) => handleColorChange(e.target.value)}
-                autoFocus
+                autoFocus={!isMobile}
               />
             </div>
           </div>

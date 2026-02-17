@@ -9,6 +9,8 @@
 
 import type { AudioMapping, Script, ContentMap, TextSegment } from '../types/text-segmentation';
 
+export const ELLIPSIS = "…";
+
 /** Segment shape needed for getSegmentText; accepts API/DB shape (script may be string). */
 type SegmentForText = { order: number; startPosition: number; endPosition: number; script: Script | string };
 
@@ -37,7 +39,7 @@ export const getSegmentText = (
   const segmentText = text.slice(segment.startPosition, segment.endPosition);
 
   if (truncate && segmentText.length > maxLength) {
-    return segmentText.slice(0, maxLength) + '...';
+    return segmentText.slice(0, maxLength) + ELLIPSIS;
   }
 
   return segmentText;

@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ColumnDef, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
@@ -13,6 +13,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
+    VirtualizedTableBody,
 } from "@narada/ui";
 import {
     Dialog,
@@ -54,7 +55,7 @@ function LabeledInput({ label, value, onChange }: { label: string; value: string
         <label className="block">
             <span className="text-xs font-medium text-muted-foreground">{label}</span>
             <input
-                className="mt-1 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="mt-1 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
             />
@@ -311,7 +312,7 @@ function BatchDialog({
                             <label className="block flex flex-col h-full">
                                 <span className="text-xs font-medium text-muted-foreground mb-2">Batch Description (optional)</span>
                                 <textarea
-                                    className="flex-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none min-h-[250px]"
+                                    className="flex-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none min-h-[250px]"
                                     placeholder="Enter batch description..."
                                     value={batchDescription}
                                     onChange={(e) => setBatchDescription(e.target.value.slice(0, 1000))}
@@ -499,6 +500,30 @@ export default function BatchList() {
         getSortedRowModel: getSortedRowModel(),
     });
 
+    const tableScrollRef = useRef<HTMLDivElement>(null);
+    const rowModel = table.getRowModel().rows;
+    const useVirtualized = rowModel.length > 30;
+    const columnCount = columns.length;
+
+    const renderTableRow = useCallback(
+        (row: (typeof rowModel)[number]) => (
+            <TableRow key={row.id} className="hover:bg-muted/50">
+                {row.getVisibleCells().map(cell => (
+                    <TableCell key={cell.id}>
+                        {cell.column.id === "batchCode" ? (
+                            <Link href={`/admin/batches/${row.original.id}`} className="block w-full h-full">
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </Link>
+                        ) : (
+                            flexRender(cell.column.columnDef.cell, cell.getContext())
+                        )}
+                    </TableCell>
+                ))}
+            </TableRow>
+        ),
+        []
+    );
+
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
@@ -509,7 +534,10 @@ export default function BatchList() {
             </div>
 
             <div className="rounded-md border">
-                <Table>
+                <Table
+                    scrollContainerRef={useVirtualized ? tableScrollRef : undefined}
+                    scrollContainerStyle={useVirtualized ? { height: 400 } : undefined}
+                >
                     <TableHeader>
                         {table.getHeaderGroups().map(headerGroup => (
                             <TableRow key={headerGroup.id}>
@@ -521,27 +549,28 @@ export default function BatchList() {
                             </TableRow>
                         ))}
                     </TableHeader>
-                    <TableBody>
-                        {isLoading ? (
-                            <TableRow><TableCell colSpan={columns.length} className="text-center h-24">Loading...</TableCell></TableRow>
-                        ) : batches.length === 0 ? (
-                            <TableRow><TableCell colSpan={columns.length} className="text-center h-24">No batches found.</TableCell></TableRow>
-                        ) : (
-                            table.getRowModel().rows.map(row => (
-                                <TableRow
-                                    key={row.id}
-                                    className="cursor-pointer hover:bg-muted/50"
-                                    onClick={() => router.push(`/admin/batches/${row.original.id}`)}
-                                >
-                                    {row.getVisibleCells().map(cell => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
+                    {isLoading ? (
+                        <TableBody>
+                            <TableRow><TableCell colSpan={columnCount} className="text-center h-24">Loading…</TableCell></TableRow>
+                        </TableBody>
+                    ) : batches.length === 0 ? (
+                        <TableBody>
+                            <TableRow><TableCell colSpan={columnCount} className="text-center h-24">No batches found.</TableCell></TableRow>
+                        </TableBody>
+                    ) : useVirtualized ? (
+                        <VirtualizedTableBody
+                            rows={rowModel}
+                            renderRow={renderTableRow}
+                            rowHeight={52}
+                            height={400}
+                            columnCount={columnCount}
+                            scrollContainerRef={tableScrollRef}
+                        />
+                    ) : (
+                        <TableBody>
+                            {rowModel.map(row => renderTableRow(row))}
+                        </TableBody>
+                    )}
                 </Table>
             </div>
 
