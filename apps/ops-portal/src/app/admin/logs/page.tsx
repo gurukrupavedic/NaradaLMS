@@ -268,7 +268,6 @@ export default function AuditLogsPage() {
             >
                 <div className="flex items-center gap-2 shrink-0 border-r border-border pr-3">
                     <Filter className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-                    <span className="text-sm font-medium text-muted-foreground">Filters</span>
                 </div>
 
                 <Select
@@ -278,7 +277,7 @@ export default function AuditLogsPage() {
                         setFilters({ ...filters, action: value === "all" ? undefined : value, offset: 0 });
                     }}
                 >
-                    <SelectTrigger className="h-9 w-[140px] shrink-0" aria-label="Filter by action">
+                    <SelectTrigger className="h-9 w-[140px] shrink-0 bg-card" aria-label="Filter by action">
                         <SelectValue placeholder="Action" />
                     </SelectTrigger>
                     <SelectContent>
@@ -296,7 +295,7 @@ export default function AuditLogsPage() {
                         setFilters({ ...filters, resourceType: value === "all" ? undefined : value, offset: 0 });
                     }}
                 >
-                    <SelectTrigger className="h-9 w-[140px] shrink-0" aria-label="Filter by resource type">
+                    <SelectTrigger className="h-9 w-[140px] shrink-0 bg-card" aria-label="Filter by resource type">
                         <SelectValue placeholder="Resource type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -312,7 +311,7 @@ export default function AuditLogsPage() {
                         <button
                             type="button"
                             className={cn(
-                                "flex h-9 min-w-[140px] shrink-0 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+                                "flex h-9 min-w-[140px] shrink-0 items-center justify-between rounded-md border border-input bg-card px-3 py-2 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
                                 selectedUserId ? "text-foreground" : "text-muted-foreground"
                             )}
                             aria-label={selectedUserId ? `Filter by user: ${allUsers.find(u => u.id === selectedUserId)?.name}` : "Filter by user"}
@@ -389,7 +388,7 @@ export default function AuditLogsPage() {
                             setStartDate(e.target.value);
                             setFilters({ ...filters, startDate: e.target.value, offset: 0 });
                         }}
-                        className="block h-9 w-[130px] shrink-0 text-sm"
+                        className="block h-9 w-[130px] shrink-0 text-sm bg-card"
                         placeholder="From"
                         aria-label="From date"
                     />
@@ -401,7 +400,7 @@ export default function AuditLogsPage() {
                             setEndDate(e.target.value);
                             setFilters({ ...filters, endDate: e.target.value, offset: 0 });
                         }}
-                        className="block h-9 w-[130px] shrink-0 text-sm"
+                        className="block h-9 w-[130px] shrink-0 text-sm bg-card"
                         placeholder="To"
                         aria-label="To date"
                     />
@@ -445,7 +444,7 @@ export default function AuditLogsPage() {
                 <>
                     <div className="flex min-h-0 flex-1 flex-col rounded-md border overflow-hidden">
                         <Table className="w-full" scrollContainerStyle={{ height: "100%" }}>
-                            <TableHeader className="sticky top-0 z-10 bg-background [&_tr]:border-b">
+                            <TableHeader className="sticky top-0 z-10 bg-muted [&_tr]:border-b">
                                 {table.getHeaderGroups().map(headerGroup => (
                                     <TableRow key={headerGroup.id}>
                                         {headerGroup.headers.map(header => (
@@ -456,7 +455,7 @@ export default function AuditLogsPage() {
                                     </TableRow>
                                 ))}
                             </TableHeader>
-                            <TableBody>
+                            <TableBody className="[&_tr]:bg-card">
                                 {table.getRowModel().rows.map(row => (
                                     <TableRow key={row.id}>
                                         {row.getVisibleCells().map(cell => (
@@ -470,8 +469,8 @@ export default function AuditLogsPage() {
                         </Table>
                     </div>
 
-                    <div className="shrink-0 py-3">
-                        <DataTablePagination
+                    <DataTablePagination
+                            className="shrink-0 py-3 [&_button]:bg-card"
                             currentPage={currentPage}
                             totalPages={totalPages}
                             pageSize={limit}
@@ -479,7 +478,6 @@ export default function AuditLogsPage() {
                             onPageChange={(page) => setFilters((prev) => ({ ...prev, offset: (page - 1) * (prev.limit ?? 25) }))}
                             onPageSizeChange={(size) => setFilters((prev) => ({ ...prev, limit: size, offset: 0 }))}
                         />
-                    </div>
                 </>
             )}
         </div>
