@@ -27,10 +27,10 @@ export function TrackListItem({ track, index, isSelected, onSelect, onEdit, onDe
                 transform: CSS.Transform.toString(transform),
                 transition: transition || undefined,
             }}
-            className={`mb-3 group relative ${isDragging ? 'opacity-80 z-20' : 'opacity-100 z-auto'}`}
+            className={`mb-3 group relative min-w-0 w-full ${isDragging ? 'opacity-80 z-20' : 'opacity-100 z-auto'}`}
         >
             <Card
-                className={`relative overflow-hidden cursor-pointer transition-colors transition-shadow duration-200 ${isSelected
+                className={`relative overflow-hidden cursor-pointer transition-colors transition-shadow duration-200 min-w-0 w-full ${isSelected
                     ? 'bg-primary/5 border-primary border-l-4 shadow-md'
                     : 'border hover:border-primary/50 hover:shadow-sm bg-card'
                     }`}
@@ -72,7 +72,7 @@ export function TrackListItem({ track, index, isSelected, onSelect, onEdit, onDe
                         </div>
                     </div>
 
-                    <div className="flex flex-col justify-center gap-1 border-l pl-2 ml-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                    <div className="flex flex-shrink-0 flex-col justify-center gap-1 border-l pl-2 ml-1 opacity-60 group-hover:opacity-100 transition-opacity">
                         <Button
                             variant="ghost"
                             size="icon"
