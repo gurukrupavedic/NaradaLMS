@@ -205,7 +205,7 @@ export function MappingTab({
                     }
 
                     return (
-                        <div className="h-full bg-muted/20 p-4">
+                        <div className="h-full bg-muted/20">
                             <ResizablePanelGroup direction="horizontal" onLayout={handleLayoutChange} className="gap-2">
                                 <ResizablePanel defaultSize={panelSizes.grid} minSize={30}>
                                     <SegmentMappingGrid
@@ -236,7 +236,7 @@ export function MappingTab({
                                     />
                                 </ResizablePanel>
                                 <ResizableHandle withHandle className="bg-transparent w-2 hover:bg-primary/10 transition-colors rounded-sm" />
-                                <ResizablePanel defaultSize={panelSizes.audio} minSize={20} className="p-4">
+                                <ResizablePanel defaultSize={panelSizes.audio} minSize={20}>
                                     <div className="h-full border rounded-lg overflow-hidden bg-card shadow-sm flex flex-col">
                                         <div className="flex-1 overflow-hidden">
                                             <AudioFileManager

@@ -36,7 +36,7 @@ function TimestampCell({ timestamp }: { timestamp: string }) {
     const date = new Date(timestamp);
     return (
         <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-medium text-foreground">
+            <span className="text-xs font-medium tabular-nums text-foreground">
                 {format(date, "MMM dd, yyyy hh:mm:ss a")}
             </span>
         </div>
@@ -51,7 +51,7 @@ function UserCell({ firstName, lastName, email }: { firstName?: string; lastName
     const displayName = firstName && lastName ? `${firstName} ${lastName}` : '—';
     return (
         <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-medium text-foreground max-w-[150px] truncate" title={displayName}>
+            <span className="text-xs font-medium text-foreground max-w-[150px] truncate" title={displayName}>
                 {displayName}
             </span>
             {email && (
@@ -203,13 +203,13 @@ export default function AuditLogsPage() {
             header: ({ column }) => (
                 <button
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                    className="flex items-center gap-2 hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+                    className="flex items-center gap-1.5 text-xs hover:bg-muted/50 px-2 py-0.5 rounded transition-colors"
                 >
                     TIME
                     {column.getIsSorted() ? (
-                        column.getIsSorted() === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
+                        column.getIsSorted() === "asc" ? <ChevronUp className="h-2.5 w-2.5" /> : <ChevronDown className="h-2.5 w-2.5" />
                     ) : (
-                        <ArrowUpDown className="h-3 w-3 opacity-50" />
+                        <ArrowUpDown className="h-2.5 w-2.5 opacity-50" />
                     )}
                 </button>
             ),
@@ -220,7 +220,7 @@ export default function AuditLogsPage() {
             accessorKey: "action",
             header: "ACTION",
             cell: ({ row }) => (
-                <Badge variant="outline" className="font-normal">
+                <Badge variant="outline" className="font-normal text-xs">
                     {row.original.action.replace(/_/g, " ")}
                 </Badge>
             ),
@@ -241,7 +241,7 @@ export default function AuditLogsPage() {
         {
             accessorKey: "resourceType",
             header: "RESOURCE",
-            cell: ({ row }) => <span className="text-sm font-medium">{row.original.resourceType}</span>,
+            cell: ({ row }) => <span className="text-xs font-medium">{row.original.resourceType}</span>,
             size: 120,
         },
         {
@@ -284,84 +284,109 @@ export default function AuditLogsPage() {
     };
 
     return (
-        <div className="flex flex-col h-full bg-background">
+        <div className="flex min-h-0 flex-1 flex-col bg-background">
             {/* Inline Filters Bar */}
-            <div className="flex-shrink-0 p-4 border-b border-border bg-card/50">
-                <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mr-2">
-                        <Filter className="h-4 w-4" />
-                        <span>Filters:</span>
-                    </div>
+            <div
+                className="flex flex-shrink-0 flex-wrap items-center gap-2 bg-card/50 p-2.5"
+                role="group"
+                aria-label="Audit log filters"
+            >
+                <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground shrink-0">
+                    <Filter className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    <span>Filters</span>
+                </div>
 
-                    <Select
-                        value={actionFilter}
-                        onValueChange={(value) => {
-                            setActionFilter(value);
-                            setFilters({ ...filters, action: value === "all" ? undefined : value, offset: 0 });
-                        }}
-                    >
-                        <SelectTrigger className="w-[160px] h-9 text-sm">
-                            <SelectValue placeholder="Action" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Actions</SelectItem>
-                            {uniqueActions.map((action) => (
-                                <SelectItem key={action} value={action}>{action.replace(/_/g, " ")}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                <Select
+                    value={actionFilter}
+                    onValueChange={(value) => {
+                        setActionFilter(value);
+                        setFilters({ ...filters, action: value === "all" ? undefined : value, offset: 0 });
+                    }}
+                >
+                    <SelectTrigger className="h-8 w-[132px] shrink-0 rounded border-border px-2.5 py-1.5 text-xs" aria-label="Filter by action">
+                        <SelectValue placeholder="Action" />
+                    </SelectTrigger>
+                    <SelectContent className="p-0.5">
+                        <SelectItem value="all" className="py-1 pl-6 pr-2 text-xs">All Actions</SelectItem>
+                        {uniqueActions.map((action) => (
+                            <SelectItem key={action} value={action} className="py-1 pl-6 pr-2 text-xs">{action.replace(/_/g, " ")}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
 
-                    <Select
-                        value={resourceTypeFilter}
-                        onValueChange={(value) => {
-                            setResourceTypeFilter(value);
-                            setFilters({ ...filters, resourceType: value === "all" ? undefined : value, offset: 0 });
-                        }}
-                    >
-                        <SelectTrigger className="w-[160px] h-9 text-sm">
-                            <SelectValue placeholder="Resource Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Resources</SelectItem>
-                            {uniqueResourceTypes.map((type) => (
-                                <SelectItem key={type} value={type}>{type}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                <Select
+                    value={resourceTypeFilter}
+                    onValueChange={(value) => {
+                        setResourceTypeFilter(value);
+                        setFilters({ ...filters, resourceType: value === "all" ? undefined : value, offset: 0 });
+                    }}
+                >
+                    <SelectTrigger className="h-8 w-[132px] shrink-0 rounded border-border px-2.5 py-1.5 text-xs" aria-label="Filter by resource type">
+                        <SelectValue placeholder="Resource type" />
+                    </SelectTrigger>
+                    <SelectContent className="p-0.5">
+                        <SelectItem value="all" className="py-1 pl-6 pr-2 text-xs">All Resources</SelectItem>
+                        {uniqueResourceTypes.map((type) => (
+                            <SelectItem key={type} value={type} className="py-1 pl-6 pr-2 text-xs">{type}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
 
-                    <Popover open={userDropdownOpen} onOpenChange={setUserDropdownOpen}>
-                        <PopoverTrigger asChild>
-                            <button className="h-9 min-w-[160px] px-3 py-1 flex items-center justify-between text-sm border border-input rounded-md bg-transparent hover:bg-accent hover:text-accent-foreground">
-                                <span className={selectedUserId ? "text-foreground" : "text-muted-foreground"}>
-                                    {selectedUserId ? allUsers.find(u => u.id === selectedUserId)?.name : "Filter by User"}
-                                </span>
-                                <ChevronDown className="h-4 w-4 opacity-50" />
+                <Popover open={userDropdownOpen} onOpenChange={setUserDropdownOpen}>
+                    <PopoverTrigger asChild>
+                        <button
+                            type="button"
+                            className={cn(
+                                "flex h-8 min-w-[132px] shrink-0 items-center justify-between rounded border border-input bg-background px-2.5 py-1.5 text-xs ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+                                selectedUserId ? "text-foreground" : "text-muted-foreground"
+                            )}
+                            aria-label={selectedUserId ? `Filter by user: ${allUsers.find(u => u.id === selectedUserId)?.name}` : "Filter by user"}
+                            aria-expanded={userDropdownOpen}
+                            aria-haspopup="dialog"
+                        >
+                            <span className="truncate">
+                                {selectedUserId ? allUsers.find(u => u.id === selectedUserId)?.name : "Filter by user"}
+                            </span>
+                            <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden />
+                        </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[200px] p-1.5" align="start" aria-label="Choose user">
+                        <Input
+                            type="search"
+                            autoComplete="off"
+                            spellCheck={false}
+                            className="mb-1.5 block h-7 w-full text-xs"
+                            placeholder="Search user…"
+                            value={userSearchInput}
+                            onChange={(e) => setUserSearchInput(e.target.value)}
+                            aria-label="Search users"
+                            autoFocus={!isMobile}
+                        />
+                        <div className="max-h-[180px] overflow-y-auto overscroll-behavior-contain space-y-0.5">
+                            <button
+                                type="button"
+                                className={cn(
+                                    "w-full rounded-sm px-2 py-1 text-left text-xs hover:bg-accent focus:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                                    !selectedUserId && "bg-accent/50 font-medium"
+                                )}
+                                onClick={() => {
+                                    setSelectedUserId("");
+                                    setUserDropdownOpen(false);
+                                }}
+                            >
+                                All users
                             </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[200px] p-2" align="start">
-                            <input
-                                className="w-full px-2 py-1 text-sm border rounded mb-2 bg-background"
-                                placeholder="Search user..."
-                                value={userSearchInput}
-                                onChange={(e) => setUserSearchInput(e.target.value)}
-                                aria-label="Search logs by user"
-                                autoFocus={!isMobile}
-                            />
-                            <div className="max-h-[200px] overflow-y-auto space-y-1">
-                                <button
-                                    className="w-full text-left px-2 py-1 text-sm rounded hover:bg-accent"
-                                    onClick={() => {
-                                        setSelectedUserId("");
-                                        setUserDropdownOpen(false);
-                                    }}
-                                >
-                                    All Users
-                                </button>
-                                {matchingUsers.map(user => (
+                            {matchingUsers.length === 0 && userSearchInput.trim() ? (
+                                <p className="px-2 py-1.5 text-xs text-muted-foreground" role="status">
+                                    No users found
+                                </p>
+                            ) : (
+                                matchingUsers.map((user) => (
                                     <button
                                         key={user.id}
+                                        type="button"
                                         className={cn(
-                                            "w-full text-left px-2 py-1 text-sm rounded hover:bg-accent truncate",
+                                            "w-full rounded-sm px-2 py-1 text-left text-xs truncate hover:bg-accent focus:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                                             selectedUserId === user.id && "bg-accent/50 font-medium"
                                         )}
                                         onClick={() => {
@@ -371,101 +396,112 @@ export default function AuditLogsPage() {
                                     >
                                         {user.name}
                                     </button>
-                                ))}
-                            </div>
-                        </PopoverContent>
-                    </Popover>
+                                ))
+                            )}
+                        </div>
+                    </PopoverContent>
+                </Popover>
 
-                    <div className="flex items-center gap-2 border-l pl-3 ml-1 h-6">
-                        <Input
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => {
-                                setStartDate(e.target.value);
-                                setFilters({ ...filters, startDate: e.target.value, offset: 0 });
-                            }}
-                            className="h-9 w-[130px]"
-                            placeholder="From date"
-                        />
-                        <span className="text-muted-foreground">-</span>
-                        <Input
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => {
-                                setEndDate(e.target.value);
-                                setFilters({ ...filters, endDate: e.target.value, offset: 0 });
-                            }}
-                            className="h-9 w-[130px]"
-                            placeholder="To date"
-                        />
-                    </div>
-
-                    {(actionFilter !== "all" || selectedUserId || resourceTypeFilter !== "all" || startDate || endDate) && (
-                        <Button variant="ghost" size="sm" onClick={resetFilters} className="ml-auto h-9">
-                            <RotateCcw className="mr-2 h-3.5 w-3.5" />
-                            Reset
-                        </Button>
-                    )}
+                <div
+                    className="flex h-8 shrink-0 items-center gap-1.5 border-l border-border pl-2"
+                    role="group"
+                    aria-label="Date range"
+                >
+                    <Input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => {
+                            setStartDate(e.target.value);
+                            setFilters({ ...filters, startDate: e.target.value, offset: 0 });
+                        }}
+                        className="block h-8 w-[112px] shrink-0 px-2 py-1.5 text-xs"
+                        placeholder="From"
+                        aria-label="From date"
+                    />
+                    <span className="text-muted-foreground shrink-0 text-xs" aria-hidden>–</span>
+                    <Input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => {
+                            setEndDate(e.target.value);
+                            setFilters({ ...filters, endDate: e.target.value, offset: 0 });
+                        }}
+                        className="block h-8 w-[112px] shrink-0 px-2 py-1.5 text-xs"
+                        placeholder="To"
+                        aria-label="To date"
+                    />
                 </div>
+
+                {(actionFilter !== "all" || selectedUserId || resourceTypeFilter !== "all" || startDate || endDate) && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={resetFilters}
+                        className="ml-auto h-8 shrink-0 px-2 text-xs"
+                        aria-label="Reset all filters"
+                    >
+                        <RotateCcw className="mr-1.5 h-3 w-3 shrink-0" aria-hidden />
+                        Reset
+                    </Button>
+                )}
             </div>
 
-            {/* Table Area */}
-            <div className="flex-1 p-4 min-h-0 bg-background/50">
-                <div className="rounded-md border bg-card h-full flex flex-col items-center justify-center">
-                    {isLoading ? (
-                        <div className="flex flex-col items-center gap-4 text-muted-foreground">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                            <p>Loading audit logs...</p>
-                        </div>
-                    ) : error ? (
-                        <div className="flex flex-col items-center gap-4 text-destructive">
-                            <AlertCircle className="h-10 w-10" />
-                            <p>Failed to load audit logs. Please try again.</p>
-                            <Button variant="outline" onClick={() => refetch()}>
-                                Retry
-                            </Button>
-                        </div>
-                    ) : filteredLogs.length === 0 ? (
-                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                            <FileSearch className="h-12 w-12 opacity-20" />
-                            <p className="font-medium">No audit logs found</p>
-                            <p className="text-sm">Try adjusting your filters.</p>
-                        </div>
-                    ) : (
-                        <div className="w-full h-full overflow-auto">
-                            <Table>
-                                <TableHeader>
-                                    {table.getHeaderGroups().map(headerGroup => (
-                                        <TableRow key={headerGroup.id}>
-                                            {headerGroup.headers.map(header => (
-                                                <TableHead key={header.id} style={{ width: header.getSize() }}>
-                                                    {flexRender(header.column.columnDef.header, header.getContext())}
-                                                </TableHead>
-                                            ))}
-                                        </TableRow>
-                                    ))}
-                                </TableHeader>
-                                <TableBody>
-                                    {table.getRowModel().rows.map(row => (
-                                        <TableRow key={row.id} className="hover:bg-muted/50">
-                                            {row.getVisibleCells().map(cell => (
-                                                <TableCell key={cell.id}>
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </TableCell>
-                                            ))}
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    )}
-                </div>
+            {/* Table Area — min-h-0 so flex constrains height and table scrolls instead of page */}
+            <div className="flex min-h-0 flex-1 flex-col rounded-md border bg-card p-4 overflow-hidden items-center justify-center">
+                {isLoading ? (
+                    <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" aria-hidden />
+                        <p className="text-sm">Loading audit logs…</p>
+                    </div>
+                ) : error ? (
+                    <div className="flex flex-col items-center gap-3 text-destructive">
+                        <AlertCircle className="h-8 w-8" aria-hidden />
+                        <p className="text-sm">Failed to load audit logs. Please try again.</p>
+                        <Button variant="outline" size="sm" onClick={() => refetch()}>
+                            Retry
+                        </Button>
+                    </div>
+                ) : filteredLogs.length === 0 ? (
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <FileSearch className="h-10 w-10 opacity-20" aria-hidden />
+                        <p className="text-sm font-medium">No audit logs found</p>
+                        <p className="text-sm">Try adjusting your filters.</p>
+                    </div>
+                ) : (
+                    <div className="min-h-0 w-full flex-1 flex flex-col">
+                        <Table className="text-xs [&_tr]:border-border/50" scrollContainerStyle={{ height: "100%" }}>
+                            <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_hsl(var(--border))] [&_tr]:border-b-0">
+                                {table.getHeaderGroups().map(headerGroup => (
+                                    <TableRow key={headerGroup.id} className="border-b border-border bg-card">
+                                        {headerGroup.headers.map(header => (
+                                            <TableHead key={header.id} style={{ width: header.getSize() }} className="h-8 px-2.5 text-xs font-medium text-muted-foreground bg-card">
+                                                {flexRender(header.column.columnDef.header, header.getContext())}
+                                            </TableHead>
+                                        ))}
+                                    </TableRow>
+                                ))}
+                            </TableHeader>
+                            <TableBody>
+                                {table.getRowModel().rows.map(row => (
+                                    <TableRow key={row.id} className="hover:bg-muted/50">
+                                        {row.getVisibleCells().map(cell => (
+                                            <TableCell key={cell.id} className="py-2 px-2.5 text-xs">
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                )}
             </div>
 
             {/* Pagination Footer */}
             {!isLoading && !error && filteredLogs.length > 0 && (
-                <div className="border-t border-border p-4 bg-card/50">
+                <div className="bg-card/50 p-2.5">
                     <DataTablePagination
+                        variant="compact"
                         currentPage={currentPage}
                         totalPages={totalPages}
                         pageSize={limit}
