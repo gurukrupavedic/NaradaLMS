@@ -292,8 +292,6 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
   }, [textSegments, mappings, selectedAudioFileId]);
 
   const displayTitle = chapter?.title || "Learn Chapter";
-  const trackName = chapter?.track?.title || undefined;
-  const chapterNumber = chapter?.order || undefined;
 
   if (chapterLoading) {
     return (
@@ -305,47 +303,15 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
 
   return (
     <div className="flex flex-col h-[calc(100dvh-4rem)]">
-      {/* Header */}
+      {/* Header: Left = Proficiency | Learn Mode; Right = Audio Selector | Audio Player */}
       <div className="bg-card border-b border-border flex-shrink-0">
-        <div className="px-6 py-3 flex items-start justify-between">
-          {/* Left: Titles aligned with rows */}
-          <div className="flex flex-col gap-3">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground h-7 flex items-center">
-              {trackName ? `Track ${chapter?.track?.order || chapter?.track?.id || '?'} - ${trackName}` : 'Learn Chapter'}
-            </p>
-            <h1 className="text-lg font-bold text-foreground leading-tight h-7 flex items-center">
-              {chapterNumber ? `Chapter ${chapterNumber} - ${displayTitle}` : displayTitle}
-            </h1>
-          </div>
+        <div className="px-6 py-3 flex items-center justify-between gap-4 flex-wrap">
+          {/* Visually hidden h1 for accessibility; breadcrumb provides visible context */}
+          <h1 className="sr-only">{displayTitle}</h1>
 
-          {/* Right: Grid Layout */}
-          <div className="flex flex-col gap-3">
-            {/* Row 1: Audio Selector + Proficiency */}
-            <div className="flex items-center gap-4">
-              <div className="w-72 flex justify-end">
-                {audioFiles.length > 0 && (
-                  <Select
-                    value={selectedAudioFileId?.toString() || ''}
-                    onValueChange={(value) => setSelectedAudioFileId(parseInt(value))}
-                  >
-                    <SelectTrigger className="h-7 w-full text-xs border-0 shadow-none bg-transparent hover:bg-accent focus:ring-2 focus:ring-ring px-2 gap-2 text-muted-foreground hover:text-foreground transition-colors justify-start">
-                      <div className="flex items-center gap-2 truncate w-full">
-                        <Music className="h-3.5 w-3.5 opacity-70 flex-shrink-0" />
-                        <SelectValue placeholder="Select audio" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent className="text-xs">
-                      {audioFiles.map((file) => (
-                        <SelectItem key={file.id} value={file.id.toString()}>
-                          {file.displayName || file.filename}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-
-              <div className="w-40 flex justify-end">
+          {/* Left: Proficiency Badge, Learn Mode */}
+          <div className="flex items-center gap-4 flex-shrink-0">
+            <div className="w-40 flex justify-start">
                 {(() => {
                   let status: 'practicing' | 'completed' | 'absent' | 'not_started' = 'not_started';
 
@@ -404,11 +370,43 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
                   );
                 })()}
               </div>
+
+              <div className="w-40 flex items-center gap-2 h-7 px-1">
+                <span className="text-xs font-medium text-muted-foreground">Learn Mode:</span>
+                <Switch
+                  checked={learnMode}
+                  onCheckedChange={setLearnMode}
+                  className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
+                />
+              </div>
+          </div>
+
+          {/* Right: Audio Selector, Audio Player */}
+          <div className="flex items-center gap-4 flex-shrink-0 ml-auto">
+            <div className="w-72 flex-shrink-0">
+                {audioFiles.length > 0 && (
+                  <Select
+                    value={selectedAudioFileId?.toString() || ''}
+                    onValueChange={(value) => setSelectedAudioFileId(parseInt(value))}
+                  >
+                    <SelectTrigger className="h-7 w-full text-xs border border-border bg-muted/50 hover:bg-muted focus:ring-2 focus:ring-ring focus:ring-offset-0 rounded-md px-2 gap-2 text-muted-foreground hover:text-foreground transition-colors justify-start">
+                      <div className="flex items-center gap-2 truncate w-full">
+                        <Music className="h-3.5 w-3.5 opacity-70 flex-shrink-0" />
+                        <SelectValue placeholder="Select audio" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="text-xs">
+                      {audioFiles.map((file) => (
+                        <SelectItem key={file.id} value={file.id.toString()}>
+                          {file.displayName || file.filename}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
             </div>
 
-            {/* Row 2: Audio Player + Learn Mode */}
-            <div className="flex items-center gap-4">
-              <div className="w-72 flex justify-end">
+            <div className="w-72 flex-shrink-0">
                 {selectedAudioFileId && (
                   <AudioPlayerControls
                     variant="minimal"
@@ -438,16 +436,6 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
                     className="w-full border-0 shadow-none bg-transparent p-0 gap-2"
                   />
                 )}
-              </div>
-
-              <div className="w-40 flex items-center justify-between h-7 px-1">
-                <span className="text-xs font-medium text-muted-foreground">Learn Mode:</span>
-                <Switch
-                  checked={learnMode}
-                  onCheckedChange={setLearnMode}
-                  className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
-                />
-              </div>
             </div>
           </div>
         </div>
