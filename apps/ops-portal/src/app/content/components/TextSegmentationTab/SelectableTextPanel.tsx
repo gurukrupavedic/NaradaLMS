@@ -241,21 +241,6 @@ export function SelectableTextPanel({
                 </div>
             </div>
 
-            {/* Clear selection control for accessibility */}
-            {onSegmentSelect && (
-                <div className="border-t border-border bg-muted/40 px-4 py-2 flex justify-end">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onSegmentSelect(undefined)}
-                        disabled={disabled}
-                    >
-                        Clear selection
-                    </Button>
-                </div>
-            )}
-
             {/* Floating Toolbar */}
             {showToolbar && selectedRange && !disabled && (
                 <div

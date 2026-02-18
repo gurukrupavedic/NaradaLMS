@@ -246,7 +246,7 @@ export function AudioFileManager({
                 aria-label="Upload audio file"
             />
             {/* Desktop Header (Matches SegmentMappingGrid style but empty) */}
-            <div className="h-12 shrink-0 bg-muted/30 border-b" />
+            <div className="h-11 shrink-0 bg-muted border-b" />
 
             <div className="flex-1 overflow-auto p-4 space-y-4">
                 {/* Controls Toolbar */}

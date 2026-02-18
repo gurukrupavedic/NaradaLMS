@@ -67,7 +67,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                 className
             )}>
                 {!hideHeader && (
-                    <div className="px-4 h-12 bg-muted/30 border-b flex-shrink-0 flex items-center justify-between">
+                    <div className="px-4 h-11 bg-muted border-b flex-shrink-0 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-muted-foreground">Script:</span>
                             {onScriptChange ? (

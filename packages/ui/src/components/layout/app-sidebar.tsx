@@ -59,11 +59,16 @@ const enhanceWithContextualItems = (items: any[], currentPath: string, contextua
         if (item.url === '/vedic-learning' || item.url === '/app/learning') {
             const chapterMatch = currentPath.match(/\/learning\/chapter\/(\d+)/);
             if (chapterMatch) {
+                // Same convention as ops portal: full label in breadcrumb, short label (no ": Title") in sidebar
+                const fullLabel = (contentContextLabel != null && contentContextLabel !== '')
+                    ? contentContextLabel
+                    : 'Learn Chapter';
+                const title = fullLabel.replace(/\s*: .*$/, '') || fullLabel;
                 return {
                     ...item,
                     items: [
                         {
-                            title: 'Learn Chapter',
+                            title,
                             url: currentPath,
                             isContextual: true,
                         },
@@ -134,7 +139,7 @@ export function AppSidebar({
                 {navSections.learn && (
                     <NavMain
                         label={getSectionLabel('learn')}
-                        items={enhanceWithContextualItems(navSections.learn.items as any, currentPath, contextualNavigation)}
+                        items={enhanceWithContextualItems(navSections.learn.items as any, currentPath, contextualNavigation, contentContextLabel)}
                         currentPath={currentPath}
                     />
                 )}

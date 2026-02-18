@@ -74,7 +74,7 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                                     } else if (pathname.match(/\/learning\/chapter\/\d+/)) {
                                         segments = [
                                             { label: 'Vedic Learning', href: '/vedic-learning' },
-                                            { label: 'Learn Chapter' }
+                                            { label: contentContextLabel ?? 'Learn Chapter' }
                                         ];
                                     } else if (pathname.startsWith('/admin')) {
                                         segments = [{ label: 'Admin Center', href: '/admin' }];

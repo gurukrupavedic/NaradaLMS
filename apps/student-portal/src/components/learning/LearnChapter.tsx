@@ -19,6 +19,7 @@ import { getProficiencyLabel, getCellColor } from "@/lib/matrix-utils";
 import { AudioPlayerControls } from "@/components/common/AudioPlayerControls";
 import type { EnrichedTextSegment as TextSegment, ContentMap } from "@narada/types";
 import { useAuth } from "@/hooks/useAuth";
+import { useContentContextLabelSetter } from "@/lib/learning/ContentContextLabelContext";
 import { formatDate } from "@shared/utils/date";
 
 interface ChapterData {
@@ -68,6 +69,7 @@ interface StudentProgressDTO {
 
 export default function LearnChapter({ chapterId }: { chapterId: number }) {
   const { user } = useAuth();
+  const setContentContextLabel = useContentContextLabelSetter();
 
   const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
   const [selectedAudioFileId, setSelectedAudioFileId] = useState<number | null>(null);
@@ -162,6 +164,17 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
     apiRequest(`/learning/chapters/${chapterId}/access`, { method: 'POST' })
       .catch(() => { });
   }, [chapterId]);
+
+  // Set sidebar/breadcrumb context label (same convention as ops portal chapter content page)
+  useEffect(() => {
+    if (chapter?.track?.order != null && chapter?.order != null) {
+      const titlePart = chapter.title ? `: ${chapter.title}` : "";
+      setContentContextLabel(`Track ${chapter.track!.order}. Chapter ${chapter.order}${titlePart}`);
+    } else {
+      setContentContextLabel(null);
+    }
+    return () => setContentContextLabel(null);
+  }, [chapter?.track?.order, chapter?.order, chapter?.title, setContentContextLabel]);
 
   // Auto-select first audio file
   useEffect(() => {
