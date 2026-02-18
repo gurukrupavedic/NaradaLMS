@@ -380,7 +380,7 @@ export default function TracksAndChapters() {
             minSize={25}
             className="flex flex-col h-full min-h-0 bg-card/50 rounded-lg border shadow-sm mr-3 min-w-0"
           >
-            <div className="h-14 px-4 border-b flex justify-between items-center bg-card rounded-t-lg shrink-0">
+            <div className="h-14 px-4 border-b flex justify-between items-center bg-muted rounded-t-lg shrink-0">
               <div className="flex items-center gap-2">
                 <LibraryBig className="w-5 h-5 text-primary shrink-0" />
                 <h2 className="font-semibold">Tracks</h2>
@@ -430,7 +430,7 @@ export default function TracksAndChapters() {
           >
             {selectedTrack ? (
               <>
-                <div className="h-14 px-4 border-b flex justify-between items-center bg-card rounded-t-lg shrink-0">
+                <div className="h-14 px-4 border-b flex justify-between items-center bg-muted rounded-t-lg shrink-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <BookText className="w-5 h-5 text-primary shrink-0" />
                     <div className="min-w-0">

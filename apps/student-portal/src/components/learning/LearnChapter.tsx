@@ -459,10 +459,10 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
             />
           </div>
         ) : (
-          // Learn Mode ON - Segmented view
-          <div className="h-full flex flex-col">
+          // Learn Mode ON - Segmented view (headers match RTE toolbar/status bar when learn mode off)
+          <div className="h-full flex flex-col border border-border rounded-lg overflow-hidden">
             {/* Script selector header with badges */}
-            <div className="border border-border border-b-0 rounded-t-lg bg-muted h-11 flex items-center justify-center gap-6 px-4 py-1">
+            <div className="border-b border-border rounded-t-lg bg-muted min-h-[2.75rem] flex items-center justify-center gap-6 px-4 py-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-medium text-muted-foreground">Script:</span>
                 <Select
@@ -497,7 +497,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
             </div>
 
             {/* Segmented text view */}
-            <div className="flex-1 min-h-0 border border-border border-b-0 bg-card overflow-hidden relative">
+            <div className="flex-1 min-h-0 bg-card overflow-hidden relative">
               {chapter?.content?.[contentScript] ? (
                 <SelectableTextPanel
                   content={chapter.content}
@@ -516,7 +516,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
             </div>
 
             {/* StatusBar with fullscreen toggle for Segmented mode */}
-            <div className="rte-status-bar border border-border rounded-b-lg h-11">
+            <div className="border-t border-border rounded-b-lg bg-muted min-h-[2.75rem] flex items-center px-4 py-1">
               <button
                 onClick={toggleFullScreen}
                 aria-label={isFullScreen ? "Exit Fullscreen" : "Fullscreen"}
