@@ -12,12 +12,15 @@ interface OpsLayoutProps {
     useActualRoles?: boolean;
     /** Whether to include contextual navigation (e.g., for instructor pages) */
     showContextualNav?: boolean;
+    /** Optional label for content chapter context (e.g. "Track 1. Chapter 3") */
+    contentContextLabel?: string | null;
 }
 
 export default function OpsLayout({
     children,
     useActualRoles = false,
     showContextualNav = false,
+    contentContextLabel = null,
 }: OpsLayoutProps) {
     const { user, isLoading, logout } = useAuth();
     const router = useRouter();
@@ -66,6 +69,8 @@ export default function OpsLayout({
             userRoles={portalRoles}
             customNavigation={opsNavigation}
             contextualNavigation={showContextualNav ? contextualNavigation : undefined}
+            contentContextLabel={contentContextLabel}
+            homeHref="/admin"
             onLogout={logout}
         >
             {children}

@@ -16,6 +16,7 @@ import {
 import { UserRole } from "../../lib/navigation-config"
 import { usePathname } from "next/navigation"
 import { cn } from "../../lib/utils"
+import { Home } from "lucide-react"
 
 interface AppShellProps {
     children: React.ReactNode
@@ -29,9 +30,11 @@ interface AppShellProps {
     homeHref?: string
     customNavigation?: any
     contextualNavigation?: Map<string, any>
+    /** Optional label for content chapter (e.g. "Track 1. Chapter 3") for breadcrumb and sidebar */
+    contentContextLabel?: string | null
 }
 
-export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation }: AppShellProps) {
+export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation, contentContextLabel }: AppShellProps) {
     // We need to pass currentPath to Sidebar for active state
     // Since this is in @narada/ui, we assume usage in Next.js app context
     const pathname = usePathname()
@@ -46,6 +49,7 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                 homeHref={homeHref}
                 customNavigation={customNavigation}
                 contextualNavigation={contextualNavigation}
+                contentContextLabel={contentContextLabel}
             />
             <SidebarInset>
                 <header className="flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b bg-background px-4">
@@ -56,8 +60,8 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                         <Breadcrumb>
                             <BreadcrumbList>
                                 <BreadcrumbItem className="hidden md:block">
-                                    <BreadcrumbLink href={homeHref}>
-                                        App
+                                    <BreadcrumbLink href={homeHref} aria-label="Home">
+                                        <Home className="h-4 w-4" />
                                     </BreadcrumbLink>
                                 </BreadcrumbItem>
                                 <BreadcrumbSeparator className="hidden md:block" />
@@ -99,6 +103,16 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                                         }
                                     } else if (pathname.startsWith('/content')) {
                                         segments = [{ label: 'Content Studio', href: '/content' }];
+                                        const tracksMatch = pathname.match(/\/content\/tracks\/([^/]+)/);
+                                        const chaptersMatch = pathname.match(/\/content\/tracks\/[^/]+\/chapters\/([^/]+)/);
+                                        if (!tracksMatch) {
+                                            segments.push({ label: 'Tracks & Chapters' });
+                                        } else {
+                                            segments.push({ label: 'Tracks & Chapters', href: chaptersMatch ? '/content' : undefined });
+                                            if (chaptersMatch) {
+                                                segments.push({ label: contentContextLabel ?? 'Chapter' });
+                                            }
+                                        }
                                     } else {
                                         // Fallback for unknown routes
                                         segments = [{ label: 'Vedic Learning' }];
@@ -128,8 +142,8 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                         <ThemeToggle />
                     </div>
                 </header>
-                <div className={cn("flex flex-1 flex-col gap-4 p-4 pt-0 max-w-7xl mx-auto w-full", {
-                    "p-0 gap-0 max-w-none": pathname.match(/\/learning\/chapter\/\d+/) || pathname.match(/\/content\/tracks\/.+/)
+                <div className={cn("flex flex-1 min-h-0 flex-col gap-4 p-4 pt-0 max-w-7xl mx-auto w-full", {
+                    "p-0 gap-0 max-w-none": pathname === '/content' || pathname.match(/\/learning\/chapter\/\d+/) || pathname.match(/\/content\/tracks\/.+/)
                 })}>
                     {children}
                 </div>

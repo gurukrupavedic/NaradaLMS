@@ -15,7 +15,7 @@ import { NavUser } from "./nav-user"
 import { BrandHeader } from "./brand-header"
 import { getNavigationForRole, UserRole, getSectionLabel } from "../../lib/navigation-config"
 
-const enhanceWithContextualItems = (items: any[], currentPath: string, contextualNav?: Map<string, any>) => {
+const enhanceWithContextualItems = (items: any[], currentPath: string, contextualNav?: Map<string, any>, contentContextLabel?: string | null) => {
     if (!items) return [];
 
     // Normalize path for matching (strip trailing slash and query params)
@@ -33,12 +33,14 @@ const enhanceWithContextualItems = (items: any[], currentPath: string, contextua
                     const match = normalizedPath.match(regex);
 
                     if (match) {
+                        const isContentChapter = pattern.startsWith('/content/tracks/') && pattern.includes('/chapters/');
+                        const title = isContentChapter && (contentContextLabel != null && contentContextLabel !== '') ? contentContextLabel : config.label;
                         return {
                             ...item,
                             items: [
                                 ...(item.items || []),
                                 {
-                                    title: config.label,
+                                    title,
                                     url: currentPath,
                                     isContextual: true,
                                 }
@@ -99,6 +101,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     homeHref?: string;
     customNavigation?: any;
     contextualNavigation?: Map<string, any>;
+    contentContextLabel?: string | null;
 }
 
 export function AppSidebar({
@@ -109,6 +112,7 @@ export function AppSidebar({
     homeHref = "/app",
     customNavigation,
     contextualNavigation,
+    contentContextLabel,
     ...props
 }: AppSidebarProps) {
 
@@ -142,7 +146,7 @@ export function AppSidebar({
                 {navSections.content && (
                     <NavMain
                         label={getSectionLabel('content')}
-                        items={navSections.content.items}
+                        items={enhanceWithContextualItems(navSections.content.items as any, currentPath, contextualNavigation, contentContextLabel)}
                         currentPath={currentPath}
                     />
                 )}

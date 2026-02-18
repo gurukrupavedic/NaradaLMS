@@ -372,13 +372,13 @@ export default function TracksAndChapters() {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] bg-background flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-hidden p-4 w-full h-full">
+    <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden bg-background max-w-7xl mx-auto w-full">
+      <div className="flex-1 min-h-0 overflow-hidden p-4 w-full h-full">
         <ResizablePanelGroup direction="horizontal" onLayout={handleLayoutChange} className="h-full">
           <ResizablePanel
             defaultSize={columnSizes.left}
             minSize={25}
-            className="flex flex-col h-full bg-card/50 rounded-lg border shadow-sm mr-3 min-w-0"
+            className="flex flex-col h-full min-h-0 bg-card/50 rounded-lg border shadow-sm mr-3 min-w-0"
           >
             <div className="h-14 px-4 border-b flex justify-between items-center bg-card rounded-t-lg shrink-0">
               <div className="flex items-center gap-2">
@@ -394,7 +394,7 @@ export default function TracksAndChapters() {
               </Button>
             </div>
 
-            <ScrollArea className="flex-1 min-w-0 p-4" type="hover">
+            <ScrollArea className="flex-1 min-h-0 min-w-0 p-4 bg-card" type="hover">
               <div className="min-w-0 w-full max-w-full overflow-x-hidden">
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndTrack}>
                   <SortableContext items={tracks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
@@ -426,7 +426,7 @@ export default function TracksAndChapters() {
           <ResizablePanel
             defaultSize={columnSizes.right}
             minSize={25}
-            className="flex flex-col h-full bg-card/50 rounded-lg border shadow-sm ml-3 min-w-0"
+            className="flex flex-col h-full min-h-0 bg-card/50 rounded-lg border shadow-sm ml-3 min-w-0"
           >
             {selectedTrack ? (
               <>
@@ -444,7 +444,7 @@ export default function TracksAndChapters() {
                   </Button>
                 </div>
 
-                <ScrollArea className="flex-1 min-w-0 p-4" type="hover">
+                <ScrollArea className="flex-1 min-h-0 min-w-0 p-4 bg-card" type="hover">
                   <div className="min-w-0 w-full max-w-full overflow-x-hidden">
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndChapter}>
                       <SortableContext items={selectedTrackChapters.map((c) => c.id)} strategy={verticalListSortingStrategy}>
