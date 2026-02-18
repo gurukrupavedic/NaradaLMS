@@ -34,7 +34,11 @@ const enhanceWithContextualItems = (items: any[], currentPath: string, contextua
 
                     if (match) {
                         const isContentChapter = pattern.startsWith('/content/tracks/') && pattern.includes('/chapters/');
-                        const title = isContentChapter && (contentContextLabel != null && contentContextLabel !== '') ? contentContextLabel : config.label;
+                        // Sidebar shows short label (e.g. "Track 1. Chapter 1"); breadcrumbs keep full label with chapter name
+                        const fullLabel = isContentChapter && (contentContextLabel != null && contentContextLabel !== '') ? contentContextLabel : config.label;
+                        const title = isContentChapter && fullLabel !== config.label
+                            ? fullLabel.replace(/\s*: .*$/, '')
+                            : fullLabel;
                         return {
                             ...item,
                             items: [
