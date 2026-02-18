@@ -39,15 +39,16 @@ export function NavMain({
 }: {
     label: string;
     items: NavMainItem[];
-    currentPath?: string;
+    currentPath?: string | null;
 }) {
+    const path = currentPath ?? '';
 
     const isItemActive = (item: NavMainItem) => {
-        if (currentPath === item.url) return true;
-        if (item.items && item.items.length > 0 && currentPath.startsWith(item.url + '/')) {
+        if (path === item.url) return true;
+        if (item.items && item.items.length > 0 && path.startsWith(item.url + '/')) {
             return true;
         }
-        if (item.items?.some(subItem => currentPath === subItem.url)) return true;
+        if (item.items?.some(subItem => path === subItem.url)) return true;
         return false;
     };
 
@@ -55,7 +56,7 @@ export function NavMain({
         if (!item.items || item.items.length === 0) return false;
         const hasContextualItems = item.items.some(sub => sub.isContextual);
         if (hasContextualItems) {
-            return isItemActive(item) && currentPath !== item.url;
+            return isItemActive(item) && path !== item.url;
         }
         return true;
     };

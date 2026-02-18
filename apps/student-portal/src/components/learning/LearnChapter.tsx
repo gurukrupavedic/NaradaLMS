@@ -305,13 +305,13 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
     <div className="flex flex-col h-[calc(100dvh-4rem)]">
       {/* Header: Left = Proficiency | Learn Mode; Right = Audio Selector | Audio Player */}
       <div className="bg-card border-b border-border flex-shrink-0">
-        <div className="px-6 py-3 flex items-center justify-between gap-4 flex-wrap">
+        <div className="min-h-11 py-2 px-3 sm:px-6 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4 flex-wrap min-w-0">
           {/* Visually hidden h1 for accessibility; breadcrumb provides visible context */}
           <h1 className="sr-only">{displayTitle}</h1>
 
           {/* Left: Proficiency Badge, Learn Mode */}
-          <div className="flex items-center gap-4 flex-shrink-0">
-            <div className="w-40 flex justify-start">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 min-w-0">
+            <div className="w-32 sm:w-40 min-w-0 flex justify-start">
                 {(() => {
                   let status: 'practicing' | 'completed' | 'absent' | 'not_started' = 'not_started';
 
@@ -333,7 +333,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
                     <Badge
                       variant="outline"
                       className={cn(
-                        "h-7 w-full justify-between text-xs font-medium border flex items-center px-3",
+                        "h-8 w-full justify-between text-xs font-medium border flex items-center px-2 sm:px-3 min-h-10 sm:min-h-0",
                         colors.bgColor,
                         colors.textColor,
                         colors.borderColor,
@@ -371,8 +371,8 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
                 })()}
               </div>
 
-              <div className="w-40 flex items-center gap-2 h-7 px-1">
-                <span className="text-xs font-medium text-muted-foreground">Learn Mode:</span>
+              <div className="w-32 sm:w-40 flex items-center gap-2 h-8 min-h-10 sm:min-h-0 px-1 shrink-0">
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Learn Mode:</span>
                 <Switch
                   checked={learnMode}
                   onCheckedChange={setLearnMode}
@@ -382,14 +382,14 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
           </div>
 
           {/* Right: Audio Selector, Audio Player */}
-          <div className="flex items-center gap-4 flex-shrink-0 ml-auto">
-            <div className="w-72 flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 ml-auto min-w-0">
+            <div className="min-w-0 w-44 sm:w-72 flex-shrink-0">
                 {audioFiles.length > 0 && (
                   <Select
                     value={selectedAudioFileId?.toString() || ''}
                     onValueChange={(value) => setSelectedAudioFileId(parseInt(value))}
                   >
-                    <SelectTrigger className="h-7 w-full text-xs border border-border bg-muted/50 hover:bg-muted focus:ring-2 focus:ring-ring focus:ring-offset-0 rounded-md px-2 gap-2 text-muted-foreground hover:text-foreground transition-colors justify-start">
+                    <SelectTrigger className="h-8 min-h-10 sm:min-h-0 w-full text-xs border border-border bg-muted/50 hover:bg-muted focus:ring-2 focus:ring-ring focus:ring-offset-0 rounded-md px-2 gap-2 text-muted-foreground hover:text-foreground transition-colors justify-start">
                       <div className="flex items-center gap-2 truncate w-full">
                         <Music className="h-3.5 w-3.5 opacity-70 flex-shrink-0" />
                         <SelectValue placeholder="Select audio" />
@@ -406,7 +406,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
                 )}
             </div>
 
-            <div className="w-72 flex-shrink-0">
+            <div className="min-w-0 w-44 sm:w-72 flex-shrink-0">
                 {selectedAudioFileId && (
                   <AudioPlayerControls
                     variant="minimal"
@@ -433,7 +433,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
                     }}
                     showSkipButtons={false}
                     showPlaybackRate={true}
-                    className="w-full border-0 shadow-none bg-transparent p-0 gap-2"
+                    className="w-full min-w-0 border-0 shadow-none bg-transparent p-0 gap-2"
                   />
                 )}
             </div>

@@ -380,15 +380,15 @@ export default function TracksAndChapters() {
             minSize={25}
             className="flex flex-col h-full min-h-0 bg-card/50 rounded-lg border shadow-sm mr-3 min-w-0"
           >
-            <div className="h-14 px-4 border-b flex justify-between items-center bg-muted rounded-t-lg shrink-0">
-              <div className="flex items-center gap-2">
+            <div className="min-h-11 h-11 py-2 px-3 sm:px-4 border-b flex justify-between items-center bg-muted rounded-t-lg shrink-0 gap-2 min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
                 <LibraryBig className="w-5 h-5 text-primary shrink-0" />
-                <h2 className="font-semibold">Tracks</h2>
+                <h2 className="font-semibold text-sm truncate">Tracks</h2>
                 <Badge variant="secondary" className="ml-2">
                   {tracksQuery.isLoading ? '…' : tracks.length}
                 </Badge>
               </div>
-              <Button size="sm" onClick={() => openCreateDialog('track')}>
+              <Button size="sm" className="h-8 shrink-0" onClick={() => openCreateDialog('track')}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Track
               </Button>
@@ -430,15 +430,15 @@ export default function TracksAndChapters() {
           >
             {selectedTrack ? (
               <>
-                <div className="h-14 px-4 border-b flex justify-between items-center bg-muted rounded-t-lg shrink-0">
+                <div className="min-h-11 h-11 py-2 px-3 sm:px-4 border-b flex justify-between items-center bg-muted rounded-t-lg shrink-0 gap-2 min-w-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <BookText className="w-5 h-5 text-primary shrink-0" />
                     <div className="min-w-0">
-                      <h2 className="font-semibold truncate">{selectedTrack.title}</h2>
+                      <h2 className="font-semibold text-sm truncate">{selectedTrack.title}</h2>
                       <p className="text-xs text-muted-foreground">{selectedTrackChapters.length} chapters</p>
                     </div>
                   </div>
-                  <Button size="sm" onClick={() => openCreateDialog('chapter')} disabled={!selectedTrackId}>
+                  <Button size="sm" className="h-8 shrink-0" onClick={() => openCreateDialog('chapter')} disabled={!selectedTrackId}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add Chapter
                   </Button>

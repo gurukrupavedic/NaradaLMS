@@ -105,7 +105,7 @@ function ChapterContentPageContent() {
                     />
 
                     {/* Tabs Content Area */}
-                    <div className="flex-1 overflow-auto bg-muted/10 p-6">
+                    <div className="flex-1 overflow-auto bg-muted/10 p-4">
                         <TabsContent value="text-segmentation" className="h-full m-0">
                             <TextSegmentationTab mode={textSegMode} />
                         </TabsContent>
