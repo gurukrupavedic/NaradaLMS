@@ -133,12 +133,19 @@ export class IdentityService {
   }
 
   /**
+   * Get user counts by status (for admin UI tab badges). Optional search filter.
+   */
+  async getUserStatusCounts(search?: string) {
+    return await identityStorage.getUserStatusCounts(search);
+  }
+
+  /**
    * Get users with database-level pagination and optional filters (admin only)
    */
   async listUsersPaginated(
     limit: number,
     offset: number,
-    filters?: { status?: string; role?: string }
+    filters?: { status?: string; role?: string; search?: string }
   ) {
     return await identityStorage.listUsersPaginated(limit, offset, filters);
   }
