@@ -41,8 +41,8 @@ export const useAuditLogs = (filters: AuditLogFilters) => {
         queryKey: ['audit-logs', filters],
         queryFn: async () => {
             const params = new URLSearchParams();
-            if (filters.limit) params.append('limit', filters.limit.toString());
-            if (filters.offset) params.append('offset', filters.offset.toString());
+            params.append('limit', String(filters.limit ?? 25));
+            params.append('offset', String(filters.offset ?? 0));
             if (filters.userId) params.append('userId', filters.userId);
             if (filters.action && filters.action !== 'all') params.append('action', filters.action);
             if (filters.resourceType && filters.resourceType !== 'all') params.append('resourceType', filters.resourceType);

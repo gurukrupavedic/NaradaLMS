@@ -80,10 +80,19 @@ export class AdminStorage {
       query = query.where(and(...conditions)) as any;
     }
 
-    return await query
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const [countRow] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(auditLogs)
+      .where(whereClause as any);
+    const total = Number(countRow?.count ?? 0);
+
+    const rows = await query
       .orderBy(desc(auditLogs.timestamp))
       .limit(filters.limit)
       .offset(filters.offset);
+
+    return { rows, total };
   }
 
   /**

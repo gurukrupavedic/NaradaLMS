@@ -21,6 +21,8 @@ interface DataTablePaginationProps<TData> {
     currentPage?: number;
     totalPages?: number;
     pageSize?: number;
+    /** Total number of rows across all pages (for "Showing X to Y of Z rows") */
+    totalRowCount?: number;
     onPageChange?: (page: number) => void;
     onPageSizeChange?: (pageSize: number) => void;
     className?: string;
@@ -32,6 +34,7 @@ export function DataTablePagination<TData>({
     currentPage,
     totalPages,
     pageSize,
+    totalRowCount,
     onPageChange,
     onPageSizeChange,
     className,
@@ -43,9 +46,13 @@ export function DataTablePagination<TData>({
     const _pageSize = isManual ? pageSize : table?.getState().pagination.pageSize;
     const _pageIndex = isManual ? (currentPage ?? 1) - 1 : table?.getState().pagination.pageIndex;
     const _pageCount = isManual ? (totalPages ?? 1) : table?.getPageCount();
+    const _totalRows = isManual ? (totalRowCount ?? 0) : (table?.getFilteredRowModel().rows.length ?? 0);
 
     const canPrev = isManual ? (_pageIndex! > 0) : table?.getCanPreviousPage();
     const canNext = isManual ? (_pageIndex! < (_pageCount! - 1)) : table?.getCanNextPage();
+
+    const start = _totalRows === 0 ? 0 : _pageIndex! * _pageSize! + 1;
+    const end = _totalRows === 0 ? 0 : Math.min((_pageIndex! + 1) * _pageSize!, _totalRows);
 
     const setPageIndex = (idx: number) => {
         if (isManual) {
@@ -74,8 +81,9 @@ export function DataTablePagination<TData>({
             )}
         >
             <div className={cn("flex-1 text-muted-foreground", isCompact ? "text-xs" : "text-sm")}>
+                Showing {start} to {end} of {_totalRows} rows
                 {table?.getFilteredSelectedRowModel().rows.length ? (
-                    <>{table.getFilteredSelectedRowModel().rows.length} row(s) selected.</>
+                    <span className="ml-4">{table.getFilteredSelectedRowModel().rows.length} row(s) selected.</span>
                 ) : null}
             </div>
             <div className={cn("flex items-center", isCompact ? "space-x-3" : "space-x-6 lg:space-x-8")}>
@@ -91,7 +99,7 @@ export function DataTablePagination<TData>({
                             <SelectValue placeholder={_pageSize} />
                         </SelectTrigger>
                         <SelectContent side="top">
-                            {[10, 20, 30, 40, 50].map((pageSize) => (
+                            {[10, 20, 25, 30, 40, 50].map((pageSize) => (
                                 <SelectItem key={pageSize} value={`${pageSize}`} className={isCompact ? "py-1 pl-6 pr-2 text-xs" : undefined}>
                                     {pageSize}
                                 </SelectItem>
