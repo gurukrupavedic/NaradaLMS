@@ -16,8 +16,7 @@ import { PreviewTab } from '@/app/content/components/PreviewTab/PreviewTab';
 import { useAudioManagement } from '@/lib/content/hooks/useAudioManagement';
 
 export default function ChapterContentPage() {
-    // Role guard - only content managers can access this page
-    useRoleGuard(['content_manager']);
+    useRoleGuard(['admin']);
 
     const params = useParams();
     const chapterId = params?.chapterId as string;

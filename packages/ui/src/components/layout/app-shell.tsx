@@ -104,7 +104,7 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                                             }
                                         }
                                     } else if (path.startsWith('/content')) {
-                                        segments = [{ label: 'Content Studio', href: '/content' }];
+                                        segments = [{ label: 'Tracks & Chapters', href: '/content' }];
                                         const tracksMatch = path.match(/\/content\/tracks\/([^/]+)/);
                                         const chaptersMatch = path.match(/\/content\/tracks\/[^/]+\/chapters\/([^/]+)/);
                                         if (!tracksMatch) {

@@ -11,7 +11,7 @@ import {
     Logs,
 } from 'lucide-react';
 
-export type UserRole = 'student' | 'instructor' | 'content_manager' | 'admin';
+export type UserRole = 'student' | 'instructor' | 'admin';
 
 export interface NavItem {
     title: string;
@@ -46,28 +46,28 @@ const learnSection: NavSection = {
     ],
 };
 
-// Batches & Progress - Instructor and Admin
+// Batches & Progress - Instructor and Admin (used in student portal)
 const batchesSection: NavSection = {
     items: [
         {
             title: 'My Batches',
-            url: '/app/instructor/batches',
+            url: '/instructor/batches',
             icon: UserPlus,
         },
         {
             title: 'My Students',
-            url: '/app/instructor/students',
+            url: '/instructor/students',
             icon: CircleUser,
         },
     ],
 };
 
-// Content Studio - Content Manager and Admin
+// Content (Tracks & Chapters) - Admin only (used in ops portal under Admin Center)
 const contentSection: NavSection = {
     items: [
         {
             title: 'Tracks & Chapters',
-            url: '/app/content',
+            url: '/content',
             icon: LibraryBig,
         },
     ],
@@ -123,15 +123,10 @@ export function getNavigationForRole(roles?: UserRole[] | UserRole): {
         nav.batches = batchesSection;
     }
 
-    // Content Manager ONLY: can see content studio + learn
-    // Admin does NOT get content studio access (separation of duties)
-    if (roleArray.includes('content_manager')) {
-        nav.content = contentSection;
-    }
-
-    // Admin: sees admin center + batches (content excluded)
+    // Admin: sees admin center + content (Tracks & Chapters)
     if (roleArray.includes('admin')) {
         nav.admin = adminSection;
+        nav.content = contentSection;
     }
 
     return nav;
@@ -144,7 +139,7 @@ export function getSectionLabel(key: 'learn' | 'batches' | 'content' | 'admin'):
     const labels: Record<string, string> = {
         learn: 'Learn',
         batches: 'Batches & Progress',
-        content: 'Content Studio',
+        content: 'Tracks & Chapters',
         admin: 'Admin Center',
     };
     return labels[key] || '';

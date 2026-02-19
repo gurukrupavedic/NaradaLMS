@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { contentService } from "../modules/content-publishing";
-import { requireContentManager } from "../shared/middleware/auth";
+import { requireAdmin } from "../shared/middleware/auth";
 import { jwtAuth } from "../middleware/jwt-auth.middleware";
 import multer from 'multer';
 import path from 'path';
@@ -12,8 +12,8 @@ import { createErrorResponse } from "../shared/utils/api-response";
 
 const router = Router();
 
-// Protect all content routes: authenticated users can READ, content managers can WRITE
-// We'll apply requireContentManager selectively on POST/PUT/DELETE routes
+// Protect all content routes: authenticated users can READ, admins can WRITE
+// We apply requireAdmin selectively on POST/PUT/DELETE routes
 router.use(jwtAuth);
 
 /**
@@ -47,7 +47,7 @@ router.get('/tracks/:id', async (req: Request, res: Response, next: NextFunction
 });
 
 // POST /api/tracks - Create new track (content managers only)
-router.post('/tracks', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/tracks', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, description } = req.body;
     if (!title || !description) {
@@ -66,7 +66,7 @@ router.post('/tracks', requireContentManager, async (req: Request, res: Response
 });
 
 // PUT /api/tracks/:id - Update track (content managers only)
-router.put('/tracks/:id', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.put('/tracks/:id', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const trackId = parseInt(req.params.id);
     const track = await contentService.updateTrack(trackId, req.body);
@@ -77,7 +77,7 @@ router.put('/tracks/:id', requireContentManager, async (req: Request, res: Respo
 });
 
 // DELETE /api/tracks/:id - Delete track (content managers only)
-router.delete('/tracks/:id', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/tracks/:id', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const trackId = parseInt(req.params.id);
     await contentService.deleteTrack(trackId);
@@ -88,7 +88,7 @@ router.delete('/tracks/:id', requireContentManager, async (req: Request, res: Re
 });
 
 // POST /api/tracks/:id/move - Reorder track (up/down) (content managers only)
-router.post('/tracks/:id/move', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/tracks/:id/move', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const trackId = parseInt(req.params.id);
     const { direction } = req.body;
@@ -140,7 +140,7 @@ router.get('/chapters/:chapterId/details', async (req: Request, res: Response, n
 });
 
 // POST /tracks/:trackId/chapters - Create chapter under track
-router.post('/tracks/:trackId/chapters', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/tracks/:trackId/chapters', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user as Express.User;
     const trackId = parseInt(req.params.trackId);
@@ -155,7 +155,7 @@ router.post('/tracks/:trackId/chapters', requireContentManager, async (req: Requ
 });
 
 // PATCH /api/chapters/:chapterId - Update chapter
-router.patch('/chapters/:chapterId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/chapters/:chapterId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const chapter = await contentService.updateChapter(chapterId, req.body);
@@ -166,7 +166,7 @@ router.patch('/chapters/:chapterId', requireContentManager, async (req: Request,
 });
 
 // New: PUT /chapters/:chapterId - Update chapter (alias for PATCH)
-router.put('/chapters/:chapterId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.put('/chapters/:chapterId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const chapter = await contentService.updateChapter(chapterId, req.body);
@@ -175,7 +175,7 @@ router.put('/chapters/:chapterId', requireContentManager, async (req: Request, r
 });
 
 // PATCH /api/chapters/:chapterId/status - Publish/unpublish chapter
-router.patch('/chapters/:chapterId/status', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/chapters/:chapterId/status', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const { status } = req.body;
@@ -199,7 +199,7 @@ router.patch('/chapters/:chapterId/status', requireContentManager, async (req: R
 });
 
 // POST /api/chapters/:id/move - Reorder or move to another track
-router.post('/chapters/:id/move', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/chapters/:id/move', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.id);
     const { direction, toTrackId } = req.body as { direction?: 'up' | 'down'; toTrackId?: number };
@@ -224,7 +224,7 @@ router.post('/chapters/:id/move', requireContentManager, async (req: Request, re
 });
 
 // DELETE /api/chapters/:id - Delete chapter
-router.delete('/chapters/:id', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/chapters/:id', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.id);
     await contentService.deleteChapter(chapterId);
@@ -292,7 +292,7 @@ router.get('/chapters/:chapterId/segments', async (req: Request, res: Response, 
 });
 
 // POST /api/segments - Create text segment
-router.post('/segments', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/segments', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { chapterId, script, startPosition, endPosition, order } = req.body;
 
@@ -339,7 +339,7 @@ router.post('/segments', requireContentManager, async (req: Request, res: Respon
 });
 
 // New: POST /chapters/:chapterId/segments - Create segment under chapter
-router.post('/chapters/:chapterId/segments', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/chapters/:chapterId/segments', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const { script, startPosition, endPosition, order } = req.body;
@@ -365,7 +365,7 @@ router.post('/chapters/:chapterId/segments', requireContentManager, async (req: 
 });
 
 // PATCH /api/segments/:segmentId - Update text segment
-router.patch('/segments/:segmentId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/segments/:segmentId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const segmentId = parseInt(req.params.segmentId);
     const segment = await contentService.updateSegment(segmentId, req.body);
@@ -376,7 +376,7 @@ router.patch('/segments/:segmentId', requireContentManager, async (req: Request,
 });
 
 // New: PUT /chapters/:chapterId/segments/:segmentId - Update segment (alias)
-router.put('/chapters/:chapterId/segments/:segmentId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.put('/chapters/:chapterId/segments/:segmentId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const segmentId = parseInt(req.params.segmentId);
     const segment = await contentService.updateSegment(segmentId, req.body);
@@ -385,7 +385,7 @@ router.put('/chapters/:chapterId/segments/:segmentId', requireContentManager, as
 });
 
 // DELETE /api/segments/:segmentId - Delete text segment
-router.delete('/segments/:segmentId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/segments/:segmentId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const segmentId = parseInt(req.params.segmentId);
     await contentService.deleteSegment(segmentId);
@@ -396,7 +396,7 @@ router.delete('/segments/:segmentId', requireContentManager, async (req: Request
 });
 
 // New: DELETE /chapters/:chapterId/segments/:segmentId - Delete segment (alias)
-router.delete('/chapters/:chapterId/segments/:segmentId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/chapters/:chapterId/segments/:segmentId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const segmentId = parseInt(req.params.segmentId);
     await contentService.deleteSegment(segmentId);
@@ -405,7 +405,7 @@ router.delete('/chapters/:chapterId/segments/:segmentId', requireContentManager,
 });
 
 // New: DELETE /chapters/:chapterId/segments/all - Clear all segments for a script
-router.delete('/chapters/:chapterId/segments/all/clear', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/chapters/:chapterId/segments/all/clear', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const script = req.query.script as string;
@@ -423,7 +423,7 @@ router.delete('/chapters/:chapterId/segments/all/clear', requireContentManager, 
 });
 
 // POST /chapters/:chapterId/segments/reorder - Reorder segments
-router.post('/chapters/:chapterId/segments/reorder', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/chapters/:chapterId/segments/reorder', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const { segmentOrders } = req.body;
@@ -470,7 +470,7 @@ router.get('/chapters/:chapterId/audio', async (req: Request, res: Response, nex
 });
 
 // POST /chapters/:chapterId/audio - Upload audio file
-router.post('/chapters/:chapterId/audio', requireContentManager, upload.single('audio'), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/chapters/:chapterId/audio', requireAdmin, upload.single('audio'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.file) {
       return res.status(400).json(createErrorResponse('No audio file provided', 'NO_FILE_PROVIDED'));
@@ -498,7 +498,7 @@ router.post('/chapters/:chapterId/audio', requireContentManager, upload.single('
 });
 
 // PUT /chapters/:chapterId/audio/:audioFileId - Update audio file metadata
-router.put('/chapters/:chapterId/audio/:audioFileId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.put('/chapters/:chapterId/audio/:audioFileId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.audioFileId);
     const file = await mediaService.updateAudioFile(id, req.body);
@@ -507,7 +507,7 @@ router.put('/chapters/:chapterId/audio/:audioFileId', requireContentManager, asy
 });
 
 // DELETE /chapters/:chapterId/audio/:audioFileId - Delete audio file
-router.delete('/chapters/:chapterId/audio/:audioFileId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/chapters/:chapterId/audio/:audioFileId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.audioFileId);
     await mediaService.deleteAudioFile(id);
@@ -535,7 +535,7 @@ router.get('/chapters/:chapterId/mappings', async (req: Request, res: Response, 
 });
 
 // POST /chapters/:chapterId/mappings - Create mapping
-router.post('/chapters/:chapterId/mappings', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/chapters/:chapterId/mappings', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const { audioFileId, textSegmentId, startTime, endTime } = req.body;
@@ -550,7 +550,7 @@ router.post('/chapters/:chapterId/mappings', requireContentManager, async (req: 
 });
 
 // PUT /chapters/:chapterId/mappings/:mappingId - Update mapping timestamps
-router.put('/chapters/:chapterId/mappings/:mappingId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.put('/chapters/:chapterId/mappings/:mappingId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const mappingId = parseInt(req.params.mappingId);
@@ -574,7 +574,7 @@ router.put('/chapters/:chapterId/mappings/:mappingId', requireContentManager, as
 });
 
 // DELETE /chapters/:chapterId/mappings/:mappingId - Delete mapping (and underlying media segment)
-router.delete('/chapters/:chapterId/mappings/:mappingId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/chapters/:chapterId/mappings/:mappingId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const mappingId = parseInt(req.params.mappingId);
     await mediaService.deleteMappingById(mappingId);
@@ -583,7 +583,7 @@ router.delete('/chapters/:chapterId/mappings/:mappingId', requireContentManager,
 });
 
 // New: DELETE /chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId - Delete by natural key
-router.delete('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const audioFileId = parseInt(req.params.audioFileId);
     const segmentId = parseInt(req.params.segmentId);
@@ -593,7 +593,7 @@ router.delete('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segment
 });
 
 // New: PATCH /chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId - Update by natural key
-router.patch('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const audioFileId = parseInt(req.params.audioFileId);
     const segmentId = parseInt(req.params.segmentId);

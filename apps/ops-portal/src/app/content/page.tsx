@@ -78,7 +78,7 @@ interface DeleteState {
 }
 
 export default function TracksAndChapters() {
-  useRoleGuard(['content_manager']);
+  useRoleGuard(['admin']);
   const router = useRouter();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -90,7 +90,7 @@ export default function TracksAndChapters() {
   const [deleteState, setDeleteState] = useState<DeleteState>({ isOpen: false, itemType: 'track' });
   const [formData, setFormData] = useState<{ title: string; description: string; trackId?: number }>({ title: '', description: '' });
 
-  const isContentManager = user?.roles?.includes('content_manager');
+  const isAdmin = user?.roles?.includes('admin');
 
   const tracksQuery = useQuery<TrackRow[]>({
     queryKey: ['content', 'tracks'],
@@ -361,11 +361,11 @@ export default function TracksAndChapters() {
     reorderChapterMutation.mutate({ chapterId: Number(active.id), direction, steps });
   };
 
-  if (!isContentManager) {
+  if (!isAdmin) {
     return (
       <div className="p-6">
         <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">You need the content_manager role to access Content Studio.</CardContent>
+          <CardContent className="py-8 text-center text-muted-foreground">You need the admin role to access Tracks & Chapters.</CardContent>
         </Card>
       </div>
     );

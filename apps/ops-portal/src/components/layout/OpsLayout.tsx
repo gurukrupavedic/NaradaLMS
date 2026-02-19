@@ -43,17 +43,13 @@ export default function OpsLayout({
         return null;
     }
 
-    // Determine which roles to show in navigation
-    let portalRoles: UserRole[];
-    if (useActualRoles) {
-        portalRoles = user.roles.filter((role: string) =>
-            ['instructor', 'admin', 'content_manager'].includes(role)
-        ) as UserRole[];
-        if (portalRoles.length === 0) portalRoles = ['instructor'];
-    } else {
-        portalRoles = ['admin', 'instructor', 'content_manager'];
+    // Ops portal is admin-only; redirect non-admins
+    if (!user.roles?.includes('admin')) {
+        router.push("/");
+        return null;
     }
 
+    const portalRoles: UserRole[] = ['admin'];
     const opsNavigation = getOpsNavigationForRole(portalRoles);
 
     // Map AuthUser to AppShell user shape (name, email, avatar)

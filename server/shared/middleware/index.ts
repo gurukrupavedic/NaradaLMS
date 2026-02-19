@@ -4,11 +4,10 @@ import {
   requireRole,
   requireAdmin,
   requireInstructor,
-  requireContentManager,
 } from "./auth";
 
 // Re-export auth helpers
-export { authMiddleware, requireRole, requireAdmin, requireInstructor, requireContentManager };
+export { authMiddleware, requireRole, requireAdmin, requireInstructor };
 
 /**
  * Validate Request Middleware - Placeholder

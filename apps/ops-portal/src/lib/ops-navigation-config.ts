@@ -1,15 +1,13 @@
 import {
-    CircleUser,
     LibraryBig,
     Logs,
     Settings,
     UserCog,
-    UserPlus,
     Users,
     LucideIcon,
 } from 'lucide-react';
 
-export type UserRole = 'student' | 'instructor' | 'admin' | 'content_manager';
+export type UserRole = 'student' | 'instructor' | 'admin';
 
 export interface NavItem {
     title: string;
@@ -27,15 +25,11 @@ export interface NavSection {
 }
 
 /**
- * Ops Portal Navigation Configuration
- * Defines navigation structure for Admin, Instructor, and Content Manager roles.
- * Uses role-based URL prefixes:
- * - Admin: /admin/*
- * - Instructor: /instructor/*
- * - Content Manager: /content/*
+ * Ops Portal Navigation Configuration (Admin only)
+ * Admin Center includes Users, Batches, Audit Logs, Settings, and Content (Tracks & Chapters).
  */
 
-// Admin Center - Admin only
+// Admin Center - Admin only (includes content management)
 const adminSection: NavSection = {
     items: [
         {
@@ -58,28 +52,6 @@ const adminSection: NavSection = {
             url: '/admin/settings',
             icon: Settings,
         },
-    ],
-};
-
-// Batches & Progress - Instructor and Admin
-const batchesSection: NavSection = {
-    items: [
-        {
-            title: 'My Batches',
-            url: '/instructor/batches',
-            icon: UserPlus,
-        },
-        {
-            title: 'My Students',
-            url: '/instructor/students',
-            icon: CircleUser,
-        },
-    ],
-};
-
-// Content Studio - Content Manager and Admin
-const contentSection: NavSection = {
-    items: [
         {
             title: 'Tracks & Chapters',
             url: '/content',
@@ -88,34 +60,13 @@ const contentSection: NavSection = {
     ],
 };
 
-// Contextual navigation mapping for dynamic routes
+// Contextual navigation mapping for dynamic routes (chapter editor)
 export const contextualNavigation = new Map([
-    // Student Progress Context
-    ['/instructor/students/:id', {
-        label: 'Student Progress',
-        parentPath: '/instructor/students',
-        breadcrumbs: [
-            { label: 'My Students', href: '/instructor/students' },
-            { label: 'Progress', href: '#' }
-        ]
-    }],
-
-    // Batch Progress Context
-    ['/instructor/batches/:id', {
-        label: 'Batch Details',
-        parentPath: '/instructor/batches',
-        breadcrumbs: [
-            { label: 'My Batches', href: '/instructor/batches' },
-            { label: 'Details', href: '#' }
-        ]
-    }],
-
-    // Chapter content (Content Studio)
     ['/content/tracks/:trackId/chapters/:chapterId', {
         label: 'Chapter',
         parentPath: '/content',
         breadcrumbs: [
-            { label: 'Content Studio', href: '/content' },
+            { label: 'Admin Center', href: '/admin' },
             { label: 'Tracks & Chapters', href: '/content' },
             { label: 'Chapter', href: '#' }
         ]
@@ -123,35 +74,15 @@ export const contextualNavigation = new Map([
 ]);
 
 /**
- * Get navigation sections for ops-portal user roles
+ * Get navigation sections for ops-portal (admin only)
  */
 export function getOpsNavigationForRole(roles?: UserRole[] | UserRole): {
-    batches?: NavSection;
-    content?: NavSection;
     admin?: NavSection;
+    content?: NavSection;
 } {
-    // Normalize to array
     const roleArray = Array.isArray(roles) ? roles : (roles ? [roles] : []);
+    const nav: { admin?: NavSection; content?: NavSection } = {};
 
-    const nav: {
-        batches?: NavSection;
-        content?: NavSection;
-        admin?: NavSection;
-    } = {};
-
-    // Instructor or Admin: can see batches
-    if (roleArray.includes('instructor') || roleArray.includes('admin')) {
-        nav.batches = batchesSection;
-    }
-
-    // Content Manager ONLY: can see content studio
-    // Admin does NOT get content studio access here (separation of duties)
-    // NOTE: If Admin needs content access, add 'content_manager' role to user
-    if (roleArray.includes('content_manager')) {
-        nav.content = contentSection;
-    }
-
-    // Admin: sees admin center
     if (roleArray.includes('admin')) {
         nav.admin = adminSection;
     }

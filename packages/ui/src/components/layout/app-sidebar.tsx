@@ -57,7 +57,7 @@ const enhanceWithContextualItems = (items: any[], currentPath: string | null | u
 
         // 2. Hardcoded fallbacks for existing patterns
         if (item.url === '/vedic-learning' || item.url === '/app/learning') {
-            const chapterMatch = currentPath.match(/\/learning\/chapter\/(\d+)/);
+            const chapterMatch = normalizedPath.match(/\/learning\/chapter\/(\d+)/);
             if (chapterMatch) {
                 // Same convention as ops portal: full label in breadcrumb, short label (no ": Title") in sidebar
                 const fullLabel = (contentContextLabel != null && contentContextLabel !== '')
@@ -78,7 +78,7 @@ const enhanceWithContextualItems = (items: any[], currentPath: string | null | u
         }
 
         if (item.url === '/admin/batches') {
-            const batchDetailMatch = currentPath.match(/^\/admin\/batches\/(\d+)$/);
+            const batchDetailMatch = normalizedPath.match(/^\/admin\/batches\/(\d+)$/);
             if (batchDetailMatch) {
                 const batchId = batchDetailMatch[1];
                 return {

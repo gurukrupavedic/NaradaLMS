@@ -34,7 +34,6 @@ export const requireRole = (...roles: string[]) => {
   };
 };
 
-// Role hierarchy: admin has access to everything
+// Role hierarchy: admin has access to everything (including content management)
 export const requireAdmin = requireRole("admin");
 export const requireInstructor = requireRole("instructor", "admin");
-export const requireContentManager = requireRole("content_manager", "admin");

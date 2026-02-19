@@ -51,11 +51,10 @@ import { ArrowUpDown } from "lucide-react";
 const ROLE_LABELS: Record<string, string> = {
     admin: "Admin",
     instructor: "Instructor",
-    content_manager: "Content Manager",
     student: "Student",
 };
 
-const ALL_ROLES = ["student", "instructor", "content_manager", "admin"] as const;
+const ALL_ROLES = ["student", "instructor", "admin"] as const;
 
 const DEFAULT_COUNTS = { all: 0, pending_approval: 0, active: 0, inactive: 0 };
 

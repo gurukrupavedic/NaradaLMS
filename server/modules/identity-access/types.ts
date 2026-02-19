@@ -2,7 +2,7 @@
  * Identity & Access Module - Type Definitions
  */
 
-export type UserRole = "admin" | "instructor" | "student" | "content_manager";
+export type UserRole = "admin" | "instructor" | "student";
 export type UserStatus = "pending_approval" | "active" | "inactive";
 
 export interface User {

@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { mediaService } from '../modules/media-pipeline';
-import { requireContentManager } from '../shared/middleware/auth';
+import { requireAdmin } from '../shared/middleware/auth';
 import { jwtAuth } from '../middleware/jwt-auth.middleware';
 import multer from 'multer';
 import path from 'path';
@@ -42,7 +42,7 @@ router.get('/audio-files/:chapterId', async (req: Request, res: Response, next: 
   } catch (error) { next(error); }
 });
 
-router.post('/audio-files/:chapterId/upload', requireContentManager, upload.single('audio'), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/audio-files/:chapterId/upload', requireAdmin, upload.single('audio'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.file) {
       return res.status(400).json(createErrorResponse('No audio file provided', 'NO_FILE_PROVIDED'));
@@ -79,7 +79,7 @@ router.post('/audio-files/:chapterId/upload', requireContentManager, upload.sing
   } catch (error) { next(error); }
 });
 
-router.patch('/audio-files/:audioFileId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/audio-files/:audioFileId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.audioFileId);
     const file = await mediaService.updateAudioFile(id, req.body);
@@ -87,7 +87,7 @@ router.patch('/audio-files/:audioFileId', requireContentManager, async (req: Req
   } catch (error) { next(error); }
 });
 
-router.delete('/audio-files/:audioFileId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/audio-files/:audioFileId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.audioFileId);
     await mediaService.deleteAudioFile(id);
@@ -126,7 +126,7 @@ const segmentSchema = z.object({
   }),
 });
 
-router.post('/media-segments/bulk', requireContentManager, validateRequest(bulkSegmentsSchema), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/media-segments/bulk', requireAdmin, validateRequest(bulkSegmentsSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { segments } = req.body;
     // Array check redundant with Zod but harmless
@@ -145,7 +145,7 @@ router.post('/media-segments/bulk', requireContentManager, validateRequest(bulkS
   } catch (error) { next(error); }
 });
 
-router.post('/media-segments', requireContentManager, validateRequest(segmentSchema), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/media-segments', requireAdmin, validateRequest(segmentSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const seg = await mediaService.createMediaSegment({
       audioFileId: req.body.audioFileId,
@@ -158,7 +158,7 @@ router.post('/media-segments', requireContentManager, validateRequest(segmentSch
   } catch (error) { next(error); }
 });
 
-router.delete('/media-segments/:id', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/media-segments/:id', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.id);
     await mediaService.deleteMediaSegment(id);
@@ -201,7 +201,7 @@ router.get('/mappings/audio/:audioFileId/count', async (req: Request, res: Respo
   } catch (error) { next(error); }
 });
 
-router.post('/mappings', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/mappings', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { audioFileId, textSegmentId, startTime, endTime } = req.body;
     const mapping = await mediaService.createMapping({
@@ -215,7 +215,7 @@ router.post('/mappings', requireContentManager, async (req: Request, res: Respon
   } catch (error) { next(error); }
 });
 
-router.delete('/mappings/:audioFileId/:segmentId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/mappings/:audioFileId/:segmentId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const audioFileId = parseInt(req.params.audioFileId);
     const segmentId = parseInt(req.params.segmentId);

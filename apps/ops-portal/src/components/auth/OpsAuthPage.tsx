@@ -116,38 +116,20 @@ export function OpsAuthPage() {
 
                     <LoginForm
                         onSuccess={(userData) => {
-                            // RBAC Check: Block student-only users
-                            const hasOnlyStudentRole =
-                                userData.roles &&
-                                userData.roles.length === 1 &&
-                                userData.roles[0] === 'student';
-
-                            if (hasOnlyStudentRole) {
+                            const roles = userData?.roles || [];
+                            if (!roles.includes('admin')) {
                                 toast({
                                     title: "Access Denied",
-                                    description: "Student accounts cannot access the operations portal. Please use the student portal.",
+                                    description: "You do not have the appropriate role to access the operations portal. Only administrators can sign in here.",
                                     variant: "destructive",
                                     duration: 5000
                                 });
-                                // Logout to clear session
                                 apiRequest("/auth/logout", { method: "POST" }).catch(console.error);
                                 return;
                             }
-
-                            // User has additional roles - allow access
                             queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
-                            // Redirect based on user's primary role (use userData from login response)
-                            const roles = userData?.roles || [];
                             setTimeout(() => {
-                                if (roles.includes('admin')) {
-                                    window.location.href = "/admin";
-                                } else if (roles.includes('instructor')) {
-                                    window.location.href = "/instructor";
-                                } else if (roles.includes('content_manager')) {
-                                    window.location.href = "/content";
-                                } else {
-                                    window.location.href = "/admin";
-                                }
+                                window.location.href = "/admin";
                             }, 500);
                         }}
                     />

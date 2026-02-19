@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { FixedSizeList, type ListChildComponentProps } from "react-window";
+import { List, type RowComponentProps } from "react-window";
 import { cn } from "../lib/utils";
 
 export interface VirtualizedListProps<T> {
@@ -31,23 +31,22 @@ function VirtualizedListInner<T>({
   overscanCount = 2,
 }: VirtualizedListProps<T>) {
   const Row = React.useCallback(
-    ({ index, style }: ListChildComponentProps) => (
+    ({ index, style }: RowComponentProps<object>) => (
       <div style={style}>{renderItem(items[index], index)}</div>
     ),
     [items, renderItem]
   );
 
   return (
-    <FixedSizeList
-      height={height}
-      width={width}
-      itemCount={items.length}
-      itemSize={estimateSize}
+    <List
+      rowCount={items.length}
+      rowHeight={estimateSize}
+      rowComponent={Row}
+      rowProps={{}}
       overscanCount={overscanCount}
       className={cn(className)}
-    >
-      {Row}
-    </FixedSizeList>
+      style={{ height, width: width ?? "100%" }}
+    />
   );
 }
 

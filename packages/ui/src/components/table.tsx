@@ -4,7 +4,7 @@ import { cn } from "../lib/utils"
 
 export interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
     /** Optional ref for the scroll container (div with overflow-auto). Use with VirtualizedTableBody. */
-    scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
+    scrollContainerRef?: React.RefObject<HTMLDivElement>;
     /** Optional style for the scroll container (e.g. { height: 400 } when using VirtualizedTableBody). */
     scrollContainerStyle?: React.CSSProperties;
 }

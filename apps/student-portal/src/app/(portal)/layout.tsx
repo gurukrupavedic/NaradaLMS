@@ -4,8 +4,30 @@ import { AppShell } from "@narada/ui";
 import { useAuth } from "@/hooks/useAuth";
 import { LoadingSpinner } from "@narada/ui";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ContentContextLabelContext } from "@/lib/learning/ContentContextLabelContext";
+
+/** Roles that can see nav sections in the student portal. Only Learn + Batches & Progress. No admin/content sections. */
+const STUDENT_PORTAL_NAV_ROLES = ["student", "instructor"] as const;
+
+const instructorContextualNavigation = new Map([
+    ["/instructor/students/:id", {
+        label: "Student Progress",
+        parentPath: "/instructor/students",
+        breadcrumbs: [
+            { label: "My Students", href: "/instructor/students" },
+            { label: "Progress", href: "#" }
+        ]
+    }],
+    ["/instructor/batches/:id", {
+        label: "Batch Details",
+        parentPath: "/instructor/batches",
+        breadcrumbs: [
+            { label: "My Batches", href: "/instructor/batches" },
+            { label: "Details", href: "#" }
+        ]
+    }],
+]);
 
 export default function PortalLayout({
     children,
@@ -29,6 +51,16 @@ export default function PortalLayout({
         }
     }, [pathname]);
 
+    // Student portal only shows Learn + Batches & Progress. We pass only STUDENT_PORTAL_NAV_ROLES
+    // so the shared AppShell/sidebar never shows Tracks & Chapters or Admin Center here.
+    const userRoles = useMemo(() => {
+        const roles = (user?.roles ?? ["student"]) as string[];
+        const allowed = roles.filter((r): r is "student" | "instructor" =>
+            STUDENT_PORTAL_NAV_ROLES.includes(r as (typeof STUDENT_PORTAL_NAV_ROLES)[number])
+        );
+        return allowed.length > 0 ? [...allowed] : ["student"];
+    }, [user?.roles]);
+
     if (isLoading) {
         return (
             <div className="h-screen w-full flex items-center justify-center">
@@ -49,10 +81,11 @@ export default function PortalLayout({
                     email: user.email,
                     avatar: user.profileImageUrl || ""
                 }}
-                userRoles={['student']}
+                userRoles={userRoles}
                 onLogout={logout}
                 homeHref="/vedic-learning"
                 contentContextLabel={contentContextLabel}
+                contextualNavigation={instructorContextualNavigation}
             >
                 {children}
             </AppShell>
