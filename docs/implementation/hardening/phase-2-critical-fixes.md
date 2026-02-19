@@ -126,7 +126,7 @@ apiRequest(`/learning/chapters/${chapterId}/access`, { method: 'POST' })
 
 ## Task 2.3: Fix `useDropEnrollment` Double API Prefix
 
-**File**: `apps/ops-portal/src/lib/hooks/useBatchRelations.ts`
+**File**: `apps/admin-portal/src/lib/hooks/useBatchRelations.ts`
 
 The `useDropEnrollment` hook prepends `/api/` to the endpoint, but `apiRequest` already prepends `/api`. This results in a request to `/api/api/enrollments/...` which 404s.
 
@@ -166,9 +166,9 @@ export function useDropEnrollment(batchId: number) {
 }
 ```
 
-**Also check**: Grep the entire ops-portal for other hooks that may have the same `/api/` prefix issue:
+**Also check**: Grep the entire admin-portal for other hooks that may have the same `/api/` prefix issue:
 ```bash
-rg '"/api/' apps/ops-portal/src/lib/hooks/ --files-with-matches
+rg '"/api/' apps/admin-portal/src/lib/hooks/ --files-with-matches
 ```
 
 Fix any other instances found with the same pattern (remove the `/api` prefix since `apiRequest` adds it).
@@ -181,9 +181,9 @@ Fix any other instances found with the same pattern (remove the `/api` prefix si
 
 ---
 
-## Task 2.4: Fix Ops Portal `QueryClient` SSR Leak
+## Task 2.4: Fix Admin Portal `QueryClient` SSR Leak
 
-**File**: `apps/ops-portal/src/components/providers.tsx`
+**File**: `apps/admin-portal/src/components/providers.tsx`
 
 The `QueryClient` is created at module level, which means it's shared across all requests during SSR. This can leak data between users.
 
@@ -277,7 +277,7 @@ const [queryClient] = useState(() => new QueryClient({
 Both portals have identical `useAuth` hooks that swallow all errors as "not authenticated." This masks real issues like network failures or server errors.
 
 **File**: `apps/student-portal/src/hooks/useAuth.ts`
-**File**: `apps/ops-portal/src/hooks/useAuth.ts`
+**File**: `apps/admin-portal/src/hooks/useAuth.ts`
 
 Apply the same change to BOTH files:
 
@@ -337,12 +337,12 @@ import { apiRequest } from "../lib/api";
 
 ---
 
-## Task 2.6: Fix Hardcoded `localhost:5000` Redirects in Ops Portal Layouts
+## Task 2.6: Fix Hardcoded `localhost:5000` Redirects in Admin Portal Layouts
 
 **Files**:
-- `apps/ops-portal/src/app/admin/layout.tsx`
-- `apps/ops-portal/src/app/instructor/layout.tsx`
-- `apps/ops-portal/src/app/content/layout.tsx`
+- `apps/admin-portal/src/app/admin/layout.tsx`
+- `apps/admin-portal/src/app/instructor/layout.tsx`
+- `apps/admin-portal/src/app/content/layout.tsx`
 
 All three layouts redirect unauthenticated users to `http://localhost:5000/login`. This should redirect to the ops portal's own login page at `/`.
 
@@ -366,7 +366,7 @@ router.push("/");
 ## Task 2.7: Fix Hardcoded Google OAuth URL
 
 **File**: `apps/student-portal/src/components/auth/StudentAuthPage.tsx`
-**File**: `apps/ops-portal/src/components/auth/OpsAuthPage.tsx`
+**File**: `apps/admin-portal/src/components/auth/AdminAuthPage.tsx`
 
 Both files hardcode `http://localhost:5000/api` as the fallback for Google OAuth.
 
@@ -397,7 +397,7 @@ const handleGoogleLogin = () => {
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ```
 
-**File**: `apps/ops-portal/.env.local`
+**File**: `apps/admin-portal/.env.local`
 ```
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ```
@@ -408,7 +408,7 @@ NEXT_PUBLIC_API_URL=http://localhost:5000/api
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ```
 
-**File**: `apps/ops-portal/.env.example`
+**File**: `apps/admin-portal/.env.example`
 ```
 # API server URL (required)
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
@@ -423,9 +423,9 @@ Add `.env.local` to `.gitignore` if not already there. The `.env.example` files 
 
 ---
 
-## Task 2.8: Fix OpsAuthPage Post-Login Redirect
+## Task 2.8: Fix AdminAuthPage Post-Login Redirect
 
-**File**: `apps/ops-portal/src/components/auth/OpsAuthPage.tsx`
+**File**: `apps/admin-portal/src/components/auth/AdminAuthPage.tsx`
 
 After successful login, the page always redirects to `/admin`, even for instructor-only users.
 
@@ -487,7 +487,7 @@ These do not block Phase 2 completion; they are documented so later phases run s
 
 2. **`@narada/ui` build blocker**: `SidebarMenuButton` in `packages/ui/src/components/sidebar.tsx` uses `variant` and `size` props but they are not declared on the component's type. This causes `npx tsc --noEmit` and portal builds to fail. Phase 4 Task 4.7 includes fixing this (add `variant?: string` and `size?: string` to the component's props type).
 
-3. **Next.js rewrites**: `apps/ops-portal/next.config.ts` (and similar) may hardcode `localhost:5000` for dev proxies. Phase 6 addresses environment-driven configuration.
+3. **Next.js rewrites**: `apps/admin-portal/next.config.ts` (and similar) may hardcode `localhost:5000` for dev proxies. Phase 6 addresses environment-driven configuration.
 
 ---
 

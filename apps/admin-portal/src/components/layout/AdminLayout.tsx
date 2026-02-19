@@ -4,11 +4,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { AppShell, UserRole } from "@narada/ui";
 import { useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { getOpsNavigationForRole, contextualNavigation } from "@/lib/ops-navigation-config";
+import { getAdminNavigationForRole, contextualNavigation } from "@/lib/admin-navigation-config";
 
-interface OpsLayoutProps {
+interface AdminLayoutProps {
     children: ReactNode;
-    /** If true, use the user's actual roles. If false, show all ops roles. */
+    /** If true, use the user's actual roles. If false, show all admin roles. */
     useActualRoles?: boolean;
     /** Whether to include contextual navigation (e.g., for instructor pages) */
     showContextualNav?: boolean;
@@ -16,12 +16,12 @@ interface OpsLayoutProps {
     contentContextLabel?: string | null;
 }
 
-export default function OpsLayout({
+export default function AdminLayout({
     children,
     useActualRoles = false,
     showContextualNav = false,
     contentContextLabel = null,
-}: OpsLayoutProps) {
+}: AdminLayoutProps) {
     const { user, isLoading, logout } = useAuth();
     const router = useRouter();
 
@@ -43,14 +43,14 @@ export default function OpsLayout({
         return null;
     }
 
-    // Ops portal is admin-only; redirect non-admins
+    // Admin portal is admin-only; redirect non-admins
     if (!user.roles?.includes('admin')) {
         router.push("/");
         return null;
     }
 
     const portalRoles: UserRole[] = ['admin'];
-    const opsNavigation = getOpsNavigationForRole(portalRoles);
+    const adminNavigation = getAdminNavigationForRole(portalRoles);
 
     // Map AuthUser to AppShell user shape (name, email, avatar)
     const shellUser = {
@@ -63,7 +63,7 @@ export default function OpsLayout({
         <AppShell
             user={shellUser}
             userRoles={portalRoles}
-            customNavigation={opsNavigation}
+            customNavigation={adminNavigation}
             contextualNavigation={showContextualNav ? contextualNavigation : undefined}
             contentContextLabel={contentContextLabel}
             homeHref="/admin"

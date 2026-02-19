@@ -1,6 +1,6 @@
 # Web Interface Guidelines
 
-This document captures coding standards and guardrails for the Narada LMS web UIs (student-portal, ops-portal, packages/ui). Following these prevents regressions on accessibility, performance, and consistency.
+This document captures coding standards and guardrails for the Narada LMS web UIs (student-portal, admin-portal, packages/ui). Following these prevents regressions on accessibility, performance, and consistency.
 
 ## Focus & Accessibility
 

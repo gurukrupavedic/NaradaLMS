@@ -25,7 +25,7 @@ export interface NavSection {
 }
 
 /**
- * Ops Portal Navigation Configuration (Admin only)
+ * Admin Portal Navigation Configuration (Admin only)
  * Admin Center includes Users, Batches, Audit Logs, Settings, and Content Studio.
  */
 
@@ -74,9 +74,9 @@ export const contextualNavigation = new Map([
 ]);
 
 /**
- * Get navigation sections for ops-portal (admin only)
+ * Get navigation sections for admin portal (admin only)
  */
-export function getOpsNavigationForRole(roles?: UserRole[] | UserRole): {
+export function getAdminNavigationForRole(roles?: UserRole[] | UserRole): {
     admin?: NavSection;
     content?: NavSection;
 } {

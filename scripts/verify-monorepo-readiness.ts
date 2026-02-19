@@ -20,7 +20,7 @@ const SHARED_CANDIDATES = [
   path.join(CLIENT_SRC, 'lib'), // Shared utils (except utils.ts if it has specific app deps, but typically pure)
 ];
 
-// These are folders that WILL move to apps/student-portal or apps/ops-portal
+// These are folders that WILL move to apps/student-portal or apps/admin-portal
 // Shared candidates MUST NOT import from these
 const FORBIDDEN_DEPENDENCIES = [
   'features/learning',

@@ -8,14 +8,14 @@
 
 ## 1. Overview
 
-**Goal**: Migrate from modular monolith to 3-container monorepo (Student Portal, Ops Portal, API) with **ZERO logic/UI changes** and **Zero Regression**.
+**Goal**: Migrate from modular monolith to 3-container monorepo (Student Portal, Admin Portal, API) with **ZERO logic/UI changes** and **Zero Regression**.
 **Core Principle**: Pure refactoring. Reorganizing folders without changing functionality.
 **Architecture**:
 
 - **Monorepo**: Turborepo
 - **Apps**:
   - `apps/student-portal` (Next.js 15, Port 3000)
-  - `apps/ops-portal` (Next.js 15, Port 3001)
+  - `apps/admin-portal` (Next.js 15, Port 3001)
   - `apps/api` (Express, Port 5000 - extracted from monolith)
 - **Packages**:
   - `@narada/ui` (Shared components, Tiptap editor)
@@ -88,13 +88,13 @@
 
 ---
 
-## 5. Phase 2: Ops Portal (Next.js 15) [PENDING]
+## 5. Phase 2: Admin Portal (Next.js 15) [PENDING]
 
 **Objective**: Port Admin, Instructor, and Content Manager views to Next.js app on port 3001.
 
 ### 5.1 Initialization
 
-- [ ] **Scaffold**: `npx create-next-app@latest apps/ops-portal`.
+- [ ] **Scaffold**: `npx create-next-app@latest apps/admin-portal`.
 - [ ] **Configuration**: Extend shared Tailwind, ESLint, and TS configs.
   - *Note*: Verify `use client` strategy for complex admin pages.
 
@@ -109,7 +109,7 @@
 
 ### 5.3 Verification
 
-- [ ] Ops Portal loads on `http://localhost:3001`.
+- [ ] Admin Portal loads on `http://localhost:3001`.
 - [ ] Admin Dashboard fetches data from Monolith API.
 - [ ] File uploads work successfully.
 
@@ -162,9 +162,9 @@
 |--------|-------------|----------|
 | **Student** | `features/learning/pages/LearningDashboardPage` | `apps/student-portal/app/dashboard/page.tsx` |
 | **Student** | `features/learning/pages/LearnChapterPage` | `apps/student-portal/app/learn/[chapterId]/page.tsx` |
-| **Ops** | `features/admin/pages/UserManagementPage` | `apps/ops-portal/app/users/page.tsx` |
-| **Ops** | `features/curriculum/pages/TrackManagementPage` | `apps/ops-portal/app/curriculum/tracks/page.tsx` |
-| **Ops** | `features/content-manager/pages/SegmentationPage` | `apps/ops-portal/app/content/segmentation/page.tsx` |
+| **Admin** | `features/admin/pages/UserManagementPage` | `apps/admin-portal/app/users/page.tsx` |
+| **Admin** | `features/curriculum/pages/TrackManagementPage` | `apps/admin-portal/app/curriculum/tracks/page.tsx` |
+| **Admin** | `features/content-manager/pages/SegmentationPage` | `apps/admin-portal/app/content/segmentation/page.tsx` |
 
 ---
 
@@ -179,7 +179,7 @@
 4. **Tiptap Strategy**:
     - Use `TiptapProvider` to bridge legacy context dependencies.
     - Student Portal: Read-only mode.
-    - Ops Portal: Full editing mode.
+    - Admin Portal: Full editing mode.
 
 ---
 
@@ -187,7 +187,7 @@
 
 - [ ] **Docker**: Run `turbo prune --scope=student-portal --docker` to verify build optimization.
 - [ ] **E2E Flow**:
-    1. Login as Admin (Ops Portal).
+    1. Login as Admin (Admin Portal).
     2. Upload Content.
     3. Login as Student (Student Portal).
     4. View Content.

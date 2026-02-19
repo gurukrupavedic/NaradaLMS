@@ -237,7 +237,7 @@ export class BatchService {
       batchName: student.batchName,
       enrolledAt: student.enrolledAt, // Keep original field name
       status: student.status, // Safe addition - monolith can ignore
-      // Optional fields for ops-portal (monolith ignores these)
+      // Optional fields for admin-portal (monolith ignores these)
       firstName: student.firstName,
       lastName: student.lastName,
     }));

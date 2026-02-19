@@ -90,7 +90,7 @@ main (protected, tagged baseline-pre-hardening)
 NaradaLMS is a Vedic education platform split into:
 - **Server** (`server/`): Express API with 6 domain modules (identity-access, content-publishing, media-pipeline, batch-cohort, learning-delivery, system-admin)
 - **Student Portal** (`apps/student-portal/`): Next.js 15 app for students (port 3000)
-- **Ops Portal** (`apps/ops-portal/`): Next.js 15 app for admins/instructors/content managers (port 3001)
+- **Admin Portal** (`apps/admin-portal/`): Next.js 15 app for admins/instructors/content managers (port 3001)
 - **Shared Packages** (`packages/`): ui, types, api-client, configs
 - **Legacy Monolith Frontend** (`client/`): Vite+React SPA (281+ files) — **to be removed**
 - **Legacy Shared** (`shared/`): Types/schema duplicated in `packages/types/` — **to be consolidated**
@@ -189,7 +189,7 @@ After each phase, verify these flows still work:
 4. Can navigate to a chapter and see content
 5. Audio player loads and plays
 
-### Ops Portal (http://localhost:3001)
+### Admin Portal (http://localhost:3001)
 1. Login page loads
 2. Can login with admin credentials
 3. Admin dashboard loads with navigation

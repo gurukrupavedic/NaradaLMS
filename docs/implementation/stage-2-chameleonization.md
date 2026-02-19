@@ -141,7 +141,7 @@ interface Theme {
 - Logo dynamic loading
 - Brand name substitution
 
-**Ops Portal** (Admin):
+**Admin Portal** (Admin):
 
 - Theme editor UI
 - Logo uploader

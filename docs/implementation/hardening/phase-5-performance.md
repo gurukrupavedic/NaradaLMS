@@ -16,7 +16,7 @@ The following pre-existing issues were identified during Phase 4 verification. T
 2. **Ops-portal MappingTab / ProgressiveMapper**: Align `TextSegment` usage with `@narada/types` — either use API response types with `createdAt: string` and `script: Script` at boundaries, or add a small adapter so Drizzle/schema types match what the UI expects.
 3. **Root server type errors**: Add `@types/cookie-parser` and `@types/csurf` (or declare modules); fix `server/auth/jwt.utils.ts` `expiresIn` typing; fix `server/auth/passport-config.ts` Google strategy callback signature (req, accessToken, refreshToken, profile, done) and `done` parameter type; fix `server/index.ts` `csrfToken` on Request if needed.
 
-After these fixes, `npx tsc --noEmit` (root), student-portal build, and ops-portal build should all pass.
+After these fixes, `npx tsc --noEmit` (root), student-portal build, and admin-portal build should all pass.
 
 ---
 
@@ -270,7 +270,7 @@ Add `listUsersPaginated(limit, offset, filters?)` to the identity storage/servic
 
 ### Fix: Instructor search
 
-**File**: `apps/ops-portal/src/lib/hooks/useBatchRelations.ts`
+**File**: `apps/admin-portal/src/lib/hooks/useBatchRelations.ts`
 
 The `useInstructors` hook fetches ALL 1000 users and filters client-side.
 
@@ -431,7 +431,7 @@ For each type that returns zero results (excluding its own definition), remove i
 ### Verification for Task 5.6
 1. Run: `cd packages/types && npx tsc --noEmit`
 2. Run: `cd apps/student-portal && npx tsc --noEmit`
-3. Run: `cd apps/ops-portal && npx tsc --noEmit`
+3. Run: `cd apps/admin-portal && npx tsc --noEmit`
 
 ---
 
@@ -526,7 +526,7 @@ These items were listed in Phase 4 Task 4.5 but are non-blocking. Complete them 
 
 3. **`apps/student-portal/src/components/common/AudioPlayerControls.tsx`**: Playback rate dropdown is cosmetic (not wired). Either wire `playbackRate` state and `previewAudioRef.current.playbackRate` in LearnChapter, or remove the dropdown.
 
-4. **`apps/ops-portal/src/components/batches/MatrixEvaluationModal.tsx`**: Remove the "thinking aloud" comments (lines ~35–48) about pre-populating notes and relaxing the level check.
+4. **`apps/admin-portal/src/components/batches/MatrixEvaluationModal.tsx`**: Remove the "thinking aloud" comments (lines ~35–48) about pre-populating notes and relaxing the level check.
 
 ### Verification for Task 5.9
 - No new type or lint errors; portals and verify still pass.
@@ -535,7 +535,7 @@ These items were listed in Phase 4 Task 4.5 but are non-blocking. Complete them 
 
 ## Phase 5 Completion Checklist
 
-- [ ] Phase 4 wrap-up: `shared/utils/text-segmentation.ts` and ops-portal TextSegment types fixed (if not done in Phase 4)
+- [ ] Phase 4 wrap-up: `shared/utils/text-segmentation.ts` and admin-portal TextSegment types fixed (if not done in Phase 4)
 - [ ] Phase 4 wrap-up: Root server type errors fixed (if not done in Phase 4)
 - [ ] N+1 query fixed in `getAllTracks()` — uses LEFT JOIN
 - [ ] N*M query fixed in `getChaptersByTrack()` — uses bulk queries

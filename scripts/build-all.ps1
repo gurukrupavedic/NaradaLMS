@@ -30,12 +30,12 @@ if ($LASTEXITCODE -ne 0) {
     $failed = $true
 }
 
-# Build ops portal
-Write-Host "`n[3/3] Building Ops Portal..." -ForegroundColor Cyan
-Set-Location "$RepoRoot\apps\ops-portal"
+# Build admin portal
+Write-Host "`n[3/3] Building Admin Portal..." -ForegroundColor Cyan
+Set-Location "$RepoRoot\apps\admin-portal"
 npm run build
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Ops portal build FAILED" -ForegroundColor Red
+    Write-Host "Admin portal build FAILED" -ForegroundColor Red
     $failed = $true
 }
 
@@ -49,6 +49,6 @@ if ($failed) {
     Write-Host "Artifacts:" -ForegroundColor White
     Write-Host "  Server:          dist/" -ForegroundColor White
     Write-Host "  Student Portal:  apps/student-portal/.next/" -ForegroundColor White
-    Write-Host "  Ops Portal:      apps/ops-portal/.next/" -ForegroundColor White
+    Write-Host "  Admin Portal:   apps/admin-portal/.next/" -ForegroundColor White
     exit 0
 }

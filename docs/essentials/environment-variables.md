@@ -30,7 +30,7 @@ All environment variables required by NaradaLMS.
 |----------|----------|---------|-------------|
 | `NEXT_PUBLIC_API_URL` | Yes | — | Full URL to the API (e.g., `http://localhost:5000/api`) |
 
-## Ops Portal (Next.js)
+## Admin Portal (Next.js)
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|

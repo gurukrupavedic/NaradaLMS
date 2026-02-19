@@ -2,7 +2,7 @@
 
 > **Objective**: Make the application deployable to a real environment where people other than you can test it. This includes environment configuration, Docker setup, build verification, and production safety checks.
 >
-> **Prerequisites**: Phases 0–5 completed and merged into `hardening`. You must be on the `hardening` branch. **All build-blocking type errors must be resolved** (Phase 4 wrap-up and Phase 5 Task 5.8): root `npx tsc --noEmit`, student-portal build, and ops-portal build must pass, and `npm run verify` must pass. Phase 6 Task 6.4 (production build script) and Task 6.8 (final verification) depend on this.
+> **Prerequisites**: Phases 0–5 completed and merged into `hardening`. You must be on the `hardening` branch. **All build-blocking type errors must be resolved** (Phase 4 wrap-up and Phase 5 Task 5.8): root `npx tsc --noEmit`, student-portal build, and admin-portal build must pass, and `npm run verify` must pass. Phase 6 Task 6.4 (production build script) and Task 6.8 (final verification) depend on this.
 >
 > **Risk**: Low. This phase adds configuration; it doesn't change application logic.
 
@@ -28,7 +28,7 @@ All tasks and commits for Phase 6 happen on `hardening-phase-6`.
 
 Environment variables are scattered and inconsistent:
 - `packages/api-client/` uses `NEXT_PUBLIC_API_URL`
-- `apps/ops-portal/next.config.ts` hardcodes `http://localhost:5000` for rewrites
+- `apps/admin-portal/next.config.ts` hardcodes `http://localhost:5000` for rewrites
 - The server uses `.env` with `PGHOST`, `PGUSER`, etc.
 - No single document describes all required environment variables
 
@@ -69,7 +69,7 @@ All environment variables required by NaradaLMS.
 |----------|----------|---------|-------------|
 | `NEXT_PUBLIC_API_URL` | Yes | — | Full URL to the API (e.g., `http://localhost:5000/api`) |
 
-## Ops Portal (Next.js)
+## Admin Portal (Next.js)
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
@@ -115,7 +115,7 @@ FRONTEND_URL=http://localhost:3000
 
 ### Step 3: Make `next.config.ts` environment-driven
 
-**File**: `apps/ops-portal/next.config.ts`
+**File**: `apps/admin-portal/next.config.ts`
 
 **Before**:
 ```typescript
@@ -159,7 +159,7 @@ const nextConfig: NextConfig = {
 export default nextConfig;
 ```
 
-**File**: `apps/ops-portal/.env.local`
+**File**: `apps/admin-portal/.env.local`
 
 Add:
 ```bash
@@ -281,15 +281,15 @@ Start-Sleep -Seconds 3
 Write-Host "Starting Student Portal (port 3000)..." -ForegroundColor Cyan
 Start-Process -FilePath "npm" -ArgumentList "run", "dev" -WorkingDirectory "$RepoRoot\apps\student-portal" -WindowStyle Normal
 
-Write-Host "Starting Ops Portal (port 3001)..." -ForegroundColor Cyan
-Start-Process -FilePath "npm" -ArgumentList "run", "dev" -WorkingDirectory "$RepoRoot\apps\ops-portal" -WindowStyle Normal
+Write-Host "Starting Admin Portal (port 3001)..." -ForegroundColor Cyan
+Start-Process -FilePath "npm" -ArgumentList "run", "dev" -WorkingDirectory "$RepoRoot\apps\admin-portal" -WindowStyle Normal
 
 Start-Sleep -Seconds 2
 
 Write-Host "`nAll services starting:" -ForegroundColor Green
 Write-Host "  API Server:      http://localhost:5000" -ForegroundColor White
 Write-Host "  Student Portal:  http://localhost:3000" -ForegroundColor White
-Write-Host "  Ops Portal:      http://localhost:3001" -ForegroundColor White
+Write-Host "  Admin Portal:   http://localhost:3001" -ForegroundColor White
 Write-Host "`nWait 5-10 seconds for Next.js to compile..." -ForegroundColor Yellow
 ```
 
@@ -342,12 +342,12 @@ if ($LASTEXITCODE -ne 0) {
     $failed = $true
 }
 
-# Build ops portal
-Write-Host "`n[3/3] Building Ops Portal..." -ForegroundColor Cyan
-Set-Location "$RepoRoot\apps\ops-portal"
+# Build admin portal
+Write-Host "`n[3/3] Building Admin Portal..." -ForegroundColor Cyan
+Set-Location "$RepoRoot\apps\admin-portal"
 npm run build
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Ops portal build FAILED" -ForegroundColor Red
+    Write-Host "Admin portal build FAILED" -ForegroundColor Red
     $failed = $true
 }
 
@@ -361,7 +361,7 @@ if ($failed) {
     Write-Host "Artifacts:" -ForegroundColor White
     Write-Host "  Server:          dist/" -ForegroundColor White
     Write-Host "  Student Portal:  apps/student-portal/.next/" -ForegroundColor White
-    Write-Host "  Ops Portal:      apps/ops-portal/.next/" -ForegroundColor White
+    Write-Host "  Admin Portal:   apps/admin-portal/.next/" -ForegroundColor White
     exit 0
 }
 ```
@@ -452,7 +452,7 @@ Update the README to reflect the current architecture after all hardening phases
 - Link to the hardening docs
 
 Key sections to update:
-- Architecture diagram (now shows: Server + Student Portal + Ops Portal + Shared Packages)
+- Architecture diagram (now shows: Server + Student Portal + Admin Portal + Shared Packages)
 - Quick Start (now includes `npm run dev:all`)
 - Environment Setup (link to `docs/essentials/environment-variables.md`)
 - Project Structure (remove `client/`, update `shared/` status)
@@ -469,7 +469,7 @@ Run the complete verification suite one final time:
 
 ### Step 1: Clean install
 ```bash
-rm -rf node_modules apps/student-portal/node_modules apps/ops-portal/node_modules packages/*/node_modules
+rm -rf node_modules apps/student-portal/node_modules apps/admin-portal/node_modules packages/*/node_modules
 npm install
 ```
 
@@ -483,7 +483,7 @@ powershell -ExecutionPolicy Bypass -File scripts/build-all.ps1
 docker-compose up -d postgres
 npm run dev     # In terminal 1
 cd apps/student-portal && npm run dev  # In terminal 2
-cd apps/ops-portal && npm run dev      # In terminal 3
+cd apps/admin-portal && npm run dev      # In terminal 3
 ```
 
 ### Step 4: Run all tests
@@ -494,7 +494,7 @@ npm run verify
 ### Step 5: Manual verification
 Follow the "Core Verification Flows" from `docs/hardening/README.md`:
 - Student Portal: Login → Dashboard → Chapter view → Audio playback
-- Ops Portal: Login → Admin dashboard → Batch list → Batch details → Content Studio
+- Admin Portal: Login → Admin dashboard → Batch list → Batch details → Content Studio
 - API: Auth flow → Protected endpoints → Data operations
 
 ### Step 6: Check for no regressions

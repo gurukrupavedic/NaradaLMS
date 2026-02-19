@@ -37,12 +37,12 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "  OK" -ForegroundColor Green
 }
 
-# Check 3: Ops Portal build
-Write-Host "`n[3/4] Checking ops-portal build..." -ForegroundColor Cyan
-Set-Location "$RepoRoot/apps/ops-portal"
+# Check 3: Admin Portal build
+Write-Host "`n[3/4] Checking admin-portal build..." -ForegroundColor Cyan
+Set-Location "$RepoRoot/apps/admin-portal"
 $result = npx next build 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "  FAILED: Ops portal build" -ForegroundColor Red
+    Write-Host "  FAILED: Admin portal build" -ForegroundColor Red
     Write-Host $result
     $failed = $true
 } else {

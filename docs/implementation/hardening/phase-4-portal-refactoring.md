@@ -1,6 +1,6 @@
 # Phase 4: Portal Refactoring
 
-> **Objective**: Deduplicate components across portals, consolidate the three near-identical ops-portal layouts, fix hooks, and remove dead code from portal codebases.
+> **Objective**: Deduplicate components across portals, consolidate the three near-identical admin-portal layouts, fix hooks, and remove dead code from portal codebases.
 >
 > **Prerequisites**: Phase 2 completed and merged into `hardening`. You must be on the `hardening` branch.
 >
@@ -26,24 +26,24 @@ All tasks and commits for Phase 4 happen on `hardening-phase-4`.
 
 ---
 
-## Task 4.1: Consolidate Ops Portal Layouts into a Shared Component
+## Task 4.1: Consolidate Admin Portal Layouts into a Shared Component
 
 ### Problem
 
 Three layout files are nearly identical:
-- `apps/ops-portal/src/app/admin/layout.tsx` (50 lines)
-- `apps/ops-portal/src/app/instructor/layout.tsx` (65 lines)
-- `apps/ops-portal/src/app/content/layout.tsx` (48 lines)
+- `apps/admin-portal/src/app/admin/layout.tsx` (50 lines)
+- `apps/admin-portal/src/app/instructor/layout.tsx` (65 lines)
+- `apps/admin-portal/src/app/content/layout.tsx` (48 lines)
 
 They all: check auth, redirect if not logged in, compute portal roles, render `<AppShell>`.
 
 ### Solution
 
-Create a shared `OpsLayout` component and use it in all three.
+Create a shared `AdminLayout` component and use it in all three.
 
 ### Step 1: Create the shared layout component
 
-**Create file**: `apps/ops-portal/src/components/layout/OpsLayout.tsx`
+**Create file**: `apps/admin-portal/src/components/layout/AdminLayout.tsx`
 
 ```typescript
 "use client";
@@ -54,7 +54,7 @@ import { useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { getOpsNavigationForRole, contextualNavigation } from "@/lib/ops-navigation-config";
 
-interface OpsLayoutProps {
+interface AdminLayoutProps {
     children: ReactNode;
     /** If true, use the user's actual roles. If false, show all ops roles. */
     useActualRoles?: boolean;
@@ -62,11 +62,11 @@ interface OpsLayoutProps {
     showContextualNav?: boolean;
 }
 
-export default function OpsLayout({
+export default function AdminLayout({
     children,
     useActualRoles = false,
     showContextualNav = false,
-}: OpsLayoutProps) {
+}: AdminLayoutProps) {
     const { user, isLoading, logout } = useAuth();
     const router = useRouter();
 
@@ -115,43 +115,43 @@ export default function OpsLayout({
 }
 ```
 
-### Step 2: Simplify each layout to use `OpsLayout`
+### Step 2: Simplify each layout to use `AdminLayout`
 
-**File**: `apps/ops-portal/src/app/admin/layout.tsx`
+**File**: `apps/admin-portal/src/app/admin/layout.tsx`
 
 **After**:
 ```typescript
-import OpsLayout from "@/components/layout/OpsLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-    return <OpsLayout>{children}</OpsLayout>;
+    return <AdminLayout>{children}</AdminLayout>;
 }
 ```
 
-**File**: `apps/ops-portal/src/app/instructor/layout.tsx`
+**File**: `apps/admin-portal/src/app/instructor/layout.tsx`
 
 **After**:
 ```typescript
-import OpsLayout from "@/components/layout/OpsLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
 
 export default function InstructorLayout({ children }: { children: React.ReactNode }) {
-    return <OpsLayout useActualRoles showContextualNav>{children}</OpsLayout>;
+    return <AdminLayout useActualRoles showContextualNav>{children}</AdminLayout>;
 }
 ```
 
-**File**: `apps/ops-portal/src/app/content/layout.tsx`
+**File**: `apps/admin-portal/src/app/content/layout.tsx`
 
 **After**:
 ```typescript
-import OpsLayout from "@/components/layout/OpsLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
 
 export default function ContentLayout({ children }: { children: React.ReactNode }) {
-    return <OpsLayout>{children}</OpsLayout>;
+    return <AdminLayout>{children}</AdminLayout>;
 }
 ```
 
 ### Verification for Task 4.1
-1. Run: `cd apps/ops-portal && npx tsc --noEmit`
+1. Run: `cd apps/admin-portal && npx tsc --noEmit`
 2. Start the ops portal
 3. Navigate to `/admin`, `/instructor`, `/content` — all should load with correct navigation
 4. Log out — should redirect to `/` (not localhost:5000)
@@ -163,10 +163,10 @@ export default function ContentLayout({ children }: { children: React.ReactNode 
 ### Problem
 
 These components exist as near-identical copies in both portals:
-- `TrackCard` (student-portal `dashboard/student-progress/` and ops-portal `instructor/student-progress/`)
+- `TrackCard` (student-portal `dashboard/student-progress/` and admin-portal `instructor/student-progress/`)
 - `TrackList` (same locations)
 - `ChapterItem` (same locations)
-- `StudentDetailsCard` (student-portal `dashboard/` and ops-portal `instructor/`)
+- `StudentDetailsCard` (student-portal `dashboard/` and admin-portal `instructor/`)
 
 ### Solution
 
@@ -233,11 +233,11 @@ DELETE: apps/student-portal/src/components/dashboard/student-progress/ChapterIte
 DELETE: apps/student-portal/src/components/dashboard/student-progress/ChapterList.tsx
 ```
 
-**Ops Portal**: Same treatment:
+**Admin Portal**: Same treatment:
 ```
-DELETE: apps/ops-portal/src/components/instructor/student-progress/TrackCard.tsx
-DELETE: apps/ops-portal/src/components/instructor/student-progress/TrackList.tsx
-DELETE: apps/ops-portal/src/components/instructor/student-progress/ChapterItem.tsx
+DELETE: apps/admin-portal/src/components/instructor/student-progress/TrackCard.tsx
+DELETE: apps/admin-portal/src/components/instructor/student-progress/TrackList.tsx
+DELETE: apps/admin-portal/src/components/instructor/student-progress/ChapterItem.tsx
 ```
 
 Update imports to use `@narada/ui`.
@@ -249,7 +249,7 @@ Create `packages/ui/src/components/student-progress/StudentDetailsCard.tsx` from
 ### Verification for Task 4.2
 1. Run: `cd packages/ui && npx tsc --noEmit`
 2. Run: `cd apps/student-portal && npx tsc --noEmit`
-3. Run: `cd apps/ops-portal && npx tsc --noEmit`
+3. Run: `cd apps/admin-portal && npx tsc --noEmit`
 4. Start both portals — student progress views should render correctly in both
 5. Verify: Student portal dashboard shows tracks/chapters with correct progress
 6. Verify: Ops portal instructor → student detail page shows the same data correctly
@@ -260,7 +260,7 @@ Create `packages/ui/src/components/student-progress/StudentDetailsCard.tsx` from
 
 ### Problem
 
-`apps/student-portal/src/lib/text-segmentation-utils.ts` is a 225-line copy-paste of `shared/utils/text-segmentation.ts`. The ops-portal imports from `@shared/utils/` (which may no longer exist after Phase 1).
+`apps/student-portal/src/lib/text-segmentation-utils.ts` is a 225-line copy-paste of `shared/utils/text-segmentation.ts`. The admin-portal imports from `@shared/utils/` (which may no longer exist after Phase 1).
 
 ### Solution
 
@@ -296,7 +296,7 @@ import { getDisplayText, formatDuration } from '@narada/types';
 
 Delete: `apps/student-portal/src/lib/text-segmentation-utils.ts`
 
-**Ops Portal**: Update any imports from `@shared/utils/text-segmentation` to `@narada/types`.
+**Admin Portal**: Update any imports from `@shared/utils/text-segmentation` to `@narada/types`.
 
 ### Verification for Task 4.3
 1. Compile both portals without errors
@@ -311,7 +311,7 @@ Delete: `apps/student-portal/src/lib/text-segmentation-utils.ts`
 The proficiency-level-to-status mapping logic is duplicated in:
 - `apps/student-portal/src/components/dashboard/student-progress/ChapterItem.tsx` (lines 30-44)
 - `apps/student-portal/src/components/learning/LearnChapter.tsx` (lines 336-348)
-- `apps/ops-portal/src/components/instructor/student-progress/ChapterItem.tsx`
+- `apps/admin-portal/src/components/instructor/student-progress/ChapterItem.tsx`
 
 ### Solution
 
@@ -367,11 +367,11 @@ Update the duplicated components to use this shared function instead of inline s
    - Wire it up: In `LearnChapter.tsx`, when `playbackRate` state changes, set `previewAudioRef.current.playbackRate = rate`
    - Or remove the dropdown until it's properly implemented
 
-### Ops Portal Dead Code
+### Admin Portal Dead Code
 
 1. **QueryKeys (cosmetic)**: In `useBatchRelations.ts`, change `useInstructors` queryKey from `["/api/auth/admin/users?role=instructor"]` to `["/auth/admin/users?role=instructor"]`. In `useSearchStudents.ts`, change queryKey from `["/api/auth/admin/users?limit=100"]` to `["/auth/admin/users?limit=100"]`. These are cache keys only (no double-prefix bug), but consistency with other hooks avoids confusion.
 
-2. **`OpsAuthPage.tsx`**: Remove unused imports: `Tabs`, `TabsContent`, `TabsList`, `TabsTrigger`, `CardDescription`, `CardHeader`, `CardTitle`, `Label` (leftover from removed registration tab). Remove "CHANGE 1 & 2" comments.
+2. **`AdminAuthPage.tsx`**: Remove unused imports: `Tabs`, `TabsContent`, `TabsList`, `TabsTrigger`, `CardDescription`, `CardHeader`, `CardTitle`, `Label` (leftover from removed registration tab). Remove "CHANGE 1 & 2" comments.
 
 3. **`instructor-student-list.tsx`**: Remove `console.log('First student data:', students[0])` (line 61-63).
 
@@ -395,7 +395,7 @@ Update the duplicated components to use this shared function instead of inline s
 
 ### Verification for Task 4.5
 1. Run: `cd apps/student-portal && npx tsc --noEmit`
-2. Run: `cd apps/ops-portal && npx tsc --noEmit`
+2. Run: `cd apps/admin-portal && npx tsc --noEmit`
 3. Both portals should build and function identically
 
 ---
@@ -575,7 +575,7 @@ icon: React.ComponentType<{ className?: string }>;
 
 ## Phase 4 Completion Checklist
 
-- [ ] Three ops-portal layouts consolidated into `OpsLayout` component
+- [ ] Three admin-portal layouts consolidated into `AdminLayout` component
 - [ ] Student progress components extracted to `@narada/ui`
 - [ ] Local copies deleted from both portals
 - [ ] `text-segmentation-utils` moved to `@narada/types`

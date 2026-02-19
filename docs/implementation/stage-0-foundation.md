@@ -707,7 +707,7 @@ MAX_FILE_SIZE_MB=50
 # STUDENT_PORTAL_URL=http://localhost:3000
 # STUDENT_PORTAL_PORT=3000
 
-# Ops Portal
+# Admin Portal
 # OPS_PORTAL_URL=http://localhost:3001
 # OPS_PORTAL_PORT=3001
 
@@ -1256,7 +1256,7 @@ Express static middleware → File stream
 When splitting into 3 containers:
 - **API Server**: Continues serving uploads via `/uploads/*`
 - **Student Portal**: Proxies `/uploads/*` to API server
-- **Ops Portal**: Proxies `/uploads/*` to API server
+- **Admin Portal**: Proxies `/uploads/*` to API server
 
 **Next.js Rewrite** (for both portals):
 ```typescript
@@ -1302,7 +1302,7 @@ async rewrites() {
 **Step 2: Verify Current Implementation**
 
 Test upload flow:
-1. Upload an audio file via Ops Portal
+1. Upload an audio file via Admin Portal
 2. Verify file saved to `./uploads`
 3. Play audio in Student Portal LearnChapter page
 4. Confirm WebAudio API can fetch the file
@@ -1535,7 +1535,7 @@ After Stage 0 merges to `main`:
 3. **Prepare for Stage 1**: Review `docs/implementation/stages/stage-1-structural-split.md`
 4. **Create Stage 1 Branch**: `git checkout main && git checkout -b stage-1-replatform`
 
-**Stage 1 will focus on**: Splitting the monolith into 3 independent containers (Student Portal, Ops Portal, API) using the clean JWT auth foundation we've built.
+**Stage 1 will focus on**: Splitting the monolith into 3 independent containers (Student Portal, Admin Portal, API) using the clean JWT auth foundation we've built.
 
 ---
 

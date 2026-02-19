@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import OpsLayout from "@/components/layout/OpsLayout";
+import AdminLayoutShell from "@/components/layout/AdminLayout";
 import { ContentContextLabelContext } from "@/lib/content/context/ContentContextLabelContext";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -18,12 +18,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     return (
         <ContentContextLabelContext.Provider value={{ setLabel: setContentContextLabel }}>
-            <OpsLayout
+            <AdminLayoutShell
                 showContextualNav={!!isChapterPage}
                 contentContextLabel={contentContextLabel}
             >
                 {children}
-            </OpsLayout>
+            </AdminLayoutShell>
         </ContentContextLabelContext.Provider>
     );
 }

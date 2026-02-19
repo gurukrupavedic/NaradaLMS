@@ -8,7 +8,7 @@ The project is a **monorepo** with a shared API server and two Next.js portals:
 
 - **Server** (Express API): Authentication, content, batches, media, admin. Runs on port 5000.
 - **Student Portal** (`apps/student-portal`): Student learning experience. Next.js on port 3000.
-- **Ops Portal** (`apps/ops-portal`): Admin, instructors, content studio. Next.js on port 3001.
+- **Admin Portal** (`apps/admin-portal`): Admin, instructors, content studio. Next.js on port 3001.
 - **Shared packages**: `packages/types`, `packages/ui` for types and shared UI.
 
 Domain modules (Identity & Access, Content Publishing, Media Pipeline, Batch & Cohort, Learning Delivery, System Admin) live in the server; the portals consume the API.
@@ -40,7 +40,7 @@ Domain modules (Identity & Access, Content Publishing, Media Pipeline, Batch & C
    Or start individually:
    - API: `npm run dev` (root)
    - Student portal: `cd apps/student-portal && npm run dev`
-   - Ops portal: `cd apps/ops-portal && npm run dev`
+   - Admin portal: `cd apps/admin-portal && npm run dev`
 
 ### Production build
 ```bash

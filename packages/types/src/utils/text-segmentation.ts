@@ -1,6 +1,6 @@
 /**
  * Text Segmentation Utilities
- * Shared by student-portal and ops-portal.
+ * Shared by student-portal and admin-portal.
  */
 
 import type { Script } from "../types.js";

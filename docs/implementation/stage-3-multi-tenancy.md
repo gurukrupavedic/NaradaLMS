@@ -241,7 +241,7 @@ export interface JWTPayload {
 - Org context persisted in localStorage with JWT
 - All API calls include orgId (implicitly via JWT)
 
-**Ops Portal**:
+**Admin Portal**:
 
 - Superadmin can switch between orgs
 - Org selector in navbar

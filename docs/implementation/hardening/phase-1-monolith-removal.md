@@ -28,7 +28,7 @@ Currently there are two parallel type systems:
 
 | Location | Files | Used By |
 |----------|-------|---------|
-| `shared/schema.ts`, `shared/types.ts`, `shared/constants.ts` | Root-level `shared/` folder | Server, Ops Portal (via `@shared/*` alias or relative imports) |
+| `shared/schema.ts`, `shared/types.ts`, `shared/constants.ts` | Root-level `shared/` folder | Server, Admin Portal (via `@shared/*` alias or relative imports) |
 | `packages/types/src/schema.ts`, `packages/types/src/types.ts`, `packages/types/src/constants.ts` | `@narada/types` package | Student Portal |
 
 These are **byte-for-byte identical copies** that will inevitably drift. Additionally, `shared/types/text-segmentation.ts` and `packages/types/src/text-segmentation.ts` have **already diverged** (different `createdAt` types).
@@ -310,14 +310,14 @@ rg "@shared/" scripts/ --files-with-matches
 rg "shared/" scripts/ --files-with-matches
 ```
 
-### Step 5: Update all ops-portal imports from `@shared/*` and relative `shared/` paths
+### Step 5: Update all admin-portal imports from `@shared/*` and relative `shared/` paths
 
-The ops-portal currently uses either `@shared/*` alias or deeply relative paths like `../../../../../../shared/types`.
+The admin-portal currently uses either `@shared/*` alias or deeply relative paths like `../../../../../../shared/types`.
 
 **Search command**:
 ```bash
-rg "@shared/" apps/ops-portal/ --files-with-matches
-rg "from ['\"]\.+/.*shared/" apps/ops-portal/ --files-with-matches
+rg "@shared/" apps/admin-portal/ --files-with-matches
+rg "from ['\"]\.+/.*shared/" apps/admin-portal/ --files-with-matches
 ```
 
 For each file found, update the import:
@@ -336,7 +336,7 @@ import { ... } from '../../../../../../shared/types';
 import { ... } from '@narada/types';
 ```
 
-**Important**: The ops-portal's `package.json` already lists `@narada/types` as a dependency (line 16), so no dependency change is needed.
+**Important**: The admin-portal's `package.json` already lists `@narada/types` as a dependency (line 16), so no dependency change is needed.
 
 ### Step 6: Remove the `@shared/*` path alias from tsconfig files
 
@@ -359,9 +359,9 @@ Remove the `@shared/*` path alias (it's defined but not used by student portal):
 }
 ```
 
-**File**: `apps/ops-portal/tsconfig.json`
+**File**: `apps/admin-portal/tsconfig.json`
 
-The ops-portal tsconfig does NOT have `@shared/*` (verified), so no change needed.
+The admin-portal tsconfig does NOT have `@shared/*` (verified), so no change needed.
 
 **File**: `tsconfig.json` (root)
 
@@ -403,7 +403,7 @@ DELETE: shared/components/ (if unused)
 DELETE: shared/monitoring/ (if unused by server)
 ```
 
-**Recommended**: Use Option B (delete). Since we've updated all imports, there should be no references left. If `shared/utils/text-segmentation.ts` is still imported by the ops-portal, move it to a shared location first.
+**Recommended**: Use Option B (delete). Since we've updated all imports, there should be no references left. If `shared/utils/text-segmentation.ts` is still imported by the admin-portal, move it to a shared location first.
 
 **Check before deleting**:
 ```bash
@@ -439,7 +439,7 @@ schema: './packages/types/src/schema.ts',
 4. Run: `npm run test:smoke`
 5. Run: `npm run test:content`
 6. Start student portal: `cd apps/student-portal && npm run dev`
-7. Start ops portal: `cd apps/ops-portal && npm run dev`
+7. Start admin portal: `cd apps/admin-portal && npm run dev`
 8. Verify both portals load and show content
 9. Run: `rg "@shared/" --files-with-matches` — should return zero results (or only `shared/` re-exports if using Option A)
 10. Run: `rg "from.*shared/" --files-with-matches` — should return zero results outside `shared/` itself
@@ -485,7 +485,7 @@ After removing `client/`, many root `package.json` dependencies are only needed 
 "react-icons": "^5.4.0"
 ```
 
-**File**: `apps/ops-portal/package.json` — add to dependencies:
+**File**: `apps/admin-portal/package.json` — add to dependencies:
 ```json
 "react-icons": "^5.4.0"
 ```
@@ -493,7 +493,7 @@ After removing `client/`, many root `package.json` dependencies are only needed 
 ### Verification for Task 1.4
 1. Run: `npm install` from root
 2. Run: `cd apps/student-portal && npm run build`
-3. Run: `cd apps/ops-portal && npm run build`
+3. Run: `cd apps/admin-portal && npm run build`
 4. Confirm no missing dependency errors
 
 ---
@@ -509,7 +509,7 @@ After removing `client/`, many root `package.json` dependencies are only needed 
 - [ ] Monolith-only dependencies removed from root
 - [ ] `@narada/types` internal collisions fixed
 - [ ] All server imports updated to `@narada/types`
-- [ ] All ops-portal imports updated to `@narada/types`
+- [ ] All admin-portal imports updated to `@narada/types`
 - [ ] `@shared/*` path aliases removed from tsconfig files
 - [ ] `shared/` directory deleted (or converted to re-exports)
 - [ ] `drizzle.config.ts` updated

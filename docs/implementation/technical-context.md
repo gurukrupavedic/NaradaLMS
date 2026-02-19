@@ -16,7 +16,7 @@ This section maps the monolithic codebase to the target Monorepo structure (Stag
 | :--- | :--- | :--- |
 | **`apps/api`** | `server/` | API, Auth, Business Logic |
 | **`apps/student-portal`** | `client/src/features/student` | Student experience, Chameleon theming |
-| **`apps/ops-portal`** | `client/src/features/{admin,batches}` | Admin, Instructor, Content Management |
+| **`apps/admin-portal`** | `client/src/features/{admin,batches}` | Admin, Instructor, Content Management |
 | **`packages/ui`** | `client/src/components/ui` | Gayatri Design System, Tiptap Editor |
 | **`packages/database`** | `shared/schema.ts` | Drizzle ORM schemas, Migrations |
 | **`packages/types`** | `shared/types.ts` | Zod schemas, TS interfaces |
@@ -60,7 +60,7 @@ This section maps the monolithic codebase to the target Monorepo structure (Stag
 - **DP-1.1: Asset Location**: Use portal-specific `public/assets` folders. Prepares for "Chameleon" (Stage 2) where assets vary by tenant.
 - **DP-1.2: API Connection**: Use **Direct Client Fetch** with JWT headers. No Next.js proxy/rewrites needed due to stateless auth.
 - **DP-1.4: useAuth Hook**: Shared implementation in `packages/ui` to ensure consistent auth logic across both portals.
-- **DP-1.5: Portal Naming**: **"Ops Portal"** chosen for the admin/instructor app to encompass all back-office roles.
+- **DP-1.5: Portal Naming**: **"Admin Portal"** chosen for the admin/instructor app to encompass all back-office roles.
 - **DP-1.6: Tiptap Editor**: Shared in `packages/ui`. Too large (132 files) to duplicate.
 - **DP-1.9: Docker Timing**: Document Docker setup in Stage 1, implement fully before production deployment (Post-Stage 3).
 - **DP-1.10: Uploads**: Keep local storage (`./uploads`) for Stage 1 using shared Docker volumes. Migrate to S3 in Stage 2/3.

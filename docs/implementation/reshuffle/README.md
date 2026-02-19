@@ -6,7 +6,7 @@ This directory holds the implementation plan and phase details for the Role & Po
 
 - **Roles:** student, instructor, admin (`content_manager` removed).
 - **Student portal (port 3000):** Learn section (all users) + Batches & Progress (instructor role) at `/instructor/batches`, `/instructor/students`.
-- **Ops portal (port 3001):** Admin only. Admin Center includes Content Studio at `/content`, User Management, Batch Admin, Audit Logs, Settings.
+- **Admin portal (port 3001):** Admin only. Admin Center includes Content Studio at `/content`, User Management, Batch Admin, Audit Logs, Settings.
 
 ## Dev database migration (one-off)
 
