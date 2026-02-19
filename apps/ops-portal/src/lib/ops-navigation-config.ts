@@ -43,6 +43,11 @@ const adminSection: NavSection = {
             icon: Users,
         },
         {
+            title: 'Content',
+            url: '/admin/content',
+            icon: LibraryBig,
+        },
+        {
             title: 'Audit Logs',
             url: '/admin/logs',
             icon: Logs,
@@ -51,11 +56,6 @@ const adminSection: NavSection = {
             title: 'Settings',
             url: '/admin/settings',
             icon: Settings,
-        },
-        {
-            title: 'Content Studio',
-            url: '/admin/content',
-            icon: LibraryBig,
         },
     ],
 };
@@ -67,7 +67,7 @@ export const contextualNavigation = new Map([
         parentPath: '/admin/content',
         breadcrumbs: [
             { label: 'Admin Center', href: '/admin' },
-            { label: 'Content Studio', href: '/admin/content' },
+            { label: 'Content', href: '/admin/content' },
             { label: 'Chapter', href: '#' }
         ]
     }],

@@ -104,14 +104,14 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                                             }
                                         }
                                     } else if (path.startsWith('/content')) {
-                                        // Ops portal Content Studio (routes under /content)
+                                        // Ops portal Content section (routes under /content)
                                         const isContentRoot = path === '/content' || path === '/content/';
                                         const contentTracksMatch = path.match(/^\/content\/tracks\/([^/]+)\/chapters\/([^/]+)$/);
                                         segments = [
                                             { label: 'Admin Center', href: '/admin' },
                                             isContentRoot
-                                                ? { label: 'Content Studio' }
-                                                : { label: 'Content Studio', href: '/content' },
+                                                ? { label: 'Content' }
+                                                : { label: 'Content', href: '/content' },
                                         ];
                                         if (!isContentRoot && contentTracksMatch) {
                                             segments.push({ label: contentContextLabel ?? 'Chapter' });
@@ -123,11 +123,11 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                                         segments = [
                                             { label: 'Admin Center', href: '/admin' },
                                             isContentRoot
-                                                ? { label: 'Content Studio' }
-                                                : { label: 'Content Studio', href: '/admin/content' },
+                                                ? { label: 'Content' }
+                                                : { label: 'Content', href: '/admin/content' },
                                         ];
                                         if (!isContentRoot && !tracksMatch) {
-                                            segments.push({ label: 'Content Studio' });
+                                            segments.push({ label: 'Content' });
                                         } else if (tracksMatch) {
                                             if (chaptersMatch) {
                                                 segments.push({ label: contentContextLabel ?? 'Chapter' });

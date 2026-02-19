@@ -90,7 +90,7 @@ export function OpsAuthPage() {
                     </div>
 
                     <div className="text-center space-y-2 shrink-0 mb-8">
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome to Operations Portal</h1>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Admin portal</h1>
                     </div>
 
                     {/* Social Login */}
