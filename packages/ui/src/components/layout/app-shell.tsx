@@ -32,17 +32,25 @@ interface AppShellProps {
     contextualNavigation?: Map<string, any>
     /** Optional label for content chapter (e.g. "Track 1. Chapter 3") for breadcrumb and sidebar */
     contentContextLabel?: string | null
+    /** Paths on which the browser window scrolls instead of the main content (e.g. ['/vedic-learning']). Other pages keep viewport-constrained inner scroll. */
+    documentScrollPaths?: string[]
 }
 
-export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation, contentContextLabel }: AppShellProps) {
+export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation, contentContextLabel, documentScrollPaths }: AppShellProps) {
     // We need to pass currentPath to Sidebar for active state
     // Since this is in @narada/ui, we assume usage in Next.js app context
     const pathname = usePathname()
     // Guard against null during SSR / pre-hydration (avoids Internal Server Error)
     const path = pathname ?? ""
 
+    const constrainToViewport = documentScrollPaths?.some(
+        (p) => path === p || path.startsWith(p + "/")
+    )
+        ? false
+        : true
+
     return (
-        <SidebarProvider>
+        <SidebarProvider constrainToViewport={constrainToViewport}>
             <AppSidebar
                 user={user}
                 userRoles={userRoles}
@@ -162,7 +170,7 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                         <ThemeToggle />
                     </div>
                 </header>
-                <div className={cn("flex flex-1 min-h-0 flex-col gap-4 p-4 pt-0 max-w-7xl mx-auto w-full", {
+                <div className={cn("flex flex-1 min-h-0 flex-col gap-4 p-4 pt-0 max-w-7xl mx-auto w-full", constrainToViewport && "overflow-y-auto", {
                     "p-0 gap-0 max-w-none": path === '/admin/content' || path === '/content' || path.match(/\/learning\/chapter\/\d+/) || path.match(/\/admin\/tracks\/.+/) || path.match(/\/content\/tracks\/.+/)
                 })}>
                     {children}

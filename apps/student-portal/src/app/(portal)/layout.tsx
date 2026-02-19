@@ -86,6 +86,7 @@ export default function PortalLayout({
                 homeHref="/vedic-learning"
                 contentContextLabel={contentContextLabel}
                 contextualNavigation={instructorContextualNavigation}
+                documentScrollPaths={["/vedic-learning"]}
             >
                 {children}
             </AppShell>
