@@ -365,7 +365,7 @@ export default function TracksAndChapters() {
     return (
       <div className="p-6">
         <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">You need the admin role to access Tracks & Chapters.</CardContent>
+          <CardContent className="py-8 text-center text-muted-foreground">You need the admin role to access Content Studio.</CardContent>
         </Card>
       </div>
     );
@@ -457,7 +457,7 @@ export default function TracksAndChapters() {
                             onMove={(c) => openMoveDialog(c)}
                             onDelete={(c) => setDeleteState({ isOpen: true, itemType: 'chapter', item: c, trackId: selectedTrack.id })}
                             onOpen={(c) => {
-                              router.push(`/content/tracks/${selectedTrack.id}/chapters/${c.id}`);
+                              router.push(`/admin/tracks/${selectedTrack.id}/chapters/${c.id}`);
                             }}
                           />
                         ))}

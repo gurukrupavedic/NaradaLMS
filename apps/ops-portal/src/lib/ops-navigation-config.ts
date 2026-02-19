@@ -26,7 +26,7 @@ export interface NavSection {
 
 /**
  * Ops Portal Navigation Configuration (Admin only)
- * Admin Center includes Users, Batches, Audit Logs, Settings, and Content (Tracks & Chapters).
+ * Admin Center includes Users, Batches, Audit Logs, Settings, and Content Studio.
  */
 
 // Admin Center - Admin only (includes content management)
@@ -53,8 +53,8 @@ const adminSection: NavSection = {
             icon: Settings,
         },
         {
-            title: 'Tracks & Chapters',
-            url: '/content',
+            title: 'Content Studio',
+            url: '/admin/content',
             icon: LibraryBig,
         },
     ],
@@ -62,12 +62,12 @@ const adminSection: NavSection = {
 
 // Contextual navigation mapping for dynamic routes (chapter editor)
 export const contextualNavigation = new Map([
-    ['/content/tracks/:trackId/chapters/:chapterId', {
+    ['/admin/tracks/:trackId/chapters/:chapterId', {
         label: 'Chapter',
-        parentPath: '/content',
+        parentPath: '/admin/content',
         breadcrumbs: [
             { label: 'Admin Center', href: '/admin' },
-            { label: 'Tracks & Chapters', href: '/content' },
+            { label: 'Content Studio', href: '/admin/content' },
             { label: 'Chapter', href: '#' }
         ]
     }],

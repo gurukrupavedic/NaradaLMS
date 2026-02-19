@@ -78,7 +78,7 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                                             { label: 'Vedic Learning', href: '/vedic-learning' },
                                             { label: contentContextLabel ?? 'Learn Chapter' }
                                         ];
-                                    } else if (path.startsWith('/admin')) {
+                                    } else if (path.startsWith('/admin') && !path.startsWith('/admin/content') && !path.startsWith('/admin/tracks')) {
                                         segments = [{ label: 'Admin Center', href: '/admin' }];
                                         if (path.includes('/users')) segments.push({ label: 'Users', href: '/admin/users' });
                                         if (path.includes('/batches')) {
@@ -104,13 +104,31 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                                             }
                                         }
                                     } else if (path.startsWith('/content')) {
-                                        segments = [{ label: 'Tracks & Chapters', href: '/content' }];
-                                        const tracksMatch = path.match(/\/content\/tracks\/([^/]+)/);
-                                        const chaptersMatch = path.match(/\/content\/tracks\/[^/]+\/chapters\/([^/]+)/);
-                                        if (!tracksMatch) {
-                                            segments.push({ label: 'Tracks & Chapters' });
-                                        } else {
-                                            segments.push({ label: 'Tracks & Chapters', href: chaptersMatch ? '/content' : undefined });
+                                        // Ops portal Content Studio (routes under /content)
+                                        const isContentRoot = path === '/content' || path === '/content/';
+                                        const contentTracksMatch = path.match(/^\/content\/tracks\/([^/]+)\/chapters\/([^/]+)$/);
+                                        segments = [
+                                            { label: 'Admin Center', href: '/admin' },
+                                            isContentRoot
+                                                ? { label: 'Content Studio' }
+                                                : { label: 'Content Studio', href: '/content' },
+                                        ];
+                                        if (!isContentRoot && contentTracksMatch) {
+                                            segments.push({ label: contentContextLabel ?? 'Chapter' });
+                                        }
+                                    } else if (path.startsWith('/admin/content') || path.startsWith('/admin/tracks')) {
+                                        const tracksMatch = path.match(/\/admin\/tracks\/([^/]+)/);
+                                        const chaptersMatch = path.match(/\/admin\/tracks\/[^/]+\/chapters\/([^/]+)/);
+                                        const isContentRoot = path === '/admin/content' || path === '/admin/content/';
+                                        segments = [
+                                            { label: 'Admin Center', href: '/admin' },
+                                            isContentRoot
+                                                ? { label: 'Content Studio' }
+                                                : { label: 'Content Studio', href: '/admin/content' },
+                                        ];
+                                        if (!isContentRoot && !tracksMatch) {
+                                            segments.push({ label: 'Content Studio' });
+                                        } else if (tracksMatch) {
                                             if (chaptersMatch) {
                                                 segments.push({ label: contentContextLabel ?? 'Chapter' });
                                             }
@@ -145,7 +163,7 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                     </div>
                 </header>
                 <div className={cn("flex flex-1 min-h-0 flex-col gap-4 p-4 pt-0 max-w-7xl mx-auto w-full", {
-                    "p-0 gap-0 max-w-none": path === '/content' || path.match(/\/learning\/chapter\/\d+/) || path.match(/\/content\/tracks\/.+/)
+                    "p-0 gap-0 max-w-none": path === '/admin/content' || path === '/content' || path.match(/\/learning\/chapter\/\d+/) || path.match(/\/admin\/tracks\/.+/) || path.match(/\/content\/tracks\/.+/)
                 })}>
                     {children}
                 </div>

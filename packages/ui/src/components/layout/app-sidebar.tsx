@@ -33,9 +33,11 @@ const enhanceWithContextualItems = (items: any[], currentPath: string | null | u
                     const match = normalizedPath.match(regex);
 
                     if (match) {
-                        const isContentChapter = pattern.startsWith('/content/tracks/') && pattern.includes('/chapters/');
-                        // Sidebar shows short label (e.g. "Track 1. Chapter 1"); breadcrumbs keep full label with chapter name
-                        const fullLabel = isContentChapter && (contentContextLabel != null && contentContextLabel !== '') ? contentContextLabel : config.label;
+                        const isContentChapter = (pattern.startsWith('/content/tracks/') || pattern.startsWith('/admin/tracks/')) && pattern.includes('/chapters/');
+                        // Prefer page-set label (e.g. "Track 1. Chapter 2"); otherwise fall back to static config.label ("Chapter")
+                        const fullLabel = isContentChapter && contentContextLabel != null && contentContextLabel !== ''
+                            ? contentContextLabel
+                            : config.label;
                         const title = isContentChapter && fullLabel !== config.label
                             ? fullLabel.replace(/\s*: .*$/, '')
                             : fullLabel;
@@ -163,7 +165,7 @@ export function AppSidebar({
                 {navSections.admin && (
                     <NavMain
                         label={getSectionLabel('admin')}
-                        items={enhanceWithContextualItems(navSections.admin.items as any, safePath, contextualNavigation)}
+                        items={enhanceWithContextualItems(navSections.admin.items as any, safePath, contextualNavigation, contentContextLabel)}
                         currentPath={safePath}
                     />
                 )}

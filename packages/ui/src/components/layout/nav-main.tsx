@@ -95,8 +95,8 @@ export function NavMain({
                                     <CollapsibleContent>
                                         <SidebarMenuSub>
                                             {item.items.map((subItem) => (
-                                                <SidebarMenuSubItem key={subItem.title}>
-                                                    <SidebarMenuSubButton asChild isActive={currentPath === subItem.url}>
+                                                <SidebarMenuSubItem key={subItem.isContextual ? subItem.url : subItem.title}>
+                                                    <SidebarMenuSubButton asChild isActive={path === subItem.url}>
                                                         <Link href={subItem.url}>
                                                             <span>{subItem.title}</span>
                                                         </Link>

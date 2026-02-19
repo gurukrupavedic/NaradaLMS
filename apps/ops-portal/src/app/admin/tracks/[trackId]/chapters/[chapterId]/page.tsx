@@ -32,7 +32,7 @@ export default function ChapterContentPage() {
 }
 
 function ChapterContentPageContent() {
-    const { isLoading, error, chapterId, trackId, chapter } = useChapterEditor();
+    const { isLoading, error, chapterId, chapter } = useChapterEditor();
     const setContentContextLabel = useContentContextLabelSetter();
     const [activeTab, setActiveTab] = useState('text-segmentation');
 

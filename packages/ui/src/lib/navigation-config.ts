@@ -62,12 +62,12 @@ const batchesSection: NavSection = {
     ],
 };
 
-// Content (Tracks & Chapters) - Admin only (used in ops portal under Admin Center)
+// Content Studio - Admin only (used in ops portal under Admin Center)
 const contentSection: NavSection = {
     items: [
         {
-            title: 'Tracks & Chapters',
-            url: '/content',
+            title: 'Content Studio',
+            url: '/admin/content',
             icon: LibraryBig,
         },
     ],
@@ -123,7 +123,7 @@ export function getNavigationForRole(roles?: UserRole[] | UserRole): {
         nav.batches = batchesSection;
     }
 
-    // Admin: sees admin center + content (Tracks & Chapters)
+    // Admin: sees admin center + content (Content Studio)
     if (roleArray.includes('admin')) {
         nav.admin = adminSection;
         nav.content = contentSection;
@@ -139,7 +139,7 @@ export function getSectionLabel(key: 'learn' | 'batches' | 'content' | 'admin'):
     const labels: Record<string, string> = {
         learn: 'Learn',
         batches: 'Batches & Progress',
-        content: 'Tracks & Chapters',
+        content: 'Content Studio',
         admin: 'Admin Center',
     };
     return labels[key] || '';
