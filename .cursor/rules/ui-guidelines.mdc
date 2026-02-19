@@ -1,6 +1,7 @@
 ---
-description: Web UI coding standards for Narada LMS (accessibility, focus, motion, navigation, typography)
-globs: apps/**/*.{ts,tsx}, packages/ui/**/*.{ts,tsx}
+description: 
+globs: apps/**/*.{ts, tsx}, packages/ui/**/*.{ts, tsx}
+alwaysApply: false
 ---
 
 # Web Interface Guidelines
