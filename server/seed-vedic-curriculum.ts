@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { db } from './db';
-import { users, tracks, chapters } from '../shared/schema';
+import { users, tracks, chapters } from '@narada/types';
 import curriculumData from './seeds/curriculum.json';
 
 /**

@@ -133,8 +133,8 @@ export default function InstructorBatchDetailsPage() {
             <div className="p-4 text-center">
                 <h2 className="text-xl font-semibold text-destructive">Error Loading Batch</h2>
                 <p className="text-muted-foreground">{batchDetail.error.message}</p>
-                <Button onClick={() => router.push('/instructor/batches')} className="mt-4">
-                    Back to My Batches
+                <Button asChild className="mt-4">
+                    <a href="/instructor/batches">Back to My Batches</a>
                 </Button>
             </div>
         );

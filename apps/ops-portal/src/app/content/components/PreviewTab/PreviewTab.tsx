@@ -132,8 +132,8 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange, 
     }
 
     return (
-        <div className={cn("h-full flex flex-col bg-background", { "fixed inset-0 z-50": isFullScreen })}>
-            <div className="border border-border border-b-0 rounded-t-lg bg-muted min-h-[2.75rem] flex items-center justify-center gap-6 px-4 py-0.5 relative">
+        <div className={cn("h-full flex flex-col bg-background border border-border rounded-lg overflow-hidden", { "fixed inset-0 z-50": isFullScreen })}>
+            <div className="border-b border-border rounded-t-lg bg-muted min-h-[2.75rem] flex items-center justify-center gap-6 px-4 py-0.5 relative">
                 <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-muted-foreground">Script:</span>
                     <Select
@@ -167,7 +167,7 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange, 
                 </div>
             </div>
 
-            <div className="flex-1 min-h-0 border border-border border-y-0 bg-card overflow-hidden relative">
+            <div className="flex-1 min-h-0 bg-card overflow-hidden relative">
                 {chapter?.content?.[contentScript] ? (
                     <SelectableTextPanel
                         content={chapter.content}
@@ -185,7 +185,7 @@ export function PreviewTab({ learnMode, selectedAudioFileId, onAudioFileChange, 
                 )}
             </div>
 
-            <div className="border border-border border-t-0 rounded-b-lg bg-background min-h-[2.5rem] flex items-center px-4 py-1">
+            <div className="border-t border-border rounded-b-lg bg-muted min-h-[2.75rem] flex items-center px-4 py-1">
                 <button
                     onClick={toggleFullScreen}
                     className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"

@@ -36,11 +36,12 @@ export class AdminService {
 
   /**
    * Get audit logs with optional filters and pagination
+   * @returns { rows: AuditLog[], total: number }
    */
   async getAuditLogs(filters: AuditFilter = {}) {
     const limit = filters.limit || 100;
     const offset = filters.offset || 0;
-    
+
     return await this.storage.getAuditLogs({
       userId: filters.userId,
       action: filters.action,

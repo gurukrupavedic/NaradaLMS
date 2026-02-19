@@ -19,14 +19,6 @@ export interface User {
   updatedAt: Date | null;
 }
 
-export interface UserWithoutPassword extends Omit<User, "passwordHash"> {}
-
-export interface Session {
-  sid: string;
-  sess: any;
-  expire: Date;
-}
-
 export interface RegisterRequest {
   email: string;
   password: string;

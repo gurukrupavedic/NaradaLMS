@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Tabs, TabsContent, Card, Skeleton, Button } from '@narada/ui';
 import { ArrowLeft } from 'lucide-react';
 
 import { useRoleGuard } from '@/hooks/useRoleGuard';
 import { ChapterEditorProvider, useChapterEditor } from '@/lib/content/context/ChapterEditorContext';
+import { useContentContextLabelSetter } from '@/lib/content/context/ContentContextLabelContext';
 import { AudioPlayerProvider } from '@/lib/content/context/AudioPlayerContext';
 import { ChapterHeader } from '@/app/content/components/ChapterHeader/ChapterHeader';
 import { TextSegmentationTab } from '@/app/content/components/TextSegmentationTab/TextSegmentationTab';
@@ -32,8 +33,19 @@ export default function ChapterContentPage() {
 }
 
 function ChapterContentPageContent() {
-    const { isLoading, error, chapterId } = useChapterEditor();
+    const { isLoading, error, chapterId, chapter } = useChapterEditor();
+    const setContentContextLabel = useContentContextLabelSetter();
     const [activeTab, setActiveTab] = useState('text-segmentation');
+
+    useEffect(() => {
+        if (chapter?.track?.order != null && chapter?.order != null) {
+            const titlePart = chapter.title ? `: ${chapter.title}` : '';
+            setContentContextLabel(`Track ${chapter.track!.order}. Chapter ${chapter.order}${titlePart}`);
+        } else {
+            setContentContextLabel(null);
+        }
+        return () => setContentContextLabel(null);
+    }, [chapter?.track?.order, chapter?.order, chapter?.title, setContentContextLabel]);
     const [textSegMode, setTextSegMode] = useState<'editor' | 'segmentation'>('editor');
     const router = useRouter();
 
@@ -93,7 +105,7 @@ function ChapterContentPageContent() {
                     />
 
                     {/* Tabs Content Area */}
-                    <div className="flex-1 overflow-auto bg-muted/10 p-6">
+                    <div className="flex-1 overflow-auto bg-muted/10 p-4">
                         <TabsContent value="text-segmentation" className="h-full m-0">
                             <TextSegmentationTab mode={textSegMode} />
                         </TabsContent>

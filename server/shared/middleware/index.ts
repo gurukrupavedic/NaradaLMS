@@ -7,17 +7,6 @@ import {
   requireContentManager,
 } from "./auth";
 
-// Match passport's Request.user typing by extending Express.User instead of Request
-declare global {
-  namespace Express {
-    interface User {
-      id: string;
-      email?: string;
-      roles?: string[];
-    }
-  }
-}
-
 // Re-export auth helpers
 export { authMiddleware, requireRole, requireAdmin, requireInstructor, requireContentManager };
 

@@ -7,6 +7,8 @@
 > **Risk**: Medium. Auth middleware changes affect access control. Test thoroughly.
 >
 > **Can run in parallel with**: Phase 4 (Portal Refactoring) — server and portal changes are independent.
+>
+> **Note**: Phase 3 is server-only. If `npm run verify` fails due to `@narada/ui` type errors (e.g. `SidebarMenuButton`), that is a pre-existing portal/UI issue; Phase 4 Task 4.7 addresses it. Use `npm run test:smoke` and server-side checks to verify Phase 3.
 
 ---
 

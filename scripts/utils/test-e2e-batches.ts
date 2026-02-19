@@ -1,5 +1,5 @@
 import { db } from "../../server/db";
-import { users, batches, batchCoInstructors } from "@shared/schema";
+import { users, batches, batchCoInstructors } from "@narada/types";
 import { eq, or, inArray } from "drizzle-orm";
 
 /**
@@ -118,3 +118,4 @@ async function testEndToEnd() {
 }
 
 testEndToEnd();
+

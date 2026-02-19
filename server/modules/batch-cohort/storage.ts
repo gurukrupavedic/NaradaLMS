@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { eq, sql, and, inArray, or, getTableColumns } from "drizzle-orm";
-import { batches, enrollments, batchCoInstructors, users, tracks, studentProgress, chapters, proficiencyEvaluationLog } from "@shared/schema";
+import { batches, enrollments, batchCoInstructors, users, tracks, studentProgress, chapters, proficiencyEvaluationLog } from "@narada/types";
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput } from "./types";
 
 export class BatchStorage {
@@ -14,6 +14,27 @@ export class BatchStorage {
       .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
       .groupBy(batches.id)
       .orderBy(batches.createdAt);
+  }
+
+  async listBatchesPaginated(limit: number, offset: number): Promise<{ items: any[]; total: number }> {
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(batches);
+    const total = Number(countResult?.count ?? 0);
+
+    const items = await db
+      .select({
+        ...getTableColumns(batches),
+        studentCount: sql<number>`COALESCE(COUNT(*) FILTER (WHERE ${enrollments.status} = 'active'), 0)::int`,
+      })
+      .from(batches)
+      .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
+      .groupBy(batches.id)
+      .orderBy(batches.createdAt)
+      .limit(limit)
+      .offset(offset);
+
+    return { items, total };
   }
 
   async listInstructorBatches(instructorId: string) {

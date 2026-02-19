@@ -2,9 +2,21 @@
 
 > **Objective**: Fix N+1 database queries, add proper server-side pagination, wrap critical operations in transactions, remove dead code from server and shared packages, and clean up ESLint configuration.
 >
-> **Prerequisites**: Phases 3 and 4 completed and merged into `hardening`. You must be on the `hardening` branch.
+> **Prerequisites**: Phases 3 and 4 completed and merged into `hardening`. You must be on the `hardening` branch. **All build-blocking type errors from Phase 4 wrap-up must be resolved** (see Phase 4 completion) so that `npm run verify` and portal builds pass before starting Phase 5.
 >
 > **Risk**: Low-Medium. Query changes affect data loading behavior. Test with realistic data volumes.
+
+---
+
+## Phase 4 Wrap-Up (complete before or at start of Phase 5)
+
+The following pre-existing issues were identified during Phase 4 verification. They block `npm run verify` and must be fixed before Phase 6 (deployment). Prefer fixing them at the end of Phase 4 or at the start of Phase 5:
+
+1. **`shared/utils/text-segmentation.ts`**: Add `TextSegment` to the import from `../types/text-segmentation` (the type is used but was never imported).
+2. **Ops-portal MappingTab / ProgressiveMapper**: Align `TextSegment` usage with `@narada/types` — either use API response types with `createdAt: string` and `script: Script` at boundaries, or add a small adapter so Drizzle/schema types match what the UI expects.
+3. **Root server type errors**: Add `@types/cookie-parser` and `@types/csurf` (or declare modules); fix `server/auth/jwt.utils.ts` `expiresIn` typing; fix `server/auth/passport-config.ts` Google strategy callback signature (req, accessToken, refreshToken, profile, done) and `done` parameter type; fix `server/index.ts` `csrfToken` on Request if needed.
+
+After these fixes, `npx tsc --noEmit` (root), student-portal build, and ops-portal build should all pass.
 
 ---
 
@@ -471,9 +483,9 @@ This is optional for now. The portals use `eslint-config-next` directly, which i
 
 ---
 
-## Task 5.8: Remove Dead Server Code
+## Task 5.8: Remove Dead Server Code and Fix Root Type Errors
 
-### Items to Remove
+### Items to Remove or Fix
 
 1. **`server/modules/identity-access/types.ts`**: Remove `UserWithoutPassword` (Omit is a no-op — `User` has no `passwordHash` field). Remove `Session` interface (dead code from session-based auth).
 
@@ -486,14 +498,45 @@ This is optional for now. The portals use `eslint-config-next` directly, which i
    // TODO: Replace deprecated csurf with csrf-csrf or lusca before production deployment
    ```
 
+### Root Server Type Fixes (required for `npx tsc --noEmit` and verify)
+
+5. **Missing type declarations**: Install or add declarations so the root TypeScript build passes:
+   - `npm i --save-dev @types/cookie-parser @types/csurf` if they exist; otherwise add a root `types/env.d.ts` (or similar) with `declare module 'cookie-parser';` and `declare module 'csurf';`.
+
+6. **`server/auth/jwt.utils.ts`**: The `jsonwebtoken.sign()` call with `expiresIn` — ensure the options object matches the correct overload (e.g. use `SignOptions` and a valid `expiresIn` value type). If using an older `@types/jsonwebtoken`, consider upgrading or casting.
+
+7. **`server/auth/passport-config.ts`**: The Google OAuth strategy verify callback has signature `(accessToken, refreshToken, profile, done)`. Newer `passport-google-oauth20` expects `(req, accessToken, refreshToken, params, profile, done)`. Either use the correct 6-argument signature and pass `done` as the last parameter, or cast the callback. Ensure `done` is typed as `VerifyCallback` (e.g. `(err?: any, user?: any) => void`), not `Profile`.
+
+8. **`server/index.ts`**: If `req.csrfToken` is used, ensure `@types/csurf` extends Express Request, or add a declaration that adds `csrfToken?: () => string` to `Express.Request`.
+
 ### Verification for Task 5.8
-1. Run: `npx tsc --noEmit` from root
+1. Run: `npx tsc --noEmit` from root — must pass
 2. Run: `npm run test:smoke`
+3. Run: `npm run verify` — must pass
+
+---
+
+## Task 5.9 (Optional): Phase 4 Task 4.5 Leftovers
+
+These items were listed in Phase 4 Task 4.5 but are non-blocking. Complete them in Phase 5 if time permits:
+
+1. **`apps/student-portal/src/lib/matrix-utils.ts`**: Audit and remove unused exported functions. Only `getCellColor` and `getProficiencyLabel` are used in the student portal; consider removing the rest or moving shared ones to `@narada/types` (Phase 4 already added `getProficiencyLabel` and `getProficiencyStatus` to types).
+
+2. **`apps/student-portal/src/components/learning/LearnChapter.tsx`**: The `onCreateSegment={() => { }}` no-op — either hide the create-segment button or implement the handler.
+
+3. **`apps/student-portal/src/components/common/AudioPlayerControls.tsx`**: Playback rate dropdown is cosmetic (not wired). Either wire `playbackRate` state and `previewAudioRef.current.playbackRate` in LearnChapter, or remove the dropdown.
+
+4. **`apps/ops-portal/src/components/batches/MatrixEvaluationModal.tsx`**: Remove the "thinking aloud" comments (lines ~35–48) about pre-populating notes and relaxing the level check.
+
+### Verification for Task 5.9
+- No new type or lint errors; portals and verify still pass.
 
 ---
 
 ## Phase 5 Completion Checklist
 
+- [ ] Phase 4 wrap-up: `shared/utils/text-segmentation.ts` and ops-portal TextSegment types fixed (if not done in Phase 4)
+- [ ] Phase 4 wrap-up: Root server type errors fixed (if not done in Phase 4)
 - [ ] N+1 query fixed in `getAllTracks()` — uses LEFT JOIN
 - [ ] N*M query fixed in `getChaptersByTrack()` — uses bulk queries
 - [ ] Database-level pagination for batches
@@ -503,7 +546,8 @@ This is optional for now. The portals use `eslint-config-next` directly, which i
 - [ ] Duplicate legacy routes removed
 - [ ] Dead type exports removed from `@narada/types`
 - [ ] ESLint `react/jsx-key` re-enabled
-- [ ] Dead server code cleaned up
+- [ ] Dead server code cleaned up; root `npx tsc --noEmit` passes
+- [ ] (Optional) Phase 4 Task 4.5 leftovers completed (Task 5.9)
 - [ ] `npm run verify` passes
 - [ ] All work committed on `hardening-phase-5`
 

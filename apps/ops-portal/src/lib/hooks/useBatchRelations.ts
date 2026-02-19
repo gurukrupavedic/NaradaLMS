@@ -115,12 +115,12 @@ export function useDropEnrollment(batchId: number) {
     return useMutation({
         mutationFn: async ({ enrollmentId }: { enrollmentId: number }) => {
             return apiRequest(
-                `/api/enrollments/${enrollmentId}/drop`,
+                `/enrollments/${enrollmentId}/drop`,
                 { method: "PATCH" }
             );
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: [`/api/batches/${batchId}/enrollments`] });
+            qc.invalidateQueries({ queryKey: [`/batches/${batchId}/enrollments`] });
         },
     });
 }
@@ -136,24 +136,15 @@ export type Instructor = {
 
 export function useInstructors() {
     return useQuery<Instructor[]>({
-        queryKey: ["/api/auth/admin/users?role=instructor"],
+        queryKey: ["instructors"],
         queryFn: async () => {
-            // Re-using the admin users endpoint with role filtering if supported, 
-            // or fetching all and filtering client side if the API text search usage implies limited filtering.
-            // For now, let's assume we can fetch all or a large list and filter for instructors.
-            // Note: The monolith might have a specific /instructors endpoint or similar. 
-            // Based on available endpoints, /auth/admin/users seems best.
-            const response = await apiRequest<{ users: any[] }>("/auth/admin/users?limit=1000");
-
-            // Filter for instructors
-            return response.users
-                .filter((u: any) => u.roles && u.roles.includes('instructor'))
-                .map((u: any) => ({
-                    id: u.id,
-                    firstName: u.firstName,
-                    lastName: u.lastName,
-                    email: u.email
-                }));
+            const response = await apiRequest<{ users: any[] }>("/auth/admin/users?role=instructor&limit=200");
+            return (response.users || []).map((u: any) => ({
+                id: u.id,
+                firstName: u.firstName,
+                lastName: u.lastName,
+                email: u.email,
+            }));
         },
     });
 }

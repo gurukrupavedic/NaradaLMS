@@ -1,47 +1,25 @@
 "use client";
 
-import { useAuth } from "@/hooks/useAuth";
-import { AppShell, UserRole } from "@narada/ui";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { getOpsNavigationForRole } from "@/lib/ops-navigation-config";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import OpsLayout from "@/components/layout/OpsLayout";
+import { ContentContextLabelContext } from "@/lib/content/context/ContentContextLabelContext";
 
-export default function ContentLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
-    const { user, isLoading, logout } = useAuth();
-    const router = useRouter();
+export default function ContentLayout({ children }: { children: React.ReactNode }) {
+    const [contentContextLabel, setContentContextLabel] = useState<string | null>(null);
+    const pathname = usePathname();
 
     useEffect(() => {
-        if (!isLoading && !user) {
-            window.location.href = "http://localhost:5000/login";
+        if (!pathname?.match(/\/content\/tracks\/.+\/chapters\/.+/)) {
+            setContentContextLabel(null);
         }
-    }, [user, isLoading, router]);
-
-    if (isLoading) {
-        return <div className="flex h-screen items-center justify-center">Loading...</div>;
-    }
-
-    if (!user) {
-        return null;
-    }
-
-    // Content manager role for navigation
-    const portalRoles: UserRole[] = ['admin', 'instructor', 'content_manager'];
-
-    // Get portal-specific navigation
-    const opsNavigation = getOpsNavigationForRole(portalRoles);
+    }, [pathname]);
 
     return (
-        <AppShell
-            user={user as any}
-            userRoles={portalRoles}
-            customNavigation={opsNavigation}
-            onLogout={logout}
-        >
-            {children}
-        </AppShell>
+        <ContentContextLabelContext.Provider value={{ setLabel: setContentContextLabel }}>
+            <OpsLayout showContextualNav contentContextLabel={contentContextLabel}>
+                {children}
+            </OpsLayout>
+        </ContentContextLabelContext.Provider>
     );
 }

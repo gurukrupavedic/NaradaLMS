@@ -1,3 +1,4 @@
+import * as React from 'react';
 import {
     BookOpen,
     BookOpenText,
@@ -15,7 +16,7 @@ export type UserRole = 'student' | 'instructor' | 'content_manager' | 'admin';
 export interface NavItem {
     title: string;
     url: string;
-    icon: any; // React.ElementType
+    icon: React.ComponentType<{ className?: string }>;
     isActive?: boolean;
     items?: {
         title: string;

@@ -3,68 +3,20 @@
  * Single source of truth for all data structures across frontend and backend
  */
 
-import { type users, type tracks, type chapters, type textSegments, type audioFiles } from './schema';
+// Import base types from schema (single source of truth)
+// MediaSegment, SegmentMapping, StudentProgress are exported only from schema to avoid index collision
+import type {
+  User,
+  Track,
+  Chapter,
+  TextSegment,
+  AudioFile,
+} from './schema.js';
 
-// Base types from schema
-export type User = typeof users.$inferSelect;
-export type Track = typeof tracks.$inferSelect;
-export type Chapter = typeof chapters.$inferSelect;
-export type TextSegment = typeof textSegments.$inferSelect;
-export type AudioFile = typeof audioFiles.$inferSelect;
+// Re-export for convenience
+export type { User, Track, Chapter, TextSegment, AudioFile };
 
-// Extended types for specific use cases
-export interface UserWithRoles extends User {
-  roles: string[];
-  // lastLoginAt inherited from User (Date | null, non-optional)
-}
-
-export interface TrackWithChapters extends Omit<Track, 'createdBy' | 'createdAt' | 'updatedAt'> {
-  chapters: Chapter[];
-  chapterCount: number;
-  lastModified?: string;
-  createdBy?: string;
-  createdAt?: Date | null;
-  updatedAt?: Date | null;
-}
-
-export interface ChapterWithProgress extends Chapter {
-  progressPercentage?: number;
-  isCompleted?: boolean;
-  proficiencyLevel?: number;
-  audioFiles?: AudioFile[];
-}
-
-export interface ChapterWithMetadata extends Omit<Chapter, 'publishedAt' | 'lastEditedBy'> {
-  trackId: number;
-  textReferences: {
-    te?: string[];
-    hi?: string[];
-    en?: string[];
-  };
-  estimatedDuration?: number;
-  lastEditedBy?: string | null;
-  publishedAt?: Date | null;
-}
-
-// Normalized Mapping Types (new system)
-export interface MediaSegment {
-  id: number;
-  audioFileId: number;
-  startTimestamp: number;
-  endTimestamp: number;
-  segmentName?: string;
-  createdBy?: string;
-  createdAt?: Date;
-}
-
-export interface SegmentMapping {
-  id: number;
-  mediaSegmentId: number;
-  textSegmentId: number;
-  createdBy?: string;
-  createdAt?: Date;
-}
-
+// Normalized Mapping Types (from schema; used by media pipeline and text-segmentation)
 export interface MappingWithTimestamps {
   mappingId: number;
   textSegmentId: number;
@@ -75,82 +27,8 @@ export interface MappingWithTimestamps {
   segmentName?: string;
 }
 
-// Learning Progress Types
-export interface StudentProgress {
-  studentId: string;
-  chapterId: number;
-  proficiencyLevel: number;
-  completionDate?: Date;
-  timeSpent: number;
-}
-
-export interface StudentStats {
-  totalChapters: number;
-  completedChapters: number;
-  averageProficiency: number;
-  progressPercentage: number;
-  currentStreak?: number;
-  highestLevel?: number;
-}
-
-// UI Component Props
-export interface DashboardProps {
-  onTrackSelect: (trackId: number) => void;
-  onChapterSelect: (chapterId: number) => void;
-}
-
-export interface TrackCardProps {
-  track: TrackWithChapters;
-  onClick?: () => void;
-  showProgress?: boolean;
-}
-
 // Content Script Types
 export type Script = 'te' | 'hi' | 'en';
-
-export interface MultiScriptContent {
-  te?: string;
-  hi?: string;
-  en?: string;
-}
-
-// Form and API Types
-export interface CreateTrackRequest {
-  title: string;
-  description: string;
-  order?: number;
-  estimatedHours?: number;
-}
-
-export interface CreateChapterRequest {
-  trackId: number;
-  title: string;
-  content: MultiScriptContent;
-  order?: number;
-}
-
-export interface UpdateChapterRequest {
-  title?: string;
-  content?: MultiScriptContent;
-  status?: 'draft' | 'published';
-}
-
-// Error and Response Types
-export interface ApiErrorResponse {
-  error: {
-    message: string;
-    code?: string;
-    details?: Record<string, unknown>;
-    timestamp: string;
-    requestId: string;
-  };
-}
-
-export interface ApiSuccessResponse<T = any> {
-  data: T;
-  message?: string;
-  timestamp: string;
-}
 
 // My Students / Instructor Student List Type
 export interface MyStudent {
@@ -164,15 +42,6 @@ export interface MyStudent {
   batchCode: string;
   batchName: string;
   enrolledAt: Date | string | null;
-}
-
-export interface GetMyStudentsResponse {
-  items: MyStudent[];
-  pagination: {
-    limit: number;
-    offset: number;
-    total: number;
-  };
 }
 
 // Student Details / Proficiency Types
@@ -205,11 +74,6 @@ export interface StudentDetail {
   email: string;
   enrollment: StudentEnrollment | null;
   proficiencyMatrix: ProficiencyRecord[];
-}
-
-export interface GetStudentDetailsResponse {
-  data: StudentDetail;
-  timestamp: string;
 }
 
 // Student Track Progress Types (Phase D: Track-wise Progress Visualization)

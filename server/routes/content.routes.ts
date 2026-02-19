@@ -6,41 +6,15 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { parseFile } from 'music-metadata';
-import { FILE_UPLOAD } from "../../shared/constants";
+import { FILE_UPLOAD } from "@narada/types";
 import { mediaService } from "../modules/media-pipeline";
+import { createErrorResponse } from "../shared/utils/api-response";
 
 const router = Router();
 
 // Protect all content routes: authenticated users can READ, content managers can WRITE
 // We'll apply requireContentManager selectively on POST/PUT/DELETE routes
 router.use(jwtAuth);
-
-// Error response interface
-interface ApiErrorResponse {
-  error: {
-    message: string;
-    code?: string;
-    details?: any;
-    timestamp: string;
-    requestId: string;
-  };
-}
-
-function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
-function createErrorResponse(message: string, code?: string, details?: any): ApiErrorResponse {
-  return {
-    error: {
-      message,
-      code,
-      details,
-      timestamp: new Date().toISOString(),
-      requestId: generateRequestId(),
-    },
-  };
-}
 
 /**
  * Track Routes
@@ -79,10 +53,11 @@ router.post('/tracks', requireContentManager, async (req: Request, res: Response
     if (!title || !description) {
       return res.status(400).json(createErrorResponse('title and description are required', 'MISSING_REQUIRED_FIELDS'));
     }
+    const user = req.user as Express.User;
     const track = await contentService.createTrack({
       title,
       description,
-      createdBy: req.body.createdBy || "system"
+      createdBy: user.id
     });
     res.json(track);
   } catch (error) {
@@ -136,18 +111,7 @@ router.post('/tracks/:id/move', requireContentManager, async (req: Request, res:
  * Chapter Routes
  */
 
-// Legacy: GET /api/chapters/:trackId - List chapters in track
-router.get('/chapters/:trackId', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const trackId = parseInt(req.params.trackId);
-    const chapters = await contentService.getChaptersByTrack(trackId);
-    res.json(chapters);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// New: GET /tracks/:trackId/chapters - List chapters for a track (namespaced)
+// GET /tracks/:trackId/chapters - List chapters for a track
 router.get('/tracks/:trackId/chapters', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const trackId = parseInt(req.params.trackId);
@@ -175,37 +139,23 @@ router.get('/chapters/:chapterId/details', async (req: Request, res: Response, n
   }
 });
 
-// Legacy: POST /api/chapters - Create new chapter
-router.post('/chapters', async (req: Request, res: Response, next: NextFunction) => {
+// POST /tracks/:trackId/chapters - Create chapter under track
+router.post('/tracks/:trackId/chapters', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const chapter = await contentService.createChapter({
-      trackId: req.body.trackId,
-      title: req.body.title,
-      content: req.body.content,
-      createdBy: req.body.createdBy || "system"
-    });
-    res.json(chapter);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// New: POST /tracks/:trackId/chapters - Create chapter under track
-router.post('/tracks/:trackId/chapters', async (req: Request, res: Response, next: NextFunction) => {
-  try {
+    const user = req.user as Express.User;
     const trackId = parseInt(req.params.trackId);
     const chapter = await contentService.createChapter({
       trackId,
       title: req.body.title,
       content: req.body.content,
-      createdBy: req.body.createdBy || "system",
+      createdBy: user.id,
     });
     res.json(chapter);
   } catch (error) { next(error); }
 });
 
 // PATCH /api/chapters/:chapterId - Update chapter
-router.patch('/chapters/:chapterId', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/chapters/:chapterId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const chapter = await contentService.updateChapter(chapterId, req.body);
@@ -216,7 +166,7 @@ router.patch('/chapters/:chapterId', async (req: Request, res: Response, next: N
 });
 
 // New: PUT /chapters/:chapterId - Update chapter (alias for PATCH)
-router.put('/chapters/:chapterId', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/chapters/:chapterId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const chapter = await contentService.updateChapter(chapterId, req.body);
@@ -225,7 +175,7 @@ router.put('/chapters/:chapterId', async (req: Request, res: Response, next: Nex
 });
 
 // PATCH /api/chapters/:chapterId/status - Publish/unpublish chapter
-router.patch('/chapters/:chapterId/status', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/chapters/:chapterId/status', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const { status } = req.body;
@@ -237,9 +187,10 @@ router.patch('/chapters/:chapterId/status', async (req: Request, res: Response, 
       ));
     }
 
+    const user = req.user as Express.User;
     const chapter = status === 'published'
-      ? await contentService.publishChapter(chapterId, req.body.userId || "system")
-      : await contentService.unpublishChapter(chapterId, req.body.userId || "system");
+      ? await contentService.publishChapter(chapterId, user.id)
+      : await contentService.unpublishChapter(chapterId, user.id);
 
     res.json(chapter);
   } catch (error) {
@@ -248,7 +199,7 @@ router.patch('/chapters/:chapterId/status', async (req: Request, res: Response, 
 });
 
 // POST /api/chapters/:id/move - Reorder or move to another track
-router.post('/chapters/:id/move', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/chapters/:id/move', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.id);
     const { direction, toTrackId } = req.body as { direction?: 'up' | 'down'; toTrackId?: number };
@@ -273,7 +224,7 @@ router.post('/chapters/:id/move', async (req: Request, res: Response, next: Next
 });
 
 // DELETE /api/chapters/:id - Delete chapter
-router.delete('/chapters/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/chapters/:id', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.id);
     await contentService.deleteChapter(chapterId);
@@ -281,15 +232,6 @@ router.delete('/chapters/:id', async (req: Request, res: Response, next: NextFun
   } catch (error) {
     next(error);
   }
-});
-
-// New: DELETE /chapters/:chapterId - Alias for consistency
-router.delete('/chapters/:chapterId', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const chapterId = parseInt(req.params.chapterId);
-    await contentService.deleteChapter(chapterId);
-    res.json({ message: "Chapter deleted successfully" });
-  } catch (error) { next(error); }
 });
 
 /**
@@ -350,9 +292,9 @@ router.get('/chapters/:chapterId/segments', async (req: Request, res: Response, 
 });
 
 // POST /api/segments - Create text segment
-router.post('/segments', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/segments', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { chapterId, script, startPosition, endPosition, order, createdBy } = req.body;
+    const { chapterId, script, startPosition, endPosition, order } = req.body;
 
     // Validate required fields
     if (!chapterId || !script || startPosition === undefined || endPosition === undefined) {
@@ -380,13 +322,14 @@ router.post('/segments', async (req: Request, res: Response, next: NextFunction)
       ));
     }
 
+    const user = req.user as Express.User;
     const segment = await contentService.createSegment({
       chapterId,
       script: script as 'te' | 'hi' | 'en',
       startPosition,
       endPosition,
       order,
-      createdBy: createdBy || "system"
+      createdBy: user.id
     });
 
     res.json(segment);
@@ -396,10 +339,10 @@ router.post('/segments', async (req: Request, res: Response, next: NextFunction)
 });
 
 // New: POST /chapters/:chapterId/segments - Create segment under chapter
-router.post('/chapters/:chapterId/segments', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/chapters/:chapterId/segments', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
-    const { script, startPosition, endPosition, order, createdBy } = req.body;
+    const { script, startPosition, endPosition, order } = req.body;
 
     if (!script || startPosition === undefined || endPosition === undefined) {
       return res.status(400).json(createErrorResponse(
@@ -408,20 +351,21 @@ router.post('/chapters/:chapterId/segments', async (req: Request, res: Response,
       ));
     }
 
+    const user = req.user as Express.User;
     const segment = await contentService.createSegment({
       chapterId,
       script: script as 'te' | 'hi' | 'en',
       startPosition,
       endPosition,
       order,
-      createdBy: createdBy || 'system',
+      createdBy: user.id,
     });
     res.json(segment);
   } catch (error) { next(error); }
 });
 
 // PATCH /api/segments/:segmentId - Update text segment
-router.patch('/segments/:segmentId', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/segments/:segmentId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const segmentId = parseInt(req.params.segmentId);
     const segment = await contentService.updateSegment(segmentId, req.body);
@@ -432,7 +376,7 @@ router.patch('/segments/:segmentId', async (req: Request, res: Response, next: N
 });
 
 // New: PUT /chapters/:chapterId/segments/:segmentId - Update segment (alias)
-router.put('/chapters/:chapterId/segments/:segmentId', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/chapters/:chapterId/segments/:segmentId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const segmentId = parseInt(req.params.segmentId);
     const segment = await contentService.updateSegment(segmentId, req.body);
@@ -441,7 +385,7 @@ router.put('/chapters/:chapterId/segments/:segmentId', async (req: Request, res:
 });
 
 // DELETE /api/segments/:segmentId - Delete text segment
-router.delete('/segments/:segmentId', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/segments/:segmentId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const segmentId = parseInt(req.params.segmentId);
     await contentService.deleteSegment(segmentId);
@@ -452,7 +396,7 @@ router.delete('/segments/:segmentId', async (req: Request, res: Response, next: 
 });
 
 // New: DELETE /chapters/:chapterId/segments/:segmentId - Delete segment (alias)
-router.delete('/chapters/:chapterId/segments/:segmentId', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/chapters/:chapterId/segments/:segmentId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const segmentId = parseInt(req.params.segmentId);
     await contentService.deleteSegment(segmentId);
@@ -461,7 +405,7 @@ router.delete('/chapters/:chapterId/segments/:segmentId', async (req: Request, r
 });
 
 // New: DELETE /chapters/:chapterId/segments/all - Clear all segments for a script
-router.delete('/chapters/:chapterId/segments/all/clear', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/chapters/:chapterId/segments/all/clear', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const script = req.query.script as string;
@@ -478,28 +422,8 @@ router.delete('/chapters/:chapterId/segments/all/clear', async (req: Request, re
   } catch (error) { next(error); }
 });
 
-// PATCH /api/segments/:chapterId/reorder - Reorder segments
-router.patch('/segments/:chapterId/reorder', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const chapterId = parseInt(req.params.chapterId);
-    const { segmentOrders } = req.body;
-
-    if (!segmentOrders || !Array.isArray(segmentOrders)) {
-      return res.status(400).json(createErrorResponse(
-        "segmentOrders array is required",
-        "MISSING_SEGMENT_ORDERS"
-      ));
-    }
-
-    await contentService.reorderSegments(chapterId, segmentOrders);
-    res.json({ message: "Segments reordered successfully" });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// New: POST /chapters/:chapterId/segments/reorder - Reorder segments (namespaced)
-router.post('/chapters/:chapterId/segments/reorder', async (req: Request, res: Response, next: NextFunction) => {
+// POST /chapters/:chapterId/segments/reorder - Reorder segments
+router.post('/chapters/:chapterId/segments/reorder', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const { segmentOrders } = req.body;
@@ -546,7 +470,7 @@ router.get('/chapters/:chapterId/audio', async (req: Request, res: Response, nex
 });
 
 // POST /chapters/:chapterId/audio - Upload audio file
-router.post('/chapters/:chapterId/audio', upload.single('audio'), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/chapters/:chapterId/audio', requireContentManager, upload.single('audio'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.file) {
       return res.status(400).json(createErrorResponse('No audio file provided', 'NO_FILE_PROVIDED'));
@@ -559,6 +483,7 @@ router.post('/chapters/:chapterId/audio', upload.single('audio'), async (req: Re
       duration = meta.format.duration || 0;
     } catch { }
 
+    const user = req.user as Express.User;
     const created = await mediaService.uploadAudioFile({
       chapterId,
       filename: req.file.filename,
@@ -566,14 +491,14 @@ router.post('/chapters/:chapterId/audio', upload.single('audio'), async (req: Re
       fileSize: req.file.size,
       duration: Math.round(duration),
       mimeType: req.file.mimetype,
-      uploadedBy: 'system',
+      uploadedBy: user.id,
     });
     res.json(created);
   } catch (error) { next(error); }
 });
 
 // PUT /chapters/:chapterId/audio/:audioFileId - Update audio file metadata
-router.put('/chapters/:chapterId/audio/:audioFileId', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/chapters/:chapterId/audio/:audioFileId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.audioFileId);
     const file = await mediaService.updateAudioFile(id, req.body);
@@ -582,7 +507,7 @@ router.put('/chapters/:chapterId/audio/:audioFileId', async (req: Request, res: 
 });
 
 // DELETE /chapters/:chapterId/audio/:audioFileId - Delete audio file
-router.delete('/chapters/:chapterId/audio/:audioFileId', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/chapters/:chapterId/audio/:audioFileId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.audioFileId);
     await mediaService.deleteAudioFile(id);
@@ -610,7 +535,7 @@ router.get('/chapters/:chapterId/mappings', async (req: Request, res: Response, 
 });
 
 // POST /chapters/:chapterId/mappings - Create mapping
-router.post('/chapters/:chapterId/mappings', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/chapters/:chapterId/mappings', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const { audioFileId, textSegmentId, startTime, endTime } = req.body;
@@ -618,13 +543,14 @@ router.post('/chapters/:chapterId/mappings', async (req: Request, res: Response,
     if (!audioFileId || !textSegmentId || startTime === undefined || endTime === undefined) {
       return res.status(400).json(createErrorResponse('Missing required fields', 'MISSING_REQUIRED_FIELDS'));
     }
-    const mapping = await mediaService.createMapping({ audioFileId, textSegmentId, startTime, endTime, createdBy: 'system' });
+    const user = req.user as Express.User;
+    const mapping = await mediaService.createMapping({ audioFileId, textSegmentId, startTime, endTime, createdBy: user.id });
     res.json(mapping);
   } catch (error) { next(error); }
 });
 
 // PUT /chapters/:chapterId/mappings/:mappingId - Update mapping timestamps
-router.put('/chapters/:chapterId/mappings/:mappingId', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/chapters/:chapterId/mappings/:mappingId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const mappingId = parseInt(req.params.mappingId);
@@ -648,7 +574,7 @@ router.put('/chapters/:chapterId/mappings/:mappingId', async (req: Request, res:
 });
 
 // DELETE /chapters/:chapterId/mappings/:mappingId - Delete mapping (and underlying media segment)
-router.delete('/chapters/:chapterId/mappings/:mappingId', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/chapters/:chapterId/mappings/:mappingId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const mappingId = parseInt(req.params.mappingId);
     await mediaService.deleteMappingById(mappingId);
@@ -657,7 +583,7 @@ router.delete('/chapters/:chapterId/mappings/:mappingId', async (req: Request, r
 });
 
 // New: DELETE /chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId - Delete by natural key
-router.delete('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const audioFileId = parseInt(req.params.audioFileId);
     const segmentId = parseInt(req.params.segmentId);
@@ -667,7 +593,7 @@ router.delete('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segment
 });
 
 // New: PATCH /chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId - Update by natural key
-router.patch('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId', requireContentManager, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const audioFileId = parseInt(req.params.audioFileId);
     const segmentId = parseInt(req.params.segmentId);

@@ -3,7 +3,7 @@
  * Student-facing content consumption and progress tracking
  */
 
-import type { ProficiencyLevel } from '@shared/constants';
+import type { ProficiencyLevel } from '@narada/types';
 import type { Chapter, TextSegment } from '../content-publishing/types';
 import type { AudioFile, MappingWithTimestamps } from '../media-pipeline/types';
 

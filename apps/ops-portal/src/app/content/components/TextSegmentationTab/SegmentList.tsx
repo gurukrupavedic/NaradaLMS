@@ -4,10 +4,10 @@ import { Button, cn } from '@narada/ui';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { LinkStatusIcon } from '@shared/components/LinkStatusIcon';
-import { getSegmentText } from '@shared/utils/text-segmentation';
-import type { ContentMap, Script } from '@shared/types/text-segmentation';
+import { getSegmentText } from '@narada/types';
+import type { ContentMap, Script } from '@narada/types';
 
-import type { TextSegment } from '@shared/schema';
+import type { TextSegment } from '@narada/types';
 
 type FrontendTextSegment = Omit<TextSegment, 'createdAt'> & {
     createdAt: string | Date | null;
@@ -69,10 +69,10 @@ const SortableSegmentItem = memo(function SortableSegmentItem({
             id={`right-segment-${segment.id}`}
             onClick={() => onSelect?.(segment.id)}
             className={cn(
-                "group pt-1.5 pb-0 px-2 border rounded-lg transition-all duration-200 cursor-pointer relative",
+                "group pt-1.5 pb-0 px-2 border rounded-lg transition-colors transition-shadow duration-200 cursor-pointer relative",
                 isSelected
                     ? "bg-card border-mantra-base text-foreground"
-                    : "bg-card border-border hover:bg-muted/50 transition-all text-foreground"
+                    : "bg-card border-border hover:bg-muted/50 text-foreground"
             )}
         >
             <div className="flex items-start gap-2">

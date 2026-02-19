@@ -2,18 +2,24 @@ import * as React from "react"
 
 import { cn } from "../lib/utils"
 
-const Table = React.forwardRef<
-    HTMLTableElement,
-    React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto">
-        <table
-            ref={ref}
-            className={cn("w-full caption-bottom text-sm", className)}
-            {...props}
-        />
-    </div>
-))
+export interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
+    /** Optional ref for the scroll container (div with overflow-auto). Use with VirtualizedTableBody. */
+    scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
+    /** Optional style for the scroll container (e.g. { height: 400 } when using VirtualizedTableBody). */
+    scrollContainerStyle?: React.CSSProperties;
+}
+
+const Table = React.forwardRef<HTMLTableElement, TableProps>(
+    ({ className, scrollContainerRef, scrollContainerStyle, ...props }, ref) => (
+        <div ref={scrollContainerRef} style={scrollContainerStyle} className="relative w-full overflow-auto">
+            <table
+                ref={ref}
+                className={cn("w-full caption-bottom text-sm", className)}
+                {...props}
+            />
+        </div>
+    )
+);
 Table.displayName = "Table"
 
 const TableHeader = React.forwardRef<
@@ -118,3 +124,4 @@ export {
     TableCell,
     TableCaption,
 }
+export { VirtualizedTableBody } from "./virtualized-table-body";

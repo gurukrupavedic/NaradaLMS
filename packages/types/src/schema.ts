@@ -431,7 +431,7 @@ export const selectEnrollmentSchema = createSelectSchema(enrollments);
 export const insertBatchCoInstructorSchema = createInsertSchema(batchCoInstructors).omit({ id: true, assignedAt: true });
 export const selectBatchCoInstructorSchema = createSelectSchema(batchCoInstructors);
 
-export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: true, timestamp: true });
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: true, timestamp: true }) as z.ZodType<Record<string, unknown>>;
 export const selectAuditLogSchema = createSelectSchema(auditLogs);
 
 export const insertSystemSettingSchema = createInsertSchema(systemSettings).omit({ updatedAt: true });

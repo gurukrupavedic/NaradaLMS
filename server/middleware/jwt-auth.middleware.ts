@@ -1,12 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyToken, type JWTPayload } from '../auth/jwt.utils';
-
-// Extensions to Express Request
-declare global {
-    namespace Express {
-        interface User extends JWTPayload { }
-    }
-}
+import '../shared/types';
 
 export interface AuthenticatedRequest extends Request {
     user?: JWTPayload;

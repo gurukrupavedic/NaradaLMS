@@ -62,7 +62,7 @@ interface LoadingOverlayProps {
 
 export function LoadingOverlay({
   isVisible,
-  message = 'Loading...',
+  message = 'Loading…',
   progress,
   onCancel,
   cancellable = false
@@ -80,7 +80,7 @@ export function LoadingOverlay({
             <div className="mb-4">
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+                  className="bg-blue-600 h-2 rounded-full transition-[width] duration-300 ease-out"
                   style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
                 />
               </div>
@@ -129,7 +129,7 @@ export function LoadingButton({
       onClick={onClick}
     >
       {isLoading && <LoadingSpinner size="sm" className="mr-2" />}
-      {isLoading ? (loadingText || 'Loading...') : children}
+      {isLoading ? (loadingText || 'Loading…') : children}
     </Button>
   );
 }

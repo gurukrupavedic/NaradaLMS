@@ -1,10 +1,17 @@
 import { batchStorage } from "./storage";
-import { VALID_PROFICIENCY_LEVELS } from "@shared/constants";
+import { VALID_PROFICIENCY_LEVELS } from "@narada/types";
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput, BatchDetail } from "./types";
+import { eventBus } from "../../shared/events/event-bus";
+import { BATCH_EVENTS } from "./events";
+import { LEARNING_DELIVERY_EVENTS } from "../learning-delivery/events";
 
 export class BatchService {
   async listBatches() {
     return batchStorage.listBatches();
+  }
+
+  async listBatchesPaginated(limit: number, offset: number) {
+    return batchStorage.listBatchesPaginated(limit, offset);
   }
 
   async listInstructorBatches(instructorId: string) {
@@ -38,7 +45,14 @@ export class BatchService {
       }
     }
 
-    return batchStorage.createBatch(input);
+    const batch = await batchStorage.createBatch(input);
+    eventBus.publish(BATCH_EVENTS.created, {
+      batchId: batch.id,
+      trackId: batch.trackId ?? undefined,
+      createdBy: batch.createdBy ?? 'system',
+      timestamp: new Date().toISOString(),
+    });
+    return batch;
   }
 
   async updateBatch(id: number, input: BatchUpdateInput) {
@@ -52,7 +66,15 @@ export class BatchService {
       if (!exists) throw Object.assign(new Error('Primary instructor does not exist'), { status: 400 });
     }
 
-    return batchStorage.updateBatch(id, input);
+    const updated = await batchStorage.updateBatch(id, input);
+    if (updated) {
+      eventBus.publish(BATCH_EVENTS.updated, {
+        batchId: id,
+        trackId: updated.trackId ?? undefined,
+        timestamp: new Date().toISOString(),
+      });
+    }
+    return updated;
   }
 
   async deleteBatch(id: number) {
@@ -86,11 +108,26 @@ export class BatchService {
     const studentExists = await batchStorage.userExists(input.studentId);
     if (!studentExists) throw Object.assign(new Error('Student not found'), { status: 400 });
 
-    return batchStorage.addEnrollment(input);
+    const created = await batchStorage.addEnrollment(input);
+    eventBus.publish(BATCH_EVENTS.enrollmentAdded, {
+      batchId: input.batchId,
+      studentId: input.studentId,
+      enrolledBy: input.enrolledBy,
+      timestamp: new Date().toISOString(),
+    });
+    return created;
   }
 
   async dropEnrollment(input: EnrollmentDropInput) {
-    return batchStorage.dropEnrollment(input);
+    const updated = await batchStorage.dropEnrollment(input);
+    if (updated) {
+      eventBus.publish(BATCH_EVENTS.enrollmentDropped, {
+        batchId: updated.batchId,
+        studentId: updated.studentId,
+        timestamp: new Date().toISOString(),
+      });
+    }
+    return updated;
   }
 
   async listEnrollments(batchId: number) {
@@ -108,11 +145,25 @@ export class BatchService {
     const instructorExists = await batchStorage.userExists(input.instructorId);
     if (!instructorExists) throw Object.assign(new Error('Instructor not found'), { status: 400 });
 
-    return batchStorage.assignCoInstructor(input);
+    const created = await batchStorage.assignCoInstructor(input);
+    eventBus.publish(BATCH_EVENTS.coInstructorAssigned, {
+      batchId: input.batchId,
+      instructorId: input.instructorId,
+      timestamp: new Date().toISOString(),
+    });
+    return created;
   }
 
   async removeCoInstructor(assignmentId: number) {
-    return batchStorage.removeCoInstructor(assignmentId);
+    const removed = await batchStorage.removeCoInstructor(assignmentId);
+    if (removed) {
+      eventBus.publish(BATCH_EVENTS.coInstructorRemoved, {
+        batchId: removed.batchId,
+        instructorId: removed.instructorId,
+        timestamp: new Date().toISOString(),
+      });
+    }
+    return removed;
   }
 
   async listCoInstructors(batchId: number) {
@@ -150,7 +201,14 @@ export class BatchService {
       if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });
     }
 
-    return batchStorage.evaluateStudent(input);
+    const result = await batchStorage.evaluateStudent(input);
+    eventBus.publish(LEARNING_DELIVERY_EVENTS.PROGRESS_UPDATED, {
+      studentId: input.studentId,
+      chapterId: input.chapterId,
+      proficiencyLevel: input.proficiencyLevel,
+      timestamp: new Date().toISOString(),
+    });
+    return result;
   }
 
   async listStudentsByInstructor(

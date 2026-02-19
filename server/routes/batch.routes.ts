@@ -1,38 +1,13 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { batchService } from "../modules/batch-cohort";
-import { requireInstructor } from "../shared/middleware/auth";
+import { requireAdmin, requireInstructor } from "../shared/middleware/auth";
 import { jwtAuth } from "../middleware/jwt-auth.middleware";
+import { createErrorResponse } from "../shared/utils/api-response";
 
 const router = Router();
 
 // Protect all batch routes - authentication required
 router.use(jwtAuth);
-
-interface ApiErrorResponse {
-  error: {
-    message: string;
-    code?: string;
-    details?: any;
-    timestamp: string;
-    requestId: string;
-  };
-}
-
-function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
-function createErrorResponse(message: string, code?: string, details?: any): ApiErrorResponse {
-  return {
-    error: {
-      message,
-      code,
-      details,
-      timestamp: new Date().toISOString(),
-      requestId: generateRequestId(),
-    },
-  };
-}
 
 // GET /api/batches - List batches with pagination (admins and instructors can view all)
 router.get('/batches', async (req: Request, res: Response, next: NextFunction) => {
@@ -40,11 +15,9 @@ router.get('/batches', async (req: Request, res: Response, next: NextFunction) =
     const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
     const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
 
-    const allItems = await batchService.listBatches();
-    const total = allItems.length;
-    const paginatedItems = allItems.slice(offset, offset + limit);
+    const { items, total } = await batchService.listBatchesPaginated(limit, offset);
 
-    res.json({ items: paginatedItems, pagination: { limit, offset, total } });
+    res.json({ items, pagination: { limit, offset, total } });
   } catch (error) { next(error); }
 });
 
@@ -107,7 +80,7 @@ router.get('/batches/:id', async (req: Request, res: Response, next: NextFunctio
 });
 
 // POST /api/batches - Create batch
-router.post('/batches', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/batches', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   // Validate required fields
   if (!req.body.batchCode || !req.body.batchName) {
     return res.status(400).json(createErrorResponse('Batch code and name are required', 'MISSING_REQUIRED_FIELDS'));
@@ -123,6 +96,7 @@ router.post('/batches', async (req: Request, res: Response, next: NextFunction) 
   }
 
   try {
+    const user = req.user as Express.User;
     const created = await batchService.createBatch({
       batchCode: req.body.batchCode,
       batchName: req.body.batchName,
@@ -130,19 +104,18 @@ router.post('/batches', async (req: Request, res: Response, next: NextFunction) 
       primaryInstructorId: req.body.primaryInstructorId ?? undefined,
       cohortType: req.body.cohortType ?? undefined,
       description: req.body.description ?? null,
-      createdBy: req.body.createdBy || 'system',
+      createdBy: user.id,
       secondaryInstructorIds: Array.isArray(req.body.secondaryInstructorIds) ? req.body.secondaryInstructorIds : undefined,
     });
 
     res.json(created);
   } catch (error) {
-    console.error('Error creating batch:', error);
     next(error);
   }
 });
 
 // PATCH /api/batches/:id - Update batch
-router.patch('/batches/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/batches/:id', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   // Validate cohortType if provided
   if (req.body.cohortType !== undefined && req.body.cohortType !== null && !['bramhachari', 'grihasta'].includes(req.body.cohortType)) {
     return res.status(400).json(createErrorResponse('Invalid cohort type. Must be "bramhachari" or "grihasta".', 'INVALID_COHORT_TYPE'));
@@ -161,15 +134,15 @@ router.patch('/batches/:id', async (req: Request, res: Response, next: NextFunct
 
     // If secondaryInstructorIds provided, sync co-instructor assignments
     if (Array.isArray(req.body.secondaryInstructorIds)) {
-      const assignedBy = req.body.assignedBy || (req as any).user?.id || 'system';
-      await batchService.syncCoInstructors(id, req.body.secondaryInstructorIds, assignedBy);
+      const user = req.user as Express.User;
+      await batchService.syncCoInstructors(id, req.body.secondaryInstructorIds, user.id);
     }
     res.json(updated);
   } catch (error) { next(error); }
 });
 
 // DELETE /api/batches/:id - Delete batch
-router.delete('/batches/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/batches/:id', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.id);
     const deleted = await batchService.deleteBatch(id);
@@ -178,20 +151,21 @@ router.delete('/batches/:id', async (req: Request, res: Response, next: NextFunc
 });
 
 // POST /api/batches/:id/enrollments - Enroll a student
-router.post('/batches/:id/enrollments', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/batches/:id/enrollments', requireInstructor, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const user = req.user as Express.User;
     const batchId = parseInt(req.params.id);
     const created = await batchService.addEnrollment({
       batchId,
       studentId: req.body.studentId,
-      enrolledBy: req.body.enrolledBy || 'system',
+      enrolledBy: user.id,
     });
     res.json(created);
   } catch (error) { next(error); }
 });
 
 // PATCH /api/enrollments/:id/drop - Drop an enrollment
-router.patch('/enrollments/:id/drop', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/enrollments/:id/drop', requireInstructor, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const enrollmentId = parseInt(req.params.id);
     const updated = await batchService.dropEnrollment({
@@ -222,21 +196,22 @@ router.get('/batches/:id/eligible-students', async (req: Request, res: Response,
 });
 
 // POST /api/batches/:id/co-instructors - Assign co-instructor
-router.post('/batches/:id/co-instructors', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/batches/:id/co-instructors', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const user = req.user as Express.User;
     const batchId = parseInt(req.params.id);
     const created = await batchService.assignCoInstructor({
       batchId,
       instructorId: req.body.instructorId,
       role: req.body.role,
-      assignedBy: req.body.assignedBy || 'system',
+      assignedBy: user.id,
     });
     res.json(created);
   } catch (error) { next(error); }
 });
 
 // DELETE /api/co-instructors/:assignmentId - Remove co-instructor assignment
-router.delete('/co-instructors/:assignmentId', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/co-instructors/:assignmentId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const assignmentId = parseInt(req.params.assignmentId);
     const removed = await batchService.removeCoInstructor(assignmentId);

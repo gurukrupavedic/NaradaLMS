@@ -4,10 +4,10 @@
  */
 
 import { db } from '../../db';
-import { studentProgress, chapters, tracks, batches, enrollments, users } from '@shared/schema';
+import { studentProgress, chapters, tracks, batches, enrollments, users } from '@narada/types';
 import { eq, and, inArray } from 'drizzle-orm';
 import type { StudentProgressDTO, ProgressQueryFilters, AvailableChapterDTO } from './types';
-import type { ProficiencyLevel } from '@shared/constants';
+import type { ProficiencyLevel } from '@narada/types';
 
 export class LearningStorage {
   /**

@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Button, Badge, cn } from '@narada/ui';
 import { Play, Square, MapPin, Zap, Moon, Sun } from 'lucide-react';
 import { AudioPlayerControls } from '@/components/common/AudioPlayerControls';
-import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
-import { getSegmentText } from '@shared/utils/text-segmentation';
+import type { AudioMapping, Script, ContentMap } from '@narada/types';
+import { getSegmentText } from '@narada/types';
+import type { SegmentForMapper } from './ProgressiveMapper';
 
 interface FocusMappingViewProps {
-    segments: TextSegment[];
+    segments: SegmentForMapper[];
     currentScript: Script;
     content: ContentMap;
     mappings: AudioMapping[];
@@ -183,7 +184,7 @@ export function FocusMappingView({
                         Current Segment
                     </div>
                     <div className={cn(
-                        "text-5xl md:text-6xl font-bold leading-tight transition-all",
+                        "text-5xl md:text-6xl font-bold leading-tight transition-colors",
                         currentScript === 'te' || currentScript === 'hi' ? 'font-telugu leading-lose' : 'font-sans',
                         isCinemaMode ? "text-white" : "text-foreground"
                     )}>
@@ -192,7 +193,7 @@ export function FocusMappingView({
                 </div>
 
                 {nextText && (
-                    <div className="w-full max-w-2xl text-center space-y-2 opacity-40 scale-90 transition-all">
+                    <div className="w-full max-w-2xl text-center space-y-2 opacity-40 scale-90 transition-opacity transition-transform">
                         <div className={cn(
                             "text-xs font-medium uppercase tracking-widest transition-colors",
                             isCinemaMode ? "text-slate-500" : "text-muted-foreground"
@@ -219,7 +220,7 @@ export function FocusMappingView({
                         onClick={isPlaying ? onMarkSegment : handleResume}
                         size="lg"
                         className={cn(
-                            "w-full h-14 text-lg font-bold rounded-xl shadow-lg transition-all transform active:scale-95 duration-100",
+                            "w-full h-14 text-lg font-bold rounded-xl shadow-lg transition-transform transition-colors transform active:scale-95 duration-100",
                             isSpacePressed && "scale-95 ring-2 ring-offset-2 ring-blue-500 ring-offset-slate-900",
                             isCinemaMode
                                 ? "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20"

@@ -3,8 +3,9 @@
 import { AppShell } from "@narada/ui";
 import { useAuth } from "@/hooks/useAuth";
 import { LoadingSpinner } from "@narada/ui";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { ContentContextLabelContext } from "@/lib/learning/ContentContextLabelContext";
 
 export default function PortalLayout({
     children,
@@ -13,12 +14,20 @@ export default function PortalLayout({
 }) {
     const { user, isLoading, logout } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
+    const [contentContextLabel, setContentContextLabel] = useState<string | null>(null);
 
     useEffect(() => {
         if (!isLoading && !user) {
             router.push("/");
         }
     }, [isLoading, user, router]);
+
+    useEffect(() => {
+        if (pathname && !pathname.match(/\/learning\/chapter\/\d+/)) {
+            setContentContextLabel(null);
+        }
+    }, [pathname]);
 
     if (isLoading) {
         return (
@@ -33,17 +42,20 @@ export default function PortalLayout({
     }
 
     return (
-        <AppShell
-            user={{
-                name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || "User",
-                email: user.email,
-                avatar: user.profileImageUrl || ""
-            }}
-            userRoles={['student']}
-            onLogout={logout}
-            homeHref="/vedic-learning"
-        >
-            {children}
-        </AppShell>
+        <ContentContextLabelContext.Provider value={{ setLabel: setContentContextLabel }}>
+            <AppShell
+                user={{
+                    name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || "User",
+                    email: user.email,
+                    avatar: user.profileImageUrl || ""
+                }}
+                userRoles={['student']}
+                onLogout={logout}
+                homeHref="/vedic-learning"
+                contentContextLabel={contentContextLabel}
+            >
+                {children}
+            </AppShell>
+        </ContentContextLabelContext.Provider>
     );
 }

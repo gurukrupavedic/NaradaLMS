@@ -5,16 +5,6 @@ import { Badge } from '@narada/ui';
 import { Skeleton } from '@narada/ui';
 import type { Track } from './types';
 
-const scrollbarHideStyles = `
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-`;
-
 interface TrackTabsProps {
     tracks: Track[];
     selectedTrackId: string | undefined;
@@ -55,9 +45,7 @@ export function TrackTabs({
     }
 
     return (
-        <>
-            <style>{scrollbarHideStyles}</style>
-            <Tabs value={selectedTrackId} onValueChange={onSelectTrack} className="w-full">
+        <Tabs value={selectedTrackId} onValueChange={onSelectTrack} className="w-full">
                 <TabsList className="w-full justify-start overflow-x-auto bg-muted p-1 scrollbar-hide">
                     {tracks.map((track) => {
                         const isCurrentTrack = currentTrackId === String(track.id);
@@ -86,6 +74,5 @@ export function TrackTabs({
                     </TabsContent>
                 ))}
             </Tabs>
-        </>
     );
 }

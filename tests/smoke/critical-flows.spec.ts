@@ -67,7 +67,7 @@ test.describe('Critical Flows Smoke Test', () => {
         }]);
 
         const page = await context.newPage();
-        await page.goto(`${BASE_URL}/app/admin/users`);
+        await page.goto(`${BASE_URL}/admin/users`);
 
         // Assert on elements known to exist in UserManagementPage.tsx (Tabs and Table)
         await expect(page.getByRole('tab', { name: 'All Users' })).toBeVisible();

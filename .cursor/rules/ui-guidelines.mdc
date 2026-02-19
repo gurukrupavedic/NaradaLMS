@@ -1,0 +1,17 @@
+---
+description: Web UI coding standards for Narada LMS (accessibility, focus, motion, navigation, typography)
+globs: apps/**/*.{ts,tsx}, packages/ui/**/*.{ts,tsx}
+---
+
+# Web Interface Guidelines
+
+When editing UI code in apps (student-portal, ops-portal) or packages/ui, follow the standards in **UI-GUIDELINES.md** at the repo root. Summary:
+
+- **Focus:** Use `focus-visible:` (or `.focus-ring`); never hide focus without a visible replacement. Icon-only buttons require `aria-label`.
+- **Motion:** No `transition-all`; use `transition-colors`, `transition-opacity`, `transition-transform`. Respect `prefers-reduced-motion`.
+- **Navigation:** Use `<Link href="...">` instead of `onClick={() => router.push(...)}` for in-app navigation.
+- **Typography:** Use the shared `ELLIPSIS` constant, not `"..."`. Use `formatDate` from `@shared/utils/date` for dates.
+- **Forms:** Set `autoComplete` and `aria-label`/labels on auth and search inputs. Gate `autoFocus` with `!useIsMobile()` where used.
+- **Lists:** Use `VirtualizedTableBody` or `VirtualizedList` for large lists; stable callbacks and `React.memo` for row/item components.
+
+See UI-GUIDELINES.md for full details and optional linting ideas.

@@ -5,6 +5,7 @@
 
 import { getAdminService } from './service';
 import { eventBus } from '../../shared/events/event-bus';
+import { Logger } from '../../utils/logger';
 
 /**
  * Initialize all event handlers for audit logging
@@ -26,11 +27,11 @@ export const initializeEventHandlers = () => {
 
   eventBus.subscribe('UserRoleChanged', async (event: any) => {
     await adminService.logAction(
-      event.userId, // User who changed their own role (or admin)
-      event.added ? 'ROLE_ASSIGNED' : 'ROLE_REMOVED',
+      event.changedBy || event.userId,
+      'ROLE_CHANGED',
       'user',
       event.userId,
-      { role: event.role, timestamp: event.timestamp }
+      { newRoles: event.newRoles, timestamp: event.timestamp }
     );
   });
 
@@ -128,6 +129,6 @@ export const initializeEventHandlers = () => {
     );
   });
 
-  console.log('[System Admin] Event handlers initialized - audit logging active');
+  Logger.info('[System Admin] Event handlers initialized - audit logging active');
 };
 

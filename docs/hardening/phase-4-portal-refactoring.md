@@ -7,6 +7,8 @@
 > **Risk**: Low. Component extraction doesn't change behavior.
 >
 > **Can run in parallel with**: Phase 3 (Server Hardening) — portal and server changes are independent.
+>
+> **Execution tip**: Doing Task 4.7 first (especially Step 0: fix `SidebarMenuButton` types) unblocks `npm run verify` and portal builds. The UI package currently has type errors that prevent both portals from building.
 
 ---
 
@@ -367,17 +369,19 @@ Update the duplicated components to use this shared function instead of inline s
 
 ### Ops Portal Dead Code
 
-1. **`OpsAuthPage.tsx`**: Remove unused imports: `Tabs`, `TabsContent`, `TabsList`, `TabsTrigger`, `CardDescription`, `CardHeader`, `CardTitle`, `Label` (leftover from removed registration tab). Remove "CHANGE 1 & 2" comments.
+1. **QueryKeys (cosmetic)**: In `useBatchRelations.ts`, change `useInstructors` queryKey from `["/api/auth/admin/users?role=instructor"]` to `["/auth/admin/users?role=instructor"]`. In `useSearchStudents.ts`, change queryKey from `["/api/auth/admin/users?limit=100"]` to `["/auth/admin/users?limit=100"]`. These are cache keys only (no double-prefix bug), but consistency with other hooks avoids confusion.
 
-2. **`instructor-student-list.tsx`**: Remove `console.log('First student data:', students[0])` (line 61-63).
+2. **`OpsAuthPage.tsx`**: Remove unused imports: `Tabs`, `TabsContent`, `TabsList`, `TabsTrigger`, `CardDescription`, `CardHeader`, `CardTitle`, `Label` (leftover from removed registration tab). Remove "CHANGE 1 & 2" comments.
 
-3. **`batch-list.tsx`**: Remove the duplicate `import { useRouter } from "next/navigation"` (line 342). Remove stream-of-consciousness comments (lines 66-70).
+3. **`instructor-student-list.tsx`**: Remove `console.log('First student data:', students[0])` (line 61-63).
 
-4. **`ChapterItem.tsx` (ops)**: Remove the "thinking aloud" comment block (lines 35-48).
+4. **`batch-list.tsx`**: Remove the duplicate `import { useRouter } from "next/navigation"` (line 342). Remove stream-of-consciousness comments (lines 66-70).
 
-5. **`MatrixEvaluationModal.tsx`**: Remove commented-out import (line 8). Remove the comment about import limitations (line 34).
+5. **`ChapterItem.tsx` (ops)**: Remove the "thinking aloud" comment block (lines 35-48).
 
-6. **`TrackTabs.tsx`**: Move the inline `<style>` CSS for scrollbar hiding to the `globals.css` file:
+6. **`MatrixEvaluationModal.tsx`**: Remove commented-out import (line 8). Remove the comment about import limitations (line 34).
+
+7. **`TrackTabs.tsx`**: Move the inline `<style>` CSS for scrollbar hiding to the `globals.css` file:
    ```css
    .scrollbar-hide::-webkit-scrollbar { display: none; }
    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -387,7 +391,7 @@ Update the duplicated components to use this shared function instead of inline s
 
 1. Remove placeholder links (`href="#"`) for Terms of Service and Privacy Policy in both auth pages. Replace with a comment or remove the text entirely.
 
-2. Remove the stale comment `// Updated to use the correct apiFetch from lib/api` from both `useAuth.ts` files (if not already done in Phase 2).
+2. **useAuth.ts**: The stale comment `// Updated to use the correct apiFetch from lib/api` was removed in Phase 2 — no action needed.
 
 ### Verification for Task 4.5
 1. Run: `cd apps/student-portal && npx tsc --noEmit`
@@ -459,6 +463,41 @@ Note: `@shared/*` path was removed in Phase 1.
 ---
 
 ## Task 4.7: Fix `@narada/ui` Package Configuration
+
+**Do this task early** — it fixes the type errors that currently block `npm run verify` and portal builds.
+
+### Step 0: Fix `SidebarMenuButton` props type (build blocker)
+
+**File**: `packages/ui/src/components/sidebar.tsx`
+
+The `SidebarMenuButton` component destructures `variant` and `size` (used in the rendered button) but they are not declared on its props type. This causes:
+- `sidebar.tsx(513,13): Property 'variant' does not exist`
+- `sidebar.tsx(514,13): Property 'size' does not exist`
+- `nav-user.tsx(53,29): Property 'size' does not exist` (when passing `size="lg"`)
+
+**Fix**: Extend the props type so it includes `variant` and `size`. For example, change the type from:
+
+```typescript
+React.ComponentProps<"button"> & {
+    asChild?: boolean
+    isActive?: boolean
+    tooltip?: string | React.ComponentProps<typeof TooltipContent>
+}
+```
+
+to:
+
+```typescript
+React.ComponentProps<"button"> & {
+    asChild?: boolean
+    isActive?: boolean
+    tooltip?: string | React.ComponentProps<typeof TooltipContent>
+    variant?: "default" | "ghost" | "outline" | "link"
+    size?: "default" | "sm" | "lg" | "icon"
+}
+```
+
+(Or use the same variant/size union types as your existing `Button` component if the UI package has one.) After this fix, `cd apps/student-portal && npx tsc --noEmit` and portal builds should pass.
 
 ### Step 1: Extend shared TypeScript config
 
@@ -549,6 +588,19 @@ icon: React.ComponentType<{ className?: string }>;
 - [ ] `npm run verify` passes
 - [ ] Both portals build and function correctly
 - [ ] All work committed on `hardening-phase-4`
+
+---
+
+## Phase 4 Wrap-Up (pre-existing fixes)
+
+The following issues were identified during Phase 4 verification and fixed so that `npm run verify` and all builds pass. They are documented in Phase 5 as optional to re-do if merging Phase 4 before doing them:
+
+1. **`shared/utils/text-segmentation.ts`**: Added `TextSegment` to the import from `../types/text-segmentation`.
+2. **Ops-portal MappingTab / ProgressiveMapper**: Introduced `SegmentForMapper` (and `SegmentForDisplay` in `@narada/types` utils) so API response segments (`createdAt: string`, `script: string`) are accepted; updated FocusSessionSetup, FocusMappingView, SegmentMappingGrid to use it; relaxed `useMappingControls` to accept `SegmentWithId[]`.
+3. **Root server type errors**: Added `server/types.d.ts` for `cookie-parser` and `csurf`; fixed `server/auth/jwt.utils.ts` sign options; fixed `server/auth/passport-config.ts` Google strategy callback signature (6-arg with `done`); fixed `server/index.ts` CSRF token access.
+4. **MatrixEvaluationModal**: Removed "thinking aloud" comments (Task 4.5).
+
+Optional leftovers for Phase 5 Task 5.9: matrix-utils unused function audit, LearnChapter `onCreateSegment` no-op, AudioPlayerControls playback rate wiring.
 
 ---
 

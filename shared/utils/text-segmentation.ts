@@ -7,7 +7,12 @@
  * Purpose: Centralized utilities for text processing and segment management
  */
 
-import type { TextSegment, AudioMapping, Script, ContentMap } from '../types/text-segmentation';
+import type { AudioMapping, Script, ContentMap, TextSegment } from '../types/text-segmentation';
+
+export const ELLIPSIS = "…";
+
+/** Segment shape needed for getSegmentText; accepts API/DB shape (script may be string). */
+type SegmentForText = { order: number; startPosition: number; endPosition: number; script: Script | string };
 
 /**
  * Extracts text content for a segment in the specified script
@@ -19,7 +24,7 @@ import type { TextSegment, AudioMapping, Script, ContentMap } from '../types/tex
  * @returns The extracted text content or segment name as fallback
  */
 export const getSegmentText = (
-  segment: TextSegment,
+  segment: SegmentForText,
   content: ContentMap,
   script: Script,
   truncate: boolean = false,
@@ -34,7 +39,7 @@ export const getSegmentText = (
   const segmentText = text.slice(segment.startPosition, segment.endPosition);
 
   if (truncate && segmentText.length > maxLength) {
-    return segmentText.slice(0, maxLength) + '...';
+    return segmentText.slice(0, maxLength) + ELLIPSIS;
   }
 
   return segmentText;

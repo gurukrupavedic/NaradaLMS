@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@narada/ui';
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { EnrichedTextSegment as TextSegment, Script, ContentMap } from '@narada/types';
-import { getDisplayText } from '@/lib/text-segmentation-utils';
+import { getDisplayText } from '@narada/types';
 
 interface SelectableTextPanelProps {
     content: ContentMap;
@@ -141,7 +141,7 @@ export function SelectableTextPanel({
                 <span
                     key={`segment-${segment.id}`}
                     id={`left-segment-${segment.id}`}
-                    className={`px-1.5 py-0.5 rounded-sm cursor-pointer transition-all ${isSelected
+                    className={`px-1.5 py-0.5 rounded-sm cursor-pointer transition-colors transition-shadow ${isSelected
                         ? 'bg-mantra-base text-white font-medium'
                         : 'bg-mantra-base/[0.08] border-l-2 border-r-2 border-y border-mantra-base/20 hover:bg-mantra-base/15 hover:border-mantra-base/50 text-foreground'
                         }`}
@@ -222,7 +222,7 @@ export function SelectableTextPanel({
 
     return (
         <div className="h-full flex flex-col" ref={scrollContainerRef}>
-            <div className="flex-1 overflow-auto" onClick={() => onSegmentSelect?.(undefined)}>
+            <div className="flex-1 overflow-auto">
                 <div
                     ref={textContainerRef}
                     className="p-8 tiptap-content max-w-4xl mx-auto"

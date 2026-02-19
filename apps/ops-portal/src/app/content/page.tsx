@@ -85,7 +85,7 @@ export default function TracksAndChapters() {
   const queryClient = useQueryClient();
 
   const [selectedTrackId, setSelectedTrackId] = useLocalStorage<number | null>('content-studio-selected-track', null);
-  const [columnSizes, setColumnSizes] = useLocalStorage<{ left: number; right: number }>('content-studio-column-sizes', { left: 40, right: 60 });
+  const [columnSizes, setColumnSizes] = useLocalStorage<{ left: number; right: number }>('content-studio-column-sizes', { left: 50, right: 50 });
   const [dialogState, setDialogState] = useState<DialogState>({ isOpen: false, type: 'create', itemType: 'track' });
   const [deleteState, setDeleteState] = useState<DeleteState>({ isOpen: false, itemType: 'track' });
   const [formData, setFormData] = useState<{ title: string; description: string; trackId?: number }>({ title: '', description: '' });
@@ -372,51 +372,52 @@ export default function TracksAndChapters() {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] bg-background flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-hidden p-4 w-full h-full">
+    <div className="h-[calc(100vh-4rem)] flex flex-col overflow-hidden bg-background max-w-7xl mx-auto w-full">
+      <div className="flex-1 min-h-0 overflow-hidden p-4 w-full h-full">
         <ResizablePanelGroup direction="horizontal" onLayout={handleLayoutChange} className="h-full">
           <ResizablePanel
             defaultSize={columnSizes.left}
             minSize={25}
-            maxSize={50}
-            className="flex flex-col h-full bg-card/50 rounded-lg border shadow-sm mr-4"
+            className="flex flex-col h-full min-h-0 bg-card/50 rounded-lg border shadow-sm mr-3 min-w-0"
           >
-            <div className="px-4 py-2 border-b flex justify-between items-center bg-card rounded-t-lg">
-              <div className="flex items-center gap-2">
-                <LibraryBig className="w-5 h-5 text-primary" />
-                <h2 className="font-semibold">Tracks</h2>
+            <div className="min-h-11 h-11 py-2 px-3 sm:px-4 border-b flex justify-between items-center bg-muted rounded-t-lg shrink-0 gap-2 min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <LibraryBig className="w-5 h-5 text-primary shrink-0" />
+                <h2 className="font-semibold text-sm truncate">Tracks</h2>
                 <Badge variant="secondary" className="ml-2">
                   {tracksQuery.isLoading ? '…' : tracks.length}
                 </Badge>
               </div>
               <Button size="sm" onClick={() => openCreateDialog('track')}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Track
+                <Plus className="h-3.5 w-3.5 shrink-0 mr-1.5" aria-hidden />
+                Track
               </Button>
             </div>
 
-            <ScrollArea className="flex-1 p-4" type="hover">
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndTrack}>
-                <SortableContext items={tracks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-                  {tracks.map((track, idx) => (
-                    <TrackListItem
-                      key={track.id}
-                      track={track}
-                      index={idx}
-                      isSelected={selectedTrackId === track.id}
-                      onSelect={setSelectedTrackId}
-                      onEdit={(t) => openEditDialog(t, 'track')}
-                      onDelete={(t) => setDeleteState({ isOpen: true, itemType: 'track', item: t })}
-                    />
-                  ))}
-                </SortableContext>
-              </DndContext>
+            <ScrollArea className="flex-1 min-h-0 min-w-0 p-4 bg-card" type="hover">
+              <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndTrack}>
+                  <SortableContext items={tracks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+                    {tracks.map((track, idx) => (
+                      <TrackListItem
+                        key={track.id}
+                        track={track}
+                        index={idx}
+                        isSelected={selectedTrackId === track.id}
+                        onSelect={setSelectedTrackId}
+                        onEdit={(t) => openEditDialog(t, 'track')}
+                        onDelete={(t) => setDeleteState({ isOpen: true, itemType: 'track', item: t })}
+                      />
+                    ))}
+                    </SortableContext>
+                  </DndContext>
 
-              {!tracks.length && !tracksQuery.isLoading && (
-                <div className="text-center py-10 text-muted-foreground">
-                  <p>No tracks found.</p>
+                  {!tracks.length && !tracksQuery.isLoading && (
+                    <div className="text-center py-10 text-muted-foreground">
+                      <p>No tracks found.</p>
+                    </div>
+                  )}
                 </div>
-              )}
             </ScrollArea>
           </ResizablePanel>
 
@@ -425,48 +426,50 @@ export default function TracksAndChapters() {
           <ResizablePanel
             defaultSize={columnSizes.right}
             minSize={25}
-            className="flex flex-col h-full bg-card/50 rounded-lg border shadow-sm ml-4"
+            className="flex flex-col h-full min-h-0 bg-card/50 rounded-lg border shadow-sm ml-3 min-w-0"
           >
             {selectedTrack ? (
               <>
-                <div className="px-4 py-2 border-b flex justify-between items-center bg-card rounded-t-lg">
-                  <div className="flex items-center gap-2">
-                    <BookText className="w-5 h-5 text-primary" />
-                    <div>
-                      <h2 className="font-semibold">{selectedTrack.title}</h2>
+                <div className="min-h-11 h-11 py-2 px-3 sm:px-4 border-b flex justify-between items-center bg-muted rounded-t-lg shrink-0 gap-2 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <BookText className="w-5 h-5 text-primary shrink-0" />
+                    <div className="min-w-0">
+                      <h2 className="font-semibold text-sm truncate">{selectedTrack.title}</h2>
                       <p className="text-xs text-muted-foreground">{selectedTrackChapters.length} chapters</p>
                     </div>
                   </div>
                   <Button size="sm" onClick={() => openCreateDialog('chapter')} disabled={!selectedTrackId}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Chapter
+                    <Plus className="h-3.5 w-3.5 shrink-0 mr-1.5" aria-hidden />
+                    Chapter
                   </Button>
                 </div>
 
-                <ScrollArea className="flex-1 p-4" type="hover">
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndChapter}>
-                    <SortableContext items={selectedTrackChapters.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-                      {selectedTrackChapters.map((chapter, idx) => (
-                        <ChapterListItem
-                          key={chapter.id}
-                          chapter={chapter}
-                          index={idx}
-                          onEdit={(c) => openEditDialog(c, 'chapter')}
-                          onMove={(c) => openMoveDialog(c)}
-                          onDelete={(c) => setDeleteState({ isOpen: true, itemType: 'chapter', item: c, trackId: selectedTrack.id })}
-                          onOpen={(c) => {
-                            router.push(`/content/tracks/${selectedTrack.id}/chapters/${c.id}`);
-                          }}
-                        />
-                      ))}
-                    </SortableContext>
-                  </DndContext>
+                <ScrollArea className="flex-1 min-h-0 min-w-0 p-4 bg-card" type="hover">
+                  <div className="min-w-0 w-full max-w-full overflow-x-hidden">
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEndChapter}>
+                      <SortableContext items={selectedTrackChapters.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                        {selectedTrackChapters.map((chapter, idx) => (
+                          <ChapterListItem
+                            key={chapter.id}
+                            chapter={chapter}
+                            index={idx}
+                            onEdit={(c) => openEditDialog(c, 'chapter')}
+                            onMove={(c) => openMoveDialog(c)}
+                            onDelete={(c) => setDeleteState({ isOpen: true, itemType: 'chapter', item: c, trackId: selectedTrack.id })}
+                            onOpen={(c) => {
+                              router.push(`/content/tracks/${selectedTrack.id}/chapters/${c.id}`);
+                            }}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
 
-                  {!selectedTrackChapters.length && !chaptersQuery.isLoading && (
-                    <div className="text-center py-10 text-muted-foreground">
-                      <p>No chapters in this track.</p>
-                    </div>
-                  )}
+                    {!selectedTrackChapters.length && !chaptersQuery.isLoading && (
+                      <div className="text-center py-10 text-muted-foreground">
+                        <p>No chapters in this track.</p>
+                      </div>
+                    )}
+                  </div>
                 </ScrollArea>
               </>
             ) : (

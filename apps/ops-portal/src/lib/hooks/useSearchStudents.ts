@@ -15,7 +15,7 @@ export function useSearchStudents(searchQuery: string) {
         users: StudentSearchResult[];
         pagination: { limit: number; offset: number; total: number };
     }>({
-        queryKey: ["/api/auth/admin/users?limit=100"], // Note: using auth admin route
+        queryKey: ["/auth/admin/users?limit=100"], // Note: using auth admin route
         queryFn: async () => {
             // Matches useAdminUsers implementation, direct return
             return apiRequest<{

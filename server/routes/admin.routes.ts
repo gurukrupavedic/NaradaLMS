@@ -29,12 +29,13 @@ router.get('/audit-logs', jwtAuth, requireAdmin, async (req: Request, res: Respo
       offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
     };
 
-    const logs = await adminService.getAuditLogs(filters);
+    const { rows, total } = await adminService.getAuditLogs(filters);
 
     res.json({
       success: true,
-      data: logs,
+      data: rows,
       pagination: {
+        total,
         limit: filters.limit,
         offset: filters.offset,
       },

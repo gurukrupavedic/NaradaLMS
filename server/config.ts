@@ -8,8 +8,10 @@ import 'dotenv/config';
 export const config = {
     env: process.env.NODE_ENV || 'development',
     port: parseInt(process.env.PORT || '5000', 10),
-    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5000',
-    corsOrigins: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [],
+    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+    corsOrigins: (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001')
+        .split(',')
+        .map(s => s.trim()),
     database: {
         url: process.env.DATABASE_URL,
     },
@@ -29,9 +31,10 @@ export const config = {
 };
 
 // Validation for critical settings in production
+const unsafeJwtSecrets = ['change-me-in-production', 'your-secret-key-change-in-production'];
 if (config.env === 'production') {
-    if (config.jwt.secret === 'change-me-in-production') {
-        throw new Error('FATAL: JWT_SECRET must be changed in production!');
+    if (!config.jwt.secret || unsafeJwtSecrets.includes(config.jwt.secret)) {
+        throw new Error('JWT_SECRET must be set to a secure value in production');
     }
     if (config.jwt.secret.length < 32) {
         throw new Error('FATAL: JWT_SECRET is too short (min 32 chars)!');

@@ -8,8 +8,9 @@ import type { StudentProgressDTO, ChapterAccessDTO, ProgressQueryFilters, Availa
 import { LEARNING_DELIVERY_EVENTS } from './events';
 import { contentService } from '../content-publishing';
 import { mediaService } from '../media-pipeline';
+import { eventBus } from '../../shared/events/event-bus';
 import { db } from '../../db';
-import { batches, batchCoInstructors, enrollments, chapters, studentProgress, users, tracks } from '@shared/schema';
+import { batches, batchCoInstructors, enrollments, chapters, studentProgress, users, tracks } from '@narada/types';
 import { eq, and, or, inArray } from 'drizzle-orm';
 
 export class LearningService {
@@ -54,7 +55,12 @@ export class LearningService {
 
     await learningStorage.trackChapterAccess(studentId, chapterId, batchId);
 
-
+    eventBus.publish(LEARNING_DELIVERY_EVENTS.CHAPTER_ACCESSED, {
+      chapterId,
+      studentId,
+      batchId: batchId ?? undefined,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   /**

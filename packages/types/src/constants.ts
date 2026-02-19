@@ -53,3 +53,28 @@ export const PROFICIENCY_LEVELS = {
 
 export const VALID_PROFICIENCY_LEVELS = [0, 1, 2, 3, 4, 8, 9] as const;
 export type ProficiencyLevel = typeof VALID_PROFICIENCY_LEVELS[number];
+
+export type ProficiencyStatus = 'not_started' | 'absent' | 'practicing' | 'level_1' | 'level_2' | 'level_3' | 'certified';
+
+export function getProficiencyStatus(level: number | null | undefined): ProficiencyStatus {
+  if (level === null || level === undefined || level === 9) return 'not_started';
+  if (level === 8) return 'absent';
+  if (level === 0) return 'practicing';
+  if (level === 1) return 'level_1';
+  if (level === 2) return 'level_2';
+  if (level === 3) return 'level_3';
+  if (level === 4) return 'certified';
+  return 'not_started';
+}
+
+export function getProficiencyLabel(level: number | null | undefined): string {
+  switch (level) {
+    case 8: return 'Absent';
+    case 0: return 'Practicing';
+    case 1: return 'L1 (50%)';
+    case 2: return 'L2 (70%)';
+    case 3: return 'L3 (90%)';
+    case 4: return 'L4 (95%)';
+    default: return 'Not Started';
+  }
+}

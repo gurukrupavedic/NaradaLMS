@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/api';
-import { StudentDetail } from '../../../../../shared/types';
+import { StudentDetail } from '@narada/types';
 
 // Re-export for component compatibility if needed, but prefer direct usage
 export type StudentDetails = StudentDetail;

@@ -109,6 +109,17 @@ export const contextualNavigation = new Map([
             { label: 'Details', href: '#' }
         ]
     }],
+
+    // Chapter content (Content Studio)
+    ['/content/tracks/:trackId/chapters/:chapterId', {
+        label: 'Chapter',
+        parentPath: '/content',
+        breadcrumbs: [
+            { label: 'Content Studio', href: '/content' },
+            { label: 'Tracks & Chapters', href: '/content' },
+            { label: 'Chapter', href: '#' }
+        ]
+    }],
 ]);
 
 /**

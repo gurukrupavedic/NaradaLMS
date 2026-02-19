@@ -17,6 +17,10 @@ import { Music, Info, StretchHorizontal, Zap } from "lucide-react";
 import { SelectableTextPanel } from "./text-segmentation/SelectableTextPanel";
 import { getProficiencyLabel, getCellColor } from "@/lib/matrix-utils";
 import { AudioPlayerControls } from "@/components/common/AudioPlayerControls";
+import type { EnrichedTextSegment as TextSegment, ContentMap } from "@narada/types";
+import { useAuth } from "@/hooks/useAuth";
+import { useContentContextLabelSetter } from "@/lib/learning/ContentContextLabelContext";
+import { formatDate } from "@shared/utils/date";
 
 interface ChapterData {
   id: number;
@@ -24,28 +28,13 @@ interface ChapterData {
   title: string;
   description?: string;
   status: "draft" | "published";
-  content: {
-    te?: string;
-    hi?: string;
-    en?: string;
-  };
+  content: ContentMap;
   track?: {
     id: number;
     title: string;
     order?: number;
   };
   order?: number;
-}
-
-interface TextSegment {
-  id: number;
-  chapterId: number;
-  script: string;
-  startPosition: number;
-  endPosition: number;
-  order: number;
-  createdBy: string;
-  createdAt: string;
 }
 
 interface AudioFile {
@@ -78,19 +67,23 @@ interface StudentProgressDTO {
   updatedAt: string;
 }
 
-import { useAuth } from "@/hooks/useAuth";
-
 export default function LearnChapter({ chapterId }: { chapterId: number }) {
   const { user } = useAuth();
-  // Removed wouter hooks
+  const setContentContextLabel = useContentContextLabelSetter();
 
   const [contentScript, setContentScript] = useState<"te" | "hi" | "en">("te");
   const [selectedAudioFileId, setSelectedAudioFileId] = useState<number | null>(null);
   const [selectedSegmentId, setSelectedSegmentId] = useState<number | undefined>(undefined);
-  const [learnMode, setLearnMode] = useState<boolean>(() => {
+  const [learnMode, setLearnMode] = useState<boolean>(true);
+
+  // Hydrate from localStorage on client mount
+  useEffect(() => {
     const stored = localStorage.getItem("study-learn-mode");
-    return stored ? JSON.parse(stored) : true;
-  });
+    if (stored !== null) {
+      setLearnMode(JSON.parse(stored));
+    }
+  }, []);
+
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   const scriptOptions = useMemo(() => ([
@@ -99,7 +92,19 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
     { value: "en" as const, label: "English (IAST)" },
   ]), []);
 
-  const previewAudioRef = useRef<HTMLAudioElement>(new Audio());
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize Audio on client mount
+  useEffect(() => {
+    previewAudioRef.current = new Audio();
+    return () => {
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+        previewAudioRef.current.src = '';
+        previewAudioRef.current = null;
+      }
+    };
+  }, []);
   const timeUpdateCleanupRef = useRef<(() => void) | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -156,24 +161,32 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
     hasTrackedAccessRef.current = true;
 
     // Pattern B
-    apiRequest('POST', `/learning/chapters/${chapterId}/access`, {})
+    apiRequest(`/learning/chapters/${chapterId}/access`, { method: 'POST' })
       .catch(() => { });
   }, [chapterId]);
 
+  // Set sidebar/breadcrumb context label (same convention as ops portal chapter content page)
+  useEffect(() => {
+    if (chapter?.track?.order != null && chapter?.order != null) {
+      const titlePart = chapter.title ? `: ${chapter.title}` : "";
+      setContentContextLabel(`Track ${chapter.track!.order}. Chapter ${chapter.order}${titlePart}`);
+    } else {
+      setContentContextLabel(null);
+    }
+    return () => setContentContextLabel(null);
+  }, [chapter?.track?.order, chapter?.order, chapter?.title, setContentContextLabel]);
+
   // Auto-select first audio file
   useEffect(() => {
-    if (audioFiles.length > 0 && !selectedAudioFileId) {
+    if (audioFiles.length > 0 && !selectedAudioFileId && previewAudioRef.current) {
       setSelectedAudioFileId(audioFiles[0].id);
-      if (previewAudioRef.current) {
-        previewAudioRef.current.src = `/uploads/${audioFiles[0].filename}`;
-      }
+      previewAudioRef.current.src = `/uploads/${audioFiles[0].filename}`;
     }
   }, [audioFiles, selectedAudioFileId]);
 
   // Audio event listeners
   useEffect(() => {
     const audio = previewAudioRef.current;
-
     if (!audio) return;
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
@@ -193,7 +206,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
 
   // Handle audio file change
   useEffect(() => {
-    if (selectedAudioFileId) {
+    if (selectedAudioFileId && previewAudioRef.current) {
       const audioFile = audioFiles.find(f => f.id === selectedAudioFileId);
       if (audioFile) {
         previewAudioRef.current.src = `/uploads/${audioFile.filename}`;
@@ -225,6 +238,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
     }
 
     const audio = previewAudioRef.current;
+    if (!audio) return;
 
     const playSegment = () => {
       audio.currentTime = mapping.startTime;
@@ -250,10 +264,10 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
 
     if (selectedAudioFileId !== mapping.audioFileId) {
       const audioFile = audioFiles.find((f) => f.id === mapping.audioFileId);
-      if (audioFile) {
-        audio.src = `/uploads/${audioFile.filename}`;
+      if (audioFile && previewAudioRef.current) {
+        previewAudioRef.current.src = `/uploads/${audioFile.filename}`;
         setSelectedAudioFileId(mapping.audioFileId);
-        audio.addEventListener("loadedmetadata", () => playSegment(), { once: true });
+        previewAudioRef.current.addEventListener("loadedmetadata", () => playSegment(), { once: true });
       }
     } else {
       playSegment();
@@ -278,8 +292,6 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
   }, [textSegments, mappings, selectedAudioFileId]);
 
   const displayTitle = chapter?.title || "Learn Chapter";
-  const trackName = chapter?.track?.title || undefined;
-  const chapterNumber = chapter?.order || undefined;
 
   if (chapterLoading) {
     return (
@@ -291,47 +303,15 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
 
   return (
     <div className="flex flex-col h-[calc(100dvh-4rem)]">
-      {/* Header */}
+      {/* Header: Left = Proficiency | Learn Mode; Right = Audio Selector | Audio Player */}
       <div className="bg-card border-b border-border flex-shrink-0">
-        <div className="px-6 py-3 flex items-start justify-between">
-          {/* Left: Titles aligned with rows */}
-          <div className="flex flex-col gap-3">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground h-7 flex items-center">
-              {trackName ? `Track ${chapter?.track?.order || chapter?.track?.id || '?'} - ${trackName}` : 'Learn Chapter'}
-            </p>
-            <h1 className="text-lg font-bold text-foreground leading-tight h-7 flex items-center">
-              {chapterNumber ? `Chapter ${chapterNumber} - ${displayTitle}` : displayTitle}
-            </h1>
-          </div>
+        <div className="min-h-11 py-2 px-3 sm:px-6 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4 flex-wrap min-w-0">
+          {/* Visually hidden h1 for accessibility; breadcrumb provides visible context */}
+          <h1 className="sr-only">{displayTitle}</h1>
 
-          {/* Right: Grid Layout */}
-          <div className="flex flex-col gap-3">
-            {/* Row 1: Audio Selector + Proficiency */}
-            <div className="flex items-center gap-4">
-              <div className="w-72 flex justify-end">
-                {audioFiles.length > 0 && (
-                  <Select
-                    value={selectedAudioFileId?.toString() || ''}
-                    onValueChange={(value) => setSelectedAudioFileId(parseInt(value))}
-                  >
-                    <SelectTrigger className="h-7 w-full text-xs border-0 shadow-none bg-transparent hover:bg-accent focus:ring-2 focus:ring-ring px-2 gap-2 text-muted-foreground hover:text-foreground transition-colors justify-start">
-                      <div className="flex items-center gap-2 truncate w-full">
-                        <Music className="h-3.5 w-3.5 opacity-70 flex-shrink-0" />
-                        <SelectValue placeholder="Select audio" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent className="text-xs">
-                      {audioFiles.map((file) => (
-                        <SelectItem key={file.id} value={file.id.toString()}>
-                          {file.displayName || file.filename}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-
-              <div className="w-40 flex justify-end">
+          {/* Left: Proficiency Badge, Learn Mode */}
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 min-w-0">
+            <div className="w-32 sm:w-40 min-w-0 flex justify-start">
                 {(() => {
                   let status: 'practicing' | 'completed' | 'absent' | 'not_started' = 'not_started';
 
@@ -353,7 +333,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
                     <Badge
                       variant="outline"
                       className={cn(
-                        "h-7 w-full justify-between text-xs font-medium border flex items-center px-3",
+                        "h-8 w-full justify-between text-xs font-medium border flex items-center px-2 sm:px-3 min-h-10 sm:min-h-0",
                         colors.bgColor,
                         colors.textColor,
                         colors.borderColor,
@@ -374,7 +354,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
                                 <p className="text-xs">
                                   <span className="font-semibold">Last Evaluated:</span>{" "}
                                   {currentProgress.lastEvaluatedAt
-                                    ? new Date(currentProgress.lastEvaluatedAt).toLocaleDateString()
+                                    ? formatDate(currentProgress.lastEvaluatedAt)
                                     : "Never"}
                                 </p>
                                 <p className="text-xs">
@@ -390,11 +370,43 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
                   );
                 })()}
               </div>
+
+              <div className="w-32 sm:w-40 flex items-center gap-2 h-8 min-h-10 sm:min-h-0 px-1 shrink-0">
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Learn Mode:</span>
+                <Switch
+                  checked={learnMode}
+                  onCheckedChange={setLearnMode}
+                  className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
+                />
+              </div>
+          </div>
+
+          {/* Right: Audio Selector, Audio Player */}
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 ml-auto min-w-0">
+            <div className="min-w-0 w-44 sm:w-72 flex-shrink-0">
+                {audioFiles.length > 0 && (
+                  <Select
+                    value={selectedAudioFileId?.toString() || ''}
+                    onValueChange={(value) => setSelectedAudioFileId(parseInt(value))}
+                  >
+                    <SelectTrigger className="h-8 min-h-10 sm:min-h-0 w-full text-xs border border-border bg-muted/50 hover:bg-muted focus:ring-2 focus:ring-ring focus:ring-offset-0 rounded-md px-2 gap-2 text-muted-foreground hover:text-foreground transition-colors justify-start">
+                      <div className="flex items-center gap-2 truncate w-full">
+                        <Music className="h-3.5 w-3.5 opacity-70 flex-shrink-0" />
+                        <SelectValue placeholder="Select audio" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="text-xs">
+                      {audioFiles.map((file) => (
+                        <SelectItem key={file.id} value={file.id.toString()}>
+                          {file.displayName || file.filename}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
             </div>
 
-            {/* Row 2: Audio Player + Learn Mode */}
-            <div className="flex items-center gap-4">
-              <div className="w-72 flex justify-end">
+            <div className="min-w-0 w-44 sm:w-72 flex-shrink-0">
                 {selectedAudioFileId && (
                   <AudioPlayerControls
                     variant="minimal"
@@ -402,32 +414,28 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
                     currentTime={currentTime}
                     duration={duration}
                     onPlay={() => {
-                      previewAudioRef.current.play().catch(console.error);
-                      setIsPlaying(true);
+                      if (previewAudioRef.current) {
+                        previewAudioRef.current.play().catch(console.error);
+                        setIsPlaying(true);
+                      }
                     }}
                     onPause={() => {
-                      previewAudioRef.current.pause();
-                      setIsPlaying(false);
+                      if (previewAudioRef.current) {
+                        previewAudioRef.current.pause();
+                        setIsPlaying(false);
+                      }
                     }}
                     onSeek={(time) => {
-                      previewAudioRef.current.currentTime = time;
-                      setCurrentTime(time);
+                      if (previewAudioRef.current) {
+                        previewAudioRef.current.currentTime = time;
+                        setCurrentTime(time);
+                      }
                     }}
                     showSkipButtons={false}
                     showPlaybackRate={true}
-                    className="w-full border-0 shadow-none bg-transparent p-0 gap-2"
+                    className="w-full min-w-0 border-0 shadow-none bg-transparent p-0 gap-2"
                   />
                 )}
-              </div>
-
-              <div className="w-40 flex items-center justify-between h-7 px-1">
-                <span className="text-xs font-medium text-muted-foreground">Learn Mode:</span>
-                <Switch
-                  checked={learnMode}
-                  onCheckedChange={setLearnMode}
-                  className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
-                />
-              </div>
             </div>
           </div>
         </div>
@@ -451,10 +459,10 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
             />
           </div>
         ) : (
-          // Learn Mode ON - Segmented view
-          <div className="h-full flex flex-col">
+          // Learn Mode ON - Segmented view (headers match RTE toolbar/status bar when learn mode off)
+          <div className="h-full flex flex-col border border-border rounded-lg overflow-hidden">
             {/* Script selector header with badges */}
-            <div className="border border-border border-b-0 rounded-t-lg bg-muted h-11 flex items-center justify-center gap-6 px-4 py-1">
+            <div className="border-b border-border rounded-t-lg bg-muted min-h-[2.75rem] flex items-center justify-center gap-6 px-4 py-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-medium text-muted-foreground">Script:</span>
                 <Select
@@ -489,7 +497,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
             </div>
 
             {/* Segmented text view */}
-            <div className="flex-1 min-h-0 border border-border border-b-0 bg-card overflow-hidden relative">
+            <div className="flex-1 min-h-0 bg-card overflow-hidden relative">
               {chapter?.content?.[contentScript] ? (
                 <SelectableTextPanel
                   content={chapter.content}
@@ -508,7 +516,7 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
             </div>
 
             {/* StatusBar with fullscreen toggle for Segmented mode */}
-            <div className="rte-status-bar border border-border rounded-b-lg h-11">
+            <div className="border-t border-border rounded-b-lg bg-muted min-h-[2.75rem] flex items-center px-4 py-1">
               <button
                 onClick={toggleFullScreen}
                 aria-label={isFullScreen ? "Exit Fullscreen" : "Fullscreen"}

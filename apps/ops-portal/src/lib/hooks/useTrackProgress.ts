@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/api';
-import { StudentProgressData, ChapterProgress, TrackProgress } from '../../../../../shared/types';
+import { StudentProgressData, ChapterProgress, TrackProgress } from '@narada/types';
 
 export function useTrackProgress(studentId: string) {
     return useQuery({
@@ -12,4 +12,4 @@ export function useTrackProgress(studentId: string) {
     });
 }
 
-export type { ChapterProgress, TrackProgress } from '../../../../../shared/types';
+export type { ChapterProgress, TrackProgress } from '@narada/types';

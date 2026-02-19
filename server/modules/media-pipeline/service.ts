@@ -1,8 +1,10 @@
 import { mediaStorage } from './storage';
 import type { CreateAudioFileData, CreateMediaSegmentData, CreateMappingData, MappingWithTimestamps } from './types';
 import { db } from '../../db';
-import { audioFiles, textSegments } from '@shared/schema';
+import { audioFiles, textSegments } from '@narada/types';
 import { eq } from 'drizzle-orm';
+import { eventBus } from '../../shared/events/event-bus';
+import { MEDIA_EVENTS } from './events';
 
 export const mediaService = {
   async listAudioFilesByChapter(chapterId: number) {
@@ -10,7 +12,13 @@ export const mediaService = {
   },
 
   async uploadAudioFile(data: CreateAudioFileData) {
-    return await mediaStorage.createAudioFile(data);
+    const created = await mediaStorage.createAudioFile(data);
+    eventBus.publish(MEDIA_EVENTS.AUDIO_UPLOADED, {
+      audioFileId: created.id,
+      chapterId: created.chapterId,
+      timestamp: new Date().toISOString(),
+    });
+    return created;
   },
 
   async updateAudioFile(id: number, update: Partial<CreateAudioFileData>) {
@@ -56,7 +64,13 @@ export const mediaService = {
     if (data.startTime < 0 || data.endTime <= data.startTime) {
       throw Object.assign(new Error('Invalid timestamp range'), { statusCode: 400 });
     }
-    return await mediaStorage.createMappingWithMediaSegment(data);
+    const result = await mediaStorage.createMappingWithMediaSegment(data);
+    eventBus.publish(MEDIA_EVENTS.MAPPING_CREATED, {
+      mappingId: result.mappingId,
+      chapterId: seg.chapterId,
+      timestamp: new Date().toISOString(),
+    });
+    return result;
   },
 
   async deleteMappingById(id: number) {

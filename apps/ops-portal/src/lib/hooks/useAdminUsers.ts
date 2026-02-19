@@ -19,15 +19,22 @@ export type AdminUsersResponse = {
         limit: number;
         offset: number;
     };
+    statusCounts: {
+        all: number;
+        pending_approval: number;
+        active: number;
+        inactive: number;
+    };
 };
 
-export function useAdminUsers(params: { limit: number; offset: number; status?: string }) {
+export function useAdminUsers(params: { limit: number; offset: number; status?: string; search?: string }) {
     const queryFn = async () => {
         const searchParams = new URLSearchParams({
             limit: params.limit.toString(),
             offset: params.offset.toString(),
         });
         if (params.status) searchParams.append('status', params.status);
+        if (params.search?.trim()) searchParams.append('search', params.search.trim());
 
         const response = await apiRequest<AdminUsersResponse>(`/auth/admin/users?${searchParams.toString()}`);
         return response;

@@ -199,7 +199,7 @@ export function AudioFileManager({
                 <div className="flex-1 overflow-auto p-4 flex flex-col">
                     <div
                         className={cn(
-                            "flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg transition-all cursor-pointer",
+                            "flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg transition-colors transition-shadow cursor-pointer",
                             dragActive
                                 ? "border-primary bg-primary/5 scale-[0.98]"
                                 : "border-border bg-muted/30 hover:border-primary/50 hover:bg-muted/50",
@@ -246,7 +246,7 @@ export function AudioFileManager({
                 aria-label="Upload audio file"
             />
             {/* Desktop Header (Matches SegmentMappingGrid style but empty) */}
-            <div className="h-12 shrink-0 bg-muted/30 border-b" />
+            <div className="h-11 shrink-0 bg-muted border-b" />
 
             <div className="flex-1 overflow-auto p-4 space-y-4">
                 {/* Controls Toolbar */}
@@ -257,7 +257,7 @@ export function AudioFileManager({
                         disabled={disabled || isUploading}
                     >
                         <SelectTrigger className="flex-1 h-9 text-sm">
-                            <SelectValue placeholder="Select file..." />
+                            <SelectValue placeholder="Select file…" />
                         </SelectTrigger>
                         <SelectContent>
                             {audioFiles?.map((file) => (
@@ -271,7 +271,7 @@ export function AudioFileManager({
                     <Button
                         size="icon"
                         variant="outline"
-                        className="h-9 w-9 flex-shrink-0 hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all"
+                        className="h-9 w-9 flex-shrink-0 hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-colors"
                         onClick={handleUploadClick}
                         disabled={disabled || isUploading}
                         title="Upload new file"
@@ -347,7 +347,7 @@ export function AudioFileManager({
                         <Input
                             value={tempFileName}
                             onChange={(e) => setTempFileName(e.target.value)}
-                            placeholder="Enter filename..."
+                            placeholder="Enter filename…"
                             maxLength={100}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') handleSaveEdit();
@@ -359,7 +359,7 @@ export function AudioFileManager({
                             Cancel
                         </Button>
                         <Button onClick={handleSaveEdit} disabled={!tempFileName.trim() || isSaving}>
-                            {isSaving ? 'Saving...' : 'Save'}
+                            {isSaving ? 'Saving…' : 'Save'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

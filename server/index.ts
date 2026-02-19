@@ -1,10 +1,10 @@
+/// <reference path="./types.d.ts" />
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 
 import passport from "passport";
 import { createServer } from "http";
-import { setupVite, serveStatic } from "./vite";
-import { LOG_TRUNCATE_LENGTH, DEFAULT_ERROR_STATUS } from "@shared/constants";
+import { LOG_TRUNCATE_LENGTH, DEFAULT_ERROR_STATUS } from "@narada/types";
 import path from "path";
 import { configurePassport } from "./auth/passport-config";
 import { identityRouter } from "./routes/identity.routes";
@@ -57,6 +57,7 @@ app.use(express.urlencoded({ extended: false }));
 // Cookie parser for JWT cookies
 app.use(cookieParser());
 
+// TODO: Replace deprecated csurf with csrf-csrf or lusca before production deployment
 // CSRF Protection
 const csrfProtection = csrf({
   cookie: {
@@ -69,7 +70,7 @@ const csrfProtection = csrf({
 // CSRF token endpoint - defined BEFORE middleware to avoid chicken-egg problem
 // This endpoint generates the initial CSRF token
 app.get('/api/csrf-token', csrfProtection, (req, res) => {
-  res.json({ csrfToken: req.csrfToken() });
+  res.json({ csrfToken: (req as Request & { csrfToken(): string }).csrfToken() });
 });
 
 // Apply CSRF middleware to all other routes (only validates on POST/PUT/DELETE/PATCH)
@@ -87,8 +88,27 @@ app.use((req, res, next) => {
 configurePassport();
 app.use(passport.initialize());
 
+// Request Logger (must be before routes)
+app.use((req, res, next) => {
+  const start = Date.now();
+  const path = req.path;
+  let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
+  const originalResJson = res.json;
+  res.json = function (bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
 
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (path.startsWith("/api")) {
+      Logger.http(req.method, path, res.statusCode, duration);
+    }
+  });
+
+  next();
+});
 
 // Serve uploaded files (audio, etc.)
 app.use('/uploads', express.static('uploads'));
@@ -118,27 +138,6 @@ app.use('/api', studentRouter);
 import { learningRouter } from "./routes/learning.routes";
 app.use('/api/learning', learningRouter);
 
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      Logger.http(req.method, path, res.statusCode, duration);
-    }
-  });
-
-  next();
-});
-
 (async () => {
   // Initialize System Admin module
   const adminStorage = new AdminStorage();
@@ -150,14 +149,8 @@ app.use((req, res, next) => {
   // Replace custom inline error handler with standardized middleware
   app.use(errorHandler);
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (config.env === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+  // No more Vite SPA serving — the API server is a pure API now.
+  // Portals are served separately via Next.js.
 
   const port = config.port;
   server.listen(port, "127.0.0.1", () => {

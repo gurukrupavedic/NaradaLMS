@@ -1,5 +1,5 @@
 import { db } from "../../server/db";
-import { users } from "../../shared/schema";
+import { users } from "@narada/types";
 import bcrypt from "bcrypt";
 
 /**
@@ -89,3 +89,4 @@ createStudents()
     console.error("\n❌ Seed script failed:", error);
     process.exit(1);
   });
+

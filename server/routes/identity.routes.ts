@@ -193,7 +193,7 @@ identityRouter.get("/me", jwtAuth, (req: Request, res: Response) => {
 /**
  * GET /api/auth/admin/users
  * Get all users (pending + active) with pagination and filtering
- * Query params: limit, offset, status (optional)
+ * Query params: limit, offset, status (optional), role (optional), search (optional)
  * Requires: Admin role
  */
 identityRouter.get(
@@ -205,17 +205,20 @@ identityRouter.get(
       const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
       const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
       const statusFilter = req.query.status as string | undefined;
+      const roleFilter = req.query.role as string | undefined;
+      const search = (req.query.search as string)?.trim() || undefined;
 
-      const allUsers = await identityService.getAllUsers();
-
-      // Filter by status if provided
-      let filteredUsers = allUsers;
+      const filters: { status?: string; role?: string; search?: string } = {};
       if (statusFilter && ["pending_approval", "active", "inactive"].includes(statusFilter)) {
-        filteredUsers = allUsers.filter((u: any) => u.status === statusFilter);
+        filters.status = statusFilter;
       }
+      if (roleFilter) filters.role = roleFilter;
+      if (search) filters.search = search;
 
-      const total = filteredUsers.length;
-      const paginatedUsers = filteredUsers.slice(offset, offset + limit);
+      const [statusCounts, { items: paginatedUsers, total }] = await Promise.all([
+        identityService.getUserStatusCounts(search),
+        identityService.listUsersPaginated(limit, offset, Object.keys(filters).length ? filters : undefined),
+      ]);
 
       const sanitized = paginatedUsers.map((u: any) => ({
         id: u.id,
@@ -227,7 +230,11 @@ identityRouter.get(
         createdAt: u.createdAt,
       }));
 
-      return res.json({ users: sanitized, pagination: { limit, offset, total } });
+      return res.json({
+        users: sanitized,
+        pagination: { limit, offset, total },
+        statusCounts,
+      });
     } catch (err: any) {
       console.error("Get users error:", err);
       return res

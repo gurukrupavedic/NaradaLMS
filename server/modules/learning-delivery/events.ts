@@ -1,9 +1,9 @@
 /**
  * Learning Delivery Module - Domain Events
- * Event constants for future EventBus integration
+ * Event names match system-admin subscriptions for audit logging
  */
 
 export const LEARNING_DELIVERY_EVENTS = {
-  CHAPTER_ACCESSED: 'learning.chapter_accessed',
-  PROGRESS_VIEWED: 'learning.progress_viewed',
+  CHAPTER_ACCESSED: 'ChapterAccessed',
+  PROGRESS_UPDATED: 'ProgressUpdated',
 } as const;

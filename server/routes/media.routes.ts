@@ -6,42 +6,16 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { parseFile } from 'music-metadata';
-import { FILE_UPLOAD } from '../../shared/constants';
+import { FILE_UPLOAD } from '@narada/types';
 import { validateRequest } from '../utils/validation';
 import { z } from 'zod';
 import { config } from '../config';
+import { createErrorResponse } from '../shared/utils/api-response';
 
 const router = Router();
 
 // Protect all media routes - authentication required
 router.use(jwtAuth);
-
-// Error response interface
-interface ApiErrorResponse {
-  error: {
-    message: string;
-    code?: string;
-    details?: any;
-    timestamp: string;
-    requestId: string;
-  };
-}
-
-function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
-function createErrorResponse(message: string, code?: string, details?: any): ApiErrorResponse {
-  return {
-    error: {
-      message,
-      code,
-      details,
-      timestamp: new Date().toISOString(),
-      requestId: generateRequestId(),
-    },
-  };
-}
 
 // Multer setup (audio only)
 const uploadsDir = path.join(process.cwd(), config.uploads.dir);

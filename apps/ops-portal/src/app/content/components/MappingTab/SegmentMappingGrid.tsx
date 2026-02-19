@@ -3,12 +3,12 @@ import { Button, cn, Select, SelectContent, SelectItem, SelectTrigger, SelectVal
 import { Square, RotateCcw } from 'lucide-react';
 import { TimestampControl } from './components/TimestampControl';
 import { SegmentCard } from '@/components/common/SegmentCard';
-import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
-import { getSegmentText } from '@shared/utils/text-segmentation';
-
+import type { AudioMapping, Script, ContentMap } from '@narada/types';
+import { getSegmentText } from '@narada/types';
+import type { SegmentForMapper } from './ProgressiveMapper';
 
 interface SegmentMappingGridProps {
-    segments: TextSegment[];
+    segments: SegmentForMapper[];
     currentScript: Script;
     content: ContentMap;
     mappings: AudioMapping[];
@@ -67,7 +67,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
                 className
             )}>
                 {!hideHeader && (
-                    <div className="px-4 h-12 bg-muted/30 border-b flex-shrink-0 flex items-center justify-between">
+                    <div className="px-4 h-11 bg-muted border-b flex-shrink-0 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-muted-foreground">Script:</span>
                             {onScriptChange ? (

@@ -71,3 +71,12 @@
 .font-devanagari {
   font-family: 'AdishilaSanVedic', 'Noto Sans Devanagari', sans-serif;
 }
+
+/* Hide scrollbar for track tabs (utility) */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

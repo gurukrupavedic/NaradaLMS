@@ -11,7 +11,7 @@ module.exports = [
     {
         rules: {
             "@next/next/no-html-link-for-pages": "off",
-            "react/jsx-key": "off",
+            // react/jsx-key is enabled (default) to catch missing keys in .map()
         },
     },
 ];

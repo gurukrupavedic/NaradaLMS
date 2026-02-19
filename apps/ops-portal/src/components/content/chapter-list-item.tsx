@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Edit2, Trash2, ArrowRight, ExternalLink, Headphones, Zap } from 'lucide-react';
-import { Chapter } from '@shared/types';
+import { Chapter } from '@narada/types';
 import { Card, CardContent } from '@narada/ui';
 import { Button } from '@narada/ui';
 import { Badge } from '@narada/ui';
@@ -29,31 +29,31 @@ export function ChapterListItem({ chapter, index, onEdit, onMove, onDelete, onOp
                 transform: CSS.Transform.toString(transform),
                 transition,
             }}
-            className={`mb-3 group relative ${isDragging ? 'opacity-80 z-20' : 'opacity-100 z-auto'}`}
+            className={`mb-3 group relative min-w-0 w-full ${isDragging ? 'opacity-80 z-20' : 'opacity-100 z-auto'}`}
         >
-            <Card className="relative overflow-hidden hover:shadow-md transition-all duration-200 border hover:border-border/80">
+            <Card className="relative overflow-hidden hover:shadow-md transition-shadow duration-200 border hover:border-border/80 min-w-0 w-full">
                 <div className="absolute left-0 top-0 bottom-0 w-1 transition-colors bg-transparent group-hover:bg-primary/50" />
 
                 <div
                     {...attributes}
                     {...listeners}
-                    className="absolute left-1 top-1/2 -translate-y-1/2 z-20 p-2 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    className="absolute left-1 top-1/2 -translate-y-1/2 z-20 p-2 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                 >
                     <GripVertical className="w-5 h-5 bg-card/80 backdrop-blur-[1px] rounded" />
                 </div>
 
-                <CardContent className="p-4 pl-9 flex items-start gap-3">
-                    <div className="flex-1 min-w-0 space-y-2">
-                        <div className="flex items-start justify-between gap-3">
-                            <h3 className="font-semibold text-sm leading-snug pt-0.5">
-                                <span className="text-muted-foreground font-mono mr-2 font-normal opacity-70">
+                <CardContent className="p-3 pl-8 flex items-start gap-3">
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                        <div className="flex items-start justify-between gap-3 min-w-0">
+                            <h3 className="font-semibold text-sm leading-snug truncate min-w-0">
+                                <span className="text-muted-foreground font-mono mr-2 font-normal opacity-70 shrink-0">
                                     {String(index + 1).padStart(2, '0')}
                                 </span>
-                                {chapter.title}
+                                <span className="truncate">{chapter.title}</span>
                             </h3>
                             <Badge
                                 variant="secondary"
-                                className={`flex-shrink-0 text-[10px] uppercase tracking-wider font-bold h-5 px-2 text-white ${isPublished ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-500 hover:bg-amber-600'
+                                className={`flex-shrink-0 text-[10px] uppercase tracking-wider font-bold h-[18px] px-1.5 text-white ${isPublished ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-500 hover:bg-amber-600'
                                     }`}
                             >
                                 {chapter.status}
@@ -61,7 +61,7 @@ export function ChapterListItem({ chapter, index, onEdit, onMove, onDelete, onOp
                         </div>
 
                         {chapter.hasContent && (
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
                                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground/80" title="Audio Files">
                                     <Headphones className="w-3 h-3" />
                                     <span className="font-medium">{chapter.audioFileCount ?? 0}</span>
@@ -73,8 +73,8 @@ export function ChapterListItem({ chapter, index, onEdit, onMove, onDelete, onOp
                             </div>
                         )}
 
-                        <div className="flex items-center gap-2 pt-2 mt-2 border-t border-border/40">
-                            <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5 pt-1.5 mt-1.5 border-t border-border/30 min-w-0 flex-wrap">
+                            <div className="flex items-center gap-0.5 min-w-0">
                                 <Button
                                     variant="ghost"
                                     size="sm"
@@ -104,9 +104,9 @@ export function ChapterListItem({ chapter, index, onEdit, onMove, onDelete, onOp
                                 </Button>
                             </div>
 
-                            <div className="flex-1" />
+                            <div className="flex-1 min-w-0" />
 
-                            <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5 shadow-sm" onClick={() => onOpen(chapter)}>
+                            <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5 shadow-sm shrink-0" onClick={() => onOpen(chapter)}>
                                 <span>Open</span>
                                 <ExternalLink className="w-3 h-3 opacity-70" />
                             </Button>

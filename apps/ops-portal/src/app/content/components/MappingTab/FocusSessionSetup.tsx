@@ -18,8 +18,9 @@ import {
     cn
 } from '@narada/ui';
 import { ChevronsUpDown, Check, Plus, ArrowRight } from 'lucide-react';
-import type { TextSegment, AudioMapping, Script, ContentMap } from '@shared/types/text-segmentation';
-import { getSegmentText } from '@shared/utils/text-segmentation';
+import type { AudioMapping, Script, ContentMap } from '@narada/types';
+import { getSegmentText } from '@narada/types';
+import type { SegmentForMapper } from './ProgressiveMapper';
 
 export interface SessionConfig {
     startSegmentId: number;
@@ -28,7 +29,7 @@ export interface SessionConfig {
 
 interface FocusSessionSetupProps {
     audioFiles: Array<{ id: number; filename: string; displayName?: string }>;
-    segments: TextSegment[];
+    segments: SegmentForMapper[];
     content: ContentMap;
     mappings: AudioMapping[];
     selectedAudioId: number | null;
@@ -66,7 +67,7 @@ export function FocusSessionSetup({
         });
     }, [segments, segmentSearchTerm, content, selectedScript]);
 
-    const getSmartStartSegmentId = React.useCallback((currentSegments: TextSegment[], currentMappings: AudioMapping[]) => {
+    const getSmartStartSegmentId = React.useCallback((currentSegments: SegmentForMapper[], currentMappings: AudioMapping[]) => {
         if (!currentSegments.length) return 0;
         const mappedIds = new Set(currentMappings.map(m => m.segmentId));
         const firstUnmapped = currentSegments.find(s => !mappedIds.has(s.id));
@@ -149,7 +150,7 @@ export function FocusSessionSetup({
                                 onValueChange={(val) => onAudioChange(parseInt(val))}
                             >
                                 <SelectTrigger className="flex-1 h-11">
-                                    <SelectValue placeholder="Select audio file..." />
+                                    <SelectValue placeholder="Select audio file…" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {audioFiles.map(file => (
@@ -201,14 +202,14 @@ export function FocusSessionSetup({
                                     variant="outline"
                                     role="combobox"
                                     aria-expanded={openSegmentCombo}
-                                    className="w-full justify-between h-11 font-normal px-4 py-2 text-left transition-all"
+                                    className="w-full justify-between h-11 font-normal px-4 py-2 text-left transition-colors"
                                 >
                                     {startSegmentId
                                         ? (() => {
                                             const s = segments.find((segment) => segment.id === startSegmentId);
-                                            if (!s) return "Select segment...";
+                                            if (!s) return "Select segment…";
                                             const txt = getSegmentText(s, content, selectedScript);
-                                            const truncated = txt.length > 60 ? txt.substring(0, 60) + '...' : txt;
+                                            const truncated = txt.length > 60 ? txt.substring(0, 60) + '…' : txt;
                                             const index = segments.indexOf(s);
                                             return (
                                                 <span className="flex items-center gap-4">
@@ -227,7 +228,7 @@ export function FocusSessionSetup({
                                                 </span>
                                             );
                                         })()
-                                        : <span className="text-muted-foreground">Select segment...</span>}
+                                        : <span className="text-muted-foreground">Select segment…</span>}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-30" />
                                 </Button>
                             </PopoverTrigger>
@@ -235,7 +236,7 @@ export function FocusSessionSetup({
                                 <div className="flex flex-col">
                                     <div className="p-2 border-b">
                                         <Input
-                                            placeholder="Search segment..."
+                                            placeholder="Search segment…"
                                             className="h-9"
                                             value={segmentSearchTerm}
                                             onChange={(e) => setSegmentSearchTerm(e.target.value)}
@@ -249,7 +250,7 @@ export function FocusSessionSetup({
                                         ) : (
                                             filteredSegments.map((segment, index) => {
                                                 const txt = getSegmentText(segment, content, selectedScript);
-                                                const truncated = txt.length > 60 ? txt.substring(0, 60) + '...' : txt;
+                                                const truncated = txt.length > 60 ? txt.substring(0, 60) + '…' : txt;
                                                 // Find original index
                                                 const originalIndex = segments.findIndex(s => s.id === segment.id);
 
@@ -342,7 +343,7 @@ export function FocusSessionSetup({
                     <div className="pt-4 flex flex-col items-center gap-4">
                         <Button
                             size="lg"
-                            className="w-full h-16 text-lg font-bold rounded-xl shadow-lg shadow-blue-900/10 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-all transform active:scale-[0.98] text-white group"
+                            className="w-full h-16 text-lg font-bold rounded-xl shadow-lg shadow-blue-900/10 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-transform transition-colors transform active:scale-[0.98] text-white group"
                             disabled={!canStart}
                             onClick={() => onStartSession({ startSegmentId, startTimestamp })}
                         >

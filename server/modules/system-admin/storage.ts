@@ -4,7 +4,7 @@
  */
 
 import { db } from '../../db';
-import { auditLogs, systemSettings, users, batches, tracks, chapters } from '@shared/schema';
+import { auditLogs, systemSettings, users, batches, tracks, chapters } from '@narada/types';
 import { eq, gte, lte, and, sql, desc } from 'drizzle-orm';
 
 export interface AuditLogFilter {
@@ -80,10 +80,19 @@ export class AdminStorage {
       query = query.where(and(...conditions)) as any;
     }
 
-    return await query
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const [countRow] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(auditLogs)
+      .where(whereClause as any);
+    const total = Number(countRow?.count ?? 0);
+
+    const rows = await query
       .orderBy(desc(auditLogs.timestamp))
       .limit(filters.limit)
       .offset(filters.offset);
+
+    return { rows, total };
   }
 
   /**
@@ -162,11 +171,10 @@ export class AdminStorage {
       .select({ totalBatches: sql<number>`count(*)` })
       .from(batches);
 
+    // Batches table has no status column; activeBatches equals totalBatches until status is added
     const [{ activeBatches }] = await db
       .select({ activeBatches: sql<number>`count(*)` })
       .from(batches);
-    // Note: batches table doesn't have a status column yet
-    // All batches are considered in this count
 
     const [{ totalTracks }] = await db
       .select({ totalTracks: sql<number>`count(*)` })

@@ -18,7 +18,7 @@ import { useAudioManagement } from '@/lib/content/hooks/useAudioManagement';
 import { useTextSegmentationEditor } from '@/lib/content/hooks/useTextSegmentationEditor';
 import { useAudioMapping } from '@/lib/content/hooks/useAudioMapping';
 import { useLocalStorage } from '@/hooks/content/useLocalStorage';
-import type { Script } from '@shared/types/text-segmentation';
+import type { Script } from '@narada/types';
 
 // Type transformation utility
 const toSimplifiedMapping = (dbMapping: any) => ({
@@ -205,7 +205,7 @@ export function MappingTab({
                     }
 
                     return (
-                        <div className="h-full bg-muted/20 p-4">
+                        <div className="h-full bg-muted/20">
                             <ResizablePanelGroup direction="horizontal" onLayout={handleLayoutChange} className="gap-2">
                                 <ResizablePanel defaultSize={panelSizes.grid} minSize={30}>
                                     <SegmentMappingGrid

@@ -5,7 +5,7 @@
  */
 
 import { db } from '../../server/db';
-import { studentProgress } from '@shared/schema';
+import { studentProgress } from '@narada/types';
 
 async function resetAllProficiency() {
   try {
@@ -41,3 +41,4 @@ async function resetAllProficiency() {
 }
 
 resetAllProficiency();
+

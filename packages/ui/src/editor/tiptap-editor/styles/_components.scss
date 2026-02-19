@@ -23,7 +23,12 @@
   user-select: none;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.15s ease-in;
+  transition:
+    background-color 0.15s ease-in,
+    color 0.15s ease-in,
+    border-color 0.15s ease-in,
+    box-shadow 0.15s ease-in,
+    transform 0.15s ease-in;
   @include font-size("sm");
 
   &:disabled {
@@ -309,7 +314,10 @@
     background: none;
     color: alpha-color($fg-color, 0.5);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      transform 0.15s ease;
 
     &:hover {
       background: alpha-color($fg-color, 0.1);
@@ -357,7 +365,10 @@
     border: 1px solid $border-color;
     border-radius: $radius-sm;
     transform: scale(1);
-    transition: all 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
+    transition:
+      transform 0.3s cubic-bezier(0.075, 0.82, 0.165, 1),
+      box-shadow 0.3s cubic-bezier(0.075, 0.82, 0.165, 1),
+      border-color 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
 
     &:hover {
       transform: scale(1.2);

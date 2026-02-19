@@ -143,8 +143,8 @@ export function useTextSegmentationEditor() {
                 order: index
             }));
 
-            return await apiRequest(`/content/segments/${chapterId}/reorder`, {
-                method: 'PATCH',
+            return await apiRequest(`/content/chapters/${chapterId}/segments/reorder`, {
+                method: 'POST',
                 body: JSON.stringify({ segmentOrders }),
             });
         },

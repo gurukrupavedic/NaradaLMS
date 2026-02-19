@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Edit2, Trash2, BookText } from 'lucide-react';
-import { Track } from '@shared/types';
+import { Track } from '@narada/types';
 import { Card, CardContent } from '@narada/ui';
 import { Button } from '@narada/ui';
 import { Badge } from '@narada/ui';
@@ -27,10 +27,10 @@ export function TrackListItem({ track, index, isSelected, onSelect, onEdit, onDe
                 transform: CSS.Transform.toString(transform),
                 transition: transition || undefined,
             }}
-            className={`mb-3 group relative ${isDragging ? 'opacity-80 z-20' : 'opacity-100 z-auto'}`}
+            className={`mb-3 group relative min-w-0 w-full ${isDragging ? 'opacity-80 z-20' : 'opacity-100 z-auto'}`}
         >
             <Card
-                className={`relative overflow-hidden cursor-pointer transition-all duration-200 ${isSelected
+                className={`relative overflow-hidden cursor-pointer transition-colors transition-shadow duration-200 min-w-0 w-full ${isSelected
                     ? 'bg-primary/5 border-primary border-l-4 shadow-md'
                     : 'border hover:border-primary/50 hover:shadow-sm bg-card'
                     }`}
@@ -41,7 +41,7 @@ export function TrackListItem({ track, index, isSelected, onSelect, onEdit, onDe
                     <div
                         {...attributes}
                         {...listeners}
-                        className="absolute left-1 top-1/2 -translate-y-1/2 z-20 p-2 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        className="absolute left-1 top-1/2 -translate-y-1/2 z-20 p-2 cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                     >
                         <GripVertical className="w-5 h-5 bg-card/80 backdrop-blur-[1px] rounded" />
                     </div>
@@ -72,7 +72,7 @@ export function TrackListItem({ track, index, isSelected, onSelect, onEdit, onDe
                         </div>
                     </div>
 
-                    <div className="flex flex-col justify-center gap-1 border-l pl-2 ml-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                    <div className="flex flex-shrink-0 flex-col justify-center gap-1 border-l pl-2 ml-1 opacity-60 group-hover:opacity-100 transition-opacity">
                         <Button
                             variant="ghost"
                             size="icon"
