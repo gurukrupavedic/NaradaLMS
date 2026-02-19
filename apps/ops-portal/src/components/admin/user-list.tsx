@@ -59,6 +59,9 @@ const ALL_ROLES = ["student", "instructor", "content_manager", "admin"] as const
 
 const DEFAULT_COUNTS = { all: 0, pending_approval: 0, active: 0, inactive: 0 };
 
+const STATUS_TAB_TRIGGER_CLASS =
+    "cursor-pointer hover:bg-muted hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm";
+
 function formatName(u: AdminUser) {
     return [u.firstName, u.lastName].filter(Boolean).join(" ") || "User";
 }
@@ -153,14 +156,18 @@ export default function UserList() {
                 accessorFn: (row) => formatName(row),
                 header: ({ column }) => <SortableHeader column={column} label="Name" />,
                 cell: ({ row }) => (
-                    <span className="text-sm font-medium text-foreground">{formatName(row.original)}</span>
+                    <span className="min-w-0 truncate block font-medium text-foreground" title={formatName(row.original)}>
+                        {formatName(row.original)}
+                    </span>
                 ),
             },
             {
                 accessorKey: "email",
                 header: ({ column }) => <SortableHeader column={column} label="Email" />,
                 cell: ({ row }) => (
-                    <span className="text-sm text-muted-foreground">{row.original.email}</span>
+                    <span className="min-w-0 truncate block text-sm text-muted-foreground" title={row.original.email}>
+                        {row.original.email}
+                    </span>
                 ),
             },
             {
@@ -187,18 +194,11 @@ export default function UserList() {
                 cell: ({ row }) => {
                     const roles = row.original.roles ?? [];
                     if (roles.length === 0) return <span className="text-sm text-muted-foreground">—</span>;
+                    const labelsList = roles.map((r) => ROLE_LABELS[r] || r).join(", ");
                     return (
-                        <div className="flex flex-wrap gap-1">
-                            {roles.map((r) => (
-                                <Badge
-                                    key={r}
-                                    variant="secondary"
-                                    className="text-xs font-normal"
-                                >
-                                    {ROLE_LABELS[r] || r}
-                                </Badge>
-                            ))}
-                        </div>
+                        <span className="min-w-0 truncate block text-sm" title={labelsList}>
+                            {labelsList}
+                        </span>
                     );
                 },
             },
@@ -207,12 +207,13 @@ export default function UserList() {
                 cell: ({ row }) => {
                     const user = row.original;
                     return (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" aria-label="Actions">
-                                    <MoreVertical className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
+                        <div className="whitespace-nowrap">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" aria-label="Actions">
+                                        <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 {user.status === "pending_approval" ? (
                                     <>
@@ -241,6 +242,7 @@ export default function UserList() {
                                 )}
                             </DropdownMenuContent>
                         </DropdownMenu>
+                        </div>
                     );
                 },
             },
@@ -274,43 +276,44 @@ export default function UserList() {
                         setPage(1);
                     }}
                 >
-                    <TabsList className="bg-muted/50">
-                        <TabsTrigger value="all">
-                            All {statusCounts.all}
-                        </TabsTrigger>
-                        <TabsTrigger value="pending_approval">
-                            Pending {statusCounts.pending_approval}
-                        </TabsTrigger>
-                        <TabsTrigger value="active">
-                            Active {statusCounts.active}
-                        </TabsTrigger>
-                        <TabsTrigger value="inactive">
-                            Inactive {statusCounts.inactive}
-                        </TabsTrigger>
-                    </TabsList>
+                    <TabsList className="bg-muted/50 border border-border rounded-lg p-1">
+                            <TabsTrigger value="all" className={STATUS_TAB_TRIGGER_CLASS}>
+                                All {statusCounts.all}
+                            </TabsTrigger>
+                            <TabsTrigger value="pending_approval" className={STATUS_TAB_TRIGGER_CLASS}>
+                                Pending {statusCounts.pending_approval}
+                            </TabsTrigger>
+                            <TabsTrigger value="active" className={STATUS_TAB_TRIGGER_CLASS}>
+                                Active {statusCounts.active}
+                            </TabsTrigger>
+                            <TabsTrigger value="inactive" className={STATUS_TAB_TRIGGER_CLASS}>
+                                Inactive {statusCounts.inactive}
+                            </TabsTrigger>
+                        </TabsList>
                 </Tabs>
 
-                <Input
-                    type="search"
-                    placeholder="Search users…"
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    className="h-9 w-[200px] shrink-0 bg-card"
-                    aria-label="Search users"
-                />
-
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => refetch()}
-                    disabled={isLoading || isRefetching}
-                    aria-label="Refresh"
-                >
-                    <RefreshCw
-                        className={`h-4 w-4 shrink-0 ${isRefetching ? "animate-spin" : ""}`}
-                        aria-hidden
+                <div className="ml-auto flex items-center gap-3">
+                    <Input
+                        type="search"
+                        placeholder="Search users…"
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        className="h-9 w-[200px] shrink-0 bg-card"
+                        aria-label="Search users"
                     />
-                </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => refetch()}
+                        disabled={isLoading || isRefetching}
+                        aria-label="Refresh"
+                    >
+                        <RefreshCw
+                            className={`h-4 w-4 shrink-0 ${isRefetching ? "animate-spin" : ""}`}
+                            aria-hidden
+                        />
+                    </Button>
+                </div>
             </div>
 
             {/* Edit roles dialog */}
@@ -427,14 +430,17 @@ export default function UserList() {
                 <>
                     <div className="flex min-h-0 flex-1 flex-col rounded-md border overflow-hidden">
                         <Table
-                            className="w-full [&_th]:h-9 [&_th]:py-1.5 [&_th]:px-3 [&_td]:py-1.5 [&_td]:px-3"
+                            className="w-full table-fixed [&_th]:h-9 [&_th]:py-1.5 [&_th]:px-3 [&_td]:py-1.5 [&_td]:px-3 [&_td]:overflow-hidden [&_tr]:h-[52px]"
                             scrollContainerStyle={{ height: "100%" }}
                         >
                             <TableHeader className="sticky top-0 z-10 bg-muted [&_tr]:border-b">
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow key={headerGroup.id}>
                                         {headerGroup.headers.map((header) => (
-                                            <TableHead key={header.id}>
+                                            <TableHead
+                                                key={header.id}
+                                                className={header.column.id === "actions" ? "text-right" : undefined}
+                                            >
                                                 {flexRender(
                                                     header.column.columnDef.header,
                                                     header.getContext()
@@ -446,9 +452,12 @@ export default function UserList() {
                             </TableHeader>
                             <TableBody className="[&_tr]:bg-card">
                                 {table.getRowModel().rows.map((row) => (
-                                    <TableRow key={row.id}>
+                                    <TableRow key={row.id} className="border-l-2 border-l-transparent hover:border-l-primary/50 transition-colors">
                                         {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
+                                            <TableCell
+                                                key={cell.id}
+                                                className={cell.column.id === "actions" ? "text-right" : undefined}
+                                            >
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
                                                     cell.getContext()

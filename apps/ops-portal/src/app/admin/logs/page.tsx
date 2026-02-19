@@ -38,9 +38,10 @@ import {
 
 function TimestampCell({ timestamp }: { timestamp: string }) {
     const date = new Date(timestamp);
+    const formatted = format(date, "MMM dd, yyyy hh:mm:ss a");
     return (
-        <span className="tabular-nums text-foreground">
-            {format(date, "MMM dd, yyyy hh:mm:ss a")}
+        <span className="whitespace-nowrap tabular-nums text-foreground" title={formatted}>
+            {formatted}
         </span>
     );
 }
@@ -51,7 +52,7 @@ function UserCell({ firstName, lastName, email }: { firstName?: string; lastName
     }
     const displayName = firstName && lastName ? `${firstName} ${lastName}`.trim() : email || '—';
     return (
-        <span className="truncate block max-w-[200px]" title={displayName}>
+        <span className="min-w-0 truncate block font-medium text-foreground" title={displayName}>
             {displayName}
         </span>
     );
@@ -79,7 +80,7 @@ function ChangesCell({ changes }: { changes: any }) {
 
         if (isSimple) {
             const line = filteredEntries.map(([key, value]) => `${key}: ${String(value)}`).join(', ');
-            return <span className="truncate block max-w-[280px]" title={line}>{line}</span>;
+            return <span className="min-w-0 truncate block" title={line}>{line}</span>;
         }
     }
 
@@ -131,7 +132,11 @@ const columns: ColumnDef<any>[] = [
     {
         accessorKey: "action",
         header: ({ column }) => <SortableHeader column={column} label="Action" />,
-        cell: ({ row }) => <span>{row.original.action.replace(/_/g, " ")}</span>,
+        cell: ({ row }) => (
+            <span className="min-w-0 truncate block" title={row.original.action}>
+                {row.original.action.replace(/_/g, " ")}
+            </span>
+        ),
     },
     {
         accessorKey: "userId",
@@ -147,13 +152,21 @@ const columns: ColumnDef<any>[] = [
     {
         accessorKey: "resourceType",
         header: ({ column }) => <SortableHeader column={column} label="Resource" />,
-        cell: ({ row }) => <span>{row.original.resourceType}</span>,
+        cell: ({ row }) => (
+            <span className="min-w-0 truncate block font-mono text-muted-foreground" title={row.original.resourceType}>
+                {row.original.resourceType}
+            </span>
+        ),
     },
     {
         accessorKey: "resourceId",
-        header: ({ column }) => <SortableHeader column={column} label="ID" />,
+        header: ({ column }) => (
+            <div className="flex justify-end">
+                <SortableHeader column={column} label="ID" />
+            </div>
+        ),
         cell: ({ row }) => (
-            <span className="font-mono text-muted-foreground" title={row.original.resourceId}>
+            <span className="font-mono text-muted-foreground inline-block text-right w-full" title={row.original.resourceId}>
                 {row.original.resourceId?.substring(0, 8)}…
             </span>
         ),
@@ -443,7 +456,7 @@ export default function AuditLogsPage() {
             ) : (
                 <>
                     <div className="flex min-h-0 flex-1 flex-col rounded-md border overflow-hidden">
-                        <Table className="w-full" scrollContainerStyle={{ height: "100%" }}>
+                        <Table className="w-full table-fixed [&_th]:h-9 [&_th]:py-1.5 [&_th]:px-3 [&_td]:py-1.5 [&_td]:px-3 [&_td]:overflow-hidden [&_tr]:h-[52px]" scrollContainerStyle={{ height: "100%" }}>
                             <TableHeader className="sticky top-0 z-10 bg-muted [&_tr]:border-b">
                                 {table.getHeaderGroups().map(headerGroup => (
                                     <TableRow key={headerGroup.id}>
@@ -457,9 +470,12 @@ export default function AuditLogsPage() {
                             </TableHeader>
                             <TableBody className="[&_tr]:bg-card">
                                 {table.getRowModel().rows.map(row => (
-                                    <TableRow key={row.id}>
+                                    <TableRow key={row.id} className="border-l-2 border-l-transparent hover:border-l-primary/50 transition-colors">
                                         {row.getVisibleCells().map(cell => (
-                                            <TableCell key={cell.id}>
+                                            <TableCell
+                                                key={cell.id}
+                                                className={cell.column.id === "resourceId" ? "text-right" : undefined}
+                                            >
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </TableCell>
                                         ))}

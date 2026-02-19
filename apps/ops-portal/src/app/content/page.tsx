@@ -388,9 +388,9 @@ export default function TracksAndChapters() {
                   {tracksQuery.isLoading ? '…' : tracks.length}
                 </Badge>
               </div>
-              <Button size="sm" className="h-8 shrink-0" onClick={() => openCreateDialog('track')}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Track
+              <Button size="sm" onClick={() => openCreateDialog('track')}>
+                <Plus className="h-3.5 w-3.5 shrink-0 mr-1.5" aria-hidden />
+                Track
               </Button>
             </div>
 
@@ -438,9 +438,9 @@ export default function TracksAndChapters() {
                       <p className="text-xs text-muted-foreground">{selectedTrackChapters.length} chapters</p>
                     </div>
                   </div>
-                  <Button size="sm" className="h-8 shrink-0" onClick={() => openCreateDialog('chapter')} disabled={!selectedTrackId}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Chapter
+                  <Button size="sm" onClick={() => openCreateDialog('chapter')} disabled={!selectedTrackId}>
+                    <Plus className="h-3.5 w-3.5 shrink-0 mr-1.5" aria-hidden />
+                    Chapter
                   </Button>
                 </div>
 
