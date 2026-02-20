@@ -32,7 +32,7 @@ import {
     cn
 } from '@narada/ui';
 import { useAudioManagement } from '@/lib/content/hooks/useAudioManagement';
-import { AudioPlayerControls, AudioPlayerControlsProps } from '@/components/common/AudioPlayerControls';
+import { AudioPlayerControls, AudioPlayerControlsProps } from "@narada/ui";
 
 export interface AudioFileManagerProps extends Omit<AudioPlayerControlsProps, 'title' | 'className'> {
     chapterId: string;

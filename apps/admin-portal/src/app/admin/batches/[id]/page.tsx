@@ -10,16 +10,12 @@ import {
     type EligibleStudent
 } from "@/lib/hooks/useBatchRelations";
 import { useBatches } from "@/lib/hooks/useBatches";
-import { useBatch } from "@/lib/hooks/useBatch";
-import { useTracks } from "@/lib/hooks/useTracks";
-import { useChaptersByTrack } from "@/lib/hooks/useChaptersByTrack";
-import { useBatchProgress } from "@/lib/hooks/useBatchProgress";
-import { useUpdateProficiency } from "@/lib/hooks/useUpdateProficiency";
+import { useBatch, useTracks, useChaptersByTrack, useBatchProgress, useUpdateProficiency } from "@narada/ui";
 import { useToast } from "@narada/ui";
 
-import { BatchDetailsCard, type BatchItem } from "@/components/batches/BatchDetailsCard";
-import { UnifiedBatchMatrix } from "@/components/batches/UnifiedBatchMatrix";
-import { TrackTabs } from "@/components/batches/TrackTabs";
+import { BatchDetailsCard, type BatchItem } from "@narada/ui";
+import { UnifiedBatchMatrix } from "@narada/ui";
+import { TrackTabs } from "@narada/ui";
 
 import { Button } from "@narada/ui";
 import { Badge } from "@narada/ui";
@@ -32,7 +28,7 @@ import type {
     Chapter,
     StudentProgress,
     ProficiencyLevel,
-} from "@/components/batches/types";
+} from "@narada/ui";
 
 export default function BatchDetailsPage() {
     const { toast } = useToast();

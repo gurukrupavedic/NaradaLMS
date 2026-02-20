@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Badge, cn } from '@narada/ui';
 import { Play, Square, MapPin, Zap, Moon, Sun } from 'lucide-react';
-import { AudioPlayerControls } from '@/components/common/AudioPlayerControls';
+import { AudioPlayerControls } from "@narada/ui";
 import type { AudioMapping, Script, ContentMap } from '@narada/types';
 import { getSegmentText } from '@narada/types';
 import type { SegmentForMapper } from './ProgressiveMapper';

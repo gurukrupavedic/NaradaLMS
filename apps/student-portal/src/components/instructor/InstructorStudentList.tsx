@@ -6,8 +6,7 @@ import Link from "next/link";
 import { Button, Input, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, VirtualizedTableBody, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DataTablePagination, Badge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useToast } from "@narada/ui";
 import { MoreVertical, ArrowUpDown, AlertCircle, Users, RotateCcw } from "lucide-react";
 import { formatDate } from "@narada/types";
-import { useMyStudents, type StudentSummary } from "@/lib/hooks/useMyStudents";
-import { useBatches } from "@/lib/hooks/useBatches";
+import { useMyStudents, useBatches, type StudentSummary } from "@narada/ui";
 
 function SortableHeader({ column, label }: { column: Column<StudentSummary>; label: string }) {
     return (

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, X } from "lucide-react";
-import { EligibleStudent } from "./types";
+import { EligibleStudent } from "@narada/ui";
 
 // Re-using EligibleStudent as StudentSearchResult for simplicity in combobox
 type StudentSearchResult = EligibleStudent;

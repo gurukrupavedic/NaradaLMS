@@ -16,7 +16,7 @@
  ⚠ Found lockfile missing swc dependencies, patching...
  ⨯ Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
 [TypeError: Cannot read properties of undefined (reading 'os')]
- ✓ Compiled successfully in 5.1s
+ ✓ Compiled successfully in 5.9s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/8) ...
@@ -28,14 +28,14 @@
    Collecting build traces ...
 
 Route (app)                                 Size  First Load JS
-┌ ○ /                                    4.34 kB         483 kB
+┌ ○ /                                    4.34 kB         485 kB
 ├ ○ /_not-found                            994 B         104 kB
-├ ○ /instructor/batches                  3.56 kB         493 kB
-├ ƒ /instructor/batches/[id]             8.17 kB         498 kB
-├ ○ /instructor/students                 4.33 kB         491 kB
-├ ƒ /instructor/students/[id]             3.8 kB         494 kB
-├ ƒ /learning/chapter/[chapterId]        8.17 kB         495 kB
-└ ○ /vedic-learning                      1.78 kB         489 kB
+├ ○ /instructor/batches                  3.56 kB         495 kB
+├ ƒ /instructor/batches/[id]             8.17 kB         500 kB
+├ ○ /instructor/students                 4.33 kB         493 kB
+├ ƒ /instructor/students/[id]             3.8 kB         496 kB
+├ ƒ /learning/chapter/[chapterId]        6.64 kB         495 kB
+└ ○ /vedic-learning                      1.78 kB         491 kB
 + First Load JS shared by all             103 kB
   ├ chunks/18-a1a838a171ca5a88.js        46.4 kB
   ├ chunks/87c73c54-09e1ba5c70e60a51.js  54.2 kB

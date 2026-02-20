@@ -37,7 +37,7 @@ import {
 import { MoreVertical, ArrowUpDown, AlertCircle, Users, RotateCcw } from "lucide-react";
 import { formatDate } from "@narada/types";
 
-import { useMyStudents, StudentSummary } from "@/lib/hooks/useMyStudents";
+import { useMyStudents, type StudentSummary } from "@narada/ui";
 import { useBatches } from "@/lib/hooks/useBatches";
 
 function SortableHeader({

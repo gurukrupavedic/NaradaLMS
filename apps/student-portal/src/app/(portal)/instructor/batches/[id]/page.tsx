@@ -3,21 +3,16 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useEnrollments, useDropEnrollment } from "@/lib/hooks/useBatchRelations";
-import { useBatches } from "@/lib/hooks/useBatches";
-import { useBatch } from "@/lib/hooks/useBatch";
-import { useTracks } from "@/lib/hooks/useTracks";
-import { useChaptersByTrack } from "@/lib/hooks/useChaptersByTrack";
-import { useBatchProgress } from "@/lib/hooks/useBatchProgress";
-import { useUpdateProficiency } from "@/lib/hooks/useUpdateProficiency";
+import { useEnrollments, useDropEnrollment } from "@narada/ui";
+import { useBatches, useBatch, useTracks, useChaptersByTrack, useBatchProgress, useUpdateProficiency } from "@narada/ui";
 import { useToast } from "@narada/ui";
-import { BatchDetailsCard, type BatchItem } from "@/components/batches/BatchDetailsCard";
-import { UnifiedBatchMatrix } from "@/components/batches/UnifiedBatchMatrix";
-import { TrackTabs } from "@/components/batches/TrackTabs";
+import { BatchDetailsCard, type BatchItem } from "@narada/ui";
+import { UnifiedBatchMatrix } from "@narada/ui";
+import { TrackTabs } from "@narada/ui";
 import { Button } from "@narada/ui";
 import { Skeleton } from "@narada/ui";
 import { Loader } from "lucide-react";
-import type { StudentMatrixRow, Chapter, StudentProgress, ProficiencyLevel } from "@/components/batches/types";
+import type { StudentMatrixRow, Chapter, StudentProgress, ProficiencyLevel } from "@narada/ui";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 
 export default function InstructorBatchDetailsPage() {
@@ -128,6 +123,7 @@ export default function InstructorBatchDetailsPage() {
                         currentTrackId={batchDetail.data?.trackId ? String(batchDetail.data.trackId) : undefined}
                         onSelectTrack={(trackId) => setSelectedTrackId(trackId)}
                         isLoading={tracks.isLoading}
+                        emptyMessage="No chapters in this track yet."
                     >
                         {chapters.isLoading ? (
                             <div className="flex items-center justify-center py-12">

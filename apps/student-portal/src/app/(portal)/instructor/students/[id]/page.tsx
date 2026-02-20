@@ -5,14 +5,12 @@ import { useParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
-import { useStudentDetails } from "@/lib/hooks/useStudentDetails";
-import { useTrackProgress } from "@/lib/hooks/useTrackProgress";
-import { useUpdateProficiency } from "@/lib/hooks/useUpdateProficiency";
+import { useStudentDetails, useTrackProgress, useUpdateProficiency } from "@narada/ui";
 import { StudentDetailsCard, TrackList } from "@narada/ui";
 import { Button, Card, CardContent, Separator, Skeleton } from "@narada/ui";
-import { MatrixEvaluationModal } from "@/components/batches/MatrixEvaluationModal";
+import { MatrixEvaluationModal } from "@narada/ui";
 import type { ChapterProgress, TrackProgress } from "@narada/types";
-import type { ProficiencyLevel } from "@/components/batches/types";
+import type { ProficiencyLevel } from "@narada/ui";
 
 export default function InstructorStudentProgressPage() {
     useRoleGuard(["instructor", "admin"]);

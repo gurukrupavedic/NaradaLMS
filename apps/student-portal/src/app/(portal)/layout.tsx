@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { LoadingSpinner } from "@narada/ui";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
-import { ContentContextLabelContext } from "@/lib/learning/ContentContextLabelContext";
+import { ContentContextLabelContext } from "@narada/ui";
 
 /** Roles that can see nav sections in the student portal. Only Learn + Batches & Progress. No admin/content sections. */
 const STUDENT_PORTAL_NAV_ROLES = ["student", "instructor"] as const;

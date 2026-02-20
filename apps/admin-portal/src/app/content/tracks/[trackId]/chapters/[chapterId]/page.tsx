@@ -7,7 +7,7 @@ import { ArrowLeft } from 'lucide-react';
 
 import { useRoleGuard } from '@/hooks/useRoleGuard';
 import { ChapterEditorProvider, useChapterEditor } from '@/lib/content/context/ChapterEditorContext';
-import { useContentContextLabelSetter } from '@/lib/content/context/ContentContextLabelContext';
+import { useContentContextLabelSetter } from "@narada/ui";
 import { AudioPlayerProvider } from '@/lib/content/context/AudioPlayerContext';
 import { ChapterHeader } from '@/app/content/components/ChapterHeader/ChapterHeader';
 import { TextSegmentationTab } from '@/app/content/components/TextSegmentationTab/TextSegmentationTab';
