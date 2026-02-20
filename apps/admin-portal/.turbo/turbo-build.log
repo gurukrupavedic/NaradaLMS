@@ -14,9 +14,7 @@
 [TypeError: Cannot read properties of undefined (reading 'os')]
  ⚠ Found lockfile missing swc dependencies, patching...
  ⚠ Found lockfile missing swc dependencies, patching...
- ⨯ Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
-[TypeError: Cannot read properties of undefined (reading 'os')]
- ✓ Compiled successfully in 6.3s
+ ✓ Compiled successfully in 4.2s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/11) ...
@@ -28,21 +26,21 @@
    Collecting build traces ...
 
 Route (app)                                            Size  First Load JS
-┌ ○ /                                               3.64 kB         478 kB
+┌ ○ /                                               3.02 kB         495 kB
 ├ ○ /_not-found                                       994 B         104 kB
-├ ○ /admin                                           1.1 kB         476 kB
-├ ○ /admin/batches                                  5.17 kB         491 kB
-├ ƒ /admin/batches/[id]                             8.51 kB         495 kB
-├ ○ /admin/content                                  6.29 kB         506 kB
-├ ○ /admin/logs                                     10.7 kB         494 kB
+├ ○ /admin                                           1.1 kB         493 kB
+├ ○ /admin/batches                                   5.5 kB         497 kB
+├ ƒ /admin/batches/[id]                             3.36 kB         495 kB
+├ ○ /admin/content                                  5.84 kB         513 kB
+├ ○ /admin/logs                                     10.2 kB         502 kB
 ├ ○ /admin/settings                                   123 B         103 kB
-├ ƒ /admin/tracks/[trackId]/chapters/[chapterId]    1.26 kB         523 kB
-├ ○ /admin/users                                    6.12 kB         489 kB
-└ ƒ /content/tracks/[trackId]/chapters/[chapterId]  1.27 kB         523 kB
+├ ƒ /admin/tracks/[trackId]/chapters/[chapterId]    1.25 kB         530 kB
+├ ○ /admin/users                                    3.82 kB         496 kB
+└ ƒ /content/tracks/[trackId]/chapters/[chapterId]  1.26 kB         530 kB
 + First Load JS shared by all                        103 kB
   ├ chunks/18-a1a838a171ca5a88.js                   46.4 kB
   ├ chunks/87c73c54-09e1ba5c70e60a51.js             54.2 kB
-  └ other shared chunks (total)                     2.05 kB
+  └ other shared chunks (total)                     2.04 kB
 
 
 ○  (Static)   prerendered as static content
