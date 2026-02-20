@@ -1,0 +1,6 @@
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT obtained from POST /api/auth/login; send as Authorization Bearer <token>
