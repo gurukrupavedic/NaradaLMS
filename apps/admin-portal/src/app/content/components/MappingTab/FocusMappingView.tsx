@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Badge, cn } from '@narada/ui';
 import { Play, Square, MapPin, Zap, Moon, Sun } from 'lucide-react';
 import { AudioPlayerControls } from "@narada/ui";
-import type { AudioMapping, Script, ContentMap } from '@narada/types';
+import type { SimplifiedMapping, Script, ContentMap } from '@narada/types';
 import { getSegmentText } from '@narada/types';
 import type { SegmentForMapper } from './ProgressiveMapper';
 
@@ -10,7 +10,7 @@ interface FocusMappingViewProps {
     segments: SegmentForMapper[];
     currentScript: Script;
     content: ContentMap;
-    mappings: AudioMapping[];
+    mappings: SimplifiedMapping[];
     activeSegmentId: number | null;
     currentTime: number;
     duration: number;

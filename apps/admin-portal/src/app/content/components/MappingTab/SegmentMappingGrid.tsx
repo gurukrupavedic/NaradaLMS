@@ -3,7 +3,7 @@ import { Button, cn, Select, SelectContent, SelectItem, SelectTrigger, SelectVal
 import { Square, RotateCcw } from 'lucide-react';
 import { TimestampControl } from './components/TimestampControl';
 import { SegmentCard } from '@/components/common/SegmentCard';
-import type { AudioMapping, Script, ContentMap } from '@narada/types';
+import type { SimplifiedMapping, Script, ContentMap } from '@narada/types';
 import { getSegmentText } from '@narada/types';
 import type { SegmentForMapper } from './ProgressiveMapper';
 
@@ -11,15 +11,15 @@ interface SegmentMappingGridProps {
     segments: SegmentForMapper[];
     currentScript: Script;
     content: ContentMap;
-    mappings: AudioMapping[];
+    mappings: SimplifiedMapping[];
     mappingSession: 'idle' | 'active' | 'paused';
     activeSegmentId: number | null;
     duration: number;
     onSegmentClick: (segmentId: number) => void;
-    onPlaySegment: (mapping: AudioMapping, event: React.MouseEvent) => void;
-    onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
+    onPlaySegment: (mapping: SimplifiedMapping, event: React.MouseEvent) => void;
+    onMappingUpdate: (segmentId: number, mapping: Partial<SimplifiedMapping>) => void;
     onMappingDelete: (segmentId: number) => void;
-    onMappingCreate: (mapping: AudioMapping) => void;
+    onMappingCreate: (mapping: SimplifiedMapping) => void;
     onEndSession: () => void;
     onClearAll?: () => void;
     onScriptChange?: (script: 'te' | 'hi' | 'en') => void;
@@ -50,7 +50,7 @@ export const SegmentMappingGrid: React.FC<SegmentMappingGridProps> = ({
 }) => {
     const [editingSegmentId, setEditingSegmentId] = useState<number | null>(null);
 
-    const getSegmentMapping = (segmentId: number): AudioMapping | undefined => {
+    const getSegmentMapping = (segmentId: number): SimplifiedMapping | undefined => {
         return mappings.find(m => m.segmentId === segmentId);
     };
 
