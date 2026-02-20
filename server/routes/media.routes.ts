@@ -32,66 +32,13 @@ const upload = multer({
 });
 
 /**
- * Audio File Routes
+ * Audio File Routes (list/upload/delete moved to content.routes.ts; PATCH remains for backward compatibility)
  */
-router.get('/audio-files/:chapterId', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const chapterId = parseInt(req.params.chapterId);
-    const files = await mediaService.listAudioFilesByChapter(chapterId);
-    res.json(files);
-  } catch (error) { next(error); }
-});
-
-router.post('/audio-files/:chapterId/upload', requireAdmin, upload.single('audio'), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json(createErrorResponse('No audio file provided', 'NO_FILE_PROVIDED'));
-    }
-    const chapterId = parseInt(req.params.chapterId);
-
-    let duration = 0;
-    try {
-      const meta = await parseFile(req.file.path);
-      duration = meta.format.duration || 0;
-
-      // S-07: Strict validation - if music-metadata can't parse it, reject it
-      if (!meta.format.container && duration === 0) {
-        throw new Error("Could not determine audio format");
-      }
-    } catch (err) {
-      // Security: Remove invalid file immediately
-      if (fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
-      }
-      return res.status(400).json(createErrorResponse('Invalid audio file content', 'INVALID_AUDIO_FILE'));
-    }
-
-    const created = await mediaService.uploadAudioFile({
-      chapterId,
-      filename: req.file.filename,
-      displayName: req.file.originalname || req.file.filename,
-      fileSize: req.file.size,
-      duration: Math.round(duration),
-      mimeType: req.file.mimetype,
-      uploadedBy: (req as any).user.id,
-    });
-    res.json(created);
-  } catch (error) { next(error); }
-});
-
 router.patch('/audio-files/:audioFileId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.audioFileId);
     const file = await mediaService.updateAudioFile(id, req.body);
     res.json(file);
-  } catch (error) { next(error); }
-});
-
-router.delete('/audio-files/:audioFileId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const id = parseInt(req.params.audioFileId);
-    await mediaService.deleteAudioFile(id);
-    res.json({ message: 'Audio file deleted successfully' });
   } catch (error) { next(error); }
 });
 
@@ -167,24 +114,8 @@ router.delete('/media-segments/:id', requireAdmin, async (req: Request, res: Res
 });
 
 /**
- * Segment Mapping Routes
+ * Segment Mapping Routes (chapter-level audio/mappings moved to content.routes.ts)
  */
-router.get('/segment-mappings/:chapterId', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const chapterId = parseInt(req.params.chapterId);
-    const mappings = await mediaService.listMappingsByChapter(chapterId);
-    res.json(mappings);
-  } catch (error) { next(error); }
-});
-
-router.get('/mappings/chapter/:chapterId', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const chapterId = parseInt(req.params.chapterId);
-    const mappings = await mediaService.listMappingsByChapter(chapterId);
-    res.json(mappings);
-  } catch (error) { next(error); }
-});
-
 router.get('/mappings/audio/:audioFileId', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const audioFileId = parseInt(req.params.audioFileId);
@@ -198,29 +129,6 @@ router.get('/mappings/audio/:audioFileId/count', async (req: Request, res: Respo
     const audioFileId = parseInt(req.params.audioFileId);
     const mappings = await mediaService.listMappingsByAudioFile(audioFileId);
     res.json({ count: mappings.length });
-  } catch (error) { next(error); }
-});
-
-router.post('/mappings', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { audioFileId, textSegmentId, startTime, endTime } = req.body;
-    const mapping = await mediaService.createMapping({
-      audioFileId,
-      textSegmentId,
-      startTime,
-      endTime,
-      createdBy: (req as any).user.id,
-    });
-    res.json(mapping);
-  } catch (error) { next(error); }
-});
-
-router.delete('/mappings/:audioFileId/:segmentId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const audioFileId = parseInt(req.params.audioFileId);
-    const segmentId = parseInt(req.params.segmentId);
-    await mediaService.deleteMappingByTextSegment(segmentId, audioFileId);
-    res.json({ message: 'Audio mapping deleted successfully' });
   } catch (error) { next(error); }
 });
 

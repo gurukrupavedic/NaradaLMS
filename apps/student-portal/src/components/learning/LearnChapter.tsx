@@ -131,18 +131,18 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
   });
 
   const { data: audioFiles = [] } = useQuery<AudioFile[]>({
-    queryKey: [`/api/audio-files/${chapterId}`],
+    queryKey: [`/api/content/chapters/${chapterId}/audio`],
     enabled: !!chapterId,
     queryFn: async () => {
-      return apiRequest<AudioFile[]>(`/audio-files/${chapterId}`);
+      return apiRequest<AudioFile[]>(`/content/chapters/${chapterId}/audio`);
     }
   });
 
   const { data: mappings = [] } = useQuery<AudioTextMapping[]>({
-    queryKey: [`/api/segment-mappings/${chapterId}`],
+    queryKey: [`/api/content/chapters/${chapterId}/mappings`],
     enabled: !!chapterId && learnMode,
     queryFn: async () => {
-      return apiRequest<AudioTextMapping[]>(`/segment-mappings/${chapterId}`);
+      return apiRequest<AudioTextMapping[]>(`/content/chapters/${chapterId}/mappings`);
     }
   });
 
