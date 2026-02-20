@@ -1,6 +1,6 @@
 "use client";
 
-import { AppShell } from "@narada/ui";
+import { AppShell, type UserRole } from "@narada/ui";
 import { useAuth } from "@/hooks/useAuth";
 import { LoadingSpinner } from "@narada/ui";
 import { usePathname, useRouter } from "next/navigation";
@@ -53,12 +53,12 @@ export default function PortalLayout({
 
     // Student portal only shows Learn + Batches & Progress. We pass only STUDENT_PORTAL_NAV_ROLES
     // so the shared AppShell/sidebar never shows Content Studio or Admin Center here.
-    const userRoles = useMemo(() => {
+    const userRoles: UserRole[] = useMemo(() => {
         const roles = (user?.roles ?? ["student"]) as string[];
         const allowed = roles.filter((r): r is "student" | "instructor" =>
             STUDENT_PORTAL_NAV_ROLES.includes(r as (typeof STUDENT_PORTAL_NAV_ROLES)[number])
         );
-        return allowed.length > 0 ? [...allowed] : ["student"];
+        return (allowed.length > 0 ? [...allowed] : ["student"]) as UserRole[];
     }, [user?.roles]);
 
     if (isLoading) {
