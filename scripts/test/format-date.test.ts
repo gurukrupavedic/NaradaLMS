@@ -1,9 +1,9 @@
 /**
- * formatDate (shared/utils/date) tests.
+ * formatDate (@narada/types) tests.
  * Run with: npx tsx scripts/test/format-date.test.ts
  */
 
-import { formatDate } from "../../shared/utils/date";
+import { formatDate } from "@narada/types";
 
 const passed: string[] = [];
 const failed: { name: string; error: string }[] = [];
