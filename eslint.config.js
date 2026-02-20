@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-    { ignores: ['dist'] },
+    { ignores: ['dist', '**/.next/**', '**/node_modules/**', '**/next-env.d.ts'] },
     {
         extends: [js.configs.recommended, ...tseslint.configs.recommended],
         files: ['**/*.{ts,tsx}'],
@@ -33,6 +33,24 @@ export default tseslint.config(
             ],
             '@typescript-eslint/no-explicit-any': 'off',
             '@typescript-eslint/no-require-imports': 'off',
-        },
+            '@typescript-eslint/no-unused-expressions': 'warn',
+            '@typescript-eslint/no-namespace': 'warn',
+            '@typescript-eslint/triple-slash-reference': 'off',
+            'react-hooks/set-state-in-effect': 'warn',
+            'react-hooks/incompatible-library': 'warn',
+            'no-empty': 'warn',
+            'prefer-const': 'warn',
+            '@typescript-eslint/no-empty-object-type': 'warn',
+            'react-hooks/immutability': 'warn',
+            'react-hooks/preserve-manual-memoization': 'warn',
+            'react-hooks/purity': 'warn',
+            'react-hooks/refs': 'warn',
+            },
     },
 );
+
+
+
+
+
+

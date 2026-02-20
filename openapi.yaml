@@ -14,7 +14,7 @@ info:
     
     **Multilingual Support:** Telugu (te), Hindi/Devanagari (hi), English/IAST (en)
     
-    **Authentication:** Session-based auth with Passport.js (PostgreSQL-backed sessions)
+    **Authentication:** JWT Bearer tokens. Obtain a token via ``POST /api/auth/login``. Protected endpoints require the ``Authorization: Bearer <token>`` header.
     
     **Authorization:** Role-based access control (student, instructor, content_manager, admin)
   version: 2.0.0
@@ -30,11 +30,11 @@ servers:
     description: Local development server
 
 security:
-  - sessionAuth: []
+  - bearerAuth: []
 
 tags:
   - name: Authentication
-    description: User authentication and session management
+    description: User authentication (JWT Bearer); login returns a token for protected endpoints
   - name: Users
     description: User management (admin only)
   - name: Tracks
@@ -103,7 +103,7 @@ paths:
     post:
       tags: [Authentication]
       summary: Login with email and password
-      description: Authenticate user with local strategy (Passport.js)
+      description: Authenticate with email/password; returns JWT token for use in Authorization header
       security: []
       requestBody:
         required: true
@@ -144,7 +144,7 @@ paths:
     get:
       tags: [Authentication]
       summary: Google OAuth callback
-      description: Handle Google OAuth callback and create session
+      description: Handle Google OAuth callback and issue JWT token
       security: []
       responses:
         '302':
@@ -154,7 +154,7 @@ paths:
     post:
       tags: [Authentication]
       summary: Logout current user
-      description: Destroy session and logout user
+      description: Logout; client should discard the JWT token
       responses:
         '200':
           description: Logout successful
@@ -1846,11 +1846,11 @@ paths:
 
 components:
   securitySchemes:
-    sessionAuth:
-      type: apiKey
-      in: cookie
-      name: connect.sid
-      description: PostgreSQL-backed session cookie (Passport.js)
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT obtained from POST /api/auth/login; send as Authorization Bearer <token>
 
   schemas:
     ApiError:
