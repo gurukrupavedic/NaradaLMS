@@ -45,19 +45,6 @@ export const ImageCaption = Figcaption.extend({
                 class: "ProseMirror-selectednode",
               }),
             ]);
-
-            // // Get image node and calculate its position
-            // const img = figure.firstChild!;
-            // // const figurePos = $anchor.start(figureDepth) - 1;
-            // const imgPos = $anchor.before(figureDepth) + 1;
-            // const imgEndPos = imgPos + img.nodeSize;
-
-            // // Apply decoration to the image node
-            // return DecorationSet.create(doc, [
-            //   Decoration.node(imgPos, imgEndPos, {
-            //     class: "ProseMirror-selectednode",
-            //   }),
-            // ]);
           },
         },
       }),

@@ -7,14 +7,6 @@ import { useTiptapEditor } from "../provider";
 
 const EmojiPopover = () => {
   const { emojis, handleSelect } = useEmoji();
-  // const { editor } = useTiptapEditor();
-
-  // const handleSelect = useCallback(
-  //   (emoji: EmojiItem) => {
-  //     editor.chain().focus().insertContent(emoji.emoji!).run();
-  //   },
-  //   [editor]
-  // );
 
   return (
     <MenuButton type="popover" icon={"Emoji"} hideArrow tooltip={"Emoji"}>

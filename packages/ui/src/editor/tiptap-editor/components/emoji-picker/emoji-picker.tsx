@@ -5,8 +5,6 @@ import { List, type RowComponentProps } from "react-window";
 import { EmojiItem } from "../../helpers/emoji";
 import SearchInput from "../ui/search-input";
 
-// import type { EmojiItem } from "@tiptap/extension-emoji";
-
 const EMOJIS_PER_ROW = 8;
 const EMOJI_ROW_HEIGHT = 36;
 
