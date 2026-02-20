@@ -1,5 +1,7 @@
 export * from "./useBatch";
+export * from "./useBatches";
 export * from "./useBatchProgress";
+export * from "./useBatchRelations";
 export * from "./useChaptersByTrack";
 export * from "./useTracks";
 export * from "./useTrackProgress";

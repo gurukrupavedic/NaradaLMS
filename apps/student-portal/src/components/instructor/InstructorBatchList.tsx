@@ -3,9 +3,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { ColumnDef, Column, SortingState, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 import Link from "next/link";
-import { useBatches, type Batch } from "@/lib/hooks/useBatches";
-import { useCoInstructors, useInstructors, type Instructor } from "@/lib/hooks/useBatchRelations";
-import { useTracks } from "@narada/ui";
+import { useBatches, useTracks, useCoInstructors, useInstructors, type Batch, type Instructor } from "@narada/ui";
 import { Button } from "@narada/ui";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, VirtualizedTableBody } from "@narada/ui";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@narada/ui";

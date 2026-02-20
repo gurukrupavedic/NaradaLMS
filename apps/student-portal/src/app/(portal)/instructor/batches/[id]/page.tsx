@@ -3,9 +3,8 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useEnrollments, useDropEnrollment } from "@/lib/hooks/useBatchRelations";
-import { useBatches } from "@/lib/hooks/useBatches";
-import { useBatch, useTracks, useChaptersByTrack, useBatchProgress, useUpdateProficiency } from "@narada/ui";
+import { useEnrollments, useDropEnrollment } from "@narada/ui";
+import { useBatches, useBatch, useTracks, useChaptersByTrack, useBatchProgress, useUpdateProficiency } from "@narada/ui";
 import { useToast } from "@narada/ui";
 import { BatchDetailsCard, type BatchItem } from "@narada/ui";
 import { UnifiedBatchMatrix } from "@narada/ui";
