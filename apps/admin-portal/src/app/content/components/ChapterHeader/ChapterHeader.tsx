@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Badge, TabsList, TabsTrigger, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@narada/ui';
 import { FilePenLine, Scissors, Music } from 'lucide-react';
-import { AudioPlayerControls } from '@/components/common/AudioPlayerControls';
+import { AudioPlayerControls } from "@narada/ui";
 import { useChapterEditor } from '@/lib/content/context/ChapterEditorContext';
 import { useChapterMetadata } from '@/lib/content/hooks/useChapterMetadata';
 import { useAudioPlayer } from '@/lib/content/context/AudioPlayerContext';
