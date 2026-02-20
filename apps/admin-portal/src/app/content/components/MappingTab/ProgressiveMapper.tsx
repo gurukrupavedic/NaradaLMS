@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MappingWarningDialog } from './components/MappingWarningDialog';
-import { useMappingControls } from '@shared/hooks/useMappingControls';
+import { useMappingControls } from "@narada/ui";
 import type { AudioMapping, Script, ContentMap } from '@narada/types';
 
 /** Segment shape from API (createdAt string) or schema (createdAt Date); both accepted. */
