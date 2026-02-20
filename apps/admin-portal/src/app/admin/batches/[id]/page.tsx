@@ -19,7 +19,7 @@ import { useToast } from "@narada/ui";
 
 import { BatchDetailsCard, type BatchItem } from "@/components/batches/BatchDetailsCard";
 import { UnifiedBatchMatrix } from "@/components/batches/UnifiedBatchMatrix";
-import { TrackTabs } from "@/components/batches/TrackTabs";
+import { TrackTabs } from "@narada/ui";
 
 import { Button } from "@narada/ui";
 import { Badge } from "@narada/ui";

@@ -13,7 +13,7 @@ import { useUpdateProficiency } from "@/lib/hooks/useUpdateProficiency";
 import { useToast } from "@narada/ui";
 import { BatchDetailsCard, type BatchItem } from "@/components/batches/BatchDetailsCard";
 import { UnifiedBatchMatrix } from "@/components/batches/UnifiedBatchMatrix";
-import { TrackTabs } from "@/components/batches/TrackTabs";
+import { TrackTabs } from "@narada/ui";
 import { Button } from "@narada/ui";
 import { Skeleton } from "@narada/ui";
 import { Loader } from "lucide-react";
@@ -128,6 +128,7 @@ export default function InstructorBatchDetailsPage() {
                         currentTrackId={batchDetail.data?.trackId ? String(batchDetail.data.trackId) : undefined}
                         onSelectTrack={(trackId) => setSelectedTrackId(trackId)}
                         isLoading={tracks.isLoading}
+                        emptyMessage="No chapters in this track yet."
                     >
                         {chapters.isLoading ? (
                             <div className="flex items-center justify-center py-12">
