@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import AdminLayoutShell from "@/components/layout/AdminLayout";
-import { ContentContextLabelContext } from "@/lib/content/context/ContentContextLabelContext";
+import { ContentContextLabelContext } from "@narada/ui";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const [contentContextLabel, setContentContextLabel] = useState<string | null>(null);

@@ -19,7 +19,7 @@ import { getProficiencyLabel, getCellColor } from "@/lib/matrix-utils";
 import { AudioPlayerControls } from "@narada/ui";
 import type { EnrichedTextSegment as TextSegment, ContentMap } from "@narada/types";
 import { useAuth } from "@/hooks/useAuth";
-import { useContentContextLabelSetter } from "@/lib/learning/ContentContextLabelContext";
+import { useContentContextLabelSetter } from "@narada/ui";
 import { formatDate } from "@narada/types";
 
 interface ChapterData {
