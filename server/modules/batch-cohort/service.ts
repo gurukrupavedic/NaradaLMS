@@ -6,10 +6,6 @@ import { BATCH_EVENTS } from "./events";
 import { LEARNING_DELIVERY_EVENTS } from "../learning-delivery/events";
 
 export class BatchService {
-  async listBatches() {
-    return batchStorage.listBatches();
-  }
-
   async listBatchesPaginated(limit: number, offset: number) {
     return batchStorage.listBatchesPaginated(limit, offset);
   }

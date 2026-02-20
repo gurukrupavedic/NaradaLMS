@@ -86,13 +86,6 @@ export class IdentityStorage {
   }
 
   /**
-   * Get all users
-   */
-  async getAllUsers(): Promise<any[]> {
-    return await db.select().from(users);
-  }
-
-  /**
    * Get counts of users by status (for tab badges).
    * Optionally filtered by search term (applied to same set of users as listUsersPaginated when search is used).
    */
