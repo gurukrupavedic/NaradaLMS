@@ -1,6 +1,6 @@
 import { Card } from "@narada/ui";
 import { cn } from "@narada/ui";
-import { LinkStatusIcon } from "@shared/components/LinkStatusIcon";
+import { LinkStatusIcon } from "@narada/ui";
 import type { Script } from "@narada/types";
 
 interface SegmentCardProps {

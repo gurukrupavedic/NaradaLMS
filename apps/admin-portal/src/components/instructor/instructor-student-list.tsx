@@ -35,7 +35,7 @@ import {
     useToast,
 } from "@narada/ui";
 import { MoreVertical, ArrowUpDown, AlertCircle, Users, RotateCcw } from "lucide-react";
-import { formatDate } from "@shared/utils/date";
+import { formatDate } from "@narada/types";
 
 import { useMyStudents, StudentSummary } from "@/lib/hooks/useMyStudents";
 import { useBatches } from "@/lib/hooks/useBatches";

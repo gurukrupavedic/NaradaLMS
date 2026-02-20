@@ -5,7 +5,7 @@ import { ColumnDef, Column, SortingState, flexRender, getCoreRowModel, getSorted
 import Link from "next/link";
 import { Button, Input, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, VirtualizedTableBody, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DataTablePagination, Badge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useToast } from "@narada/ui";
 import { MoreVertical, ArrowUpDown, AlertCircle, Users, RotateCcw } from "lucide-react";
-import { formatDate } from "@shared/utils/date";
+import { formatDate } from "@narada/types";
 import { useMyStudents, type StudentSummary } from "@/lib/hooks/useMyStudents";
 import { useBatches } from "@/lib/hooks/useBatches";
 

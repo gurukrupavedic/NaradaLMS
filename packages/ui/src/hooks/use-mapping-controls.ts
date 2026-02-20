@@ -1,14 +1,14 @@
 /**
  * Mapping Controls Hook
- * 
+ *
  * Centralized mapping session state management for audio mapping workflow.
- * 
+ *
  * Created: January 2025
  * Purpose: Reusable mapping session logic
  */
 
 import { useCallback } from 'react';
-import type { AudioMapping } from '../types/text-segmentation';
+import type { AudioMapping } from '@narada/types';
 
 /** Minimal segment shape used by the hook (id only required). */
 interface SegmentWithId {
@@ -115,7 +115,7 @@ export const useMappingControls = ({
 
     onSessionStartTimeChange(startTime !== undefined ? startTime : currentTime);
 
-    // [MODIFIED] Removed auto-deletion of existing mappings. 
+    // [MODIFIED] Removed auto-deletion of existing mappings.
     // New session should append/merge, not wipe previous work.
   }, [currentTime, onSessionChange, onActiveSegmentChange, onSessionStartTimeChange]);
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Badge } from "../badge";
 import { ChevronDown } from "lucide-react";
 import type { StudentDetail } from "@narada/types";
-import { formatDate } from "@shared/utils/date";
+import { formatDate } from "@narada/types";
 
 interface StudentDetailsCardProps {
   student: StudentDetail;

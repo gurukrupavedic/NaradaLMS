@@ -4,7 +4,7 @@ import React from "react";
 import { ChevronDown, ArrowLeftRight } from "lucide-react";
 import { Skeleton } from "@narada/ui";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from "@narada/ui";
-import { formatDate } from "@shared/utils/date";
+import { formatDate } from "@narada/types";
 
 export interface BatchItem {
     id: number;

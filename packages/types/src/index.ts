@@ -15,3 +15,5 @@ export * from "./text-segmentation.js";
 // Text Segmentation utilities
 export * from "./utils/text-segmentation.js";
 
+export * from "./utils/date.js";
+
