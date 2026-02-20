@@ -8,6 +8,7 @@ import rateLimit from "express-rate-limit";
 import { validateRequest } from "../utils/validation";
 import { z } from "zod";
 import { config } from "../config";
+import { catchAsync } from "../utils/catchAsync";
 
 // S-06: Rate limiting for auth endpoints
 const authLimiter = rateLimit({
@@ -45,28 +46,19 @@ identityRouter.post(
   "/register",
   authLimiter,
   validateRequest(registerSchema),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { email, password, firstName, lastName } = req.body;
+  catchAsync(async (req: Request, res: Response) => {
+    const { email, password, firstName, lastName } = req.body;
 
-      // Note: Manual check removed as Zod handles it
+    const result = await identityService.registerUser({
+      email,
+      password,
+      firstName,
+      lastName,
+      adminEmail: config.adminEmail,
+    });
 
-      const result = await identityService.registerUser({
-        email,
-        password,
-        firstName,
-        lastName,
-        adminEmail: config.adminEmail,
-      });
-
-      return res.json(result);
-    } catch (err: any) {
-      console.error("Register error:", err);
-      return res
-        .status(400)
-        .json({ error: err.message || "Registration failed" });
-    }
-  }
+    return res.json(result);
+  })
 );
 
 /**
@@ -200,48 +192,41 @@ identityRouter.get(
   "/admin/users",
   jwtAuth,
   requireAdmin,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
-      const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
-      const statusFilter = req.query.status as string | undefined;
-      const roleFilter = req.query.role as string | undefined;
-      const search = (req.query.search as string)?.trim() || undefined;
+  catchAsync(async (req: Request, res: Response) => {
+    const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
+    const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+    const statusFilter = req.query.status as string | undefined;
+    const roleFilter = req.query.role as string | undefined;
+    const search = (req.query.search as string)?.trim() || undefined;
 
-      const filters: { status?: string; role?: string; search?: string } = {};
-      if (statusFilter && ["pending_approval", "active", "inactive"].includes(statusFilter)) {
-        filters.status = statusFilter;
-      }
-      if (roleFilter) filters.role = roleFilter;
-      if (search) filters.search = search;
-
-      const [statusCounts, { items: paginatedUsers, total }] = await Promise.all([
-        identityService.getUserStatusCounts(search),
-        identityService.listUsersPaginated(limit, offset, Object.keys(filters).length ? filters : undefined),
-      ]);
-
-      const sanitized = paginatedUsers.map((u: any) => ({
-        id: u.id,
-        email: u.email,
-        status: u.status,
-        roles: u.roles || [],
-        firstName: u.firstName,
-        lastName: u.lastName,
-        createdAt: u.createdAt,
-      }));
-
-      return res.json({
-        users: sanitized,
-        pagination: { limit, offset, total },
-        statusCounts,
-      });
-    } catch (err: any) {
-      console.error("Get users error:", err);
-      return res
-        .status(500)
-        .json({ error: err.message || "Failed to fetch users" });
+    const filters: { status?: string; role?: string; search?: string } = {};
+    if (statusFilter && ["pending_approval", "active", "inactive"].includes(statusFilter)) {
+      filters.status = statusFilter;
     }
-  }
+    if (roleFilter) filters.role = roleFilter;
+    if (search) filters.search = search;
+
+    const [statusCounts, { items: paginatedUsers, total }] = await Promise.all([
+      identityService.getUserStatusCounts(search),
+      identityService.listUsersPaginated(limit, offset, Object.keys(filters).length ? filters : undefined),
+    ]);
+
+    const sanitized = paginatedUsers.map((u: any) => ({
+      id: u.id,
+      email: u.email,
+      status: u.status,
+      roles: u.roles || [],
+      firstName: u.firstName,
+      lastName: u.lastName,
+      createdAt: u.createdAt,
+    }));
+
+    return res.json({
+      users: sanitized,
+      pagination: { limit, offset, total },
+      statusCounts,
+    });
+  })
 );
 
 /**
@@ -253,24 +238,17 @@ identityRouter.post(
   "/admin/users/:userId/approve",
   jwtAuth,
   requireAdmin,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { userId } = req.params;
-      const user = req.user as any;
+  catchAsync(async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const user = req.user as any;
 
-      const approvedUser = await identityService.approveUser(userId, user.id);
+    const approvedUser = await identityService.approveUser(userId, user.id);
 
-      return res.json({
-        message: "User approved",
-        user: approvedUser,
-      });
-    } catch (err: any) {
-      console.error("Approve user error:", err);
-      return res
-        .status(err.message === "User not found" ? 404 : 500)
-        .json({ error: err.message || "Failed to approve user" });
-    }
-  }
+    return res.json({
+      message: "User approved",
+      user: approvedUser,
+    });
+  })
 );
 
 /**
@@ -283,33 +261,26 @@ identityRouter.post(
   "/admin/users/:userId/roles",
   jwtAuth,
   requireAdmin,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { userId } = req.params;
-      const { roles } = req.body;
-      const user = req.user as any;
+  catchAsync(async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const { roles } = req.body;
+    const user = req.user as any;
 
-      if (!Array.isArray(roles)) {
-        return res.status(400).json({ error: "Roles must be an array" });
-      }
-
-      const updatedUser = await identityService.assignRoles(
-        userId,
-        roles,
-        user.id
-      );
-
-      return res.json({
-        message: "Roles assigned",
-        user: updatedUser,
-      });
-    } catch (err: any) {
-      console.error("Assign roles error:", err);
-      return res
-        .status(err.message === "User not found" ? 404 : 500)
-        .json({ error: err.message || "Failed to assign roles" });
+    if (!Array.isArray(roles)) {
+      return res.status(400).json({ error: "Roles must be an array" });
     }
-  }
+
+    const updatedUser = await identityService.assignRoles(
+      userId,
+      roles,
+      user.id
+    );
+
+    return res.json({
+      message: "Roles assigned",
+      user: updatedUser,
+    });
+  })
 );
 
 /**
@@ -321,27 +292,20 @@ identityRouter.post(
   "/admin/users/:userId/disable",
   jwtAuth,
   requireAdmin,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { userId } = req.params;
+  catchAsync(async (req: Request, res: Response) => {
+    const { userId } = req.params;
 
-      const disabledUser = await identityService.disableUser(userId);
+    const disabledUser = await identityService.disableUser(userId);
 
-      return res.json({
-        message: "User disabled",
-        user: {
-          id: disabledUser.id,
-          email: disabledUser.email,
-          status: disabledUser.status,
-        },
-      });
-    } catch (err: any) {
-      console.error("Disable user error:", err);
-      return res
-        .status(err.message === "User not found" ? 404 : 500)
-        .json({ error: err.message || "Failed to disable user" });
-    }
-  }
+    return res.json({
+      message: "User disabled",
+      user: {
+        id: disabledUser.id,
+        email: disabledUser.email,
+        status: disabledUser.status,
+      },
+    });
+  })
 );
 
 /**
@@ -353,27 +317,20 @@ identityRouter.post(
   "/admin/users/:userId/enable",
   jwtAuth,
   requireAdmin,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { userId } = req.params;
+  catchAsync(async (req: Request, res: Response) => {
+    const { userId } = req.params;
 
-      const enabledUser = await identityService.enableUser(userId);
+    const enabledUser = await identityService.enableUser(userId);
 
-      return res.json({
-        message: "User enabled",
-        user: {
-          id: enabledUser.id,
-          email: enabledUser.email,
-          status: enabledUser.status,
-        },
-      });
-    } catch (err: any) {
-      console.error("Enable user error:", err);
-      return res
-        .status(err.message === "User not found" ? 404 : 500)
-        .json({ error: err.message || "Failed to enable user" });
-    }
-  }
+    return res.json({
+      message: "User enabled",
+      user: {
+        id: enabledUser.id,
+        email: enabledUser.email,
+        status: enabledUser.status,
+      },
+    });
+  })
 );
 
 /**
@@ -385,18 +342,11 @@ identityRouter.post(
   "/admin/users/:userId/reject",
   jwtAuth,
   requireAdmin,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { userId } = req.params;
-      const result = await identityService.rejectUser(userId);
-      return res.json({ success: true, message: "User rejected", user: result });
-    } catch (err: any) {
-      console.error("Reject user error:", err);
-      return res
-        .status(err.message === "User not found" ? 404 : 500)
-        .json({ error: err.message || "Failed to reject user" });
-    }
-  }
+  catchAsync(async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const result = await identityService.rejectUser(userId);
+    return res.json({ success: true, message: "User rejected", user: result });
+  })
 );
 
 /**
@@ -408,28 +358,21 @@ identityRouter.get(
   "/admin/users/:userId",
   jwtAuth,
   requireAdmin,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { userId } = req.params;
-      const user = await identityService.getUser(userId);
+  catchAsync(async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    const user = await identityService.getUser(userId);
 
-      return res.json({
-        id: user.id,
-        email: user.email,
-        status: user.status,
-        roles: user.roles || [],
-        firstName: user.firstName,
-        lastName: user.lastName,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      });
-    } catch (err: any) {
-      console.error("Get user error:", err);
-      return res
-        .status(err.message === "User not found" ? 404 : 500)
-        .json({ error: err.message || "Failed to fetch user" });
-    }
-  }
+    return res.json({
+      id: user.id,
+      email: user.email,
+      status: user.status,
+      roles: user.roles || [],
+      firstName: user.firstName,
+      lastName: user.lastName,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    });
+  })
 );
 
 export default identityRouter;
