@@ -14,26 +14,34 @@
 [TypeError: Cannot read properties of undefined (reading 'os')]
  ⚠ Found lockfile missing swc dependencies, patching...
  ⚠ Found lockfile missing swc dependencies, patching...
- ✓ Compiled successfully in 3.4s
+ ⨯ Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
+[TypeError: Cannot read properties of undefined (reading 'os')]
+ ✓ Compiled successfully in 5.1s
    Linting and checking validity of types ...
-Failed to compile.
+   Collecting page data ...
+   Generating static pages (0/8) ...
+   Generating static pages (2/8) 
+   Generating static pages (4/8) 
+   Generating static pages (6/8) 
+ ✓ Generating static pages (8/8)
+   Finalizing page optimization ...
+   Collecting build traces ...
 
-./src/app/(portal)/layout.tsx:84:17
-Type error: Type 'string[]' is not assignable to type 'UserRole[]'.
-  Type 'string' is not assignable to type 'UserRole'.
+Route (app)                                 Size  First Load JS
+┌ ○ /                                    4.34 kB         483 kB
+├ ○ /_not-found                            994 B         104 kB
+├ ○ /instructor/batches                  3.56 kB         493 kB
+├ ƒ /instructor/batches/[id]             8.17 kB         498 kB
+├ ○ /instructor/students                 4.33 kB         491 kB
+├ ƒ /instructor/students/[id]             3.8 kB         494 kB
+├ ƒ /learning/chapter/[chapterId]        8.17 kB         495 kB
+└ ○ /vedic-learning                      1.78 kB         489 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/18-a1a838a171ca5a88.js        46.4 kB
+  ├ chunks/87c73c54-09e1ba5c70e60a51.js  54.2 kB
+  └ other shared chunks (total)          2.02 kB
 
-[0m [90m 82 |[39m                     avatar[33m:[39m user[33m.[39mprofileImageUrl [33m||[39m [32m""[39m
- [90m 83 |[39m                 }}
-[31m[1m>[22m[39m[90m 84 |[39m                 userRoles[33m=[39m{userRoles}
- [90m    |[39m                 [31m[1m^[22m[39m
- [90m 85 |[39m                 onLogout[33m=[39m{logout}
- [90m 86 |[39m                 homeHref[33m=[39m[32m"/vedic-learning"[39m
- [90m 87 |[39m                 contentContextLabel[33m=[39m{contentContextLabel}[0m
-Next.js build worker exited with code: 1 and signal: null
-npm error Lifecycle script `build` failed with error:
-npm error code 1
-npm error path C:\Users\kashy\Projects\NaradaLMS\apps\student-portal
-npm error workspace student-portal@0.1.0
-npm error location C:\Users\kashy\Projects\NaradaLMS\apps\student-portal
-npm error command failed
-npm error command C:\WINDOWS\system32\cmd.exe /d /s /c next build
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
