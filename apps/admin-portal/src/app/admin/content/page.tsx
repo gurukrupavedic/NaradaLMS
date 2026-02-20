@@ -55,8 +55,8 @@ import {
 import { Separator } from '@narada/ui';
 import { useToast } from '@narada/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { TrackListItem, TrackRow } from '@/components/content/track-list-item';
-import { ChapterListItem, ChapterRow } from '@/components/content/chapter-list-item';
+import { TrackListItem, TrackRow } from '@/components/content/TrackListItem';
+import { ChapterListItem, ChapterRow } from '@/components/content/ChapterListItem';
 import { useLocalStorage } from '@/hooks/content/useLocalStorage';
 
 import { Plus, LibraryBig, BookText } from 'lucide-react';

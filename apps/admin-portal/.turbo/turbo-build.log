@@ -16,7 +16,7 @@
  ⚠ Found lockfile missing swc dependencies, patching...
  ⨯ Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
 [TypeError: Cannot read properties of undefined (reading 'os')]
- ✓ Compiled successfully in 3.9s
+ ✓ Compiled successfully in 4.9s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/11) ...
@@ -31,7 +31,7 @@ Route (app)                                            Size  First Load JS
 ┌ ○ /                                               3.02 kB         495 kB
 ├ ○ /_not-found                                       994 B         104 kB
 ├ ○ /admin                                           1.1 kB         493 kB
-├ ○ /admin/batches                                   5.5 kB         497 kB
+├ ○ /admin/batches                                  5.47 kB         497 kB
 ├ ƒ /admin/batches/[id]                             3.36 kB         495 kB
 ├ ○ /admin/content                                  5.84 kB         513 kB
 ├ ○ /admin/logs                                     10.2 kB         502 kB
