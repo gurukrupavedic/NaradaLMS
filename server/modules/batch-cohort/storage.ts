@@ -4,18 +4,6 @@ import { batches, enrollments, batchCoInstructors, users, tracks, studentProgres
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput } from "./types";
 
 export class BatchStorage {
-  async listBatches() {
-    return db
-      .select({
-        ...getTableColumns(batches),
-        studentCount: sql<number>`COALESCE(COUNT(*) FILTER (WHERE ${enrollments.status} = 'active'), 0)::int`,
-      })
-      .from(batches)
-      .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
-      .groupBy(batches.id)
-      .orderBy(batches.createdAt);
-  }
-
   async listBatchesPaginated(limit: number, offset: number): Promise<{ items: any[]; total: number }> {
     const [countResult] = await db
       .select({ count: sql<number>`count(*)` })

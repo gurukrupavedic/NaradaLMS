@@ -126,13 +126,6 @@ export class IdentityService {
   }
 
   /**
-   * Get all users (admin only)
-   */
-  async getAllUsers() {
-    return await identityStorage.getAllUsers();
-  }
-
-  /**
    * Get user counts by status (for admin UI tab badges). Optional search filter.
    */
   async getUserStatusCounts(search?: string) {
