@@ -83,22 +83,4 @@ export const Youtube = TiptapYoutube.extend({
         },
     };
   },
-
-  // addNodeView() {
-  //   return ({ node }) => {
-  //     const iframe = document.createElement("iframe");
-
-  //     iframe.src = node.attrs.src;
-
-  //     const dom = document.createElement("div");
-  //     dom.style.cursor = "default";
-  //     dom.style.marginInline = "auto";
-  //     dom.style.width = `${node.attrs.width}%`;
-  //     dom.appendChild(iframe);
-
-  //     return {
-  //       dom,
-  //     };
-  //   };
-  // },
 });

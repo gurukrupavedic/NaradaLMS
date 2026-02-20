@@ -10,7 +10,6 @@ import { StarterKit } from "@tiptap/starter-kit";
 
 import { CellAlign } from "./cell-align";
 
-// import { CodeBlockShiki } from "./code-block-shiki";
 import { ImageFigure } from "./image";
 import { Link } from "./link";
 import { Youtube } from "./youtube";
@@ -59,23 +58,6 @@ export function createExtensions({ placeholder }: ExtensionConfig) {
     Color,
     Highlight.configure({ multicolor: true }),
     ImageFigure,
-    // CodeBlockLowlight,
-    // CodeBlockShiki,
     Youtube,
   ];
 }
-
-// const placeholders: Record<string, Record<string, string>> = {
-//   en: {
-//     paragraph: "Type your content here...",
-//     imageCaption: "Type caption for image (optional)",
-//   },
-//   vi: {
-//     paragraph: "Nhập nội dung bài viết...",
-//     imageCaption: "Nhập chú thích ảnh (tuỳ chọn)",
-//   },
-//   jp: {
-//     paragraph: "ここに内容を入力してください...",
-//     imageCaption: "画像のキャプションを入力（任意）",
-//   },
-// };

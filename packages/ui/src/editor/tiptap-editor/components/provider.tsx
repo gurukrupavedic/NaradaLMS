@@ -2,8 +2,6 @@ import { createContext, ReactNode, useContext, useMemo, useState } from "react";
 
 import { EditorContent, type Editor } from "@tiptap/react";
 
-// import SourceEditor from "@/components/source-editor/editor"; // Source editor not ported yet
-
 import { getEditorContent } from "../helpers/tiptap";
 import { cn } from "../helpers/utils";
 

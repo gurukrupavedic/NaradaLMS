@@ -1,7 +1,5 @@
 import React, { useMemo, useState, useCallback, memo } from "react";
 
-// import { getSupportedLanguages } from "@/lib/lowlight";
-
 import { MenuButton } from "../../menu-button";
 import { useTiptapEditor } from "../../provider";
 import Icon from "../../ui/icon";
