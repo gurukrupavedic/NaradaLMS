@@ -36,7 +36,7 @@ export function useAssignCoInstructor(batchId: number) {
       instructorId: string;
       role?: string;
     }) => {
-      return apiRequest(`/batches/${batchId}/co-instructors`, {
+      return apiRequest<unknown>(`/batches/${batchId}/co-instructors`, {
         method: 'POST',
         body: JSON.stringify({ instructorId, role }),
       });
@@ -59,7 +59,7 @@ export function useRemoveCoInstructor() {
       assignmentId: number;
       batchId: number;
     }) => {
-      await apiRequest(`/co-instructors/${assignmentId}`, {
+      await apiRequest<unknown>(`/co-instructors/${assignmentId}`, {
         method: 'DELETE',
       });
       return { batchId };
@@ -76,7 +76,7 @@ export function useEnrollStudent(batchId: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ studentId }: { studentId: string }) => {
-      return apiRequest(`/batches/${batchId}/enrollments`, {
+      return apiRequest<unknown>(`/batches/${batchId}/enrollments`, {
         method: 'POST',
         body: JSON.stringify({ studentId }),
       });
