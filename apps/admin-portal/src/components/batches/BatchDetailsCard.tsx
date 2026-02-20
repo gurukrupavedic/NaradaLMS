@@ -7,7 +7,7 @@ import {
     DropdownMenuTrigger,
     DropdownMenuItem
 } from "@narada/ui";
-import { formatDate } from "@shared/utils/date";
+import { formatDate } from "@narada/types";
 
 // Minimal interface for batch item in dropdown
 export interface BatchItem {

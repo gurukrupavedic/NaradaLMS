@@ -20,7 +20,7 @@ import { AudioPlayerControls } from "@/components/common/AudioPlayerControls";
 import type { EnrichedTextSegment as TextSegment, ContentMap } from "@narada/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useContentContextLabelSetter } from "@/lib/learning/ContentContextLabelContext";
-import { formatDate } from "@shared/utils/date";
+import { formatDate } from "@narada/types";
 
 interface ChapterData {
   id: number;
