@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from "@narada/ui";
 import { StudentMatrixRow, StudentProgress, UnifiedBatchMatrixProps, MatrixCell, ProficiencyLevel } from "@narada/ui";
 import { getCellColor, getProficiencyShortLabel } from "@narada/ui";
-import { MatrixEvaluationModal } from "./MatrixEvaluationModal";
+import { MatrixEvaluationModal } from "@narada/ui";
 
 export function UnifiedBatchMatrix({
     students,

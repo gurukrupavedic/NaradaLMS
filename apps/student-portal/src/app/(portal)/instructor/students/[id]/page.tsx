@@ -10,7 +10,7 @@ import { useTrackProgress } from "@/lib/hooks/useTrackProgress";
 import { useUpdateProficiency } from "@/lib/hooks/useUpdateProficiency";
 import { StudentDetailsCard, TrackList } from "@narada/ui";
 import { Button, Card, CardContent, Separator, Skeleton } from "@narada/ui";
-import { MatrixEvaluationModal } from "@/components/batches/MatrixEvaluationModal";
+import { MatrixEvaluationModal } from "@narada/ui";
 import type { ChapterProgress, TrackProgress } from "@narada/types";
 import type { ProficiencyLevel } from "@narada/ui";
 

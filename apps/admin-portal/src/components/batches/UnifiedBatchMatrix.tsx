@@ -26,7 +26,7 @@ import {
     ProficiencyLevel,
 } from '@narada/ui';
 import { getCellColor, getProficiencyShortLabel } from '@narada/ui';
-import { MatrixEvaluationModal } from './MatrixEvaluationModal';
+import { MatrixEvaluationModal } from "@narada/ui";
 
 /**
  * UnifiedBatchMatrix Component
