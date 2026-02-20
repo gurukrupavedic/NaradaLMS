@@ -16,7 +16,7 @@
  ⚠ Found lockfile missing swc dependencies, patching...
  ⨯ Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
 [TypeError: Cannot read properties of undefined (reading 'os')]
- ✓ Compiled successfully in 4.9s
+ ✓ Compiled successfully in 5.9s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/11) ...
@@ -37,7 +37,7 @@ Route (app)                                            Size  First Load JS
 ├ ○ /admin/logs                                     10.2 kB         502 kB
 ├ ○ /admin/settings                                   123 B         103 kB
 ├ ƒ /admin/tracks/[trackId]/chapters/[chapterId]    1.25 kB         530 kB
-├ ○ /admin/users                                    3.82 kB         496 kB
+├ ○ /admin/users                                    3.82 kB         495 kB
 └ ƒ /content/tracks/[trackId]/chapters/[chapterId]  1.26 kB         530 kB
 + First Load JS shared by all                        103 kB
   ├ chunks/18-a1a838a171ca5a88.js                   46.4 kB
