@@ -18,7 +18,7 @@ import { useUpdateProficiency } from "@/lib/hooks/useUpdateProficiency";
 import { useToast } from "@narada/ui";
 
 import { BatchDetailsCard, type BatchItem } from "@narada/ui";
-import { UnifiedBatchMatrix } from "@/components/batches/UnifiedBatchMatrix";
+import { UnifiedBatchMatrix } from "@narada/ui";
 import { TrackTabs } from "@narada/ui";
 
 import { Button } from "@narada/ui";

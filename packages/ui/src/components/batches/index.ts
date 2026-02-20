@@ -2,5 +2,6 @@
 export * from "./TrackTabs";
 export * from "./BatchDetailsCard";
 export * from "./MatrixEvaluationModal";
+export * from "./UnifiedBatchMatrix";
 export * from "./types";
 export * from "./utils";
