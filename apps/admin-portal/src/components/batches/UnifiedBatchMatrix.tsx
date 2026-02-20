@@ -337,12 +337,12 @@ export function UnifiedBatchMatrix({
                                     const stickyLeftStyle = isSticky ? `${header.column.getStart()}px` : '0';
 
                                     return (
-                                        // eslint-disable-next-line @stylistic/no-non-null-assertion
+                                        // eslint-disable-next-line
                                         <th
                                             key={header.id}
                                             className={`${isStudentCol ? 'text-center' : 'text-center'} text-xs font-semibold text-muted-foreground uppercase tracking-tight ${isStudentCol ? 'pl-4 pr-2 py-2 align-middle' : 'p-0'
                                                 } sticky top-0 ${isSticky ? 'z-30' : 'z-10'} bg-card`}
-                                            // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+                                            // eslint-disable-next-line
                                             style={{
                                                 width: `${header.getSize()}px`,
                                                 maxWidth: `${header.getSize()}px`, // Prevent expansion
