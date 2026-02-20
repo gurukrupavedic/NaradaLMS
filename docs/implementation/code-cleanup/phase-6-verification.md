@@ -178,9 +178,9 @@ git tag cleanup-phase-6-complete
 
 ---
 
-## Cleanup Complete Gate (Merge to Main)
+## Cleanup Complete Gate (User Merges to Main)
 
-**Only proceed when ALL of the following are true:**
+**When ALL of the following are true, the cleanup branch is ready for the final merge:**
 
 - [ ] Phase 0 complete and tagged (`cleanup-phase-0-complete`)
 - [ ] Phase 1 complete and tagged (`cleanup-phase-1-complete`)
@@ -189,13 +189,13 @@ git tag cleanup-phase-6-complete
 - [ ] Phase 4 complete and tagged (`cleanup-phase-4-complete`)
 - [ ] Phase 5 complete and tagged (`cleanup-phase-5-complete`)
 - [ ] Phase 6 complete and tagged (`cleanup-phase-6-complete`)
+- [ ] Phase 7 complete and tagged (`cleanup-phase-7-complete`) if run
 - [ ] `npx tsc --noEmit` passes on `cleanup` branch
 - [ ] `npx turbo run build --force` passes on `cleanup` branch
 - [ ] All manual flow checks pass
 - [ ] All grep checks return zero results
-- [ ] **User has given explicit written approval**
 
-### Merge to Main
+**Agents must NOT merge `cleanup` into `main`.** The user performs the final merge manually when ready, for example:
 
 ```bash
 git checkout main
@@ -204,11 +204,7 @@ git tag baseline-pre-stage-2
 git push origin main --tags
 ```
 
-### Post-Merge
-
-- [ ] Verify `main` builds: `npx turbo run build --force`
-- [ ] Start all 3 services from `main` and do a quick smoke test
-- [ ] Ready to begin Stage 2: Chameleonization
+After merging, verify `main` builds and run a quick smoke test, then proceed to Stage 2: Chameleonization.
 
 ---
 

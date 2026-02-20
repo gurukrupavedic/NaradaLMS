@@ -31,7 +31,7 @@ All work happens on branches. `main` stays untouched until every phase is comple
    git checkout cleanup && git merge cleanup-phase-N --no-ff -m "Merge cleanup-phase-N: <phase name>"
    git tag cleanup-phase-N-complete
    ```
-6. **Merge `cleanup` into `main` only after ALL phases 0–6 are complete.**
+6. **Merge `cleanup` into `main` is done manually by the user** after all phases are complete. Agents must **never** merge into `main` or push to `main`.
 
 ### Branch Structure
 
@@ -44,11 +44,12 @@ main (protected, tagged baseline-pre-cleanup)
         ├── cleanup-phase-3   (server quality)
         ├── cleanup-phase-4   (config/deps)
         ├── cleanup-phase-5   (naming)
-        └── cleanup-phase-6   (verification)
+        ├── cleanup-phase-6   (verification)
+        └── cleanup-phase-7   (residual: scripts, gitignore, orphan file)
                                   ↓
-                      Only when ALL phases verified:
-                      merge cleanup → main
-                      tag main: baseline-pre-stage-2
+                      When ALL phases verified:
+                      User merges cleanup → main manually
+                      User tags main: baseline-pre-stage-2
 ```
 
 ---
@@ -63,6 +64,7 @@ main (protected, tagged baseline-pre-cleanup)
 6. **Verify after each task.** Run the verification command specified. If it fails, fix the issue before proceeding.
 7. **Do NOT touch** any file not explicitly listed in the phase document.
 8. **Do NOT modify** `packages/types/src/schema.ts`, database migrations, or any database-related code.
+9. **Do NOT merge `cleanup` into `main`** or push to `main`. The user performs the final merge to `main` manually.
 
 ---
 
@@ -112,6 +114,7 @@ Manual checks:
 | **4** | Config & Deps | Fix env file, remove unused deps, replace deprecated csurf, fix broken scripts | Low | 1-2 hours |
 | **5** | Naming Conventions | Rename files to PascalCase, standardize types, migrate deprecated AudioMapping | Low | 1 hour |
 | **6** | Final Verification | Full build, manual flow testing, documentation updates | None | 1 hour |
+| **7** | Residual Cleanup | Unused scripts, gitignore for logs/cache, redundant patch file | None | 15–20 min |
 
 ## Dependency Graph
 
@@ -123,6 +126,7 @@ Phase 0 (Safe Deletes)
             └─→ Phase 4 (Config & Deps)
                  └─→ Phase 5 (Naming Conventions)
                       └─→ Phase 6 (Final Verification)
+                           └─→ Phase 7 (Residual Cleanup)
 ```
 
 - Phase 0 must be first: later phases assume dead files are gone.
@@ -130,7 +134,8 @@ Phase 0 (Safe Deletes)
 - Phase 2 depends on Phase 1: components in Phase 2 may import from `@narada/types` (set up in Phase 1).
 - Phases 3 and 4 can run in parallel (server vs config changes are independent) but both depend on Phase 2.
 - Phase 5 after 3+4: naming changes are safest after all code moves are done.
-- Phase 6 is last: final verification assumes all code is clean.
+- Phase 6 is last verification phase; Phase 7 is optional residual cleanup (scripts, gitignore, orphan file).
+- **Merge to `main`:** Done manually by the user when all phases are complete. Agents do not merge to `main`.
 
 ---
 
@@ -145,6 +150,7 @@ Phase 0 (Safe Deletes)
 | [phase-4-config-deps.md](./phase-4-config-deps.md) | 4 | Fix env, remove unused deps, replace csurf, fix scripts |
 | [phase-5-naming-conventions.md](./phase-5-naming-conventions.md) | 5 | Rename files, standardize types, migrate deprecated types |
 | [phase-6-verification.md](./phase-6-verification.md) | 6 | Full build verification, manual testing, documentation |
+| [phase-7-residual-cleanup.md](./phase-7-residual-cleanup.md) | 7 | Unused scripts, gitignore for logs/cache, redundant patch file (no docs/ changes) |
 
 ---
 
@@ -153,8 +159,7 @@ Phase 0 (Safe Deletes)
 - **Execute one phase document per chat session.** Each document is self-contained.
 - **Start each session** by reading the phase document AND checking the current branch state (`git status`, `git branch`).
 - At the **start** of each phase, create the phase branch from `cleanup`.
-- At the **end** of each phase, follow the completion steps to merge into `cleanup`.
-- The **only** merge into `main` happens in Phase 6 after all phases are verified.
+- At the **end** of each phase, follow the completion steps to merge into `cleanup` only. Do **not** merge `cleanup` into `main`; the user does that merge manually.
 
 ---
 
