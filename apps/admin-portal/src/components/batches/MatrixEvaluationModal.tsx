@@ -9,11 +9,9 @@ import { Button } from '@narada/ui';
 import {
     MatrixEvaluationModalProps,
     ProficiencyLevel,
-} from './types';
-import {
     PROFICIENCY_OPTIONS,
     getCellColor,
-} from './utils';
+} from '@narada/ui';
 
 // Temporary fix if Dialog components not exported from @narada/ui top level
 // Assuming standard shadcn structure where Dialog is a composite

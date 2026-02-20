@@ -6,8 +6,8 @@ import { Loader, MoreVertical } from "lucide-react";
 import { Button } from "@narada/ui";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@narada/ui";
 import { useToast } from "@narada/ui";
-import { StudentMatrixRow, StudentProgress, UnifiedBatchMatrixProps, MatrixCell, ProficiencyLevel } from "./types";
-import { getCellColor, getProficiencyShortLabel } from "./utils";
+import { StudentMatrixRow, StudentProgress, UnifiedBatchMatrixProps, MatrixCell, ProficiencyLevel } from "@narada/ui";
+import { getCellColor, getProficiencyShortLabel } from "@narada/ui";
 import { MatrixEvaluationModal } from "./MatrixEvaluationModal";
 
 export function UnifiedBatchMatrix({

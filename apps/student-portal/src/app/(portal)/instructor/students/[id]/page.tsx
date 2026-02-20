@@ -12,7 +12,7 @@ import { StudentDetailsCard, TrackList } from "@narada/ui";
 import { Button, Card, CardContent, Separator, Skeleton } from "@narada/ui";
 import { MatrixEvaluationModal } from "@/components/batches/MatrixEvaluationModal";
 import type { ChapterProgress, TrackProgress } from "@narada/types";
-import type { ProficiencyLevel } from "@/components/batches/types";
+import type { ProficiencyLevel } from "@narada/ui";
 
 export default function InstructorStudentProgressPage() {
     useRoleGuard(["instructor", "admin"]);

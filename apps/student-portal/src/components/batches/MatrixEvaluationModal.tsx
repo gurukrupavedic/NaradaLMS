@@ -3,8 +3,7 @@
 import React from "react";
 import { AlertCircle, Loader } from "lucide-react";
 import { Button } from "@narada/ui";
-import { MatrixEvaluationModalProps, ProficiencyLevel } from "./types";
-import { PROFICIENCY_OPTIONS, getCellColor } from "./utils";
+import { MatrixEvaluationModalProps, ProficiencyLevel, PROFICIENCY_OPTIONS, getCellColor } from "@narada/ui";
 import { Dialog as UiDialog, DialogContent as UiDialogContent, DialogHeader as UiDialogHeader, DialogTitle as UiDialogTitle, DialogDescription as UiDialogDescription } from "@narada/ui";
 
 export function MatrixEvaluationModal({

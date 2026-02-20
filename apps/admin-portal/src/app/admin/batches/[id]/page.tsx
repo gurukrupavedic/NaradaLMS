@@ -32,7 +32,7 @@ import type {
     Chapter,
     StudentProgress,
     ProficiencyLevel,
-} from "@/components/batches/types";
+} from "@narada/ui";
 
 export default function BatchDetailsPage() {
     const { toast } = useToast();

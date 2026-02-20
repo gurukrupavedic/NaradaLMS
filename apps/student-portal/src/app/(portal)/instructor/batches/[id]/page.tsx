@@ -17,7 +17,7 @@ import { TrackTabs } from "@narada/ui";
 import { Button } from "@narada/ui";
 import { Skeleton } from "@narada/ui";
 import { Loader } from "lucide-react";
-import type { StudentMatrixRow, Chapter, StudentProgress, ProficiencyLevel } from "@/components/batches/types";
+import type { StudentMatrixRow, Chapter, StudentProgress, ProficiencyLevel } from "@narada/ui";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 
 export default function InstructorBatchDetailsPage() {
