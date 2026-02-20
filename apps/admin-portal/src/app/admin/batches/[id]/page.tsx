@@ -10,11 +10,7 @@ import {
     type EligibleStudent
 } from "@/lib/hooks/useBatchRelations";
 import { useBatches } from "@/lib/hooks/useBatches";
-import { useBatch } from "@/lib/hooks/useBatch";
-import { useTracks } from "@/lib/hooks/useTracks";
-import { useChaptersByTrack } from "@/lib/hooks/useChaptersByTrack";
-import { useBatchProgress } from "@/lib/hooks/useBatchProgress";
-import { useUpdateProficiency } from "@/lib/hooks/useUpdateProficiency";
+import { useBatch, useTracks, useChaptersByTrack, useBatchProgress, useUpdateProficiency } from "@narada/ui";
 import { useToast } from "@narada/ui";
 
 import { BatchDetailsCard, type BatchItem } from "@narada/ui";

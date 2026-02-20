@@ -5,7 +5,7 @@ import { ColumnDef, Column, SortingState, flexRender, getCoreRowModel, getSorted
 import Link from "next/link";
 import { useBatches, type Batch } from "@/lib/hooks/useBatches";
 import { useCoInstructors, useInstructors, type Instructor } from "@/lib/hooks/useBatchRelations";
-import { useTracks } from "@/lib/hooks/useTracks";
+import { useTracks } from "@narada/ui";
 import { Button } from "@narada/ui";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, VirtualizedTableBody } from "@narada/ui";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@narada/ui";
