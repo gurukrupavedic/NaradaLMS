@@ -3,7 +3,7 @@ import React from "react";
 import BoldButton from "./controls/bold-button";
 import BulletListButton from "./controls/bullet-list-button";
 import HeadingDropdown from "./controls/heading-dropdown";
-import ImageButton from "./controls/image-button-2";
+import ImageButton from "./controls/image-button";
 import InsertDropdown from "./controls/insert-dropdown";
 import ItalicButton from "./controls/italic-button";
 import LinkButton from "./controls/link-button";
