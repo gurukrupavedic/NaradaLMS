@@ -3,7 +3,7 @@ import { Trash2, FileText, GripVertical } from 'lucide-react';
 import { Button, cn } from '@narada/ui';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { LinkStatusIcon } from '@shared/components/LinkStatusIcon';
+import { LinkStatusIcon } from "@narada/ui";
 import { getSegmentText } from '@narada/types';
 import type { ContentMap, Script } from '@narada/types';
 

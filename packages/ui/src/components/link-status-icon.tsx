@@ -1,6 +1,6 @@
 /**
  * Shared LinkStatusIcon Component
- * 
+ *
  * Provides consistent status visualization across all components
  * for segment-to-audio mapping status indication.
  */
