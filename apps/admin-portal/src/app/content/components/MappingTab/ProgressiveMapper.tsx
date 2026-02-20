@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MappingWarningDialog } from './components/MappingWarningDialog';
 import { useMappingControls } from "@narada/ui";
-import type { AudioMapping, Script, ContentMap } from '@narada/types';
+import type { SimplifiedMapping, Script, ContentMap } from '@narada/types';
 
 /** Segment shape from API (createdAt string) or schema (createdAt Date); both accepted. */
 export interface SegmentForMapper {
@@ -31,7 +31,7 @@ export interface MappingState {
     segments: SegmentForMapper[];
     currentScript: Script;
     content: ContentMap;
-    mappings: AudioMapping[];
+    mappings: SimplifiedMapping[];
 
     togglePlayPause: () => void;
     clearSessionData: () => void;
@@ -41,10 +41,10 @@ export interface MappingState {
     stopMappingSession: () => void;
     resetMappingSession: () => void;
     handleSegmentClick: (segmentId: number) => void;
-    handlePlaySegment: (mapping: AudioMapping, event: React.MouseEvent) => void;
-    onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
+    handlePlaySegment: (mapping: SimplifiedMapping, event: React.MouseEvent) => void;
+    onMappingUpdate: (segmentId: number, mapping: Partial<SimplifiedMapping>) => void;
     onMappingDelete: (segmentId: number) => void;
-    onMappingCreate: (mapping: AudioMapping) => void;
+    onMappingCreate: (mapping: SimplifiedMapping) => void;
     confirmStartSession: (startSegmentId?: number, startTime?: number) => void;
 }
 
@@ -53,15 +53,15 @@ interface ProgressiveMapperProps {
     segments: SegmentForMapper[];
     currentScript: Script;
     content: ContentMap;
-    mappings: AudioMapping[];
+    mappings: SimplifiedMapping[];
     selectedAudioFile?: { id: number; filename: string; displayName?: string };
     currentTime: number;
     duration: number;
     isPlaying: boolean;
     togglePlayPause: () => void;
     onSeek: (time: number) => void;
-    onMappingCreate: (mapping: AudioMapping) => void;
-    onMappingUpdate: (segmentId: number, mapping: Partial<AudioMapping>) => void;
+    onMappingCreate: (mapping: SimplifiedMapping) => void;
+    onMappingUpdate: (segmentId: number, mapping: Partial<SimplifiedMapping>) => void;
     onMappingDelete: (segmentId: number) => void;
     readOnly?: boolean;
     children: (state: MappingState) => React.ReactNode;
@@ -126,7 +126,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
         segments: currentScriptSegments,
         mappings: normalizedMappings,
         selectedAudioFileId: selectedAudioFile?.id,
-        onMappingCreate: (m) => onMappingCreate({ ...m, textSegmentId: m.segmentId } as AudioMapping),
+        onMappingCreate: (m) => onMappingCreate({ ...m, textSegmentId: m.segmentId } as SimplifiedMapping),
         onMappingDelete,
         onSessionChange: setMappingSession,
         onActiveSegmentChange: setActiveSegmentId,
@@ -194,7 +194,7 @@ export const ProgressiveMapper: React.FC<ProgressiveMapperProps> = ({
         handlePlaySegment: () => { },
         onMappingUpdate: (id, m) => !readOnly && onMappingUpdate(id, m),
         onMappingDelete: (id) => !readOnly && onMappingDelete(id),
-        onMappingCreate: (m) => !readOnly && onMappingCreate({ ...m, textSegmentId: m.segmentId } as AudioMapping),
+        onMappingCreate: (m) => !readOnly && onMappingCreate({ ...m, textSegmentId: m.segmentId } as SimplifiedMapping),
         confirmStartSession: proceedWithMappingSession
     };
 

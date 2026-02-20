@@ -8,7 +8,7 @@
  */
 
 import { useCallback } from 'react';
-import type { AudioMapping } from '@narada/types';
+import type { SimplifiedMapping } from '@narada/types';
 
 /** Minimal segment shape used by the hook (id only required). */
 interface SegmentWithId {
@@ -21,9 +21,9 @@ interface MappingControlsProps {
   currentTime: number;
   sessionStartTime: number;
   segments: SegmentWithId[];
-  mappings: AudioMapping[];
+  mappings: SimplifiedMapping[];
   selectedAudioFileId?: number;
-  onMappingCreate: (mapping: AudioMapping) => void;
+  onMappingCreate: (mapping: SimplifiedMapping) => void;
   onMappingDelete: (segmentId: number) => void;
   onSessionChange: (session: 'idle' | 'setup' | 'active' | 'paused') => void;
   onActiveSegmentChange: (segmentId: number | null) => void;
@@ -65,7 +65,7 @@ export const useMappingControls = ({
       return;
     }
 
-    const mapping: AudioMapping = {
+    const mapping: SimplifiedMapping = {
       segmentId: activeSegmentId,
       startTime: sessionStartTime,
       endTime: currentTime
