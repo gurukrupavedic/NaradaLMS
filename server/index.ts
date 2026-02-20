@@ -19,7 +19,7 @@ import { config } from "./config";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import csrf from "csurf";
+import { doubleCsrf } from "csrf-csrf";
 
 const app = express();
 
@@ -57,30 +57,26 @@ app.use(express.urlencoded({ extended: false }));
 // Cookie parser for JWT cookies
 app.use(cookieParser());
 
-// TODO: Replace deprecated csurf with csrf-csrf or lusca before production deployment
-// CSRF Protection
-const csrfProtection = csrf({
-  cookie: {
+// CSRF Protection (double-submit cookie pattern via csrf-csrf)
+const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
+  getSecret: () => config.jwt.secret,
+  getSessionIdentifier: () => 'default',
+  cookieName: '__csrf',
+  cookieOptions: {
     httpOnly: true,
+    sameSite: config.env === 'production' ? 'strict' : 'lax',
     secure: config.env === 'production',
-    sameSite: config.env === 'production' ? 'strict' : 'lax'
-  }
+  },
+  getCsrfTokenFromRequest: (req) => req.headers['x-csrf-token'] as string | undefined,
 });
 
-// CSRF token endpoint - defined BEFORE middleware to avoid chicken-egg problem
-// This endpoint generates the initial CSRF token
-app.get('/api/csrf-token', csrfProtection, (req, res) => {
-  res.json({ csrfToken: (req as Request & { csrfToken(): string }).csrfToken() });
+// CSRF token endpoint - defined before doubleCsrfProtection so token can be generated
+app.get('/api/csrf-token', (req, res) => {
+  const csrfToken = generateCsrfToken(req, res);
+  res.json({ csrfToken });
 });
 
-// Apply CSRF middleware to all other routes (only validates on POST/PUT/DELETE/PATCH)
-app.use((req, res, next) => {
-  // Skip CSRF token endpoint (already handled above)
-  if (req.path === '/api/csrf-token') {
-    return next();
-  }
-  csrfProtection(req, res, next);
-});
+app.use(doubleCsrfProtection);
 
 
 
