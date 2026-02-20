@@ -40,3 +40,4 @@ export * from "./layout/brand-header";
 export * from "./theme-provider";
 export * from "./theme-toggle";
 export * from "./link-status-icon";
+export * from "./batches";
