@@ -149,7 +149,7 @@ app.use('/api/learning', learningRouter);
   // Portals are served separately via Next.js.
 
   const port = config.port;
-  server.listen(port, "127.0.0.1", () => {
-    Logger.info(`serving on port ${port}`);
+  server.listen(port, config.host, () => {
+    Logger.info(`serving on ${config.host}:${port}`);
   });
 })();
