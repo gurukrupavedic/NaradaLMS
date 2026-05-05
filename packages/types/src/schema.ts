@@ -8,6 +8,9 @@ import {
   serial,
   integer,
   real,
+  unique,
+  check,
+  foreignKey,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
@@ -25,22 +28,38 @@ export const users = pgTable("users", {
 
   // Authentication
   passwordHash: varchar("password_hash"), // Null for social-only users
-  provider: varchar("provider").notNull().default("local"), // 'local' | 'google' | 'facebook'
+  provider: varchar("provider").notNull().default("local"), // 'local' | 'google' (DB CHECK)
   providerId: varchar("provider_id"), // Provider user ID
 
   // Authorization
   roles: text("roles").array().notNull().default(sql`ARRAY[]::text[]`),
   status: varchar("status").notNull().default("pending_approval"), // 'pending_approval' | 'active' | 'inactive'
 
-  // Audit / invitations
-  invitedBy: varchar("invited_by"), // references users.id (defined in DB, not in Drizzle schema to avoid circular dep)
+  // Audit / invitations (self-FKs in table callback)
+  invitedBy: varchar("invited_by"),
   invitedAt: timestamp("invited_at"),
   approvedAt: timestamp("approved_at"),
-  approvedBy: varchar("approved_by"), // references users.id (defined in DB, not in Drizzle schema to avoid circular dep)
+  approvedBy: varchar("approved_by"),
   lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  foreignKey({
+    columns: [table.invitedBy],
+    foreignColumns: [table.id],
+    name: "users_invited_by_fkey",
+  }).onDelete("set null"),
+  foreignKey({
+    columns: [table.approvedBy],
+    foreignColumns: [table.id],
+    name: "users_approved_by_fkey",
+  }).onDelete("set null"),
+  check(
+    "users_status_check",
+    sql`status IN ('pending_approval', 'active', 'inactive')`
+  ),
+  check("users_provider_check", sql`provider IN ('local', 'google')`),
+]);
 
 // Learning tracks - Vedic curriculum structure
 export const tracks = pgTable("tracks", {
@@ -73,6 +92,8 @@ export const chapters = pgTable("chapters", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("idx_chapters_track").on(table.trackId),
+  unique("chapters_track_title_uniq").on(table.trackId, table.title),
+  check("chapters_status_check", sql`status IN ('draft', 'published')`),
 ]);
 
 // Audio files for chapters
@@ -99,7 +120,12 @@ export const textSegments = pgTable("text_segments", {
   order: integer("order").notNull().default(0),
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  check(
+    "text_segments_start_lte_end_check",
+    sql`start_position <= end_position`
+  ),
+]);
 
 // Media segments - Audio file timestamp segments
 export const mediaSegments = pgTable("media_segments", {
@@ -119,7 +145,12 @@ export const segmentMappings = pgTable("segment_mappings", {
   textSegmentId: integer("text_segment_id").notNull().references(() => textSegments.id, { onDelete: "cascade" }),
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  unique("segment_mappings_media_text_uniq").on(
+    table.mediaSegmentId,
+    table.textSegmentId
+  ),
+]);
 
 // Batches - Flexible cohorts (track and instructor optional; assignable later)
 export const batches = pgTable("batches", {
@@ -133,7 +164,9 @@ export const batches = pgTable("batches", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   createdBy: varchar("created_by").notNull().references(() => users.id),
-});
+}, (table) => [
+  unique("batches_batch_code_uniq").on(table.batchCode),
+]);
 
 // Enrollments - Student enrollment in batches
 // BUSINESS RULE: A student can only be enrolled in ONE batch at a time (one-to-many relationship)
@@ -153,6 +186,10 @@ export const enrollments = pgTable("enrollments", {
     .on(table.studentId)
     .where(sql`status = 'active'`),
   index("idx_enrollments_batch").on(table.batchId),
+  check(
+    "enrollments_status_check",
+    sql`status IN ('active', 'dropped', 'completed')`
+  ),
 ]);
 
 // Batch Co-Instructors - Additional instructors/TAs for a batch
@@ -166,6 +203,10 @@ export const batchCoInstructors = pgTable("batch_co_instructors", {
 }, (table) => [
   index("idx_co_instructors_batch").on(table.batchId),
   index("idx_co_instructors_instructor").on(table.instructorId),
+  unique("batch_co_instructors_batch_instructor_uniq").on(
+    table.batchId,
+    table.instructorId
+  ),
 ]);
 
 // Student progress tracking
@@ -174,7 +215,7 @@ export const studentProgress = pgTable("student_progress", {
   studentId: varchar("student_id").notNull().references(() => users.id),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
   batchId: integer("batch_id").references(() => batches.id),
-  proficiencyLevel: integer("proficiency_level").default(0).notNull(), // 0-4 (0=not started, 1-4=levels)
+  proficiencyLevel: integer("proficiency_level").default(0).notNull(), // 0-4, 8 absent, 9 not started (DB CHECK)
   lastAccessed: timestamp("last_accessed"),
   lastEvaluatedAt: timestamp("last_evaluated_at"),
   evaluatedBy: varchar("evaluated_by").references(() => users.id),
@@ -185,6 +226,14 @@ export const studentProgress = pgTable("student_progress", {
   index("idx_progress_student").on(table.studentId),
   index("idx_progress_chapter").on(table.chapterId),
   index("idx_progress_batch").on(table.batchId),
+  unique("student_progress_student_chapter_unique").on(
+    table.studentId,
+    table.chapterId
+  ),
+  check(
+    "student_progress_proficiency_level_check",
+    sql`proficiency_level IN (0, 1, 2, 3, 4, 8, 9)`
+  ),
 ]);
 
 // Proficiency Evaluation Log - Audit trail for proficiency changes
@@ -198,11 +247,19 @@ export const proficiencyEvaluationLog = pgTable("proficiency_evaluation_log", {
   newProficiencyLevel: integer("new_proficiency_level").notNull(),
   notes: text("notes"),
   evaluatedAt: timestamp("evaluated_at").defaultNow().notNull(),
-}, (table) => ([
+}, (table) => [
   index("idx_proficiency_log_student").on(table.studentId),
   index("idx_proficiency_log_chapter").on(table.chapterId),
   index("idx_proficiency_log_batch").on(table.batchId),
-]));
+  check(
+    "proficiency_eval_log_new_level_check",
+    sql`new_proficiency_level IN (0, 1, 2, 3, 4, 8, 9)`
+  ),
+  check(
+    "proficiency_eval_log_old_level_check",
+    sql`(old_proficiency_level IS NULL OR old_proficiency_level IN (0, 1, 2, 3, 4, 8, 9))`
+  ),
+]);
 
 // Audit logs - Track all sensitive operations
 export const auditLogs = pgTable("audit_logs", {

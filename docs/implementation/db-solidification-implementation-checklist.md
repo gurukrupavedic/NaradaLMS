@@ -18,12 +18,12 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 - [ ] **1.1** Convert `users.email` to PostgreSQL `citext`.
 - [ ] **1.1.a** Auto-normalize/dedupe case-colliding emails in dev migration path before enforcing `citext` uniqueness.
 - [ ] **1.2** Keep/ensure unique constraint on `users.email` (case-insensitive via `citext`).
-- [ ] **1.3** Add/ensure CHECK on `users.status`:
+- [x] **1.3** Add/ensure CHECK on `users.status`:
   - `pending_approval`, `active`, `inactive`
-- [ ] **1.4** Add/ensure CHECK on `users.provider`:
+- [x] **1.4** Add/ensure CHECK on `users.provider`:
   - `local`, `google`
-- [ ] **1.5** Add FK for `users.invited_by -> users.id` (nullable).
-- [ ] **1.6** Add FK for `users.approved_by -> users.id` (nullable).
+- [x] **1.5** Add FK for `users.invited_by -> users.id` (nullable).
+- [x] **1.6** Add FK for `users.approved_by -> users.id` (nullable).
 - [ ] **1.7** Convert timestamps in `users` to `timestamptz`:
   - `invited_at`, `approved_at`, `last_login_at`, `created_at`, `updated_at`
 
@@ -45,8 +45,8 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 ## 3) `chapters` table
 
 - [ ] **3.1** Rename `chapters.order` -> `chapters.sort_order`.
-- [ ] **3.2** Add UNIQUE on `(track_id, title)`.
-- [ ] **3.3** Add CHECK on `status IN ('draft', 'published')`.
+- [x] **3.2** Add UNIQUE on `(track_id, title)`.
+- [x] **3.3** Add CHECK on `status IN ('draft', 'published')`.
 - [ ] **3.4** Convert `chapters.published_at`, `chapters.created_at`, `chapters.updated_at` to `timestamptz`.
 - [ ] **3.5** Add soft-delete fields for chapter retention strategy:
   - `deleted_at` (`timestamptz`, nullable)
@@ -66,7 +66,7 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 
 ## 5) `text_segments` table
 
-- [ ] **5.1** Add CHECK: `start_position <= end_position`.
+- [x] **5.1** Add CHECK: `start_position <= end_position`.
 - [ ] **5.2** Add UNIQUE on `(chapter_id, script, sort/order column)`.
 - [ ] **5.3** Convert `text_segments.created_at` to `timestamptz`.
 
@@ -88,14 +88,14 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 
 ## 7) `segment_mappings` table
 
-- [ ] **7.1** Add UNIQUE on `(media_segment_id, text_segment_id)`.
+- [x] **7.1** Add UNIQUE on `(media_segment_id, text_segment_id)`.
 - [ ] **7.2** Convert `segment_mappings.created_at` to `timestamptz`.
 
 ---
 
 ## 8) `batches` table
 
-- [ ] **8.1** Add global UNIQUE on `batch_code` (pre-tenancy).
+- [x] **8.1** Add global UNIQUE on `batch_code` (pre-tenancy).
 - [ ] **8.2** Keep `cohort_type` flexible (no DB CHECK now).
 - [ ] **8.3** Convert `batches.created_at`, `batches.updated_at` to `timestamptz`.
 
@@ -103,23 +103,23 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 
 ## 9) `enrollments` table
 
-- [ ] **9.1** Keep partial unique for one active enrollment per student.
-- [ ] **9.2** Add CHECK on `status IN ('active', 'dropped', 'completed')`.
+- [x] **9.1** Keep partial unique for one active enrollment per student.
+- [x] **9.2** Add CHECK on `status IN ('active', 'dropped', 'completed')`.
 - [ ] **9.3** Convert `enrollments.enrolled_at`, `dropped_at`, `updated_at` to `timestamptz`.
 
 ---
 
 ## 10) `batch_co_instructors` table
 
-- [ ] **10.1** Add UNIQUE on `(batch_id, instructor_id)`.
+- [x] **10.1** Add UNIQUE on `(batch_id, instructor_id)`.
 - [ ] **10.2** Convert `assigned_at` to `timestamptz`.
 
 ---
 
 ## 11) `student_progress` table
 
-- [ ] **11.1** Add UNIQUE on `(student_id, chapter_id)`.
-- [ ] **11.2** Add CHECK on `proficiency_level IN (0,1,2,3,4,8,9)`.
+- [x] **11.1** Add UNIQUE on `(student_id, chapter_id)`.
+- [x] **11.2** Add CHECK on `proficiency_level IN (0,1,2,3,4,8,9)`.
 - [ ] **11.3** Convert `last_accessed`, `last_evaluated_at`, `created_at`, `updated_at` to `timestamptz`.
 - [ ] **11.4** Update schema comment to match actual allowed proficiency set.
 
@@ -128,8 +128,8 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 ## 12) `proficiency_evaluation_log` table
 
 - [ ] **12.1** Keep hard-delete avoidance by relying on chapter soft-delete strategy.
-- [ ] **12.2** Add CHECK on `new_proficiency_level IN (0,1,2,3,4,8,9)`.
-- [ ] **12.3** Add CHECK on `old_proficiency_level` with same allowed set when not null.
+- [x] **12.2** Add CHECK on `new_proficiency_level IN (0,1,2,3,4,8,9)`.
+- [x] **12.3** Add CHECK on `old_proficiency_level` with same allowed set when not null.
 - [ ] **12.4** Add Drizzle `relations()` metadata for DX.
 - [ ] **12.5** Convert `evaluated_at` to `timestamptz`.
 
@@ -165,8 +165,8 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 
 ## 16) Verification and safeguards
 
-- [ ] **16.1** Add pre-migration data cleanup steps for new UNIQUE/CHECK constraints (if needed).
-- [ ] **16.1.a** In dev, prefer auto-fix cleanup scripts for duplicates/out-of-range values where safe; avoid manual cleanup unless needed.
+- [x] **16.1** Add pre-migration data cleanup steps for new UNIQUE/CHECK constraints (if needed).
+- [x] **16.1.a** In dev, prefer auto-fix cleanup scripts for duplicates/out-of-range values where safe; avoid manual cleanup unless needed.
 - [ ] **16.2** Run migrations end-to-end on a fresh DB.
 - [ ] **16.3** Run migrations on a DB with representative seeded data.
 - [ ] **16.4** Run full typecheck/tests after schema + code updates.

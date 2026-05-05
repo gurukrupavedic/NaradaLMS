@@ -14,6 +14,24 @@ import type { Track, Chapter, TextSegment, CreateSegmentData, CreateTrackData, C
 import { db } from "../../db";
 import { eq } from "drizzle-orm";
 import { tracks, chapters } from "@narada/types";
+import {
+  getPostgresConstraintName,
+  isPostgresUniqueViolation,
+} from "../../shared/utils/postgres-unique-violation";
+
+const CHAPTER_TRACK_TITLE_UNIQ = "chapters_track_title_uniq";
+
+function throwIfChapterTitleConflict(error: unknown): void {
+  if (
+    isPostgresUniqueViolation(error) &&
+    getPostgresConstraintName(error) === CHAPTER_TRACK_TITLE_UNIQ
+  ) {
+    throw Object.assign(
+      new Error("A chapter with this title already exists in this track"),
+      { status: 409, code: "CHAPTER_TITLE_CONFLICT" }
+    );
+  }
+}
 
 export class ContentService {
   constructor(
@@ -109,14 +127,19 @@ export class ContentService {
   }
 
   async createChapter(data: CreateChapterData): Promise<Chapter> {
-    const chapter = await this.storage.createChapter({
-      trackId: data.trackId,
-      title: data.title,
-      content: data.content || { te: '', hi: '', en: '' },
-      status: 'draft',
-      createdBy: data.createdBy
-    });
-    return chapter;
+    try {
+      const chapter = await this.storage.createChapter({
+        trackId: data.trackId,
+        title: data.title,
+        content: data.content || { te: '', hi: '', en: '' },
+        status: 'draft',
+        createdBy: data.createdBy
+      });
+      return chapter;
+    } catch (e) {
+      throwIfChapterTitleConflict(e);
+      throw e;
+    }
   }
 
   async updateChapterContent(chapterId: number, content: object): Promise<Chapter> {
@@ -132,17 +155,22 @@ export class ContentService {
   }
 
   async updateChapter(chapterId: number, data: Partial<Chapter>): Promise<Chapter> {
-    const chapter = await this.storage.updateChapter(chapterId, data);
+    try {
+      const chapter = await this.storage.updateChapter(chapterId, data);
 
-    if (data.content) {
-      await this.eventBus.publish(CONTENT_EVENTS.CONTENT_UPDATED, {
-        type: 'ContentUpdated',
-        chapterId,
-        timestamp: new Date()
-      });
+      if (data.content) {
+        await this.eventBus.publish(CONTENT_EVENTS.CONTENT_UPDATED, {
+          type: 'ContentUpdated',
+          chapterId,
+          timestamp: new Date()
+        });
+      }
+
+      return chapter;
+    } catch (e) {
+      throwIfChapterTitleConflict(e);
+      throw e;
     }
-
-    return chapter;
   }
 
   /**
@@ -238,7 +266,12 @@ export class ContentService {
     const maxOrder = targetChapters.reduce((acc, c) => Math.max(acc, c.sortOrder ?? 0), 0);
     const nextOrder = (maxOrder || 0) + 1;
 
-    await this.storage.updateChapter(chapterId, { trackId: toTrackId, sortOrder: nextOrder });
+    try {
+      await this.storage.updateChapter(chapterId, { trackId: toTrackId, sortOrder: nextOrder });
+    } catch (e) {
+      throwIfChapterTitleConflict(e);
+      throw e;
+    }
   }
 
   /**

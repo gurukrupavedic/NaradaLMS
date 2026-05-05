@@ -4,6 +4,24 @@ import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, Enrollm
 import { eventBus } from "../../shared/events/event-bus";
 import { BATCH_EVENTS } from "./events";
 import { LEARNING_DELIVERY_EVENTS } from "../learning-delivery/events";
+import {
+  getPostgresConstraintName,
+  isPostgresUniqueViolation,
+} from "../../shared/utils/postgres-unique-violation";
+
+const BATCH_CODE_UNIQ = "batches_batch_code_uniq";
+
+function throwIfBatchCodeConflict(error: unknown): void {
+  if (
+    isPostgresUniqueViolation(error) &&
+    getPostgresConstraintName(error) === BATCH_CODE_UNIQ
+  ) {
+    throw Object.assign(new Error("Batch code already in use"), {
+      status: 409,
+      code: "BATCH_CODE_CONFLICT",
+    });
+  }
+}
 
 export class BatchService {
   async listBatchesPaginated(limit: number, offset: number) {
@@ -41,7 +59,13 @@ export class BatchService {
       }
     }
 
-    const batch = await batchStorage.createBatch(input);
+    let batch;
+    try {
+      batch = await batchStorage.createBatch(input);
+    } catch (e) {
+      throwIfBatchCodeConflict(e);
+      throw e;
+    }
     eventBus.publish(BATCH_EVENTS.created, {
       batchId: batch.id,
       trackId: batch.trackId ?? undefined,
@@ -62,7 +86,15 @@ export class BatchService {
       if (!exists) throw Object.assign(new Error('Primary instructor does not exist'), { status: 400 });
     }
 
-    const updated = await batchStorage.updateBatch(id, input);
+    let updated;
+    try {
+      updated = await batchStorage.updateBatch(id, input);
+    } catch (e) {
+      if (input.batchCode !== undefined && input.batchCode !== null) {
+        throwIfBatchCodeConflict(e);
+      }
+      throw e;
+    }
     if (updated) {
       eventBus.publish(BATCH_EVENTS.updated, {
         batchId: id,

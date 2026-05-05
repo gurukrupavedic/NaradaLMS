@@ -2,6 +2,24 @@ import { db } from "../../db";
 import { eq, sql, and, inArray, or, getTableColumns } from "drizzle-orm";
 import { batches, enrollments, batchCoInstructors, users, tracks, studentProgress, chapters, proficiencyEvaluationLog } from "@narada/types";
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput } from "./types";
+import {
+  getPostgresConstraintName,
+  isPostgresUniqueViolation,
+} from "../../shared/utils/postgres-unique-violation";
+
+const BATCH_CO_INSTRUCTOR_UNIQ = "batch_co_instructors_batch_instructor_uniq";
+
+function throwIfCoInstructorDuplicate(error: unknown): void {
+  if (
+    isPostgresUniqueViolation(error) &&
+    getPostgresConstraintName(error) === BATCH_CO_INSTRUCTOR_UNIQ
+  ) {
+    throw Object.assign(
+      new Error("Instructor is already assigned to this batch"),
+      { status: 409, code: "CO_INSTRUCTOR_CONFLICT" }
+    );
+  }
+}
 
 export class BatchStorage {
   async listBatchesPaginated(limit: number, offset: number): Promise<{ items: any[]; total: number }> {
@@ -373,13 +391,18 @@ export class BatchStorage {
   }
 
   async assignCoInstructor(input: CoInstructorAssignInput) {
-    const [created] = await db.insert(batchCoInstructors).values({
-      batchId: input.batchId,
-      instructorId: input.instructorId,
-      role: input.role ?? 'co_instructor',
-      assignedBy: input.assignedBy,
-    }).returning();
-    return created;
+    try {
+      const [created] = await db.insert(batchCoInstructors).values({
+        batchId: input.batchId,
+        instructorId: input.instructorId,
+        role: input.role ?? 'co_instructor',
+        assignedBy: input.assignedBy,
+      }).returning();
+      return created;
+    } catch (e) {
+      throwIfCoInstructorDuplicate(e);
+      throw e;
+    }
   }
 
   async removeCoInstructor(assignmentId: number) {
@@ -407,7 +430,8 @@ export class BatchStorage {
   }
 
   async syncCoInstructors(batchId: number, instructorIds: string[], assignedBy: string) {
-    return db.transaction(async (tx) => {
+    try {
+      return await db.transaction(async (tx) => {
       const current = await tx
         .select({ id: batchCoInstructors.id, instructorId: batchCoInstructors.instructorId })
         .from(batchCoInstructors)
@@ -448,6 +472,10 @@ export class BatchStorage {
         .from(batchCoInstructors)
         .where(eq(batchCoInstructors.batchId, batchId));
     });
+    } catch (e) {
+      throwIfCoInstructorDuplicate(e);
+      throw e;
+    }
   }
 
   // Basic existence checks for foreign keys
