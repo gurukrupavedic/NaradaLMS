@@ -31,7 +31,7 @@ async function seedVedicCurriculum() {
       const [insertedTrack] = await db.insert(tracks).values({
         title: trackData.title,
         description: trackData.description,
-        order: (trackData as any).number,
+        sortOrder: (trackData as any).number,
         createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -45,7 +45,7 @@ async function seedVedicCurriculum() {
         const chapterValues = (trackData as any).chapters.map((chapter: any) => ({
           trackId: insertedTrack.id,
           title: chapter.title,
-          order: chapter.number,
+          sortOrder: chapter.number,
           status: chapter.status || "published",
           content: chapter.content || {},
           createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id,

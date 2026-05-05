@@ -7,7 +7,7 @@ export type TrackListItem = {
   id: number;
   title: string;
   description?: string | null;
-  order: number;
+  sortOrder: number;
   createdBy?: string | null;
   createdAt?: string;
   updatedAt?: string;

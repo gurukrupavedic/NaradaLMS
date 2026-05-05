@@ -18,10 +18,10 @@ async function run() {
     // Create Track
     console.log('Creating track...');
     // Create track directly via DB to avoid legacy service mismatch
-    // Query max order from tracks table
-    const maxOrderRows = await (db as any).execute("SELECT COALESCE(MAX(\"order\"), 0) AS max_order FROM tracks");
+    // Query max sort order from tracks table
+    const maxOrderRows = await (db as any).execute("SELECT COALESCE(MAX(sort_order), 0) AS max_order FROM tracks");
     const nextOrder = Number(maxOrderRows?.rows?.[0]?.max_order ?? 0) + 1;
-    const [track] = await db.insert(tracks).values({ title: `Smoke Track ${unique}`, description: `Smoke description ${unique}`, order: nextOrder, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id, createdAt: new Date(), updatedAt: new Date() }).returning();
+    const [track] = await db.insert(tracks).values({ title: `Smoke Track ${unique}`, description: `Smoke description ${unique}`, sortOrder: nextOrder, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id, createdAt: new Date(), updatedAt: new Date() }).returning();
     console.log('Track created:', track);
 
     // List Tracks

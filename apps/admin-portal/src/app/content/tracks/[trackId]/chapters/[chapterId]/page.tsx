@@ -37,14 +37,14 @@ function ChapterContentPageContent() {
     const [activeTab, setActiveTab] = useState('text-segmentation');
 
     useEffect(() => {
-        if (chapter?.track?.order != null && chapter?.order != null) {
+        if (chapter?.track?.sortOrder != null && chapter?.sortOrder != null) {
             const titlePart = chapter.title ? `: ${chapter.title}` : '';
-            setContentContextLabel(`Track ${chapter.track!.order}. Chapter ${chapter.order}${titlePart}`);
+            setContentContextLabel(`Track ${chapter.track!.sortOrder}. Chapter ${chapter.sortOrder}${titlePart}`);
         } else {
             setContentContextLabel(null);
         }
         return () => setContentContextLabel(null);
-    }, [chapter?.track?.order, chapter?.order, chapter?.title, setContentContextLabel]);
+    }, [chapter?.track?.sortOrder, chapter?.sortOrder, chapter?.title, setContentContextLabel]);
     const [textSegMode, setTextSegMode] = useState<'editor' | 'segmentation'>('editor');
     const router = useRouter();
 

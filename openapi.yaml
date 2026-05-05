@@ -1909,7 +1909,7 @@ components:
           type: string
         description:
           type: string
-        order:
+        sortOrder:
           type: integer
         status:
           type: string
@@ -1958,7 +1958,7 @@ components:
           type: integer
         title:
           type: string
-        order:
+        sortOrder:
           type: integer
         status:
           type: string

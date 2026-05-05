@@ -58,7 +58,7 @@ export class ContentService {
    */
   async moveTrack(trackId: number, direction: 'up' | 'down'): Promise<void> {
     const allTracks = await this.storage.getAllTracks();
-    const sortedTracks = allTracks.sort((a, b) => a.order - b.order);
+    const sortedTracks = allTracks.sort((a, b) => a.sortOrder - b.sortOrder);
     const currentIndex = sortedTracks.findIndex(t => t.id === trackId);
 
     if (currentIndex === -1) {
@@ -69,15 +69,15 @@ export class ContentService {
       const previousTrack = sortedTracks[currentIndex - 1];
       const currentTrack = sortedTracks[currentIndex];
       await db.transaction(async (tx) => {
-        await tx.update(tracks).set({ order: previousTrack.order, updatedAt: new Date() }).where(eq(tracks.id, trackId));
-        await tx.update(tracks).set({ order: currentTrack.order, updatedAt: new Date() }).where(eq(tracks.id, previousTrack.id));
+        await tx.update(tracks).set({ sortOrder: previousTrack.sortOrder, updatedAt: new Date() }).where(eq(tracks.id, trackId));
+        await tx.update(tracks).set({ sortOrder: currentTrack.sortOrder, updatedAt: new Date() }).where(eq(tracks.id, previousTrack.id));
       });
     } else if (direction === 'down' && currentIndex < sortedTracks.length - 1) {
       const nextTrack = sortedTracks[currentIndex + 1];
       const currentTrack = sortedTracks[currentIndex];
       await db.transaction(async (tx) => {
-        await tx.update(tracks).set({ order: nextTrack.order, updatedAt: new Date() }).where(eq(tracks.id, trackId));
-        await tx.update(tracks).set({ order: currentTrack.order, updatedAt: new Date() }).where(eq(tracks.id, nextTrack.id));
+        await tx.update(tracks).set({ sortOrder: nextTrack.sortOrder, updatedAt: new Date() }).where(eq(tracks.id, trackId));
+        await tx.update(tracks).set({ sortOrder: currentTrack.sortOrder, updatedAt: new Date() }).where(eq(tracks.id, nextTrack.id));
       });
     } else {
       throw new Error("Cannot move track in that direction");
@@ -204,7 +204,7 @@ export class ContentService {
     }
 
     const chapterList = await this.storage.getChaptersByTrack(chapter.trackId);
-    const sortedChapters = chapterList.sort((a, b) => a.order - b.order);
+    const sortedChapters = chapterList.sort((a, b) => a.sortOrder - b.sortOrder);
     const currentIndex = sortedChapters.findIndex(c => c.id === chapterId);
 
     if (currentIndex === -1) {
@@ -215,15 +215,15 @@ export class ContentService {
       const previousChapter = sortedChapters[currentIndex - 1];
       const currentChapter = sortedChapters[currentIndex];
       await db.transaction(async (tx) => {
-        await tx.update(chapters).set({ order: previousChapter.order, updatedAt: new Date() }).where(eq(chapters.id, chapterId));
-        await tx.update(chapters).set({ order: currentChapter.order, updatedAt: new Date() }).where(eq(chapters.id, previousChapter.id));
+        await tx.update(chapters).set({ sortOrder: previousChapter.sortOrder, updatedAt: new Date() }).where(eq(chapters.id, chapterId));
+        await tx.update(chapters).set({ sortOrder: currentChapter.sortOrder, updatedAt: new Date() }).where(eq(chapters.id, previousChapter.id));
       });
     } else if (direction === 'down' && currentIndex < sortedChapters.length - 1) {
       const nextChapter = sortedChapters[currentIndex + 1];
       const currentChapter = sortedChapters[currentIndex];
       await db.transaction(async (tx) => {
-        await tx.update(chapters).set({ order: nextChapter.order, updatedAt: new Date() }).where(eq(chapters.id, chapterId));
-        await tx.update(chapters).set({ order: currentChapter.order, updatedAt: new Date() }).where(eq(chapters.id, nextChapter.id));
+        await tx.update(chapters).set({ sortOrder: nextChapter.sortOrder, updatedAt: new Date() }).where(eq(chapters.id, chapterId));
+        await tx.update(chapters).set({ sortOrder: currentChapter.sortOrder, updatedAt: new Date() }).where(eq(chapters.id, nextChapter.id));
       });
     } else {
       throw new Error("Cannot move chapter in that direction");
@@ -235,10 +235,10 @@ export class ContentService {
     if (!chapter) throw new Error('Chapter not found');
 
     const targetChapters = await this.storage.getChaptersByTrack(toTrackId);
-    const maxOrder = targetChapters.reduce((acc, c) => Math.max(acc, c.order ?? 0), 0);
+    const maxOrder = targetChapters.reduce((acc, c) => Math.max(acc, c.sortOrder ?? 0), 0);
     const nextOrder = (maxOrder || 0) + 1;
 
-    await this.storage.updateChapter(chapterId, { trackId: toTrackId, order: nextOrder });
+    await this.storage.updateChapter(chapterId, { trackId: toTrackId, sortOrder: nextOrder });
   }
 
   /**

@@ -11,7 +11,7 @@ import { mediaService } from '../media-pipeline';
 import { eventBus } from '../../shared/events/event-bus';
 import { db } from '../../db';
 import { batches, batchCoInstructors, enrollments, chapters, studentProgress, users, tracks } from '@narada/types';
-import { eq, and, or, inArray } from 'drizzle-orm';
+import { eq, and, or, inArray, isNull } from 'drizzle-orm';
 
 export class LearningService {
   /**
@@ -266,7 +266,7 @@ export class LearningService {
     const allTracks = await db
       .select()
       .from(tracks)
-      .orderBy(tracks.order);
+      .orderBy(tracks.sortOrder);
 
     if (allTracks.length === 0) {
       return {
@@ -336,8 +336,8 @@ export class LearningService {
     const chapterList = await db
       .select()
       .from(chapters)
-      .where(eq(chapters.trackId, trackId))
-      .orderBy(chapters.order);
+      .where(and(eq(chapters.trackId, trackId), isNull(chapters.deletedAt)))
+      .orderBy(chapters.sortOrder);
 
     // Get all student progress for this track's chapters
     const chapterIds = chapterList.map((ch) => ch.id);
@@ -387,7 +387,7 @@ export class LearningService {
 
     return {
       trackId: track.id,
-      trackOrder: track.order,
+      trackOrder: track.sortOrder,
       trackTitle: track.title,
       trackDescription: track.description || '',
       completedChapters,
@@ -396,9 +396,9 @@ export class LearningService {
         const progress = progressByChapter[ch.id];
         return {
           chapterId: ch.id,
-          chapterOrder: ch.order,
+          chapterOrder: ch.sortOrder,
           chapterTitle: ch.title,
-          chapterCode: `CH${ch.order}`,
+          chapterCode: `CH${ch.sortOrder}`,
           proficiencyLevel: progress?.proficiencyLevel ?? null,
           lastEvaluatedAt: progress?.lastEvaluatedAt
             ? progress.lastEvaluatedAt.toISOString()

@@ -16,9 +16,9 @@ interface ChapterData {
     track?: {
         id: number;
         title: string;
-        order: number;
+        sortOrder: number;
     };
-    order?: number;
+    sortOrder?: number;
 }
 
 interface ChapterEditorContextValue {

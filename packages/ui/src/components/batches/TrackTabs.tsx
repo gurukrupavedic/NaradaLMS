@@ -6,7 +6,7 @@ import { Skeleton } from "../skeleton";
 
 export interface TrackTabsTrack {
   id: string;
-  order: number;
+  sortOrder: number;
 }
 
 interface TrackTabsProps {
@@ -67,7 +67,7 @@ export function TrackTabs({
               value={String(track.id)}
               className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-background"
             >
-              <span className="text-sm font-medium">Track {track.order}</span>
+              <span className="text-sm font-medium">Track {track.sortOrder}</span>
               {isCurrentTrack && (
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                   Current

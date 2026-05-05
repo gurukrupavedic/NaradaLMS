@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { tracks, chapters, textSegments, audioFiles, mediaSegments } from "@narada/types";
-import { eq, and, asc, sql, max, inArray } from "drizzle-orm";
+import { eq, and, asc, sql, max, inArray, isNull } from "drizzle-orm";
 
 /**
  * ContentStorage
@@ -17,16 +17,16 @@ export class ContentStorage {
         id: tracks.id,
         title: tracks.title,
         description: tracks.description,
-        order: tracks.order,
+        sortOrder: tracks.sortOrder,
         createdBy: tracks.createdBy,
         createdAt: tracks.createdAt,
         updatedAt: tracks.updatedAt,
         chapterCount: sql<number>`count(${chapters.id})`.as('chapter_count'),
       })
       .from(tracks)
-      .leftJoin(chapters, eq(chapters.trackId, tracks.id))
+      .leftJoin(chapters, and(eq(chapters.trackId, tracks.id), isNull(chapters.deletedAt)))
       .groupBy(tracks.id)
-      .orderBy(tracks.order);
+      .orderBy(tracks.sortOrder);
 
     return result.map(row => ({
       ...row,
@@ -41,14 +41,14 @@ export class ContentStorage {
 
   async createTrack(track: any): Promise<any> {
     const maxOrderResult = await db
-      .select({ maxOrder: sql<number>`COALESCE(MAX(${tracks.order}), 0)` })
+      .select({ maxOrder: sql<number>`COALESCE(MAX(${tracks.sortOrder}), 0)` })
       .from(tracks);
 
     const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
 
     const [newTrack] = await db.insert(tracks).values({
       ...track,
-      order: nextOrder,
+      sortOrder: nextOrder,
       createdBy: track.createdBy,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -76,8 +76,8 @@ export class ContentStorage {
     const chapterList = await db
       .select()
       .from(chapters)
-      .where(eq(chapters.trackId, trackId))
-      .orderBy(chapters.order);
+      .where(and(eq(chapters.trackId, trackId), isNull(chapters.deletedAt)))
+      .orderBy(chapters.sortOrder);
 
     if (chapterList.length === 0) return [];
 
@@ -134,10 +134,11 @@ export class ContentStorage {
         id: chapters.id,
         trackId: chapters.trackId,
         title: chapters.title,
-        order: chapters.order,
+        sortOrder: chapters.sortOrder,
         status: chapters.status,
         content: chapters.content,
         publishedAt: chapters.publishedAt,
+        deletedAt: chapters.deletedAt,
         lastEditedBy: chapters.lastEditedBy,
         createdBy: chapters.createdBy,
         createdAt: chapters.createdAt,
@@ -145,12 +146,12 @@ export class ContentStorage {
         track: {
           id: tracks.id,
           title: tracks.title,
-          order: tracks.order,
+          sortOrder: tracks.sortOrder,
         }
       })
       .from(chapters)
       .leftJoin(tracks, eq(chapters.trackId, tracks.id))
-      .where(eq(chapters.id, id));
+      .where(and(eq(chapters.id, id), isNull(chapters.deletedAt)));
 
     if (result.length === 0) return null;
     const chapter = result[0];
@@ -168,15 +169,15 @@ export class ContentStorage {
 
   async createChapter(chapter: any): Promise<any> {
     const maxOrderResult = await db
-      .select({ maxOrder: sql<number>`COALESCE(MAX(${chapters.order}), 0)` })
+      .select({ maxOrder: sql<number>`COALESCE(MAX(${chapters.sortOrder}), 0)` })
       .from(chapters)
-      .where(eq(chapters.trackId, chapter.trackId));
+      .where(and(eq(chapters.trackId, chapter.trackId), isNull(chapters.deletedAt)));
 
     const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
 
     const [newChapter] = await db.insert(chapters).values({
       ...chapter,
-      order: nextOrder,
+      sortOrder: nextOrder,
       createdBy: chapter.createdBy,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -210,7 +211,10 @@ export class ContentStorage {
   }
 
   async deleteChapter(id: number): Promise<void> {
-    await db.delete(chapters).where(eq(chapters.id, id));
+    await db
+      .update(chapters)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
+      .where(eq(chapters.id, id));
   }
 
   /**

@@ -57,7 +57,7 @@ export default function InstructorBatchDetailsPage() {
         () =>
             (chapters.data ?? []).map((ch) => ({
                 id: String(ch.id),
-                code: `CH${ch.order}`,
+                code: `CH${ch.sortOrder}`,
                 title: ch.title,
                 trackId: String(ch.trackId),
             })),
@@ -118,7 +118,7 @@ export default function InstructorBatchDetailsPage() {
             {isBatchSelected && (
                 <div className="space-y-4">
                     <TrackTabs
-                        tracks={(tracks.data ?? []).map((t) => ({ id: String(t.id), name: t.title, code: `Track ${t.order}`, description: t.description ?? undefined, order: t.order }))}
+                        tracks={(tracks.data ?? []).map((t) => ({ id: String(t.id), name: t.title, code: `Track ${t.sortOrder}`, description: t.description ?? undefined, sortOrder: t.sortOrder }))}
                         selectedTrackId={selectedTrackId}
                         currentTrackId={batchDetail.data?.trackId ? String(batchDetail.data.trackId) : undefined}
                         onSelectTrack={(trackId) => setSelectedTrackId(trackId)}

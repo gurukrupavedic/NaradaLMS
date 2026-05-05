@@ -32,9 +32,9 @@ interface ChapterData {
   track?: {
     id: number;
     title: string;
-    order?: number;
+    sortOrder?: number;
   };
-  order?: number;
+  sortOrder?: number;
 }
 
 interface AudioFile {
@@ -167,14 +167,14 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
 
   // Set sidebar/breadcrumb context label (same convention as ops portal chapter content page)
   useEffect(() => {
-    if (chapter?.track?.order != null && chapter?.order != null) {
+    if (chapter?.track?.sortOrder != null && chapter?.sortOrder != null) {
       const titlePart = chapter.title ? `: ${chapter.title}` : "";
-      setContentContextLabel(`Track ${chapter.track!.order}. Chapter ${chapter.order}${titlePart}`);
+      setContentContextLabel(`Track ${chapter.track!.sortOrder}. Chapter ${chapter.sortOrder}${titlePart}`);
     } else {
       setContentContextLabel(null);
     }
     return () => setContentContextLabel(null);
-  }, [chapter?.track?.order, chapter?.order, chapter?.title, setContentContextLabel]);
+  }, [chapter?.track?.sortOrder, chapter?.sortOrder, chapter?.title, setContentContextLabel]);
 
   // Auto-select first audio file
   useEffect(() => {
