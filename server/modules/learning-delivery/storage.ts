@@ -5,7 +5,7 @@
 
 import { db } from '../../db';
 import { studentProgress, chapters, tracks, batches, enrollments, users } from '@narada/types';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, isNull } from 'drizzle-orm';
 import type { StudentProgressDTO, ProgressQueryFilters, AvailableChapterDTO } from './types';
 import type { ProficiencyLevel } from '@narada/types';
 
@@ -124,14 +124,14 @@ export class LearningStorage {
       .select({
         chapterId: chapters.id,
         chapterTitle: chapters.title,
-        chapterNumber: chapters.order,
+        chapterNumber: chapters.sortOrder,
         trackId: chapters.trackId,
         trackName: tracks.title,
         status: chapters.status,
       })
       .from(chapters)
       .innerJoin(tracks, eq(chapters.trackId, tracks.id))
-      .where(eq(chapters.trackId, studentEnrollment.trackId));
+      .where(and(eq(chapters.trackId, studentEnrollment.trackId), isNull(chapters.deletedAt)));
 
     // Get student's progress for these chapters
     const chapterIds = chaptersList.map(c => c.chapterId);
@@ -184,7 +184,7 @@ export class LearningStorage {
     const result = await db
       .select({ id: chapters.id })
       .from(chapters)
-      .where(eq(chapters.id, chapterId))
+      .where(and(eq(chapters.id, chapterId), isNull(chapters.deletedAt)))
       .limit(1);
 
     return result.length > 0;
@@ -284,12 +284,12 @@ export class LearningStorage {
       .select({
         chapterId: chapters.id,
         chapterTitle: chapters.title,
-        chapterNumber: chapters.order,
+        chapterNumber: chapters.sortOrder,
         status: chapters.status,
       })
       .from(chapters)
-      .where(eq(chapters.trackId, enrollment.trackId))
-      .orderBy(chapters.order);
+      .where(and(eq(chapters.trackId, enrollment.trackId), isNull(chapters.deletedAt)))
+      .orderBy(chapters.sortOrder);
 
     // Get proficiency for all chapters
     const chapterIds = chaptersList.map(c => c.chapterId);

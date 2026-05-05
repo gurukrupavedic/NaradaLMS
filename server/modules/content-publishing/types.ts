@@ -6,7 +6,7 @@ export interface Track {
   id: number;
   title: string;
   description: string;
-  order: number;
+  sortOrder: number;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
@@ -23,7 +23,8 @@ export interface Chapter {
     en?: string;
   };
   status: 'draft' | 'published';
-  order: number;
+  sortOrder: number;
+  deletedAt?: Date | null;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;

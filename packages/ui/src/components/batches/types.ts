@@ -30,7 +30,7 @@ export interface Track {
   name: string;
   code: string;
   description?: string;
-  order: number;
+  sortOrder: number;
 }
 
 /** Batch shape from API for matrix/admin context (id/name). List context uses hooks/data useBatches Batch. */

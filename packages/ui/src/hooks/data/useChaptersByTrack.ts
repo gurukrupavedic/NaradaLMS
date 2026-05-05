@@ -6,7 +6,7 @@ import { apiRequest } from "@narada/api-client";
 export type ChapterListItem = {
   id: number;
   title: string;
-  order: number;
+  sortOrder: number;
   trackId: number;
   status?: string;
 };

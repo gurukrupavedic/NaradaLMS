@@ -47,7 +47,7 @@ export const tracks = pgTable("tracks", {
   id: serial("id").primaryKey(),
   title: text("title").notNull().unique(), // Unique track titles as per requirements
   description: text("description").notNull(), // Made mandatory
-  order: integer("order").notNull(), // Sequential number starting from 1, 2, 3...
+  sortOrder: integer("sort_order").notNull(), // Sequential number starting from 1, 2, 3...
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -58,7 +58,7 @@ export const chapters = pgTable("chapters", {
   id: serial("id").primaryKey(),
   trackId: integer("track_id").notNull().references(() => tracks.id, { onDelete: "cascade" }),
   title: text("title").notNull(), // Single source of truth per Q9
-  order: integer("order").notNull(),
+  sortOrder: integer("sort_order").notNull(),
   status: varchar("status").default("draft").notNull(), // 'draft', 'published' with protection per Q13
   content: jsonb("content").$type<{
     te?: string; // Telugu
@@ -66,6 +66,7 @@ export const chapters = pgTable("chapters", {
     en?: string; // English/IAST
   }>().default({}).notNull(),
   publishedAt: timestamp("published_at"), // Track when content was published
+  deletedAt: timestamp("deleted_at"),
   lastEditedBy: varchar("last_edited_by").references(() => users.id),
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
@@ -401,10 +402,10 @@ export const systemSettingsRelations = relations(systemSettings, ({ one }) => ({
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 
-export const insertTrackSchema = createInsertSchema(tracks).omit({ id: true, createdAt: true, updatedAt: true, createdBy: true, order: true });
+export const insertTrackSchema = createInsertSchema(tracks).omit({ id: true, createdAt: true, updatedAt: true, createdBy: true, sortOrder: true });
 export const selectTrackSchema = createSelectSchema(tracks);
 
-export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true, createdAt: true, updatedAt: true, order: true, createdBy: true, lastEditedBy: true, publishedAt: true });
+export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true, createdAt: true, updatedAt: true, sortOrder: true, createdBy: true, lastEditedBy: true, publishedAt: true, deletedAt: true });
 export const selectChapterSchema = createSelectSchema(chapters);
 
 export const insertAudioFileSchema = createInsertSchema(audioFiles).omit({ id: true, createdAt: true });

@@ -52,7 +52,7 @@ export class BatchStorage {
         primaryInstructorFirstName: users.firstName,
         primaryInstructorLastName: users.lastName,
         trackName: tracks.title,
-        trackOrder: tracks.order,
+        trackOrder: tracks.sortOrder,
       })
       .from(batches)
       .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
@@ -119,7 +119,7 @@ export class BatchStorage {
 
     const track = base.trackId
       ? (await db
-        .select({ id: tracks.id, title: tracks.title, name: tracks.title, order: tracks.order })
+        .select({ id: tracks.id, title: tracks.title, name: tracks.title, sortOrder: tracks.sortOrder })
         .from(tracks)
         .where(eq(tracks.id, base.trackId)))[0] || null
       : null;
@@ -232,7 +232,8 @@ export class BatchStorage {
     try {
       const allChapters = await db
         .select({ id: chapters.id })
-        .from(chapters);
+        .from(chapters)
+        .where(sql`${chapters.deletedAt} IS NULL`);
 
       if (allChapters.length > 0) {
         // Check which chapters the student already has proficiency records for
@@ -494,10 +495,11 @@ export class BatchStorage {
       .select({
         chapterId: chapters.id,
         chapterTitle: chapters.title,
-        chapterNumber: chapters.order,
+        chapterNumber: chapters.sortOrder,
       })
       .from(chapters)
-      .orderBy(chapters.order);
+      .where(sql`${chapters.deletedAt} IS NULL`)
+      .orderBy(chapters.sortOrder);
 
     // Get student IDs for progress query
     const studentIds = enrollmentsList.map(e => e.studentId);
@@ -611,7 +613,10 @@ export class BatchStorage {
   }
 
   async chapterExists(chapterId: number) {
-    const rows = await db.select({ id: chapters.id }).from(chapters).where(eq(chapters.id, chapterId));
+    const rows = await db
+      .select({ id: chapters.id })
+      .from(chapters)
+      .where(and(eq(chapters.id, chapterId), sql`${chapters.deletedAt} IS NULL`));
     return !!rows[0];
   }
 
