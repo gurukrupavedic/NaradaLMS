@@ -49,13 +49,13 @@ export interface CreateSegmentData {
   startPosition: number;
   endPosition: number;
   order?: number;
-  createdBy?: string;
+  createdBy: string;
 }
 
 export interface CreateTrackData {
   title: string;
   description: string;
-  createdBy?: string;
+  createdBy: string;
 }
 
 export interface CreateChapterData {
@@ -66,5 +66,5 @@ export interface CreateChapterData {
     hi?: string;
     en?: string;
   };
-  createdBy?: string;
+  createdBy: string;
 }

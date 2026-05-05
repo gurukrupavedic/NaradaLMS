@@ -36,7 +36,7 @@ export class ContentService {
     const track = await this.storage.createTrack({
       title: data.title,
       description: data.description,
-      createdBy: data.createdBy || "system"
+      createdBy: data.createdBy
     });
     return track;
   }
@@ -114,7 +114,7 @@ export class ContentService {
       title: data.title,
       content: data.content || { te: '', hi: '', en: '' },
       status: 'draft',
-      createdBy: data.createdBy || "system"
+      createdBy: data.createdBy
     });
     return chapter;
   }
@@ -255,7 +255,7 @@ export class ContentService {
       startPosition: data.startPosition,
       endPosition: data.endPosition,
       order: data.order,
-      createdBy: data.createdBy || "system"
+      createdBy: data.createdBy
     });
     return segment;
   }

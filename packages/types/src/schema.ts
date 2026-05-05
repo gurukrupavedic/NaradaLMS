@@ -48,7 +48,7 @@ export const tracks = pgTable("tracks", {
   title: text("title").notNull().unique(), // Unique track titles as per requirements
   description: text("description").notNull(), // Made mandatory
   order: integer("order").notNull(), // Sequential number starting from 1, 2, 3...
-  createdBy: varchar("created_by").notNull().references(() => users.id).default("system"),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
