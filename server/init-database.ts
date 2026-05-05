@@ -1,19 +1,13 @@
 import { identityStorage } from "./modules/identity-access/storage";
+import { CURRICULUM_IMPORT_ACTOR_PROFILE } from "./shared/constants/system-actors";
 // NOTE: Placeholder import removed because seed-vedic-data is not present in this repo.
 // Add back when the seed script is available.
 
 export async function initializeDatabase(): Promise<void> {
   console.log("Initializing database with authentic Vedic content...");
 
-  // Create system user for seeding
-  const systemUser = await identityStorage.upsertUser({
-    id: "system",
-    email: "system@naradalms.local",
-    firstName: "System",
-    lastName: "Admin",
-    roles: ["instructor", "admin"],
-    status: "active",
-  });
+  // Create dedicated curriculum import actor for bootstrap data
+  const systemUser = await identityStorage.upsertUser(CURRICULUM_IMPORT_ACTOR_PROFILE);
 
   console.log("System user created:", systemUser.id);
 

@@ -49,7 +49,7 @@ export class ContentStorage {
     const [newTrack] = await db.insert(tracks).values({
       ...track,
       order: nextOrder,
-      createdBy: track.createdBy || "system",
+      createdBy: track.createdBy,
       createdAt: new Date(),
       updatedAt: new Date()
     }).returning();
@@ -177,7 +177,7 @@ export class ContentStorage {
     const [newChapter] = await db.insert(chapters).values({
       ...chapter,
       order: nextOrder,
-      createdBy: chapter.createdBy || "system",
+      createdBy: chapter.createdBy,
       createdAt: new Date(),
       updatedAt: new Date()
     }).returning();
@@ -248,7 +248,7 @@ export class ContentStorage {
       startPosition: segment.startPosition,
       endPosition: segment.endPosition,
       order: segment.order !== undefined ? segment.order : nextOrder,
-      createdBy: segment.createdBy || "system",
+      createdBy: segment.createdBy,
       createdAt: new Date()
     }).returning();
     return newSegment;

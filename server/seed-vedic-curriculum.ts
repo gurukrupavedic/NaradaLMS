@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { db } from './db';
 import { users, tracks, chapters } from '@narada/types';
 import curriculumData from './seeds/curriculum.json';
+import { CURRICULUM_IMPORT_ACTOR_PROFILE } from './shared/constants/system-actors';
 
 /**
  * Seed the database with Vedic curriculum structure
@@ -11,13 +12,10 @@ async function seedVedicCurriculum() {
   console.log('🌱 Starting Vedic curriculum seed...');
 
   try {
-    // 1. Create system user (required for foreign key constraints)
-    console.log('Creating system user...');
+    // 1. Create dedicated import actor (required for foreign key constraints)
+    console.log('Creating dedicated curriculum import actor...');
     await db.insert(users).values({
-      id: "system",
-      email: "system@vediclms.local",
-      roles: ["admin"],
-      status: "active",
+      ...CURRICULUM_IMPORT_ACTOR_PROFILE,
       createdAt: new Date(),
       updatedAt: new Date()
     }).onConflictDoNothing();
@@ -34,7 +32,7 @@ async function seedVedicCurriculum() {
         title: trackData.title,
         description: trackData.description,
         order: (trackData as any).number,
-        createdBy: "system",
+        createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id,
         createdAt: new Date(),
         updatedAt: new Date()
       }).returning();
@@ -50,7 +48,7 @@ async function seedVedicCurriculum() {
           order: chapter.number,
           status: chapter.status || "published",
           content: chapter.content || {},
-          createdBy: "system",
+          createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id,
           createdAt: new Date(),
           updatedAt: new Date()
         }));
