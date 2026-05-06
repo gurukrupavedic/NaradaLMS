@@ -24,7 +24,7 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
   - `local`, `google`
 - [x] **1.5** Add FK for `users.invited_by -> users.id` (nullable).
 - [x] **1.6** Add FK for `users.approved_by -> users.id` (nullable).
-- [ ] **1.7** Convert timestamps in `users` to `timestamptz`:
+- [x] **1.7** Convert timestamps in `users` to `timestamptz`:
   - `invited_at`, `approved_at`, `last_login_at`, `created_at`, `updated_at`
 
 ---
@@ -38,7 +38,7 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
   - runtime uses authenticated user id
 - [ ] **2.4** Rename `tracks.order` -> `tracks.sort_order`.
 - [ ] **2.4.a** Switch clients immediately to new field naming (no temporary backward-compat alias for `order`).
-- [ ] **2.5** Convert `tracks.created_at`, `tracks.updated_at` to `timestamptz`.
+- [x] **2.5** Convert `tracks.created_at`, `tracks.updated_at` to `timestamptz`.
 
 ---
 
@@ -47,7 +47,7 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 - [ ] **3.1** Rename `chapters.order` -> `chapters.sort_order`.
 - [x] **3.2** Add UNIQUE on `(track_id, title)`.
 - [x] **3.3** Add CHECK on `status IN ('draft', 'published')`.
-- [ ] **3.4** Convert `chapters.published_at`, `chapters.created_at`, `chapters.updated_at` to `timestamptz`.
+- [x] **3.4** Convert `chapters.published_at`, `chapters.created_at`, `chapters.updated_at` to `timestamptz`.
 - [ ] **3.5** Add soft-delete fields for chapter retention strategy:
   - `deleted_at` (`timestamptz`, nullable)
   - `deleted_by` (nullable FK to `users.id`) if implemented now
@@ -60,7 +60,7 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 ## 4) `audio_files` table
 
 - [ ] **4.1** Add index on `audio_files.chapter_id`.
-- [ ] **4.2** Convert `audio_files.created_at` to `timestamptz`.
+- [x] **4.2** Convert `audio_files.created_at` to `timestamptz`.
 
 ---
 
@@ -68,7 +68,7 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 
 - [x] **5.1** Add CHECK: `start_position <= end_position`.
 - [ ] **5.2** Add UNIQUE on `(chapter_id, script, sort/order column)`.
-- [ ] **5.3** Convert `text_segments.created_at` to `timestamptz`.
+- [x] **5.3** Convert `text_segments.created_at` to `timestamptz`.
 
 ---
 
@@ -80,7 +80,7 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
   - `start_ms >= 0`
   - `end_ms >= 0`
   - `start_ms < end_ms`
-- [ ] **6.3** Convert `media_segments.created_at` to `timestamptz`.
+- [x] **6.3** Convert `media_segments.created_at` to `timestamptz`.
 - [x] **6.4** Update service/API/UI conversion boundary (`ms <-> seconds`) at player layer.
 - [x] **6.4.a** Change API contract to milliseconds as well (`startMs`/`endMs`) for strong end-to-end consistency.
 
@@ -89,7 +89,7 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 ## 7) `segment_mappings` table
 
 - [x] **7.1** Add UNIQUE on `(media_segment_id, text_segment_id)`.
-- [ ] **7.2** Convert `segment_mappings.created_at` to `timestamptz`.
+- [x] **7.2** Convert `segment_mappings.created_at` to `timestamptz`.
 
 ---
 
@@ -97,7 +97,7 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 
 - [x] **8.1** Add global UNIQUE on `batch_code` (pre-tenancy).
 - [ ] **8.2** Keep `cohort_type` flexible (no DB CHECK now).
-- [ ] **8.3** Convert `batches.created_at`, `batches.updated_at` to `timestamptz`.
+- [x] **8.3** Convert `batches.created_at`, `batches.updated_at` to `timestamptz`.
 
 ---
 
@@ -105,14 +105,14 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 
 - [x] **9.1** Keep partial unique for one active enrollment per student.
 - [x] **9.2** Add CHECK on `status IN ('active', 'dropped', 'completed')`.
-- [ ] **9.3** Convert `enrollments.enrolled_at`, `dropped_at`, `updated_at` to `timestamptz`.
+- [x] **9.3** Convert `enrollments.enrolled_at`, `dropped_at`, `updated_at` to `timestamptz`.
 
 ---
 
 ## 10) `batch_co_instructors` table
 
 - [x] **10.1** Add UNIQUE on `(batch_id, instructor_id)`.
-- [ ] **10.2** Convert `assigned_at` to `timestamptz`.
+- [x] **10.2** Convert `assigned_at` to `timestamptz`.
 
 ---
 
@@ -120,7 +120,7 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 
 - [x] **11.1** Add UNIQUE on `(student_id, chapter_id)`.
 - [x] **11.2** Add CHECK on `proficiency_level IN (0,1,2,3,4,8,9)`.
-- [ ] **11.3** Convert `last_accessed`, `last_evaluated_at`, `created_at`, `updated_at` to `timestamptz`.
+- [x] **11.3** Convert `last_accessed`, `last_evaluated_at`, `created_at`, `updated_at` to `timestamptz`.
 - [ ] **11.4** Update schema comment to match actual allowed proficiency set.
 
 ---
@@ -131,7 +131,7 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 - [x] **12.2** Add CHECK on `new_proficiency_level IN (0,1,2,3,4,8,9)`.
 - [x] **12.3** Add CHECK on `old_proficiency_level` with same allowed set when not null.
 - [ ] **12.4** Add Drizzle `relations()` metadata for DX.
-- [ ] **12.5** Convert `evaluated_at` to `timestamptz`.
+- [x] **12.5** Convert `evaluated_at` to `timestamptz`.
 
 ---
 
@@ -141,14 +141,14 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 - [ ] **13.2** Add index `(user_id, timestamp DESC)`.
 - [ ] **13.3** Add index `(resource_type, timestamp DESC)`.
 - [ ] **13.4** Defer `(resource_type, resource_id)` until concrete query path requires it.
-- [ ] **13.5** Convert `timestamp` to `timestamptz`.
+- [x] **13.5** Convert `timestamp` to `timestamptz`.
 
 ---
 
 ## 14) `system_settings`
 
 - [ ] **14.1** Keep global-only in this phase (no `org_id`).
-- [ ] **14.2** Convert `updated_at` to `timestamptz`.
+- [x] **14.2** Convert `updated_at` to `timestamptz`.
 - [ ] **14.3** (Doc) Maintain key scope classification for tenancy planning:
   - `platform.*` -> global
   - `org.*` -> future tenant-scoped
