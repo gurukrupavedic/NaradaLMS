@@ -108,7 +108,9 @@ export const audioFiles = pgTable("audio_files", {
   mimeType: varchar("mime_type"),
   uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-});
+}, (table) => [
+  index("idx_audio_files_chapter").on(table.chapterId),
+]);
 
 // Text segments - Script-specific approach for clean architecture
 export const textSegments = pgTable("text_segments", {
@@ -228,7 +230,8 @@ export const studentProgress = pgTable("student_progress", {
   studentId: varchar("student_id").notNull().references(() => users.id),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
   batchId: integer("batch_id").references(() => batches.id),
-  proficiencyLevel: integer("proficiency_level").default(0).notNull(), // 0-4, 8 absent, 9 not started (DB CHECK)
+  // Allowed set matches student_progress_proficiency_level_check and VALID_PROFICIENCY_LEVELS: 0–4 skill bands, 8 absent, 9 not started
+  proficiencyLevel: integer("proficiency_level").default(0).notNull(),
   lastAccessed: timestamp("last_accessed", { withTimezone: true }),
   lastEvaluatedAt: timestamp("last_evaluated_at", { withTimezone: true }),
   evaluatedBy: varchar("evaluated_by").references(() => users.id),
@@ -284,9 +287,13 @@ export const auditLogs = pgTable("audit_logs", {
   changes: jsonb("changes"), // { before: {...}, after: {...} }
   timestamp: timestamp("timestamp", { withTimezone: true }).defaultNow(),
   requestId: text("request_id"), // for tracing
-});
+}, (table) => [
+  index("idx_audit_logs_timestamp_desc").on(table.timestamp.desc()),
+  index("idx_audit_logs_user_timestamp_desc").on(table.userId, table.timestamp.desc()),
+  index("idx_audit_logs_resource_type_timestamp_desc").on(table.resourceType, table.timestamp.desc()),
+]);
 
-// System settings - Configuration key-value store
+// System settings — global key-value store only in pre-tenancy phase (no org_id); tenant keys belong in future org_settings
 export const systemSettings = pgTable("system_settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
@@ -310,6 +317,12 @@ export const usersRelations = relations(users, ({ many }) => ({
   coInstructorAssignments: many(batchCoInstructors),
   enrollments: many(enrollments),
   auditLogs: many(auditLogs),
+  proficiencyEvalLogsAsStudent: many(proficiencyEvaluationLog, {
+    relationName: "evalLogStudent",
+  }),
+  proficiencyEvalLogsAsInstructor: many(proficiencyEvaluationLog, {
+    relationName: "evalLogInstructor",
+  }),
 }));
 
 export const tracksRelations = relations(tracks, ({ one, many }) => ({
@@ -332,6 +345,7 @@ export const chaptersRelations = relations(chapters, ({ one, many }) => ({
   audioFiles: many(audioFiles),
   textSegments: many(textSegments),
   studentProgress: many(studentProgress),
+  proficiencyEvaluationLogs: many(proficiencyEvaluationLog),
 }));
 
 export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({
@@ -406,6 +420,30 @@ export const studentProgressRelations = relations(studentProgress, ({ one }) => 
   }),
 }));
 
+export const proficiencyEvaluationLogRelations = relations(
+  proficiencyEvaluationLog,
+  ({ one }) => ({
+    student: one(users, {
+      fields: [proficiencyEvaluationLog.studentId],
+      references: [users.id],
+      relationName: "evalLogStudent",
+    }),
+    instructor: one(users, {
+      fields: [proficiencyEvaluationLog.instructorId],
+      references: [users.id],
+      relationName: "evalLogInstructor",
+    }),
+    chapter: one(chapters, {
+      fields: [proficiencyEvaluationLog.chapterId],
+      references: [chapters.id],
+    }),
+    batch: one(batches, {
+      fields: [proficiencyEvaluationLog.batchId],
+      references: [batches.id],
+    }),
+  })
+);
+
 export const batchesRelations = relations(batches, ({ one, many }) => ({
   track: one(tracks, {
     fields: [batches.trackId],
@@ -422,6 +460,7 @@ export const batchesRelations = relations(batches, ({ one, many }) => ({
   }),
   enrollments: many(enrollments),
   coInstructors: many(batchCoInstructors),
+  proficiencyEvaluationLogs: many(proficiencyEvaluationLog),
 }));
 
 export const enrollmentsRelations = relations(enrollments, ({ one }) => ({

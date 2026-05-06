@@ -154,12 +154,15 @@ Implement these when you add organizations and `org_id`; they are **not** part o
 - Optional naming convention for clarity: `platform.*` keys for global settings, `org.*` keys for future org-scoped settings.
 - **timestamptz** for `updated_at`. K: agree with this.
 
-### Key classification template (fill as needed)
+### Key classification template (maintain as keys are added)
 
+- **Repo state:** No `system_settings` rows are inserted by committed migrations; keys appear when operators use the admin settings API or manual SQL.
+- **Naming:** Prefer `platform.<area>.<name>` for values that stay global through tenancy phase one. Reserve `org.<area>.<name>` for keys that will move to `org_settings` later—do not store org-scoped values in `system_settings` once tenancy lands.
+- **When adding a key:** Add or update a row below so reviewers can see scope intent without reading application code.
 
 | key | current purpose | target scope (`global` / `per-org`) | notes / migration hint |
 | --- | --------------- | ----------------------------------- | ---------------------- |
-|     |                 |                                     |                        |
+| *(none seeded in repo)* | — | — | Document each real key here when introduced. |
 
 
 ---
