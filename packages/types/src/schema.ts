@@ -37,12 +37,12 @@ export const users = pgTable("users", {
 
   // Audit / invitations (self-FKs in table callback)
   invitedBy: varchar("invited_by"),
-  invitedAt: timestamp("invited_at"),
-  approvedAt: timestamp("approved_at"),
+  invitedAt: timestamp("invited_at", { withTimezone: true }),
+  approvedAt: timestamp("approved_at", { withTimezone: true }),
   approvedBy: varchar("approved_by"),
-  lastLoginAt: timestamp("last_login_at"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
   foreignKey({
     columns: [table.invitedBy],
@@ -68,8 +68,8 @@ export const tracks = pgTable("tracks", {
   description: text("description").notNull(), // Made mandatory
   sortOrder: integer("sort_order").notNull(), // Sequential number starting from 1, 2, 3...
   createdBy: varchar("created_by").notNull().references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // Chapters - Wiki-style content with draft/published workflow
@@ -84,12 +84,12 @@ export const chapters = pgTable("chapters", {
     hi?: string; // Devanagari/Hindi  
     en?: string; // English/IAST
   }>().default({}).notNull(),
-  publishedAt: timestamp("published_at"), // Track when content was published
-  deletedAt: timestamp("deleted_at"),
+  publishedAt: timestamp("published_at", { withTimezone: true }), // Track when content was published
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
   lastEditedBy: varchar("last_edited_by").references(() => users.id),
   createdBy: varchar("created_by").notNull().references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
   index("idx_chapters_track").on(table.trackId),
   unique("chapters_track_title_uniq").on(table.trackId, table.title),
@@ -107,7 +107,7 @@ export const audioFiles = pgTable("audio_files", {
   fileSize: integer("file_size"),
   mimeType: varchar("mime_type"),
   uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
 // Text segments - Script-specific approach for clean architecture
@@ -119,7 +119,7 @@ export const textSegments = pgTable("text_segments", {
   endPosition: integer("end_position").notNull(),
   order: integer("order").notNull().default(0),
   createdBy: varchar("created_by").notNull().references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
   check(
     "text_segments_start_lte_end_check",
@@ -135,7 +135,7 @@ export const mediaSegments = pgTable("media_segments", {
   endMs: integer("end_ms").notNull(), // in milliseconds
   segmentName: text("segment_name"), // Optional human-readable name
   createdBy: varchar("created_by").notNull().references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
   check(
     "media_segments_start_ms_nonneg_check",
@@ -157,7 +157,7 @@ export const segmentMappings = pgTable("segment_mappings", {
   mediaSegmentId: integer("media_segment_id").notNull().references(() => mediaSegments.id, { onDelete: "cascade" }),
   textSegmentId: integer("text_segment_id").notNull().references(() => textSegments.id, { onDelete: "cascade" }),
   createdBy: varchar("created_by").notNull().references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
   unique("segment_mappings_media_text_uniq").on(
     table.mediaSegmentId,
@@ -174,8 +174,8 @@ export const batches = pgTable("batches", {
   primaryInstructorId: varchar("primary_instructor_id").references(() => users.id),
   cohortType: varchar("cohort_type", { length: 20 }), // 'bramhachari', 'grihasta' - optional
   description: text("description"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   createdBy: varchar("created_by").notNull().references(() => users.id),
 }, (table) => [
   unique("batches_batch_code_uniq").on(table.batchCode),
@@ -188,11 +188,11 @@ export const enrollments = pgTable("enrollments", {
   batchId: integer("batch_id").notNull().references(() => batches.id, { onDelete: "cascade" }),
   studentId: varchar("student_id").notNull().references(() => users.id),
   status: varchar("status").default("active").notNull(), // 'active', 'dropped', 'completed'
-  enrolledAt: timestamp("enrolled_at").defaultNow(),
+  enrolledAt: timestamp("enrolled_at", { withTimezone: true }).defaultNow(),
   enrolledBy: varchar("enrolled_by").notNull().references(() => users.id),
-  droppedAt: timestamp("dropped_at"),
+  droppedAt: timestamp("dropped_at", { withTimezone: true }),
   droppedReason: text("dropped_reason"),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
   // Partial unique index: Only one active enrollment per student
   index("unique_active_enrollment_idx")
@@ -211,7 +211,7 @@ export const batchCoInstructors = pgTable("batch_co_instructors", {
   batchId: integer("batch_id").notNull().references(() => batches.id, { onDelete: "cascade" }),
   instructorId: varchar("instructor_id").notNull().references(() => users.id),
   role: varchar("role").default("co_instructor").notNull(), // 'co_instructor', 'ta'
-  assignedAt: timestamp("assigned_at").defaultNow(),
+  assignedAt: timestamp("assigned_at", { withTimezone: true }).defaultNow(),
   assignedBy: varchar("assigned_by").notNull().references(() => users.id),
 }, (table) => [
   index("idx_co_instructors_batch").on(table.batchId),
@@ -229,12 +229,12 @@ export const studentProgress = pgTable("student_progress", {
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
   batchId: integer("batch_id").references(() => batches.id),
   proficiencyLevel: integer("proficiency_level").default(0).notNull(), // 0-4, 8 absent, 9 not started (DB CHECK)
-  lastAccessed: timestamp("last_accessed"),
-  lastEvaluatedAt: timestamp("last_evaluated_at"),
+  lastAccessed: timestamp("last_accessed", { withTimezone: true }),
+  lastEvaluatedAt: timestamp("last_evaluated_at", { withTimezone: true }),
   evaluatedBy: varchar("evaluated_by").references(() => users.id),
   notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
   index("idx_progress_student").on(table.studentId),
   index("idx_progress_chapter").on(table.chapterId),
@@ -259,7 +259,7 @@ export const proficiencyEvaluationLog = pgTable("proficiency_evaluation_log", {
   oldProficiencyLevel: integer("old_proficiency_level"),
   newProficiencyLevel: integer("new_proficiency_level").notNull(),
   notes: text("notes"),
-  evaluatedAt: timestamp("evaluated_at").defaultNow().notNull(),
+  evaluatedAt: timestamp("evaluated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("idx_proficiency_log_student").on(table.studentId),
   index("idx_proficiency_log_chapter").on(table.chapterId),
@@ -282,7 +282,7 @@ export const auditLogs = pgTable("audit_logs", {
   resourceType: text("resource_type").notNull(), // 'chapter', 'batch', 'enrollment', etc.
   resourceId: text("resource_id").notNull(),
   changes: jsonb("changes"), // { before: {...}, after: {...} }
-  timestamp: timestamp("timestamp").defaultNow(),
+  timestamp: timestamp("timestamp", { withTimezone: true }).defaultNow(),
   requestId: text("request_id"), // for tracing
 });
 
@@ -292,7 +292,7 @@ export const systemSettings = pgTable("system_settings", {
   value: text("value").notNull(),
   description: text("description"),
   updatedBy: varchar("updated_by").references(() => users.id),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 // Relations
