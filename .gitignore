@@ -1,5 +1,6 @@
 node_modules
 dist
+**/.next/
 .DS_Store
 server/public
 vite.config.ts.*
@@ -17,6 +18,8 @@ dev.error.log
 
 # Cursor IDE debug logs
 .cursor/*.log
+.cursor/settings.json
+.cursor/plans/
 
 # Turbo cache and task logs
 .turbo/
@@ -28,3 +31,5 @@ uploads/
 
 # Prevent nested repo-in-repo from being re-added
 VedicLMS/
+.agent/
+.agents/
