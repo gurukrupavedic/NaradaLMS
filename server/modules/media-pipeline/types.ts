@@ -14,8 +14,8 @@ export interface AudioFile {
 export interface MediaSegment {
 	id: number;
 	audioFileId: number;
-	startTimestamp: number;
-	endTimestamp: number;
+	startMs: number;
+	endMs: number;
 	segmentName?: string | null;
 	createdBy: string;
 	createdAt?: Date | null;
@@ -26,8 +26,8 @@ export interface MappingWithTimestamps {
 	textSegmentId: number;
 	mediaSegmentId: number;
 	audioFileId: number;
-	startTime: number;
-	endTime: number;
+	startMs: number;
+	endMs: number;
 	segmentName?: string | null;
 }
 
@@ -44,8 +44,8 @@ export interface CreateAudioFileData {
 
 export interface CreateMediaSegmentData {
 	audioFileId: number;
-	startTimestamp: number;
-	endTimestamp: number;
+	startMs: number;
+	endMs: number;
 	segmentName?: string | null;
 	createdBy: string;
 }
@@ -53,7 +53,7 @@ export interface CreateMediaSegmentData {
 export interface CreateMappingData {
 	audioFileId: number;
 	textSegmentId: number;
-	startTime: number;
-	endTime: number;
+	startMs: number;
+	endMs: number;
 	createdBy: string;
 }

@@ -138,11 +138,19 @@ export default function LearnChapter({ chapterId }: { chapterId: number }) {
     }
   });
 
+  // Wire is ms (Bundle E); convert to seconds at this boundary so the player layer stays in seconds.
   const { data: mappings = [] } = useQuery<AudioTextMapping[]>({
     queryKey: [`/api/content/chapters/${chapterId}/mappings`],
     enabled: !!chapterId && learnMode,
     queryFn: async () => {
-      return apiRequest<AudioTextMapping[]>(`/content/chapters/${chapterId}/mappings`);
+      const wire = await apiRequest<Array<{ mappingId: number; audioFileId: number; textSegmentId: number; startMs: number; endMs: number }>>(`/content/chapters/${chapterId}/mappings`);
+      return wire.map((m) => ({
+        mappingId: m.mappingId,
+        audioFileId: m.audioFileId,
+        textSegmentId: m.textSegmentId,
+        startTime: m.startMs / 1000,
+        endTime: m.endMs / 1000,
+      }));
     }
   });
 

@@ -45,12 +45,17 @@ export type AudioMappingDatabase = MappingWithTimestamps;
 export type AudioMapping = SimplifiedMapping;
 
 /**
- * Convert database mapping to simplified frontend format
+ * Convert database/wire mapping (ms) to simplified frontend format (seconds).
+ * This is the single ms->seconds boundary on the read path (Bundle E, Option B).
  */
 export const toSimplifiedMapping = (db: MappingWithTimestamps): SimplifiedMapping => ({
   segmentId: db.textSegmentId,
-  startTime: db.startTime,
-  endTime: db.endTime
+  startTime: db.startMs / 1000,
+  endTime: db.endMs / 1000,
+  textSegmentId: db.textSegmentId,
+  mediaSegmentId: db.mediaSegmentId,
+  audioFileId: db.audioFileId,
+  mappingId: db.mappingId,
 });
 
 /**

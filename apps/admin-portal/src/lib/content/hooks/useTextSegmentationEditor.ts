@@ -24,6 +24,17 @@ interface AudioMapping {
     endTime: number;
 }
 
+// Wire shape for chapter mappings (Bundle E: ms on the wire).
+interface AudioMappingWire {
+    mappingId: number;
+    textSegmentId: number;
+    mediaSegmentId: number;
+    audioFileId: number;
+    startMs: number;
+    endMs: number;
+    segmentName?: string | null;
+}
+
 export function useTextSegmentationEditor() {
     const { toast } = useToast();
     const queryClient = useQueryClient();
@@ -51,10 +62,20 @@ export function useTextSegmentationEditor() {
         enabled: !!chapterId,
     });
 
-    // Query: Fetch audio mappings for current chapter
+    // Query: Fetch audio mappings for current chapter.
+    // Wire is ms (Bundle E); convert to seconds at this boundary so UI stays in seconds.
     const { data: allChapterMappings = [] } = useQuery<AudioMapping[]>({
         queryKey: ['content', 'chapters', chapterId, 'mappings'],
-        queryFn: () => apiRequest<AudioMapping[]>(`/content/chapters/${chapterId}/mappings`, { method: 'GET' }),
+        queryFn: async () => {
+            const wire = await apiRequest<AudioMappingWire[]>(`/content/chapters/${chapterId}/mappings`, { method: 'GET' });
+            return wire.map((m) => ({
+                id: m.mappingId,
+                textSegmentId: m.textSegmentId,
+                audioFileId: m.audioFileId,
+                startTime: m.startMs / 1000,
+                endTime: m.endMs / 1000,
+            }));
+        },
         enabled: !!chapterId,
     });
 

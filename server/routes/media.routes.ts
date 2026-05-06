@@ -57,8 +57,8 @@ const bulkSegmentsSchema = z.object({
   body: z.object({
     segments: z.array(z.object({
       audioFileId: z.number(),
-      startTime: z.number(),
-      endTime: z.number(),
+      startMs: z.number().int().nonnegative(),
+      endMs: z.number().int().nonnegative(),
       name: z.string(),
     })),
   }),
@@ -67,8 +67,8 @@ const bulkSegmentsSchema = z.object({
 const segmentSchema = z.object({
   body: z.object({
     audioFileId: z.number(),
-    startTimestamp: z.number(),
-    endTimestamp: z.number(),
+    startMs: z.number().int().nonnegative(),
+    endMs: z.number().int().nonnegative(),
     segmentName: z.string(),
   }),
 });
@@ -76,13 +76,12 @@ const segmentSchema = z.object({
 router.post('/media-segments/bulk', requireAdmin, validateRequest(bulkSegmentsSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { segments } = req.body;
-    // Array check redundant with Zod but harmless
     const created = [] as any[];
     for (const s of segments) {
       const seg = await mediaService.createMediaSegment({
         audioFileId: s.audioFileId,
-        startTimestamp: s.startTime,
-        endTimestamp: s.endTime,
+        startMs: s.startMs,
+        endMs: s.endMs,
         segmentName: s.name,
         createdBy: (req as any).user.id,
       });
@@ -96,8 +95,8 @@ router.post('/media-segments', requireAdmin, validateRequest(segmentSchema), asy
   try {
     const seg = await mediaService.createMediaSegment({
       audioFileId: req.body.audioFileId,
-      startTimestamp: req.body.startTimestamp,
-      endTimestamp: req.body.endTimestamp,
+      startMs: req.body.startMs,
+      endMs: req.body.endMs,
       segmentName: req.body.segmentName,
       createdBy: (req as any).user.id,
     });

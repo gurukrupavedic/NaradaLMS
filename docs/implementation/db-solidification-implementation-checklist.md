@@ -74,15 +74,15 @@ Source of truth for decisions: `docs/implementation/db-solidification-checklist.
 
 ## 6) `media_segments` table
 
-- [ ] **6.1** Replace `start_timestamp` / `end_timestamp` (`real`) with integer millisecond fields:
+- [x] **6.1** Replace `start_timestamp` / `end_timestamp` (`real`) with integer millisecond fields:
   - `start_ms`, `end_ms`
-- [ ] **6.2** Add CHECKs:
+- [x] **6.2** Add CHECKs:
   - `start_ms >= 0`
   - `end_ms >= 0`
   - `start_ms < end_ms`
 - [ ] **6.3** Convert `media_segments.created_at` to `timestamptz`.
-- [ ] **6.4** Update service/API/UI conversion boundary (`ms <-> seconds`) at player layer.
-- [ ] **6.4.a** Change API contract to milliseconds as well (`startMs`/`endMs`) for strong end-to-end consistency.
+- [x] **6.4** Update service/API/UI conversion boundary (`ms <-> seconds`) at player layer.
+- [x] **6.4.a** Change API contract to milliseconds as well (`startMs`/`endMs`) for strong end-to-end consistency.
 
 ---
 

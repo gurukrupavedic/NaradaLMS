@@ -17,13 +17,14 @@ import type {
 export type { User, Track, Chapter, TextSegment, AudioFile };
 
 // Normalized Mapping Types (from schema; used by media pipeline and text-segmentation)
+// Wire shape uses integer milliseconds (Bundle E). Frontend converts to seconds at the boundary.
 export interface MappingWithTimestamps {
   mappingId: number;
   textSegmentId: number;
   mediaSegmentId: number;
   audioFileId: number;
-  startTime: number;
-  endTime: number;
+  startMs: number;
+  endMs: number;
   segmentName?: string;
 }
 

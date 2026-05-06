@@ -21,7 +21,7 @@ export function useAudioMapping() {
     const { toast } = useToast();
     const { chapterId, isPublished } = useChapterEditor();
 
-    // Create mapping mutation
+    // Create mapping mutation (Bundle E: convert seconds -> ms at the wire boundary)
     const createMappingMutation = useMutation({
         mutationFn: async (mapping: CreateMappingInput) => {
             return await apiRequest(`/content/chapters/${chapterId}/mappings`, {
@@ -29,8 +29,8 @@ export function useAudioMapping() {
                 body: JSON.stringify({
                     textSegmentId: mapping.textSegmentId,
                     audioFileId: mapping.audioFileId,
-                    startTime: mapping.startTime,
-                    endTime: mapping.endTime,
+                    startMs: Math.round(mapping.startTime * 1000),
+                    endMs: Math.round(mapping.endTime * 1000),
                 }),
             });
         },
@@ -49,12 +49,15 @@ export function useAudioMapping() {
         },
     });
 
-    // Update mapping mutation
+    // Update mapping mutation (Bundle E: convert seconds -> ms at the wire boundary)
     const updateMappingMutation = useMutation({
         mutationFn: async ({ audioFileId, segmentId, updates }: { audioFileId: number; segmentId: number; updates: UpdateMappingInput }) => {
+            const body: Record<string, number> = {};
+            if (updates.startTime !== undefined) body.startMs = Math.round(updates.startTime * 1000);
+            if (updates.endTime !== undefined) body.endMs = Math.round(updates.endTime * 1000);
             return await apiRequest(`/content/chapters/${chapterId}/mappings/audio/${audioFileId}/segment/${segmentId}`, {
                 method: 'PATCH',
-                body: JSON.stringify(updates),
+                body: JSON.stringify(body),
             });
         },
         onSuccess: () => {

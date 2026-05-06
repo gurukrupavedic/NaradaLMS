@@ -55,9 +55,9 @@ async function run() {
     const audio = await mediaService.uploadAudioFile({ chapterId: chapter.id, filename: `smoke-${unique}.mp3`, displayName: `smoke-${unique}.mp3`, fileSize: 12345, duration: 30, mimeType: 'audio/mpeg', uploadedBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
     console.log('Audio created:', audio);
 
-    // Create Mapping
+    // Create Mapping (ms contract)
     console.log('Creating mapping...');
-    const mapping = await mediaService.createMapping({ audioFileId: audio.id, textSegmentId: seg1.id, startTime: 0, endTime: 5, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
+    const mapping = await mediaService.createMapping({ audioFileId: audio.id, textSegmentId: seg1.id, startMs: 0, endMs: 5000, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
     console.log('Mapping created:', mapping);
 
     // List mappings
@@ -65,9 +65,9 @@ async function run() {
     const mapsByAudio = await mediaService.listMappingsByAudioFile(audio.id);
     console.log('Mappings by chapter:', mapsByChapter.length, 'Mappings by audio:', mapsByAudio.length);
 
-    // Update mapping timestamps
+    // Update mapping timestamps (ms contract)
     console.log('Updating mapping timestamps...');
-    const updatedMediaSeg = await mediaService.updateMediaSegment(mapping.mediaSegmentId, { startTimestamp: 1, endTimestamp: 6 } as any);
+    const updatedMediaSeg = await mediaService.updateMediaSegment(mapping.mediaSegmentId, { startMs: 1000, endMs: 6000 } as any);
     console.log('Updated media segment:', updatedMediaSeg);
 
     // Cleanup

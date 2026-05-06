@@ -61,7 +61,10 @@ export const mediaService = {
     if (!seg || !af || seg.chapterId !== af.chapterId) {
       throw Object.assign(new Error('Segment and audio file must belong to the same chapter'), { statusCode: 400 });
     }
-    if (data.startTime < 0 || data.endTime <= data.startTime) {
+    if (!Number.isInteger(data.startMs) || !Number.isInteger(data.endMs)) {
+      throw Object.assign(new Error('startMs and endMs must be integer milliseconds'), { statusCode: 400 });
+    }
+    if (data.startMs < 0 || data.endMs <= data.startMs) {
       throw Object.assign(new Error('Invalid timestamp range'), { statusCode: 400 });
     }
     const result = await mediaStorage.createMappingWithMediaSegment(data);

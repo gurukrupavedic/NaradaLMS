@@ -127,16 +127,29 @@ export const textSegments = pgTable("text_segments", {
   ),
 ]);
 
-// Media segments - Audio file timestamp segments
+// Media segments - Audio file timestamp segments (integer milliseconds; Bundle E)
 export const mediaSegments = pgTable("media_segments", {
   id: serial("id").primaryKey(),
   audioFileId: integer("audio_file_id").notNull().references(() => audioFiles.id, { onDelete: "cascade" }),
-  startTimestamp: real("start_timestamp").notNull(), // in seconds
-  endTimestamp: real("end_timestamp").notNull(), // in seconds
+  startMs: integer("start_ms").notNull(), // in milliseconds
+  endMs: integer("end_ms").notNull(), // in milliseconds
   segmentName: text("segment_name"), // Optional human-readable name
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  check(
+    "media_segments_start_ms_nonneg_check",
+    sql`${table.startMs} >= 0`
+  ),
+  check(
+    "media_segments_end_ms_nonneg_check",
+    sql`${table.endMs} >= 0`
+  ),
+  check(
+    "media_segments_start_lt_end_check",
+    sql`${table.startMs} < ${table.endMs}`
+  ),
+]);
 
 // Segment mapping - Maps media segments to text segments
 export const segmentMappings = pgTable("segment_mappings", {

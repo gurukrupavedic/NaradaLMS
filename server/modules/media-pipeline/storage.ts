@@ -32,14 +32,14 @@ export const mediaStorage = {
   },
 
   async getMediaSegmentsByAudioFile(audioFileId: number): Promise<MediaSegment[]> {
-    return await db.select().from(mediaSegments).where(eq(mediaSegments.audioFileId, audioFileId)).orderBy(asc(mediaSegments.startTimestamp));
+    return await db.select().from(mediaSegments).where(eq(mediaSegments.audioFileId, audioFileId)).orderBy(asc(mediaSegments.startMs));
   },
 
   async createMediaSegment(data: CreateMediaSegmentData): Promise<MediaSegment> {
     const [seg] = await db.insert(mediaSegments).values({
       audioFileId: data.audioFileId,
-      startTimestamp: data.startTimestamp,
-      endTimestamp: data.endTimestamp,
+      startMs: data.startMs,
+      endMs: data.endMs,
       segmentName: data.segmentName ?? null,
       createdBy: data.createdBy,
     }).returning();
@@ -61,8 +61,8 @@ export const mediaStorage = {
       textSegmentId: segmentMappings.textSegmentId,
       mediaSegmentId: segmentMappings.mediaSegmentId,
       audioFileId: mediaSegments.audioFileId,
-      startTime: mediaSegments.startTimestamp,
-      endTime: mediaSegments.endTimestamp,
+      startMs: mediaSegments.startMs,
+      endMs: mediaSegments.endMs,
       segmentName: mediaSegments.segmentName,
     })
       .from(segmentMappings)
@@ -78,8 +78,8 @@ export const mediaStorage = {
       textSegmentId: segmentMappings.textSegmentId,
       mediaSegmentId: segmentMappings.mediaSegmentId,
       audioFileId: mediaSegments.audioFileId,
-      startTime: mediaSegments.startTimestamp,
-      endTime: mediaSegments.endTimestamp,
+      startMs: mediaSegments.startMs,
+      endMs: mediaSegments.endMs,
       segmentName: mediaSegments.segmentName,
     })
       .from(segmentMappings)
@@ -91,8 +91,8 @@ export const mediaStorage = {
   async createMappingWithMediaSegment(data: CreateMappingData): Promise<MappingWithTimestamps> {
     const [mediaSeg] = await db.insert(mediaSegments).values({
       audioFileId: data.audioFileId,
-      startTimestamp: data.startTime,
-      endTimestamp: data.endTime,
+      startMs: data.startMs,
+      endMs: data.endMs,
       createdBy: data.createdBy,
     }).returning();
 
@@ -107,8 +107,8 @@ export const mediaStorage = {
       textSegmentId: data.textSegmentId,
       mediaSegmentId: mediaSeg.id,
       audioFileId: data.audioFileId,
-      startTime: data.startTime,
-      endTime: data.endTime,
+      startMs: data.startMs,
+      endMs: data.endMs,
     };
   },
 

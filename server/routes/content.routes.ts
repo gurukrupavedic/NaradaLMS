@@ -534,39 +534,36 @@ router.get('/chapters/:chapterId/mappings', async (req: Request, res: Response, 
   } catch (error) { next(error); }
 });
 
-// POST /chapters/:chapterId/mappings - Create mapping
+// POST /chapters/:chapterId/mappings - Create mapping (Bundle E: ms wire contract)
 router.post('/chapters/:chapterId/mappings', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const chapterId = parseInt(req.params.chapterId);
-    const { audioFileId, textSegmentId, startTime, endTime } = req.body;
-    // Basic validation
-    if (!audioFileId || !textSegmentId || startTime === undefined || endTime === undefined) {
+    const { audioFileId, textSegmentId, startMs, endMs } = req.body;
+    if (!audioFileId || !textSegmentId || startMs === undefined || endMs === undefined) {
       return res.status(400).json(createErrorResponse('Missing required fields', 'MISSING_REQUIRED_FIELDS'));
     }
     const user = req.user as Express.User;
-    const mapping = await mediaService.createMapping({ audioFileId, textSegmentId, startTime, endTime, createdBy: user.id });
+    const mapping = await mediaService.createMapping({ audioFileId, textSegmentId, startMs, endMs, createdBy: user.id });
     res.json(mapping);
   } catch (error) { next(error); }
 });
 
-// PUT /chapters/:chapterId/mappings/:mappingId - Update mapping timestamps
+// PUT /chapters/:chapterId/mappings/:mappingId - Update mapping timestamps (ms)
 router.put('/chapters/:chapterId/mappings/:mappingId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
     const mappingId = parseInt(req.params.mappingId);
-    const { startTime, endTime, segmentName } = req.body;
-    if (startTime === undefined || endTime === undefined) {
-      return res.status(400).json(createErrorResponse('startTime and endTime are required', 'MISSING_TIMESTAMP_FIELDS'));
+    const { startMs, endMs, segmentName } = req.body;
+    if (startMs === undefined || endMs === undefined) {
+      return res.status(400).json(createErrorResponse('startMs and endMs are required', 'MISSING_TIMESTAMP_FIELDS'));
     }
-    // Find mapping to get mediaSegmentId
     const mappings = await mediaService.listMappingsByChapter(chapterId);
     const target = mappings.find(m => m.mappingId === mappingId);
     if (!target) {
       return res.status(404).json(createErrorResponse('Mapping not found', 'MAPPING_NOT_FOUND'));
     }
     const updated = await mediaService.updateMediaSegment(target.mediaSegmentId, {
-      startTimestamp: startTime,
-      endTimestamp: endTime,
+      startMs,
+      endMs,
       segmentName,
     } as any);
     res.json(updated);
@@ -592,18 +589,17 @@ router.delete('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segment
   } catch (error) { next(error); }
 });
 
-// New: PATCH /chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId - Update by natural key
+// PATCH /chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId - Update by natural key (ms)
 router.patch('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const audioFileId = parseInt(req.params.audioFileId);
     const segmentId = parseInt(req.params.segmentId);
-    const { startTime, endTime } = req.body;
+    const { startMs, endMs } = req.body;
 
-    if (startTime === undefined || endTime === undefined) {
-      return res.status(400).json(createErrorResponse('startTime and endTime are required', 'MISSING_TIMESTAMP_FIELDS'));
+    if (startMs === undefined || endMs === undefined) {
+      return res.status(400).json(createErrorResponse('startMs and endMs are required', 'MISSING_TIMESTAMP_FIELDS'));
     }
 
-    // Find the mapping first
     const mappings = await mediaService.listMappingsByAudioFile(audioFileId);
     const target = mappings.find(m => m.textSegmentId === segmentId);
 
@@ -612,8 +608,8 @@ router.patch('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentI
     }
 
     const updated = await mediaService.updateMediaSegment(target.mediaSegmentId, {
-      startTimestamp: startTime,
-      endTimestamp: endTime,
+      startMs,
+      endMs,
     } as any);
 
     res.json(updated);

@@ -972,12 +972,16 @@ paths:
           application/json:
             schema:
               type: object
-              required: [startTime, endTime]
+              required: [startMs, endMs]
               properties:
-                startTime:
-                  type: number
-                endTime:
-                  type: number
+                startMs:
+                  type: integer
+                  minimum: 0
+                  description: Start timestamp in milliseconds
+                endMs:
+                  type: integer
+                  minimum: 0
+                  description: End timestamp in milliseconds
       responses:
         '200':
           description: Mapping updated successfully
@@ -1024,12 +1028,16 @@ paths:
           application/json:
             schema:
               type: object
-              required: [startTime, endTime]
+              required: [startMs, endMs]
               properties:
-                startTime:
-                  type: number
-                endTime:
-                  type: number
+                startMs:
+                  type: integer
+                  minimum: 0
+                  description: Start timestamp in milliseconds
+                endMs:
+                  type: integer
+                  minimum: 0
+                  description: End timestamp in milliseconds
       responses:
         '200':
           description: Mapping updated successfully
@@ -1059,12 +1067,16 @@ paths:
                   type: array
                   items:
                     type: object
-                    required: [startTime, endTime]
+                    required: [startMs, endMs]
                     properties:
-                      startTime:
-                        type: number
-                      endTime:
-                        type: number
+                      startMs:
+                        type: integer
+                        minimum: 0
+                        description: Start timestamp in milliseconds
+                      endMs:
+                        type: integer
+                        minimum: 0
+                        description: End timestamp in milliseconds
       responses:
         '201':
           description: Media segments created successfully
@@ -2096,12 +2108,14 @@ components:
           type: integer
         audioFileId:
           type: integer
-        startTime:
-          type: number
-          description: Start timestamp in seconds
-        endTime:
-          type: number
-          description: End timestamp in seconds
+        startMs:
+          type: integer
+          minimum: 0
+          description: Start timestamp in milliseconds
+        endMs:
+          type: integer
+          minimum: 0
+          description: End timestamp in milliseconds
         createdAt:
           type: string
           format: date-time
@@ -2116,10 +2130,14 @@ components:
           type: integer
         audioFileId:
           type: integer
-        startTime:
-          type: number
-        endTime:
-          type: number
+        startMs:
+          type: integer
+          minimum: 0
+          description: Start timestamp in milliseconds
+        endMs:
+          type: integer
+          minimum: 0
+          description: End timestamp in milliseconds
         createdBy:
           type: integer
         createdAt:
@@ -2128,16 +2146,20 @@ components:
 
     CreateSegmentMappingRequest:
       type: object
-      required: [textSegmentId, audioFileId, startTime, endTime]
+      required: [textSegmentId, audioFileId, startMs, endMs]
       properties:
         textSegmentId:
           type: integer
         audioFileId:
           type: integer
-        startTime:
-          type: number
-        endTime:
-          type: number
+        startMs:
+          type: integer
+          minimum: 0
+          description: Start timestamp in milliseconds
+        endMs:
+          type: integer
+          minimum: 0
+          description: End timestamp in milliseconds
 
     Batch:
       type: object
