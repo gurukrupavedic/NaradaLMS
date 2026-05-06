@@ -53,6 +53,11 @@ export interface CreateSegmentData {
   createdBy: string;
 }
 
+export interface SegmentOrderUpdate {
+  id: number;
+  order: number;
+}
+
 export interface CreateTrackData {
   title: string;
   description: string;

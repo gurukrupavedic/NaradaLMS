@@ -2,6 +2,10 @@ import { db } from "../../db";
 import { tracks, chapters, textSegments, audioFiles, mediaSegments } from "@narada/types";
 import { eq, and, asc, sql, max, inArray, isNull } from "drizzle-orm";
 
+function createHttpError(message: string, status: number, code: string, details?: unknown): Error {
+  return Object.assign(new Error(message), { status, code, details });
+}
+
 /**
  * ContentStorage
  * Database access layer for content publishing domain
@@ -234,31 +238,53 @@ export class ContentStorage {
       throw new Error("Missing required fields: chapterId, script, startPosition, endPosition");
     }
 
-    const maxOrderResult = await db
-      .select({ maxOrder: max(textSegments.order) })
-      .from(textSegments)
-      .where(
-        and(
-          eq(textSegments.chapterId, segment.chapterId),
-          eq(textSegments.script, segment.script)
+    return db.transaction(async (tx) => {
+      await tx
+        .select({ id: textSegments.id })
+        .from(textSegments)
+        .where(
+          and(
+            eq(textSegments.chapterId, segment.chapterId),
+            eq(textSegments.script, segment.script)
+          )
         )
-      );
+        .for("update");
 
-    const nextOrder = (maxOrderResult[0]?.maxOrder ?? -1) + 1;
+      const maxOrderResult = await tx
+        .select({ maxOrder: max(textSegments.order) })
+        .from(textSegments)
+        .where(
+          and(
+            eq(textSegments.chapterId, segment.chapterId),
+            eq(textSegments.script, segment.script)
+          )
+        );
 
-    const [newSegment] = await db.insert(textSegments).values({
-      chapterId: segment.chapterId,
-      script: segment.script,
-      startPosition: segment.startPosition,
-      endPosition: segment.endPosition,
-      order: segment.order !== undefined ? segment.order : nextOrder,
-      createdBy: segment.createdBy,
-      createdAt: new Date()
-    }).returning();
-    return newSegment;
+      const nextOrder = (maxOrderResult[0]?.maxOrder ?? -1) + 1;
+
+      const [newSegment] = await tx.insert(textSegments).values({
+        chapterId: segment.chapterId,
+        script: segment.script,
+        startPosition: segment.startPosition,
+        endPosition: segment.endPosition,
+        order: segment.order !== undefined ? segment.order : nextOrder,
+        createdBy: segment.createdBy,
+        createdAt: new Date()
+      }).returning();
+
+      return newSegment;
+    });
   }
 
   async updateTextSegment(id: number, segmentUpdate: any): Promise<any> {
+    if (segmentUpdate.order !== undefined) {
+      throw createHttpError(
+        "Direct segment order updates are not allowed. Use the reorder endpoint.",
+        400,
+        "SEGMENT_ORDER_UPDATE_FORBIDDEN"
+      );
+    }
+
     const [segment] = await db
       .update(textSegments)
       .set(segmentUpdate)
@@ -267,14 +293,70 @@ export class ContentStorage {
     return segment;
   }
 
-  async updateSegmentOrder(chapterId: number, segmentOrders: { id: number; order: number }[]): Promise<void> {
-    for (const { id, order } of segmentOrders) {
-      await db
+  async updateSegmentOrder(
+    chapterId: number,
+    script: "te" | "hi" | "en",
+    segmentOrders: { id: number; order: number }[]
+  ): Promise<void> {
+    await db.transaction(async (tx) => {
+      const currentSegments = await tx
+        .select({
+          id: textSegments.id,
+          order: textSegments.order,
+        })
+        .from(textSegments)
+        .where(and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script)))
+        .orderBy(asc(textSegments.order), asc(textSegments.id))
+        .for("update");
+
+      if (currentSegments.length === 0) {
+        throw createHttpError("No segments found for requested chapter and script", 404, "SEGMENTS_NOT_FOUND");
+      }
+
+      if (currentSegments.length !== segmentOrders.length) {
+        throw createHttpError(
+          "segmentOrders must include the full ordered set for the chapter and script",
+          400,
+          "SEGMENT_ORDERS_MUST_INCLUDE_FULL_SET",
+          {
+            expected: currentSegments.length,
+            received: segmentOrders.length,
+          }
+        );
+      }
+
+      const dbIds = new Set(currentSegments.map((segment) => segment.id));
+      const payloadIds = new Set(segmentOrders.map((segment) => segment.id));
+      if (dbIds.size !== payloadIds.size || Array.from(dbIds).some((id) => !payloadIds.has(id))) {
+        throw createHttpError(
+          "segmentOrders ids must match exactly the current chapter/script segments",
+          400,
+          "SEGMENT_IDS_SCOPE_MISMATCH"
+        );
+      }
+
+      const maxCurrentOrder = currentSegments.reduce(
+        (acc, segment) => Math.max(acc, segment.order),
+        -1
+      );
+      const temporaryOffset = maxCurrentOrder + segmentOrders.length + 1;
+
+      await tx
         .update(textSegments)
-        .set({ order })
-        .where(eq(textSegments.id, id))
-        .returning();
-    }
+        .set({ order: sql`${textSegments.order} + ${temporaryOffset}` })
+        .where(and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script)));
+
+      const caseBranches = segmentOrders.map(({ id, order }) => sql`WHEN ${id} THEN ${order}`);
+      await tx.execute(sql`
+        UPDATE text_segments
+        SET "order" = CASE id
+          ${sql.join(caseBranches, sql` `)}
+          ELSE "order"
+        END
+        WHERE chapter_id = ${chapterId}
+          AND script = ${script}
+      `);
+    });
   }
 
   async deleteTextSegment(id: number): Promise<void> {

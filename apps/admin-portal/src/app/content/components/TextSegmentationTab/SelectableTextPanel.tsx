@@ -121,6 +121,8 @@ export function SelectableTextPanel({
             return <div className="whitespace-pre-wrap">{plainText || ''}</div>;
         }
 
+        // Rendering on the source text must follow character offsets, even when editor-controlled
+        // segment order is different for list/reorder workflows.
         const sortedSegments = [...(segments || [])].sort((a, b) => a.startPosition - b.startPosition);
         const parts: React.ReactNode[] = [];
         let lastEnd = 0;

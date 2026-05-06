@@ -5,6 +5,12 @@ import { db } from '../../server/db';
 import { tracks, users } from '@narada/types';
 import { CURRICULUM_IMPORT_ACTOR_PROFILE } from '../../server/shared/constants/system-actors';
 
+function assert(condition: unknown, message: string): void {
+  if (!condition) {
+    throw new Error(message);
+  }
+}
+
 async function run() {
   console.log('\n=== Content Smoke Test ===');
   const unique = Date.now();
@@ -42,13 +48,43 @@ async function run() {
     console.log('Creating segments...');
     const seg1 = await contentService.createSegment({ chapterId: chapter.id, script: 'en', startPosition: 0, endPosition: 10, order: 0, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
     const seg2 = await contentService.createSegment({ chapterId: chapter.id, script: 'en', startPosition: 10, endPosition: 20, order: 1, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
+    const seg3 = await contentService.createSegment({ chapterId: chapter.id, script: 'en', startPosition: 20, endPosition: 30, order: 2, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
     const segs = await contentService.getSegmentsByChapter(chapter.id, 'en');
     console.log('Segments created:', segs.length);
+    assert(segs.length === 3, 'Expected 3 created segments');
 
-    // Reorder Segments
-    await contentService.reorderSegments(chapter.id, [ { id: seg1.id, order: 1 }, { id: seg2.id, order: 0 } ]);
+    // Reorder Segments (full-set payload required)
+    await contentService.reorderSegments(chapter.id, 'en', [
+      { id: seg1.id, order: 2 },
+      { id: seg2.id, order: 0 },
+      { id: seg3.id, order: 1 },
+    ]);
     const reordered = await contentService.getSegmentsByChapter(chapter.id, 'en');
     console.log('Segment order after reorder:', reordered.map(s => s.order));
+    assert(JSON.stringify(reordered.map((s) => s.order)) === JSON.stringify([0, 1, 2]), 'Expected contiguous 0..2 order after reorder');
+    assert(reordered[0].id === seg2.id && reordered[1].id === seg3.id && reordered[2].id === seg1.id, 'Expected reordered IDs to match payload');
+
+    // Invalid reorder payload should fail (not full-set)
+    let fullSetValidationFailed = false;
+    try {
+      await contentService.reorderSegments(chapter.id, 'en', [{ id: seg1.id, order: 0 }]);
+    } catch (error: any) {
+      fullSetValidationFailed = error?.code === 'SEGMENT_ORDERS_MUST_INCLUDE_FULL_SET';
+    }
+    assert(fullSetValidationFailed, 'Expected full-set reorder validation failure');
+
+    // Duplicate order values should fail validation before DB write
+    let duplicateOrderFailed = false;
+    try {
+      await contentService.reorderSegments(chapter.id, 'en', [
+        { id: seg1.id, order: 0 },
+        { id: seg2.id, order: 0 },
+        { id: seg3.id, order: 1 },
+      ]);
+    } catch (error: any) {
+      duplicateOrderFailed = error?.code === 'DUPLICATE_SEGMENT_ORDER';
+    }
+    assert(duplicateOrderFailed, 'Expected duplicate order validation failure');
 
     // Upload Audio (DB insert via service)
     console.log('Uploading audio (DB)...');
@@ -57,7 +93,7 @@ async function run() {
 
     // Create Mapping (ms contract)
     console.log('Creating mapping...');
-    const mapping = await mediaService.createMapping({ audioFileId: audio.id, textSegmentId: seg1.id, startMs: 0, endMs: 5000, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
+    const mapping = await mediaService.createMapping({ audioFileId: audio.id, textSegmentId: seg2.id, startMs: 0, endMs: 5000, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
     console.log('Mapping created:', mapping);
 
     // List mappings
@@ -76,6 +112,7 @@ async function run() {
     await mediaService.deleteAudioFile(audio.id);
     await contentService.deleteSegment(seg1.id);
     await contentService.deleteSegment(seg2.id);
+    await contentService.deleteSegment(seg3.id);
     await contentService.deleteChapter(chapter.id);
     await contentService.deleteTrack(track.id);
 

@@ -123,6 +123,11 @@ export const textSegments = pgTable("text_segments", {
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
+  unique("text_segments_chapter_script_order_uniq").on(
+    table.chapterId,
+    table.script,
+    table.order
+  ),
   check(
     "text_segments_start_lte_end_check",
     sql`start_position <= end_position`

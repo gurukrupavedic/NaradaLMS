@@ -351,6 +351,31 @@ router.post('/chapters/:chapterId/segments', requireAdmin, async (req: Request, 
       ));
     }
 
+    if (!['te', 'hi', 'en'].includes(script)) {
+      return res.status(400).json(createErrorResponse(
+        "Invalid script. Must be 'te', 'hi', or 'en'",
+        "INVALID_SCRIPT"
+      ));
+    }
+
+    if (
+      typeof startPosition !== 'number' ||
+      typeof endPosition !== 'number' ||
+      (order !== undefined && typeof order !== 'number')
+    ) {
+      return res.status(400).json(createErrorResponse(
+        "Invalid field types for startPosition/endPosition/order",
+        "INVALID_FIELD_TYPES"
+      ));
+    }
+
+    if (startPosition < 0 || endPosition < 0 || startPosition >= endPosition) {
+      return res.status(400).json(createErrorResponse(
+        "Invalid position values. startPosition must be >= 0 and < endPosition",
+        "INVALID_POSITION_VALUES"
+      ));
+    }
+
     const user = req.user as Express.User;
     const segment = await contentService.createSegment({
       chapterId,
@@ -426,14 +451,23 @@ router.delete('/chapters/:chapterId/segments/all/clear', requireAdmin, async (re
 router.post('/chapters/:chapterId/segments/reorder', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
-    const { segmentOrders } = req.body;
+    const { script, segmentOrders } = req.body;
+
+    if (!script || !['te', 'hi', 'en'].includes(script)) {
+      return res.status(400).json(createErrorResponse(
+        "script is required and must be 'te', 'hi', or 'en'",
+        'INVALID_SCRIPT'
+      ));
+    }
+
     if (!segmentOrders || !Array.isArray(segmentOrders)) {
       return res.status(400).json(createErrorResponse(
         'segmentOrders array is required',
         'MISSING_SEGMENT_ORDERS'
       ));
     }
-    await contentService.reorderSegments(chapterId, segmentOrders);
+
+    await contentService.reorderSegments(chapterId, script, segmentOrders);
     res.json({ message: 'Segments reordered successfully' });
   } catch (error) { next(error); }
 });

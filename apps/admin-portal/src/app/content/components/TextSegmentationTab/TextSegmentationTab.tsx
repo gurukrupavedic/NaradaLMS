@@ -104,6 +104,7 @@ function SegmentationMode() {
         deleteSegment,
         getMappingStatus,
         reorderSegments,
+        isReordering,
         clearAllSegments,
         isClearing,
     } = useTextSegmentationEditor();
@@ -127,6 +128,8 @@ function SegmentationMode() {
 
     // Handle drag end
     const handleDragEnd = (event: DragEndEvent) => {
+        if (isPublished || isReordering) return;
+
         const { active, over } = event;
         if (!over || active.id === over.id) return;
 

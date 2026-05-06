@@ -166,11 +166,16 @@ export function useTextSegmentationEditor() {
 
             return await apiRequest(`/content/chapters/${chapterId}/segments/reorder`, {
                 method: 'POST',
-                body: JSON.stringify({ segmentOrders }),
+                body: JSON.stringify({ script: selectedScript, segmentOrders }),
             });
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['content', 'chapters', chapterId, 'segments'] });
+        },
+        onSuccess: () => {
+            toast({
+                title: 'Segments reordered',
+            });
         },
         onError: (error: Error) => {
             toast({

@@ -20,6 +20,11 @@ import {
 } from "../../shared/utils/postgres-unique-violation";
 
 const CHAPTER_TRACK_TITLE_UNIQ = "chapters_track_title_uniq";
+const TEXT_SEGMENTS_CHAPTER_SCRIPT_ORDER_UNIQ = "text_segments_chapter_script_order_uniq";
+
+function createHttpError(message: string, status: number, code: string, details?: unknown): Error {
+  return Object.assign(new Error(message), { status, code, details });
+}
 
 function throwIfChapterTitleConflict(error: unknown): void {
   if (
@@ -29,6 +34,19 @@ function throwIfChapterTitleConflict(error: unknown): void {
     throw Object.assign(
       new Error("A chapter with this title already exists in this track"),
       { status: 409, code: "CHAPTER_TITLE_CONFLICT" }
+    );
+  }
+}
+
+function throwIfSegmentOrderConflict(error: unknown): void {
+  if (
+    isPostgresUniqueViolation(error) &&
+    getPostgresConstraintName(error) === TEXT_SEGMENTS_CHAPTER_SCRIPT_ORDER_UNIQ
+  ) {
+    throw createHttpError(
+      "Segment order conflict detected. Refresh and retry.",
+      409,
+      "SEGMENT_ORDER_CONFLICT"
     );
   }
 }
@@ -282,28 +300,86 @@ export class ContentService {
   }
 
   async createSegment(data: CreateSegmentData): Promise<TextSegment> {
-    const segment = await this.storage.createTextSegment({
-      chapterId: data.chapterId,
-      script: data.script,
-      startPosition: data.startPosition,
-      endPosition: data.endPosition,
-      order: data.order,
-      createdBy: data.createdBy
-    });
-    return segment;
+    try {
+      const segment = await this.storage.createTextSegment({
+        chapterId: data.chapterId,
+        script: data.script,
+        startPosition: data.startPosition,
+        endPosition: data.endPosition,
+        order: data.order,
+        createdBy: data.createdBy
+      });
+      return segment;
+    } catch (e) {
+      throwIfSegmentOrderConflict(e);
+      throw e;
+    }
   }
 
   async updateSegment(segmentId: number, data: Partial<TextSegment>): Promise<TextSegment> {
-    const segment = await this.storage.updateTextSegment(segmentId, data);
-    return segment;
+    try {
+      const segment = await this.storage.updateTextSegment(segmentId, data);
+      return segment;
+    } catch (e) {
+      throwIfSegmentOrderConflict(e);
+      throw e;
+    }
   }
 
   async deleteSegment(segmentId: number): Promise<void> {
     await this.storage.deleteTextSegment(segmentId);
   }
 
-  async reorderSegments(chapterId: number, segmentOrders: Array<{ id: number; order: number }>): Promise<void> {
-    await this.storage.updateSegmentOrder(chapterId, segmentOrders);
+  async reorderSegments(
+    chapterId: number,
+    script: "te" | "hi" | "en",
+    segmentOrders: Array<{ id: number; order: number }>
+  ): Promise<void> {
+    if (!["te", "hi", "en"].includes(script)) {
+      throw createHttpError("Invalid script. Must be 'te', 'hi', or 'en'", 400, "INVALID_SCRIPT");
+    }
+
+    if (segmentOrders.length === 0) {
+      throw createHttpError("segmentOrders must include all script segments", 400, "EMPTY_SEGMENT_ORDERS");
+    }
+
+    const idSet = new Set<number>();
+    const orderSet = new Set<number>();
+    for (const item of segmentOrders) {
+      if (!Number.isInteger(item.id) || item.id <= 0 || !Number.isInteger(item.order) || item.order < 0) {
+        throw createHttpError(
+          "Each segmentOrders item requires positive integer id and non-negative integer order",
+          400,
+          "INVALID_SEGMENT_ORDER_ITEM"
+        );
+      }
+      if (idSet.has(item.id)) {
+        throw createHttpError("segmentOrders cannot include duplicate ids", 400, "DUPLICATE_SEGMENT_ID");
+      }
+      if (orderSet.has(item.order)) {
+        throw createHttpError("segmentOrders cannot include duplicate order values", 400, "DUPLICATE_SEGMENT_ORDER");
+      }
+      idSet.add(item.id);
+      orderSet.add(item.order);
+    }
+
+    const expectedOrders = Array.from(orderSet).sort((a, b) => a - b);
+    for (let i = 0; i < expectedOrders.length; i += 1) {
+      if (expectedOrders[i] !== i) {
+        throw createHttpError(
+          "segmentOrders must be contiguous starting at 0",
+          400,
+          "INVALID_SEGMENT_ORDER_SEQUENCE"
+        );
+      }
+    }
+
+    try {
+      await this.storage.updateSegmentOrder(chapterId, script, segmentOrders);
+    } catch (e) {
+      throwIfSegmentOrderConflict(e);
+      throw e;
+    }
   }
 
   async deleteSegmentsByChapter(chapterId: number, script: 'te' | 'hi' | 'en'): Promise<void> {

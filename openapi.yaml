@@ -759,7 +759,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateTextSegmentRequest'
       responses:
-        '201':
+        '200':
           description: Segment created successfully
           content:
             application/json:
@@ -825,8 +825,11 @@ paths:
           application/json:
             schema:
               type: object
-              required: [segmentOrders]
+              required: [script, segmentOrders]
               properties:
+                script:
+                  type: string
+                  enum: [te, hi, en]
                 segmentOrders:
                   type: array
                   items:
@@ -840,6 +843,14 @@ paths:
       responses:
         '200':
           description: Segments reordered successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Segment order conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
 
   /api/content/chapters/{chapterId}/audio:
     get:
@@ -2054,10 +2065,8 @@ components:
 
     CreateTextSegmentRequest:
       type: object
-      required: [chapterId, script, startPosition, endPosition]
+      required: [script, startPosition, endPosition]
       properties:
-        chapterId:
-          type: integer
         script:
           type: string
           enum: [te, hi, en]
@@ -2065,6 +2074,9 @@ components:
           type: integer
         endPosition:
           type: integer
+        order:
+          type: integer
+          minimum: 0
 
     UpdateTextSegmentRequest:
       type: object
