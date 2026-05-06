@@ -606,10 +606,14 @@ export default function BatchList() {
                     </Button>
                 </div>
             ) : batches.length === 0 ? (
-                <div className="flex flex-1 min-h-0 flex-col items-center justify-center gap-2 text-muted-foreground py-12 max-w-sm text-center">
-                    <Layers className="h-10 w-10 opacity-20" aria-hidden />
-                    <p className="text-sm font-medium">No batches found</p>
-                    <p className="text-sm">Create a batch to get started.</p>
+                <div className="flex min-h-0 flex-1 flex-col rounded-md border overflow-hidden">
+                    <div className="flex min-h-0 flex-1 items-center justify-center px-6 py-12">
+                        <div className="flex max-w-sm flex-col items-center gap-2 text-center text-muted-foreground">
+                            <Layers className="h-10 w-10 opacity-20" aria-hidden />
+                            <p className="text-sm font-medium">No batches found</p>
+                            <p className="text-sm">Create a batch to get started.</p>
+                        </div>
+                    </div>
                 </div>
             ) : (
                 <>

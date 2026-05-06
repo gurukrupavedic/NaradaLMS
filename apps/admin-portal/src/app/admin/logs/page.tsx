@@ -448,10 +448,14 @@ export default function AuditLogsPage() {
                     </Button>
                 </div>
             ) : filteredLogs.length === 0 ? (
-                <div className="flex flex-1 min-h-0 flex-col items-center justify-center gap-2 text-muted-foreground py-12 max-w-sm text-center">
-                    <FileSearch className="h-10 w-10 opacity-20" aria-hidden />
-                    <p className="text-sm font-medium">No audit logs found</p>
-                    <p className="text-sm">Try adjusting your filters.</p>
+                <div className="flex min-h-0 flex-1 flex-col rounded-md border overflow-hidden">
+                    <div className="flex min-h-0 flex-1 items-center justify-center px-6 py-12">
+                        <div className="flex max-w-sm flex-col items-center gap-2 text-center text-muted-foreground">
+                            <FileSearch className="h-10 w-10 opacity-20" aria-hidden />
+                            <p className="text-sm font-medium">No audit logs found</p>
+                            <p className="text-sm">Try adjusting your filters.</p>
+                        </div>
+                    </div>
                 </div>
             ) : (
                 <>

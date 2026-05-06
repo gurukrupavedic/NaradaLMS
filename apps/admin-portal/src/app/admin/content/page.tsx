@@ -413,8 +413,12 @@ export default function TracksAndChapters() {
                   </DndContext>
 
                   {!tracks.length && !tracksQuery.isLoading && (
-                    <div className="text-center py-10 text-muted-foreground">
-                      <p>No tracks found.</p>
+                    <div className="flex min-h-[320px] items-center justify-center px-6 py-12">
+                      <div className="flex max-w-sm flex-col items-center gap-2 text-center text-muted-foreground">
+                        <LibraryBig className="h-10 w-10 opacity-20" aria-hidden />
+                        <p className="text-sm font-medium">No tracks found.</p>
+                        <p className="text-sm">Create a track to get started.</p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -465,17 +469,24 @@ export default function TracksAndChapters() {
                     </DndContext>
 
                     {!selectedTrackChapters.length && !chaptersQuery.isLoading && (
-                      <div className="text-center py-10 text-muted-foreground">
-                        <p>No chapters in this track.</p>
+                      <div className="flex min-h-[320px] items-center justify-center px-6 py-12">
+                        <div className="flex max-w-sm flex-col items-center gap-2 text-center text-muted-foreground">
+                          <BookText className="h-10 w-10 opacity-20" aria-hidden />
+                          <p className="text-sm font-medium">No chapters in this track.</p>
+                          <p className="text-sm">Create a chapter to get started.</p>
+                        </div>
                       </div>
                     )}
                   </div>
                 </ScrollArea>
               </>
             ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground flex-col gap-2">
-                <LibraryBig className="w-10 h-10 opacity-20" />
-                <p>Select a track to manage chapters</p>
+              <div className="flex h-full items-center justify-center px-6 py-12">
+                <div className="flex max-w-sm flex-col items-center gap-2 text-center text-muted-foreground">
+                  <LibraryBig className="h-10 w-10 opacity-20" aria-hidden />
+                  <p className="text-sm font-medium">No track selected</p>
+                  <p className="text-sm">Select a track to manage chapters.</p>
+                </div>
               </div>
             )}
           </ResizablePanel>
