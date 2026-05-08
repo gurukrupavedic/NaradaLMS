@@ -4,6 +4,8 @@
 
 **Active Plan**: [roadmap.md](./roadmap.md)
 
+**Execution & planning (multi-tenancy)**: [multi-tenancy/README.md](./multi-tenancy/README.md)
+
 **Archive**: Previous implementation docs (Stages 0–1, hardening, code-cleanup, reshuffle) are in `docs/archive/rearchitecture-stages-0-1/`.
 
 ---
