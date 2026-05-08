@@ -33,3 +33,4 @@ uploads/
 VedicLMS/
 .agent/
 .agents/
+docs/implementation/multi-tenancy/setup-baseline.*.log
