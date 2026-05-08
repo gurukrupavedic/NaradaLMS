@@ -1,3 +1,9 @@
+# Archived: DB Solidification Implementation Checklist
+
+> Moved from `docs/implementation/db-solidification-implementation-checklist.md` after multi-tenancy planning was completed. Content preserved for historical reference.
+
+## Original content
+
 # DB Solidification Implementation Checklist
 
 Execution checklist for the pre-tenancy DB hardening work.  

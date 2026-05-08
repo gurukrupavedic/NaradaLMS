@@ -1,3 +1,9 @@
+# Archived: DB Solidification Task Coverage Matrix
+
+> Moved from `docs/implementation/db-solidification-task-coverage-matrix.md` after multi-tenancy planning was completed. Content preserved for historical reference.
+
+## Original content
+
 # DB Solidification Task Coverage Matrix
 
 This is the execution source of truth for solidification.  
@@ -16,7 +22,6 @@ It is intentionally self-sufficient: each row includes the task intent, entity, 
 ---
 
 ## Task Coverage Matrix (sequenced)
-
 
 | Seq | Task     | Primary table/entity         | Execution mode | Task detail                                                   | DB/Schema impact                           | Backend/API impact                           | Frontend impact                 | Seed/scripts impact                 | Verification focus              |
 | --- | -------- | ---------------------------- | -------------- | ------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------- | ------------------------------- | ----------------------------------- | ------------------------------- |
@@ -93,7 +98,6 @@ It is intentionally self-sufficient: each row includes the task intent, entity, 
 | 71  | `16.5`   | Cross-cutting (verification) | Individual     | Manual core-flow validation                                   | None                                       | API flow validation                          | Manual UI regressions           | smoke scripts                       | End-to-end acceptance           |
 | 72  | `17.1`   | Scope guard                  | Individual     | Keep tenancy tables out of scope                              | Scope guard                                | Scope guard                                  | Scope guard                     | Scope guard                         | PR scope review                 |
 | 73  | `17.2`   | Scope guard                  | Individual     | Keep org-scoped uniques deferred                              | Scope guard                                | Scope guard                                  | Scope guard                     | Scope guard                         | PR scope review                 |
-
 
 ---
 

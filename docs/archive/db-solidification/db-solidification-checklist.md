@@ -1,3 +1,9 @@
+# Archived: Database solidification checklist (pre-tenancy)
+
+> Moved from `docs/implementation/db-solidification-checklist.md` after multi-tenancy planning was completed. Content preserved for historical reference.
+
+## Original content
+
 # Database solidification checklist (pre-tenancy)
 
 **Purpose**: Proposed improvements to `packages/types/src/schema.ts` **before** introducing `organizations`, `user_organizations`, and `org_id`. Use this document to record decisions and feedback; implementation should follow a reviewed plan.
@@ -137,7 +143,7 @@ Implement these when you add organizations and `org_id`; they are **not** part o
 
 - **Decision — agreed**: Add indexes aligned to current admin-log queries:
   - `**(timestamp DESC)`** for default/recent log listing and date-range scans.
-  - `**(user_id, timestamp DESC)`** for user-filtered audit views sorted by latest first.
+  - `**(user_id, timestamp DESC)**` for user-filtered audit views sorted by latest first.
   - `**(resource_type, timestamp DESC)**` for resource-type filtered views sorted by latest first.
 - Defer `**(resource_type, resource_id)**` until a concrete query path filters by specific `resource_id`.
 - Consider **timestamptz** for `timestamp`. K: agree with this.
@@ -164,7 +170,6 @@ Implement these when you add organizations and `org_id`; they are **not** part o
 | --- | --------------- | ----------------------------------- | ---------------------- |
 | *(none seeded in repo)* | — | — | Document each real key here when introduced. |
 
-
 ---
 
 ## Cross-cutting (not one table)
@@ -174,7 +179,7 @@ Implement these when you add organizations and `org_id`; they are **not** part o
 - Keep dev reset scripts only as a fallback utility, **not** as the primary schema-change workflow.
 - **Reserved word**: rename `**order`** → `**sort_order`** on `tracks` and `chapters` if you want zero quoting risk in ad-hoc SQL.  K: agree with this.
 - **timestamptz**: apply with a **single policy** (e.g. all `created_at`/`updated_at`/audit times) to avoid mixed semantics.  K: agree with this.
-- **Decision — agreed**: Convert **all existing timestamp columns** in this phase to align with the `timestamptz` policy (not just newly added/edited columns).
+- **Decision — agreed**: Convert **all existing timestamp columns** in this phase to `timestamptz` in this solidification phase for consistency.
 
 ---
 
@@ -188,7 +193,6 @@ Implement these when you add organizations and `org_id`; they are **not** part o
 ## Feedback / decisions log
 
 *Use this section when responding with approvals, rejections, or alternatives.*
-
 
 | Table / area                             | Your decision                                                                                                                                                  |
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -211,5 +215,4 @@ Implement these when you add organizations and `org_id`; they are **not** part o
 | `system_settings` / scope                | Keep global-only now; add dedicated `org_settings` in tenancy phase; classify keys as `platform.*` (global) vs `org.*` (future tenant-scoped).                 |
 | `migration workflow`                     | Commit versioned generated migrations for every schema change; apply locally and commit schema + migration together.                                           |
 | `timestamps` / policy scope              | Convert all existing timestamp columns to `timestamptz` in this solidification phase for consistency.                                                          |
-
 

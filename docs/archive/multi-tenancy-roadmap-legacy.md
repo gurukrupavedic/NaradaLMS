@@ -1,3 +1,9 @@
+# Archived: Legacy Multi-Tenancy & Chameleonization Roadmap
+
+> This file was originally `docs/implementation/roadmap.md`. It predates the config-based theming and super-admin decisions now captured under `docs/implementation/multi-tenancy/`. Kept here for historical context only.
+
+## Original content
+
 # Roadmap: Multi-Tenancy & Chameleonization
 
 **Date**: March 30, 2026
@@ -254,3 +260,4 @@ Same pattern as previous work:
 - **After completing a slice**: Check off the "Done when" items, note anything learned, and move to the next slice.
 - **When a decision is made**: Fill in the Decision column in the Open Decisions table above.
 - **When done with all layers**: Archive this folder (your usual process) and sync the rest of the repo docs.
+

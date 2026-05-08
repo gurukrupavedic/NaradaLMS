@@ -2,8 +2,6 @@
 
 **Active Goal**: Make NaradaLMS a multi-tenant, white-label platform.
 
-**Active Plan**: [roadmap.md](./roadmap.md)
-
 **Execution & planning (multi-tenancy)**: [multi-tenancy/README.md](./multi-tenancy/README.md)
 
 **Archive**: Previous implementation docs (Stages 0–1, hardening, code-cleanup, reshuffle) are in `docs/archive/rearchitecture-stages-0-1/`.
@@ -22,7 +20,7 @@
 | **Admin Portal**   | `apps/admin-portal/`   | Next.js 15 App Router, port 3001 |
 
 
-Orchestrated by **Turborepo** (`turbo.json`) with **npm workspaces** (`apps/`*, `packages/*`).
+Orchestrated by **Turborepo** (`turbo.json`) with **npm workspaces** (`apps/`*, `packages/`*).
 
 ### Packages
 
