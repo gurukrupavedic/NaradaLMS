@@ -16,8 +16,9 @@ The following **roadmap slices are implemented and merged** unless your checkout
 - **Layer 1:** 1.1 schema expand (orgs + memberships + `is_super_admin`), 1.2 seed orgs, 1.3 dev bootstrap. **Not** slice 1.4 contract (legacy `users.roles` / `users.status` still in DB).
 - **Layer 2:** **2.1**–**2.5** JWT, membership-first auth, org switch, **super-admin governance**, governance event/audit alignment, and org-admin **directory** API; student pending UX unchanged.
 - **Layer 3 Pass A:** core org isolation on `tracks`, `chapters`, `batches`, and `enrollments`, plus org-scoped handler/query enforcement and fresh DB verification.
+- **Layer 3 Pass B:** physical `org_id` coverage is now in place for media, progress, and audit tables, including backfills, route/service/storage org scoping, and physical `audit_logs.org_id` filtering.
 - **Admin portal:** **5.3** org switcher is now merged; **5.1** and **5.4** are also in place. **5.2** remains partial because the governance API supports `orgSlug` filtering but the current user-management UI does not yet expose a dedicated org filter control.
-- **Next up (foundational backend follow-on):** **Layer 3 Pass B** remaining `org_id` coverage on media/progress/audit tables.
+- **Next up:** **Layer 4** student chameleon / tenant config, unless you prefer the smaller admin-portal **5.2** org-filter UI follow-up first.
 - **Deferred:** checklist **2.12** OAuth parity unless Google OAuth becomes real product scope — see [implementation-status.md](./implementation-status.md).
 
 ---
@@ -83,8 +84,8 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
 5. **2.5 Event and audit alignment**
   - Emit membership-centric events; log governance actions with `org_id` null where platform-scoped (per architecture decisions).
   - Standardize governance payloads around `actorUserId`, `targetUserId`, `membershipId`, `orgId` (membership actions only), and `timestamp`.
-  - Restrict the audit read path so org admins only see current-org audit rows until Layer 3 adds a physical `audit_logs.org_id` column.
-  - Persist scope metadata in audit `changes` now; defer the physical `audit_logs.org_id` column to Layer 3 Pass B.
+  - Restrict the audit read path so org admins only see current-org audit rows.
+  - Persist scope metadata in audit `changes`; Layer 3 Pass B now also persists physical `audit_logs.org_id` for org-scoped rows.
 
 **Done when:** Super-admin can list users with memberships, approve pending membership, assign org roles; org admin cannot hit user-governance routes; login/register match pending-access story.
 
@@ -105,7 +106,7 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
 3. **3.3 Middleware and handlers**
   - Resolve `req.orgId` from JWT + membership validation.
   - Enforce org filter on all CRUD for scoped resources.
-  - Revisit enrollment: partial unique “one active enrollment per student” may need org-scoped variant when `enrollments.org_id` exists.
+  - Runtime enrollment semantics are now one active enrollment per org; only revisit schema-level uniqueness if product rules or DB enforcement require it later.
 
 **Done when:** Automated or manual checks show Org A data never returned under Org B context; indexes in place for `org_id` filters.
 

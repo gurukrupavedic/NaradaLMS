@@ -2,7 +2,7 @@
 
 This document defines how we know each layer is **done** and the platform is safe to expand (RR) after SLMTS pilot.
 
-**Current build:** Layer 2 includes **2.1**–**2.5** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory, governance event/audit alignment). Layer **3 Pass A** is now implemented for `tracks`, `chapters`, `batches`, and `enrollments`. Physical `audit_logs.org_id` schema support remains deferred to Layer `3.B.1` — see [implementation-status.md](./implementation-status.md).
+**Current build:** Layer 2 includes **2.1**–**2.5** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory, governance event/audit alignment). Layer **3 Pass A** and **3 Pass B** are now implemented for the core, media, progress, and audit tables, including physical `audit_logs.org_id` support — see [implementation-status.md](./implementation-status.md).
 
 ---
 
@@ -29,6 +29,9 @@ Add or extend tests when implementation lands (exact framework TBD per repo conv
 - **Admin org switcher helpers:** `npx tsx scripts/test/admin-org-switcher-utils.test.ts` validates switchable-membership filtering, current-org resolution, and org-scoped admin query invalidation predicates used by the admin shell switcher.
 - **Layer 3 schema + guards:** `npx tsx scripts/test/layer3-pass-a-schema-and-guards.test.ts` validates `org_id` columns and `requireOrgContext` wiring on core routers.
 - **Layer 3 isolation:** `npx tsx scripts/test/layer3-pass-a-isolation.test.ts` creates SLMTS/RR fixtures on the same DB and asserts content + batch isolation.
+- **Layer 3 Pass B schema + backfill:** `npx tsx scripts/test/layer3-pass-b-schema-and-guards.test.ts` validates the remaining `org_id` columns, nullable `audit_logs.org_id`, and migration guard/backfill shape.
+- **Layer 3 Pass B media/content isolation:** `npx tsx scripts/test/layer3-pass-b-media-isolation.test.ts` validates org-scoped create/read/update/delete behavior for audio, text segments, media segments, and mappings.
+- **Layer 3 Pass B progress/audit isolation:** `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts` validates org-scoped progress writes/reads, per-org enrollment semantics, and event-handler-backed audit persistence.
 - **Register:** creates `user_organizations` row `pending` for slug from tenant header/env.
 
 Until automated tests exist, use the manual scenarios below and record results in the PR/slice notes.
@@ -77,13 +80,13 @@ Run only on branch `slice-1.4-schema-contract` when [legacy-users-columns-cleanu
 
 1. Token: org admin only (no super-admin).
 2. Call user management approve/list endpoints -> **403**.
-3. `GET /api/admin/audit-logs` returns only rows whose audit metadata matches the current org scope.
+3. `GET /api/admin/audit-logs` returns only rows whose physical `audit_logs.org_id` matches the current org; `NULL` platform rows remain super-admin only.
 
 ### Governance event + audit alignment
 
 1. Membership approve/reject/enable/disable and role changes emit membership-scoped events with `actorUserId`, `targetUserId`, `membershipId`, `orgId`, and `timestamp`.
 2. Super-admin grant/revoke emit platform-scoped events with `actorUserId`, `targetUserId`, and `timestamp`, with no `orgId`.
-3. Audit subscribers persist governance rows with `scope: 'org'` for membership actions and `scope: 'platform'` for super-admin actions until Layer `3.B.1` adds a physical `audit_logs.org_id` column.
+3. Audit subscribers persist governance rows with `scope: 'org'` for membership actions and `scope: 'platform'` for super-admin actions, and org-scoped subscribers also populate physical `audit_logs.org_id`.
 
 ### Org switch (admin portal)
 
@@ -109,10 +112,14 @@ Run only on branch `slice-1.4-schema-contract` when [legacy-users-columns-cleanu
 - In SLMTS context: list tracks -> only SLMTS tracks.
 - In RR context: list tracks -> only RR tracks.
 - Direct ID guessing: fetch by id of other org's chapter/track/batch -> **404 via scoped lookup** for current Pass A core routes.
+- Pass B media/content lookups and mutations (`audio_files`, `text_segments`, `media_segments`, `segment_mappings`) reject or hide foreign-org rows even when IDs are guessed correctly.
+- Progress reads/writes use physical `student_progress.org_id`, not chapter-only inference.
+- Org-admin audit reads use physical `audit_logs.org_id`; platform rows remain visible only to super-admins.
 
 ### Enrollment rule
 
-- If org-scoped “one active enrollment” applies: verify student cannot hold active enrollments in two orgs simultaneously **if** that is product intent; otherwise document allowed behavior.
+- Verify the same student can hold independent active enrollments in different orgs.
+- Verify the same student cannot create a second active enrollment inside the same org.
 
 ---
 

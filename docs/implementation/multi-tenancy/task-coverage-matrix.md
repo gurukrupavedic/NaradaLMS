@@ -11,6 +11,12 @@ Sequenced execution reference. Execute rows in ascending **Seq** unless noted pa
 
 **Note:** Seq **16** (`MT-1.4`) runs **after** Layer 2 tasks **6–15** complete, even though it appears mid-table for readability.
 
+**Progress snapshot on `multi-tenancy`:**
+
+- Complete through **MT-3.B.3** (Layer 3 Pass A + Pass B).
+- **MT-5.3** is complete; **MT-5.2** remains partial because the backend filter exists but the admin UI still lacks a dedicated org filter control.
+- Main remaining execution areas are **MT-4.x**, deferred **MT-1.4**, optional **MT-2.10** (OAuth parity), and pilot validation **MT-6.1**.
+
 ---
 
 ## Task matrix
