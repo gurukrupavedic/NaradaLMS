@@ -54,7 +54,7 @@ export class LearningService {
       }
     }
 
-    await learningStorage.trackChapterAccess(studentId, chapterId, batchId);
+    await learningStorage.trackChapterAccess(studentId, chapterId, orgId, batchId);
 
     eventBus.publish(LEARNING_DELIVERY_EVENTS.CHAPTER_ACCESSED, {
       chapterId,

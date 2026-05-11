@@ -267,6 +267,16 @@ export class ContentStorage {
     }
 
     return db.transaction(async (tx) => {
+      const [chapter] = await tx
+        .select({ orgId: chapters.orgId })
+        .from(chapters)
+        .where(eq(chapters.id, segment.chapterId))
+        .limit(1);
+
+      if (!chapter) {
+        throw createHttpError("Chapter not found", 404, "CHAPTER_NOT_FOUND");
+      }
+
       await tx
         .select({ id: textSegments.id })
         .from(textSegments)
@@ -291,6 +301,7 @@ export class ContentStorage {
       const nextOrder = (maxOrderResult[0]?.maxOrder ?? -1) + 1;
 
       const [newSegment] = await tx.insert(textSegments).values({
+        orgId: chapter.orgId,
         chapterId: segment.chapterId,
         script: segment.script,
         startPosition: segment.startPosition,

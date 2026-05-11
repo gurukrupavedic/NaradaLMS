@@ -178,6 +178,9 @@ export const chapters = pgTable("chapters", {
 // Audio files for chapters
 export const audioFiles = pgTable("audio_files", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
   filename: text("filename").notNull(),
   displayName: text("display_name").notNull(),
@@ -188,12 +191,16 @@ export const audioFiles = pgTable("audio_files", {
   uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index("idx_audio_files_org").on(table.orgId),
   index("idx_audio_files_chapter").on(table.chapterId),
 ]);
 
 // Text segments - Script-specific approach for clean architecture
 export const textSegments = pgTable("text_segments", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
   script: varchar("script", { length: 2 }).notNull(), // 'te', 'hi', 'en'
   startPosition: integer("start_position").notNull(),
@@ -202,6 +209,7 @@ export const textSegments = pgTable("text_segments", {
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index("idx_text_segments_org").on(table.orgId),
   unique("text_segments_chapter_script_order_uniq").on(
     table.chapterId,
     table.script,
@@ -216,6 +224,9 @@ export const textSegments = pgTable("text_segments", {
 // Media segments - Audio file timestamp segments (integer milliseconds; Bundle E)
 export const mediaSegments = pgTable("media_segments", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   audioFileId: integer("audio_file_id").notNull().references(() => audioFiles.id, { onDelete: "cascade" }),
   startMs: integer("start_ms").notNull(), // in milliseconds
   endMs: integer("end_ms").notNull(), // in milliseconds
@@ -223,6 +234,7 @@ export const mediaSegments = pgTable("media_segments", {
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index("idx_media_segments_org").on(table.orgId),
   check(
     "media_segments_start_ms_nonneg_check",
     sql`${table.startMs} >= 0`
@@ -240,11 +252,15 @@ export const mediaSegments = pgTable("media_segments", {
 // Segment mapping - Maps media segments to text segments
 export const segmentMappings = pgTable("segment_mappings", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   mediaSegmentId: integer("media_segment_id").notNull().references(() => mediaSegments.id, { onDelete: "cascade" }),
   textSegmentId: integer("text_segment_id").notNull().references(() => textSegments.id, { onDelete: "cascade" }),
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index("idx_segment_mappings_org").on(table.orgId),
   unique("segment_mappings_media_text_uniq").on(
     table.mediaSegmentId,
     table.textSegmentId
@@ -319,6 +335,9 @@ export const batchCoInstructors = pgTable("batch_co_instructors", {
 // Student progress tracking
 export const studentProgress = pgTable("student_progress", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   studentId: varchar("student_id").notNull().references(() => users.id),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
   batchId: integer("batch_id").references(() => batches.id),
@@ -331,6 +350,7 @@ export const studentProgress = pgTable("student_progress", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index("idx_progress_org").on(table.orgId),
   index("idx_progress_student").on(table.studentId),
   index("idx_progress_chapter").on(table.chapterId),
   index("idx_progress_batch").on(table.batchId),
@@ -347,6 +367,9 @@ export const studentProgress = pgTable("student_progress", {
 // Proficiency Evaluation Log - Audit trail for proficiency changes
 export const proficiencyEvaluationLog = pgTable("proficiency_evaluation_log", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   studentId: varchar("student_id").notNull().references(() => users.id),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
   batchId: integer("batch_id").references(() => batches.id), // Current batch at time of evaluation
@@ -356,6 +379,7 @@ export const proficiencyEvaluationLog = pgTable("proficiency_evaluation_log", {
   notes: text("notes"),
   evaluatedAt: timestamp("evaluated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
+  index("idx_proficiency_log_org").on(table.orgId),
   index("idx_proficiency_log_student").on(table.studentId),
   index("idx_proficiency_log_chapter").on(table.chapterId),
   index("idx_proficiency_log_batch").on(table.batchId),
@@ -372,6 +396,9 @@ export const proficiencyEvaluationLog = pgTable("proficiency_evaluation_log", {
 // Audit logs - Track all sensitive operations
 export const auditLogs = pgTable("audit_logs", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   userId: varchar("user_id").notNull().references(() => users.id),
   action: text("action").notNull(), // 'CREATE_CHAPTER', 'PUBLISH_CHAPTER', 'ENROLL_STUDENT', etc.
   resourceType: text("resource_type").notNull(), // 'chapter', 'batch', 'enrollment', etc.
@@ -380,6 +407,7 @@ export const auditLogs = pgTable("audit_logs", {
   timestamp: timestamp("timestamp", { withTimezone: true }).defaultNow(),
   requestId: text("request_id"), // for tracing
 }, (table) => [
+  index("idx_audit_logs_org_timestamp_desc").on(table.orgId, table.timestamp.desc()),
   index("idx_audit_logs_timestamp_desc").on(table.timestamp.desc()),
   index("idx_audit_logs_user_timestamp_desc").on(table.userId, table.timestamp.desc()),
   index("idx_audit_logs_resource_type_timestamp_desc").on(table.resourceType, table.timestamp.desc()),
@@ -425,8 +453,15 @@ export const organizationsRelations = relations(organizations, ({ many }) => ({
   userOrganizations: many(userOrganizations),
   tracks: many(tracks),
   chapters: many(chapters),
+  audioFiles: many(audioFiles),
+  textSegments: many(textSegments),
+  mediaSegments: many(mediaSegments),
+  segmentMappings: many(segmentMappings),
+  studentProgress: many(studentProgress),
+  proficiencyEvaluationLogs: many(proficiencyEvaluationLog),
   batches: many(batches),
   enrollments: many(enrollments),
+  auditLogs: many(auditLogs),
 }));
 
 export const userOrganizationsRelations = relations(
@@ -481,6 +516,10 @@ export const chaptersRelations = relations(chapters, ({ one, many }) => ({
 }));
 
 export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [audioFiles.orgId],
+    references: [organizations.id],
+  }),
   chapter: one(chapters, {
     fields: [audioFiles.chapterId],
     references: [chapters.id],
@@ -493,6 +532,10 @@ export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({
 }));
 
 export const textSegmentsRelations = relations(textSegments, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [textSegments.orgId],
+    references: [organizations.id],
+  }),
   chapter: one(chapters, {
     fields: [textSegments.chapterId],
     references: [chapters.id],
@@ -505,6 +548,10 @@ export const textSegmentsRelations = relations(textSegments, ({ one, many }) => 
 }));
 
 export const mediaSegmentsRelations = relations(mediaSegments, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [mediaSegments.orgId],
+    references: [organizations.id],
+  }),
   audioFile: one(audioFiles, {
     fields: [mediaSegments.audioFileId],
     references: [audioFiles.id],
@@ -517,6 +564,10 @@ export const mediaSegmentsRelations = relations(mediaSegments, ({ one, many }) =
 }));
 
 export const segmentMappingsRelations = relations(segmentMappings, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [segmentMappings.orgId],
+    references: [organizations.id],
+  }),
   mediaSegment: one(mediaSegments, {
     fields: [segmentMappings.mediaSegmentId],
     references: [mediaSegments.id],
@@ -532,6 +583,10 @@ export const segmentMappingsRelations = relations(segmentMappings, ({ one }) => 
 }));
 
 export const studentProgressRelations = relations(studentProgress, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [studentProgress.orgId],
+    references: [organizations.id],
+  }),
   student: one(users, {
     fields: [studentProgress.studentId],
     references: [users.id],
@@ -555,6 +610,10 @@ export const studentProgressRelations = relations(studentProgress, ({ one }) => 
 export const proficiencyEvaluationLogRelations = relations(
   proficiencyEvaluationLog,
   ({ one }) => ({
+    organization: one(organizations, {
+      fields: [proficiencyEvaluationLog.orgId],
+      references: [organizations.id],
+    }),
     student: one(users, {
       fields: [proficiencyEvaluationLog.studentId],
       references: [users.id],
@@ -634,6 +693,10 @@ export const batchCoInstructorsRelations = relations(batchCoInstructors, ({ one 
 }));
 
 export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [auditLogs.orgId],
+    references: [organizations.id],
+  }),
   user: one(users, {
     fields: [auditLogs.userId],
     references: [users.id],

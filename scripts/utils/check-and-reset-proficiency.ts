@@ -6,7 +6,7 @@
 
 import { db } from '../../server/db';
 import { studentProgress, enrollments, chapters } from '@narada/types';
-import { inArray } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 async function checkAndResetProficiency() {
   try {
@@ -14,21 +14,26 @@ async function checkAndResetProficiency() {
     
     // Get all active students
     const activeStudents = await db
-      .select({ studentId: enrollments.studentId })
+      .select({ studentId: enrollments.studentId, orgId: enrollments.orgId })
       .from(enrollments)
-      .where(({ status }) => status === 'active');
+      .where(eq(enrollments.status, 'active'));
     
     console.log(`📚 Found ${activeStudents.length} active enrolled students`);
     
-    // Get all chapters
+    // Get all chapters with org scope
     const allChapters = await db
-      .select({ id: chapters.id })
+      .select({ id: chapters.id, orgId: chapters.orgId })
       .from(chapters);
     
     console.log(`📖 Found ${allChapters.length} total chapters`);
     
     // Calculate expected records
-    const expectedRecords = activeStudents.length * allChapters.length;
+    const expectedRecords = activeStudents.reduce((total, student) => {
+      return (
+        total +
+        allChapters.filter((chapter) => chapter.orgId === student.orgId).length
+      );
+    }, 0);
     console.log(`💾 Expected proficiency records: ${expectedRecords}`);
     
     // Get existing records
@@ -51,9 +56,14 @@ async function checkAndResetProficiency() {
       const missingRecords: any[] = [];
       for (const student of activeStudents) {
         for (const chapter of allChapters) {
+          if (chapter.orgId !== student.orgId) {
+            continue;
+          }
+
           const key = `${student.studentId}-${chapter.id}`;
           if (!existingSet.has(key)) {
             missingRecords.push({
+              orgId: chapter.orgId,
               studentId: student.studentId,
               chapterId: chapter.id,
               proficiencyLevel: 9,

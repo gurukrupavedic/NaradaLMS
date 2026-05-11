@@ -1,7 +1,49 @@
 import { db } from '../../db';
-import { audioFiles, mediaSegments, segmentMappings, textSegments } from '@narada/types';
+import { audioFiles, chapters, mediaSegments, segmentMappings, textSegments } from '@narada/types';
 import { eq, and, asc } from 'drizzle-orm';
 import type { AudioFile, MediaSegment, MappingWithTimestamps, CreateAudioFileData, CreateMediaSegmentData, CreateMappingData } from './types';
+
+async function getChapterOrgId(chapterId: number): Promise<string> {
+  const [chapter] = await db
+    .select({ orgId: chapters.orgId })
+    .from(chapters)
+    .where(eq(chapters.id, chapterId))
+    .limit(1);
+
+  if (!chapter) {
+    throw Object.assign(new Error(`Chapter ${chapterId} not found`), { status: 404 });
+  }
+
+  return chapter.orgId;
+}
+
+async function getAudioFileOrgId(audioFileId: number): Promise<string> {
+  const [audioFile] = await db
+    .select({ orgId: audioFiles.orgId })
+    .from(audioFiles)
+    .where(eq(audioFiles.id, audioFileId))
+    .limit(1);
+
+  if (!audioFile) {
+    throw Object.assign(new Error(`Audio file ${audioFileId} not found`), { status: 404 });
+  }
+
+  return audioFile.orgId;
+}
+
+async function getTextSegmentOrgId(textSegmentId: number): Promise<string> {
+  const [textSegment] = await db
+    .select({ orgId: textSegments.orgId })
+    .from(textSegments)
+    .where(eq(textSegments.id, textSegmentId))
+    .limit(1);
+
+  if (!textSegment) {
+    throw Object.assign(new Error(`Text segment ${textSegmentId} not found`), { status: 404 });
+  }
+
+  return textSegment.orgId;
+}
 
 export const mediaStorage = {
   async getAudioFilesByChapter(chapterId: number): Promise<AudioFile[]> {
@@ -9,7 +51,9 @@ export const mediaStorage = {
   },
 
   async createAudioFile(data: CreateAudioFileData): Promise<AudioFile> {
+    const orgId = await getChapterOrgId(data.chapterId);
     const [newFile] = await db.insert(audioFiles).values({
+      orgId,
       chapterId: data.chapterId,
       filename: data.filename,
       displayName: data.displayName,
@@ -36,7 +80,9 @@ export const mediaStorage = {
   },
 
   async createMediaSegment(data: CreateMediaSegmentData): Promise<MediaSegment> {
+    const orgId = await getAudioFileOrgId(data.audioFileId);
     const [seg] = await db.insert(mediaSegments).values({
+      orgId,
       audioFileId: data.audioFileId,
       startMs: data.startMs,
       endMs: data.endMs,
@@ -89,7 +135,17 @@ export const mediaStorage = {
   },
 
   async createMappingWithMediaSegment(data: CreateMappingData): Promise<MappingWithTimestamps> {
+    const orgId = await getAudioFileOrgId(data.audioFileId);
+    const textSegmentOrgId = await getTextSegmentOrgId(data.textSegmentId);
+
+    if (orgId !== textSegmentOrgId) {
+      throw Object.assign(new Error('Audio file and text segment must belong to the same organization'), {
+        status: 400,
+      });
+    }
+
     const [mediaSeg] = await db.insert(mediaSegments).values({
+      orgId,
       audioFileId: data.audioFileId,
       startMs: data.startMs,
       endMs: data.endMs,
@@ -97,6 +153,7 @@ export const mediaStorage = {
     }).returning();
 
     const [map] = await db.insert(segmentMappings).values({
+      orgId,
       mediaSegmentId: mediaSeg.id,
       textSegmentId: data.textSegmentId,
       createdBy: data.createdBy,
