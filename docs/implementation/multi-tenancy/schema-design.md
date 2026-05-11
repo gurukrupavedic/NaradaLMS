@@ -94,6 +94,8 @@ Seeded initial rows:
 - `slmts` (active)
 - `rr` (initially active/inactive can be operationally decided in seed data)
 
+**Dev seeding:** after migrations (`npm run db:reset` or `npm run db:migrate`), run `npm run db:seed-orgs` to insert these rows idempotently. Implementation: [server/seed-organizations.ts](../../../server/seed-organizations.ts). Display names in the DB use **Pathasala** spelling; canonical API / tenant keys are the slugs `slmts` and `rr`.
+
 ---
 
 ### 3) New `user_organizations` table

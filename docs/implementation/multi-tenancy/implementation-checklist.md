@@ -26,7 +26,7 @@ Layer 1 uses an **expand–contract** pattern so `multi-tenancy` stays buildable
 - [ ] **1.2** Add `user_organizations` table with unique `(user_id, org_id)`, status + roles columns (additive).
 - [ ] **1.3** Add `users.is_super_admin` (boolean, default false; additive).
 - [ ] **1.4** Commit Drizzle schema changes and **generated** SQL migrations together (`drizzle-kit generate`; dev reset applies them via `drizzle-kit migrate`). Include a baseline migration that matches the pre–multi-tenancy schema plus a migration for the additive Layer 1 changes.
-- [ ] **1.5** Seed `slmts` and `rr` org rows + document slugs.
+- [x] **1.5** Seed `slmts` and `rr` org rows + document slugs (`npm run db:seed-orgs`; [server/seed-organizations.ts](../../../server/seed-organizations.ts)).
 - [ ] **1.6** Seed dev super-admin + minimal test memberships (manual SQL or seed script).
 
 ### Deferred — slice `slice-1.4-schema-contract` (after Layer 2 completes)
