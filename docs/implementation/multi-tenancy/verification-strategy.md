@@ -26,6 +26,7 @@ Add or extend tests when implementation lands (exact framework TBD per repo conv
 - **Governance events:** `npx tsx scripts/test/identity-governance-events.test.ts` validates aligned payloads plus audit subscriber mappings for membership and super-admin governance actions.
 - **Governance gate:** `npx tsx scripts/test/require-super-admin.test.ts` validates 401-without-user, 403-for-org-admin, and pass-through for `isSuperAdmin`.
 - **Audit visibility:** `npx tsx scripts/test/audit-log-visibility.test.ts` validates that org admins are constrained to current-org audit scope while super-admins remain unrestricted.
+- **Admin org switcher helpers:** `npx tsx scripts/test/admin-org-switcher-utils.test.ts` validates switchable-membership filtering, current-org resolution, and org-scoped admin query invalidation predicates used by the admin shell switcher.
 - **Layer 3 schema + guards:** `npx tsx scripts/test/layer3-pass-a-schema-and-guards.test.ts` validates `org_id` columns and `requireOrgContext` wiring on core routers.
 - **Layer 3 isolation:** `npx tsx scripts/test/layer3-pass-a-isolation.test.ts` creates SLMTS/RR fixtures on the same DB and asserts content + batch isolation.
 - **Register:** creates `user_organizations` row `pending` for slug from tenant header/env.

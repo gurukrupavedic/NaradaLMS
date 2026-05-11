@@ -4,7 +4,7 @@
 
 **Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
 
-**Last updated:** Reflects Layer **1** (expand), Layer **2** roadmap slices **2.1–2.5**, Layer **3 Pass A** core org isolation work through slice `slice-3.a-core-org-isolation`, and checklist **5.3** through slice `slice-5.3-admin-org-switcher`.
+**Last updated:** Reflects Layer **1** (expand), Layer **2** roadmap slices **2.1–2.5**, Layer **3 Pass A** core org isolation work through slice `slice-3.a-core-org-isolation`, and checklist **5.3** through merge commit `e7db9e2a` on `multi-tenancy`.
 
 ---
 
@@ -15,6 +15,8 @@
   - `slice-2.3-switch-org` — `req.orgId`, `attachOrgContext`, `POST /api/auth/switch-org`
   - `slice-2.4-superadmin-governance` — `requireSuperAdmin`, membership governance routes, `GET /api/admin/directory/users`, admin UserList + hooks
   - `slice-2.5-governance-event-alignment` — governance event contract alignment, persisted audit subscriber alignment, org-scoped audit-log visibility
+  - `slice-3.a-core-org-isolation` — `org_id` on core content/batch tables plus org-scoped handlers
+  - `slice-5.3-admin-org-switcher` — admin shell org switcher + auth/query refresh behavior
 
 ---
 
@@ -72,7 +74,7 @@ Use this to map [implementation-checklist.md](./implementation-checklist.md) lin
 | Checklist | Status | Notes |
 | --------- | ------ | ----- |
 | **5.1** User management super-admin only | **Done** (UI + server) | [`UserList.tsx`](../../../apps/admin-portal/src/components/admin/UserList.tsx) shows **Super-admin only** for others; APIs return **403**. |
-| **5.2** List + memberships + org filter | **Partial** | List + memberships + **`orgSlug`** / membership filters on **governance** API; no dedicated admin-only “org switcher” UX beyond what JWT + **switch-org** API already provide. |
+| **5.2** List + memberships + org filter | **Partial** | The governance API already supports nested **`memberships[]`**, **`membershipStatus`**, **`role`**, and **`orgSlug`** filters, and the admin grid renders membership details. The remaining gap is the admin user-management UI: it still lacks a dedicated org filter control/wiring for the existing **`orgSlug`** backend filter. |
 | **5.3** Org switcher in admin UI | **Done** | Admin shell now renders an org switcher in the shared header, calls **`POST /api/auth/switch-org`**, refetches **`GET /api/auth/me`**, and invalidates org-scoped admin query families before a conservative `router.refresh()`. Verified locally against a temporary dual-active admin fixture (seeded super-admin password reset + RR membership promoted from pending to active/admin for the verification session). Key files: [`apps/admin-portal/src/components/layout/AdminOrgSwitcher.tsx`](../../../apps/admin-portal/src/components/layout/AdminOrgSwitcher.tsx), [`apps/admin-portal/src/hooks/useSwitchOrg.ts`](../../../apps/admin-portal/src/hooks/useSwitchOrg.ts), [`apps/admin-portal/src/lib/org-switcher.ts`](../../../apps/admin-portal/src/lib/org-switcher.ts), [`packages/ui/src/components/layout/app-shell.tsx`](../../../packages/ui/src/components/layout/app-shell.tsx), [`scripts/test/admin-org-switcher-utils.test.ts`](../../../scripts/test/admin-org-switcher-utils.test.ts). |
 | **5.4** Org admins cannot governance APIs | **Done** | **403** without `isSuperAdmin`; directory uses separate route. |
 
@@ -151,7 +153,7 @@ Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` afte
 
 When continuing in a brand-new chat, do this first:
 
-1. Confirm checkout is on **`multi-tenancy`** and includes merge commit **`4726aa8b`** or later.
+1. Confirm checkout is on **`multi-tenancy`** and includes merge commit **`e7db9e2a`** or later.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
 3. Default to **Layer 3 Pass B** as the next foundational slice.
 4. Keep **2.12** deferred unless Google OAuth becomes product scope; if you do touch Layer 2 governance behavior again, rerun the targeted checks listed below before merging.

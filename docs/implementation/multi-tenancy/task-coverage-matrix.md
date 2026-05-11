@@ -44,7 +44,8 @@ Sequenced execution reference. Execute rows in ascending **Seq** unless noted pa
 | 24  | MT-4.3    | Client        | Parallel-safe | Tenant header on auth API calls                                                                    | student `api` layer                                             | correct org on register                               |
 | 25  | MT-5.1    | Admin UI      | Individual    | Super-admin gate on User Management                                                                | admin routes/pages                                              | non-super-admin blocked                               |
 | 26  | MT-5.2    | Admin UI      | Parallel-safe | Multi-org user list + org filter                                                                   | grid + query params                                             | matches API                                           |
-| 27  | MT-6.1    | Pilot         | Individual    | Pilot checklist execution                                                                          | notes in [verification-strategy.md](./verification-strategy.md) | sign-off                                              |
+| 27  | MT-5.3    | Admin UI      | Parallel-safe | Admin shell org switcher + auth refresh + org-scoped admin cache invalidation                     | shell/header UI + switch hook                                   | switch updates `auth/me` and refreshes org data       |
+| 28  | MT-6.1    | Pilot         | Individual    | Pilot checklist execution                                                                          | notes in [verification-strategy.md](./verification-strategy.md) | sign-off                                              |
 
 
 ---
@@ -77,7 +78,7 @@ MT-4.1 -> MT-4.2 -> MT-4.3
 
 ### Bundle F — Admin UI governance
 
-MT-5.1 -> MT-5.2 after MT-2.8
+MT-5.1 -> MT-5.2 -> MT-5.3 after MT-2.8 (and after Layer 3 org-scoped data is meaningful)
 
 ---
 
