@@ -79,7 +79,12 @@ export class LearningStorage {
   /**
    * Track chapter access (upsert lastAccessed)
    */
-  async trackChapterAccess(studentId: string, chapterId: number, batchId?: number): Promise<void> {
+  async trackChapterAccess(
+    studentId: string,
+    chapterId: number,
+    orgId: string,
+    batchId?: number
+  ): Promise<void> {
     const existing = await db
       .select()
       .from(studentProgress)
@@ -103,6 +108,7 @@ export class LearningStorage {
     } else {
       // Insert new progress record
       await db.insert(studentProgress).values({
+        orgId,
         studentId,
         chapterId,
         batchId: batchId ?? null,

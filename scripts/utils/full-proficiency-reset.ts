@@ -5,30 +5,40 @@
  */
 
 import { db } from '../../server/db';
-import { studentProgress, users, chapters } from '@narada/types';
-import { sql } from 'drizzle-orm';
+import { chapters, studentProgress, userOrganizations } from '@narada/types';
+import { and, eq, sql } from 'drizzle-orm';
 
 async function fullProficiencyReset() {
   try {
     console.log('🔍 Analyzing complete proficiency coverage...\n');
     
-    // Get ALL students (not just enrolled)
-    const allStudents = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(sql`'student' = ANY(${users.roles})`);
+    // Get all active student memberships so proficiency rows stay org-scoped
+    const activeStudentMemberships = await db
+      .select({ studentId: userOrganizations.userId, orgId: userOrganizations.orgId })
+      .from(userOrganizations)
+      .where(
+        and(
+          eq(userOrganizations.status, 'active'),
+          sql`'student' = ANY(${userOrganizations.roles})`
+        )
+      );
     
-    console.log(`👥 Found ${allStudents.length} total student users`);
+    console.log(`👥 Found ${activeStudentMemberships.length} active student memberships`);
     
-    // Get all chapters
+    // Get all chapters with org scope
     const allChapters = await db
-      .select({ id: chapters.id })
+      .select({ id: chapters.id, orgId: chapters.orgId })
       .from(chapters);
     
     console.log(`📖 Found ${allChapters.length} total chapters`);
     
     // Calculate expected records
-    const expectedRecords = allStudents.length * allChapters.length;
+    const expectedRecords = activeStudentMemberships.reduce((total, membership) => {
+      return (
+        total +
+        allChapters.filter((chapter) => chapter.orgId === membership.orgId).length
+      );
+    }, 0);
     console.log(`💾 Expected proficiency records: ${expectedRecords}`);
     
     // Get existing records
@@ -45,12 +55,17 @@ async function fullProficiencyReset() {
     
     // Generate missing records
     const missingRecords: any[] = [];
-    for (const student of allStudents) {
+    for (const membership of activeStudentMemberships) {
       for (const chapter of allChapters) {
-        const key = `${student.id}-${chapter.id}`;
+        if (chapter.orgId !== membership.orgId) {
+          continue;
+        }
+
+        const key = `${membership.studentId}-${chapter.id}`;
         if (!existingSet.has(key)) {
           missingRecords.push({
-            studentId: student.id,
+            orgId: chapter.orgId,
+            studentId: membership.studentId,
             chapterId: chapter.id,
             proficiencyLevel: 9,
             batchId: null,

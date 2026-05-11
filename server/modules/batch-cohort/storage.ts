@@ -286,6 +286,7 @@ export class BatchStorage {
 
         if (newChapters.length > 0) {
           const proficiencyRecords = newChapters.map(chapter => ({
+            orgId: input.orgId,
             studentId: input.studentId,
             chapterId: chapter.id,
             batchId: null,  // Batch-agnostic: proficiency is global per student per chapter
@@ -605,7 +606,7 @@ export class BatchStorage {
     };
   }
 
-  async evaluateStudent(input: { studentId: string; chapterId: number; proficiencyLevel: number; notes?: string; evaluatedBy: string; batchId?: number }) {
+  async evaluateStudent(orgId: string, input: { studentId: string; chapterId: number; proficiencyLevel: number; notes?: string; evaluatedBy: string; batchId?: number }) {
     // Query by (studentId, chapterId) only - batch-agnostic
     // A student should have exactly ONE proficiency record per chapter
     const existing = await db
@@ -639,6 +640,7 @@ export class BatchStorage {
       [result] = await db
         .insert(studentProgress)
         .values({
+          orgId,
           studentId: input.studentId,
           chapterId: input.chapterId,
           batchId: null,  // Batch-agnostic
@@ -652,6 +654,7 @@ export class BatchStorage {
 
     // Create audit log entry (track which batch the instructor evaluated from)
     await db.insert(proficiencyEvaluationLog).values({
+      orgId,
       studentId: input.studentId,
       chapterId: input.chapterId,
       batchId: input.batchId ?? null,  // Current batch for audit purposes

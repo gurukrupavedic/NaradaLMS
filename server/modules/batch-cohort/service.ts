@@ -231,7 +231,7 @@ export class BatchService {
       if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });
     }
 
-    const result = await batchStorage.evaluateStudent(input);
+    const result = await batchStorage.evaluateStudent(orgId, input);
     eventBus.publish(LEARNING_DELIVERY_EVENTS.PROGRESS_UPDATED, {
       studentId: input.studentId,
       chapterId: input.chapterId,
