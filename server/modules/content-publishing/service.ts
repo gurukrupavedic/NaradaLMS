@@ -215,6 +215,7 @@ export class ContentService {
 
     await this.eventBus.publish(CONTENT_EVENTS.CHAPTER_PUBLISHED, {
       type: 'ChapterPublished',
+      orgId,
       chapterId,
       publishedBy: userId,
       timestamp: new Date()
@@ -228,6 +229,7 @@ export class ContentService {
 
     await this.eventBus.publish(CONTENT_EVENTS.CHAPTER_UNPUBLISHED, {
       type: 'ChapterUnpublished',
+      orgId,
       chapterId,
       unpublishedBy: userId,
       timestamp: new Date()

@@ -179,9 +179,13 @@ router.post('/batches/:id/enrollments', requireInstructor, async (req: Request, 
 // PATCH /api/enrollments/:id/drop - Drop an enrollment
 router.patch('/enrollments/:id/drop', requireInstructor, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const user = req.user as Express.User;
+    const orgId = req.orgId as string;
     const enrollmentId = parseInt(req.params.id);
     const updated = await batchService.dropEnrollment({
+      orgId,
       enrollmentId,
+      droppedBy: user.id,
       droppedReason: req.body.droppedReason,
     });
     res.json(updated);

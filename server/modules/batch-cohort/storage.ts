@@ -277,7 +277,12 @@ export class BatchStorage {
         const existingProgress = await db
           .select({ chapterId: studentProgress.chapterId })
           .from(studentProgress)
-          .where(eq(studentProgress.studentId, input.studentId));
+          .where(
+            and(
+              eq(studentProgress.studentId, input.studentId),
+              eq(studentProgress.orgId, input.orgId)
+            )
+          );
 
         const existingChapterIds = new Set(existingProgress.map(p => p.chapterId));
 
@@ -312,7 +317,12 @@ export class BatchStorage {
       droppedAt: new Date(),
       droppedReason: input.droppedReason ?? null,
       updatedAt: new Date(),
-    }).where(eq(enrollments.id, input.enrollmentId)).returning();
+    }).where(
+      and(
+        eq(enrollments.id, input.enrollmentId),
+        eq(enrollments.orgId, input.orgId)
+      )
+    ).returning();
     return updated;
   }
 
@@ -338,11 +348,12 @@ export class BatchStorage {
       ));
   }
 
-  async getActiveEnrollmentForStudent(studentId: string) {
+  async getActiveEnrollmentForStudent(studentId: string, orgId: string) {
     const [enrollment] = await db
       .select({
         id: enrollments.id,
         batchId: enrollments.batchId,
+        orgId: enrollments.orgId,
         studentId: enrollments.studentId,
         status: enrollments.status,
         enrolledAt: enrollments.enrolledAt,
@@ -350,6 +361,7 @@ export class BatchStorage {
       .from(enrollments)
       .where(and(
         eq(enrollments.studentId, studentId),
+        eq(enrollments.orgId, orgId),
         eq(enrollments.status, 'active')
       ))
       .limit(1);
@@ -361,12 +373,11 @@ export class BatchStorage {
     const batch = await this.getBatchById(batchId, orgId);
     const primaryInstructorId = batch?.primaryInstructorId;
 
-    // ONE-TO-MANY CONSTRAINT: Get ALL students with active enrollments (in any batch)
-    // A student can only enroll in ONE batch, so exclude all currently enrolled students
+    // Limit eligibility to active enrollments within the current org.
     const enrolled = await db
       .select({ studentId: enrollments.studentId })
       .from(enrollments)
-      .where(eq(enrollments.status, 'active')); // Removed batchId filter - exclude all enrolled students
+      .where(and(eq(enrollments.orgId, orgId), eq(enrollments.status, 'active')));
 
     const enrolledIds = enrolled.map(e => e.studentId);
 
@@ -566,6 +577,7 @@ export class BatchStorage {
         .from(studentProgress)
         .where(and(
           inArray(studentProgress.studentId, studentIds),
+          eq(studentProgress.orgId, orgId),
           inArray(studentProgress.chapterId, chapterIds)
         ));
     }
@@ -626,6 +638,7 @@ export class BatchStorage {
       [result] = await db
         .update(studentProgress)
         .set({
+          orgId,
           proficiencyLevel: input.proficiencyLevel,
           notes: input.notes ?? null,
           lastEvaluatedAt: new Date(),

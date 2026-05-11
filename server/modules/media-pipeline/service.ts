@@ -14,8 +14,10 @@ export const mediaService = {
   async uploadAudioFile(data: CreateAudioFileData, orgId: string) {
     const created = await mediaStorage.createAudioFile(data, orgId);
     eventBus.publish(MEDIA_EVENTS.AUDIO_UPLOADED, {
+      orgId,
       audioFileId: created.id,
       chapterId: created.chapterId,
+      uploadedBy: data.uploadedBy,
       timestamp: new Date().toISOString(),
     });
     return created;
@@ -69,8 +71,10 @@ export const mediaService = {
     }
     const result = await mediaStorage.createMappingWithMediaSegment(data, orgId);
     eventBus.publish(MEDIA_EVENTS.MAPPING_CREATED, {
+      orgId,
       mappingId: result.mappingId,
       chapterId: seg.chapterId,
+      createdBy: data.createdBy,
       timestamp: new Date().toISOString(),
     });
     return result;

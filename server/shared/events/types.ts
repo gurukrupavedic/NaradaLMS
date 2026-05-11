@@ -116,24 +116,88 @@ export type DomainEvent =
   // Content events
   | { type: "TrackCreated"; trackId: number; createdBy: string }
   | { type: "ChapterCreated"; chapterId: number; trackId: number; createdBy: string }
-  | { type: "ChapterPublished"; chapterId: number; userId: string }
-  | { type: "ChapterUnpublished"; chapterId: number; userId: string }
+  | {
+      type: "ChapterPublished";
+      orgId: string;
+      chapterId: number;
+      publishedBy: string;
+      timestamp: Date;
+    }
+  | {
+      type: "ChapterUnpublished";
+      orgId: string;
+      chapterId: number;
+      unpublishedBy: string;
+      timestamp: Date;
+    }
   | { type: "ChapterDeleted"; chapterId: number; userId: string }
   | { type: "ChapterUpdated"; chapterId: number; userId: string }
   // Media events
-  | { type: "AudioUploaded"; audioFileId: number; chapterId: number; uploadedBy: string }
+  | {
+      type: "AudioUploaded";
+      orgId: string;
+      audioFileId: number;
+      chapterId: number;
+      uploadedBy: string;
+      timestamp: string;
+    }
   | { type: "AudioDeleted"; audioFileId: number; chapterId: number }
-  | { type: "SegmentMappingCreated"; mappingId: number; chapterId: number; createdBy: string }
+  | {
+      type: "SegmentMappingCreated";
+      orgId: string;
+      mappingId: number;
+      chapterId: number;
+      createdBy: string;
+      timestamp: string;
+    }
   | { type: "SegmentMappingDeleted"; mappingId: number; chapterId: number }
   // Batch events
-  | { type: "BatchCreated"; batchId: number; trackId: number; createdBy: string }
+  | {
+      type: "BatchCreated";
+      orgId: string;
+      batchId: number;
+      trackId: number;
+      createdBy: string;
+      timestamp: string;
+    }
   | { type: "BatchStatusChanged"; batchId: number; status: string }
-  | { type: "StudentEnrolled"; batchId: number; studentId: string; enrolledBy: string }
-  | { type: "StudentDropped"; batchId: number; studentId: string; reason?: string }
-  | { type: "CoInstructorAssigned"; batchId: number; instructorId: string; assignedBy: string }
+  | {
+      type: "StudentEnrolled";
+      orgId: string;
+      batchId: number;
+      studentId: string;
+      enrolledBy: string;
+      timestamp: string;
+    }
+  | {
+      type: "StudentDropped";
+      orgId: string;
+      batchId: number;
+      studentId: string;
+      droppedBy: string;
+      reason?: string;
+      timestamp: string;
+    }
+  | {
+      type: "CoInstructorAssigned";
+      orgId: string;
+      batchId: number;
+      instructorId: string;
+      assignedBy: string;
+      timestamp: string;
+    }
   | { type: "CoInstructorRemoved"; batchId: number; instructorId: string }
   // Progress events
-  | { type: "ProgressUpdated"; studentId: string; chapterId: number; batchId?: number; proficiencyLevel: number; evaluatedBy: string }
+  | {
+      type: "ProgressUpdated";
+      orgId: string;
+      studentId: string;
+      chapterId: number;
+      batchId?: number;
+      proficiencyLevel: number;
+      evaluatedBy: string;
+      timestamp: string;
+    }
   | { type: "ProgressCreated"; studentId: string; chapterId: number; evaluatedBy: string }
   // Settings events
   | { type: "SettingChanged"; key: string; value: string; changedBy: string };

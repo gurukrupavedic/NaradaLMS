@@ -31,9 +31,10 @@ export class AdminService {
     action: string,
     resourceType: string,
     resourceId: string,
-    changes?: any
+    changes?: any,
+    orgId?: string
   ): Promise<void> {
-    await this.storage.insertAuditLog(userId, action, resourceType, resourceId, changes);
+    await this.storage.insertAuditLog(userId, action, resourceType, resourceId, changes, orgId);
   }
 
   /**

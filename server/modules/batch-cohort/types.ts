@@ -47,7 +47,9 @@ export interface EnrollmentCreateInput {
 }
 
 export interface EnrollmentDropInput {
+	orgId: string;
 	enrollmentId: number;
+	droppedBy: string;
 	droppedReason?: string;
 }
 
