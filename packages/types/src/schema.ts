@@ -133,17 +133,26 @@ export const userOrganizations = pgTable(
 // Learning tracks - Vedic curriculum structure
 export const tracks = pgTable("tracks", {
   id: serial("id").primaryKey(),
-  title: text("title").notNull().unique(), // Unique track titles as per requirements
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
+  title: text("title").notNull(), // Unique per organization in Pass A
   description: text("description").notNull(), // Made mandatory
   sortOrder: integer("sort_order").notNull(), // Sequential number starting from 1, 2, 3...
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
+}, (table) => [
+  index("idx_tracks_org").on(table.orgId),
+  unique("tracks_org_title_uniq").on(table.orgId, table.title),
+]);
 
 // Chapters - Wiki-style content with draft/published workflow
 export const chapters = pgTable("chapters", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   trackId: integer("track_id").notNull().references(() => tracks.id, { onDelete: "cascade" }),
   title: text("title").notNull(), // Single source of truth per Q9
   sortOrder: integer("sort_order").notNull(),
@@ -160,6 +169,7 @@ export const chapters = pgTable("chapters", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index("idx_chapters_org").on(table.orgId),
   index("idx_chapters_track").on(table.trackId),
   unique("chapters_track_title_uniq").on(table.trackId, table.title),
   check("chapters_status_check", sql`status IN ('draft', 'published')`),
@@ -244,6 +254,9 @@ export const segmentMappings = pgTable("segment_mappings", {
 // Batches - Flexible cohorts (track and instructor optional; assignable later)
 export const batches = pgTable("batches", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   batchCode: text("batch_code").notNull(),
   batchName: text("batch_name").notNull(),
   trackId: integer("track_id").references(() => tracks.id, { onDelete: "set null" }),
@@ -254,13 +267,17 @@ export const batches = pgTable("batches", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   createdBy: varchar("created_by").notNull().references(() => users.id),
 }, (table) => [
-  unique("batches_batch_code_uniq").on(table.batchCode),
+  index("idx_batches_org").on(table.orgId),
+  unique("batches_org_batch_code_uniq").on(table.orgId, table.batchCode),
 ]);
 
 // Enrollments - Student enrollment in batches
 // BUSINESS RULE: A student can only be enrolled in ONE batch at a time (one-to-many relationship)
 export const enrollments = pgTable("enrollments", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   batchId: integer("batch_id").notNull().references(() => batches.id, { onDelete: "cascade" }),
   studentId: varchar("student_id").notNull().references(() => users.id),
   status: varchar("status").default("active").notNull(), // 'active', 'dropped', 'completed'
@@ -274,6 +291,7 @@ export const enrollments = pgTable("enrollments", {
   index("unique_active_enrollment_idx")
     .on(table.studentId)
     .where(sql`status = 'active'`),
+  index("idx_enrollments_org").on(table.orgId),
   index("idx_enrollments_batch").on(table.batchId),
   check(
     "enrollments_status_check",
@@ -405,6 +423,10 @@ export const usersRelations = relations(users, ({ many }) => ({
 
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   userOrganizations: many(userOrganizations),
+  tracks: many(tracks),
+  chapters: many(chapters),
+  batches: many(batches),
+  enrollments: many(enrollments),
 }));
 
 export const userOrganizationsRelations = relations(
@@ -428,6 +450,10 @@ export const userOrganizationsRelations = relations(
 );
 
 export const tracksRelations = relations(tracks, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [tracks.orgId],
+    references: [organizations.id],
+  }),
   createdBy: one(users, {
     fields: [tracks.createdBy],
     references: [users.id],
@@ -436,6 +462,10 @@ export const tracksRelations = relations(tracks, ({ one, many }) => ({
 }));
 
 export const chaptersRelations = relations(chapters, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [chapters.orgId],
+    references: [organizations.id],
+  }),
   track: one(tracks, {
     fields: [chapters.trackId],
     references: [tracks.id],
@@ -547,6 +577,10 @@ export const proficiencyEvaluationLogRelations = relations(
 );
 
 export const batchesRelations = relations(batches, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [batches.orgId],
+    references: [organizations.id],
+  }),
   track: one(tracks, {
     fields: [batches.trackId],
     references: [tracks.id],
@@ -566,6 +600,10 @@ export const batchesRelations = relations(batches, ({ one, many }) => ({
 }));
 
 export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [enrollments.orgId],
+    references: [organizations.id],
+  }),
   batch: one(batches, {
     fields: [enrollments.batchId],
     references: [batches.id],
@@ -619,10 +657,10 @@ export const selectOrganizationSchema = createSelectSchema(organizations);
 export const insertUserOrganizationSchema = createInsertSchema(userOrganizations);
 export const selectUserOrganizationSchema = createSelectSchema(userOrganizations);
 
-export const insertTrackSchema = createInsertSchema(tracks).omit({ id: true, createdAt: true, updatedAt: true, createdBy: true, sortOrder: true });
+export const insertTrackSchema = createInsertSchema(tracks).omit({ id: true, orgId: true, createdAt: true, updatedAt: true, createdBy: true, sortOrder: true });
 export const selectTrackSchema = createSelectSchema(tracks);
 
-export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true, createdAt: true, updatedAt: true, sortOrder: true, createdBy: true, lastEditedBy: true, publishedAt: true, deletedAt: true });
+export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true, orgId: true, createdAt: true, updatedAt: true, sortOrder: true, createdBy: true, lastEditedBy: true, publishedAt: true, deletedAt: true });
 export const selectChapterSchema = createSelectSchema(chapters);
 
 export const insertAudioFileSchema = createInsertSchema(audioFiles).omit({ id: true, createdAt: true });
@@ -640,10 +678,10 @@ export const selectSegmentMappingSchema = createSelectSchema(segmentMappings);
 export const insertStudentProgressSchema = createInsertSchema(studentProgress).omit({ id: true, createdAt: true, updatedAt: true });
 export const selectStudentProgressSchema = createSelectSchema(studentProgress);
 
-export const insertBatchSchema = createInsertSchema(batches).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertBatchSchema = createInsertSchema(batches).omit({ id: true, orgId: true, createdAt: true, updatedAt: true });
 export const selectBatchSchema = createSelectSchema(batches);
 
-export const insertEnrollmentSchema = createInsertSchema(enrollments).omit({ id: true, enrolledAt: true, updatedAt: true });
+export const insertEnrollmentSchema = createInsertSchema(enrollments).omit({ id: true, orgId: true, enrolledAt: true, updatedAt: true });
 export const selectEnrollmentSchema = createSelectSchema(enrollments);
 
 export const insertBatchCoInstructorSchema = createInsertSchema(batchCoInstructors).omit({ id: true, assignedAt: true });

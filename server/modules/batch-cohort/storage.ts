@@ -22,10 +22,11 @@ function throwIfCoInstructorDuplicate(error: unknown): void {
 }
 
 export class BatchStorage {
-  async listBatchesPaginated(limit: number, offset: number): Promise<{ items: any[]; total: number }> {
+  async listBatchesPaginated(limit: number, offset: number, orgId: string): Promise<{ items: any[]; total: number }> {
     const [countResult] = await db
       .select({ count: sql<number>`count(*)` })
-      .from(batches);
+      .from(batches)
+      .where(eq(batches.orgId, orgId));
     const total = Number(countResult?.count ?? 0);
 
     const items = await db
@@ -35,6 +36,7 @@ export class BatchStorage {
       })
       .from(batches)
       .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
+      .where(eq(batches.orgId, orgId))
       .groupBy(batches.id)
       .orderBy(batches.createdAt)
       .limit(limit)
@@ -43,12 +45,18 @@ export class BatchStorage {
     return { items, total };
   }
 
-  async listInstructorBatches(instructorId: string) {
+  async listInstructorBatches(instructorId: string, orgId: string) {
     // Get all co-instructor batch IDs for this user
     const coInstructorBatches = await db
       .select({ batchId: batchCoInstructors.batchId })
       .from(batchCoInstructors)
-      .where(eq(batchCoInstructors.instructorId, instructorId));
+      .innerJoin(batches, eq(batches.id, batchCoInstructors.batchId))
+      .where(
+        and(
+          eq(batchCoInstructors.instructorId, instructorId),
+          eq(batches.orgId, orgId)
+        )
+      );
 
     const coInstructorBatchIds = coInstructorBatches.map(row => row.batchId);
 
@@ -76,7 +84,7 @@ export class BatchStorage {
       .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
       .leftJoin(users, eq(users.id, batches.primaryInstructorId))
       .leftJoin(tracks, eq(tracks.id, batches.trackId))
-      .where(whereCondition)
+      .where(and(whereCondition, eq(batches.orgId, orgId)))
       .groupBy(batches.id, users.id, tracks.id)
       .orderBy(batches.createdAt);
 
@@ -121,7 +129,7 @@ export class BatchStorage {
     });
   }
 
-  async getBatchById(id: number) {
+  async getBatchById(id: number, orgId: string) {
     const baseRows = await db
       .select({
         ...getTableColumns(batches),
@@ -129,7 +137,7 @@ export class BatchStorage {
       })
       .from(batches)
       .leftJoin(enrollments, eq(enrollments.batchId, batches.id))
-      .where(eq(batches.id, id))
+      .where(and(eq(batches.id, id), eq(batches.orgId, orgId)))
       .groupBy(batches.id);
 
     const base = baseRows[0];
@@ -139,7 +147,7 @@ export class BatchStorage {
       ? (await db
         .select({ id: tracks.id, title: tracks.title, name: tracks.title, sortOrder: tracks.sortOrder })
         .from(tracks)
-        .where(eq(tracks.id, base.trackId)))[0] || null
+        .where(and(eq(tracks.id, base.trackId), eq(tracks.orgId, orgId))))[0] || null
       : null;
 
     const primaryInstructor = base.primaryInstructorId
@@ -179,6 +187,7 @@ export class BatchStorage {
     // Persist batch and optional co-instructor assignments atomically
     const result = await db.transaction(async (tx) => {
       const [created] = await tx.insert(batches).values({
+        orgId: input.orgId,
         batchCode: input.batchCode,
         batchName: input.batchName,
         trackId: input.trackId ?? null,
@@ -205,7 +214,7 @@ export class BatchStorage {
     return result;
   }
 
-  async updateBatch(id: number, input: BatchUpdateInput) {
+  async updateBatch(id: number, orgId: string, input: BatchUpdateInput) {
     const [updated] = await db.update(batches).set({
       batchCode: input.batchCode ?? undefined,
       batchName: input.batchName ?? undefined,
@@ -214,16 +223,22 @@ export class BatchStorage {
       cohortType: input.cohortType === undefined ? undefined : input.cohortType,
       description: input.description === undefined ? undefined : input.description,
       updatedAt: new Date(),
-    }).where(eq(batches.id, id)).returning();
+    }).where(and(eq(batches.id, id), eq(batches.orgId, orgId))).returning();
     return updated;
   }
 
-  async deleteBatch(id: number) {
+  async deleteBatch(id: number, orgId: string) {
     // Check for active enrollments
     const activeEnrollments = await db
       .select()
       .from(enrollments)
-      .where(and(eq(enrollments.batchId, id), eq(enrollments.status, 'active')));
+      .where(
+        and(
+          eq(enrollments.batchId, id),
+          eq(enrollments.orgId, orgId),
+          eq(enrollments.status, 'active')
+        )
+      );
 
     if (activeEnrollments.length > 0) {
       throw Object.assign(
@@ -233,13 +248,17 @@ export class BatchStorage {
     }
 
     // Delete the batch (cascade will handle co-instructors and dropped enrollments)
-    const [deleted] = await db.delete(batches).where(eq(batches.id, id)).returning();
+    const [deleted] = await db
+      .delete(batches)
+      .where(and(eq(batches.id, id), eq(batches.orgId, orgId)))
+      .returning();
     return deleted;
   }
 
   async addEnrollment(input: EnrollmentCreateInput) {
     // Create the enrollment record
     const [created] = await db.insert(enrollments).values({
+      orgId: input.orgId,
       batchId: input.batchId,
       studentId: input.studentId,
       status: 'active',
@@ -251,7 +270,7 @@ export class BatchStorage {
       const allChapters = await db
         .select({ id: chapters.id })
         .from(chapters)
-        .where(sql`${chapters.deletedAt} IS NULL`);
+        .where(and(eq(chapters.orgId, input.orgId), sql`${chapters.deletedAt} IS NULL`));
 
       if (allChapters.length > 0) {
         // Check which chapters the student already has proficiency records for
@@ -296,7 +315,7 @@ export class BatchStorage {
     return updated;
   }
 
-  async listEnrollmentsByBatch(batchId: number) {
+  async listEnrollmentsByBatch(batchId: number, orgId: string) {
     return db
       .select({
         id: enrollments.id,
@@ -313,6 +332,7 @@ export class BatchStorage {
       .leftJoin(users, eq(users.id, enrollments.studentId))
       .where(and(
         eq(enrollments.batchId, batchId),
+        eq(enrollments.orgId, orgId),
         eq(enrollments.status, 'active') // Only show active enrollments, hide dropped students
       ));
   }
@@ -335,9 +355,9 @@ export class BatchStorage {
     return enrollment || null;
   }
 
-  async listEligibleStudents(batchId: number, searchQuery?: string) {
+  async listEligibleStudents(batchId: number, orgId: string, searchQuery?: string) {
     // Get the batch to check primary instructor
-    const batch = await this.getBatchById(batchId);
+    const batch = await this.getBatchById(batchId, orgId);
     const primaryInstructorId = batch?.primaryInstructorId;
 
     // ONE-TO-MANY CONSTRAINT: Get ALL students with active enrollments (in any batch)
@@ -484,14 +504,17 @@ export class BatchStorage {
     return !!rows[0];
   }
 
-  async trackExists(trackId: number) {
-    const rows = await db.select({ id: tracks.id }).from(tracks).where(eq(tracks.id, trackId));
+  async trackExists(trackId: number, orgId: string) {
+    const rows = await db
+      .select({ id: tracks.id })
+      .from(tracks)
+      .where(and(eq(tracks.id, trackId), eq(tracks.orgId, orgId)));
     return !!rows[0];
   }
 
-  async getBatchProgress(batchId: number) {
+  async getBatchProgress(batchId: number, orgId: string) {
     // Get batch info
-    const batchInfo = await this.getBatchById(batchId);
+    const batchInfo = await this.getBatchById(batchId, orgId);
     if (!batchInfo) return null;
 
     // Get all active students in batch
@@ -505,6 +528,7 @@ export class BatchStorage {
       .innerJoin(users, eq(enrollments.studentId, users.id))
       .where(and(
         eq(enrollments.batchId, batchId),
+        eq(enrollments.orgId, orgId),
         eq(enrollments.status, 'active')
       ));
 
@@ -526,7 +550,7 @@ export class BatchStorage {
         chapterNumber: chapters.sortOrder,
       })
       .from(chapters)
-      .where(sql`${chapters.deletedAt} IS NULL`)
+      .where(and(eq(chapters.orgId, orgId), sql`${chapters.deletedAt} IS NULL`))
       .orderBy(chapters.sortOrder);
 
     // Get student IDs for progress query
@@ -640,16 +664,23 @@ export class BatchStorage {
     return result;
   }
 
-  async chapterExists(chapterId: number) {
+  async chapterExists(chapterId: number, orgId: string) {
     const rows = await db
       .select({ id: chapters.id })
       .from(chapters)
-      .where(and(eq(chapters.id, chapterId), sql`${chapters.deletedAt} IS NULL`));
+      .where(
+        and(
+          eq(chapters.id, chapterId),
+          eq(chapters.orgId, orgId),
+          sql`${chapters.deletedAt} IS NULL`
+        )
+      );
     return !!rows[0];
   }
 
   async listStudentsByInstructor(
     instructorId: string,
+    orgId: string,
     filters?: {
       search?: string;
       batchId?: number;
@@ -660,7 +691,13 @@ export class BatchStorage {
     const coInstructorBatches = await db
       .select({ batchId: batchCoInstructors.batchId })
       .from(batchCoInstructors)
-      .where(eq(batchCoInstructors.instructorId, instructorId));
+      .innerJoin(batches, eq(batches.id, batchCoInstructors.batchId))
+      .where(
+        and(
+          eq(batchCoInstructors.instructorId, instructorId),
+          eq(batches.orgId, orgId)
+        )
+      );
 
     const coInstructorBatchIds = coInstructorBatches.map(row => row.batchId);
 
@@ -676,7 +713,7 @@ export class BatchStorage {
     }
 
     // Build filter conditions
-    const filterConditions: any[] = [batchWhereCondition];
+    const filterConditions: any[] = [batchWhereCondition, eq(batches.orgId, orgId)];
 
     // Status filter (default to 'active' if not specified)
     const statusFilter = filters?.status || 'active';

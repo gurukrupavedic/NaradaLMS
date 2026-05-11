@@ -5,6 +5,7 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { jwtAuth } from '../middleware/jwt-auth.middleware';
+import { requireOrgContext } from '../shared/middleware/org-context';
 import { learningService } from '../modules/learning-delivery';
 import type { ChapterAccessDTO, ProgressQueryFilters, ChapterInclude } from '../modules/learning-delivery/types';
 import { catchAsync } from '../utils/catchAsync';
@@ -13,6 +14,7 @@ const router = Router();
 
 // Protect all learning routes - users must be authenticated
 router.use(jwtAuth);
+router.use(requireOrgContext);
 
 /**
  * GET /api/learning/my-progress
@@ -20,11 +22,12 @@ router.use(jwtAuth);
  */
 router.get('/my-progress', catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
+  const orgId = req.orgId as string;
   if (!user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const progress = await learningService.getSelfTrackProgress(user.id);
+  const progress = await learningService.getSelfTrackProgress(user.id, orgId);
   if (!progress) {
     return res.status(404).json({ error: 'Progress not found' });
   }
@@ -38,11 +41,12 @@ router.get('/my-progress', catchAsync(async (req: Request, res: Response) => {
  */
 router.get('/my-details', catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
+  const orgId = req.orgId as string;
   if (!user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const details = await learningService.getSelfDetails(user.id);
+  const details = await learningService.getSelfDetails(user.id, orgId);
   if (!details) {
     return res.status(404).json({ error: 'Details not found' });
   }
@@ -56,6 +60,7 @@ router.get('/my-details', catchAsync(async (req: Request, res: Response) => {
  */
 router.get('/progress', catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
+  const orgId = req.orgId as string;
   if (!user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
@@ -73,7 +78,7 @@ router.get('/progress', catchAsync(async (req: Request, res: Response) => {
     batchId: req.query.batchId ? parseInt(req.query.batchId as string) : undefined,
   };
 
-  const progress = await learningService.getStudentProgress(user.id, isStudent, filters);
+  const progress = await learningService.getStudentProgress(user.id, orgId, isStudent, filters);
   res.json(progress);
 }));
 
@@ -83,11 +88,12 @@ router.get('/progress', catchAsync(async (req: Request, res: Response) => {
  */
 router.get('/chapters', catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
+  const orgId = req.orgId as string;
   if (!user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const chapters = await learningService.getAvailableChapters(user.id);
+  const chapters = await learningService.getAvailableChapters(user.id, orgId);
   res.json(chapters);
 }));
 
@@ -98,6 +104,7 @@ router.get('/chapters', catchAsync(async (req: Request, res: Response) => {
  */
 router.post('/chapters/:chapterId/access', catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
+  const orgId = req.orgId as string;
   if (!user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
@@ -108,6 +115,7 @@ router.post('/chapters/:chapterId/access', catchAsync(async (req: Request, res: 
   }
 
   const accessData: ChapterAccessDTO = {
+    orgId,
     chapterId,
     studentId: user.id,
     batchId: req.body.batchId ? parseInt(req.body.batchId) : undefined,
@@ -121,8 +129,9 @@ router.post('/chapters/:chapterId/access', catchAsync(async (req: Request, res: 
  * GET /api/learning/tracks
  * Facade for listing tracks for learning
  */
-router.get('/tracks', catchAsync(async (_req: Request, res: Response) => {
-  const tracks = await learningService.listTracks();
+router.get('/tracks', catchAsync(async (req: Request, res: Response) => {
+  const orgId = req.orgId as string;
+  const tracks = await learningService.listTracks(orgId);
   res.json(tracks);
 }));
 
@@ -131,11 +140,12 @@ router.get('/tracks', catchAsync(async (_req: Request, res: Response) => {
  * Facade for listing chapters within a track
  */
 router.get('/tracks/:trackId/chapters', catchAsync(async (req: Request, res: Response) => {
+  const orgId = req.orgId as string;
   const trackId = parseInt(req.params.trackId);
   if (isNaN(trackId)) {
     return res.status(400).json({ error: 'Invalid track ID' });
   }
-  const chapters = await learningService.listChaptersByTrack(trackId);
+  const chapters = await learningService.listChaptersByTrack(trackId, orgId);
   res.json(chapters);
 }));
 
@@ -147,6 +157,7 @@ router.get('/tracks/:trackId/chapters', catchAsync(async (req: Request, res: Res
  */
 router.get('/chapter/:chapterId', catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
+  const orgId = req.orgId as string;
   if (!user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
@@ -162,7 +173,7 @@ router.get('/chapter/:chapterId', catchAsync(async (req: Request, res: Response)
     : undefined;
   const script = (req.query.script as 'te' | 'hi' | 'en' | undefined);
 
-  const bundle = await learningService.getChapterBundle(user.id, chapterId, { include, script });
+  const bundle = await learningService.getChapterBundle(user.id, orgId, chapterId, { include, script });
   res.json(bundle);
 }));
 

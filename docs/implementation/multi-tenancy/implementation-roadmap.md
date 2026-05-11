@@ -15,8 +15,9 @@ The following **roadmap slices are implemented and merged** unless your checkout
 
 - **Layer 1:** 1.1 schema expand (orgs + memberships + `is_super_admin`), 1.2 seed orgs, 1.3 dev bootstrap. **Not** slice 1.4 contract (legacy `users.roles` / `users.status` still in DB).
 - **Layer 2:** **2.1**–**2.5** JWT, membership-first auth, org switch, **super-admin governance**, governance event/audit alignment, and org-admin **directory** API; student pending UX unchanged.
-- **Next up (foundational):** **Layer 3 Pass A** org isolation on core tables and handlers.
-- **Next up (small ready follow-on):** admin portal **5.3** org switcher once you want a contained UI slice.
+- **Layer 3 Pass A:** core org isolation on `tracks`, `chapters`, `batches`, and `enrollments`, plus org-scoped handler/query enforcement and fresh DB verification.
+- **Next up (small ready follow-on):** admin portal **5.3** org switcher now that org-scoped data changes materially by JWT org.
+- **Next up (foundational backend follow-on):** **Layer 3 Pass B** remaining `org_id` coverage on media/progress/audit tables.
 - **Deferred:** checklist **2.12** OAuth parity unless Google OAuth becomes real product scope — see [implementation-status.md](./implementation-status.md).
 
 ---

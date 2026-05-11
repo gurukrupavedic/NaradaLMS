@@ -62,9 +62,11 @@ Do not start this block until [legacy-users-columns-cleanup.md](./legacy-users-c
 
 ### Pass A
 
-- **3.A.1** Add `org_id` to `tracks`, `chapters`, `batches`, `enrollments`; backfill SLMTS; NOT NULL + FK.
-- **3.A.2** Update uniqueness: `tracks` title per org; plan `batches.batch_code` per org ([schema-design.md](./schema-design.md)).
-- **3.A.3** Update all handlers/queries for these tables to filter by `req.orgId`.
+Pass A is implemented in slice `slice-3.a-core-org-isolation` and should now be treated as the baseline state after this branch lands.
+
+- [x] **3.A.1** Add `org_id` to `tracks`, `chapters`, `batches`, `enrollments`; backfill SLMTS; NOT NULL + FK.
+- [x] **3.A.2** Update uniqueness: `tracks` title per org; plan `batches.batch_code` per org ([schema-design.md](./schema-design.md)).
+- [x] **3.A.3** Update all handlers/queries for these tables to filter by `req.orgId`.
 
 ### Pass B
 
