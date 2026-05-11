@@ -25,6 +25,7 @@ Add or extend tests when implementation lands (exact framework TBD per repo conv
 - **Governance:** org admin token receives 403 on `membership approve` endpoint; super-admin receives 200.
 - **Governance events:** `npx tsx scripts/test/identity-governance-events.test.ts` validates aligned payloads plus audit subscriber mappings for membership and super-admin governance actions.
 - **Governance gate:** `npx tsx scripts/test/require-super-admin.test.ts` validates 401-without-user, 403-for-org-admin, and pass-through for `isSuperAdmin`.
+- **Audit visibility:** `npx tsx scripts/test/audit-log-visibility.test.ts` validates that org admins are constrained to current-org audit scope while super-admins remain unrestricted.
 - **Register:** creates `user_organizations` row `pending` for slug from tenant header/env.
 
 Until automated tests exist, use the manual scenarios below and record results in the PR/slice notes.
@@ -73,6 +74,7 @@ Run only on branch `slice-1.4-schema-contract` when [legacy-users-columns-cleanu
 
 1. Token: org admin only (no super-admin).
 2. Call user management approve/list endpoints -> **403**.
+3. `GET /api/admin/audit-logs` returns only rows whose audit metadata matches the current org scope.
 
 ### Governance event + audit alignment
 

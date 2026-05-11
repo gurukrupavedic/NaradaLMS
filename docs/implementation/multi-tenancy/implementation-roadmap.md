@@ -87,6 +87,7 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
 6. **2.5 Event and audit alignment**
    - Emit membership-centric events; log governance actions with `org_id` null where platform-scoped (per architecture decisions).
    - Standardize governance payloads around `actorUserId`, `targetUserId`, `membershipId`, `orgId` (membership actions only), and `timestamp`.
+   - Restrict the audit read path so org admins only see current-org audit rows until Layer 3 adds a physical `audit_logs.org_id` column.
    - Persist scope metadata in audit `changes` now; defer the physical `audit_logs.org_id` column to Layer 3 Pass B.
 
 **Done when:** Super-admin can list users with memberships, approve pending membership, assign org roles; org admin cannot hit user-governance routes; login/register match pending-access story.

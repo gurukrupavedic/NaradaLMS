@@ -13,6 +13,22 @@ import { identityService } from '../modules/identity-access/service';
 
 const router = Router();
 
+export function getAuditLogVisibilityFilter(params: {
+  isSuperAdmin: boolean;
+  orgId?: string;
+}): { scope?: 'org'; orgId?: string } {
+  if (params.isSuperAdmin) {
+    return {};
+  }
+  if (!params.orgId) {
+    throw new Error('Organization context is required for org-scoped audit logs');
+  }
+  return {
+    scope: 'org',
+    orgId: params.orgId,
+  };
+}
+
 /**
  * GET /api/admin/directory/users
  * Org admins: list users in the current org (JWT org) with optional membership role filter.
@@ -55,6 +71,27 @@ router.get(
  */
 router.get('/audit-logs', jwtAuth, requireAdmin, catchAsync(async (req: Request, res: Response) => {
   const adminService = getAdminService();
+  const session = req.user as Express.User;
+  let visibilityFilter: { scope?: 'org'; orgId?: string };
+
+  try {
+    visibilityFilter = getAuditLogVisibilityFilter({
+      isSuperAdmin: Boolean(session?.isSuperAdmin),
+      orgId: req.orgId,
+    });
+  } catch (error) {
+    return res.status(403).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Organization context is required',
+    });
+  }
+
+  const requestedScope = req.query.scope as string | undefined;
+  const superAdminScope: 'org' | 'platform' | undefined =
+    requestedScope === 'org' || requestedScope === 'platform'
+      ? requestedScope
+      : undefined;
+  const scope = session?.isSuperAdmin ? superAdminScope : visibilityFilter.scope;
 
   const filters = {
     userId: req.query.userId as string | undefined,
@@ -62,6 +99,8 @@ router.get('/audit-logs', jwtAuth, requireAdmin, catchAsync(async (req: Request,
     resourceType: req.query.resourceType as string | undefined,
     startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
     endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
+    scope,
+    orgId: visibilityFilter.orgId,
     limit: req.query.limit ? parseInt(req.query.limit as string) : 100,
     offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
   };
