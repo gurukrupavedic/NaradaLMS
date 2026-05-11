@@ -9,10 +9,17 @@ import type { JwtSignClaims, OrgMembershipStatusClaim } from "../../auth/jwt.uti
  */
 export class IdentityStorage {
   /**
-   * Build JWT claims for a user: super-admin flag plus default org context from `user_organizations`.
-   * Default org: prefer **active** membership in org slug `slmts`, else first active membership by org slug (ascending).
+   * Build JWT claims for a user: super-admin flag plus org context from `user_organizations`.
+   *
+   * Without `targetOrgId`: default org prefers **active** membership in org slug `slmts`, else first active by slug;
+   * if none, prefers **pending** `slmts`, else first pending by slug.
+   *
+   * With `targetOrgId`: org context is that org only if the user has an **active** membership there (else `null`).
    */
-  async getJwtSignClaimsForUser(userId: string): Promise<JwtSignClaims | null> {
+  async getJwtSignClaimsForUser(
+    userId: string,
+    options?: { targetOrgId?: string }
+  ): Promise<JwtSignClaims | null> {
     const [user] = await db
       .select({
         id: users.id,
@@ -38,29 +45,42 @@ export class IdentityStorage {
       .innerJoin(organizations, eq(organizations.id, userOrganizations.orgId))
       .where(eq(userOrganizations.userId, userId));
 
-    const active = membershipRows.filter((r) => r.status === "active");
+    const targetOrgId = options?.targetOrgId;
     let chosen: (typeof membershipRows)[0] | undefined;
-    const slmtsActive = active.find((r) => r.orgSlug === "slmts");
-    if (slmtsActive) {
-      chosen = slmtsActive;
-    } else if (active.length > 0) {
-      const sorted = [...active].sort((a, b) =>
-        a.orgSlug.localeCompare(b.orgSlug)
-      );
-      chosen = sorted[0];
-    }
 
-    if (!chosen && membershipRows.length > 0) {
-      const pending = membershipRows.filter((r) => r.status === "pending");
-      const slmtsPending = pending.find((r) => r.orgSlug === "slmts");
-      if (slmtsPending) {
-        chosen = slmtsPending;
-      } else if (pending.length > 0) {
-        const sorted = [...pending].sort((a, b) =>
+    if (targetOrgId) {
+      const row = membershipRows.find(
+        (r) => r.orgId === targetOrgId && r.status === "active"
+      );
+      chosen = row;
+    } else {
+      const active = membershipRows.filter((r) => r.status === "active");
+      const slmtsActive = active.find((r) => r.orgSlug === "slmts");
+      if (slmtsActive) {
+        chosen = slmtsActive;
+      } else if (active.length > 0) {
+        const sorted = [...active].sort((a, b) =>
           a.orgSlug.localeCompare(b.orgSlug)
         );
         chosen = sorted[0];
       }
+
+      if (!chosen && membershipRows.length > 0) {
+        const pending = membershipRows.filter((r) => r.status === "pending");
+        const slmtsPending = pending.find((r) => r.orgSlug === "slmts");
+        if (slmtsPending) {
+          chosen = slmtsPending;
+        } else if (pending.length > 0) {
+          const sorted = [...pending].sort((a, b) =>
+            a.orgSlug.localeCompare(b.orgSlug)
+          );
+          chosen = sorted[0];
+        }
+      }
+    }
+
+    if (targetOrgId && !chosen) {
+      return null;
     }
 
     const base: JwtSignClaims = {

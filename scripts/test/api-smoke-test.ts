@@ -166,6 +166,14 @@ async function run() {
         if (status !== 401) throw new Error(`Expected 401, got ${status}`);
     });
 
+    await test('POST /api/auth/switch-org returns 401 without auth', async () => {
+        const { status } = await fetchJson('/api/auth/switch-org', {
+            method: 'POST',
+            body: JSON.stringify({ orgId: '00000000-0000-4000-8000-000000000001' }),
+        });
+        if (status !== 401) throw new Error(`Expected 401, got ${status}`);
+    });
+
     // ── Section 4: Authenticated data endpoints ──
     // To test these, we need to login as an existing seeded user.
     // If the database has seeded users, attempt login with known credentials.
@@ -206,7 +214,52 @@ async function run() {
             const { status, data } = await authenticatedFetch('/api/auth/me');
             if (status !== 200) throw new Error(`Expected 200, got ${status}`);
             if (!data.user) throw new Error('Response missing "user" field');
-            if (!data.user.roles) throw new Error('User missing "roles" field');
+            if (typeof data.user.isSuperAdmin !== 'boolean') {
+                throw new Error('User missing isSuperAdmin (JWT session shape)');
+            }
+        });
+
+        await test('POST /api/auth/switch-org returns 403 for random org', async () => {
+            const { status } = await authenticatedFetch('/api/auth/switch-org', {
+                method: 'POST',
+                body: JSON.stringify({ orgId: '00000000-0000-4000-8000-000000000099' }),
+            });
+            if (status !== 403) throw new Error(`Expected 403, got ${status}`);
+        });
+
+        await test('POST /api/auth/switch-org returns 403 for pending membership (rr)', async () => {
+            const { status: meStatus, data: meData } = await authenticatedFetch('/api/auth/me');
+            if (meStatus !== 200) throw new Error(`Expected 200 from /me, got ${meStatus}`);
+            const rr = (meData.memberships as { orgSlug: string; orgId: string; status: string }[] | undefined)?.find(
+                (m) => m.orgSlug === 'rr'
+            );
+            if (!rr) {
+                throw new Error('Expected RR membership in seed for admin user');
+            }
+            const { status } = await authenticatedFetch('/api/auth/switch-org', {
+                method: 'POST',
+                body: JSON.stringify({ orgId: rr.orgId }),
+            });
+            if (status !== 403) throw new Error(`Expected 403 for pending RR org, got ${status}`);
+        });
+
+        await test('POST /api/auth/switch-org succeeds for active SLMTS org', async () => {
+            const { status: meStatus, data: meData } = await authenticatedFetch('/api/auth/me');
+            if (meStatus !== 200) throw new Error(`Expected 200 from /me, got ${meStatus}`);
+            const slmts = (meData.memberships as { orgSlug: string; orgId: string; status: string }[] | undefined)?.find(
+                (m) => m.orgSlug === 'slmts' && m.status === 'active'
+            );
+            if (!slmts) {
+                throw new Error('Expected active SLMTS membership in seed for admin user');
+            }
+            const { status, data } = await authenticatedFetch('/api/auth/switch-org', {
+                method: 'POST',
+                body: JSON.stringify({ orgId: slmts.orgId }),
+            });
+            if (status !== 200) throw new Error(`Expected 200, got ${status}: ${JSON.stringify(data)}`);
+            if (data.user?.currentOrgId !== slmts.orgId) {
+                throw new Error('switch-org response should echo active org as currentOrgId');
+            }
         });
 
         await test('GET /api/batches returns batch list', async () => {

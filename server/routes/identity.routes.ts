@@ -41,6 +41,21 @@ const registerSchema = z.object({
   }),
 });
 
+const switchOrgSchema = z.object({
+  body: z.object({
+    orgId: z.string().uuid(),
+  }),
+});
+
+function setAuthTokenCookie(res: Response, token: string) {
+  res.cookie("auth_token", token, {
+    httpOnly: true,
+    secure: config.env === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+}
+
 /**
  * POST /api/auth/register
  * Register a new user (pending approval unless admin email)
@@ -113,12 +128,7 @@ identityRouter.post(
 
             const token = generateToken(claims);
 
-            res.cookie("auth_token", token, {
-              httpOnly: true,
-              secure: config.env === "production",
-              sameSite: "strict",
-              maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-            });
+            setAuthTokenCookie(res, token);
 
             const memberships =
               await identityStorage.listUserMembershipsWithOrgs(user.id);
@@ -186,15 +196,51 @@ identityRouter.get(
 
     const token = generateToken(claims);
 
-    res.cookie("auth_token", token, {
-      httpOnly: true,
-      secure: config.env === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    setAuthTokenCookie(res, token);
 
     const frontendUrl = config.frontendUrl;
     return res.redirect(frontendUrl);
+  })
+);
+
+/**
+ * POST /api/auth/switch-org
+ * Active membership required for target org; reissues JWT + auth cookie.
+ */
+identityRouter.post(
+  "/switch-org",
+  jwtAuth,
+  validateRequest(switchOrgSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const { orgId } = req.body as { orgId: string };
+    const session = req.user as Express.User;
+
+    const claims = await identityStorage.getJwtSignClaimsForUser(session.id, {
+      targetOrgId: orgId,
+    });
+    if (!claims) {
+      return res.status(403).json({
+        error: "No active membership for this organization",
+      });
+    }
+
+    const token = generateToken(claims);
+    setAuthTokenCookie(res, token);
+
+    const profile = await identityStorage.getUser(session.id);
+
+    return res.json({
+      user: {
+        id: session.id,
+        email: session.email,
+        firstName: profile?.firstName ?? undefined,
+        lastName: profile?.lastName ?? undefined,
+        isSuperAdmin: claims.isSuperAdmin,
+        currentOrgId: claims.currentOrgId,
+        orgRoles: claims.orgRoles,
+        orgMembershipStatus: claims.orgMembershipStatus,
+      },
+    });
   })
 );
 

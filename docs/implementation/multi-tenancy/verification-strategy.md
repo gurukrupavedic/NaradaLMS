@@ -2,7 +2,7 @@
 
 This document defines how we know each layer is **done** and the platform is safe to expand (RR) after SLMTS pilot.
 
-**Current build:** Layer 2 slices **2.1** and **2.2** are implemented on `multi-tenancy` (JWT + membership-first register/login, pending student UX). Governance APIs (**2.9+**) and org switch (**2.8**) are **not** done — adjust expectations in the sections below accordingly. See [implementation-status.md](./implementation-status.md).
+**Current build:** Layer 2 includes **2.1**–**2.3** on `multi-tenancy` (JWT, membership-first register/login, pending student UX, **`req.orgId`**, **`POST /api/auth/switch-org`** with active-membership-only policy). Governance APIs (**2.9+**) are **not** done — adjust expectations in the sections below accordingly. See [implementation-status.md](./implementation-status.md).
 
 ---
 
@@ -61,6 +61,11 @@ Run only on branch `slice-1.4-schema-contract` when [legacy-users-columns-cleanu
 
 1. Super-admin approves membership for SLMTS. *(**Not yet:** membership-specific approve endpoints per [api-contract-changes.md](./api-contract-changes.md); legacy `/api/auth/admin/users/:id/approve` still operates on **global** `users.status` and does not flip `user_organizations.status` alone. Pilot verification of this bullet awaits checklist **2.9** / governance slice.)*
 2. After governance work: user can access SLMTS-scoped content APIs when `user_organizations.status = active` for SLMTS.
+
+### Org switch (API)
+
+1. Authenticated user with **active** SLMTS membership: `POST /api/auth/switch-org` with SLMTS `orgId` returns **200** and refreshed cookie; `/api/auth/me` reflects `currentOrgId`.
+2. Same user with **pending** RR membership only: `POST` with RR `orgId` returns **403**.
 
 ### Org admin restriction
 
