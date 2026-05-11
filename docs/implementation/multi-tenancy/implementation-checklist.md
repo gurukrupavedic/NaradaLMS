@@ -43,14 +43,14 @@ Do not start this block until [legacy-users-columns-cleanup.md](./legacy-users-c
 - [x] **2.2** Update `server/shared/types.ts` `Express.User` augmentation.
 - [ ] **2.3** Implement org context resolution middleware (JWT `currentOrgId` first; extensible for host later).
 - [ ] **2.4** Replace `requireRole` global checks with `requireOrgRole` + `requireSuperAdmin` pattern; keep `requireAdmin`/`requireInstructor` as org-scoped wrappers.
-- [ ] **2.5** Register: create user + pending `user_organizations` row for tenant from request.
-- [ ] **2.6** Login: do not block solely on removed global status; enforce access via membership state + return pending UX contract.
-- [ ] **2.7** `GET /api/auth/me`: return profile + memberships + current org context.
+- [x] **2.5** Register: create user + pending `user_organizations` row for tenant from request.
+- [x] **2.6** Login: do not block solely on removed global status; enforce access via membership state + return pending UX contract.
+- [x] **2.7** `GET /api/auth/me`: return profile + memberships + current org context.
 - [ ] **2.8** `POST /api/auth/switch-org`: membership check + cookie reissue.
 - [ ] **2.9** User governance routes: gate with `requireSuperAdmin`; operate on memberships (approve/reject/roles/disable), not global user status.
 - [ ] **2.10** Super-admin grant/revoke endpoints + audit events.
 - [ ] **2.11** Remove or redirect old `/api/auth/admin/*` semantics that assume global `users.roles` / `users.status`.
-- [ ] **2.12** OAuth path: align with membership model (no auto-active bypass that skips super-admin approval if product requires parity with local register).
+- [x] **2.12** OAuth path: align with membership model (no auto-active bypass that skips super-admin approval if product requires parity with local register).
 
 ---
 

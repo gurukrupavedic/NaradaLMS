@@ -9,48 +9,89 @@ import { eventBus } from "../../shared/events/event-bus";
  */
 export class IdentityService {
   /**
-   * Register a new user (pending approval or immediate if admin email)
+   * Register a new local user with a pending (or bootstrap-active) org membership.
+   * Self-serve: `users.status` is `active`; access is governed by `user_organizations`.
+   * Admin email: active user + active SLMTS membership with org admin roles (pilot bootstrap).
    */
   async registerUser(data: {
     email: string;
     password: string;
     firstName?: string;
     lastName?: string;
-    adminEmail?: string; // Used to determine if should be pre-approved as admin
+    adminEmail?: string;
+    /** Target org slug from tenant resolution (`slmts` | `rr`). */
+    tenantSlug: string;
   }) {
     const normalizedEmail = String(data.email).toLowerCase();
 
-    // Check if email already exists
     const existing = await identityStorage.getUserByEmail(normalizedEmail);
     if (existing) {
       throw new Error("Email already registered");
     }
 
-    // Hash password
+    const org = await identityStorage.getOrganizationBySlug(data.tenantSlug);
+    if (!org) {
+      throw new Error("Organization not available for registration");
+    }
+
     const passwordHash = await bcrypt.hash(data.password, 10);
 
-    // Check if this is the admin email
     const isAdminEmail =
-      data.adminEmail && normalizedEmail === data.adminEmail.toLowerCase();
+      Boolean(data.adminEmail) &&
+      normalizedEmail === String(data.adminEmail).toLowerCase();
 
-    // Create user
-    const user = await identityStorage.createUser({
+    if (isAdminEmail) {
+      const slmtsOrg = await identityStorage.getOrganizationBySlug("slmts");
+      if (!slmtsOrg) {
+        throw new Error(
+          "SLMTS organization is not configured (run db:seed-orgs first)."
+        );
+      }
+
+      const user = await identityStorage.registerLocalUserWithOrgMembership({
+        email: normalizedEmail,
+        passwordHash,
+        firstName: data.firstName || null,
+        lastName: data.lastName || null,
+        legacyRoles: ["admin"],
+        legacyStatus: "active",
+        orgId: slmtsOrg.id,
+        membershipStatus: "active",
+        membershipRoles: ["student", "admin"],
+        membershipApprovedAt: new Date(),
+        membershipSelfApproved: true,
+      });
+
+      return {
+        userId: user.id,
+        email: user.email,
+        legacyStatus: user.status,
+        tenantSlugRegistered: slmtsOrg.slug,
+        membership: { orgSlug: slmtsOrg.slug, status: "active" as const },
+        message: "Admin account created.",
+      };
+    }
+
+    const user = await identityStorage.registerLocalUserWithOrgMembership({
       email: normalizedEmail,
       passwordHash,
-      provider: "local",
-      roles: isAdminEmail ? ["admin"] : [],
-      status: isAdminEmail ? "active" : "pending_approval",
       firstName: data.firstName || null,
       lastName: data.lastName || null,
+      legacyRoles: [],
+      legacyStatus: "active",
+      orgId: org.id,
+      membershipStatus: "pending",
+      membershipRoles: ["student"],
     });
 
     return {
       userId: user.id,
       email: user.email,
-      status: user.status,
-      message: isAdminEmail
-        ? "Admin account created."
-        : "Account created. Awaiting admin approval.",
+      legacyStatus: user.status,
+      tenantSlugRegistered: org.slug,
+      membership: { orgSlug: org.slug, status: "pending" as const },
+      message:
+        "Account created. Your membership request is pending approval.",
     };
   }
 
@@ -65,9 +106,8 @@ export class IdentityService {
       throw new Error("Invalid email or password");
     }
 
-    // Check status
-    if (user.status !== "active") {
-      throw new Error("User account is not active. Awaiting admin approval.");
+    if (user.status === "inactive") {
+      throw new Error("Your account has been disabled.");
     }
 
     // Verify password

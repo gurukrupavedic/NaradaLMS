@@ -29,6 +29,11 @@ export const config = {
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
     adminEmail: process.env.ADMIN_EMAIL,
+    /** Default org slug for register/OAuth when no `X-Tenant-Slug` (must be `slmts` or `rr`). */
+    defaultTenantSlug: (() => {
+        const raw = (process.env.DEFAULT_TENANT_SLUG || "slmts").trim().toLowerCase();
+        return raw === "rr" ? "rr" : "slmts";
+    })(),
 };
 
 // Validation for critical settings in production

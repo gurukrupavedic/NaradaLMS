@@ -123,6 +123,7 @@ async function run() {
     await test('POST /api/auth/register creates account', async () => {
         const { status, data } = await fetchJson('/api/auth/register', {
             method: 'POST',
+            headers: { 'X-Tenant-Slug': 'slmts' },
             body: JSON.stringify({
                 email: testEmail,
                 password: testPassword,
@@ -131,16 +132,20 @@ async function run() {
             }),
         });
         if (status !== 200 && status !== 201) throw new Error(`Expected 200/201, got ${status}: ${JSON.stringify(data)}`);
+        if (data.membership?.status !== 'pending') {
+            throw new Error(`Expected pending org membership, got ${JSON.stringify(data.membership)}`);
+        }
     });
 
-    // Note: Login will return 401 because new users need approval.
-    // This is correct behavior.
-    await test('POST /api/auth/login returns 401 for pending user (expected)', async () => {
-        const { status } = await fetchJson('/api/auth/login', {
+    await test('POST /api/auth/login succeeds for pending-membership user (200 + cookie)', async () => {
+        const { status, data } = await authenticatedFetch('/api/auth/login', {
             method: 'POST',
             body: JSON.stringify({ email: testEmail, password: testPassword }),
         });
-        if (status !== 401) throw new Error(`Expected 401 for pending user, got ${status}`);
+        if (status !== 200) throw new Error(`Expected 200, got ${status}: ${JSON.stringify(data)}`);
+        if (data.loginState?.hasActiveMembership !== false) {
+            throw new Error('Expected hasActiveMembership false for pending membership');
+        }
     });
 
     // ── Section 3: Data endpoints (unauthenticated - expect 401) ──
