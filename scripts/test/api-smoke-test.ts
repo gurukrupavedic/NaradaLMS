@@ -275,8 +275,19 @@ async function run() {
             if (!Array.isArray(data)) throw new Error('Expected array response');
         });
 
-        await test('GET /api/admin/users returns user list', async () => {
+        await test('GET /api/auth/admin/users returns governance list (super-admin)', async () => {
             const { status, data } = await authenticatedFetch('/api/auth/admin/users');
+            if (status !== 200) throw new Error(`Expected 200, got ${status}`);
+            if (!data.users || !Array.isArray(data.users)) throw new Error('Response missing "users" array');
+            if (data.users[0] && !Array.isArray(data.users[0].memberships)) {
+                throw new Error('Expected each user to include memberships[]');
+            }
+        });
+
+        await test('GET /api/admin/directory/users returns org-scoped directory', async () => {
+            const { status, data } = await authenticatedFetch(
+                '/api/admin/directory/users?membershipRole=student&limit=50'
+            );
             if (status !== 200) throw new Error(`Expected 200, got ${status}`);
             if (!data.users || !Array.isArray(data.users)) throw new Error('Response missing "users" array');
         });

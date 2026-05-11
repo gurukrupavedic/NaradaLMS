@@ -4,10 +4,8 @@ import { apiRequest } from "@/lib/api";
 export interface StudentSearchResult {
     id: string;
     email: string;
-    firstName?: string;
-    lastName?: string;
-    status: "pending_approval" | "active" | "inactive";
-    roles: string[];
+    firstName?: string | null;
+    lastName?: string | null;
 }
 
 export function useSearchStudents(searchQuery: string) {
@@ -15,13 +13,12 @@ export function useSearchStudents(searchQuery: string) {
         users: StudentSearchResult[];
         pagination: { limit: number; offset: number; total: number };
     }>({
-        queryKey: ["/auth/admin/users?limit=100"], // Note: using auth admin route
+        queryKey: ["/admin/directory/users?membershipRole=student&limit=200"],
         queryFn: async () => {
-            // Matches useAdminUsers implementation, direct return
             return apiRequest<{
                 users: StudentSearchResult[];
                 pagination: { limit: number; offset: number; total: number };
-            }>("/auth/admin/users?limit=100");
+            }>("/admin/directory/users?membershipRole=student&limit=200");
         },
         enabled: true, // Always fetch to have full list available
         select: (data) => {

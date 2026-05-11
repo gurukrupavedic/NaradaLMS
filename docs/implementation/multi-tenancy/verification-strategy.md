@@ -2,7 +2,7 @@
 
 This document defines how we know each layer is **done** and the platform is safe to expand (RR) after SLMTS pilot.
 
-**Current build:** Layer 2 includes **2.1**–**2.3** on `multi-tenancy` (JWT, membership-first register/login, pending student UX, **`req.orgId`**, **`POST /api/auth/switch-org`** with active-membership-only policy). Governance APIs (**2.9+**) are **not** done — adjust expectations in the sections below accordingly. See [implementation-status.md](./implementation-status.md).
+**Current build:** Layer 2 includes **2.1**–**2.4** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory). Roadmap **2.5** audit/event depth may still be partial — see [implementation-status.md](./implementation-status.md).
 
 ---
 
@@ -59,7 +59,7 @@ Run only on branch `slice-1.4-schema-contract` when [legacy-users-columns-cleanu
 
 ### Super-admin approval
 
-1. Super-admin approves membership for SLMTS. *(**Not yet:** membership-specific approve endpoints per [api-contract-changes.md](./api-contract-changes.md); legacy `/api/auth/admin/users/:id/approve` still operates on **global** `users.status` and does not flip `user_organizations.status` alone. Pilot verification of this bullet awaits checklist **2.9** / governance slice.)*
+1. Super-admin approves membership for SLMTS: **`POST /api/auth/admin/memberships/:membershipId/approve`** (super-admin JWT); `user_organizations.status` becomes **`active`** for that row.
 2. After governance work: user can access SLMTS-scoped content APIs when `user_organizations.status = active` for SLMTS.
 
 ### Org switch (API)
