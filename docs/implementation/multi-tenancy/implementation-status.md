@@ -117,12 +117,12 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 | Area | Checklist / roadmap | Notes |
 | ---- | -------------------- | ----- |
 | `requireOrgRole` rename (optional) | **2.4** | `requireRole` still org-scoped via JWT `orgRoles`; optional alias/split only. |
-| OAuth parity with local register | **2.12** | Review [`server/auth/passport-config.ts`](../../../server/auth/passport-config.ts) / Google callback vs product pending story. |
+| OAuth parity with local register | **2.12** | Deferred unless Google OAuth becomes real product scope; current flow is placeholder-only and should not drive slice ordering right now. Review [`server/auth/passport-config.ts`](../../../server/auth/passport-config.ts) / Google callback vs product pending story when OAuth is promoted. |
 | Governance extras | **api-contract** | Optional: `POST …/users/:userId/memberships`, `DELETE …/memberships/:id` not implemented in slice 2.4. |
 | `audit_logs.org_id` schema support | **3.B.1** | Governance events now distinguish org-vs-platform scope in payloads and audit `changes`, but the physical `audit_logs.org_id` column still lands with Layer **3.B.1**. |
-| Admin **5.3** org switcher UI | **5.3** | Call existing **`POST /api/auth/switch-org`** + refresh admin queries. |
+| Admin **5.3** org switcher UI | **5.3** | Call existing **`POST /api/auth/switch-org`** + refresh admin queries. Best treated as a small UI follow-on once Layer 3 makes org switching materially affect org-scoped data. |
 | Slice **1.4-contract** | **1.4-contract** | Blocked until [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is fully cleared. |
-| Layer 3 `org_id` on content/batches/etc. | **3.x** | Not started; `requireOrgContext` ready for scoped routers. |
+| Layer 3 `org_id` on content/batches/etc. | **3.x** | Not started; `requireOrgContext` ready for scoped routers. This is the recommended next foundational slice. |
 | Layer 4 student chameleon | **4.x** | Not started; checklist **4.4** partially overlaps (tenant header on register is done for student path). |
 | Pilot gate **6.x** | **6** | End-to-end pilot scenarios in [verification-strategy.md](./verification-strategy.md) — run after Layer 3 + any remaining Layer 2 gaps you care about. |
 
@@ -130,10 +130,12 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 
 ## Suggested next slice order (for a new chat)
 
-1. **Checklist 5.3** — Admin portal org switcher wired to **`POST /api/auth/switch-org`** + data refresh.
-2. **Checklist 2.12** — OAuth vs membership pending policy (if product requires strict parity with local register).
-3. **Layer 3** — `org_id` on domain tables + handler scoping with **`req.orgId`** (see [schema-design.md](./schema-design.md)).
-4. **Layer 4** — Tenant config + student chameleon ([README.md](./README.md) port plan :3000 / :3010).
+Use the distinction below so slice selection is not misleading:
+
+1. **Recommended next foundational slice: Layer 3 Pass A** — add `org_id` to core domain tables (`tracks`, `chapters`, `batches`, `enrollments`) and scope handlers/queries with **`req.orgId`**.
+2. **Recommended next small ready slice: Checklist 5.3** — admin portal org switcher wired to **`POST /api/auth/switch-org`** + data refresh. Choose this when you want a contained UI PR, not when you are deciding the next deepest multi-tenancy layer.
+3. **Deferred slice: Checklist 2.12** — OAuth vs membership pending policy. Only reprioritize this if Google OAuth becomes real product scope.
+4. **Then Layer 4** — Tenant config + student chameleon ([README.md](./README.md) port plan :3000 / :3010) after Layer 3 is stable enough to validate per-org behavior end to end.
 
 Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` after `npm run check`.
 
@@ -145,8 +147,8 @@ When continuing in a brand-new chat, do this first:
 
 1. Confirm checkout is on **`multi-tenancy`** and includes merge commit **`4726aa8b`** or later.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
-3. Assume the default next slice is **checklist 5.3** (admin org switcher) unless product direction explicitly reprioritizes **2.12** OAuth parity.
-4. If touching Layer 2 governance behavior again, rerun the targeted checks listed below before merging.
+3. Default to **Layer 3 Pass A** when choosing the next foundational implementation slice. Treat **checklist 5.3** as the next small UI follow-on only if you deliberately want a contained PR before Layer 3.
+4. Keep **2.12** deferred unless Google OAuth becomes product scope; if you do touch Layer 2 governance behavior again, rerun the targeted checks listed below before merging.
 
 ---
 

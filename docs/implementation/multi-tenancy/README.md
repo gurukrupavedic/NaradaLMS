@@ -8,7 +8,7 @@ It captures the finalized product and architecture decisions before coding, then
 
 ## Start here (continuing work)
 
-1. Read **[implementation-status.md](./implementation-status.md)** — what is already merged to `multi-tenancy`, current behavior, gaps, and next recommended slices.
+1. Read **[implementation-status.md](./implementation-status.md)** — what is already merged to `multi-tenancy`, current behavior, gaps, and the distinction between the next **foundational** slice and the next **small ready** slice.
 2. Follow **[implementation-roadmap.md](./implementation-roadmap.md)** and **[implementation-checklist.md](./implementation-checklist.md)** for execution order.
 3. Use **[verification-strategy.md](./verification-strategy.md)** before marking checklist items done.
 
