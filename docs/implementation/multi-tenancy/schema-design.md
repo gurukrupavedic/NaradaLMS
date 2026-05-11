@@ -96,6 +96,8 @@ Seeded initial rows:
 
 **Dev seeding:** after migrations (`npm run db:reset` or `npm run db:migrate`), run `npm run db:seed-orgs` to insert these rows idempotently. Implementation: [server/seed-organizations.ts](../../../server/seed-organizations.ts). Display names in the DB use **Pathasala** spelling; canonical API / tenant keys are the slugs `slmts` and `rr`.
 
+**Dev bootstrap (super-admin + memberships):** after org seed, run `npm run db:seed-dev` ([server/seed-dev-bootstrap.ts](../../../server/seed-dev-bootstrap.ts)). Requires `ADMIN_EMAIL`; see [environment-setup.md](../../essentials/environment-setup.md) Phase 0b for `DEV_SUPERADMIN_PASSWORD` and related env vars.
+
 ---
 
 ### 3) New `user_organizations` table

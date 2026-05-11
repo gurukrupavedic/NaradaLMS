@@ -16,6 +16,7 @@
     "check": "tsc",
     "db:migrate": "drizzle-kit migrate",
     "db:seed-orgs": "tsx server/seed-organizations.ts",
+    "db:seed-dev": "tsx server/seed-dev-bootstrap.ts",
     "db:seed": "tsx server/seed-vedic-curriculum.ts",
     "db:reset": "powershell -ExecutionPolicy Bypass -File scripts/test/db-reset.ps1",
     "auth:test": "tsx scripts/test/auth-test.ts",
