@@ -1,6 +1,15 @@
 import bcrypt from "bcrypt";
 import { identityStorage } from "./storage";
 import { eventBus } from "../../shared/events/event-bus";
+import type {
+  MembershipApprovedEvent,
+  MembershipDisabledEvent,
+  MembershipEnabledEvent,
+  MembershipRejectedEvent,
+  MembershipRolesChangedEvent,
+  SuperAdminGrantedEvent,
+  SuperAdminRevokedEvent,
+} from "../../shared/events/types";
 
 /**
  * Identity & Access Service
@@ -8,6 +17,19 @@ import { eventBus } from "../../shared/events/event-bus";
  * Publishes events for user lifecycle (approval, role changes)
  */
 export class IdentityService {
+  private async publishGovernanceEvent(
+    event:
+      | MembershipApprovedEvent
+      | MembershipRejectedEvent
+      | MembershipEnabledEvent
+      | MembershipDisabledEvent
+      | MembershipRolesChangedEvent
+      | SuperAdminGrantedEvent
+      | SuperAdminRevokedEvent
+  ) {
+    await eventBus.publish(event.type, event);
+  }
+
   /**
    * Register a new local user with a pending (or bootstrap-active) org membership.
    * Self-serve: `users.status` is `active`; access is governed by `user_organizations`.
@@ -371,12 +393,12 @@ export class IdentityService {
       approvedAt: now,
       approvedBy: actorUserId,
     });
-    await eventBus.publish("MembershipApproved", {
+    await this.publishGovernanceEvent({
       type: "MembershipApproved",
       membershipId,
-      userId: row.userId,
+      targetUserId: row.userId,
+      actorUserId,
       orgId: row.orgId,
-      approvedBy: actorUserId,
       timestamp: now,
     });
     return { membershipId, userId: row.userId, orgId: row.orgId, status: "active" as const };
@@ -394,12 +416,12 @@ export class IdentityService {
       approvedAt: null,
       approvedBy: null,
     });
-    await eventBus.publish("MembershipRejected", {
+    await this.publishGovernanceEvent({
       type: "MembershipRejected",
       membershipId,
-      userId: row.userId,
+      targetUserId: row.userId,
+      actorUserId,
       orgId: row.orgId,
-      rejectedBy: actorUserId,
       timestamp: now,
     });
     return { membershipId, userId: row.userId, status: "rejected" as const };
@@ -408,20 +430,42 @@ export class IdentityService {
   async setMembershipActiveFlag(
     membershipId: string,
     target: "inactive" | "active",
-    _actorUserId: string
+    actorUserId: string
   ) {
     const row = await identityStorage.getMembershipWithUserOrg(membershipId);
     if (!row) throw new Error("Membership not found");
     if (target === "inactive" && row.status === "pending") {
       throw new Error("Use reject for pending memberships");
     }
+    const now = new Date();
     await identityStorage.updateMembershipRecord(membershipId, {
       status: target,
     });
+    if (target === "active") {
+      await this.publishGovernanceEvent({
+        type: "MembershipEnabled",
+        membershipId,
+        targetUserId: row.userId,
+        actorUserId,
+        orgId: row.orgId,
+        status: "active",
+        timestamp: now,
+      });
+    } else {
+      await this.publishGovernanceEvent({
+        type: "MembershipDisabled",
+        membershipId,
+        targetUserId: row.userId,
+        actorUserId,
+        orgId: row.orgId,
+        status: "inactive",
+        timestamp: now,
+      });
+    }
     return { membershipId, status: target };
   }
 
-  async setMembershipRoles(membershipId: string, roles: string[], _actorUserId: string) {
+  async setMembershipRoles(membershipId: string, roles: string[], actorUserId: string) {
     const row = await identityStorage.getMembershipWithUserOrg(membershipId);
     if (!row) throw new Error("Membership not found");
     const allowed = new Set(["student", "instructor", "admin"]);
@@ -432,10 +476,11 @@ export class IdentityService {
       throw new Error("At least one role is required");
     }
     await identityStorage.updateMembershipRecord(membershipId, { roles });
-    await eventBus.publish("MembershipRolesUpdated", {
-      type: "MembershipRolesUpdated",
+    await this.publishGovernanceEvent({
+      type: "MembershipRolesChanged",
       membershipId,
-      userId: row.userId,
+      targetUserId: row.userId,
+      actorUserId,
       orgId: row.orgId,
       roles,
       timestamp: new Date(),
@@ -447,10 +492,10 @@ export class IdentityService {
     const target = await identityStorage.getUser(targetUserId);
     if (!target) throw new Error("User not found");
     await identityStorage.setUserIsSuperAdmin(targetUserId, true);
-    await eventBus.publish("SuperAdminGranted", {
+    await this.publishGovernanceEvent({
       type: "SuperAdminGranted",
-      userId: targetUserId,
-      grantedBy: actorUserId,
+      targetUserId,
+      actorUserId,
       timestamp: new Date(),
     });
     return { userId: targetUserId, isSuperAdmin: true };
@@ -470,10 +515,10 @@ export class IdentityService {
       throw new Error("Cannot revoke the last super-admin");
     }
     await identityStorage.setUserIsSuperAdmin(targetUserId, false);
-    await eventBus.publish("SuperAdminRevoked", {
+    await this.publishGovernanceEvent({
       type: "SuperAdminRevoked",
-      userId: targetUserId,
-      revokedBy: actorUserId,
+      targetUserId,
+      actorUserId,
       timestamp: new Date(),
     });
     return { userId: targetUserId, isSuperAdmin: false };

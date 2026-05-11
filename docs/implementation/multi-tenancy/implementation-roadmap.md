@@ -14,8 +14,8 @@ References:
 The following **roadmap slices are implemented and merged** unless your checkout is behind `origin/multi-tenancy`:
 
 - **Layer 1:** 1.1 schema expand (orgs + memberships + `is_super_admin`), 1.2 seed orgs, 1.3 dev bootstrap. **Not** slice 1.4 contract (legacy `users.roles` / `users.status` still in DB).
-- **Layer 2:** **2.1**–**2.4** JWT, membership-first auth, org switch, **super-admin governance** + org-admin **directory** API; student pending UX unchanged.
-- **Next up:** roadmap **2.5** event/audit alignment (and optional governance extras from [api-contract-changes.md](./api-contract-changes.md)) — see [implementation-status.md](./implementation-status.md).
+- **Layer 2:** **2.1**–**2.5** JWT, membership-first auth, org switch, **super-admin governance**, governance event/audit alignment, and org-admin **directory** API; student pending UX unchanged.
+- **Next up:** admin portal **5.3** org switcher, or checklist **2.12** OAuth parity if product direction requires it — see [implementation-status.md](./implementation-status.md).
 
 ---
 
@@ -86,6 +86,9 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
 
 6. **2.5 Event and audit alignment**
    - Emit membership-centric events; log governance actions with `org_id` null where platform-scoped (per architecture decisions).
+   - Standardize governance payloads around `actorUserId`, `targetUserId`, `membershipId`, `orgId` (membership actions only), and `timestamp`.
+   - Restrict the audit read path so org admins only see current-org audit rows until Layer 3 adds a physical `audit_logs.org_id` column.
+   - Persist scope metadata in audit `changes` now; defer the physical `audit_logs.org_id` column to Layer 3 Pass B.
 
 **Done when:** Super-admin can list users with memberships, approve pending membership, assign org roles; org admin cannot hit user-governance routes; login/register match pending-access story.
 

@@ -13,6 +13,8 @@ export interface AuditLogFilter {
   resourceType?: string;
   startDate?: Date;
   endDate?: Date;
+  scope?: 'org' | 'platform';
+  orgId?: string;
   limit: number;
   offset: number;
 }
@@ -58,6 +60,16 @@ export class AdminStorage {
     }
     if (filters.endDate) {
       conditions.push(lte(auditLogs.timestamp, filters.endDate));
+    }
+    if (filters.scope) {
+      conditions.push(
+        sql`${auditLogs.changes}->>'scope' = ${filters.scope}`
+      );
+    }
+    if (filters.orgId) {
+      conditions.push(
+        sql`${auditLogs.changes}->>'orgId' = ${filters.orgId}`
+      );
     }
 
     let query = db

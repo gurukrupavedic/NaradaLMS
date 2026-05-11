@@ -4,7 +4,7 @@
 
 **Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
 
-**Last updated:** Reflects Layer **1** (expand) and Layer **2** roadmap slices **2.1–2.4** merged to `multi-tenancy` (JWT, membership-first auth, org context + switch-org, super-admin governance, org-admin directory).
+**Last updated:** Reflects Layer **1** (expand) and Layer **2** roadmap slices **2.1–2.5** merged to `multi-tenancy` (JWT, membership-first auth, org context + switch-org, super-admin governance, governance event/audit alignment, org-admin directory).
 
 ---
 
@@ -35,6 +35,7 @@
 | **2.2** Login / register (membership-first) | Register creates **`user_organizations`** row (`pending`, roles `['student']`) for tenant from **`X-Tenant-Slug`**, optional body `tenantSlug`, or **`DEFAULT_TENANT_SLUG`** / `slmts` ([`server/config.ts`](../../../server/config.ts), [`.env.example`](../../../.env.example)). New self-serve users: `users.status = **active**`, legacy `roles = []` (access governed by membership). **Admin email** path: active user + **active** SLMTS membership (`student`+`admin`, self-approved). Passport **does not** block local login on `pending_approval` alone; still blocks **inactive**. Google: new users `active` + pending org on `defaultTenantSlug`; existing users with **no** memberships get a pending row backfilled. **Login** returns `loginState` (`hasActiveMembership`, membership summaries). **`GET /api/auth/me`** returns session user + `memberships[]` + `hasActiveMembership`. Student portal: **`/pending-approval`** when authenticated, not super-admin, and no active membership. | [`server/modules/identity-access/tenant-context.ts`](../../../server/modules/identity-access/tenant-context.ts), [`server/auth/passport-config.ts`](../../../server/auth/passport-config.ts), [`server/modules/identity-access/service.ts`](../../../server/modules/identity-access/service.ts), [`server/routes/identity.routes.ts`](../../../server/routes/identity.routes.ts), [`apps/student-portal/src/app/(portal)/pending-approval/page.tsx`](../../../apps/student-portal/src/app/(portal)/pending-approval/page.tsx), [`apps/student-portal/src/app/(portal)/layout.tsx`](../../../apps/student-portal/src/app/(portal)/layout.tsx) |
 | **2.3** Org context + switch-org | **`req.orgId`** set from JWT `currentOrgId` on every `jwtAuth` / `optionalJwtAuth` success via [`attachOrgContext`](../../../server/shared/middleware/org-context.ts). **`requireOrgContext`** returns **403** when `req.orgId` is missing (for Layer 3 composition). **`POST /api/auth/switch-org`** (body `orgId`): requires **active** `user_organizations` row for that org; otherwise **403**; reissues `auth_token` with `currentOrgId` / `orgRoles` / `orgMembershipStatus`. [`getJwtSignClaimsForUser`](../../../server/modules/identity-access/storage.ts) accepts optional `{ targetOrgId }` for switch vs default-org selection. | [`server/middleware/jwt-auth.middleware.ts`](../../../server/middleware/jwt-auth.middleware.ts), [`server/shared/middleware/org-context.ts`](../../../server/shared/middleware/org-context.ts), [`server/shared/types.ts`](../../../server/shared/types.ts), [`server/modules/identity-access/storage.ts`](../../../server/modules/identity-access/storage.ts), [`server/routes/identity.routes.ts`](../../../server/routes/identity.routes.ts) |
 | **2.4** Super-admin governance | **`requireSuperAdmin`** on governance routes under [`/api/auth/admin/…`](../../../server/routes/identity.routes.ts). **`GET /api/auth/admin/users`** returns users with nested **`memberships[]`**; query filters: **`membershipStatus`**, legacy **`status`** (e.g. `pending_approval` → pending), **`role`** (membership role in any org), **`orgSlug`**, **`search`**. **`GET /api/auth/admin/users/:userId`** returns one user + memberships. **`POST`** …`/memberships/:membershipId/{approve,reject,disable,enable}`; **`PATCH`** …`/memberships/:membershipId/roles`; **`POST`** …`/users/:userId/super-admin/{grant,revoke}` (revoke blocks self and last super-admin). **`GET /api/admin/directory/users`** ([`server/routes/admin.routes.ts`](../../../server/routes/admin.routes.ts)): **`jwtAuth` + `requireAdmin` + `requireOrgContext`** — lists users in **current JWT org** with optional **`membershipRole`** / legacy **`role`** + **`search`** (used by instructor/student pickers). Admin portal: [`UserList.tsx`](../../../apps/admin-portal/src/components/admin/UserList.tsx) **super-admin gate** + membership-based actions; [`useAdminUsers.ts`](../../../apps/admin-portal/src/lib/hooks/useAdminUsers.ts); [`useSearchStudents.ts`](../../../apps/admin-portal/src/lib/hooks/useSearchStudents.ts) + [`useBatchRelations.ts`](../../../packages/ui/src/hooks/data/useBatchRelations.ts) call **directory** API, not governance list. | [`server/shared/middleware/auth.ts`](../../../server/shared/middleware/auth.ts), [`server/routes/identity.routes.ts`](../../../server/routes/identity.routes.ts), [`server/routes/admin.routes.ts`](../../../server/routes/admin.routes.ts), [`server/modules/identity-access/service.ts`](../../../server/modules/identity-access/service.ts), [`server/modules/identity-access/storage.ts`](../../../server/modules/identity-access/storage.ts) |
+| **2.5** Governance event + audit alignment | Membership governance events now use a consistent contract: membership actions publish **`actorUserId`**, **`targetUserId`**, **`membershipId`**, **`orgId`**, and **`timestamp`**; platform-scoped super-admin actions publish **`actorUserId`**, **`targetUserId`**, and **`timestamp`** with **no `orgId`**. **`setMembershipActiveFlag`** now emits **`MembershipEnabled`** / **`MembershipDisabled`**; role updates emit **`MembershipRolesChanged`**. [`initializeEventHandlers`](../../../server/modules/system-admin/events.ts) now auto-logs membership governance and super-admin actions to persisted audit rows with explicit scope metadata in `changes` (`scope: 'org'` vs `scope: 'platform'`). **`GET /api/admin/audit-logs`** is now current-org scoped for org admins and unrestricted for super-admins. **`audit_logs.org_id`** remains deferred to Layer **3.B.1**. | [`server/modules/identity-access/service.ts`](../../../server/modules/identity-access/service.ts), [`server/modules/system-admin/events.ts`](../../../server/modules/system-admin/events.ts), [`server/routes/admin.routes.ts`](../../../server/routes/admin.routes.ts), [`server/shared/events/types.ts`](../../../server/shared/events/types.ts), [`scripts/test/identity-governance-events.test.ts`](../../../scripts/test/identity-governance-events.test.ts), [`scripts/test/audit-log-visibility.test.ts`](../../../scripts/test/audit-log-visibility.test.ts) |
 
 ---
 
@@ -53,7 +54,7 @@ Use this to map [implementation-checklist.md](./implementation-checklist.md) lin
 | **2.7** `GET /api/auth/me` | **Done** | Slice **2.2**. |
 | **2.8** `POST /api/auth/switch-org` | **Done** | Slice **2.3**; active membership only. |
 | **2.9** Governance on memberships + super-admin gate | **Done** | Slice **2.4**; legacy user-level approve/reject **routes removed**. |
-| **2.10** Super-admin grant/revoke | **Done** | Slice **2.4**; events emitted from service (audit depth = roadmap **2.5**). |
+| **2.10** Super-admin grant/revoke | **Done** | Slice **2.4** routes + slice **2.5** event/audit alignment. |
 | **2.11** Remove legacy `/api/auth/admin/*` user-status semantics | **Done** for routes | Old approve/reject/roles/disable/enable **user** routes gone. **`IdentityService.approveUser` / `assignRoles` / etc.** may still exist for scripts — see [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md). |
 | **2.12** OAuth parity with local register | **Not done** | Still evaluate against product; see [api-contract-changes.md](./api-contract-changes.md). |
 
@@ -103,8 +104,9 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 5. **Super-admin** without any org membership still bypasses `requireRole` via `isSuperAdmin` on the server; student UI also skips the pending gate for `isSuperAdmin`.
 6. **`POST /api/auth/switch-org`** only succeeds when the target **`orgId`** has an **active** membership; pending orgs return **403**. Authenticated requests that ran through **`jwtAuth`** expose **`req.orgId`** (mirror of JWT `currentOrgId`).
 7. **Super-admin** uses **`GET /api/auth/admin/users`** (+ mutations) for user governance; **org admins** use **`GET /api/admin/directory/users`** for in-org student/instructor pickers (requires JWT org context).
-8. **Membership approve/reject** updates **`user_organizations`** only; org-only admins receive **403** on governance routes.
-9. **Legacy DB columns** `users.roles` / `users.status` still exist and are still read in some paths (Passport inactive check, seeds, old service methods). Pilot listing must use **membership** APIs, not `users.status === pending_approval` alone.
+8. **`GET /api/admin/audit-logs`** now respects authority boundaries: super-admin sees the full audit stream, while org admins are restricted to rows whose audit `changes` metadata matches the current JWT org and org-scoped audit `scope`.
+9. **Membership approve/reject** updates **`user_organizations`** only; org-only admins receive **403** on governance routes.
+10. **Legacy DB columns** `users.roles` / `users.status` still exist and are still read in some paths (Passport inactive check, seeds, old service methods). Pilot listing must use **membership** APIs, not `users.status === pending_approval` alone.
 
 ---
 
@@ -115,7 +117,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 | `requireOrgRole` rename (optional) | **2.4** | `requireRole` still org-scoped via JWT `orgRoles`; optional alias/split only. |
 | OAuth parity with local register | **2.12** | Review [`server/auth/passport-config.ts`](../../../server/auth/passport-config.ts) / Google callback vs product pending story. |
 | Governance extras | **api-contract** | Optional: `POST …/users/:userId/memberships`, `DELETE …/memberships/:id` not implemented in slice 2.4. |
-| Roadmap **2.5** event/audit alignment | **2.5** | Membership / super-admin actions already published on event bus from [`identity.service`](../../../server/modules/identity-access/service.ts); **persisted audit rows** / full alignment with architecture doc is follow-up. |
+| `audit_logs.org_id` schema support | **3.B.1** | Governance events now distinguish org-vs-platform scope in payloads and audit `changes`, but the physical `audit_logs.org_id` column still lands with Layer **3.B.1**. |
 | Admin **5.3** org switcher UI | **5.3** | Call existing **`POST /api/auth/switch-org`** + refresh admin queries. |
 | Slice **1.4-contract** | **1.4-contract** | Blocked until [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is fully cleared. |
 | Layer 3 `org_id` on content/batches/etc. | **3.x** | Not started; `requireOrgContext` ready for scoped routers. |
@@ -126,11 +128,10 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 
 ## Suggested next slice order (for a new chat)
 
-1. **Roadmap 2.5** — Audit/event alignment: persist or standardize logging for governance events; confirm `org_id` null for platform actions per [architecture-decisions.md](./architecture-decisions.md).
+1. **Checklist 5.3** — Admin portal org switcher wired to **`POST /api/auth/switch-org`** + data refresh.
 2. **Checklist 2.12** — OAuth vs membership pending policy (if product requires strict parity with local register).
-3. **Checklist 5.3** — Admin portal org switcher wired to **`POST /api/auth/switch-org`** + data refresh.
-4. **Layer 3** — `org_id` on domain tables + handler scoping with **`req.orgId`** (see [schema-design.md](./schema-design.md)).
-5. **Layer 4** — Tenant config + student chameleon ([README.md](./README.md) port plan :3000 / :3010).
+3. **Layer 3** — `org_id` on domain tables + handler scoping with **`req.orgId`** (see [schema-design.md](./schema-design.md)).
+4. **Layer 4** — Tenant config + student chameleon ([README.md](./README.md) port plan :3000 / :3010).
 
 Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` after `npm run check`.
 
@@ -139,6 +140,9 @@ Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` afte
 ## Verification commands
 
 - **Typecheck:** `npm run check` (root `tsc`).
+- **Governance event contract:** `npx tsx scripts/test/identity-governance-events.test.ts`.
+- **Governance super-admin gate:** `npx tsx scripts/test/require-super-admin.test.ts`.
+- **Audit visibility:** `npx tsx scripts/test/audit-log-visibility.test.ts`.
 - **DB:** After migrations, `npm run db:seed-orgs` then `npm run db:seed-dev` (see [README.md](./README.md) seed order).
 - **Smoke (optional, server running):** `npx tsx scripts/test/api-smoke-test.ts` — auth section includes register + pending login; when seeded **super-admin** login succeeds: **`GET /api/auth/admin/users`** (expects `memberships[]` on users), **`GET /api/admin/directory/users`**, **`POST /api/auth/switch-org`** (403 pending RR / 200 active SLMTS per seed data).
 

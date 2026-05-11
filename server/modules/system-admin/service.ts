@@ -14,6 +14,8 @@ export interface AuditFilter {
   resourceType?: string;
   startDate?: Date;
   endDate?: Date;
+  scope?: "org" | "platform";
+  orgId?: string;
   limit?: number;
   offset?: number;
 }
@@ -48,6 +50,8 @@ export class AdminService {
       resourceType: filters.resourceType,
       startDate: filters.startDate,
       endDate: filters.endDate,
+      scope: filters.scope,
+      orgId: filters.orgId,
       limit,
       offset,
     });
