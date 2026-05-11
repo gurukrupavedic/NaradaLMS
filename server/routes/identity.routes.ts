@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import passport from "passport";
 import { identityService } from "../modules/identity-access/service";
-import { authMiddleware, requireAdmin } from "../shared/middleware/auth";
+import { authMiddleware, requireSuperAdmin } from "../shared/middleware/auth";
 import { jwtAuth } from "../middleware/jwt-auth.middleware";
 import { generateToken } from "../auth/jwt.utils";
 import { identityStorage } from "../modules/identity-access/storage";
@@ -297,199 +297,260 @@ identityRouter.get(
 );
 
 // ======================
-// Admin Routes
+// Super-admin governance (membership model)
 // ======================
+
+const membershipIdParamSchema = z.object({
+  params: z.object({ membershipId: z.string().uuid() }),
+});
+
+const patchMembershipRolesSchema = z.object({
+  params: z.object({ membershipId: z.string().uuid() }),
+  body: z.object({
+    roles: z
+      .array(z.enum(["student", "instructor", "admin"]))
+      .min(1, "At least one role is required"),
+  }),
+});
+
+function governanceError(res: Response, err: unknown, fallbackStatus = 400) {
+  const message = err instanceof Error ? err.message : "Request failed";
+  const lower = message.toLowerCase();
+  const status =
+    lower.includes("not found") || lower.includes("membership not found")
+      ? 404
+      : fallbackStatus;
+  return res.status(status).json({ error: message });
+}
 
 /**
  * GET /api/auth/admin/users
- * Get all users (pending + active) with pagination and filtering
- * Query params: limit, offset, status (optional), role (optional), search (optional)
- * Requires: Admin role
+ * Super-admin: users with nested org memberships; filters by membership state / org.
  */
 identityRouter.get(
   "/admin/users",
   jwtAuth,
-  requireAdmin,
+  requireSuperAdmin,
   catchAsync(async (req: Request, res: Response) => {
-    const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
-    const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
-    const statusFilter = req.query.status as string | undefined;
-    const roleFilter = req.query.role as string | undefined;
+    const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string, 10), 100) : 50;
+    const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : 0;
     const search = (req.query.search as string)?.trim() || undefined;
+    const orgSlug =
+      req.query.orgSlug === "slmts" || req.query.orgSlug === "rr"
+        ? (req.query.orgSlug as "slmts" | "rr")
+        : undefined;
 
-    const filters: { status?: string; role?: string; search?: string } = {};
-    if (statusFilter && ["pending_approval", "active", "inactive"].includes(statusFilter)) {
-      filters.status = statusFilter;
+    let membershipStatus = req.query.membershipStatus as string | undefined;
+    const legacyStatus = req.query.status as string | undefined;
+    if (!membershipStatus && legacyStatus === "pending_approval") {
+      membershipStatus = "pending";
     }
-    if (roleFilter) filters.role = roleFilter;
-    if (search) filters.search = search;
-
-    const [statusCounts, { items: paginatedUsers, total }] = await Promise.all([
-      identityService.getUserStatusCounts(search),
-      identityService.listUsersPaginated(limit, offset, Object.keys(filters).length ? filters : undefined),
-    ]);
-
-    const sanitized = paginatedUsers.map((u: any) => ({
-      id: u.id,
-      email: u.email,
-      status: u.status,
-      roles: u.roles || [],
-      firstName: u.firstName,
-      lastName: u.lastName,
-      createdAt: u.createdAt,
-    }));
-
-    return res.json({
-      users: sanitized,
-      pagination: { limit, offset, total },
-      statusCounts,
-    });
-  })
-);
-
-/**
- * POST /api/auth/admin/users/:userId/approve
- * Approve a pending user and add student role
- * Requires: Admin role
- */
-identityRouter.post(
-  "/admin/users/:userId/approve",
-  jwtAuth,
-  requireAdmin,
-  catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
-    const user = req.user as any;
-
-    const approvedUser = await identityService.approveUser(userId, user.id);
-
-    return res.json({
-      message: "User approved",
-      user: approvedUser,
-    });
-  })
-);
-
-/**
- * POST /api/auth/admin/users/:userId/roles
- * Assign roles to a user
- * Requires: Admin role
- * Body: { roles: ['student', 'instructor', ...] }
- */
-identityRouter.post(
-  "/admin/users/:userId/roles",
-  jwtAuth,
-  requireAdmin,
-  catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
-    const { roles } = req.body;
-    const user = req.user as any;
-
-    if (!Array.isArray(roles)) {
-      return res.status(400).json({ error: "Roles must be an array" });
+    if (!membershipStatus && legacyStatus === "active") {
+      membershipStatus = "active";
+    }
+    if (!membershipStatus && legacyStatus === "inactive") {
+      membershipStatus = "inactive";
     }
 
-    const updatedUser = await identityService.assignRoles(
-      userId,
-      roles,
-      user.id
-    );
+    const ms =
+      membershipStatus &&
+      ["pending", "active", "inactive", "rejected"].includes(membershipStatus)
+        ? (membershipStatus as "pending" | "active" | "inactive" | "rejected")
+        : undefined;
 
-    return res.json({
-      message: "Roles assigned",
-      user: updatedUser,
-    });
-  })
-);
+    const roleParam = req.query.role as string | undefined;
+    const membershipHasRole =
+      roleParam && ["student", "instructor", "admin"].includes(roleParam)
+        ? roleParam
+        : undefined;
 
-/**
- * POST /api/auth/admin/users/:userId/disable
- * Disable a user account (set status to inactive)
- * Requires: Admin role
- */
-identityRouter.post(
-  "/admin/users/:userId/disable",
-  jwtAuth,
-  requireAdmin,
-  catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
+    try {
+      const { users, total, statusCounts } = await identityService.listGovernanceUsers(
+        limit,
+        offset,
+        {
+          membershipStatus: ms,
+          orgSlug,
+          membershipHasRole,
+          search,
+        }
+      );
 
-    const disabledUser = await identityService.disableUser(userId);
-
-    return res.json({
-      message: "User disabled",
-      user: {
-        id: disabledUser.id,
-        email: disabledUser.email,
-        status: disabledUser.status,
-      },
-    });
-  })
-);
-
-/**
- * POST /api/auth/admin/users/:userId/enable
- * Enable a user account (set status to active)
- * Requires: Admin role
- */
-identityRouter.post(
-  "/admin/users/:userId/enable",
-  jwtAuth,
-  requireAdmin,
-  catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
-
-    const enabledUser = await identityService.enableUser(userId);
-
-    return res.json({
-      message: "User enabled",
-      user: {
-        id: enabledUser.id,
-        email: enabledUser.email,
-        status: enabledUser.status,
-      },
-    });
-  })
-);
-
-/**
- * POST /api/auth/admin/users/:userId/reject
- * Reject a pending user (delete from database)
- * Requires: Admin role
- */
-identityRouter.post(
-  "/admin/users/:userId/reject",
-  jwtAuth,
-  requireAdmin,
-  catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
-    const result = await identityService.rejectUser(userId);
-    return res.json({ success: true, message: "User rejected", user: result });
+      return res.json({
+        users,
+        pagination: { limit, offset, total },
+        statusCounts: {
+          all: statusCounts.all,
+          pending_approval: statusCounts.pending,
+          active: statusCounts.active,
+          inactive: statusCounts.inactive,
+          rejected: statusCounts.rejected,
+        },
+      });
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
   })
 );
 
 /**
  * GET /api/auth/admin/users/:userId
- * Get details of a specific user
- * Requires: Admin role
+ * Super-admin: user + memberships
  */
 identityRouter.get(
   "/admin/users/:userId",
   jwtAuth,
-  requireAdmin,
+  requireSuperAdmin,
   catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
-    const user = await identityService.getUser(userId);
+    try {
+      const user = await identityService.getUserWithMembershipsForGovernance(
+        req.params.userId
+      );
+      return res.json(user);
+    } catch (err: unknown) {
+      return governanceError(res, err, 404);
+    }
+  })
+);
 
-    return res.json({
-      id: user.id,
-      email: user.email,
-      status: user.status,
-      roles: user.roles || [],
-      firstName: user.firstName,
-      lastName: user.lastName,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    });
+identityRouter.post(
+  "/admin/memberships/:membershipId/approve",
+  jwtAuth,
+  requireSuperAdmin,
+  validateRequest(membershipIdParamSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    try {
+      const result = await identityService.approveMembership(
+        req.params.membershipId,
+        session.id
+      );
+      return res.json(result);
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
+  })
+);
+
+identityRouter.post(
+  "/admin/memberships/:membershipId/reject",
+  jwtAuth,
+  requireSuperAdmin,
+  validateRequest(membershipIdParamSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    try {
+      const result = await identityService.rejectMembership(
+        req.params.membershipId,
+        session.id
+      );
+      return res.json(result);
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
+  })
+);
+
+identityRouter.post(
+  "/admin/memberships/:membershipId/disable",
+  jwtAuth,
+  requireSuperAdmin,
+  validateRequest(membershipIdParamSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    try {
+      const result = await identityService.setMembershipActiveFlag(
+        req.params.membershipId,
+        "inactive",
+        session.id
+      );
+      return res.json(result);
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
+  })
+);
+
+identityRouter.post(
+  "/admin/memberships/:membershipId/enable",
+  jwtAuth,
+  requireSuperAdmin,
+  validateRequest(membershipIdParamSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    try {
+      const result = await identityService.setMembershipActiveFlag(
+        req.params.membershipId,
+        "active",
+        session.id
+      );
+      return res.json(result);
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
+  })
+);
+
+identityRouter.patch(
+  "/admin/memberships/:membershipId/roles",
+  jwtAuth,
+  requireSuperAdmin,
+  validateRequest(patchMembershipRolesSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    const { roles } = req.body as { roles: string[] };
+    try {
+      const result = await identityService.setMembershipRoles(
+        req.params.membershipId,
+        roles,
+        session.id
+      );
+      return res.json(result);
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
+  })
+);
+
+const userIdParamSchema = z.object({
+  params: z.object({ userId: z.string().min(1) }),
+});
+
+identityRouter.post(
+  "/admin/users/:userId/super-admin/grant",
+  jwtAuth,
+  requireSuperAdmin,
+  validateRequest(userIdParamSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    try {
+      const result = await identityService.grantSuperAdmin(
+        req.params.userId,
+        session.id
+      );
+      return res.json(result);
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
+  })
+);
+
+identityRouter.post(
+  "/admin/users/:userId/super-admin/revoke",
+  jwtAuth,
+  requireSuperAdmin,
+  validateRequest(userIdParamSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    try {
+      const result = await identityService.revokeSuperAdmin(
+        req.params.userId,
+        session.id
+      );
+      return res.json(result);
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
   })
 );
 

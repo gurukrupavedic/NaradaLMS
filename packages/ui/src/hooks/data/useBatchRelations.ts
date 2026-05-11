@@ -69,10 +69,10 @@ export function useCoInstructors(
 
 export function useInstructors() {
   return useQuery<Instructor[]>({
-    queryKey: ["instructors"],
+    queryKey: ["instructors", "/admin/directory/users"],
     queryFn: async () => {
       const response = await apiRequest<{ users: unknown[] }>(
-        "/auth/admin/users?role=instructor&limit=200"
+        "/admin/directory/users?membershipRole=instructor&limit=200"
       );
       return (
         (response.users || []) as {

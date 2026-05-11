@@ -330,6 +330,163 @@ export class IdentityService {
   async isStudent(userId: string) {
     return await this.userHasRole(userId, "student");
   }
+
+  async listGovernanceUsers(
+    limit: number,
+    offset: number,
+    filters?: {
+      membershipStatus?: "pending" | "active" | "inactive" | "rejected";
+      orgSlug?: string;
+      membershipHasRole?: string;
+      search?: string;
+    }
+  ) {
+    const { ids, total } = await identityStorage.listGovernanceUserIdsPaginated(
+      limit,
+      offset,
+      filters
+    );
+    const users = await identityStorage.getGovernanceUsersHydrated(ids);
+    const statusCounts =
+      await identityStorage.getGovernanceMembershipTabCounts(filters?.search);
+    return { users, total, statusCounts };
+  }
+
+  async getUserWithMembershipsForGovernance(userId: string) {
+    const rows = await identityStorage.getGovernanceUsersHydrated([userId]);
+    const u = rows[0];
+    if (!u) throw new Error("User not found");
+    return u;
+  }
+
+  async approveMembership(membershipId: string, actorUserId: string) {
+    const row = await identityStorage.getMembershipWithUserOrg(membershipId);
+    if (!row) throw new Error("Membership not found");
+    if (row.status !== "pending") {
+      throw new Error("Only pending memberships can be approved");
+    }
+    const now = new Date();
+    await identityStorage.updateMembershipRecord(membershipId, {
+      status: "active",
+      approvedAt: now,
+      approvedBy: actorUserId,
+    });
+    await eventBus.publish("MembershipApproved", {
+      type: "MembershipApproved",
+      membershipId,
+      userId: row.userId,
+      orgId: row.orgId,
+      approvedBy: actorUserId,
+      timestamp: now,
+    });
+    return { membershipId, userId: row.userId, orgId: row.orgId, status: "active" as const };
+  }
+
+  async rejectMembership(membershipId: string, actorUserId: string) {
+    const row = await identityStorage.getMembershipWithUserOrg(membershipId);
+    if (!row) throw new Error("Membership not found");
+    if (row.status !== "pending") {
+      throw new Error("Only pending memberships can be rejected");
+    }
+    const now = new Date();
+    await identityStorage.updateMembershipRecord(membershipId, {
+      status: "rejected",
+      approvedAt: null,
+      approvedBy: null,
+    });
+    await eventBus.publish("MembershipRejected", {
+      type: "MembershipRejected",
+      membershipId,
+      userId: row.userId,
+      orgId: row.orgId,
+      rejectedBy: actorUserId,
+      timestamp: now,
+    });
+    return { membershipId, userId: row.userId, status: "rejected" as const };
+  }
+
+  async setMembershipActiveFlag(
+    membershipId: string,
+    target: "inactive" | "active",
+    _actorUserId: string
+  ) {
+    const row = await identityStorage.getMembershipWithUserOrg(membershipId);
+    if (!row) throw new Error("Membership not found");
+    if (target === "inactive" && row.status === "pending") {
+      throw new Error("Use reject for pending memberships");
+    }
+    await identityStorage.updateMembershipRecord(membershipId, {
+      status: target,
+    });
+    return { membershipId, status: target };
+  }
+
+  async setMembershipRoles(membershipId: string, roles: string[], _actorUserId: string) {
+    const row = await identityStorage.getMembershipWithUserOrg(membershipId);
+    if (!row) throw new Error("Membership not found");
+    const allowed = new Set(["student", "instructor", "admin"]);
+    for (const r of roles) {
+      if (!allowed.has(r)) throw new Error(`Invalid role: ${r}`);
+    }
+    if (roles.length === 0) {
+      throw new Error("At least one role is required");
+    }
+    await identityStorage.updateMembershipRecord(membershipId, { roles });
+    await eventBus.publish("MembershipRolesUpdated", {
+      type: "MembershipRolesUpdated",
+      membershipId,
+      userId: row.userId,
+      orgId: row.orgId,
+      roles,
+      timestamp: new Date(),
+    });
+    return { membershipId, roles };
+  }
+
+  async grantSuperAdmin(targetUserId: string, actorUserId: string) {
+    const target = await identityStorage.getUser(targetUserId);
+    if (!target) throw new Error("User not found");
+    await identityStorage.setUserIsSuperAdmin(targetUserId, true);
+    await eventBus.publish("SuperAdminGranted", {
+      type: "SuperAdminGranted",
+      userId: targetUserId,
+      grantedBy: actorUserId,
+      timestamp: new Date(),
+    });
+    return { userId: targetUserId, isSuperAdmin: true };
+  }
+
+  async revokeSuperAdmin(targetUserId: string, actorUserId: string) {
+    if (targetUserId === actorUserId) {
+      throw new Error("You cannot revoke your own super-admin access");
+    }
+    const target = await identityStorage.getUser(targetUserId);
+    if (!target) throw new Error("User not found");
+    if (!target.isSuperAdmin) {
+      throw new Error("User is not a super-admin");
+    }
+    const n = await identityStorage.countSuperAdminUsers();
+    if (n <= 1) {
+      throw new Error("Cannot revoke the last super-admin");
+    }
+    await identityStorage.setUserIsSuperAdmin(targetUserId, false);
+    await eventBus.publish("SuperAdminRevoked", {
+      type: "SuperAdminRevoked",
+      userId: targetUserId,
+      revokedBy: actorUserId,
+      timestamp: new Date(),
+    });
+    return { userId: targetUserId, isSuperAdmin: false };
+  }
+
+  async listDirectoryUsersInOrg(params: {
+    orgId: string;
+    membershipHasRole?: "student" | "instructor" | "admin";
+    search?: string;
+    limit: number;
+  }) {
+    return identityStorage.listDirectoryUsersInOrg(params);
+  }
 }
 
 export const identityService = new IdentityService();

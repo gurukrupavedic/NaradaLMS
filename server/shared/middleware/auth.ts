@@ -40,6 +40,24 @@ export const requireRole = (...roles: string[]) => {
   };
 };
 
+/**
+ * Platform governance: only users with `isSuperAdmin` on the JWT may proceed.
+ */
+export const requireSuperAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = req.user as Express.User | undefined;
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized - missing or invalid token" });
+  }
+  if (!user.isSuperAdmin) {
+    return res.status(403).json({ error: "Super-admin access required" });
+  }
+  next();
+};
+
 // Role hierarchy: admin has access to everything (including content management)
 export const requireAdmin = requireRole("admin");
 export const requireInstructor = requireRole("instructor", "admin");

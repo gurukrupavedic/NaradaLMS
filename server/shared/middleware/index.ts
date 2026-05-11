@@ -3,6 +3,7 @@ import {
   requireRole,
   requireAdmin,
   requireInstructor,
+  requireSuperAdmin,
 } from "./auth";
 import { attachOrgContext, requireOrgContext } from "./org-context";
 
@@ -12,6 +13,7 @@ export {
   requireRole,
   requireAdmin,
   requireInstructor,
+  requireSuperAdmin,
   attachOrgContext,
   requireOrgContext,
 };

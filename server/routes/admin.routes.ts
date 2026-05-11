@@ -3,13 +3,51 @@
  * Audit logging and system settings management
  */
 
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import { requireAdmin } from '../shared/middleware/auth';
 import { jwtAuth } from '../middleware/jwt-auth.middleware';
 import { getAdminService } from '../modules/system-admin/service';
 import { catchAsync } from '../utils/catchAsync';
+import { requireOrgContext } from '../shared/middleware/org-context';
+import { identityService } from '../modules/identity-access/service';
 
 const router = Router();
+
+/**
+ * GET /api/admin/directory/users
+ * Org admins: list users in the current org (JWT org) with optional membership role filter.
+ */
+router.get(
+  '/directory/users',
+  jwtAuth,
+  requireAdmin,
+  requireOrgContext,
+  catchAsync(async (req: Request, res: Response) => {
+    const orgId = req.orgId as string;
+    const limit = Math.min(parseInt(String(req.query.limit ?? '100'), 10) || 100, 500);
+    const search = (req.query.search as string)?.trim() || undefined;
+    const mr = req.query.membershipRole as string | undefined;
+    const membershipHasRole =
+      mr === 'student' || mr === 'instructor' || mr === 'admin' ? mr : undefined;
+    const legacyRole = req.query.role as string | undefined;
+    const roleFromLegacy =
+      legacyRole === 'student' || legacyRole === 'instructor' || legacyRole === 'admin'
+        ? legacyRole
+        : undefined;
+
+    const users = await identityService.listDirectoryUsersInOrg({
+      orgId,
+      membershipHasRole: membershipHasRole ?? roleFromLegacy,
+      search,
+      limit,
+    });
+
+    res.json({
+      users,
+      pagination: { total: users.length, limit, offset: 0 },
+    });
+  })
+);
 
 /**
  * GET /api/admin/audit-logs
