@@ -11,6 +11,7 @@ import {
     useToast
 } from "@narada/ui";
 import { apiRequest } from "@/lib/api";
+import { AUTH_ME_QUERY_KEY } from "@/lib/org-switcher";
 import { FcGoogle } from "react-icons/fc";
 import { useAuth, type AuthUser } from "@/hooks/useAuth";
 
@@ -129,7 +130,7 @@ export function AdminAuthPage() {
                                 apiRequest("/auth/logout", { method: "POST" }).catch(console.error);
                                 return;
                             }
-                            queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+                            queryClient.invalidateQueries({ queryKey: AUTH_ME_QUERY_KEY });
                             setTimeout(() => {
                                 window.location.href = "/admin";
                             }, 500);

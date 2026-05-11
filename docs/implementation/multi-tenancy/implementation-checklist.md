@@ -90,8 +90,11 @@ Pass A is implemented in slice `slice-3.a-core-org-isolation` and should now be 
 
 - **5.1** Gate existing User Management module: **super-admin only** (not org admin).
 - **5.2** API integration: list users with all memberships; add org filter (server-side).
-- **5.3** Org switcher: JWT switch + refresh admin data for active org.
+- [x] **5.3** Org switcher: JWT switch + refresh admin data for active org.
 - **5.4** Ensure org admins cannot access user-governance API routes (403).
+
+Verification note for **5.3**:
+- Confirmed admin shell org switcher refreshes `auth/me`, content queries, batch queries, and org-directory query families on switch. Focused utility coverage lives in [`scripts/test/admin-org-switcher-utils.test.ts`](../../../scripts/test/admin-org-switcher-utils.test.ts). Local browser verification used a temporary dual-active admin fixture by resetting the seeded super-admin password and promoting the RR membership from pending to active/admin for the session.
 
 ---
 

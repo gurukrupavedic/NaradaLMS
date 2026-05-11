@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "../lib/api";
+import { AUTH_ME_QUERY_KEY } from "../lib/org-switcher";
 
 export type OrgMembershipStatusClient =
     | "pending"
@@ -48,7 +49,7 @@ export function useAuth() {
         isLoading,
         error,
     } = useQuery({
-        queryKey: ["auth", "me"],
+        queryKey: AUTH_ME_QUERY_KEY,
         queryFn: async () => {
             try {
                 const response = await apiRequest("/auth/me");
@@ -78,8 +79,8 @@ export function useAuth() {
     const logout = async () => {
         try {
             await apiRequest("/auth/logout", { method: "POST" });
-            queryClient.setQueryData(["auth", "me"], null);
-            queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+            queryClient.setQueryData(AUTH_ME_QUERY_KEY, null);
+            queryClient.invalidateQueries({ queryKey: AUTH_ME_QUERY_KEY });
             router.push("/");
         } catch (err) {
             console.error("Logout error", err);
