@@ -26,7 +26,7 @@ export async function seedOrganizations(): Promise<void> {
   const now = new Date();
 
   for (const row of BASELINE_ORGS) {
-    await db
+    const inserted = await db
       .insert(organizations)
       .values({
         name: row.name,
@@ -35,8 +35,14 @@ export async function seedOrganizations(): Promise<void> {
         createdAt: now,
         updatedAt: now,
       })
-      .onConflictDoNothing({ target: organizations.slug });
-    console.log(`  ok slug=${row.slug}`);
+      .onConflictDoNothing({ target: organizations.slug })
+      .returning({ id: organizations.id });
+
+    if (inserted.length > 0) {
+      console.log(`  inserted slug=${row.slug}`);
+    } else {
+      console.log(`  skipped (already exists) slug=${row.slug}`);
+    }
   }
 
   console.log("Organization seed complete.");
