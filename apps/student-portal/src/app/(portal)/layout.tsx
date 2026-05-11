@@ -54,12 +54,12 @@ export default function PortalLayout({
     // Student portal only shows Learn + Batches & Progress. We pass only STUDENT_PORTAL_NAV_ROLES
     // so the shared AppShell/sidebar never shows Content Studio or Admin Center here.
     const userRoles: UserRole[] = useMemo(() => {
-        const roles = (user?.roles ?? ["student"]) as string[];
+        const roles = (user?.orgRoles?.length ? user.orgRoles : ["student"]) as string[];
         const allowed = roles.filter((r): r is "student" | "instructor" =>
             STUDENT_PORTAL_NAV_ROLES.includes(r as (typeof STUDENT_PORTAL_NAV_ROLES)[number])
         );
         return (allowed.length > 0 ? [...allowed] : ["student"]) as UserRole[];
-    }, [user?.roles]);
+    }, [user?.orgRoles]);
 
     if (isLoading) {
         return (

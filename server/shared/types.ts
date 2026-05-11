@@ -1,12 +1,10 @@
+import type { JWTPayload } from '../auth/jwt.utils';
+
 declare global {
-    namespace Express {
-        interface User {
-            id: string;
-            email: string;
-            roles: string[];
-            status: string;
-        }
-    }
+  namespace Express {
+    // Populated by jwt-auth middleware from verified JWT
+    interface User extends JWTPayload {}
+  }
 }
 
 export {};

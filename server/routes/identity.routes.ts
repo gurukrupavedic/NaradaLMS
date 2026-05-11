@@ -3,7 +3,8 @@ import passport from "passport";
 import { identityService } from "../modules/identity-access/service";
 import { authMiddleware, requireAdmin } from "../shared/middleware/auth";
 import { jwtAuth } from "../middleware/jwt-auth.middleware";
-import { generateToken, type JWTPayload } from "../auth/jwt.utils";
+import { generateToken } from "../auth/jwt.utils";
+import { identityStorage } from "../modules/identity-access/storage";
 import rateLimit from "express-rate-limit";
 import { validateRequest } from "../utils/validation";
 import { z } from "zod";
@@ -69,42 +70,69 @@ identityRouter.post(
   "/login",
   authLimiter,
   (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate("local", { session: false }, (err: any, user: any, info: any) => {
-      if (err) {
-        return next(err);
-      }
-      if (!user) {
-        return res.status(401).json({ error: info?.message || "Invalid credentials" });
-      }
-
-      // Generate token
-      const token = generateToken({
-        id: user.id || user._id,
-        email: user.email,
-        roles: user.roles || [],
-        status: user.status || 'active',
-      });
-
-      // Set HttpOnly cookie (prevents XSS attacks)
-      res.cookie('auth_token', token, {
-        httpOnly: true,
-        secure: config.env === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
-
-      // Don't send token in response body - it's in the cookie
-      return res.json({
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          roles: user.roles,
-          status: user.status
+    passport.authenticate(
+      "local",
+      { session: false },
+      (
+        err: unknown,
+        user:
+          | false
+          | null
+          | {
+              id: string;
+              email: string;
+              firstName?: string | null;
+              lastName?: string | null;
+            },
+        info: { message?: string }
+      ) => {
+        if (err) {
+          return next(err);
         }
-      });
-    })(req, res, next);
+        if (!user) {
+          return res
+            .status(401)
+            .json({ error: info?.message || "Invalid credentials" });
+        }
+
+        void (async () => {
+          try {
+            const claims = await identityStorage.getJwtSignClaimsForUser(
+              user.id
+            );
+            if (!claims) {
+              return res
+                .status(500)
+                .json({ error: "Failed to build session" });
+            }
+
+            const token = generateToken(claims);
+
+            res.cookie("auth_token", token, {
+              httpOnly: true,
+              secure: config.env === "production",
+              sameSite: "strict",
+              maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            });
+
+            return res.json({
+              user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                isSuperAdmin: claims.isSuperAdmin,
+                currentOrgId: claims.currentOrgId,
+                orgRoles: claims.orgRoles,
+                orgMembershipStatus: claims.orgMembershipStatus,
+              },
+            });
+          } catch (e) {
+            next(e);
+          }
+        })();
+      }
+    )(req, res, next);
   }
 );
 
@@ -124,32 +152,30 @@ identityRouter.get(
 identityRouter.get(
   "/google/callback",
   passport.authenticate("google", { session: false, failureRedirect: "/login?error=auth_failed" }),
-  (req: Request, res: Response) => {
+  catchAsync(async (req: Request, res: Response) => {
     if (!req.user) {
       return res.redirect("/login?error=pending_approval");
     }
 
-    const user = req.user as any;
+    const oauthUser = req.user as { id: string };
 
-    const token = generateToken({
-      id: user.id,
-      email: user.email,
-      roles: user.roles || [],
-      status: user.status || 'active',
-    });
+    const claims = await identityStorage.getJwtSignClaimsForUser(oauthUser.id);
+    if (!claims) {
+      return res.redirect("/login?error=session_failed");
+    }
 
-    // Set HttpOnly cookie
-    res.cookie('auth_token', token, {
+    const token = generateToken(claims);
+
+    res.cookie("auth_token", token, {
       httpOnly: true,
-      secure: config.env === 'production',
-      sameSite: 'strict',
+      secure: config.env === "production",
+      sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // Redirect to frontend without token in URL (it's in the cookie)
     const frontendUrl = config.frontendUrl;
     return res.redirect(frontendUrl);
-  }
+  })
 );
 
 /**

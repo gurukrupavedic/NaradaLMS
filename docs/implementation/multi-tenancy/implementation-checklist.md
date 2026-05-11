@@ -39,8 +39,8 @@ Do not start this block until [legacy-users-columns-cleanup.md](./legacy-users-c
 
 ## 2) Layer 2 — Auth, JWT, governance APIs
 
-- [ ] **2.1** Update `JWTPayload` / `generateToken` / `verifyToken` for new claims ([api-contract-changes.md](./api-contract-changes.md)).
-- [ ] **2.2** Update `server/shared/types.ts` `Express.User` augmentation.
+- [x] **2.1** Update `JWTPayload` / `generateToken` / `verifyToken` for new claims ([api-contract-changes.md](./api-contract-changes.md)).
+- [x] **2.2** Update `server/shared/types.ts` `Express.User` augmentation.
 - [ ] **2.3** Implement org context resolution middleware (JWT `currentOrgId` first; extensible for host later).
 - [ ] **2.4** Replace `requireRole` global checks with `requireOrgRole` + `requireSuperAdmin` pattern; keep `requireAdmin`/`requireInstructor` as org-scoped wrappers.
 - [ ] **2.5** Register: create user + pending `user_organizations` row for tenant from request.

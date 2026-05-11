@@ -4,16 +4,25 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "../lib/api";
 
+export type OrgMembershipStatusClient =
+    | "pending"
+    | "active"
+    | "inactive"
+    | "rejected";
+
+/** Session user from JWT (`/auth/me`) plus optional profile fields when merged from APIs. */
 export interface AuthUser {
     id: string;
     email: string;
     firstName?: string;
     lastName?: string;
     profileImageUrl?: string;
-    roles: string[];
-    status: "active" | "pending_approval" | "inactive";
-    createdAt: string; // Serialized date
-    updatedAt: string;
+    isSuperAdmin: boolean;
+    currentOrgId?: string;
+    orgRoles?: string[];
+    orgMembershipStatus?: OrgMembershipStatusClient;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export function useAuth() {

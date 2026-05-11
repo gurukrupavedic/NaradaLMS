@@ -20,7 +20,9 @@ export function useRoleGuard(requiredRoles: string[]) {
             return;
         }
 
-        const hasRequiredRole = requiredRoles.some(role => user.roles?.includes(role));
+        const hasRequiredRole =
+            user.isSuperAdmin ||
+            requiredRoles.some((role) => user.orgRoles?.includes(role));
 
         if (!hasRequiredRole) {
             router.push('/unauthorized');
