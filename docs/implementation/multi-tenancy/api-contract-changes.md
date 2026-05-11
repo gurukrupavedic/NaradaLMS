@@ -2,6 +2,8 @@
 
 This document defines backend contract changes needed to move from global user role/status to org-scoped membership with super-admin governance.
 
+**Migration sequencing (physical schema):** Layer 2 updates JWT payloads, middleware, and routes to use `user_organizations` and `users.is_super_admin`. The database columns `users.roles` and `users.status` remain until **all** code paths stop reading them; then slice **`slice-1.4-schema-contract`** drops those columns (see [implementation-checklist.md](./implementation-checklist.md) deferred block and [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md)). API contracts below describe the **target** behavior; implementation may still read legacy columns temporarily during Layer 2.
+
 Grounded references:
 
 - `server/routes/identity.routes.ts`

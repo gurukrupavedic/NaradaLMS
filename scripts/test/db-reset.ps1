@@ -42,14 +42,14 @@ Step 1: Reads your .env file to get database connection info
 Step 2: Connects to your PostgreSQL database
 Step 3: DROPS the entire "public" schema (deletes all tables and data)
 Step 4: Creates a new empty "public" schema
-Step 5: Runs Drizzle migrations to recreate all tables fresh
+Step 5: Runs Drizzle versioned migrations (`./migrations`) to recreate all tables fresh
 Step 6: Your database is now clean and empty
 
 SUCCESS LOOKS LIKE:
 You'll see:
 - "Dropping public schema..." 
 - "Recreating public schema..."
-- "Applying Drizzle schema..."
+- "Applying Drizzle migrations..."
 - "DB reset complete" in green
 
 FAILURE LOOKS LIKE:
@@ -61,7 +61,7 @@ REQUIREMENTS:
 - PostgreSQL installed (version 16, 17, or 18)
 - .env file with DATABASE_URL or PG* variables
 - Windows PowerShell
-- Node.js and npm (for Drizzle push)
+- Node.js and npm (for `drizzle-kit migrate`)
 
 RECOVERY:
 If something goes wrong, your database will be in a broken state.
@@ -126,7 +126,7 @@ if (-not $envMap["PGHOST"]) { $envMap["PGHOST"] = "localhost" }
 Write-Host "Recreating public schema..." -ForegroundColor Yellow
 & $psql -U $envMap["PGUSER"] -h $envMap["PGHOST"] -d $dbName -c "CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO postgres; GRANT ALL ON SCHEMA public TO public;" | Out-String | Write-Host
 
-Write-Host "Applying Drizzle schema (--force)..." -ForegroundColor Yellow
-npx drizzle-kit push --force | Out-String | Write-Host
+Write-Host "Applying Drizzle migrations..." -ForegroundColor Yellow
+npx drizzle-kit migrate | Out-String | Write-Host
 
 Write-Host "`nDB reset complete" -ForegroundColor Green

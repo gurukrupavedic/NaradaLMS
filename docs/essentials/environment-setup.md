@@ -38,17 +38,15 @@ Follow these steps in order to ensure all dependencies and configurations are co
 
 ### 3. Database Initialization
 
-NaradaLMS uses **Drizzle ORM** with a declarative "push" strategy for development.
+NaradaLMS uses **Drizzle ORM** with versioned SQL migrations under `./migrations/` (generated from `packages/types/src/schema.ts`).
 
-Run the following command to synchronize your database schema with the code:
+Apply pending migrations to an existing database:
 
 ```bash
-npm run db:push
+npm run db:migrate
 ```
 
-> [!IMPORTANT]
-> **Why `db:push`?**
-> We use `drizzle-kit push` instead of traditional SQL migrations during active development. This makes the database match `shared/schema.ts` immediately without the overhead of tracking migration files.
+For a **clean** local database (drops and recreates `public`, then applies all migrations), use `npm run db:reset` (see Maintenance & Reset below).
 
 ---
 
@@ -107,7 +105,7 @@ npm run db:reset
 1. Drops the `public` schema.
 2. Recreates the `public` schema.
 3. Grants necessary permissions.
-4. Executes `drizzle-kit push --force`.
+4. Executes `drizzle-kit migrate` against `./migrations/`.
 
 ---
 
