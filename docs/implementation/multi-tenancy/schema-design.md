@@ -14,6 +14,20 @@ This document translates Wave 1 decisions into concrete database/schema changes,
 
 ---
 
+## Expand / contract phasing
+
+Schema work is split so the integration branch never sits in a non-buildable state:
+
+| Phase | When | What |
+| ----- | ---- | ---- |
+| **Expand** | Slice `slice-1.1-org-schema` | Add `organizations`, `user_organizations`, and `users.is_super_admin`. Legacy `users.roles` / `users.status` (and `users_status_check`) stay in place. |
+| **Migrate** | Layer 2 | Application code reads membership and `is_super_admin` instead of global role/status. Track remaining references in [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md). |
+| **Contract** | Slice `slice-1.4-schema-contract` (after Layer 2) | Drop `users.roles`, `users.status`, and `users_status_check` once the cleanup tracker is empty. |
+
+Dev and CI apply versioned SQL from `./migrations/` via `drizzle-kit migrate` after a clean schema reset (see [implementation-checklist.md](./implementation-checklist.md) item 1.4).
+
+---
+
 ## Current baseline (from code)
 
 Today:
@@ -34,15 +48,17 @@ Key references:
 
 ### 1) `users` table changes
 
-#### Add
+#### Add (slice 1.1 — expand)
 
 - `is_super_admin boolean not null default false`
 
-#### Drop
+#### Drop (slice 1.4 — contract, after Layer 2)
 
 - `roles` (text[])
 - `status` (varchar)
-- account-level status CHECK constraint tied to `users.status`
+- account-level status CHECK constraint tied to `users.status` (`users_status_check`)
+
+Do **not** drop these columns until every consumer is migrated off them; see [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md).
 
 #### Keep
 
@@ -180,8 +196,8 @@ In `packages/types/src/schema.ts`:
    - `organizations`
    - `userOrganizations`
 2. Update `users` table definition:
-   - add `isSuperAdmin`
-   - remove `roles`, `status`, related CHECK
+   - add `isSuperAdmin` (slice 1.1)
+   - remove `roles`, `status`, related CHECK (slice 1.4 only, after Layer 2)
 3. Add `orgId` columns and FKs on scoped tables.
 4. Update indexes/uniques to include `orgId` where required.
 5. Add relations:
@@ -196,14 +212,14 @@ In `packages/types/src/schema.ts`:
 
 Per product decision, skip legacy migration complexity:
 
-- reset/purge dev database
-- apply new migrations on clean DB
+- reset/purge dev database (drop `public` schema, recreate empty `public`)
+- apply **versioned** migrations on clean DB (`drizzle-kit generate` produces SQL under `./migrations/`; `drizzle-kit migrate` applies them in order — see dev reset script)
 - reseed with:
   - org rows (`slmts`, `rr`)
   - super-admin user (Kashyap account in dev)
   - baseline memberships/roles for testing
 
-No compatibility bridge for old `users.roles/status` is required.
+During expand (slice 1.1), legacy `users.roles` / `users.status` columns remain; no dual-write bridge is required. After contract (slice 1.4), those columns are gone permanently for new environments.
 
 ---
 

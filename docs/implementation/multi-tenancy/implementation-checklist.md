@@ -16,13 +16,24 @@ Mark items done only when verification for that slice passes (see [verification-
 
 ## 1) Layer 1 — Tenant foundation (schema)
 
-- [ ] **1.1** Add `organizations` table (see [schema-design.md](./schema-design.md)).
-- [ ] **1.2** Add `user_organizations` table with unique `(user_id, org_id)`, status + roles columns.
-- [ ] **1.3** Add `users.is_super_admin` (boolean, default false).
-- [ ] **1.4** Remove `users.roles`, `users.status`, and `users_status_check` (and any code depending on them in same PR slice or immediately following).
-- [ ] **1.5** Commit Drizzle schema + generated migration together.
-- [ ] **1.6** Seed `slmts` and `rr` org rows + document slugs.
-- [ ] **1.7** Seed dev super-admin + minimal test memberships (manual SQL or seed script).
+Layer 1 uses an **expand–contract** pattern so `multi-tenancy` stays buildable at every merge:
+
+1. **Expand (slice `slice-1.1-org-schema`):** add `organizations`, `user_organizations`, and `users.is_super_admin` only. Keep legacy `users.roles` / `users.status` (and `users_status_check`) until application code no longer reads them.
+2. **Migrate (Layer 2):** move auth, JWT, routes, and portals to membership + `is_super_admin`. Track every remaining legacy reference in [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) until the list is empty.
+3. **Contract (slice `slice-1.4-schema-contract`, after Layer 2):** drop `users.roles`, `users.status`, and `users_status_check` in a dedicated slice once the cleanup tracker is clear.
+
+- [ ] **1.1** Add `organizations` table (additive; see [schema-design.md](./schema-design.md)).
+- [ ] **1.2** Add `user_organizations` table with unique `(user_id, org_id)`, status + roles columns (additive).
+- [ ] **1.3** Add `users.is_super_admin` (boolean, default false; additive).
+- [ ] **1.4** Commit Drizzle schema changes and **generated** SQL migrations together (`drizzle-kit generate`; dev reset applies them via `drizzle-kit migrate`). Include a baseline migration that matches the pre–multi-tenancy schema plus a migration for the additive Layer 1 changes.
+- [ ] **1.5** Seed `slmts` and `rr` org rows + document slugs.
+- [ ] **1.6** Seed dev super-admin + minimal test memberships (manual SQL or seed script).
+
+### Deferred — slice `slice-1.4-schema-contract` (after Layer 2 completes)
+
+Do not start this block until [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) has no open items.
+
+- [ ] **1.4-contract** Remove `users.roles`, `users.status`, and `users_status_check` (and any remaining code or scripts that depend on them). Generate/commit the contract migration. Re-verify fresh DB + typecheck.
 
 ---
 

@@ -47,6 +47,7 @@ Use the roadmap and checklist as the primary execution guide. The root [roadmap.
 
 - Build once, deploy many.
 - Backend-first sequencing: schema -> server -> API -> UI.
+- Schema changes follow an **expand–contract** pattern: add new tables/columns first (`slice-1.1-org-schema`), migrate application code in Layer 2, then drop legacy columns in `slice-1.4-schema-contract` so the integration branch stays buildable.
 - Strict org data isolation.
 - Global identity with per-org memberships and per-org roles.
 - Super-admin is the only authority for user approval and role/membership management.

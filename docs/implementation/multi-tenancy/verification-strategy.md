@@ -29,9 +29,19 @@ Until automated tests exist, use the manual scenarios below and record results i
 
 ## Layer 1 — Schema verification
 
-- [ ] `pnpm`/`npm` workspace typecheck: no remaining references to `users.roles` or `users.status` in server and packages (after Layer 2 completes, or same slice if coordinated).
-- [ ] Migration on fresh DB succeeds.
-- [ ] Seed creates two orgs with expected `slug` values.
+- [ ] `pnpm`/`npm` workspace typecheck: passes after each merge (legacy `users.roles` / `users.status` may still exist until slice 1.4 contract; **zero** references is required only after [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is complete and item **1.4-contract** is done).
+- [ ] Migration on fresh DB succeeds (`drizzle-kit migrate` after reset).
+- [ ] After slice 1.1 expand: `\d users` shows `is_super_admin` alongside legacy columns; `\dt` includes `organizations` and `user_organizations`.
+- [ ] Seed creates two orgs with expected `slug` values (after seed slice 1.5 / checklist 1.5).
+
+---
+
+## Slice 1.4 — Schema contract verification (after Layer 2)
+
+Run only on branch `slice-1.4-schema-contract` when [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) has no open items.
+
+- [ ] Contract migration applies on fresh DB; `\d users` no longer lists `roles`, `status`, or `users_status_check`.
+- [ ] Full workspace typecheck: no remaining references to `users.roles` or `users.status` in server, packages, apps, or scripts.
 
 ---
 

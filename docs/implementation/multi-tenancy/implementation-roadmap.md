@@ -27,15 +27,15 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
 
 ## Layer 1: Tenant foundation (schema + seeds)
 
-**Goal:** Org and membership tables exist; global `users.roles` / `users.status` removed; `users.is_super_admin` added.
+**Goal:** Org and membership tables exist; `users.is_super_admin` added. Legacy global `users.roles` / `users.status` are **removed only in slice 1.4** after Layer 2 migrates all consumers (expand–contract; see [implementation-checklist.md](./implementation-checklist.md) section 1).
 
 **Slices:**
 
-1. **1.1 Schema migration (clean DB)**
+1. **1.1 Schema expand (clean DB, slice `slice-1.1-org-schema`)**
    - Add `organizations`, `user_organizations`.
    - Add `is_super_admin` on `users`.
-   - Drop `users.roles`, `users.status`, and related CHECKs (per [schema-design.md](./schema-design.md)).
-   - Generate/commit Drizzle migration.
+   - Commit Drizzle schema + **generated** SQL migrations (`drizzle-kit generate`; dev reset uses `drizzle-kit migrate`). Do **not** drop `users.roles` / `users.status` in this slice.
+   - Add [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) to track remaining references until contract slice.
 
 2. **1.2 Seed baseline orgs**
    - Insert `slmts`, `rr` (status per operational choice).
@@ -45,7 +45,11 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
    - Seed at least one super-admin account and minimal SLMTS memberships for smoke testing.
    - No production hosting assumptions.
 
-**Done when:** Migrations apply on empty DB; typecheck shows no broken references to removed columns (may require Layer 2 for full compile green).
+4. **1.4 Schema contract (slice `slice-1.4-schema-contract`, after Layer 2)**
+   - Drop `users.roles`, `users.status`, and `users_status_check` per [schema-design.md](./schema-design.md) once the cleanup tracker is empty.
+   - Generate/commit the contract migration.
+
+**Done when:** Migrations apply on empty DB; typecheck stays green after each merge to `multi-tenancy`. No legacy column drops until slice 1.4; after 1.4, no references to removed columns remain.
 
 ---
 
@@ -135,6 +139,17 @@ RR public onboarding can remain gated operationally (data/flags) even if code su
 
 ---
 
+## Slice 1.4: Schema contract (after Layer 2)
+
+This slice is **not** part of the initial Layer 1 expand work. Run branch `slice-1.4-schema-contract` only after:
+
+- Layer 2 auth, JWT, governance, and portals no longer read `users.roles` or `users.status`.
+- [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) has zero unchecked items.
+
+Then drop the legacy columns and CHECK in one small migration and re-verify fresh DB + full typecheck.
+
+---
+
 ## Parallel tracks (after Layer 2 is stable)
 
 - **API:** Layer 3 passes A/B, handler updates.
@@ -146,7 +161,7 @@ RR public onboarding can remain gated operationally (data/flags) even if code su
 ## Branching suggestion
 
 - Long-lived: `multi-tenancy`
-- Slice branches: `slice-1.1-org-schema`, `slice-2.2-auth-membership`, etc.
+- Slice branches: `slice-1.1-org-schema`, `slice-1.2-seed-orgs`, `slice-1.3-seed-dev`, `slice-1.4-schema-contract` (after Layer 2), `slice-2.1-jwt-payload`, etc.
 - Merge to long-lived branch after each slice verification (see [verification-strategy.md](./verification-strategy.md)).
 
 ---
