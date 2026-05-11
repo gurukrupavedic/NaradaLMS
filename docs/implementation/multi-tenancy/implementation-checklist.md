@@ -19,7 +19,7 @@ Mark items done only when verification for that slice passes (see [verification-
 Layer 1 uses an **expand–contract** pattern so `multi-tenancy` stays buildable at every merge:
 
 1. **Expand (slice `slice-1.1-org-schema`):** add `organizations`, `user_organizations`, and `users.is_super_admin` only. Keep legacy `users.roles` / `users.status` (and `users_status_check`) until application code no longer reads them.
-2. **Migrate (Layer 2):** move auth, JWT, routes, and portals to membership + `is_super_admin`. Track every remaining legacy reference in [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) until the list is empty.
+2. **Migrate (Layer 2):** move auth, JWT, routes, and portals to membership + `is_super_admin`. Track every remaining legacy reference in [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) until every row in that tracker is checked.
 3. **Contract (slice `slice-1.4-schema-contract`, after Layer 2):** drop `users.roles`, `users.status`, and `users_status_check` in a dedicated slice once the cleanup tracker is clear.
 
 - [ ] **1.1** Add `organizations` table (additive; see [schema-design.md](./schema-design.md)).

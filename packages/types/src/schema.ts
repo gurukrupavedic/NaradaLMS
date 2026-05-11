@@ -11,6 +11,8 @@ import {
   unique,
   check,
   foreignKey,
+  uuid,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
@@ -34,6 +36,7 @@ export const users = pgTable("users", {
   // Authorization
   roles: text("roles").array().notNull().default(sql`ARRAY[]::text[]`),
   status: varchar("status").notNull().default("pending_approval"), // 'pending_approval' | 'active' | 'inactive'
+  isSuperAdmin: boolean("is_super_admin").notNull().default(false),
 
   // Audit / invitations (self-FKs in table callback)
   invitedBy: varchar("invited_by"),
@@ -60,6 +63,72 @@ export const users = pgTable("users", {
   ),
   check("users_provider_check", sql`provider IN ('local', 'google')`),
 ]);
+
+// Organizations — tenant identity (multi-tenancy expand phase)
+export const organizations = pgTable(
+  "organizations",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull().unique(),
+    status: varchar("status").notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    check(
+      "organizations_status_check",
+      sql`${table.status} IN ('active', 'inactive')`
+    ),
+  ]
+);
+
+// User–organization membership (per-org roles and status)
+export const userOrganizations = pgTable(
+  "user_organizations",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    roles: text("roles")
+      .array()
+      .notNull()
+      .default(sql`ARRAY['student']::text[]`),
+    status: varchar("status").notNull().default("pending"),
+    requestedAt: timestamp("requested_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    approvedBy: varchar("approved_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    unique("user_organizations_user_org_uniq").on(table.userId, table.orgId),
+    check(
+      "user_organizations_status_check",
+      sql`${table.status} IN ('pending', 'active', 'inactive', 'rejected')`
+    ),
+    check(
+      "user_organizations_roles_subset_check",
+      sql`${table.roles} <@ ARRAY['student','instructor','admin']::text[]`
+    ),
+    index("idx_user_org_user_id").on(table.userId),
+    index("idx_user_org_org_id").on(table.orgId),
+    index("idx_user_org_status").on(table.status),
+    index("idx_user_org_org_status").on(table.orgId, table.status),
+  ]
+);
 
 // Learning tracks - Vedic curriculum structure
 export const tracks = pgTable("tracks", {
@@ -309,6 +378,10 @@ export const systemSettings = pgTable("system_settings", {
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
+  memberships: many(userOrganizations, { relationName: "membershipUser" }),
+  membershipsApprovedByUser: many(userOrganizations, {
+    relationName: "membershipApprovedByUser",
+  }),
   createdTracks: many(tracks),
   createdChapters: many(chapters),
   uploadedAudioFiles: many(audioFiles),
@@ -329,6 +402,30 @@ export const usersRelations = relations(users, ({ many }) => ({
     relationName: "evalLogInstructor",
   }),
 }));
+
+export const organizationsRelations = relations(organizations, ({ many }) => ({
+  userOrganizations: many(userOrganizations),
+}));
+
+export const userOrganizationsRelations = relations(
+  userOrganizations,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userOrganizations.userId],
+      references: [users.id],
+      relationName: "membershipUser",
+    }),
+    organization: one(organizations, {
+      fields: [userOrganizations.orgId],
+      references: [organizations.id],
+    }),
+    approvedByUser: one(users, {
+      fields: [userOrganizations.approvedBy],
+      references: [users.id],
+      relationName: "membershipApprovedByUser",
+    }),
+  })
+);
 
 export const tracksRelations = relations(tracks, ({ one, many }) => ({
   createdBy: one(users, {
@@ -516,6 +613,12 @@ export const systemSettingsRelations = relations(systemSettings, ({ one }) => ({
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 
+export const insertOrganizationSchema = createInsertSchema(organizations);
+export const selectOrganizationSchema = createSelectSchema(organizations);
+
+export const insertUserOrganizationSchema = createInsertSchema(userOrganizations);
+export const selectUserOrganizationSchema = createSelectSchema(userOrganizations);
+
 export const insertTrackSchema = createInsertSchema(tracks).omit({ id: true, createdAt: true, updatedAt: true, createdBy: true, sortOrder: true });
 export const selectTrackSchema = createSelectSchema(tracks);
 
@@ -555,6 +658,12 @@ export const selectSystemSettingSchema = createSelectSchema(systemSettings);
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = z.infer<typeof selectUserSchema>;
+
+export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
+export type Organization = z.infer<typeof selectOrganizationSchema>;
+
+export type InsertUserOrganization = z.infer<typeof insertUserOrganizationSchema>;
+export type UserOrganization = z.infer<typeof selectUserOrganizationSchema>;
 
 export type InsertTrack = z.infer<typeof insertTrackSchema>;
 export type Track = z.infer<typeof selectTrackSchema>;
