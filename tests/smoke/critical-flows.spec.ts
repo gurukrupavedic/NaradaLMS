@@ -52,8 +52,10 @@ test.describe('Critical Flows Smoke Test', () => {
         const token = generateToken({
             id: 'admin-123',
             email: 'admin@vedam.org',
-            roles: ['admin'],
-            status: 'active'
+            isSuperAdmin: true,
+            currentOrgId: '00000000-0000-4000-8000-000000000001',
+            orgRoles: ['admin'],
+            orgMembershipStatus: 'active',
         });
 
         await context.addCookies([{

@@ -90,7 +90,8 @@ export default function TracksAndChapters() {
   const [deleteState, setDeleteState] = useState<DeleteState>({ isOpen: false, itemType: 'track' });
   const [formData, setFormData] = useState<{ title: string; description: string; trackId?: number }>({ title: '', description: '' });
 
-  const isAdmin = user?.roles?.includes('admin');
+  const isAdmin =
+    user?.isSuperAdmin || user?.orgRoles?.includes("admin");
 
   const tracksQuery = useQuery<TrackRow[]>({
     queryKey: ['content', 'tracks'],

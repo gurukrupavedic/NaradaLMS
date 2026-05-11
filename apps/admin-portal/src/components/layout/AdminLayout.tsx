@@ -43,8 +43,9 @@ export default function AdminLayout({
         return null;
     }
 
-    // Admin portal is admin-only; redirect non-admins
-    if (!user.roles?.includes('admin')) {
+    const canAccessAdminPortal =
+        user.isSuperAdmin || user.orgRoles?.includes("admin");
+    if (!canAccessAdminPortal) {
         router.push("/");
         return null;
     }

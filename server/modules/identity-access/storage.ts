@@ -1,12 +1,70 @@
 import { db } from "../../db";
-import { users } from "@narada/types";
+import { organizations, userOrganizations, users } from "@narada/types";
 import { eq, and, or, ilike, sql } from "drizzle-orm";
+import type { JwtSignClaims, OrgMembershipStatusClaim } from "../../auth/jwt.utils";
 
 /**
  * Identity & Access - Data Access Layer
  * Handles all user-related database operations
  */
 export class IdentityStorage {
+  /**
+   * Build JWT claims for a user: super-admin flag plus default org context from `user_organizations`.
+   * Default org: prefer **active** membership in org slug `slmts`, else first active membership by org slug (ascending).
+   */
+  async getJwtSignClaimsForUser(userId: string): Promise<JwtSignClaims | null> {
+    const [user] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        isSuperAdmin: users.isSuperAdmin,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user) {
+      return null;
+    }
+
+    const membershipRows = await db
+      .select({
+        orgId: userOrganizations.orgId,
+        orgSlug: organizations.slug,
+        roles: userOrganizations.roles,
+        status: userOrganizations.status,
+      })
+      .from(userOrganizations)
+      .innerJoin(organizations, eq(organizations.id, userOrganizations.orgId))
+      .where(eq(userOrganizations.userId, userId));
+
+    const active = membershipRows.filter((r) => r.status === "active");
+    let chosen: (typeof membershipRows)[0] | undefined;
+    const slmts = active.find((r) => r.orgSlug === "slmts");
+    if (slmts) {
+      chosen = slmts;
+    } else if (active.length > 0) {
+      const sorted = [...active].sort((a, b) =>
+        a.orgSlug.localeCompare(b.orgSlug)
+      );
+      chosen = sorted[0];
+    }
+
+    const base: JwtSignClaims = {
+      id: user.id,
+      email: user.email,
+      isSuperAdmin: user.isSuperAdmin,
+    };
+
+    if (chosen) {
+      base.currentOrgId = chosen.orgId;
+      base.orgRoles = [...(chosen.roles ?? [])];
+      base.orgMembershipStatus = chosen.status as OrgMembershipStatusClaim;
+    }
+
+    return base;
+  }
+
   /**
    * Get user by ID
    */

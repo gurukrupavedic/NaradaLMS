@@ -13,8 +13,8 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 };
 
 /**
- * Role guard using the roles array attached to req.user by Passport.
- * Fails with 401 when no user; 403 when none of the required roles are present.
+ * Role guard using org-scoped roles on `req.user` (JWT `orgRoles`), populated by jwt-auth.
+ * Super-admin bypasses org role checks for this guard.
  */
 export const requireRole = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -23,8 +23,14 @@ export const requireRole = (...roles: string[]) => {
       return res.status(401).json({ error: "Unauthorized - missing or invalid token" });
     }
 
-    const userRoles = user.roles ?? [];
-    const allowed = roles.length === 0 || roles.some((role) => userRoles.includes(role));
+    if (user.isSuperAdmin) {
+      return next();
+    }
+
+    const userRoles = user.orgRoles ?? [];
+    const allowed =
+      roles.length === 0 ||
+      roles.some((role) => userRoles.includes(role));
 
     if (!allowed) {
       return res.status(403).json({ error: "Insufficient permissions" });

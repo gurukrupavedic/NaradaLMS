@@ -116,8 +116,10 @@ export function AdminAuthPage() {
 
                     <LoginForm
                         onSuccess={(userData) => {
-                            const roles = userData?.roles || [];
-                            if (!roles.includes('admin')) {
+                            const canAdmin =
+                                userData.isSuperAdmin ||
+                                (userData.orgRoles?.includes("admin") ?? false);
+                            if (!canAdmin) {
                                 toast({
                                     title: "Access Denied",
                                     description: "You do not have the appropriate role to access the admin portal. Only administrators can sign in here.",

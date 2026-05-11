@@ -60,7 +60,11 @@ router.get('/progress', catchAsync(async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const isStudent = user.roles?.includes('student') && !user.roles?.includes('instructor') && !user.roles?.includes('admin');
+  const roles = user.orgRoles ?? [];
+  const isStudent =
+    roles.includes("student") &&
+    !roles.includes("instructor") &&
+    !roles.includes("admin");
 
   const filters: ProgressQueryFilters = {
     studentId: req.query.studentId as string,

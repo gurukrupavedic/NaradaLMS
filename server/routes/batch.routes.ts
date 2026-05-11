@@ -239,7 +239,10 @@ router.get('/batches/:id/progress', async (req: Request, res: Response, next: Ne
     }
 
     // Only instructors and admins can view batch progress
-    const isInstructorOrAdmin = user.roles?.includes('instructor') || user.roles?.includes('admin');
+    const isInstructorOrAdmin =
+      user.orgRoles?.includes("instructor") ||
+      user.orgRoles?.includes("admin") ||
+      user.isSuperAdmin;
     if (!isInstructorOrAdmin) {
       return res.status(403).json(createErrorResponse('Forbidden: Instructors only', 'FORBIDDEN'));
     }
@@ -259,7 +262,7 @@ router.post('/batches/:batchId/students/:studentId/evaluate', async (req: Reques
     }
 
     // Only instructors can evaluate
-    if (!user.roles?.includes('instructor')) {
+    if (!user.orgRoles?.includes("instructor") && !user.isSuperAdmin) {
       return res.status(403).json(createErrorResponse('Forbidden: Instructors only', 'FORBIDDEN'));
     }
 
