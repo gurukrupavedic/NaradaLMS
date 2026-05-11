@@ -2,15 +2,17 @@
 
 Execution checklist for multi-tenancy. Source of truth for product/architecture: [architecture-decisions.md](./architecture-decisions.md), [schema-design.md](./schema-design.md), [api-contract-changes.md](./api-contract-changes.md).
 
+**Current implementation snapshot:** [implementation-status.md](./implementation-status.md) (use when resuming in a new session).
+
 Mark items done only when verification for that slice passes (see [verification-strategy.md](./verification-strategy.md)).
 
 ---
 
 ## 0) Setup
 
-- [ ] **0.1** Create branch for multi-tenancy work (e.g. `multi-tenancy`).
-- [ ] **0.2** Reset/purge local dev DB; confirm migration-from-empty path only (no legacy migration).
-- [ ] **0.3** Baseline: `npm` typecheck/tests (capture failures to clear after schema/auth work).
+- [x] **0.1** Create branch for multi-tenancy work (e.g. `multi-tenancy`).
+- [ ] **0.2** Reset/purge local dev DB; confirm migration-from-empty path only (no legacy migration). *(Re-verify whenever migrations change.)*
+- [ ] **0.3** Baseline: `npm` typecheck/tests (capture failures to clear after schema/auth work). *(Ongoing: run `npm run check` before merges.)*
 
 ---
 
@@ -22,10 +24,10 @@ Layer 1 uses an **expand–contract** pattern so `multi-tenancy` stays buildable
 2. **Migrate (Layer 2):** move auth, JWT, routes, and portals to membership + `is_super_admin`. Track every remaining legacy reference in [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) until every row in that tracker is checked.
 3. **Contract (slice `slice-1.4-schema-contract`, after Layer 2):** drop `users.roles`, `users.status`, and `users_status_check` in a dedicated slice once the cleanup tracker is clear.
 
-- [ ] **1.1** Add `organizations` table (additive; see [schema-design.md](./schema-design.md)).
-- [ ] **1.2** Add `user_organizations` table with unique `(user_id, org_id)`, status + roles columns (additive).
-- [ ] **1.3** Add `users.is_super_admin` (boolean, default false; additive).
-- [ ] **1.4** Commit Drizzle schema changes and **generated** SQL migrations together (`drizzle-kit generate`; dev reset applies them via `drizzle-kit migrate`). Include a baseline migration that matches the pre–multi-tenancy schema plus a migration for the additive Layer 1 changes.
+- [x] **1.1** Add `organizations` table (additive; see [schema-design.md](./schema-design.md)). *(Drizzle in `@narada/types`; SQL under repo `migrations/`.)*
+- [x] **1.2** Add `user_organizations` table with unique `(user_id, org_id)`, status + roles columns (additive).
+- [x] **1.3** Add `users.is_super_admin` (boolean, default false; additive).
+- [x] **1.4** Commit Drizzle schema changes and **generated** SQL migrations together (`drizzle-kit generate`; dev reset applies them via `drizzle-kit migrate`). Include a baseline migration that matches the pre–multi-tenancy schema plus a migration for the additive Layer 1 changes.
 - [x] **1.5** Seed `slmts` and `rr` org rows + document slugs (`npm run db:seed-orgs`; [server/seed-organizations.ts](../../../server/seed-organizations.ts)).
 - [x] **1.6** Seed dev super-admin + minimal test memberships (`npm run db:seed-dev`; [server/seed-dev-bootstrap.ts](../../../server/seed-dev-bootstrap.ts)).
 
@@ -75,7 +77,7 @@ Do not start this block until [legacy-users-columns-cleanup.md](./legacy-users-c
 - [ ] **4.1** Add `config/tenants/<slug>/` structure + TypeScript types for tenant config.
 - [ ] **4.2** Wire `TENANT` env (and `PORT` for RR on `3010` if using separate dev processes).
 - [ ] **4.3** Student portal: replace hardcoded branding with tenant config (auth shell, headers).
-- [ ] **4.4** Student API client: send tenant slug header (or equivalent) on auth/register so server creates correct org membership.
+- [ ] **4.4** Student API client: send tenant slug header (or equivalent) on auth/register so server creates correct org membership. *(SLMTS student register already sends `X-Tenant-Slug` + `tenantSlug`; RR-dedicated dev instance / shared client abstraction still Layer 4.)*
 - [ ] **4.5** Document dev commands in root or app `package.json` (SLMTS :3000, RR :3010).
 
 ---

@@ -2,6 +2,8 @@
 
 Sequenced execution reference. Execute rows in ascending **Seq** unless noted parallel-safe.
 
+> **Warning — ID mapping:** `MT-2.x` **does not** match **roadmap slice 2.x** one-to-one. For example, roadmap **2.2** (login/register) is **not** the same row as MT-2.2 (org middleware). **Authoritative order:** [implementation-roadmap.md](./implementation-roadmap.md) + [implementation-checklist.md](./implementation-checklist.md) + [implementation-status.md](./implementation-status.md).
+
 **Execution mode**
 
 - **Individual** — do in isolation (touches many files or high risk).

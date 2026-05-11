@@ -4,6 +4,14 @@ Physical columns `users.roles`, `users.status`, and constraint `users_status_che
 
 When every row below is checked, run slice 1.4 to drop the columns and regenerate the contract migration.
 
+## Layer 2 progress (JWT vs database)
+
+As of slices **2.1** and **2.2** merged to `multi-tenancy`:
+
+- **JWT / `req.user` (post–2.1):** No global `roles` / `status` claims; use `orgRoles`, `orgMembershipStatus`, `isSuperAdmin`, `currentOrgId` ([`server/auth/jwt.utils.ts`](../../../server/auth/jwt.utils.ts)).
+- **Database columns:** Still read/written in many paths (Passport **inactive** check, `IdentityService` approve/disable, admin user listing, seeds, etc.). Rows in the tables below track **removal of dependency on DB columns**, not JWT work already done.
+- **New self-serve users:** `users.status` is typically **`active`** with pending **`user_organizations`**; admin UIs that list “pending” users by `users.status = pending_approval` will **miss** them until governance/list APIs use membership state ([implementation-status.md](./implementation-status.md)).
+
 ## Runtime — server
 
 | Done | File | Notes | Target slice (initial guess) |

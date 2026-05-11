@@ -6,6 +6,14 @@ It captures the finalized product and architecture decisions before coding, then
 
 ---
 
+## Start here (continuing work)
+
+1. Read **[implementation-status.md](./implementation-status.md)** — what is already merged to `multi-tenancy`, current behavior, gaps, and next recommended slices.
+2. Follow **[implementation-roadmap.md](./implementation-roadmap.md)** and **[implementation-checklist.md](./implementation-checklist.md)** for execution order.
+3. Use **[verification-strategy.md](./verification-strategy.md)** before marking checklist items done.
+
+---
+
 ## Scope
 
 - Convert NaradaLMS from single-tenant to multi-tenant.
@@ -34,10 +42,11 @@ Wave 2 technical design docs are now available:
 
 Wave 3 execution docs are now available:
 
-1. [implementation-roadmap.md](./implementation-roadmap.md)
-2. [implementation-checklist.md](./implementation-checklist.md)
-3. [task-coverage-matrix.md](./task-coverage-matrix.md)
-4. [verification-strategy.md](./verification-strategy.md)
+1. [implementation-status.md](./implementation-status.md) — **resume here** (merged work + handoff)
+2. [implementation-roadmap.md](./implementation-roadmap.md)
+3. [implementation-checklist.md](./implementation-checklist.md)
+4. [task-coverage-matrix.md](./task-coverage-matrix.md)
+5. [verification-strategy.md](./verification-strategy.md)
 
 Use the roadmap and checklist as the primary execution guide. The root [roadmap.md](../roadmap.md) remains historical context for earlier planning; multi-tenant execution follows this folder.
 
@@ -55,6 +64,7 @@ After migrations (`npm run db:migrate` or `npm run db:reset`):
 
 - Build once, deploy many.
 - Backend-first sequencing: schema -> server -> API -> UI.
+- **End of each slice:** commit on the slice branch, `git merge --no-ff` into `multi-tenancy`, `git push origin multi-tenancy`, and confirm `npm run check`.
 - Schema changes follow an **expand–contract** pattern: add new tables/columns first (`slice-1.1-org-schema`), migrate application code in Layer 2, then drop legacy columns in `slice-1.4-schema-contract` so the integration branch stays buildable.
 - Strict org data isolation.
 - Global identity with per-org memberships and per-org roles.

@@ -4,6 +4,8 @@ This document defines backend contract changes needed to move from global user r
 
 **Migration sequencing (physical schema):** Layer 2 updates JWT payloads, middleware, and routes to use `user_organizations` and `users.is_super_admin`. The database columns `users.roles` and `users.status` remain until **all** code paths stop reading them; then slice **`slice-1.4-schema-contract`** drops those columns (see [implementation-checklist.md](./implementation-checklist.md) deferred block and [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md)). API contracts below describe the **target** behavior; implementation may still read legacy columns temporarily during Layer 2.
 
+**Implementation snapshot:** Slices **2.1** (JWT shape) and **2.2** (register/login/`/me`/Passport/student pending UX) are merged to `multi-tenancy`. See [implementation-status.md](./implementation-status.md) for what is done vs still open (e.g. governance routes, `switch-org`, `req.orgId` middleware).
+
 Grounded references:
 
 - `server/routes/identity.routes.ts`
@@ -17,7 +19,7 @@ Grounded references:
 
 ## 1) JWT payload changes
 
-Current payload (from `server/auth/jwt.utils.ts`):
+**Former** payload (pre–slice 2.1; removed from new tokens):
 
 - `id`
 - `email`

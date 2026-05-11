@@ -7,6 +7,15 @@ References:
 - [architecture-decisions.md](./architecture-decisions.md)
 - [schema-design.md](./schema-design.md)
 - [api-contract-changes.md](./api-contract-changes.md)
+- [implementation-status.md](./implementation-status.md) — **what is already implemented** on `multi-tenancy` (agent handoff)
+
+### Progress on branch `multi-tenancy` (high level)
+
+The following **roadmap slices are implemented and merged** unless your checkout is behind `origin/multi-tenancy`:
+
+- **Layer 1:** 1.1 schema expand (orgs + memberships + `is_super_admin`), 1.2 seed orgs, 1.3 dev bootstrap. **Not** slice 1.4 contract (legacy `users.roles` / `users.status` still in DB).
+- **Layer 2:** **2.1** JWT / Express typing; **2.2** membership-first register/login, Passport, enriched `/me`, student pending-approval UX.
+- **Next up:** roadmap **2.3** org switch (`POST /api/auth/switch-org`) and/or checklist **2.3** `req.orgId` middleware — see [implementation-status.md](./implementation-status.md) for details and ordering notes.
 
 ---
 
@@ -161,7 +170,7 @@ Then drop the legacy columns and CHECK in one small migration and re-verify fres
 ## Branching suggestion
 
 - Long-lived: `multi-tenancy`
-- Slice branches: `slice-1.1-org-schema`, `slice-1.2-seed-orgs`, `slice-1.3-dev-bootstrap`, `slice-1.4-schema-contract` (after Layer 2), `slice-2.1-jwt-payload`, etc.
+- Slice branches: `slice-1.1-org-schema`, `slice-1.2-seed-orgs`, `slice-1.3-dev-bootstrap`, `slice-1.4-schema-contract` (after Layer 2), `slice-2.1-jwt-payload`, `slice-2.2-login-register`, `slice-2.3-switch-org` (suggested next), etc.
 - Merge to long-lived branch after each slice verification (see [verification-strategy.md](./verification-strategy.md)).
 
 ---

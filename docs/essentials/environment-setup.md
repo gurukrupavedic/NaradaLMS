@@ -64,6 +64,7 @@ npm run db:seed-orgs
 
 - **Script**: `server/seed-organizations.ts`
 - Idempotent: safe to re-run. Typical order: `npm run db:reset` (or `db:migrate`), then `db:seed-orgs`, then Phase 0b (below), then `db:seed` if you need curriculum data.
+- **API / registration:** Clients may send **`X-Tenant-Slug: slmts`** or **`rr`** (or JSON `tenantSlug` on `POST /api/auth/register`). If omitted, the API uses **`DEFAULT_TENANT_SLUG`** from `.env` (default `slmts`; see `.env.example`). Multi-tenancy status: [implementation-status.md](../implementation/multi-tenancy/implementation-status.md).
 
 ### Phase 0b: Dev super-admin and memberships (multi-tenancy)
 

@@ -2,6 +2,8 @@
 
 This document defines how we know each layer is **done** and the platform is safe to expand (RR) after SLMTS pilot.
 
+**Current build:** Layer 2 slices **2.1** and **2.2** are implemented on `multi-tenancy` (JWT + membership-first register/login, pending student UX). Governance APIs (**2.9+**) and org switch (**2.8**) are **not** done — adjust expectations in the sections below accordingly. See [implementation-status.md](./implementation-status.md).
+
 ---
 
 ## Principles
@@ -49,14 +51,16 @@ Run only on branch `slice-1.4-schema-contract` when [legacy-users-columns-cleanu
 
 ### Registration (new user, SLMTS tenant)
 
-1. POST register with tenant context for `slmts`.
-2. Expect: user row exists; `user_organizations` row for SLMTS with `status = pending`; roles include `student` (if policy sets roles at request time) or empty roles until approval — **align with implementation** (document actual behavior in PR).
-3. Login succeeds (cookie set) but student content routes return pending or 403 until approval.
+1. POST `/api/auth/register` with tenant context for `slmts` (`X-Tenant-Slug: slmts` and/or JSON `tenantSlug: "slmts"`; default server slug from `DEFAULT_TENANT_SLUG` / `slmts` if omitted).
+2. **Implemented behavior:** `users` row exists with `status = active` and legacy `roles = []` for self-serve signups; **`user_organizations`** row for SLMTS with `status = pending` and roles `['student']`.
+3. POST `/api/auth/login` succeeds (200, `auth_token` cookie); response includes `loginState.hasActiveMembership === false` until membership is approved.
+4. Student portal shows **`/pending-approval`** until an active membership exists (unless `isSuperAdmin`).
+5. Learning/content APIs remain **403 or empty** until membership is **active** (enforced by existing route logic + org roles in JWT).
 
 ### Super-admin approval
 
-1. Super-admin approves membership for SLMTS.
-2. User can access SLMTS-scoped content APIs.
+1. Super-admin approves membership for SLMTS. *(**Not yet:** membership-specific approve endpoints per [api-contract-changes.md](./api-contract-changes.md); legacy `/api/auth/admin/users/:id/approve` still operates on **global** `users.status` and does not flip `user_organizations.status` alone. Pilot verification of this bullet awaits checklist **2.9** / governance slice.)*
+2. After governance work: user can access SLMTS-scoped content APIs when `user_organizations.status = active` for SLMTS.
 
 ### Org admin restriction
 
