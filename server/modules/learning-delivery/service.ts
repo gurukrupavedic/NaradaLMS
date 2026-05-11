@@ -121,15 +121,15 @@ export class LearningService {
     if (include.includes('segments')) {
       // If no script provided, default to 'te' to avoid tripling payload
       const segScript = (script || 'te') as 'te' | 'hi' | 'en';
-      result.textSegments = await contentService.getSegmentsByChapter(chapterId, segScript);
+      result.textSegments = await contentService.getSegmentsByChapter(chapterId, segScript, orgId);
     }
 
     if (include.includes('audio')) {
-      result.audioFiles = await mediaService.listAudioFilesByChapter(chapterId);
+      result.audioFiles = await mediaService.listAudioFilesByChapter(chapterId, orgId);
     }
 
     if (include.includes('mappings')) {
-      result.segmentMappings = await mediaService.listMappingsByChapter(chapterId);
+      result.segmentMappings = await mediaService.listMappingsByChapter(chapterId, orgId);
     }
 
     if (include.includes('progress')) {

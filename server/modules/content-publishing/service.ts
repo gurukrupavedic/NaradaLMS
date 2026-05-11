@@ -321,20 +321,27 @@ export class ContentService {
   /**
    * Text Segment Operations
    */
-  async getSegmentsByChapter(chapterId: number, script?: 'te' | 'hi' | 'en'): Promise<TextSegment[]> {
-    return await this.storage.getSegmentsByChapter(chapterId, script);
+  async getSegmentsByChapter(
+    chapterId: number,
+    script: 'te' | 'hi' | 'en' | undefined,
+    orgId: string
+  ): Promise<TextSegment[]> {
+    return await this.storage.getSegmentsByChapter(chapterId, script, orgId);
   }
 
-  async createSegment(data: CreateSegmentData): Promise<TextSegment> {
+  async createSegment(data: CreateSegmentData, orgId: string): Promise<TextSegment> {
     try {
-      const segment = await this.storage.createTextSegment({
-        chapterId: data.chapterId,
-        script: data.script,
-        startPosition: data.startPosition,
-        endPosition: data.endPosition,
-        order: data.order,
-        createdBy: data.createdBy
-      });
+      const segment = await this.storage.createTextSegment(
+        {
+          chapterId: data.chapterId,
+          script: data.script,
+          startPosition: data.startPosition,
+          endPosition: data.endPosition,
+          order: data.order,
+          createdBy: data.createdBy
+        },
+        orgId
+      );
       return segment;
     } catch (e) {
       throwIfSegmentOrderConflict(e);
@@ -342,9 +349,13 @@ export class ContentService {
     }
   }
 
-  async updateSegment(segmentId: number, data: Partial<TextSegment>): Promise<TextSegment> {
+  async updateSegment(
+    orgId: string,
+    segmentId: number,
+    data: Partial<TextSegment>
+  ): Promise<TextSegment> {
     try {
-      const segment = await this.storage.updateTextSegment(segmentId, data);
+      const segment = await this.storage.updateTextSegment(segmentId, orgId, data);
       return segment;
     } catch (e) {
       throwIfSegmentOrderConflict(e);
@@ -352,12 +363,13 @@ export class ContentService {
     }
   }
 
-  async deleteSegment(segmentId: number): Promise<void> {
-    await this.storage.deleteTextSegment(segmentId);
+  async deleteSegment(orgId: string, segmentId: number): Promise<void> {
+    await this.storage.deleteTextSegment(segmentId, orgId);
   }
 
   async reorderSegments(
     chapterId: number,
+    orgId: string,
     script: "te" | "hi" | "en",
     segmentOrders: Array<{ id: number; order: number }>
   ): Promise<void> {
@@ -401,15 +413,19 @@ export class ContentService {
     }
 
     try {
-      await this.storage.updateSegmentOrder(chapterId, script, segmentOrders);
+      await this.storage.updateSegmentOrder(chapterId, script, orgId, segmentOrders);
     } catch (e) {
       throwIfSegmentOrderConflict(e);
       throw e;
     }
   }
 
-  async deleteSegmentsByChapter(chapterId: number, script: 'te' | 'hi' | 'en'): Promise<void> {
-    await this.storage.deleteTextSegmentsByChapter(chapterId, script);
+  async deleteSegmentsByChapter(
+    chapterId: number,
+    orgId: string,
+    script: 'te' | 'hi' | 'en'
+  ): Promise<void> {
+    await this.storage.deleteTextSegmentsByChapter(chapterId, orgId, script);
   }
 }
 
