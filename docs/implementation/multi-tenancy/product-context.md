@@ -1,4 +1,4 @@
-# Product Context: Multi-Tenancy for Patasala Model
+# Product Context: Multi-Tenancy for Pathasala Model
 
 ## Why this exists
 
@@ -19,8 +19,8 @@ This document defines the product intent behind the technical implementation so 
 
 Two initial orgs:
 
-- `slmts`: Sri Lalita Maha Tripura Sundari Patasala
-- `rr`: Raja Rajeswari Patasala
+- `slmts`: Sri Lalita Maha Tripura Sundari Pathasala
+- `rr`: Raja Rajeswari Pathasala
 
 Both are independent learning communities with different logos/naming and separate curriculum.
 

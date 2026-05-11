@@ -52,7 +52,18 @@ For a **clean** local database (drops and recreates `public`, then applies all m
 
 ## 🌱 Data Seeding Strategy
 
-Seeding is divided into mandatory curriculum data and optional testing data.
+Seeding is divided into tenant org rows (multi-tenancy), mandatory curriculum data, and optional testing data.
+
+### Phase 0: Tenant organizations (multi-tenancy)
+
+After migrations, ensure canonical organization rows exist (`slmts`, `rr`):
+
+```bash
+npm run db:seed-orgs
+```
+
+- **Script**: `server/seed-organizations.ts`
+- Idempotent: safe to re-run. Typical order: `npm run db:reset` (or `db:migrate`), then `db:seed-orgs`, then `db:seed` if you need curriculum data.
 
 ### Phase A: Vedic Curriculum (Mandatory)
 

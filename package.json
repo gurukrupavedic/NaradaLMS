@@ -15,6 +15,7 @@
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "check": "tsc",
     "db:migrate": "drizzle-kit migrate",
+    "db:seed-orgs": "tsx server/seed-organizations.ts",
     "db:seed": "tsx server/seed-vedic-curriculum.ts",
     "db:reset": "powershell -ExecutionPolicy Bypass -File scripts/test/db-reset.ps1",
     "auth:test": "tsx scripts/test/auth-test.ts",

@@ -10,8 +10,8 @@ It captures the finalized product and architecture decisions before coding, then
 
 - Convert NaradaLMS from single-tenant to multi-tenant.
 - Support two initial orgs:
-  - `slmts` (Sri Lalita Maha Tripura Sundari Patasala, pilot first)
-  - `rr` (Raja Rajeswari Patasala, onboard after SLMTS pilot)
+  - `slmts` (Sri Lalita Maha Tripura Sundari Pathasala, pilot first)
+  - `rr` (Raja Rajeswari Pathasala, onboard after SLMTS pilot)
 - Keep one shared codebase for each portal type:
   - one student portal codebase (`apps/student-portal`)
   - one admin portal codebase (`apps/admin-portal`)
