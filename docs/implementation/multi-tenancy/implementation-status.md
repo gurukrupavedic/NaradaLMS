@@ -4,7 +4,7 @@
 
 **Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
 
-**Last updated:** Reflects Layer **1** (expand), Layer **2** roadmap slices **2.1–2.5**, and Layer **3 Pass A** core org isolation work through slice `slice-3.a-core-org-isolation` (core `org_id`, org-scoped handlers, fresh DB reset fix, and dual-org isolation verification).
+**Last updated:** Reflects Layer **1** (expand), Layer **2** roadmap slices **2.1–2.5**, Layer **3 Pass A** core org isolation work through slice `slice-3.a-core-org-isolation`, and checklist **5.3** through slice `slice-5.3-admin-org-switcher`.
 
 ---
 
@@ -73,7 +73,7 @@ Use this to map [implementation-checklist.md](./implementation-checklist.md) lin
 | --------- | ------ | ----- |
 | **5.1** User management super-admin only | **Done** (UI + server) | [`UserList.tsx`](../../../apps/admin-portal/src/components/admin/UserList.tsx) shows **Super-admin only** for others; APIs return **403**. |
 | **5.2** List + memberships + org filter | **Partial** | List + memberships + **`orgSlug`** / membership filters on **governance** API; no dedicated admin-only “org switcher” UX beyond what JWT + **switch-org** API already provide. |
-| **5.3** Org switcher in admin UI | **Not done** | Backend **`POST /api/auth/switch-org`** exists; admin shell still needs explicit switcher + refetch pattern if desired. |
+| **5.3** Org switcher in admin UI | **Done** | Admin shell now renders an org switcher in the shared header, calls **`POST /api/auth/switch-org`**, refetches **`GET /api/auth/me`**, and invalidates org-scoped admin query families before a conservative `router.refresh()`. Verified locally against a temporary dual-active admin fixture (seeded super-admin password reset + RR membership promoted from pending to active/admin for the verification session). Key files: [`apps/admin-portal/src/components/layout/AdminOrgSwitcher.tsx`](../../../apps/admin-portal/src/components/layout/AdminOrgSwitcher.tsx), [`apps/admin-portal/src/hooks/useSwitchOrg.ts`](../../../apps/admin-portal/src/hooks/useSwitchOrg.ts), [`apps/admin-portal/src/lib/org-switcher.ts`](../../../apps/admin-portal/src/lib/org-switcher.ts), [`packages/ui/src/components/layout/app-shell.tsx`](../../../packages/ui/src/components/layout/app-shell.tsx), [`scripts/test/admin-org-switcher-utils.test.ts`](../../../scripts/test/admin-org-switcher-utils.test.ts). |
 | **5.4** Org admins cannot governance APIs | **Done** | **403** without `isSuperAdmin`; directory uses separate route. |
 
 ---
@@ -111,10 +111,12 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 4. **`/api/auth/me`** is the source for portals: use `hasActiveMembership` and `memberships`, not only JWT fields.
 5. **Super-admin** without any org membership still bypasses `requireRole` via `isSuperAdmin` on the server; student UI also skips the pending gate for `isSuperAdmin`.
 6. **`POST /api/auth/switch-org`** only succeeds when the target **`orgId`** has an **active** membership; pending orgs return **403**. Authenticated requests that ran through **`jwtAuth`** expose **`req.orgId`** (mirror of JWT `currentOrgId`).
-7. **Super-admin** uses **`GET /api/auth/admin/users`** (+ mutations) for user governance; **org admins** use **`GET /api/admin/directory/users`** for in-org student/instructor pickers (requires JWT org context).
-8. **`GET /api/admin/audit-logs`** now respects authority boundaries: super-admin sees the full audit stream, while org admins are restricted to rows whose audit `changes` metadata matches the current JWT org and org-scoped audit `scope`.
-9. **Membership approve/reject** updates **`user_organizations`** only; org-only admins receive **403** on governance routes.
-10. **Legacy DB columns** `users.roles` / `users.status` still exist and are still read in some paths (Passport inactive check, seeds, old service methods). Pilot listing must use **membership** APIs, not `users.status === pending_approval` alone.
+7. **Admin shell** now exposes a header org switcher whenever the current admin has more than one switchable active org; org-admin users only see active orgs where they still have admin access, while super-admins can switch across all active memberships.
+8. After admin org switch, the portal refreshes **`auth/me`** and invalidates org-sensitive query families before `router.refresh()`. Local verification on the slice branch confirmed RR content collapsed to the single RR track and SLMTS content restored to the 10 SLMTS tracks after switching back.
+9. **Super-admin** uses **`GET /api/auth/admin/users`** (+ mutations) for user governance; **org admins** use **`GET /api/admin/directory/users`** for in-org student/instructor pickers (requires JWT org context).
+10. **`GET /api/admin/audit-logs`** now respects authority boundaries: super-admin sees the full audit stream, while org admins are restricted to rows whose audit `changes` metadata matches the current JWT org and org-scoped audit `scope`.
+11. **Membership approve/reject** updates **`user_organizations`** only; org-only admins receive **403** on governance routes.
+12. **Legacy DB columns** `users.roles` / `users.status` still exist and are still read in some paths (Passport inactive check, seeds, old service methods). Pilot listing must use **membership** APIs, not `users.status === pending_approval` alone.
 
 ---
 
@@ -126,7 +128,6 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 | OAuth parity with local register | **2.12** | Deferred unless Google OAuth becomes real product scope; current flow is placeholder-only and should not drive slice ordering right now. Review [`server/auth/passport-config.ts`](../../../server/auth/passport-config.ts) / Google callback vs product pending story when OAuth is promoted. |
 | Governance extras | **api-contract** | Optional: `POST …/users/:userId/memberships`, `DELETE …/memberships/:id` not implemented in slice 2.4. |
 | `audit_logs.org_id` schema support | **3.B.1** | Governance events now distinguish org-vs-platform scope in payloads and audit `changes`, but the physical `audit_logs.org_id` column still lands with Layer **3.B.1**. |
-| Admin **5.3** org switcher UI | **5.3** | Call existing **`POST /api/auth/switch-org`** + refresh admin queries. Best treated as a small UI follow-on once Layer 3 makes org switching materially affect org-scoped data. |
 | Slice **1.4-contract** | **1.4-contract** | Blocked until [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is fully cleared. |
 | Layer 3 Pass B on media/progress/audit tables | **3.B** | Still not started. Pass A only covers `tracks`, `chapters`, `batches`, and `enrollments`; remaining org-scoped tables still need physical `org_id` coverage. |
 | Layer 4 student chameleon | **4.x** | Not started; checklist **4.4** partially overlaps (tenant header on register is done for student path). |
@@ -138,10 +139,9 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 
 Use the distinction below so slice selection is not misleading:
 
-1. **Recommended next small ready slice: Checklist 5.3** — admin portal org switcher wired to **`POST /api/auth/switch-org`** + admin query refresh, now that org switching materially changes content/batch data.
-2. **Recommended next foundational backend slice: Layer 3 Pass B** — add `org_id` to media/progress/audit tables and finish the physical scoping model.
-3. **Then Layer 4** — Tenant config + student chameleon ([README.md](./README.md) port plan :3000 / :3010) once you want the white-labeled student surface to reflect the now-real org isolation.
-4. **Deferred slice: Checklist 2.12** — OAuth vs membership pending policy. Only reprioritize this if Google OAuth becomes real product scope.
+1. **Recommended next foundational backend slice: Layer 3 Pass B** — add `org_id` to media/progress/audit tables and finish the physical scoping model.
+2. **Then Layer 4** — Tenant config + student chameleon ([README.md](./README.md) port plan :3000 / :3010) once you want the white-labeled student surface to reflect the now-real org isolation.
+3. **Deferred slice: Checklist 2.12** — OAuth vs membership pending policy. Only reprioritize this if Google OAuth becomes real product scope.
 
 Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` after `npm run check`.
 
@@ -153,7 +153,7 @@ When continuing in a brand-new chat, do this first:
 
 1. Confirm checkout is on **`multi-tenancy`** and includes merge commit **`4726aa8b`** or later.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
-3. Default to **checklist 5.3** for the next small reviewable slice, or **Layer 3 Pass B** for the next foundational backend slice.
+3. Default to **Layer 3 Pass B** as the next foundational slice.
 4. Keep **2.12** deferred unless Google OAuth becomes product scope; if you do touch Layer 2 governance behavior again, rerun the targeted checks listed below before merging.
 
 ---
@@ -166,6 +166,7 @@ When continuing in a brand-new chat, do this first:
 - **Audit visibility:** `npx tsx scripts/test/audit-log-visibility.test.ts`.
 - **Layer 3 schema + guards:** `npx tsx scripts/test/layer3-pass-a-schema-and-guards.test.ts`.
 - **Layer 3 isolation:** `npx tsx scripts/test/layer3-pass-a-isolation.test.ts`.
+- **Admin org-switcher helper coverage:** `npx tsx scripts/test/admin-org-switcher-utils.test.ts`.
 - **DB:** `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed` (see [README.md](./README.md) seed order; first-time dev bootstrap needs `DEV_SUPERADMIN_PASSWORD`).
 - **Smoke (optional, server running):** `npx tsx scripts/test/api-smoke-test.ts` — auth section includes register + pending login; when seeded **super-admin** login succeeds: **`GET /api/auth/admin/users`** (expects `memberships[]` on users), **`GET /api/admin/directory/users`**, **`POST /api/auth/switch-org`** (403 pending RR / 200 active SLMTS per seed data).
 

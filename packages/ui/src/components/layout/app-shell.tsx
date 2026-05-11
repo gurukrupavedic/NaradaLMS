@@ -34,9 +34,11 @@ interface AppShellProps {
     contentContextLabel?: string | null
     /** Paths on which the browser window scrolls instead of the main content (e.g. ['/vedic-learning']). Other pages keep viewport-constrained inner scroll. */
     documentScrollPaths?: string[]
+    /** Optional header actions rendered beside the theme toggle. */
+    headerActions?: React.ReactNode
 }
 
-export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation, contentContextLabel, documentScrollPaths }: AppShellProps) {
+export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation, contentContextLabel, documentScrollPaths, headerActions }: AppShellProps) {
     // We need to pass currentPath to Sidebar for active state
     // Since this is in @narada/ui, we assume usage in Next.js app context
     const pathname = usePathname()
@@ -167,6 +169,7 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                         </Breadcrumb>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
+                        {headerActions}
                         <ThemeToggle />
                     </div>
                 </header>

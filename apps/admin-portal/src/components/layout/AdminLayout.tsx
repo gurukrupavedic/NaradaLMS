@@ -5,6 +5,7 @@ import { AppShell, UserRole } from "@narada/ui";
 import { useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { getAdminNavigationForRole, contextualNavigation } from "@/lib/admin-navigation-config";
+import { AdminOrgSwitcher } from "./AdminOrgSwitcher";
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -69,6 +70,13 @@ export default function AdminLayout({
             contentContextLabel={contentContextLabel}
             homeHref="/admin"
             onLogout={logout}
+            headerActions={
+                <AdminOrgSwitcher
+                    memberships={user.memberships}
+                    currentOrgId={user.currentOrgId}
+                    isSuperAdmin={user.isSuperAdmin}
+                />
+            }
         >
             {children}
         </AppShell>
