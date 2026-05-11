@@ -63,7 +63,21 @@ npm run db:seed-orgs
 ```
 
 - **Script**: `server/seed-organizations.ts`
-- Idempotent: safe to re-run. Typical order: `npm run db:reset` (or `db:migrate`), then `db:seed-orgs`, then `db:seed` if you need curriculum data.
+- Idempotent: safe to re-run. Typical order: `npm run db:reset` (or `db:migrate`), then `db:seed-orgs`, then Phase 0b (below), then `db:seed` if you need curriculum data.
+
+### Phase 0b: Dev super-admin and memberships (multi-tenancy)
+
+Seeds the account matching **`ADMIN_EMAIL`** as a platform super-admin (`users.is_super_admin`) with legacy **`users.roles` / `users.status`** kept compatible with current auth until Layer 2. Also upserts **`user_organizations`**: active membership on **`slmts`** (roles `student` + `admin`) and a **pending** membership on **`rr`** (role `student`) for second-org smoke tests.
+
+```bash
+npm run db:seed-dev
+```
+
+- **Script**: `server/seed-dev-bootstrap.ts`
+- **Required:** `ADMIN_EMAIL` (same as [server/config.ts](../../server/config.ts) auto-promotion).
+- **When the user row does not exist yet:** set **`DEV_SUPERADMIN_PASSWORD`** (bcrypt-hashed on insert). Re-runs without this variable are fine once the user exists.
+- **Optional:** `DEV_SUPERADMIN_FIRST_NAME`, `DEV_SUPERADMIN_LAST_NAME` (defaults: Dev / SuperAdmin).
+- **Optional (dev only):** `DEV_SUPERADMIN_RESET_PASSWORD=1` plus **`DEV_SUPERADMIN_PASSWORD`** to re-hash the password for an existing user.
 
 ### Phase A: Vedic Curriculum (Mandatory)
 
@@ -78,11 +92,13 @@ npm run db:seed
 
 ### Phase B: First Admin User (Required)
 
-There are two ways to establish the first administrator:
+There are three ways to establish the first administrator:
 
 1. **Recommended (Auto-Promotion)**:
    Add `ADMIN_EMAIL=your.email@example.com` to your `.env` file. The first time you register via the UI using this email, you will be automatically granted the `admin` role and `active` status.
-2. **Manual Utility**:
+2. **Dev seed (multi-tenancy Phase 0b)**:
+   After `db:seed-orgs`, run `npm run db:seed-dev` with `ADMIN_EMAIL` and `DEV_SUPERADMIN_PASSWORD` set (see Phase 0b above). Creates or updates the user row, sets `is_super_admin`, and inserts minimal org memberships.
+3. **Manual Utility**:
    If you have already registered, you can promote yourself via the CLI:
 
    ```bash
