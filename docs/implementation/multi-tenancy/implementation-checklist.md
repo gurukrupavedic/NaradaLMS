@@ -41,6 +41,8 @@ Do not start this block until [legacy-users-columns-cleanup.md](./legacy-users-c
 
 ## 2) Layer 2 — Auth, JWT, governance APIs
 
+**Roadmap `2.5` follow-up (after `2.9` / `2.10`):** align governance event contracts and audit subscribers around membership-first semantics. Membership events should carry `actorUserId`, `targetUserId`, `membershipId`, `orgId`, and `timestamp`; platform-scoped super-admin events should omit `orgId`. Defer physical `audit_logs.org_id` schema work to Layer `3.B.1`.
+
 - **2.1** Update `JWTPayload` / `generateToken` / `verifyToken` for new claims ([api-contract-changes.md](./api-contract-changes.md)).
 - **2.2** Update `server/shared/types.ts` `Express.User` augmentation.
 - **2.3** Implement org context resolution middleware (JWT `currentOrgId` first; extensible for host later).
@@ -107,4 +109,3 @@ Do not start this block until [legacy-users-columns-cleanup.md](./legacy-users-c
 - Email invites
 - Cross-org analytics dashboards
 - Production DNS/SSL (document only in deployment follow-up)
-

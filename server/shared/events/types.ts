@@ -1,11 +1,118 @@
 // Domain event definitions shared across modules
+
+export type UserApprovedEvent = {
+  type: "UserApproved";
+  userId: string;
+  approvedBy: string;
+  timestamp: Date;
+};
+
+export type UserRejectedEvent = {
+  type: "UserRejected";
+  userId: string;
+  timestamp: Date;
+};
+
+export type UserDisabledEvent = {
+  type: "UserDisabled";
+  userId: string;
+};
+
+export type UserEnabledEvent = {
+  type: "UserEnabled";
+  userId: string;
+};
+
+export type RoleAssignedEvent = {
+  type: "RoleAssigned";
+  userId: string;
+  role: string;
+};
+
+export type RoleRemovedEvent = {
+  type: "RoleRemoved";
+  userId: string;
+  role: string;
+};
+
+export type MembershipApprovedEvent = {
+  type: "MembershipApproved";
+  membershipId: string;
+  targetUserId: string;
+  actorUserId: string;
+  orgId: string;
+  timestamp: Date;
+};
+
+export type MembershipRejectedEvent = {
+  type: "MembershipRejected";
+  membershipId: string;
+  targetUserId: string;
+  actorUserId: string;
+  orgId: string;
+  timestamp: Date;
+};
+
+export type MembershipEnabledEvent = {
+  type: "MembershipEnabled";
+  membershipId: string;
+  targetUserId: string;
+  actorUserId: string;
+  orgId: string;
+  status: "active";
+  timestamp: Date;
+};
+
+export type MembershipDisabledEvent = {
+  type: "MembershipDisabled";
+  membershipId: string;
+  targetUserId: string;
+  actorUserId: string;
+  orgId: string;
+  status: "inactive";
+  timestamp: Date;
+};
+
+export type MembershipRolesChangedEvent = {
+  type: "MembershipRolesChanged";
+  membershipId: string;
+  targetUserId: string;
+  actorUserId: string;
+  orgId: string;
+  roles: string[];
+  timestamp: Date;
+};
+
+export type SuperAdminGrantedEvent = {
+  type: "SuperAdminGranted";
+  targetUserId: string;
+  actorUserId: string;
+  timestamp: Date;
+};
+
+export type SuperAdminRevokedEvent = {
+  type: "SuperAdminRevoked";
+  targetUserId: string;
+  actorUserId: string;
+  timestamp: Date;
+};
+
 export type DomainEvent =
   // User events
-  | { type: "UserApproved"; userId: string; approvedBy: string }
-  | { type: "UserDisabled"; userId: string }
-  | { type: "UserEnabled"; userId: string }
-  | { type: "RoleAssigned"; userId: string; role: string }
-  | { type: "RoleRemoved"; userId: string; role: string }
+  | UserApprovedEvent
+  | UserRejectedEvent
+  | UserDisabledEvent
+  | UserEnabledEvent
+  | RoleAssignedEvent
+  | RoleRemovedEvent
+  // Identity governance events
+  | MembershipApprovedEvent
+  | MembershipRejectedEvent
+  | MembershipEnabledEvent
+  | MembershipDisabledEvent
+  | MembershipRolesChangedEvent
+  | SuperAdminGrantedEvent
+  | SuperAdminRevokedEvent
   // Content events
   | { type: "TrackCreated"; trackId: number; createdBy: string }
   | { type: "ChapterCreated"; chapterId: number; trackId: number; createdBy: string }

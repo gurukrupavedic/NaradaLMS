@@ -5,6 +5,15 @@
 
 import { getAdminService } from './service';
 import { eventBus } from '../../shared/events/event-bus';
+import type {
+  MembershipApprovedEvent,
+  MembershipDisabledEvent,
+  MembershipEnabledEvent,
+  MembershipRejectedEvent,
+  MembershipRolesChangedEvent,
+  SuperAdminGrantedEvent,
+  SuperAdminRevokedEvent,
+} from '../../shared/events/types';
 import { Logger } from '../../utils/logger';
 
 /**
@@ -13,6 +22,47 @@ import { Logger } from '../../utils/logger';
  */
 export const initializeEventHandlers = () => {
   const adminService = getAdminService();
+  const logMembershipGovernance = async (
+    event:
+      | MembershipApprovedEvent
+      | MembershipRejectedEvent
+      | MembershipEnabledEvent
+      | MembershipDisabledEvent
+      | MembershipRolesChangedEvent,
+    action: string,
+    changes: Record<string, unknown>
+  ) => {
+    await adminService.logAction(
+      event.actorUserId,
+      action,
+      'user_membership',
+      event.membershipId,
+      {
+        targetUserId: event.targetUserId,
+        orgId: event.orgId,
+        scope: 'org',
+        ...changes,
+      }
+    );
+  };
+
+  const logPlatformGovernance = async (
+    event: SuperAdminGrantedEvent | SuperAdminRevokedEvent,
+    action: string,
+    changes: Record<string, unknown>
+  ) => {
+    await adminService.logAction(
+      event.actorUserId,
+      action,
+      'user',
+      event.targetUserId,
+      {
+        targetUserId: event.targetUserId,
+        scope: 'platform',
+        ...changes,
+      }
+    );
+  };
 
   // User events
   eventBus.subscribe('UserApproved', async (event: any) => {
@@ -33,6 +83,51 @@ export const initializeEventHandlers = () => {
       event.userId,
       { newRoles: event.newRoles, timestamp: event.timestamp }
     );
+  });
+
+  eventBus.subscribe('MembershipApproved', async (event: MembershipApprovedEvent) => {
+    await logMembershipGovernance(event, 'MEMBERSHIP_APPROVED', {
+      approvedAt: event.timestamp,
+    });
+  });
+
+  eventBus.subscribe('MembershipRejected', async (event: MembershipRejectedEvent) => {
+    await logMembershipGovernance(event, 'MEMBERSHIP_REJECTED', {
+      rejectedAt: event.timestamp,
+    });
+  });
+
+  eventBus.subscribe('MembershipEnabled', async (event: MembershipEnabledEvent) => {
+    await logMembershipGovernance(event, 'MEMBERSHIP_ENABLED', {
+      status: event.status,
+      enabledAt: event.timestamp,
+    });
+  });
+
+  eventBus.subscribe('MembershipDisabled', async (event: MembershipDisabledEvent) => {
+    await logMembershipGovernance(event, 'MEMBERSHIP_DISABLED', {
+      status: event.status,
+      disabledAt: event.timestamp,
+    });
+  });
+
+  eventBus.subscribe('MembershipRolesChanged', async (event: MembershipRolesChangedEvent) => {
+    await logMembershipGovernance(event, 'MEMBERSHIP_ROLES_CHANGED', {
+      roles: event.roles,
+      rolesChangedAt: event.timestamp,
+    });
+  });
+
+  eventBus.subscribe('SuperAdminGranted', async (event: SuperAdminGrantedEvent) => {
+    await logPlatformGovernance(event, 'SUPER_ADMIN_GRANTED', {
+      grantedAt: event.timestamp,
+    });
+  });
+
+  eventBus.subscribe('SuperAdminRevoked', async (event: SuperAdminRevokedEvent) => {
+    await logPlatformGovernance(event, 'SUPER_ADMIN_REVOKED', {
+      revokedAt: event.timestamp,
+    });
   });
 
   // Content events

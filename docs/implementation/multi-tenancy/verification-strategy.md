@@ -2,7 +2,7 @@
 
 This document defines how we know each layer is **done** and the platform is safe to expand (RR) after SLMTS pilot.
 
-**Current build:** Layer 2 includes **2.1**–**2.4** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory). Roadmap **2.5** audit/event depth may still be partial — see [implementation-status.md](./implementation-status.md).
+**Current build:** Layer 2 includes **2.1**–**2.5** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory, governance event/audit alignment). Physical `audit_logs.org_id` schema support remains deferred to Layer `3.B.1` — see [implementation-status.md](./implementation-status.md).
 
 ---
 
@@ -23,6 +23,8 @@ Add or extend tests when implementation lands (exact framework TBD per repo conv
 - **Org guard:** scoped route without org context returns 403.
 - **Isolation:** given user A active only in `slmts`, requests with `currentOrgId` = `rr` return 403 or empty for RR-scoped resources.
 - **Governance:** org admin token receives 403 on `membership approve` endpoint; super-admin receives 200.
+- **Governance events:** `npx tsx scripts/test/identity-governance-events.test.ts` validates aligned payloads plus audit subscriber mappings for membership and super-admin governance actions.
+- **Governance gate:** `npx tsx scripts/test/require-super-admin.test.ts` validates 401-without-user, 403-for-org-admin, and pass-through for `isSuperAdmin`.
 - **Register:** creates `user_organizations` row `pending` for slug from tenant header/env.
 
 Until automated tests exist, use the manual scenarios below and record results in the PR/slice notes.
@@ -71,6 +73,12 @@ Run only on branch `slice-1.4-schema-contract` when [legacy-users-columns-cleanu
 
 1. Token: org admin only (no super-admin).
 2. Call user management approve/list endpoints -> **403**.
+
+### Governance event + audit alignment
+
+1. Membership approve/reject/enable/disable and role changes emit membership-scoped events with `actorUserId`, `targetUserId`, `membershipId`, `orgId`, and `timestamp`.
+2. Super-admin grant/revoke emit platform-scoped events with `actorUserId`, `targetUserId`, and `timestamp`, with no `orgId`.
+3. Audit subscribers persist governance rows with `scope: 'org'` for membership actions and `scope: 'platform'` for super-admin actions until Layer `3.B.1` adds a physical `audit_logs.org_id` column.
 
 ### Org switch (admin portal)
 
