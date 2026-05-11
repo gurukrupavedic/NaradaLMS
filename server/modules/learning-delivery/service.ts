@@ -369,6 +369,7 @@ export class LearningService {
         .where(
           and(
             eq(studentProgress.studentId, studentId),
+            eq(studentProgress.orgId, orgId),
             inArray(studentProgress.chapterId, chapterIds)
           )
         );

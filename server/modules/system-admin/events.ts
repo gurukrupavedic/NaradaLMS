@@ -42,7 +42,8 @@ export const initializeEventHandlers = () => {
         orgId: event.orgId,
         scope: 'org',
         ...changes,
-      }
+      },
+      event.orgId
     );
   };
 
@@ -133,42 +134,46 @@ export const initializeEventHandlers = () => {
   // Content events
   eventBus.subscribe('ChapterPublished', async (event: any) => {
     await adminService.logAction(
-      event.userId,
+      event.publishedBy,
       'CHAPTER_PUBLISHED',
       'chapter',
       event.chapterId.toString(),
-      { publishedAt: event.timestamp }
+      { publishedAt: event.timestamp, scope: 'org' },
+      event.orgId
     );
   });
 
   eventBus.subscribe('ChapterUnpublished', async (event: any) => {
     await adminService.logAction(
-      event.userId,
+      event.unpublishedBy,
       'CHAPTER_UNPUBLISHED',
       'chapter',
       event.chapterId.toString(),
-      { unpublishedAt: event.timestamp }
+      { unpublishedAt: event.timestamp, scope: 'org' },
+      event.orgId
     );
   });
 
   // Media events
   eventBus.subscribe('AudioUploaded', async (event: any) => {
     await adminService.logAction(
-      'system', // No userId in event, use system
+      event.uploadedBy,
       'AUDIO_UPLOADED',
       'audioFile',
       event.audioFileId.toString(),
-      { chapterId: event.chapterId, timestamp: event.timestamp }
+      { chapterId: event.chapterId, scope: 'org', timestamp: event.timestamp },
+      event.orgId
     );
   });
 
   eventBus.subscribe('SegmentMappingCreated', async (event: any) => {
     await adminService.logAction(
-      'system',
+      event.createdBy,
       'MAPPING_CREATED',
       'segmentMapping',
       event.mappingId.toString(),
-      { chapterId: event.chapterId, timestamp: event.timestamp }
+      { chapterId: event.chapterId, scope: 'org', timestamp: event.timestamp },
+      event.orgId
     );
   });
 
@@ -179,7 +184,8 @@ export const initializeEventHandlers = () => {
       'BATCH_CREATED',
       'batch',
       event.batchId.toString(),
-      { trackId: event.trackId, timestamp: event.timestamp }
+      { trackId: event.trackId, scope: 'org', timestamp: event.timestamp },
+      event.orgId
     );
   });
 
@@ -189,38 +195,48 @@ export const initializeEventHandlers = () => {
       'STUDENT_ENROLLED',
       'enrollment',
       `${event.batchId}-${event.studentId}`,
-      { batchId: event.batchId, studentId: event.studentId, timestamp: event.timestamp }
+      { batchId: event.batchId, studentId: event.studentId, scope: 'org', timestamp: event.timestamp },
+      event.orgId
     );
   });
 
   eventBus.subscribe('StudentDropped', async (event: any) => {
     await adminService.logAction(
-      'system',
+      event.droppedBy,
       'STUDENT_DROPPED',
       'enrollment',
       `${event.batchId}-${event.studentId}`,
-      { batchId: event.batchId, studentId: event.studentId, timestamp: event.timestamp }
+      { batchId: event.batchId, studentId: event.studentId, scope: 'org', timestamp: event.timestamp },
+      event.orgId
     );
   });
 
   // Learning events
   eventBus.subscribe('ProgressUpdated', async (event: any) => {
     await adminService.logAction(
-      event.studentId,
+      event.evaluatedBy,
       'PROGRESS_UPDATED',
       'studentProgress',
       `${event.studentId}-${event.chapterId}`,
-      { proficiencyLevel: event.proficiencyLevel, timestamp: event.timestamp }
+      {
+        orgId: event.orgId,
+        scope: 'org',
+        batchId: event.batchId ?? null,
+        proficiencyLevel: event.proficiencyLevel,
+        timestamp: event.timestamp,
+      },
+      event.orgId
     );
   });
 
   eventBus.subscribe('CoInstructorAssigned', async (event: any) => {
     await adminService.logAction(
-      'system',
+      event.assignedBy,
       'INSTRUCTOR_ASSIGNED',
       'coInstructor',
       `${event.batchId}-${event.instructorId}`,
-      { batchId: event.batchId, instructorId: event.instructorId, timestamp: event.timestamp }
+      { batchId: event.batchId, instructorId: event.instructorId, scope: 'org', timestamp: event.timestamp },
+      event.orgId
     );
   });
 

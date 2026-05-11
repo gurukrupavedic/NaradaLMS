@@ -67,6 +67,7 @@ export class BatchService {
       throw e;
     }
     eventBus.publish(BATCH_EVENTS.created, {
+      orgId: input.orgId,
       batchId: batch.id,
       trackId: batch.trackId ?? undefined,
       createdBy: batch.createdBy ?? 'system',
@@ -121,8 +122,11 @@ export class BatchService {
   }
 
   async addEnrollment(input: EnrollmentCreateInput) {
-    // ONE-TO-MANY CONSTRAINT: Check if student already has an active enrollment
-    const existingEnrollment = await batchStorage.getActiveEnrollmentForStudent(input.studentId);
+    // Enforce at most one active enrollment per org.
+    const existingEnrollment = await batchStorage.getActiveEnrollmentForStudent(
+      input.studentId,
+      input.orgId
+    );
     if (existingEnrollment) {
       throw Object.assign(
         new Error(`Student is already enrolled in batch ${existingEnrollment.batchId}`),
@@ -138,6 +142,7 @@ export class BatchService {
 
     const created = await batchStorage.addEnrollment(input);
     eventBus.publish(BATCH_EVENTS.enrollmentAdded, {
+      orgId: input.orgId,
       batchId: input.batchId,
       studentId: input.studentId,
       enrolledBy: input.enrolledBy,
@@ -150,8 +155,11 @@ export class BatchService {
     const updated = await batchStorage.dropEnrollment(input);
     if (updated) {
       eventBus.publish(BATCH_EVENTS.enrollmentDropped, {
+        orgId: updated.orgId,
         batchId: updated.batchId,
         studentId: updated.studentId,
+        droppedBy: input.droppedBy,
+        reason: input.droppedReason,
         timestamp: new Date().toISOString(),
       });
     }
@@ -175,8 +183,10 @@ export class BatchService {
 
     const created = await batchStorage.assignCoInstructor(input);
     eventBus.publish(BATCH_EVENTS.coInstructorAssigned, {
+      orgId: input.orgId,
       batchId: input.batchId,
       instructorId: input.instructorId,
+      assignedBy: input.assignedBy,
       timestamp: new Date().toISOString(),
     });
     return created;
@@ -233,9 +243,12 @@ export class BatchService {
 
     const result = await batchStorage.evaluateStudent(orgId, input);
     eventBus.publish(LEARNING_DELIVERY_EVENTS.PROGRESS_UPDATED, {
+      orgId,
       studentId: input.studentId,
       chapterId: input.chapterId,
+      batchId: input.batchId,
       proficiencyLevel: input.proficiencyLevel,
+      evaluatedBy: input.evaluatedBy,
       timestamp: new Date().toISOString(),
     });
     return result;

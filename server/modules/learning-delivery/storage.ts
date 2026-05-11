@@ -25,6 +25,7 @@ export class LearningStorage {
       conditions.push(eq(studentProgress.batchId, filters.batchId));
     }
     if (filters.orgId) {
+      conditions.push(eq(studentProgress.orgId, filters.orgId));
       chapterScopeConditions.push(eq(chapters.orgId, filters.orgId));
     }
     if (filters.trackId) {
@@ -101,6 +102,7 @@ export class LearningStorage {
       await db
         .update(studentProgress)
         .set({
+          orgId,
           lastAccessed: new Date(),
           updatedAt: new Date(),
         })
@@ -176,6 +178,7 @@ export class LearningStorage {
         .where(
           and(
             eq(studentProgress.studentId, studentId),
+            eq(studentProgress.orgId, orgId),
             inArray(studentProgress.chapterId, chapterIds)
           )
         )
@@ -343,6 +346,7 @@ export class LearningStorage {
         .where(
           and(
             eq(studentProgress.studentId, studentId),
+            eq(studentProgress.orgId, orgId),
             inArray(studentProgress.chapterId, chapterIds)
           )
         )

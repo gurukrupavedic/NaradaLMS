@@ -28,9 +28,11 @@ export class AdminStorage {
     action: string,
     resourceType: string,
     resourceId: string,
-    changes?: any
+    changes?: any,
+    orgId?: string
   ): Promise<void> {
     await db.insert(auditLogs).values({
+      orgId: orgId ?? null,
       userId,
       action,
       resourceType,
@@ -62,14 +64,14 @@ export class AdminStorage {
       conditions.push(lte(auditLogs.timestamp, filters.endDate));
     }
     if (filters.scope) {
-      conditions.push(
-        sql`${auditLogs.changes}->>'scope' = ${filters.scope}`
-      );
+      if (filters.scope === 'org') {
+        conditions.push(sql`${auditLogs.orgId} IS NOT NULL`);
+      } else {
+        conditions.push(sql`${auditLogs.orgId} IS NULL`);
+      }
     }
     if (filters.orgId) {
-      conditions.push(
-        sql`${auditLogs.changes}->>'orgId' = ${filters.orgId}`
-      );
+      conditions.push(eq(auditLogs.orgId, filters.orgId));
     }
 
     let query = db
