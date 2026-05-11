@@ -15,6 +15,13 @@
       "when": 1778507489039,
       "tag": "0001_dapper_gorgon",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778524145648,
+      "tag": "0002_marvelous_dark_beast",
+      "breakpoints": true
     }
   ]
 }

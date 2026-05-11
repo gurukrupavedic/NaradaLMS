@@ -1,8 +1,11 @@
 import 'dotenv/config';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { db } from './db';
-import { users, tracks, chapters } from '@narada/types';
+import { organizations, users, tracks, chapters } from '@narada/types';
 import curriculumData from './seeds/curriculum.json';
 import { CURRICULUM_IMPORT_ACTOR_PROFILE } from './shared/constants/system-actors';
+import { eq } from 'drizzle-orm';
 
 /**
  * Seed the database with Vedic curriculum structure
@@ -12,6 +15,16 @@ async function seedVedicCurriculum() {
   console.log('🌱 Starting Vedic curriculum seed...');
 
   try {
+    const [slmtsOrg] = await db
+      .select({ id: organizations.id })
+      .from(organizations)
+      .where(eq(organizations.slug, 'slmts'))
+      .limit(1);
+
+    if (!slmtsOrg) {
+      throw new Error('SLMTS organization not found. Run `npm run db:seed-orgs` first.');
+    }
+
     // 1. Create dedicated import actor (required for foreign key constraints)
     console.log('Creating dedicated curriculum import actor...');
     await db.insert(users).values({
@@ -29,6 +42,7 @@ async function seedVedicCurriculum() {
     for (const trackData of curriculumData.tracks) {
       // Insert track
       const [insertedTrack] = await db.insert(tracks).values({
+        orgId: slmtsOrg.id,
         title: trackData.title,
         description: trackData.description,
         sortOrder: (trackData as any).number,
@@ -43,6 +57,7 @@ async function seedVedicCurriculum() {
       // Insert chapters for this track
       if ((trackData as any).chapters && (trackData as any).chapters.length > 0) {
         const chapterValues = (trackData as any).chapters.map((chapter: any) => ({
+          orgId: slmtsOrg.id,
           trackId: insertedTrack.id,
           title: chapter.title,
           sortOrder: chapter.number,
@@ -70,7 +85,12 @@ async function seedVedicCurriculum() {
   }
 }
 
-if (require.main === module) {
+const isMainModule =
+  process.argv[1] &&
+  path.normalize(process.argv[1]) ===
+    path.normalize(fileURLToPath(import.meta.url));
+
+if (isMainModule) {
   seedVedicCurriculum()
     .then(() => process.exit(0))
     .catch(() => process.exit(1));

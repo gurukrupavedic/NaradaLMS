@@ -52,10 +52,10 @@ Use the roadmap and checklist as the primary execution guide. The root [roadmap.
 
 ### Local DB seed order (multi-tenancy dev)
 
-After migrations (`npm run db:migrate` or `npm run db:reset`):
+After migrations (`npm run db:migrate` or `npm run db:reset`; the reset path now clears both `public` and Drizzle's `drizzle` schema so fresh-migrate verification is real):
 
 1. `npm run db:seed-orgs` — canonical org rows (`slmts`, `rr`).
-2. `npm run db:seed-dev` — super-admin for `ADMIN_EMAIL` plus minimal `user_organizations` (SLMTS active, RR pending); see [environment-setup.md](../../essentials/environment-setup.md).
+2. `npm run db:seed-dev` — super-admin for `ADMIN_EMAIL` plus minimal `user_organizations` (SLMTS active, RR pending); first-time bootstrap needs `DEV_SUPERADMIN_PASSWORD` set (see [environment-setup.md](../../essentials/environment-setup.md)).
 3. Optionally `npm run db:seed` — Vedic curriculum structure.
 
 ---

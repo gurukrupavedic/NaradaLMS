@@ -2,7 +2,7 @@
 
 This document defines how we know each layer is **done** and the platform is safe to expand (RR) after SLMTS pilot.
 
-**Current build:** Layer 2 includes **2.1**–**2.5** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory, governance event/audit alignment). Physical `audit_logs.org_id` schema support remains deferred to Layer `3.B.1` — see [implementation-status.md](./implementation-status.md).
+**Current build:** Layer 2 includes **2.1**–**2.5** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory, governance event/audit alignment). Layer **3 Pass A** is now implemented for `tracks`, `chapters`, `batches`, and `enrollments`. Physical `audit_logs.org_id` schema support remains deferred to Layer `3.B.1` — see [implementation-status.md](./implementation-status.md).
 
 ---
 
@@ -26,6 +26,8 @@ Add or extend tests when implementation lands (exact framework TBD per repo conv
 - **Governance events:** `npx tsx scripts/test/identity-governance-events.test.ts` validates aligned payloads plus audit subscriber mappings for membership and super-admin governance actions.
 - **Governance gate:** `npx tsx scripts/test/require-super-admin.test.ts` validates 401-without-user, 403-for-org-admin, and pass-through for `isSuperAdmin`.
 - **Audit visibility:** `npx tsx scripts/test/audit-log-visibility.test.ts` validates that org admins are constrained to current-org audit scope while super-admins remain unrestricted.
+- **Layer 3 schema + guards:** `npx tsx scripts/test/layer3-pass-a-schema-and-guards.test.ts` validates `org_id` columns and `requireOrgContext` wiring on core routers.
+- **Layer 3 isolation:** `npx tsx scripts/test/layer3-pass-a-isolation.test.ts` creates SLMTS/RR fixtures on the same DB and asserts content + batch isolation.
 - **Register:** creates `user_organizations` row `pending` for slug from tenant header/env.
 
 Until automated tests exist, use the manual scenarios below and record results in the PR/slice notes.
@@ -35,7 +37,7 @@ Until automated tests exist, use the manual scenarios below and record results i
 ## Layer 1 — Schema verification
 
 - [ ] `pnpm`/`npm` workspace typecheck: passes after each merge (legacy `users.roles` / `users.status` may still exist until slice 1.4 contract; **zero** references is required only after [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is complete and item **1.4-contract** is done).
-- [ ] Migration on fresh DB succeeds (`drizzle-kit migrate` after reset).
+- [ ] Migration on fresh DB succeeds (`drizzle-kit migrate` after reset; `npm run db:reset` must clear both `public` and Drizzle's `drizzle` schema).
 - [ ] After slice 1.1 expand: `\d users` shows `is_super_admin` alongside legacy columns; `\dt` includes `organizations` and `user_organizations`.
 - [ ] Seed creates two orgs with expected `slug` values (after seed slice 1.5 / checklist 1.5).
 
@@ -99,12 +101,13 @@ Run only on branch `slice-1.4-schema-contract` when [legacy-users-columns-cleanu
 
 - Create Track `T-SLMTS` in org SLMTS and `T-RR` in org RR (distinct titles or same title per org after `UNIQUE (org_id, title)`).
 - Create batch/enrollment under each org.
+- Fresh DB path: `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`. First-time `db:seed-dev` requires `DEV_SUPERADMIN_PASSWORD`.
 
 ### Assertions
 
 - In SLMTS context: list tracks -> only SLMTS tracks.
 - In RR context: list tracks -> only RR tracks.
-- Direct ID guessing: fetch by id of other org's chapter/track -> **403 or 404** (pick one policy and document; prefer 404 if IDs are enumerable).
+- Direct ID guessing: fetch by id of other org's chapter/track/batch -> **404 via scoped lookup** for current Pass A core routes.
 
 ### Enrollment rule
 

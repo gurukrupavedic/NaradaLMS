@@ -2,8 +2,9 @@ import 'dotenv/config';
 import { contentService } from '../../server/modules/content-publishing';
 import { mediaService } from '../../server/modules/media-pipeline/service';
 import { db } from '../../server/db';
-import { tracks, users } from '@narada/types';
+import { organizations, tracks, users } from '@narada/types';
 import { CURRICULUM_IMPORT_ACTOR_PROFILE } from '../../server/shared/constants/system-actors';
+import { eq } from 'drizzle-orm';
 
 function assert(condition: unknown, message: string): void {
   if (!condition) {
@@ -15,6 +16,14 @@ async function run() {
   console.log('\n=== Content Smoke Test ===');
   const unique = Date.now();
   try {
+    const [slmtsOrg] = await db
+      .select({ id: organizations.id })
+      .from(organizations)
+      .where(eq(organizations.slug, 'slmts'))
+      .limit(1);
+
+    assert(Boolean(slmtsOrg), 'Expected seeded SLMTS organization');
+
     await db.insert(users).values({
       ...CURRICULUM_IMPORT_ACTOR_PROFILE,
       createdAt: new Date(),
@@ -27,21 +36,21 @@ async function run() {
     // Query max sort order from tracks table
     const maxOrderRows = await (db as any).execute("SELECT COALESCE(MAX(sort_order), 0) AS max_order FROM tracks");
     const nextOrder = Number(maxOrderRows?.rows?.[0]?.max_order ?? 0) + 1;
-    const [track] = await db.insert(tracks).values({ title: `Smoke Track ${unique}`, description: `Smoke description ${unique}`, sortOrder: nextOrder, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id, createdAt: new Date(), updatedAt: new Date() }).returning();
+    const [track] = await db.insert(tracks).values({ orgId: slmtsOrg!.id, title: `Smoke Track ${unique}`, description: `Smoke description ${unique}`, sortOrder: nextOrder, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id, createdAt: new Date(), updatedAt: new Date() }).returning();
     console.log('Track created:', track);
 
     // List Tracks
-    const tracksList = await contentService.listTracks();
+    const tracksList = await contentService.listTracks(slmtsOrg!.id);
     const foundTrack = tracksList.find(t => t.id === track.id);
     console.log('Tracks count:', tracksList.length, 'Found created:', Boolean(foundTrack));
 
     // Create Chapter
     console.log('Creating chapter...');
-    const chapter = await contentService.createChapter({ trackId: track.id, title: `Smoke Chapter ${unique}`, content: { te: '', hi: '', en: '' }, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
+    const chapter = await contentService.createChapter({ orgId: slmtsOrg!.id, trackId: track.id, title: `Smoke Chapter ${unique}`, content: { te: '', hi: '', en: '' }, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
     console.log('Chapter created:', chapter);
 
     // Get Chapter Details
-    const chapterDetails = await contentService.getChapter(chapter.id);
+    const chapterDetails = await contentService.getChapter(chapter.id, slmtsOrg!.id);
     console.log('Chapter details includes track:', Boolean(chapterDetails?.track));
 
     // Create Segments
@@ -113,8 +122,8 @@ async function run() {
     await contentService.deleteSegment(seg1.id);
     await contentService.deleteSegment(seg2.id);
     await contentService.deleteSegment(seg3.id);
-    await contentService.deleteChapter(chapter.id);
-    await contentService.deleteTrack(track.id);
+    await contentService.deleteChapter(chapter.id, slmtsOrg!.id);
+    await contentService.deleteTrack(track.id, slmtsOrg!.id);
 
     console.log('\n✅ Content smoke test completed successfully');
   } catch (err: any) {

@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import { contentService } from "../modules/content-publishing";
 import { requireAdmin } from "../shared/middleware/auth";
 import { jwtAuth } from "../middleware/jwt-auth.middleware";
+import { requireOrgContext } from "../shared/middleware/org-context";
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -15,6 +16,7 @@ const router = Router();
 // Protect all content routes: authenticated users can READ, admins can WRITE
 // We apply requireAdmin selectively on POST/PUT/DELETE routes
 router.use(jwtAuth);
+router.use(requireOrgContext);
 
 /**
  * Track Routes
@@ -23,10 +25,11 @@ router.use(jwtAuth);
 // GET /api/tracks - List all tracks
 router.get('/tracks', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     // Note: batchId parameter is ignored because tracks don't belong to batches
     // Instead, batches belong to ONE track (batch.trackId)
     // The client should use batch.trackId to identify the current track
-    const tracks = await contentService.listTracks();
+    const tracks = await contentService.listTracks(orgId);
     res.json(tracks);
   } catch (error) {
     next(error);
@@ -36,7 +39,8 @@ router.get('/tracks', async (req: Request, res: Response, next: NextFunction) =>
 // GET /api/tracks/:id - Get specific track by ID
 router.get('/tracks/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const track = await contentService.getTrack(parseInt(req.params.id));
+    const orgId = req.orgId as string;
+    const track = await contentService.getTrack(parseInt(req.params.id), orgId);
     if (!track) {
       return res.status(404).json(createErrorResponse("Track not found", "TRACK_NOT_FOUND"));
     }
@@ -49,12 +53,14 @@ router.get('/tracks/:id', async (req: Request, res: Response, next: NextFunction
 // POST /api/tracks - Create new track (content managers only)
 router.post('/tracks', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const { title, description } = req.body;
     if (!title || !description) {
       return res.status(400).json(createErrorResponse('title and description are required', 'MISSING_REQUIRED_FIELDS'));
     }
     const user = req.user as Express.User;
     const track = await contentService.createTrack({
+      orgId,
       title,
       description,
       createdBy: user.id
@@ -68,8 +74,9 @@ router.post('/tracks', requireAdmin, async (req: Request, res: Response, next: N
 // PUT /api/tracks/:id - Update track (content managers only)
 router.put('/tracks/:id', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const trackId = parseInt(req.params.id);
-    const track = await contentService.updateTrack(trackId, req.body);
+    const track = await contentService.updateTrack(trackId, orgId, req.body);
     res.json(track);
   } catch (error) {
     next(error);
@@ -79,8 +86,9 @@ router.put('/tracks/:id', requireAdmin, async (req: Request, res: Response, next
 // DELETE /api/tracks/:id - Delete track (content managers only)
 router.delete('/tracks/:id', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const trackId = parseInt(req.params.id);
-    await contentService.deleteTrack(trackId);
+    await contentService.deleteTrack(trackId, orgId);
     res.json({ message: "Track deleted successfully" });
   } catch (error) {
     next(error);
@@ -90,6 +98,7 @@ router.delete('/tracks/:id', requireAdmin, async (req: Request, res: Response, n
 // POST /api/tracks/:id/move - Reorder track (up/down) (content managers only)
 router.post('/tracks/:id/move', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const trackId = parseInt(req.params.id);
     const { direction } = req.body;
 
@@ -100,7 +109,7 @@ router.post('/tracks/:id/move', requireAdmin, async (req: Request, res: Response
       ));
     }
 
-    await contentService.moveTrack(trackId, direction);
+    await contentService.moveTrack(trackId, orgId, direction);
     res.json({ message: "Track order updated successfully" });
   } catch (error) {
     next(error);
@@ -114,8 +123,9 @@ router.post('/tracks/:id/move', requireAdmin, async (req: Request, res: Response
 // GET /tracks/:trackId/chapters - List chapters for a track
 router.get('/tracks/:trackId/chapters', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const trackId = parseInt(req.params.trackId);
-    const chapters = await contentService.getChaptersByTrack(trackId);
+    const chapters = await contentService.getChaptersByTrack(trackId, orgId);
     res.json(chapters);
   } catch (error) {
     next(error);
@@ -125,8 +135,9 @@ router.get('/tracks/:trackId/chapters', async (req: Request, res: Response, next
 // GET /api/chapters/:chapterId/details - Get chapter details
 router.get('/chapters/:chapterId/details', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const chapterId = parseInt(req.params.chapterId);
-    const chapter = await contentService.getChapter(chapterId);
+    const chapter = await contentService.getChapter(chapterId, orgId);
 
     if (!chapter) {
       return res.status(404).json(createErrorResponse("Chapter not found", "CHAPTER_NOT_FOUND"));
@@ -142,9 +153,11 @@ router.get('/chapters/:chapterId/details', async (req: Request, res: Response, n
 // POST /tracks/:trackId/chapters - Create chapter under track
 router.post('/tracks/:trackId/chapters', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const user = req.user as Express.User;
     const trackId = parseInt(req.params.trackId);
     const chapter = await contentService.createChapter({
+      orgId,
       trackId,
       title: req.body.title,
       content: req.body.content,
@@ -157,8 +170,9 @@ router.post('/tracks/:trackId/chapters', requireAdmin, async (req: Request, res:
 // PATCH /api/chapters/:chapterId - Update chapter
 router.patch('/chapters/:chapterId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const chapterId = parseInt(req.params.chapterId);
-    const chapter = await contentService.updateChapter(chapterId, req.body);
+    const chapter = await contentService.updateChapter(chapterId, orgId, req.body);
     res.json(chapter);
   } catch (error) {
     next(error);
@@ -168,8 +182,9 @@ router.patch('/chapters/:chapterId', requireAdmin, async (req: Request, res: Res
 // New: PUT /chapters/:chapterId - Update chapter (alias for PATCH)
 router.put('/chapters/:chapterId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const chapterId = parseInt(req.params.chapterId);
-    const chapter = await contentService.updateChapter(chapterId, req.body);
+    const chapter = await contentService.updateChapter(chapterId, orgId, req.body);
     res.json(chapter);
   } catch (error) { next(error); }
 });
@@ -177,6 +192,7 @@ router.put('/chapters/:chapterId', requireAdmin, async (req: Request, res: Respo
 // PATCH /api/chapters/:chapterId/status - Publish/unpublish chapter
 router.patch('/chapters/:chapterId/status', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const chapterId = parseInt(req.params.chapterId);
     const { status } = req.body;
 
@@ -189,8 +205,8 @@ router.patch('/chapters/:chapterId/status', requireAdmin, async (req: Request, r
 
     const user = req.user as Express.User;
     const chapter = status === 'published'
-      ? await contentService.publishChapter(chapterId, user.id)
-      : await contentService.unpublishChapter(chapterId, user.id);
+      ? await contentService.publishChapter(chapterId, orgId, user.id)
+      : await contentService.unpublishChapter(chapterId, orgId, user.id);
 
     res.json(chapter);
   } catch (error) {
@@ -201,11 +217,12 @@ router.patch('/chapters/:chapterId/status', requireAdmin, async (req: Request, r
 // POST /api/chapters/:id/move - Reorder or move to another track
 router.post('/chapters/:id/move', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const chapterId = parseInt(req.params.id);
     const { direction, toTrackId } = req.body as { direction?: 'up' | 'down'; toTrackId?: number };
 
     if (toTrackId && Number.isInteger(toTrackId)) {
-      await contentService.moveChapterToTrack(chapterId, Number(toTrackId));
+      await contentService.moveChapterToTrack(chapterId, orgId, Number(toTrackId));
       return res.json({ message: 'Chapter moved to target track' });
     }
 
@@ -216,7 +233,7 @@ router.post('/chapters/:id/move', requireAdmin, async (req: Request, res: Respon
       ));
     }
 
-    await contentService.moveChapter(chapterId, direction);
+    await contentService.moveChapter(chapterId, orgId, direction);
     res.json({ message: "Chapter order updated successfully" });
   } catch (error) {
     next(error);
@@ -226,8 +243,9 @@ router.post('/chapters/:id/move', requireAdmin, async (req: Request, res: Respon
 // DELETE /api/chapters/:id - Delete chapter
 router.delete('/chapters/:id', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const chapterId = parseInt(req.params.id);
-    await contentService.deleteChapter(chapterId);
+    await contentService.deleteChapter(chapterId, orgId);
     res.json({ message: "Chapter deleted successfully" });
   } catch (error) {
     next(error);

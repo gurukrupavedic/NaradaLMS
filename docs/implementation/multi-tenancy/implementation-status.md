@@ -4,7 +4,7 @@
 
 **Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
 
-**Last updated:** Reflects Layer **1** (expand) and Layer **2** roadmap slices **2.1–2.5** merged to `multi-tenancy` through merge commit **`4726aa8b`** (JWT, membership-first auth, org context + switch-org, super-admin governance, governance event/audit alignment, org-admin directory).
+**Last updated:** Reflects Layer **1** (expand), Layer **2** roadmap slices **2.1–2.5**, and Layer **3 Pass A** core org isolation work through slice `slice-3.a-core-org-isolation` (core `org_id`, org-scoped handlers, fresh DB reset fix, and dual-org isolation verification).
 
 ---
 
@@ -37,6 +37,12 @@
 | **2.3** Org context + switch-org | **`req.orgId`** set from JWT `currentOrgId` on every `jwtAuth` / `optionalJwtAuth` success via [`attachOrgContext`](../../../server/shared/middleware/org-context.ts). **`requireOrgContext`** returns **403** when `req.orgId` is missing (for Layer 3 composition). **`POST /api/auth/switch-org`** (body `orgId`): requires **active** `user_organizations` row for that org; otherwise **403**; reissues `auth_token` with `currentOrgId` / `orgRoles` / `orgMembershipStatus`. [`getJwtSignClaimsForUser`](../../../server/modules/identity-access/storage.ts) accepts optional `{ targetOrgId }` for switch vs default-org selection. | [`server/middleware/jwt-auth.middleware.ts`](../../../server/middleware/jwt-auth.middleware.ts), [`server/shared/middleware/org-context.ts`](../../../server/shared/middleware/org-context.ts), [`server/shared/types.ts`](../../../server/shared/types.ts), [`server/modules/identity-access/storage.ts`](../../../server/modules/identity-access/storage.ts), [`server/routes/identity.routes.ts`](../../../server/routes/identity.routes.ts) |
 | **2.4** Super-admin governance | **`requireSuperAdmin`** on governance routes under [`/api/auth/admin/…`](../../../server/routes/identity.routes.ts). **`GET /api/auth/admin/users`** returns users with nested **`memberships[]`**; query filters: **`membershipStatus`**, legacy **`status`** (e.g. `pending_approval` → pending), **`role`** (membership role in any org), **`orgSlug`**, **`search`**. **`GET /api/auth/admin/users/:userId`** returns one user + memberships. **`POST`** …`/memberships/:membershipId/{approve,reject,disable,enable}`; **`PATCH`** …`/memberships/:membershipId/roles`; **`POST`** …`/users/:userId/super-admin/{grant,revoke}` (revoke blocks self and last super-admin). **`GET /api/admin/directory/users`** ([`server/routes/admin.routes.ts`](../../../server/routes/admin.routes.ts)): **`jwtAuth` + `requireAdmin` + `requireOrgContext`** — lists users in **current JWT org** with optional **`membershipRole`** / legacy **`role`** + **`search`** (used by instructor/student pickers). Admin portal: [`UserList.tsx`](../../../apps/admin-portal/src/components/admin/UserList.tsx) **super-admin gate** + membership-based actions; [`useAdminUsers.ts`](../../../apps/admin-portal/src/lib/hooks/useAdminUsers.ts); [`useSearchStudents.ts`](../../../apps/admin-portal/src/lib/hooks/useSearchStudents.ts) + [`useBatchRelations.ts`](../../../packages/ui/src/hooks/data/useBatchRelations.ts) call **directory** API, not governance list. | [`server/shared/middleware/auth.ts`](../../../server/shared/middleware/auth.ts), [`server/routes/identity.routes.ts`](../../../server/routes/identity.routes.ts), [`server/routes/admin.routes.ts`](../../../server/routes/admin.routes.ts), [`server/modules/identity-access/service.ts`](../../../server/modules/identity-access/service.ts), [`server/modules/identity-access/storage.ts`](../../../server/modules/identity-access/storage.ts) |
 | **2.5** Governance event + audit alignment | Membership governance events now use a consistent contract: membership actions publish **`actorUserId`**, **`targetUserId`**, **`membershipId`**, **`orgId`**, and **`timestamp`**; platform-scoped super-admin actions publish **`actorUserId`**, **`targetUserId`**, and **`timestamp`** with **no `orgId`**. **`setMembershipActiveFlag`** now emits **`MembershipEnabled`** / **`MembershipDisabled`**; role updates emit **`MembershipRolesChanged`**. [`initializeEventHandlers`](../../../server/modules/system-admin/events.ts) now auto-logs membership governance and super-admin actions to persisted audit rows with explicit scope metadata in `changes` (`scope: 'org'` vs `scope: 'platform'`). **`GET /api/admin/audit-logs`** is now current-org scoped for org admins and unrestricted for super-admins. **`audit_logs.org_id`** remains deferred to Layer **3.B.1**. | [`server/modules/identity-access/service.ts`](../../../server/modules/identity-access/service.ts), [`server/modules/system-admin/events.ts`](../../../server/modules/system-admin/events.ts), [`server/routes/admin.routes.ts`](../../../server/routes/admin.routes.ts), [`server/shared/events/types.ts`](../../../server/shared/events/types.ts), [`scripts/test/identity-governance-events.test.ts`](../../../scripts/test/identity-governance-events.test.ts), [`scripts/test/require-super-admin.test.ts`](../../../scripts/test/require-super-admin.test.ts), [`scripts/test/audit-log-visibility.test.ts`](../../../scripts/test/audit-log-visibility.test.ts) |
+
+### Layer 3 — Pass A core org isolation
+
+| Slice | Summary | Key files |
+| ----- | ------- | --------- |
+| **3.A** Core org isolation | Added **`org_id`** to `tracks`, `chapters`, `batches`, and `enrollments` with backfill-to-SLMTS migration **`0002_marvelous_dark_beast.sql`**. Updated uniques to **`tracks (org_id, title)`** and **`batches (org_id, batch_code)`**; added org relations/indexes in `@narada/types`. Core content, batch, learning, and student flows now require **`req.orgId`** and scope reads/writes to the active org. Fresh DB reset now clears both `public` and Drizzle's `drizzle` schema; dev verification also fixed the ESM entrypoint in [`server/seed-vedic-curriculum.ts`](../../../server/seed-vedic-curriculum.ts). Focused checks now cover schema + guard wiring and dual-org isolation. | [`packages/types/src/schema.ts`](../../../packages/types/src/schema.ts), [`migrations/0002_marvelous_dark_beast.sql`](../../../migrations/0002_marvelous_dark_beast.sql), [`server/routes/content.routes.ts`](../../../server/routes/content.routes.ts), [`server/routes/batch.routes.ts`](../../../server/routes/batch.routes.ts), [`server/routes/learning.routes.ts`](../../../server/routes/learning.routes.ts), [`server/routes/student.routes.ts`](../../../server/routes/student.routes.ts), [`scripts/test/layer3-pass-a-schema-and-guards.test.ts`](../../../scripts/test/layer3-pass-a-schema-and-guards.test.ts), [`scripts/test/layer3-pass-a-isolation.test.ts`](../../../scripts/test/layer3-pass-a-isolation.test.ts), [`scripts/test/db-reset.ps1`](../../../scripts/test/db-reset.ps1) |
 
 ---
 
@@ -122,7 +128,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 | `audit_logs.org_id` schema support | **3.B.1** | Governance events now distinguish org-vs-platform scope in payloads and audit `changes`, but the physical `audit_logs.org_id` column still lands with Layer **3.B.1**. |
 | Admin **5.3** org switcher UI | **5.3** | Call existing **`POST /api/auth/switch-org`** + refresh admin queries. Best treated as a small UI follow-on once Layer 3 makes org switching materially affect org-scoped data. |
 | Slice **1.4-contract** | **1.4-contract** | Blocked until [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is fully cleared. |
-| Layer 3 `org_id` on content/batches/etc. | **3.x** | Not started; `requireOrgContext` ready for scoped routers. This is the recommended next foundational slice. |
+| Layer 3 Pass B on media/progress/audit tables | **3.B** | Still not started. Pass A only covers `tracks`, `chapters`, `batches`, and `enrollments`; remaining org-scoped tables still need physical `org_id` coverage. |
 | Layer 4 student chameleon | **4.x** | Not started; checklist **4.4** partially overlaps (tenant header on register is done for student path). |
 | Pilot gate **6.x** | **6** | End-to-end pilot scenarios in [verification-strategy.md](./verification-strategy.md) — run after Layer 3 + any remaining Layer 2 gaps you care about. |
 
@@ -132,10 +138,10 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 
 Use the distinction below so slice selection is not misleading:
 
-1. **Recommended next foundational slice: Layer 3 Pass A** — add `org_id` to core domain tables (`tracks`, `chapters`, `batches`, `enrollments`) and scope handlers/queries with **`req.orgId`**.
-2. **Recommended next small ready slice: Checklist 5.3** — admin portal org switcher wired to **`POST /api/auth/switch-org`** + data refresh. Choose this when you want a contained UI PR, not when you are deciding the next deepest multi-tenancy layer.
-3. **Deferred slice: Checklist 2.12** — OAuth vs membership pending policy. Only reprioritize this if Google OAuth becomes real product scope.
-4. **Then Layer 4** — Tenant config + student chameleon ([README.md](./README.md) port plan :3000 / :3010) after Layer 3 is stable enough to validate per-org behavior end to end.
+1. **Recommended next small ready slice: Checklist 5.3** — admin portal org switcher wired to **`POST /api/auth/switch-org`** + admin query refresh, now that org switching materially changes content/batch data.
+2. **Recommended next foundational backend slice: Layer 3 Pass B** — add `org_id` to media/progress/audit tables and finish the physical scoping model.
+3. **Then Layer 4** — Tenant config + student chameleon ([README.md](./README.md) port plan :3000 / :3010) once you want the white-labeled student surface to reflect the now-real org isolation.
+4. **Deferred slice: Checklist 2.12** — OAuth vs membership pending policy. Only reprioritize this if Google OAuth becomes real product scope.
 
 Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` after `npm run check`.
 
@@ -147,7 +153,7 @@ When continuing in a brand-new chat, do this first:
 
 1. Confirm checkout is on **`multi-tenancy`** and includes merge commit **`4726aa8b`** or later.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
-3. Default to **Layer 3 Pass A** when choosing the next foundational implementation slice. Treat **checklist 5.3** as the next small UI follow-on only if you deliberately want a contained PR before Layer 3.
+3. Default to **checklist 5.3** for the next small reviewable slice, or **Layer 3 Pass B** for the next foundational backend slice.
 4. Keep **2.12** deferred unless Google OAuth becomes product scope; if you do touch Layer 2 governance behavior again, rerun the targeted checks listed below before merging.
 
 ---
@@ -158,7 +164,9 @@ When continuing in a brand-new chat, do this first:
 - **Governance event contract:** `npx tsx scripts/test/identity-governance-events.test.ts`.
 - **Governance super-admin gate:** `npx tsx scripts/test/require-super-admin.test.ts`.
 - **Audit visibility:** `npx tsx scripts/test/audit-log-visibility.test.ts`.
-- **DB:** After migrations, `npm run db:seed-orgs` then `npm run db:seed-dev` (see [README.md](./README.md) seed order).
+- **Layer 3 schema + guards:** `npx tsx scripts/test/layer3-pass-a-schema-and-guards.test.ts`.
+- **Layer 3 isolation:** `npx tsx scripts/test/layer3-pass-a-isolation.test.ts`.
+- **DB:** `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed` (see [README.md](./README.md) seed order; first-time dev bootstrap needs `DEV_SUPERADMIN_PASSWORD`).
 - **Smoke (optional, server running):** `npx tsx scripts/test/api-smoke-test.ts` — auth section includes register + pending login; when seeded **super-admin** login succeeds: **`GET /api/auth/admin/users`** (expects `memberships[]` on users), **`GET /api/admin/directory/users`**, **`POST /api/auth/switch-org`** (403 pending RR / 200 active SLMTS per seed data).
 
 ---

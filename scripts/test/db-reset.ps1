@@ -98,6 +98,14 @@ if (-not $envMap["DATABASE_URL"]) {
   $envMap["DATABASE_URL"] = "postgresql://$($pgUser):$($pgPass)@$($pgHost):$($pgPort)/$($pgDb)"
 }
 
+# Fill PG* variables from DATABASE_URL when they are not explicitly set.
+if ($envMap["DATABASE_URL"] -match '^postgres(?:ql)?://([^:]+):([^@]+)@([^:/]+)(?::(\d+))?/([^/?]+)') {
+  if (-not $envMap["PGUSER"]) { $envMap["PGUSER"] = $matches[1] }
+  if (-not $envMap["PGPASSWORD"]) { $envMap["PGPASSWORD"] = $matches[2] }
+  if (-not $envMap["PGHOST"]) { $envMap["PGHOST"] = $matches[3] }
+  if (-not $envMap["PGPORT"]) { $envMap["PGPORT"] = $matches[4] }
+}
+
 $env:DATABASE_URL = $envMap["DATABASE_URL"]
 Write-Host "Using DATABASE_URL: $($env:DATABASE_URL)" -ForegroundColor Cyan
 
@@ -115,16 +123,17 @@ $psqlPaths = @(
 $psql = $psqlPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $psql) { throw "psql.exe not found (install PostgreSQL or update script path)" }
 
-# For local dev, set PGPASSWORD if present in .env
+# For local dev, set PGPASSWORD if present in .env or DATABASE_URL
 if ($envMap["PGPASSWORD"]) { $env:PGPASSWORD = $envMap["PGPASSWORD"] }
 
-Write-Host "Dropping public schema in '$dbName'..." -ForegroundColor Yellow
+Write-Host "Dropping public and drizzle schemas in '$dbName'..." -ForegroundColor Yellow
 if (-not $envMap["PGUSER"]) { $envMap["PGUSER"] = "postgres" }
 if (-not $envMap["PGHOST"]) { $envMap["PGHOST"] = "localhost" }
-& $psql -U $envMap["PGUSER"] -h $envMap["PGHOST"] -d $dbName -c "DROP SCHEMA IF EXISTS public CASCADE;" | Out-String | Write-Host
+if (-not $envMap["PGPORT"]) { $envMap["PGPORT"] = "5432" }
+& $psql -U $envMap["PGUSER"] -h $envMap["PGHOST"] -p $envMap["PGPORT"] -d $dbName -c "DROP SCHEMA IF EXISTS public CASCADE; DROP SCHEMA IF EXISTS drizzle CASCADE;" | Out-String | Write-Host
 
 Write-Host "Recreating public schema..." -ForegroundColor Yellow
-& $psql -U $envMap["PGUSER"] -h $envMap["PGHOST"] -d $dbName -c "CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO postgres; GRANT ALL ON SCHEMA public TO public;" | Out-String | Write-Host
+& $psql -U $envMap["PGUSER"] -h $envMap["PGHOST"] -p $envMap["PGPORT"] -d $dbName -c "CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO postgres; GRANT ALL ON SCHEMA public TO public;" | Out-String | Write-Host
 
 Write-Host "Applying Drizzle migrations..." -ForegroundColor Yellow
 npx drizzle-kit migrate | Out-String | Write-Host

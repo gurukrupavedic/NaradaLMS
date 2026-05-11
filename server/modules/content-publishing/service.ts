@@ -12,7 +12,7 @@ import { EventBus } from "../../shared/events/event-bus";
 import { CONTENT_EVENTS } from "./events";
 import type { Track, Chapter, TextSegment, CreateSegmentData, CreateTrackData, CreateChapterData } from "./types";
 import { db } from "../../db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { tracks, chapters } from "@narada/types";
 import {
   getPostgresConstraintName,
@@ -60,16 +60,17 @@ export class ContentService {
   /**
    * Track Operations
    */
-  async getTrack(trackId: number): Promise<Track | null> {
-    return await this.storage.getTrack(trackId);
+  async getTrack(trackId: number, orgId: string): Promise<Track | null> {
+    return await this.storage.getTrack(trackId, orgId);
   }
 
-  async listTracks(): Promise<Track[]> {
-    return await this.storage.getAllTracks();
+  async listTracks(orgId: string): Promise<Track[]> {
+    return await this.storage.getAllTracks(orgId);
   }
 
   async createTrack(data: CreateTrackData): Promise<Track> {
     const track = await this.storage.createTrack({
+      orgId: data.orgId,
       title: data.title,
       description: data.description,
       createdBy: data.createdBy
@@ -77,13 +78,13 @@ export class ContentService {
     return track;
   }
 
-  async updateTrack(trackId: number, data: Partial<Track>): Promise<Track> {
-    const track = await this.storage.updateTrack(trackId, data);
+  async updateTrack(trackId: number, orgId: string, data: Partial<Track>): Promise<Track> {
+    const track = await this.storage.updateTrack(trackId, orgId, data);
     return track;
   }
 
-  async deleteTrack(trackId: number): Promise<void> {
-    await this.storage.deleteTrack(trackId);
+  async deleteTrack(trackId: number, orgId: string): Promise<void> {
+    await this.storage.deleteTrack(trackId, orgId);
   }
 
   /**
@@ -92,8 +93,8 @@ export class ContentService {
    * Current implementation swaps with adjacent track.
    * TODO: Consider "move to position" logic if drag-and-drop becomes complex.
    */
-  async moveTrack(trackId: number, direction: 'up' | 'down'): Promise<void> {
-    const allTracks = await this.storage.getAllTracks();
+  async moveTrack(trackId: number, orgId: string, direction: 'up' | 'down'): Promise<void> {
+    const allTracks = await this.storage.getAllTracks(orgId);
     const sortedTracks = allTracks.sort((a, b) => a.sortOrder - b.sortOrder);
     const currentIndex = sortedTracks.findIndex(t => t.id === trackId);
 
@@ -105,15 +106,27 @@ export class ContentService {
       const previousTrack = sortedTracks[currentIndex - 1];
       const currentTrack = sortedTracks[currentIndex];
       await db.transaction(async (tx) => {
-        await tx.update(tracks).set({ sortOrder: previousTrack.sortOrder, updatedAt: new Date() }).where(eq(tracks.id, trackId));
-        await tx.update(tracks).set({ sortOrder: currentTrack.sortOrder, updatedAt: new Date() }).where(eq(tracks.id, previousTrack.id));
+        await tx
+          .update(tracks)
+          .set({ sortOrder: previousTrack.sortOrder, updatedAt: new Date() })
+          .where(and(eq(tracks.id, trackId), eq(tracks.orgId, orgId)));
+        await tx
+          .update(tracks)
+          .set({ sortOrder: currentTrack.sortOrder, updatedAt: new Date() })
+          .where(and(eq(tracks.id, previousTrack.id), eq(tracks.orgId, orgId)));
       });
     } else if (direction === 'down' && currentIndex < sortedTracks.length - 1) {
       const nextTrack = sortedTracks[currentIndex + 1];
       const currentTrack = sortedTracks[currentIndex];
       await db.transaction(async (tx) => {
-        await tx.update(tracks).set({ sortOrder: nextTrack.sortOrder, updatedAt: new Date() }).where(eq(tracks.id, trackId));
-        await tx.update(tracks).set({ sortOrder: currentTrack.sortOrder, updatedAt: new Date() }).where(eq(tracks.id, nextTrack.id));
+        await tx
+          .update(tracks)
+          .set({ sortOrder: nextTrack.sortOrder, updatedAt: new Date() })
+          .where(and(eq(tracks.id, trackId), eq(tracks.orgId, orgId)));
+        await tx
+          .update(tracks)
+          .set({ sortOrder: currentTrack.sortOrder, updatedAt: new Date() })
+          .where(and(eq(tracks.id, nextTrack.id), eq(tracks.orgId, orgId)));
       });
     } else {
       throw new Error("Cannot move track in that direction");
@@ -123,20 +136,20 @@ export class ContentService {
   /**
    * Chapter Operations
    */
-  async getChapter(chapterId: number): Promise<Chapter | null> {
-    return await this.storage.getChapter(chapterId);
+  async getChapter(chapterId: number, orgId: string): Promise<Chapter | null> {
+    return await this.storage.getChapter(chapterId, orgId);
   }
 
-  async getChaptersByTrack(trackId: number): Promise<Chapter[]> {
-    return await this.storage.getChaptersByTrack(trackId);
+  async getChaptersByTrack(trackId: number, orgId: string): Promise<Chapter[]> {
+    return await this.storage.getChaptersByTrack(trackId, orgId);
   }
 
-  async getPublishedChapters(): Promise<Chapter[]> {
-    const allTracks = await this.storage.getAllTracks();
+  async getPublishedChapters(orgId: string): Promise<Chapter[]> {
+    const allTracks = await this.storage.getAllTracks(orgId);
     const allChapters: Chapter[] = [];
 
     for (const track of allTracks) {
-      const trackChapters = await this.storage.getChaptersByTrack(track.id);
+      const trackChapters = await this.storage.getChaptersByTrack(track.id, orgId);
       const publishedChapters = trackChapters.filter(c => c.status === 'published');
       allChapters.push(...publishedChapters);
     }
@@ -147,6 +160,7 @@ export class ContentService {
   async createChapter(data: CreateChapterData): Promise<Chapter> {
     try {
       const chapter = await this.storage.createChapter({
+        orgId: data.orgId,
         trackId: data.trackId,
         title: data.title,
         content: data.content || { te: '', hi: '', en: '' },
@@ -160,8 +174,8 @@ export class ContentService {
     }
   }
 
-  async updateChapterContent(chapterId: number, content: object): Promise<Chapter> {
-    const chapter = await this.storage.updateChapter(chapterId, { content });
+  async updateChapterContent(chapterId: number, orgId: string, content: object): Promise<Chapter> {
+    const chapter = await this.storage.updateChapter(chapterId, orgId, { content });
 
     await this.eventBus.publish(CONTENT_EVENTS.CONTENT_UPDATED, {
       type: 'ContentUpdated',
@@ -172,9 +186,9 @@ export class ContentService {
     return chapter;
   }
 
-  async updateChapter(chapterId: number, data: Partial<Chapter>): Promise<Chapter> {
+  async updateChapter(chapterId: number, orgId: string, data: Partial<Chapter>): Promise<Chapter> {
     try {
-      const chapter = await this.storage.updateChapter(chapterId, data);
+      const chapter = await this.storage.updateChapter(chapterId, orgId, data);
 
       if (data.content) {
         await this.eventBus.publish(CONTENT_EVENTS.CONTENT_UPDATED, {
@@ -196,8 +210,8 @@ export class ContentService {
    * - Updates status to 'published'
    * - Emits CHAPTER_PUBLISHED event
    */
-  async publishChapter(chapterId: number, userId: string): Promise<Chapter> {
-    const chapter = await this.storage.updateChapter(chapterId, { status: 'published' });
+  async publishChapter(chapterId: number, orgId: string, userId: string): Promise<Chapter> {
+    const chapter = await this.storage.updateChapter(chapterId, orgId, { status: 'published' });
 
     await this.eventBus.publish(CONTENT_EVENTS.CHAPTER_PUBLISHED, {
       type: 'ChapterPublished',
@@ -209,8 +223,8 @@ export class ContentService {
     return chapter;
   }
 
-  async unpublishChapter(chapterId: number, userId: string): Promise<Chapter> {
-    const chapter = await this.storage.updateChapter(chapterId, { status: 'draft' });
+  async unpublishChapter(chapterId: number, orgId: string, userId: string): Promise<Chapter> {
+    const chapter = await this.storage.updateChapter(chapterId, orgId, { status: 'draft' });
 
     await this.eventBus.publish(CONTENT_EVENTS.CHAPTER_UNPUBLISHED, {
       type: 'ChapterUnpublished',
@@ -228,8 +242,8 @@ export class ContentService {
    * @domain_invariant Published content CANNOT be deleted. using soft-delete or 
    * unpublish-then-delete is required to prevent data integrity issues for students.
    */
-  async deleteChapter(chapterId: number): Promise<void> {
-    const chapter = await this.storage.getChapter(chapterId);
+  async deleteChapter(chapterId: number, orgId: string): Promise<void> {
+    const chapter = await this.storage.getChapter(chapterId, orgId);
 
     if (!chapter) {
       throw new Error("Chapter not found");
@@ -239,17 +253,17 @@ export class ContentService {
       throw new Error("Cannot delete a published chapter. Unpublish it first.");
     }
 
-    await this.storage.deleteChapter(chapterId);
+    await this.storage.deleteChapter(chapterId, orgId);
   }
 
-  async moveChapter(chapterId: number, direction: 'up' | 'down'): Promise<void> {
-    const chapter = await this.storage.getChapter(chapterId);
+  async moveChapter(chapterId: number, orgId: string, direction: 'up' | 'down'): Promise<void> {
+    const chapter = await this.storage.getChapter(chapterId, orgId);
 
     if (!chapter) {
       throw new Error("Chapter not found");
     }
 
-    const chapterList = await this.storage.getChaptersByTrack(chapter.trackId);
+    const chapterList = await this.storage.getChaptersByTrack(chapter.trackId, orgId);
     const sortedChapters = chapterList.sort((a, b) => a.sortOrder - b.sortOrder);
     const currentIndex = sortedChapters.findIndex(c => c.id === chapterId);
 
@@ -261,31 +275,43 @@ export class ContentService {
       const previousChapter = sortedChapters[currentIndex - 1];
       const currentChapter = sortedChapters[currentIndex];
       await db.transaction(async (tx) => {
-        await tx.update(chapters).set({ sortOrder: previousChapter.sortOrder, updatedAt: new Date() }).where(eq(chapters.id, chapterId));
-        await tx.update(chapters).set({ sortOrder: currentChapter.sortOrder, updatedAt: new Date() }).where(eq(chapters.id, previousChapter.id));
+        await tx
+          .update(chapters)
+          .set({ sortOrder: previousChapter.sortOrder, updatedAt: new Date() })
+          .where(and(eq(chapters.id, chapterId), eq(chapters.orgId, orgId)));
+        await tx
+          .update(chapters)
+          .set({ sortOrder: currentChapter.sortOrder, updatedAt: new Date() })
+          .where(and(eq(chapters.id, previousChapter.id), eq(chapters.orgId, orgId)));
       });
     } else if (direction === 'down' && currentIndex < sortedChapters.length - 1) {
       const nextChapter = sortedChapters[currentIndex + 1];
       const currentChapter = sortedChapters[currentIndex];
       await db.transaction(async (tx) => {
-        await tx.update(chapters).set({ sortOrder: nextChapter.sortOrder, updatedAt: new Date() }).where(eq(chapters.id, chapterId));
-        await tx.update(chapters).set({ sortOrder: currentChapter.sortOrder, updatedAt: new Date() }).where(eq(chapters.id, nextChapter.id));
+        await tx
+          .update(chapters)
+          .set({ sortOrder: nextChapter.sortOrder, updatedAt: new Date() })
+          .where(and(eq(chapters.id, chapterId), eq(chapters.orgId, orgId)));
+        await tx
+          .update(chapters)
+          .set({ sortOrder: currentChapter.sortOrder, updatedAt: new Date() })
+          .where(and(eq(chapters.id, nextChapter.id), eq(chapters.orgId, orgId)));
       });
     } else {
       throw new Error("Cannot move chapter in that direction");
     }
   }
 
-  async moveChapterToTrack(chapterId: number, toTrackId: number): Promise<void> {
-    const chapter = await this.storage.getChapter(chapterId);
+  async moveChapterToTrack(chapterId: number, orgId: string, toTrackId: number): Promise<void> {
+    const chapter = await this.storage.getChapter(chapterId, orgId);
     if (!chapter) throw new Error('Chapter not found');
 
-    const targetChapters = await this.storage.getChaptersByTrack(toTrackId);
+    const targetChapters = await this.storage.getChaptersByTrack(toTrackId, orgId);
     const maxOrder = targetChapters.reduce((acc, c) => Math.max(acc, c.sortOrder ?? 0), 0);
     const nextOrder = (maxOrder || 0) + 1;
 
     try {
-      await this.storage.updateChapter(chapterId, { trackId: toTrackId, sortOrder: nextOrder });
+      await this.storage.updateChapter(chapterId, orgId, { trackId: toTrackId, sortOrder: nextOrder });
     } catch (e) {
       throwIfChapterTitleConflict(e);
       throw e;

@@ -15,10 +15,11 @@ export class ContentStorage {
   /**
    * Track Operations
    */
-  async getAllTracks(): Promise<any[]> {
+  async getAllTracks(orgId: string): Promise<any[]> {
     const result = await db
       .select({
         id: tracks.id,
+        orgId: tracks.orgId,
         title: tracks.title,
         description: tracks.description,
         sortOrder: tracks.sortOrder,
@@ -29,6 +30,7 @@ export class ContentStorage {
       })
       .from(tracks)
       .leftJoin(chapters, and(eq(chapters.trackId, tracks.id), isNull(chapters.deletedAt)))
+      .where(eq(tracks.orgId, orgId))
       .groupBy(tracks.id)
       .orderBy(tracks.sortOrder);
 
@@ -38,15 +40,19 @@ export class ContentStorage {
     }));
   }
 
-  async getTrack(id: number): Promise<any | null> {
-    const [track] = await db.select().from(tracks).where(eq(tracks.id, id));
+  async getTrack(id: number, orgId: string): Promise<any | null> {
+    const [track] = await db
+      .select()
+      .from(tracks)
+      .where(and(eq(tracks.id, id), eq(tracks.orgId, orgId)));
     return track || null;
   }
 
   async createTrack(track: any): Promise<any> {
     const maxOrderResult = await db
       .select({ maxOrder: sql<number>`COALESCE(MAX(${tracks.sortOrder}), 0)` })
-      .from(tracks);
+      .from(tracks)
+      .where(eq(tracks.orgId, track.orgId));
 
     const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
 
@@ -60,27 +66,33 @@ export class ContentStorage {
     return newTrack;
   }
 
-  async updateTrack(id: number, trackUpdate: any): Promise<any> {
+  async updateTrack(id: number, orgId: string, trackUpdate: any): Promise<any> {
     const [track] = await db
       .update(tracks)
       .set({ ...trackUpdate, updatedAt: new Date() })
-      .where(eq(tracks.id, id))
+      .where(and(eq(tracks.id, id), eq(tracks.orgId, orgId)))
       .returning();
     return track;
   }
 
-  async deleteTrack(id: number): Promise<void> {
-    await db.delete(tracks).where(eq(tracks.id, id));
+  async deleteTrack(id: number, orgId: string): Promise<void> {
+    await db.delete(tracks).where(and(eq(tracks.id, id), eq(tracks.orgId, orgId)));
   }
 
   /**
    * Chapter Operations
    */
-  async getChaptersByTrack(trackId: number): Promise<any[]> {
+  async getChaptersByTrack(trackId: number, orgId: string): Promise<any[]> {
     const chapterList = await db
       .select()
       .from(chapters)
-      .where(and(eq(chapters.trackId, trackId), isNull(chapters.deletedAt)))
+      .where(
+        and(
+          eq(chapters.trackId, trackId),
+          eq(chapters.orgId, orgId),
+          isNull(chapters.deletedAt)
+        )
+      )
       .orderBy(chapters.sortOrder);
 
     if (chapterList.length === 0) return [];
@@ -132,10 +144,11 @@ export class ContentStorage {
     });
   }
 
-  async getChapter(id: number): Promise<any | null> {
+  async getChapter(id: number, orgId: string): Promise<any | null> {
     const result = await db
       .select({
         id: chapters.id,
+        orgId: chapters.orgId,
         trackId: chapters.trackId,
         title: chapters.title,
         sortOrder: chapters.sortOrder,
@@ -155,7 +168,13 @@ export class ContentStorage {
       })
       .from(chapters)
       .leftJoin(tracks, eq(chapters.trackId, tracks.id))
-      .where(and(eq(chapters.id, id), isNull(chapters.deletedAt)));
+      .where(
+        and(
+          eq(chapters.id, id),
+          eq(chapters.orgId, orgId),
+          isNull(chapters.deletedAt)
+        )
+      );
 
     if (result.length === 0) return null;
     const chapter = result[0];
@@ -175,7 +194,13 @@ export class ContentStorage {
     const maxOrderResult = await db
       .select({ maxOrder: sql<number>`COALESCE(MAX(${chapters.sortOrder}), 0)` })
       .from(chapters)
-      .where(and(eq(chapters.trackId, chapter.trackId), isNull(chapters.deletedAt)));
+      .where(
+        and(
+          eq(chapters.trackId, chapter.trackId),
+          eq(chapters.orgId, chapter.orgId),
+          isNull(chapters.deletedAt)
+        )
+      );
 
     const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
 
@@ -190,9 +215,12 @@ export class ContentStorage {
     return newChapter;
   }
 
-  async updateChapter(id: number, chapterUpdate: any): Promise<any> {
+  async updateChapter(id: number, orgId: string, chapterUpdate: any): Promise<any> {
     if (chapterUpdate.content) {
-      const [existingChapter] = await db.select().from(chapters).where(eq(chapters.id, id));
+      const [existingChapter] = await db
+        .select()
+        .from(chapters)
+        .where(and(eq(chapters.id, id), eq(chapters.orgId, orgId)));
       if (existingChapter && existingChapter.content) {
         const existingContent = typeof existingChapter.content === 'string'
           ? JSON.parse(existingChapter.content)
@@ -208,17 +236,17 @@ export class ContentStorage {
     const [chapter] = await db
       .update(chapters)
       .set({ ...chapterUpdate, updatedAt: new Date() })
-      .where(eq(chapters.id, id))
+      .where(and(eq(chapters.id, id), eq(chapters.orgId, orgId)))
       .returning();
 
     return chapter;
   }
 
-  async deleteChapter(id: number): Promise<void> {
+  async deleteChapter(id: number, orgId: string): Promise<void> {
     await db
       .update(chapters)
       .set({ deletedAt: new Date(), updatedAt: new Date() })
-      .where(eq(chapters.id, id));
+      .where(and(eq(chapters.id, id), eq(chapters.orgId, orgId)));
   }
 
   /**

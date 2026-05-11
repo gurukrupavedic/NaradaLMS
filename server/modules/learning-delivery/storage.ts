@@ -16,15 +16,34 @@ export class LearningStorage {
    */
   async getStudentProgress(filters: ProgressQueryFilters): Promise<StudentProgressDTO[]> {
     const conditions = [] as any[];
+    const chapterScopeConditions = [] as any[];
 
     if (filters.studentId) {
       conditions.push(eq(studentProgress.studentId, filters.studentId));
     }
-    if (filters.chapterId) {
-      conditions.push(eq(studentProgress.chapterId, filters.chapterId));
-    }
     if (filters.batchId) {
       conditions.push(eq(studentProgress.batchId, filters.batchId));
+    }
+    if (filters.orgId) {
+      chapterScopeConditions.push(eq(chapters.orgId, filters.orgId));
+    }
+    if (filters.trackId) {
+      chapterScopeConditions.push(eq(chapters.trackId, filters.trackId));
+    }
+    if (filters.chapterId) {
+      chapterScopeConditions.push(eq(chapters.id, filters.chapterId));
+    }
+    if (chapterScopeConditions.length > 0) {
+      chapterScopeConditions.push(isNull(chapters.deletedAt));
+      const scopedChapters = await db
+        .select({ id: chapters.id })
+        .from(chapters)
+        .where(and(...chapterScopeConditions));
+      const scopedChapterIds = scopedChapters.map((chapter) => chapter.id);
+      if (scopedChapterIds.length === 0) {
+        return [];
+      }
+      conditions.push(inArray(studentProgress.chapterId, scopedChapterIds));
     }
 
     // Simplified query without joins (avoids Drizzle leftJoin + select bug)
@@ -97,7 +116,7 @@ export class LearningStorage {
    * Get available chapters for a student (based on enrollments)
    * ONE-TO-MANY CONSTRAINT: Student can only have ONE active enrollment
    */
-  async getAvailableChapters(studentId: string): Promise<AvailableChapterDTO[]> {
+  async getAvailableChapters(studentId: string, orgId: string): Promise<AvailableChapterDTO[]> {
     // Get student's enrolled batch (singular - one-to-many relationship)
     const [studentEnrollment] = await db
       .select({
@@ -110,6 +129,8 @@ export class LearningStorage {
       .where(
         and(
           eq(enrollments.studentId, studentId),
+          eq(enrollments.orgId, orgId),
+          eq(batches.orgId, orgId),
           eq(enrollments.status, 'active')
         )
       )
@@ -131,7 +152,14 @@ export class LearningStorage {
       })
       .from(chapters)
       .innerJoin(tracks, eq(chapters.trackId, tracks.id))
-      .where(and(eq(chapters.trackId, studentEnrollment.trackId), isNull(chapters.deletedAt)));
+      .where(
+        and(
+          eq(chapters.trackId, studentEnrollment.trackId),
+          eq(chapters.orgId, orgId),
+          eq(tracks.orgId, orgId),
+          isNull(chapters.deletedAt)
+        )
+      );
 
     // Get student's progress for these chapters
     const chapterIds = chaptersList.map(c => c.chapterId);
@@ -180,11 +208,11 @@ export class LearningStorage {
   /**
    * Check if chapter exists
    */
-  async chapterExists(chapterId: number): Promise<boolean> {
+  async chapterExists(chapterId: number, orgId: string): Promise<boolean> {
     const result = await db
       .select({ id: chapters.id })
       .from(chapters)
-      .where(and(eq(chapters.id, chapterId), isNull(chapters.deletedAt)))
+      .where(and(eq(chapters.id, chapterId), eq(chapters.orgId, orgId), isNull(chapters.deletedAt)))
       .limit(1);
 
     return result.length > 0;
@@ -193,7 +221,7 @@ export class LearningStorage {
   /**
    * Check if student is enrolled in batch
    */
-  async isStudentEnrolled(studentId: string, batchId: number): Promise<boolean> {
+  async isStudentEnrolled(studentId: string, batchId: number, orgId: string): Promise<boolean> {
     const result = await db
       .select({ id: enrollments.id })
       .from(enrollments)
@@ -201,6 +229,7 @@ export class LearningStorage {
         and(
           eq(enrollments.studentId, studentId),
           eq(enrollments.batchId, batchId),
+          eq(enrollments.orgId, orgId),
           eq(enrollments.status, 'active')
         )
       )
@@ -213,7 +242,7 @@ export class LearningStorage {
    * Get student details with proficiency matrix
    * Returns: Student profile + enrollment + all chapters with proficiency for their batch
    */
-  async getStudentDetailsWithProgress(studentId: string): Promise<any> {
+  async getStudentDetailsWithProgress(studentId: string, orgId: string): Promise<any> {
     // Get student info
     const [student] = await db
       .select()
@@ -241,6 +270,8 @@ export class LearningStorage {
       .where(
         and(
           eq(enrollments.studentId, studentId),
+          eq(enrollments.orgId, orgId),
+          eq(batches.orgId, orgId),
           eq(enrollments.status, 'active')
         )
       )
@@ -288,7 +319,13 @@ export class LearningStorage {
         status: chapters.status,
       })
       .from(chapters)
-      .where(and(eq(chapters.trackId, enrollment.trackId), isNull(chapters.deletedAt)))
+      .where(
+        and(
+          eq(chapters.trackId, enrollment.trackId),
+          eq(chapters.orgId, orgId),
+          isNull(chapters.deletedAt)
+        )
+      )
       .orderBy(chapters.sortOrder);
 
     // Get proficiency for all chapters
