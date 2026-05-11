@@ -252,15 +252,29 @@ export class ContentStorage {
   /**
    * Text Segment Operations
    */
-  async getSegmentsByChapter(chapterId: number, script?: string): Promise<any[]> {
-    const whereConditions = script
-      ? and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script))
-      : eq(textSegments.chapterId, chapterId);
+  async getSegmentsByChapter(
+    chapterId: number,
+    script?: string,
+    orgId?: string
+  ): Promise<any[]> {
+    const conditions = [eq(textSegments.chapterId, chapterId)];
 
-    return await db.select().from(textSegments).where(whereConditions).orderBy(asc(textSegments.order));
+    if (script) {
+      conditions.push(eq(textSegments.script, script));
+    }
+
+    if (orgId) {
+      conditions.push(eq(textSegments.orgId, orgId));
+    }
+
+    return await db
+      .select()
+      .from(textSegments)
+      .where(and(...conditions))
+      .orderBy(asc(textSegments.order));
   }
 
-  async createTextSegment(segment: any): Promise<any> {
+  async createTextSegment(segment: any, orgId?: string): Promise<any> {
     if (!segment.chapterId || !segment.script ||
       segment.startPosition === undefined || segment.endPosition === undefined) {
       throw new Error("Missing required fields: chapterId, script, startPosition, endPosition");
@@ -275,6 +289,14 @@ export class ContentStorage {
 
       if (!chapter) {
         throw createHttpError("Chapter not found", 404, "CHAPTER_NOT_FOUND");
+      }
+
+      if (orgId && chapter.orgId !== orgId) {
+        throw createHttpError(
+          "Chapter does not belong to the active organization",
+          404,
+          "CHAPTER_NOT_FOUND"
+        );
       }
 
       await tx
@@ -315,7 +337,7 @@ export class ContentStorage {
     });
   }
 
-  async updateTextSegment(id: number, segmentUpdate: any): Promise<any> {
+  async updateTextSegment(id: number, orgId: string, segmentUpdate: any): Promise<any> {
     if (segmentUpdate.order !== undefined) {
       throw createHttpError(
         "Direct segment order updates are not allowed. Use the reorder endpoint.",
@@ -327,14 +349,20 @@ export class ContentStorage {
     const [segment] = await db
       .update(textSegments)
       .set(segmentUpdate)
-      .where(eq(textSegments.id, id))
+      .where(and(eq(textSegments.id, id), eq(textSegments.orgId, orgId)))
       .returning();
+
+    if (!segment) {
+      throw createHttpError("Segment not found", 404, "SEGMENT_NOT_FOUND");
+    }
+
     return segment;
   }
 
   async updateSegmentOrder(
     chapterId: number,
     script: "te" | "hi" | "en",
+    orgId: string,
     segmentOrders: { id: number; order: number }[]
   ): Promise<void> {
     await db.transaction(async (tx) => {
@@ -344,7 +372,13 @@ export class ContentStorage {
           order: textSegments.order,
         })
         .from(textSegments)
-        .where(and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script)))
+        .where(
+          and(
+            eq(textSegments.chapterId, chapterId),
+            eq(textSegments.script, script),
+            eq(textSegments.orgId, orgId)
+          )
+        )
         .orderBy(asc(textSegments.order), asc(textSegments.id))
         .for("update");
 
@@ -383,7 +417,13 @@ export class ContentStorage {
       await tx
         .update(textSegments)
         .set({ order: sql`${textSegments.order} + ${temporaryOffset}` })
-        .where(and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script)));
+        .where(
+          and(
+            eq(textSegments.chapterId, chapterId),
+            eq(textSegments.script, script),
+            eq(textSegments.orgId, orgId)
+          )
+        );
 
       const caseBranches = segmentOrders.map(({ id, order }) => sql`WHEN ${id} THEN ${order}`);
       await tx.execute(sql`
@@ -394,19 +434,29 @@ export class ContentStorage {
         END
         WHERE chapter_id = ${chapterId}
           AND script = ${script}
+          AND org_id = ${orgId}
       `);
     });
   }
 
-  async deleteTextSegment(id: number): Promise<void> {
-    await db.delete(textSegments).where(eq(textSegments.id, id));
-  }
-  async deleteTextSegmentsByChapter(chapterId: number, script?: string): Promise<void> {
-    const whereConditions = script
-      ? and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script))
-      : eq(textSegments.chapterId, chapterId);
+  async deleteTextSegment(id: number, orgId: string): Promise<void> {
+    const [deletedSegment] = await db
+      .delete(textSegments)
+      .where(and(eq(textSegments.id, id), eq(textSegments.orgId, orgId)))
+      .returning({ id: textSegments.id });
 
-    await db.delete(textSegments).where(whereConditions);
+    if (!deletedSegment) {
+      throw createHttpError("Segment not found", 404, "SEGMENT_NOT_FOUND");
+    }
+  }
+  async deleteTextSegmentsByChapter(chapterId: number, orgId: string, script?: string): Promise<void> {
+    const conditions = [eq(textSegments.chapterId, chapterId), eq(textSegments.orgId, orgId)];
+
+    if (script) {
+      conditions.push(eq(textSegments.script, script));
+    }
+
+    await db.delete(textSegments).where(and(...conditions));
   }
 }
 

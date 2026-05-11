@@ -46,12 +46,20 @@ async function getTextSegmentOrgId(textSegmentId: number): Promise<string> {
 }
 
 export const mediaStorage = {
-  async getAudioFilesByChapter(chapterId: number): Promise<AudioFile[]> {
-    return await db.select().from(audioFiles).where(eq(audioFiles.chapterId, chapterId));
+  async getAudioFilesByChapter(chapterId: number, orgId: string): Promise<AudioFile[]> {
+    return await db
+      .select()
+      .from(audioFiles)
+      .where(and(eq(audioFiles.chapterId, chapterId), eq(audioFiles.orgId, orgId)));
   },
 
-  async createAudioFile(data: CreateAudioFileData): Promise<AudioFile> {
-    const orgId = await getChapterOrgId(data.chapterId);
+  async createAudioFile(data: CreateAudioFileData, orgId: string): Promise<AudioFile> {
+    const chapterOrgId = await getChapterOrgId(data.chapterId);
+
+    if (chapterOrgId !== orgId) {
+      throw Object.assign(new Error(`Chapter ${data.chapterId} not found`), { status: 404 });
+    }
+
     const [newFile] = await db.insert(audioFiles).values({
       orgId,
       chapterId: data.chapterId,
@@ -66,21 +74,46 @@ export const mediaStorage = {
     return newFile as AudioFile;
   },
 
-  async updateAudioFile(id: number, update: Partial<AudioFile>): Promise<AudioFile> {
-    const [updated] = await db.update(audioFiles).set(update).where(eq(audioFiles.id, id)).returning();
+  async updateAudioFile(id: number, orgId: string, update: Partial<AudioFile>): Promise<AudioFile> {
+    const [updated] = await db
+      .update(audioFiles)
+      .set(update)
+      .where(and(eq(audioFiles.id, id), eq(audioFiles.orgId, orgId)))
+      .returning();
+
+    if (!updated) {
+      throw Object.assign(new Error(`Audio file ${id} not found`), { status: 404 });
+    }
+
     return updated as AudioFile;
   },
 
-  async deleteAudioFile(id: number): Promise<void> {
-    await db.delete(audioFiles).where(eq(audioFiles.id, id));
+  async deleteAudioFile(id: number, orgId: string): Promise<void> {
+    const [deleted] = await db
+      .delete(audioFiles)
+      .where(and(eq(audioFiles.id, id), eq(audioFiles.orgId, orgId)))
+      .returning({ id: audioFiles.id });
+
+    if (!deleted) {
+      throw Object.assign(new Error(`Audio file ${id} not found`), { status: 404 });
+    }
   },
 
-  async getMediaSegmentsByAudioFile(audioFileId: number): Promise<MediaSegment[]> {
-    return await db.select().from(mediaSegments).where(eq(mediaSegments.audioFileId, audioFileId)).orderBy(asc(mediaSegments.startMs));
+  async getMediaSegmentsByAudioFile(audioFileId: number, orgId: string): Promise<MediaSegment[]> {
+    return await db
+      .select()
+      .from(mediaSegments)
+      .where(and(eq(mediaSegments.audioFileId, audioFileId), eq(mediaSegments.orgId, orgId)))
+      .orderBy(asc(mediaSegments.startMs));
   },
 
-  async createMediaSegment(data: CreateMediaSegmentData): Promise<MediaSegment> {
-    const orgId = await getAudioFileOrgId(data.audioFileId);
+  async createMediaSegment(data: CreateMediaSegmentData, orgId: string): Promise<MediaSegment> {
+    const audioFileOrgId = await getAudioFileOrgId(data.audioFileId);
+
+    if (audioFileOrgId !== orgId) {
+      throw Object.assign(new Error(`Audio file ${data.audioFileId} not found`), { status: 404 });
+    }
+
     const [seg] = await db.insert(mediaSegments).values({
       orgId,
       audioFileId: data.audioFileId,
@@ -92,16 +125,32 @@ export const mediaStorage = {
     return seg as MediaSegment;
   },
 
-  async updateMediaSegment(id: number, update: Partial<MediaSegment>): Promise<MediaSegment> {
-    const [seg] = await db.update(mediaSegments).set(update).where(eq(mediaSegments.id, id)).returning();
+  async updateMediaSegment(id: number, orgId: string, update: Partial<MediaSegment>): Promise<MediaSegment> {
+    const [seg] = await db
+      .update(mediaSegments)
+      .set(update)
+      .where(and(eq(mediaSegments.id, id), eq(mediaSegments.orgId, orgId)))
+      .returning();
+
+    if (!seg) {
+      throw Object.assign(new Error(`Media segment ${id} not found`), { status: 404 });
+    }
+
     return seg as MediaSegment;
   },
 
-  async deleteMediaSegment(id: number): Promise<void> {
-    await db.delete(mediaSegments).where(eq(mediaSegments.id, id));
+  async deleteMediaSegment(id: number, orgId: string): Promise<void> {
+    const [deleted] = await db
+      .delete(mediaSegments)
+      .where(and(eq(mediaSegments.id, id), eq(mediaSegments.orgId, orgId)))
+      .returning({ id: mediaSegments.id });
+
+    if (!deleted) {
+      throw Object.assign(new Error(`Media segment ${id} not found`), { status: 404 });
+    }
   },
 
-  async getSegmentMappingsByChapter(chapterId: number): Promise<MappingWithTimestamps[]> {
+  async getSegmentMappingsByChapter(chapterId: number, orgId: string): Promise<MappingWithTimestamps[]> {
     const rows = await db.select({
       mappingId: segmentMappings.id,
       textSegmentId: segmentMappings.textSegmentId,
@@ -114,11 +163,16 @@ export const mediaStorage = {
       .from(segmentMappings)
       .leftJoin(mediaSegments, eq(segmentMappings.mediaSegmentId, mediaSegments.id))
       .leftJoin(textSegments, eq(segmentMappings.textSegmentId, textSegments.id))
-      .where(eq(textSegments.chapterId, chapterId));
+      .where(
+        and(
+          eq(textSegments.chapterId, chapterId),
+          eq(segmentMappings.orgId, orgId)
+        )
+      );
     return rows as MappingWithTimestamps[];
   },
 
-  async getSegmentMappingsByAudioFile(audioFileId: number): Promise<MappingWithTimestamps[]> {
+  async getSegmentMappingsByAudioFile(audioFileId: number, orgId: string): Promise<MappingWithTimestamps[]> {
     const rows = await db.select({
       mappingId: segmentMappings.id,
       textSegmentId: segmentMappings.textSegmentId,
@@ -130,15 +184,20 @@ export const mediaStorage = {
     })
       .from(segmentMappings)
       .leftJoin(mediaSegments, eq(segmentMappings.mediaSegmentId, mediaSegments.id))
-      .where(eq(mediaSegments.audioFileId, audioFileId));
+      .where(
+        and(
+          eq(mediaSegments.audioFileId, audioFileId),
+          eq(segmentMappings.orgId, orgId)
+        )
+      );
     return rows as MappingWithTimestamps[];
   },
 
-  async createMappingWithMediaSegment(data: CreateMappingData): Promise<MappingWithTimestamps> {
-    const orgId = await getAudioFileOrgId(data.audioFileId);
+  async createMappingWithMediaSegment(data: CreateMappingData, orgId: string): Promise<MappingWithTimestamps> {
+    const audioFileOrgId = await getAudioFileOrgId(data.audioFileId);
     const textSegmentOrgId = await getTextSegmentOrgId(data.textSegmentId);
 
-    if (orgId !== textSegmentOrgId) {
+    if (audioFileOrgId !== textSegmentOrgId || audioFileOrgId !== orgId) {
       throw Object.assign(new Error('Audio file and text segment must belong to the same organization'), {
         status: 400,
       });
@@ -169,24 +228,52 @@ export const mediaStorage = {
     };
   },
 
-  async deleteSegmentMapping(id: number): Promise<void> {
+  async deleteSegmentMapping(id: number, orgId: string): Promise<void> {
     const rows = await db.select({ mediaSegmentId: segmentMappings.mediaSegmentId })
       .from(segmentMappings)
-      .where(eq(segmentMappings.id, id));
+      .where(and(eq(segmentMappings.id, id), eq(segmentMappings.orgId, orgId)));
     const mediaId = rows[0]?.mediaSegmentId;
-    await db.delete(segmentMappings).where(eq(segmentMappings.id, id));
-    if (mediaId) await db.delete(mediaSegments).where(eq(mediaSegments.id, mediaId));
+    const [deletedMapping] = await db
+      .delete(segmentMappings)
+      .where(and(eq(segmentMappings.id, id), eq(segmentMappings.orgId, orgId)))
+      .returning({ id: segmentMappings.id });
+
+    if (!deletedMapping) {
+      throw Object.assign(new Error(`Mapping ${id} not found`), { status: 404 });
+    }
+
+    if (mediaId) {
+      await db
+        .delete(mediaSegments)
+        .where(and(eq(mediaSegments.id, mediaId), eq(mediaSegments.orgId, orgId)));
+    }
   },
 
-  async deleteSegmentMappingByTextSegment(textSegmentId: number, audioFileId: number): Promise<void> {
+  async deleteSegmentMappingByTextSegment(
+    textSegmentId: number,
+    audioFileId: number,
+    orgId: string
+  ): Promise<void> {
     const rows = await db.select({ mappingId: segmentMappings.id, mediaSegmentId: segmentMappings.mediaSegmentId })
       .from(segmentMappings)
       .leftJoin(mediaSegments, eq(segmentMappings.mediaSegmentId, mediaSegments.id))
-      .where(and(eq(segmentMappings.textSegmentId, textSegmentId), eq(mediaSegments.audioFileId, audioFileId)));
+      .where(
+        and(
+          eq(segmentMappings.textSegmentId, textSegmentId),
+          eq(mediaSegments.audioFileId, audioFileId),
+          eq(segmentMappings.orgId, orgId)
+        )
+      );
     for (const row of rows) {
-      await db.delete(segmentMappings).where(eq(segmentMappings.id, (row as any).mappingId));
+      await db
+        .delete(segmentMappings)
+        .where(and(eq(segmentMappings.id, (row as any).mappingId), eq(segmentMappings.orgId, orgId)));
       const mediaId = (row as any).mediaSegmentId;
-      if (mediaId) await db.delete(mediaSegments).where(eq(mediaSegments.id, mediaId));
+      if (mediaId) {
+        await db
+          .delete(mediaSegments)
+          .where(and(eq(mediaSegments.id, mediaId), eq(mediaSegments.orgId, orgId)));
+      }
     }
   },
 };

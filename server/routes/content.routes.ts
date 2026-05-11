@@ -269,7 +269,7 @@ router.get('/segments/:chapterId/:script', async (req: Request, res: Response, n
       ));
     }
 
-    const segments = await contentService.getSegmentsByChapter(chapterId, script);
+    const segments = await contentService.getSegmentsByChapter(chapterId, script, req.orgId!);
     res.json(segments);
   } catch (error) {
     next(error);
@@ -280,7 +280,7 @@ router.get('/segments/:chapterId/:script', async (req: Request, res: Response, n
 router.get('/segments/:chapterId', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
-    const segments = await contentService.getSegmentsByChapter(chapterId);
+    const segments = await contentService.getSegmentsByChapter(chapterId, undefined, req.orgId!);
     res.json(segments);
   } catch (error) {
     next(error);
@@ -302,7 +302,7 @@ router.get('/chapters/:chapterId/segments', async (req: Request, res: Response, 
       }
       script = scriptParam as 'te' | 'hi' | 'en';
     }
-    const segments = await contentService.getSegmentsByChapter(chapterId, script);
+    const segments = await contentService.getSegmentsByChapter(chapterId, script, req.orgId!);
     res.json(segments);
   } catch (error) {
     next(error);
@@ -341,14 +341,17 @@ router.post('/segments', requireAdmin, async (req: Request, res: Response, next:
     }
 
     const user = req.user as Express.User;
-    const segment = await contentService.createSegment({
-      chapterId,
-      script: script as 'te' | 'hi' | 'en',
-      startPosition,
-      endPosition,
-      order,
-      createdBy: user.id
-    });
+    const segment = await contentService.createSegment(
+      {
+        chapterId,
+        script: script as 'te' | 'hi' | 'en',
+        startPosition,
+        endPosition,
+        order,
+        createdBy: user.id
+      },
+      req.orgId!
+    );
 
     res.json(segment);
   } catch (error) {
@@ -395,14 +398,17 @@ router.post('/chapters/:chapterId/segments', requireAdmin, async (req: Request, 
     }
 
     const user = req.user as Express.User;
-    const segment = await contentService.createSegment({
-      chapterId,
-      script: script as 'te' | 'hi' | 'en',
-      startPosition,
-      endPosition,
-      order,
-      createdBy: user.id,
-    });
+    const segment = await contentService.createSegment(
+      {
+        chapterId,
+        script: script as 'te' | 'hi' | 'en',
+        startPosition,
+        endPosition,
+        order,
+        createdBy: user.id,
+      },
+      req.orgId!
+    );
     res.json(segment);
   } catch (error) { next(error); }
 });
@@ -411,7 +417,7 @@ router.post('/chapters/:chapterId/segments', requireAdmin, async (req: Request, 
 router.patch('/segments/:segmentId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const segmentId = parseInt(req.params.segmentId);
-    const segment = await contentService.updateSegment(segmentId, req.body);
+    const segment = await contentService.updateSegment(req.orgId!, segmentId, req.body);
     res.json(segment);
   } catch (error) {
     next(error);
@@ -422,7 +428,14 @@ router.patch('/segments/:segmentId', requireAdmin, async (req: Request, res: Res
 router.put('/chapters/:chapterId/segments/:segmentId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const segmentId = parseInt(req.params.segmentId);
-    const segment = await contentService.updateSegment(segmentId, req.body);
+    const chapterId = parseInt(req.params.chapterId);
+    const chapterSegments = await contentService.getSegmentsByChapter(chapterId, undefined, req.orgId!);
+    const target = chapterSegments.find((segment) => segment.id === segmentId);
+    if (!target) {
+      return res.status(404).json(createErrorResponse('Segment not found', 'SEGMENT_NOT_FOUND'));
+    }
+
+    const segment = await contentService.updateSegment(req.orgId!, segmentId, req.body);
     res.json(segment);
   } catch (error) { next(error); }
 });
@@ -431,7 +444,7 @@ router.put('/chapters/:chapterId/segments/:segmentId', requireAdmin, async (req:
 router.delete('/segments/:segmentId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const segmentId = parseInt(req.params.segmentId);
-    await contentService.deleteSegment(segmentId);
+    await contentService.deleteSegment(req.orgId!, segmentId);
     res.json({ message: "Segment deleted successfully" });
   } catch (error) {
     next(error);
@@ -442,7 +455,14 @@ router.delete('/segments/:segmentId', requireAdmin, async (req: Request, res: Re
 router.delete('/chapters/:chapterId/segments/:segmentId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const segmentId = parseInt(req.params.segmentId);
-    await contentService.deleteSegment(segmentId);
+    const chapterId = parseInt(req.params.chapterId);
+    const chapterSegments = await contentService.getSegmentsByChapter(chapterId, undefined, req.orgId!);
+    const target = chapterSegments.find((segment) => segment.id === segmentId);
+    if (!target) {
+      return res.status(404).json(createErrorResponse('Segment not found', 'SEGMENT_NOT_FOUND'));
+    }
+
+    await contentService.deleteSegment(req.orgId!, segmentId);
     res.json({ message: 'Segment deleted successfully' });
   } catch (error) { next(error); }
 });
@@ -460,7 +480,7 @@ router.delete('/chapters/:chapterId/segments/all/clear', requireAdmin, async (re
       ));
     }
 
-    await contentService.deleteSegmentsByChapter(chapterId, script as 'te' | 'hi' | 'en');
+    await contentService.deleteSegmentsByChapter(chapterId, req.orgId!, script as 'te' | 'hi' | 'en');
     res.json({ message: 'All segments cleared successfully' });
   } catch (error) { next(error); }
 });
@@ -485,7 +505,7 @@ router.post('/chapters/:chapterId/segments/reorder', requireAdmin, async (req: R
       ));
     }
 
-    await contentService.reorderSegments(chapterId, script, segmentOrders);
+    await contentService.reorderSegments(chapterId, req.orgId!, script, segmentOrders);
     res.json({ message: 'Segments reordered successfully' });
   } catch (error) { next(error); }
 });
@@ -516,7 +536,7 @@ const upload = multer({
 router.get('/chapters/:chapterId/audio', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const chapterId = parseInt(req.params.chapterId);
-    const files = await mediaService.listAudioFilesByChapter(chapterId);
+    const files = await mediaService.listAudioFilesByChapter(chapterId, req.orgId!);
     res.json(files);
   } catch (error) { next(error); }
 });
@@ -536,15 +556,18 @@ router.post('/chapters/:chapterId/audio', requireAdmin, upload.single('audio'), 
     } catch { }
 
     const user = req.user as Express.User;
-    const created = await mediaService.uploadAudioFile({
-      chapterId,
-      filename: req.file.filename,
-      displayName: req.file.originalname || req.file.filename,
-      fileSize: req.file.size,
-      duration: Math.round(duration),
-      mimeType: req.file.mimetype,
-      uploadedBy: user.id,
-    });
+    const created = await mediaService.uploadAudioFile(
+      {
+        chapterId,
+        filename: req.file.filename,
+        displayName: req.file.originalname || req.file.filename,
+        fileSize: req.file.size,
+        duration: Math.round(duration),
+        mimeType: req.file.mimetype,
+        uploadedBy: user.id,
+      },
+      req.orgId!
+    );
     res.json(created);
   } catch (error) { next(error); }
 });
@@ -553,7 +576,14 @@ router.post('/chapters/:chapterId/audio', requireAdmin, upload.single('audio'), 
 router.put('/chapters/:chapterId/audio/:audioFileId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.audioFileId);
-    const file = await mediaService.updateAudioFile(id, req.body);
+    const chapterId = parseInt(req.params.chapterId);
+    const files = await mediaService.listAudioFilesByChapter(chapterId, req.orgId!);
+    const target = files.find((file) => file.id === id);
+    if (!target) {
+      return res.status(404).json(createErrorResponse('Audio file not found', 'AUDIO_FILE_NOT_FOUND'));
+    }
+
+    const file = await mediaService.updateAudioFile(id, req.orgId!, req.body);
     res.json(file);
   } catch (error) { next(error); }
 });
@@ -562,7 +592,14 @@ router.put('/chapters/:chapterId/audio/:audioFileId', requireAdmin, async (req: 
 router.delete('/chapters/:chapterId/audio/:audioFileId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.audioFileId);
-    await mediaService.deleteAudioFile(id);
+    const chapterId = parseInt(req.params.chapterId);
+    const files = await mediaService.listAudioFilesByChapter(chapterId, req.orgId!);
+    const target = files.find((file) => file.id === id);
+    if (!target) {
+      return res.status(404).json(createErrorResponse('Audio file not found', 'AUDIO_FILE_NOT_FOUND'));
+    }
+
+    await mediaService.deleteAudioFile(id, req.orgId!);
     res.json({ message: 'Audio file deleted successfully' });
   } catch (error) { next(error); }
 });
@@ -576,13 +613,13 @@ router.get('/chapters/:chapterId/mappings', async (req: Request, res: Response, 
   try {
     const chapterId = parseInt(req.params.chapterId);
     const audioFileIdParam = req.query.audioFileId as string | undefined;
+    const chapterMappings = await mediaService.listMappingsByChapter(chapterId, req.orgId!);
     if (audioFileIdParam) {
       const audioFileId = parseInt(audioFileIdParam);
-      const mappings = await mediaService.listMappingsByAudioFile(audioFileId);
+      const mappings = chapterMappings.filter((mapping) => mapping.audioFileId === audioFileId);
       return res.json(mappings);
     }
-    const mappings = await mediaService.listMappingsByChapter(chapterId);
-    res.json(mappings);
+    res.json(chapterMappings);
   } catch (error) { next(error); }
 });
 
@@ -594,7 +631,26 @@ router.post('/chapters/:chapterId/mappings', requireAdmin, async (req: Request, 
       return res.status(400).json(createErrorResponse('Missing required fields', 'MISSING_REQUIRED_FIELDS'));
     }
     const user = req.user as Express.User;
-    const mapping = await mediaService.createMapping({ audioFileId, textSegmentId, startMs, endMs, createdBy: user.id });
+    const chapterId = parseInt(req.params.chapterId);
+    const [chapterAudioFile] = await mediaService.listAudioFilesByChapter(chapterId, req.orgId!).then((files) =>
+      files.filter((file) => file.id === audioFileId)
+    );
+    const chapterSegments = await contentService.getSegmentsByChapter(chapterId, undefined, req.orgId!);
+    const chapterSegment = chapterSegments.find((segment) => segment.id === textSegmentId);
+
+    if (!chapterAudioFile || !chapterSegment) {
+      return res.status(404).json(
+        createErrorResponse(
+          'Audio file and text segment must belong to the requested chapter',
+          'CHAPTER_SCOPE_MISMATCH'
+        )
+      );
+    }
+
+    const mapping = await mediaService.createMapping(
+      { audioFileId, textSegmentId, startMs, endMs, createdBy: user.id },
+      req.orgId!
+    );
     res.json(mapping);
   } catch (error) { next(error); }
 });
@@ -608,12 +664,12 @@ router.put('/chapters/:chapterId/mappings/:mappingId', requireAdmin, async (req:
     if (startMs === undefined || endMs === undefined) {
       return res.status(400).json(createErrorResponse('startMs and endMs are required', 'MISSING_TIMESTAMP_FIELDS'));
     }
-    const mappings = await mediaService.listMappingsByChapter(chapterId);
+    const mappings = await mediaService.listMappingsByChapter(chapterId, req.orgId!);
     const target = mappings.find(m => m.mappingId === mappingId);
     if (!target) {
       return res.status(404).json(createErrorResponse('Mapping not found', 'MAPPING_NOT_FOUND'));
     }
-    const updated = await mediaService.updateMediaSegment(target.mediaSegmentId, {
+    const updated = await mediaService.updateMediaSegment(target.mediaSegmentId, req.orgId!, {
       startMs,
       endMs,
       segmentName,
@@ -626,7 +682,14 @@ router.put('/chapters/:chapterId/mappings/:mappingId', requireAdmin, async (req:
 router.delete('/chapters/:chapterId/mappings/:mappingId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const mappingId = parseInt(req.params.mappingId);
-    await mediaService.deleteMappingById(mappingId);
+    const chapterId = parseInt(req.params.chapterId);
+    const mappings = await mediaService.listMappingsByChapter(chapterId, req.orgId!);
+    const target = mappings.find((mapping) => mapping.mappingId === mappingId);
+    if (!target) {
+      return res.status(404).json(createErrorResponse('Mapping not found', 'MAPPING_NOT_FOUND'));
+    }
+
+    await mediaService.deleteMappingById(mappingId, req.orgId!);
     res.json({ message: 'Mapping deleted successfully' });
   } catch (error) { next(error); }
 });
@@ -636,7 +699,19 @@ router.delete('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segment
   try {
     const audioFileId = parseInt(req.params.audioFileId);
     const segmentId = parseInt(req.params.segmentId);
-    await mediaService.deleteMappingByTextSegment(segmentId, audioFileId);
+    const chapterId = parseInt(req.params.chapterId);
+    const mappings = await mediaService.listMappingsByChapter(chapterId, req.orgId!);
+    const target = mappings.find(
+      (mapping) => mapping.audioFileId === audioFileId && mapping.textSegmentId === segmentId
+    );
+
+    if (!target) {
+      return res.status(404).json(
+        createErrorResponse('Mapping not found for this segment and audio file', 'MAPPING_NOT_FOUND')
+      );
+    }
+
+    await mediaService.deleteMappingByTextSegment(segmentId, audioFileId, req.orgId!);
     res.json({ message: 'Mapping deleted successfully' });
   } catch (error) { next(error); }
 });
@@ -652,14 +727,17 @@ router.patch('/chapters/:chapterId/mappings/audio/:audioFileId/segment/:segmentI
       return res.status(400).json(createErrorResponse('startMs and endMs are required', 'MISSING_TIMESTAMP_FIELDS'));
     }
 
-    const mappings = await mediaService.listMappingsByAudioFile(audioFileId);
-    const target = mappings.find(m => m.textSegmentId === segmentId);
+    const chapterId = parseInt(req.params.chapterId);
+    const mappings = await mediaService.listMappingsByChapter(chapterId, req.orgId!);
+    const target = mappings.find(
+      (mapping) => mapping.audioFileId === audioFileId && mapping.textSegmentId === segmentId
+    );
 
     if (!target) {
       return res.status(404).json(createErrorResponse('Mapping not found for this segment and audio file', 'MAPPING_NOT_FOUND'));
     }
 
-    const updated = await mediaService.updateMediaSegment(target.mediaSegmentId, {
+    const updated = await mediaService.updateMediaSegment(target.mediaSegmentId, req.orgId!, {
       startMs,
       endMs,
     } as any);

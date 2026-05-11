@@ -11,11 +11,13 @@ import { validateRequest } from '../utils/validation';
 import { z } from 'zod';
 import { config } from '../config';
 import { createErrorResponse } from '../shared/utils/api-response';
+import { requireOrgContext } from '../shared/middleware/org-context';
 
 const router = Router();
 
 // Protect all media routes - authentication required
 router.use(jwtAuth);
+router.use(requireOrgContext);
 
 // Multer setup (audio only)
 const uploadsDir = path.join(process.cwd(), config.uploads.dir);
@@ -37,7 +39,7 @@ const upload = multer({
 router.patch('/audio-files/:audioFileId', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.audioFileId);
-    const file = await mediaService.updateAudioFile(id, req.body);
+    const file = await mediaService.updateAudioFile(id, req.orgId!, req.body);
     res.json(file);
   } catch (error) { next(error); }
 });
@@ -48,7 +50,7 @@ router.patch('/audio-files/:audioFileId', requireAdmin, async (req: Request, res
 router.get('/media-segments/:audioFileId', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const audioFileId = parseInt(req.params.audioFileId);
-    const segs = await mediaService.listMediaSegments(audioFileId);
+    const segs = await mediaService.listMediaSegments(audioFileId, req.orgId!);
     res.json(segs);
   } catch (error) { next(error); }
 });
@@ -84,7 +86,7 @@ router.post('/media-segments/bulk', requireAdmin, validateRequest(bulkSegmentsSc
         endMs: s.endMs,
         segmentName: s.name,
         createdBy: (req as any).user.id,
-      });
+      }, req.orgId!);
       created.push(seg);
     }
     res.json(created);
@@ -99,7 +101,7 @@ router.post('/media-segments', requireAdmin, validateRequest(segmentSchema), asy
       endMs: req.body.endMs,
       segmentName: req.body.segmentName,
       createdBy: (req as any).user.id,
-    });
+    }, req.orgId!);
     res.json(seg);
   } catch (error) { next(error); }
 });
@@ -107,7 +109,7 @@ router.post('/media-segments', requireAdmin, validateRequest(segmentSchema), asy
 router.delete('/media-segments/:id', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.id);
-    await mediaService.deleteMediaSegment(id);
+    await mediaService.deleteMediaSegment(id, req.orgId!);
     res.json({ message: 'Media segment deleted successfully' });
   } catch (error) { next(error); }
 });
@@ -118,7 +120,7 @@ router.delete('/media-segments/:id', requireAdmin, async (req: Request, res: Res
 router.get('/mappings/audio/:audioFileId', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const audioFileId = parseInt(req.params.audioFileId);
-    const mappings = await mediaService.listMappingsByAudioFile(audioFileId);
+    const mappings = await mediaService.listMappingsByAudioFile(audioFileId, req.orgId!);
     res.json(mappings);
   } catch (error) { next(error); }
 });
@@ -126,7 +128,7 @@ router.get('/mappings/audio/:audioFileId', async (req: Request, res: Response, n
 router.get('/mappings/audio/:audioFileId/count', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const audioFileId = parseInt(req.params.audioFileId);
-    const mappings = await mediaService.listMappingsByAudioFile(audioFileId);
+    const mappings = await mediaService.listMappingsByAudioFile(audioFileId, req.orgId!);
     res.json({ count: mappings.length });
   } catch (error) { next(error); }
 });
