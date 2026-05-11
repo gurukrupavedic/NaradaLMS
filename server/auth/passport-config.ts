@@ -4,7 +4,7 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy, type Profile as GoogleProfile } from "passport-google-oauth20";
 import bcrypt from "bcrypt";
 import { identityStorage } from "../modules/identity-access/storage";
-import { config } from '../config';
+import { config } from "../config";
 
 // Configure all passport strategies
 export function configurePassport() {
@@ -17,9 +17,6 @@ export function configurePassport() {
           return done(null, false, { message: "Invalid email or password" }); // S-08 prevent enumeration
         }
 
-        if (user.status === "pending_approval") {
-          return done(null, false, { message: "Your account is awaiting admin approval" });
-        }
         if (user.status === "inactive") {
           return done(null, false, { message: "Your account has been disabled" });
         }
@@ -75,15 +72,40 @@ export function configurePassport() {
                 lastName: profile.name?.familyName,
                 profileImageUrl: profile.photos?.[0]?.value,
                 roles: [],
-                status: "pending_approval",
+                status: "active",
               });
+              const defaultOrg = await identityStorage.getOrganizationBySlug(
+                config.defaultTenantSlug
+              );
+              if (defaultOrg) {
+                await identityStorage.upsertOrgMembership({
+                  userId: user.id,
+                  orgId: defaultOrg.id,
+                  roles: ["student"],
+                  status: "pending",
+                });
+              }
             }
 
-            if (user.status === "pending_approval") {
-              return done(null, false, { message: "Your account is awaiting admin approval" });
-            }
             if (user.status === "inactive") {
               return done(null, false, { message: "Your account has been disabled" });
+            }
+
+            const memberships = await identityStorage.listUserMembershipsWithOrgs(
+              user.id
+            );
+            if (memberships.length === 0) {
+              const defaultOrg = await identityStorage.getOrganizationBySlug(
+                config.defaultTenantSlug
+              );
+              if (defaultOrg) {
+                await identityStorage.upsertOrgMembership({
+                  userId: user.id,
+                  orgId: defaultOrg.id,
+                  roles: ["student"],
+                  status: "pending",
+                });
+              }
             }
 
             return done(null, user);

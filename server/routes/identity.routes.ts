@@ -10,6 +10,7 @@ import { validateRequest } from "../utils/validation";
 import { z } from "zod";
 import { config } from "../config";
 import { catchAsync } from "../utils/catchAsync";
+import { resolveTenantSlugForRequest } from "../modules/identity-access/tenant-context";
 
 // S-06: Rate limiting for auth endpoints
 const authLimiter = rateLimit({
@@ -36,6 +37,7 @@ const registerSchema = z.object({
     password: z.string().min(8),
     firstName: z.string().optional(),
     lastName: z.string().optional(),
+    tenantSlug: z.enum(["slmts", "rr"]).optional(),
   }),
 });
 
@@ -48,7 +50,9 @@ identityRouter.post(
   authLimiter,
   validateRequest(registerSchema),
   catchAsync(async (req: Request, res: Response) => {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, firstName, lastName, tenantSlug } = req.body;
+
+    const resolvedTenant = resolveTenantSlugForRequest(req, tenantSlug);
 
     const result = await identityService.registerUser({
       email,
@@ -56,6 +60,7 @@ identityRouter.post(
       firstName,
       lastName,
       adminEmail: config.adminEmail,
+      tenantSlug: resolvedTenant,
     });
 
     return res.json(result);
@@ -115,6 +120,12 @@ identityRouter.post(
               maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             });
 
+            const memberships =
+              await identityStorage.listUserMembershipsWithOrgs(user.id);
+            const hasActiveMembership = memberships.some(
+              (m) => m.status === "active"
+            );
+
             return res.json({
               user: {
                 id: user.id,
@@ -125,6 +136,15 @@ identityRouter.post(
                 currentOrgId: claims.currentOrgId,
                 orgRoles: claims.orgRoles,
                 orgMembershipStatus: claims.orgMembershipStatus,
+              },
+              loginState: {
+                hasActiveMembership,
+                memberships: memberships.map((m) => ({
+                  orgSlug: m.orgSlug,
+                  orgName: m.orgName,
+                  status: m.status,
+                  roles: m.roles,
+                })),
               },
             });
           } catch (e) {
@@ -197,12 +217,38 @@ identityRouter.post("/logout", (req: Request, res: Response) => {
  * GET /api/auth/me
  * Get current authenticated user
  */
-identityRouter.get("/me", jwtAuth, (req: Request, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({ error: "Not authenticated" });
-  }
-  return res.json({ user: req.user });
-});
+identityRouter.get(
+  "/me",
+  jwtAuth,
+  catchAsync(async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const session = req.user;
+    const profile = await identityStorage.getUser(session.id);
+    const memberships = await identityStorage.listUserMembershipsWithOrgs(
+      session.id
+    );
+    const hasActiveMembership = memberships.some((m) => m.status === "active");
+
+    return res.json({
+      user: {
+        id: session.id,
+        email: session.email,
+        firstName: profile?.firstName ?? undefined,
+        lastName: profile?.lastName ?? undefined,
+        profileImageUrl: profile?.profileImageUrl ?? undefined,
+        isSuperAdmin: session.isSuperAdmin,
+        currentOrgId: session.currentOrgId,
+        orgRoles: session.orgRoles,
+        orgMembershipStatus: session.orgMembershipStatus,
+      },
+      memberships,
+      hasActiveMembership,
+    });
+  })
+);
 
 // ======================
 // Admin Routes

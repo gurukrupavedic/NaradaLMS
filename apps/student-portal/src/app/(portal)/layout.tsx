@@ -1,7 +1,7 @@
 "use client";
 
 import { AppShell, type UserRole } from "@narada/ui";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, type AuthSession } from "@/hooks/useAuth";
 import { LoadingSpinner } from "@narada/ui";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
@@ -44,6 +44,23 @@ export default function PortalLayout({
             router.push("/");
         }
     }, [isLoading, user, router]);
+
+    useEffect(() => {
+        if (isLoading || !user) return;
+        const session = user as AuthSession;
+        const onPendingPage = pathname?.startsWith("/pending-approval");
+        if (session.hasActiveMembership && onPendingPage) {
+            router.replace("/vedic-learning");
+            return;
+        }
+        if (
+            !session.isSuperAdmin &&
+            !session.hasActiveMembership &&
+            !onPendingPage
+        ) {
+            router.replace("/pending-approval");
+        }
+    }, [isLoading, user, pathname, router]);
 
     useEffect(() => {
         if (pathname && !pathname.match(/\/learning\/chapter\/\d+/)) {

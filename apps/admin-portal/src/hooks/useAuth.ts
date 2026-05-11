@@ -25,6 +25,20 @@ export interface AuthUser {
     updatedAt?: string;
 }
 
+export interface MembershipSummary {
+    membershipId: string;
+    orgId: string;
+    orgSlug: string;
+    orgName: string;
+    roles: string[];
+    status: string;
+}
+
+export interface AuthSession extends AuthUser {
+    memberships: MembershipSummary[];
+    hasActiveMembership: boolean;
+}
+
 export function useAuth() {
     const router = useRouter();
     const queryClient = useQueryClient();
@@ -38,7 +52,12 @@ export function useAuth() {
         queryFn: async () => {
             try {
                 const response = await apiRequest("/auth/me");
-                return response.user as AuthUser;
+                const u = response.user as AuthUser;
+                return {
+                    ...u,
+                    memberships: (response.memberships ?? []) as MembershipSummary[],
+                    hasActiveMembership: Boolean(response.hasActiveMembership),
+                } satisfies AuthSession;
             } catch (err: unknown) {
                 const message = err instanceof Error ? err.message : String(err);
                 if (message.includes('401') || message.includes('Unauthorized')) {
@@ -68,7 +87,7 @@ export function useAuth() {
     };
 
     return {
-        user: userData || null,
+        user: (userData as AuthSession | null) || null,
         isLoading,
         isAuthenticated: !!userData,
         logout,

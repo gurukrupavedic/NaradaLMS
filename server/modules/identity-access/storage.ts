@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { organizations, userOrganizations, users } from "@narada/types";
-import { eq, and, or, ilike, sql } from "drizzle-orm";
+import { eq, and, or, ilike, sql, asc } from "drizzle-orm";
 import type { JwtSignClaims, OrgMembershipStatusClaim } from "../../auth/jwt.utils";
 
 /**
@@ -40,14 +40,27 @@ export class IdentityStorage {
 
     const active = membershipRows.filter((r) => r.status === "active");
     let chosen: (typeof membershipRows)[0] | undefined;
-    const slmts = active.find((r) => r.orgSlug === "slmts");
-    if (slmts) {
-      chosen = slmts;
+    const slmtsActive = active.find((r) => r.orgSlug === "slmts");
+    if (slmtsActive) {
+      chosen = slmtsActive;
     } else if (active.length > 0) {
       const sorted = [...active].sort((a, b) =>
         a.orgSlug.localeCompare(b.orgSlug)
       );
       chosen = sorted[0];
+    }
+
+    if (!chosen && membershipRows.length > 0) {
+      const pending = membershipRows.filter((r) => r.status === "pending");
+      const slmtsPending = pending.find((r) => r.orgSlug === "slmts");
+      if (slmtsPending) {
+        chosen = slmtsPending;
+      } else if (pending.length > 0) {
+        const sorted = [...pending].sort((a, b) =>
+          a.orgSlug.localeCompare(b.orgSlug)
+        );
+        chosen = sorted[0];
+      }
     }
 
     const base: JwtSignClaims = {
@@ -63,6 +76,159 @@ export class IdentityStorage {
     }
 
     return base;
+  }
+
+  /**
+   * Lookup organization by canonical slug (`slmts`, `rr`).
+   */
+  async getOrganizationBySlug(
+    slug: string
+  ): Promise<{ id: string; slug: string; name: string } | null> {
+    const [row] = await db
+      .select({
+        id: organizations.id,
+        slug: organizations.slug,
+        name: organizations.name,
+      })
+      .from(organizations)
+      .where(eq(organizations.slug, slug))
+      .limit(1);
+    return row ?? null;
+  }
+
+  /**
+   * All memberships for a user with org metadata (for `/auth/me`).
+   */
+  async listUserMembershipsWithOrgs(userId: string): Promise<
+    {
+      membershipId: string;
+      orgId: string;
+      orgSlug: string;
+      orgName: string;
+      roles: string[];
+      status: string;
+    }[]
+  > {
+    const rows = await db
+      .select({
+        membershipId: userOrganizations.id,
+        orgId: userOrganizations.orgId,
+        orgSlug: organizations.slug,
+        orgName: organizations.name,
+        roles: userOrganizations.roles,
+        status: userOrganizations.status,
+      })
+      .from(userOrganizations)
+      .innerJoin(organizations, eq(organizations.id, userOrganizations.orgId))
+      .where(eq(userOrganizations.userId, userId))
+      .orderBy(asc(organizations.slug));
+
+    return rows.map((r) => ({
+      membershipId: r.membershipId,
+      orgId: r.orgId,
+      orgSlug: r.orgSlug,
+      orgName: r.orgName,
+      roles: [...(r.roles ?? [])],
+      status: r.status,
+    }));
+  }
+
+  /**
+   * Insert or update a single org membership row (register / OAuth bootstrap).
+   */
+  async upsertOrgMembership(params: {
+    userId: string;
+    orgId: string;
+    roles: string[];
+    status: "pending" | "active" | "inactive" | "rejected";
+    approvedAt?: Date | null;
+    approvedBy?: string | null;
+  }): Promise<void> {
+    const now = new Date();
+    await db
+      .insert(userOrganizations)
+      .values({
+        userId: params.userId,
+        orgId: params.orgId,
+        roles: params.roles,
+        status: params.status,
+        requestedAt: now,
+        approvedAt: params.approvedAt ?? null,
+        approvedBy: params.approvedBy ?? null,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [userOrganizations.userId, userOrganizations.orgId],
+        set: {
+          roles: params.roles,
+          status: params.status,
+          approvedAt: params.approvedAt ?? null,
+          approvedBy: params.approvedBy ?? null,
+          updatedAt: now,
+        },
+      });
+  }
+
+  /**
+   * Create a local user and one org membership in a single transaction.
+   */
+  async registerLocalUserWithOrgMembership(input: {
+    email: string;
+    passwordHash: string;
+    firstName: string | null;
+    lastName: string | null;
+    legacyRoles: string[];
+    legacyStatus: "active" | "pending_approval";
+    isSuperAdmin?: boolean;
+    orgId: string;
+    membershipStatus: "pending" | "active";
+    membershipRoles: string[];
+    membershipApprovedAt?: Date | null;
+    /** When true, sets `approved_by` to the new user id (bootstrap admin self-approval). */
+    membershipSelfApproved?: boolean;
+    membershipApprovedByUserId?: string | null;
+  }): Promise<{ id: string; email: string; status: string }> {
+    const now = new Date();
+    return db.transaction(async (tx) => {
+      const [user] = await tx
+        .insert(users)
+        .values({
+          email: input.email,
+          passwordHash: input.passwordHash,
+          provider: "local",
+          firstName: input.firstName,
+          lastName: input.lastName,
+          roles: input.legacyRoles,
+          status: input.legacyStatus,
+          isSuperAdmin: input.isSuperAdmin ?? false,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning({ id: users.id, email: users.email, status: users.status });
+
+      if (!user) {
+        throw new Error("Failed to create user");
+      }
+
+      const approvedBy = input.membershipSelfApproved
+        ? user.id
+        : input.membershipApprovedByUserId ?? null;
+
+      await tx.insert(userOrganizations).values({
+        userId: user.id,
+        orgId: input.orgId,
+        roles: input.membershipRoles,
+        status: input.membershipStatus,
+        requestedAt: now,
+        approvedAt: input.membershipApprovedAt ?? null,
+        approvedBy,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      return user;
+    });
   }
 
   /**

@@ -282,17 +282,20 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
         try {
             await apiRequest("/auth/register", {
                 method: "POST",
+                headers: { "X-Tenant-Slug": "slmts" },
                 body: JSON.stringify({
                     email: formData.email.toLowerCase(),
                     password: formData.password,
                     firstName: formData.firstName,
                     lastName: formData.lastName,
+                    tenantSlug: "slmts",
                 }),
             });
 
             toast({
                 title: "Account created",
-                description: "Please login with your new credentials."
+                description:
+                    "Your membership is pending approval. You can sign in to check status.",
             });
             onSuccess(formData.email);
         } catch (err: any) {
