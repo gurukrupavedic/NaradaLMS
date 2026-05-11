@@ -41,7 +41,7 @@ Do not start this block until [legacy-users-columns-cleanup.md](./legacy-users-c
 
 ## 2) Layer 2 — Auth, JWT, governance APIs
 
-**Roadmap `2.5` follow-up (after `2.9` / `2.10`):** align governance event contracts and audit subscribers around membership-first semantics. Membership events should carry `actorUserId`, `targetUserId`, `membershipId`, `orgId`, and `timestamp`; platform-scoped super-admin events should omit `orgId`. Defer physical `audit_logs.org_id` schema work to Layer `3.B.1`.
+**Roadmap `2.5` follow-up (after `2.9` / `2.10`):** align governance event contracts and audit subscribers around membership-first semantics. Membership events should carry `actorUserId`, `targetUserId`, `membershipId`, `orgId`, and `timestamp`; platform-scoped super-admin events should omit `orgId`. Physical `audit_logs.org_id` persistence is now landed as part of Layer `3.B`.
 
 - **2.1** Update `JWTPayload` / `generateToken` / `verifyToken` for new claims ([api-contract-changes.md](./api-contract-changes.md)).
 - **2.2** Update `server/shared/types.ts` `Express.User` augmentation.
@@ -70,9 +70,9 @@ Pass A is implemented in slice `slice-3.a-core-org-isolation` and should now be 
 
 ### Pass B
 
-- **3.B.1** Add `org_id` to `audio_files`, `text_segments`, `media_segments`, `segment_mappings`, `student_progress`, `proficiency_evaluation_log`, `audit_logs` (nullable on `audit_logs` for platform actions).
-- **3.B.2** Backfill; enforce NOT NULL where required; add indexes on `org_id`.
-- **3.B.3** Update remaining handlers for org filters; fix `student_progress` / enrollment uniqueness if org-scoping demands it.
+- [x] **3.B.1** Add `org_id` to `audio_files`, `text_segments`, `media_segments`, `segment_mappings`, `student_progress`, `proficiency_evaluation_log`, `audit_logs` (nullable on `audit_logs` for platform actions).
+- [x] **3.B.2** Backfill; enforce NOT NULL where required; add indexes on `org_id`.
+- [x] **3.B.3** Update remaining handlers for org filters; finish Pass B media/content/progress/audit isolation and settle the runtime enrollment rule as one active enrollment per org.
 
 ---
 
