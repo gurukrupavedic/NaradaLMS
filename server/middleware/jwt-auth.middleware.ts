@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyToken, type JWTPayload } from '../auth/jwt.utils';
 import '../shared/types';
+import { attachOrgContext } from '../shared/middleware/org-context';
 
 export interface AuthenticatedRequest extends Request {
     user?: JWTPayload;
@@ -24,7 +25,7 @@ export function jwtAuth(req: AuthenticatedRequest, res: Response, next: NextFunc
     //Attach user to request - matches Express.User and our AuthenticatedRequest
     req.user = payload;
 
-    next();
+    return attachOrgContext(req, res, next);
 }
 
 export function optionalJwtAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
@@ -35,6 +36,7 @@ export function optionalJwtAuth(req: AuthenticatedRequest, res: Response, next: 
 
         if (payload) {
             req.user = payload;
+            return attachOrgContext(req, res, next);
         }
     }
 

@@ -29,6 +29,7 @@
 | ----- | ------- | --------- |
 | **2.1** JWT + Express typing | JWT claims: `isSuperAdmin`, `currentOrgId`, `orgRoles`, `orgMembershipStatus` (no global `roles`/`status` in token). `verifyToken` rejects legacy token shape. Default org in token: prefer **active** `slmts`, else first active by slug; if none, prefer **pending** `slmts`, else first pending by slug. | [`server/auth/jwt.utils.ts`](../../../server/auth/jwt.utils.ts), [`server/shared/types.ts`](../../../server/shared/types.ts), [`server/modules/identity-access/storage.ts`](../../../server/modules/identity-access/storage.ts) (`getJwtSignClaimsForUser`), [`server/routes/identity.routes.ts`](../../../server/routes/identity.routes.ts), [`server/shared/middleware/auth.ts`](../../../server/shared/middleware/auth.ts), portals `useAuth` / role guards |
 | **2.2** Login / register (membership-first) | Register creates **`user_organizations`** row (`pending`, roles `['student']`) for tenant from **`X-Tenant-Slug`**, optional body `tenantSlug`, or **`DEFAULT_TENANT_SLUG`** / `slmts` ([`server/config.ts`](../../../server/config.ts), [`.env.example`](../../../.env.example)). New self-serve users: `users.status = **active**`, legacy `roles = []` (access governed by membership). **Admin email** path: active user + **active** SLMTS membership (`student`+`admin`, self-approved). Passport **does not** block local login on `pending_approval` alone; still blocks **inactive**. Google: new users `active` + pending org on `defaultTenantSlug`; existing users with **no** memberships get a pending row backfilled. **Login** returns `loginState` (`hasActiveMembership`, membership summaries). **`GET /api/auth/me`** returns session user + `memberships[]` + `hasActiveMembership`. Student portal: **`/pending-approval`** when authenticated, not super-admin, and no active membership. | [`server/modules/identity-access/tenant-context.ts`](../../../server/modules/identity-access/tenant-context.ts), [`server/auth/passport-config.ts`](../../../server/auth/passport-config.ts), [`server/modules/identity-access/service.ts`](../../../server/modules/identity-access/service.ts), [`server/routes/identity.routes.ts`](../../../server/routes/identity.routes.ts), [`apps/student-portal/src/app/(portal)/pending-approval/page.tsx`](../../../apps/student-portal/src/app/(portal)/pending-approval/page.tsx), [`apps/student-portal/src/app/(portal)/layout.tsx`](../../../apps/student-portal/src/app/(portal)/layout.tsx) |
+| **2.3** Org context + switch-org | **`req.orgId`** set from JWT `currentOrgId` on every `jwtAuth` / `optionalJwtAuth` success via [`attachOrgContext`](../../../server/shared/middleware/org-context.ts). **`requireOrgContext`** returns **403** when `req.orgId` is missing (for Layer 3 composition). **`POST /api/auth/switch-org`** (body `orgId`): requires **active** `user_organizations` row for that org; otherwise **403**; reissues `auth_token` with `currentOrgId` / `orgRoles` / `orgMembershipStatus`. [`getJwtSignClaimsForUser`](../../../server/modules/identity-access/storage.ts) accepts optional `{ targetOrgId }` for switch vs default-org selection. | [`server/middleware/jwt-auth.middleware.ts`](../../../server/middleware/jwt-auth.middleware.ts), [`server/shared/middleware/org-context.ts`](../../../server/shared/middleware/org-context.ts), [`server/shared/types.ts`](../../../server/shared/types.ts), [`server/modules/identity-access/storage.ts`](../../../server/modules/identity-access/storage.ts), [`server/routes/identity.routes.ts`](../../../server/routes/identity.routes.ts) |
 
 ---
 
@@ -39,7 +40,8 @@
 3. **Login** succeeds for valid credentials unless user is **inactive**; pending **membership** does not block login.
 4. **`/api/auth/me`** is the source for portals: use `hasActiveMembership` and `memberships`, not only JWT fields.
 5. **Super-admin** without any org membership still bypasses `requireRole` via `isSuperAdmin` on the server; student UI also skips the pending gate for `isSuperAdmin`.
-6. **Admin “pending users” UI** that filters on `users.status === pending_approval` will **not** list new self-serve signups (they are `active` with **pending membership**). Membership approval APIs and grid filters are **checklist 2.9 / 5.x** — not done yet.
+6. **`POST /api/auth/switch-org`** only succeeds when the target **`orgId`** has an **active** membership; pending orgs return **403**. Authenticated requests that ran through **`jwtAuth`** expose **`req.orgId`** (mirror of JWT `currentOrgId`).
+7. **Admin “pending users” UI** that filters on `users.status === pending_approval` will **not** list new self-serve signups (they are `active` with **pending membership**). Membership approval APIs and grid filters are **checklist 2.9 / 5.x** — not done yet.
 
 ---
 
@@ -47,9 +49,7 @@
 
 | Area | Checklist / roadmap | Notes |
 | ---- | -------------------- | ----- |
-| `req.orgId` middleware | **2.3** | JWT has `currentOrgId`; Express does not yet attach `req.orgId` for handlers. |
 | `requireOrgRole` / `requireSuperAdmin` split | **2.4** | Today `requireRole` checks `orgRoles` and super-admin bypasses; formal rename/split is optional cleanup. |
-| **`POST /api/auth/switch-org`** | **2.8** roadmap **2.3** | Next natural slice after 2.2 for multi-org admins. |
 | Super-admin-only governance + membership approve/reject | **2.9–2.11** | Legacy `/api/auth/admin/*` still uses global `users` status/roles for listing and approve flows where applicable. |
 | Slice **1.4-contract** | **1.4-contract** | Blocked until [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is fully cleared. |
 | Layer 3 `org_id` on content/batches/etc. | **3.x** | Not started. |
@@ -61,7 +61,7 @@
 
 - **Typecheck:** `npm run check` (root `tsc`).
 - **DB:** After migrations, `npm run db:seed-orgs` then `npm run db:seed-dev` (see [README.md](./README.md) seed order).
-- **Smoke (optional, server running):** `npx tsx scripts/test/api-smoke-test.ts` — auth section expects register with pending membership and **login 200** with `loginState.hasActiveMembership === false`.
+- **Smoke (optional, server running):** `npx tsx scripts/test/api-smoke-test.ts` — auth section expects register with pending membership and **login 200** with `loginState.hasActiveMembership === false`; when seeded admin login succeeds, exercises **`POST /api/auth/switch-org`** (403 pending RR, 200 active SLMTS).
 
 ---
 

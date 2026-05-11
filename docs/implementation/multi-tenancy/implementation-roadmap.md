@@ -14,8 +14,8 @@ References:
 The following **roadmap slices are implemented and merged** unless your checkout is behind `origin/multi-tenancy`:
 
 - **Layer 1:** 1.1 schema expand (orgs + memberships + `is_super_admin`), 1.2 seed orgs, 1.3 dev bootstrap. **Not** slice 1.4 contract (legacy `users.roles` / `users.status` still in DB).
-- **Layer 2:** **2.1** JWT / Express typing; **2.2** membership-first register/login, Passport, enriched `/me`, student pending-approval UX.
-- **Next up:** roadmap **2.3** org switch (`POST /api/auth/switch-org`) and/or checklist **2.3** `req.orgId` middleware — see [implementation-status.md](./implementation-status.md) for details and ordering notes.
+- **Layer 2:** **2.1** JWT / Express typing; **2.2** membership-first register/login, Passport, enriched `/me`, student pending-approval UX; **2.3** `req.orgId` from JWT + `POST /api/auth/switch-org` (active membership only).
+- **Next up:** roadmap **2.4** super-admin-only user governance APIs (**checklist 2.9–2.11**) — see [implementation-status.md](./implementation-status.md).
 
 ---
 
