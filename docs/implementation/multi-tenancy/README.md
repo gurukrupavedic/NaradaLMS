@@ -1,8 +1,8 @@
 # Multi-Tenancy Implementation Docs
 
-This folder is the source of truth for the upcoming multi-tenancy and chameleonization implementation.
+This folder is the source of truth for the ongoing multi-tenancy and chameleonization rollout on branch `multi-tenancy`.
 
-It captures the finalized product and architecture decisions before coding, then breaks implementation into a predictable execution path.
+It captures both the locked product/architecture decisions and the current as-built execution state, so a new chat can resume from what is already merged rather than treating this work as pre-implementation planning.
 
 ---
 
@@ -11,6 +11,15 @@ It captures the finalized product and architecture decisions before coding, then
 1. Read **[implementation-status.md](./implementation-status.md)** — what is already merged to `multi-tenancy`, current behavior, gaps, and the distinction between the next **foundational** slice and the next **small ready** slice.
 2. Follow **[implementation-roadmap.md](./implementation-roadmap.md)** and **[implementation-checklist.md](./implementation-checklist.md)** for execution order.
 3. Use **[verification-strategy.md](./verification-strategy.md)** before marking checklist items done.
+
+### Current merged baseline
+
+- Layer **1** expand/seed/bootstrap is merged.
+- Layer **2** slices **2.1–2.5** are merged.
+- Layer **3** Pass A and Pass B isolation are merged.
+- Student Layer **4.1 / 4.2** tenant-config and authenticated shell branding work are merged.
+- Admin **5.1**, **5.3**, and **5.4** are merged.
+- Default next slice is **5.2** (admin user-management org filter UI).
 
 ---
 
@@ -28,7 +37,7 @@ It captures the finalized product and architecture decisions before coding, then
 
 ---
 
-## Current Wave
+## Current doc set
 
 These Wave 1 foundation docs are now available:
 

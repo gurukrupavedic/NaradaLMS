@@ -4,7 +4,7 @@
 
 **Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
 
-**Last updated:** Reflects Layer **1** (expand), Layer **2** roadmap slices **2.1–2.5**, Layer **3 Pass A** and **Pass B**, checklist **5.3**, Layer **4.1** tenant-config foundation, and the authenticated student-shell branding follow-up on `multi-tenancy`.
+**Last updated:** Reflects Layer **1** (expand/seed/bootstrap), Layer **2** roadmap slices **2.1–2.5**, Layer **3** Pass A and Pass B, student Layer **4.1 / 4.2**, and admin checklist **5.1**, **5.3**, and **5.4** on `multi-tenancy`.
 
 ---
 
@@ -32,7 +32,7 @@
 
 | Roadmap / checklist | What was delivered |
 | ------------------- | ------------------- |
-| **1.1–1.4** (expand) | `organizations`, `user_organizations`, `users.is_super_admin`; legacy `users.roles` / `users.status` **still present** (expand–contract). Drizzle schema in `@narada/types`; SQL under repo root [`migrations/`](../../../migrations/) (e.g. org tables in generated migrations). |
+| **1.1–1.3** (expand / seed / bootstrap) | `organizations`, `user_organizations`, `users.is_super_admin`; legacy `users.roles` / `users.status` **still present** (expand–contract). Drizzle schema in `@narada/types`; SQL under repo root [`migrations/`](../../../migrations/) (e.g. org tables in generated migrations). |
 | **1.5** | `npm run db:seed-orgs` — orgs `slmts`, `rr`. See [`server/seed-organizations.ts`](../../../server/seed-organizations.ts). |
 | **1.6** | `npm run db:seed-dev` — super-admin for `ADMIN_EMAIL`, SLMTS active + RR **pending** memberships. See [`server/seed-dev-bootstrap.ts`](../../../server/seed-dev-bootstrap.ts). Requires `ADMIN_EMAIL`; new super-admin creation needs `DEV_SUPERADMIN_PASSWORD` (see script / `.env.example`). |
 

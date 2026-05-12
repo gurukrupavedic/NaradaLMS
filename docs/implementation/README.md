@@ -1,84 +1,128 @@
 # Implementation: Multi-Tenancy & Chameleonization
 
-**Active Goal**: Make NaradaLMS a multi-tenant, white-label platform.
+**Active goal:** Continue the multi-tenancy rollout on branch `multi-tenancy`, with the default next slice now the admin user-management org filter follow-up (`5.2`).
 
-**Execution & planning (multi-tenancy)**: [multi-tenancy/README.md](./multi-tenancy/README.md)
+**Execution & handoff:** [multi-tenancy/README.md](./multi-tenancy/README.md) and especially [multi-tenancy/implementation-status.md](./multi-tenancy/implementation-status.md)
 
-**Archive**: Previous implementation docs (Stages 0–1, hardening, code-cleanup, reshuffle) are in `docs/archive/rearchitecture-stages-0-1/`.
+**Archive:** Previous implementation docs (Stages 0–1, hardening, code-cleanup, reshuffle) are in `docs/archive/rearchitecture-stages-0-1/`.
 
 ---
 
-## As-Built Baseline (current state of the codebase)
+## Current As-Built Baseline
 
 ### Architecture
 
+| Component | Location | Runtime |
+| --------- | -------- | ------- |
+| **API** | `server/` | Express on port `5000` |
+| **Student Portal** | `apps/student-portal/` | Next.js 15 App Router, tenant-aware local instances on `3000` (SLMTS) and `3010` (RR) |
+| **Admin Portal** | `apps/admin-portal/` | Next.js 15 App Router on `3001` |
 
-| Component          | Location               | Runtime                          |
-| ------------------ | ---------------------- | -------------------------------- |
-| **API**            | `server/` (repo root)  | Express on port 5000             |
-| **Student Portal** | `apps/student-portal/` | Next.js 15 App Router, port 3000 |
-| **Admin Portal**   | `apps/admin-portal/`   | Next.js 15 App Router, port 3001 |
+The repo is orchestrated by **Turborepo** (`turbo.json`) with **npm workspaces** across `apps/*` and `packages/*`.
 
+### Shared Packages
 
-Orchestrated by **Turborepo** (`turbo.json`) with **npm workspaces** (`apps/`*, `packages/`*).
+| Package | Purpose |
+| ------- | ------- |
+| `@narada/types` | Drizzle schema, Zod schemas, shared types/constants |
+| `@narada/ui` | Shared components, `AppShell`, `BrandHeader`, theme support, Tiptap editor |
+| `@narada/api-client` | `apiRequest()` wrapper with CSRF + cookie forwarding support |
+| `@narada/tailwind-config` | Shared Tailwind preset |
+| `@narada/eslint-config` | Shared ESLint config |
+| `@narada/typescript-config` | Shared TypeScript base configs |
 
-### Packages
+### Multi-Tenancy Progress Snapshot
 
+The codebase is no longer at a pre-tenancy baseline. As of `multi-tenancy`:
 
-| Package                     | Purpose                                                                                                 |
-| --------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `@narada/types`             | Drizzle schema, Zod schemas, shared types/constants                                                     |
-| `@narada/ui`                | Shared components (shadcn-style), AppShell, BrandHeader, ThemeProvider (dark/light only), Tiptap editor |
-| `@narada/api-client`        | `apiRequest()` with CSRF + cookie forwarding for SSR                                                    |
-| `@narada/tailwind-config`   | Shared Tailwind preset                                                                                  |
-| `@narada/eslint-config`     | Shared ESLint config                                                                                    |
-| `@narada/typescript-config` | Shared TS base configs                                                                                  |
+- **Layer 1** expand/seed/bootstrap is in place:
+  - `organizations`
+  - `user_organizations`
+  - `users.is_super_admin`
+- **Layer 2** slices `2.1`–`2.5` are merged:
+  - membership-first auth
+  - JWT org context
+  - `/api/auth/switch-org`
+  - super-admin governance APIs
+  - governance event/audit alignment
+- **Layer 3** Pass A and Pass B are merged:
+  - physical `org_id` coverage across core, media, progress, and audit tables
+  - org-scoped query/handler enforcement
+- **Layer 4** student portal foundation plus shell-branding follow-up are merged:
+  - typed tenant config for `slmts` / `rr`
+  - tenant-branded auth form area, root metadata, authenticated shell, and pending page
+  - shared Narada branding intentionally preserved on the left auth hero
+- **Admin portal** `5.1`, `5.3`, and `5.4` are in place:
+  - super-admin user-management gate
+  - org switcher
+  - governance route restrictions for org admins
 
+Use [multi-tenancy/implementation-status.md](./multi-tenancy/implementation-status.md) for the detailed slice-by-slice handoff.
 
-### Authentication
+### Authentication And Session Model
 
-- **Passport.js** with Local (email/password) and Google OAuth strategies, `session: false`.
-- **JWT** in HttpOnly cookie (`auth_token`), HS256, issuer `narada-lms`.
-- Payload: `{ userId, email, roles, status }`.
-- **CSRF**: Double-submit via `csrf-csrf`; state-changing requests require `X-CSRF-Token`.
-- Role guards: `requireAdmin`, `requireInstructor` in `server/shared/middleware/auth.ts`.
+- **Passport.js** supports Local (email/password) and Google OAuth strategies, `session: false`.
+- **JWT** lives in the HttpOnly `auth_token` cookie.
+- JWT/session context is now membership-aware:
+  - `isSuperAdmin`
+  - `currentOrgId`
+  - `orgRoles`
+  - optional `orgMembershipStatus`
+- **`GET /api/auth/me`** returns the session user plus `memberships[]` and `hasActiveMembership`.
+- **CSRF** still uses the double-submit pattern via `csrf-csrf`.
 
-### Roles
+### Roles And Authority
 
-Three roles (text array on `users` table): **admin**, **instructor**, **student**.
+- Global authority is `users.is_super_admin`.
+- Org-scoped roles live on `user_organizations.roles`:
+  - `admin`
+  - `instructor`
+  - `student`
+- Org-scoped membership status also lives on `user_organizations`.
+- Legacy `users.roles` / `users.status` still physically exist and remain tracked for the deferred `1.4` contract slice.
 
-### Database (Single-Tenant)
+### Database And Isolation
 
 Schema lives in `packages/types/src/schema.ts` (Drizzle + PostgreSQL).
 
-**Tables**: `users`, `tracks`, `chapters`, `audio_files`, `text_segments`, `media_segments`, `segment_mappings`, `batches`, `enrollments`, `batch_co_instructors`, `student_progress`, `proficiency_evaluation_log`, `audit_logs`, `system_settings`.
+The platform now has:
 
-**No organization, tenant, or theme tables exist yet.**
+- `organizations`
+- `user_organizations`
+- physical `org_id` scoping on the core tenant-owned tables, including:
+  - `tracks`, `chapters`, `batches`, `enrollments`
+  - `audio_files`, `text_segments`, `media_segments`, `segment_mappings`
+  - `student_progress`, `proficiency_evaluation_log`, `audit_logs`
 
-### Theming (current)
+`system_settings` remains global for this phase.
 
-- `next-themes` provides dark/light mode toggle only.
-- Branding assets (logos, patterns) are hardcoded in `@narada/ui` and per-app `src/assets/branding/`.
-- No runtime theming per organization.
+### Branding And Portal Behavior
+
+- **Student portal** is white-labeled by tenant config.
+- **Admin portal** remains Narada-branded.
+- Student branding is intentionally split:
+  - auth page **left hero** stays Narada-branded across tenants
+  - auth form area, metadata, authenticated shell, and pending page are tenant-branded
+- There is still **no DB-backed theming system** or theme editor in this phase.
 
 ### File Uploads
 
-- Local filesystem (`./uploads`), served via Express static middleware.
-- Both portals proxy `/uploads` to the API server via Next.js rewrites.
+- Uploads still use the local filesystem (`./uploads`) served by Express.
+- Both portals proxy `/uploads` to the API server through Next rewrites.
 
-### Config
+### Configuration And Local Dev
 
-- `server/config.ts`: env, host, port, frontendUrl, corsOrigins, database.url, jwt.secret/expiry, uploads.dir/maxSize, Google OAuth, adminEmail.
+- `server/config.ts` handles env, host, port, frontend URL, CORS origins, database URL, JWT config, upload config, Google OAuth, admin email, and `DEFAULT_TENANT_SLUG`.
+- Student portal tenant selection is driven by `TENANT`, with client-runtime mirroring handled in `next.config.ts`.
+- Student portal local dev now supports side-by-side tenant instances and tenant-specific Next build output directories to avoid collisions.
 - Portals use `NEXT_PUBLIC_API_URL` for API calls.
 
-### Key Decisions Already Made
+### Key Decisions Still In Force
 
-These carry forward from completed Stages 0–1:
-
-1. **Build Once, Deploy Many** — one Docker image per app, configured at runtime via env vars.
-2. **Runtime config injection** — not per-org rebuilds (env vars + React Context).
-3. **CSS variables for semantic theming** — `--primary` tokens, not hardcoded Tailwind classes.
-4. **Users can belong to multiple orgs** — junction table, not a single `orgId` column on `users`.
-5. **Gatekeeper middleware pattern** — every protected request must carry org context.
-6. **Local uploads now, S3 later** — cloud storage when needed for scale.
+1. **Build once, deploy many** — runtime configuration, not per-tenant code forks.
+2. **Backend-first sequencing** — schema -> server -> API -> UI.
+3. **Global identity with per-org membership** — one user can belong to multiple orgs.
+4. **Strict org isolation** — tenant-owned rows and routes must carry org context.
+5. **Super-admin-only governance** — user approvals and role/membership management stay centralized.
+6. **Local uploads now, cloud storage later** — S3/object storage remains a later operational concern.
 
