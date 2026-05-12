@@ -4,7 +4,7 @@
 
 **Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
 
-**Last updated:** Reflects Layer **1** (expand), Layer **2** roadmap slices **2.1–2.5**, Layer **3 Pass A** and **Pass B**, plus checklist **5.3** through merge commit `8353f173` on `multi-tenancy`.
+**Last updated:** Reflects Layer **1** (expand), Layer **2** roadmap slices **2.1–2.5**, Layer **3 Pass A** and **Pass B**, checklist **5.3**, and the Pass B docs/verification closeout through merge commit `a0462f8e` on `multi-tenancy`.
 
 ---
 
@@ -19,6 +19,7 @@
   - `slice-3b-schema-foundation` — Pass B schema/backfill foundation for media, progress, and audit tables
   - `slice-3b-media-isolation` — Pass B media/content runtime org isolation
   - `slice-3b-progress-audit-isolation` — Pass B progress/audit runtime isolation and event wiring
+  - `slice-3b-docs-verification` — Pass B docs refresh plus merged-baseline verification closeout
   - `slice-5.3-admin-org-switcher` — admin shell org switcher + auth/query refresh behavior
 
 ---
@@ -163,7 +164,7 @@ Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` afte
 
 When continuing in a brand-new chat, do this first:
 
-1. Confirm checkout is on **`multi-tenancy`** and includes merge commit **`8353f173`** or later.
+1. Confirm checkout is on **`multi-tenancy`** and includes merge commit **`a0462f8e`** or later.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
 3. Default to **Layer 4** next, unless you intentionally want the smaller admin **5.2** follow-up first.
 4. Keep **2.12** deferred unless Google OAuth becomes product scope; if you do touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.

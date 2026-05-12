@@ -166,7 +166,7 @@ Then drop the legacy columns and CHECK in one small migration and re-verify fres
 ## Branching suggestion
 
 - Long-lived: `multi-tenancy`
-- Slice branches: `slice-1.1-org-schema`, `slice-1.2-seed-orgs`, `slice-1.3-dev-bootstrap`, `slice-1.4-schema-contract` (after Layer 2), `slice-2.1-jwt-payload`, `slice-2.2-login-register`, `slice-2.3-switch-org` (suggested next), etc.
+- Slice branches: `slice-1.1-org-schema`, `slice-1.2-seed-orgs`, `slice-1.3-dev-bootstrap`, `slice-1.4-schema-contract` (after Layer 2), `slice-2.1-jwt-payload`, `slice-2.2-login-register`, `slice-4.1-tenant-config`, etc.
 - Merge to long-lived branch after each slice verification (see [verification-strategy.md](./verification-strategy.md)).
 
 ---
