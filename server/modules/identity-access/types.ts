@@ -3,15 +3,27 @@
  */
 
 export type UserRole = "admin" | "instructor" | "student";
-export type UserStatus = "pending_approval" | "active" | "inactive";
+export type MembershipStatus = "pending" | "active" | "inactive" | "rejected";
+
+export interface UserMembership {
+  membershipId: string;
+  orgId: string;
+  orgSlug: string;
+  orgName: string;
+  roles: UserRole[];
+  status: MembershipStatus;
+}
 
 export interface User {
   id: string;
   email: string;
   firstName: string | null;
   lastName: string | null;
-  roles: UserRole[];
-  status: UserStatus;
+  isSuperAdmin: boolean;
+  currentOrgId?: string;
+  orgRoles?: UserRole[];
+  orgMembershipStatus?: MembershipStatus;
+  memberships?: UserMembership[];
   provider: string;
   providerId?: string | null;
   profileImageUrl?: string | null;
@@ -29,15 +41,4 @@ export interface RegisterRequest {
 export interface LoginRequest {
   email: string;
   password: string;
-}
-
-export interface ApproveUserRequest {
-  userId: string;
-  approvedBy: string;
-}
-
-export interface AssignRolesRequest {
-  userId: string;
-  roles: UserRole[];
-  changedBy: string;
 }

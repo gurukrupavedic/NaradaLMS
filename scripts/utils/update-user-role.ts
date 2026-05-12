@@ -11,10 +11,17 @@ async function updateUserRole() {
   try {
     await client.connect();
     const result = await client.query(
-      `UPDATE users 
-       SET roles = ARRAY['admin']::text[] 
-       WHERE email = $1 
-       RETURNING email, roles`,
+      `UPDATE user_organizations uo
+       SET roles = ARRAY['student', 'admin']::text[],
+           status = 'active',
+           approved_at = COALESCE(uo.approved_at, NOW()),
+           updated_at = NOW()
+       FROM users u
+       JOIN organizations o ON o.slug = 'slmts'
+       WHERE uo.user_id = u.id
+         AND uo.org_id = o.id
+         AND u.email = $1
+       RETURNING u.email, o.slug AS org_slug, uo.roles`,
       ['kashyap.kuchipudi@gmail.com']
     );
     

@@ -6,6 +6,4 @@ export const CURRICULUM_IMPORT_ACTOR_PROFILE = {
   email: CURRICULUM_IMPORT_ACTOR_EMAIL,
   firstName: "Curriculum",
   lastName: "Import",
-  roles: ["admin"] as string[],
-  status: "active" as const,
 };

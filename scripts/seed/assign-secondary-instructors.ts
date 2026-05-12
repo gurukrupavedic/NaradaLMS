@@ -12,6 +12,16 @@ async function assignSecondaryInstructors() {
     await client.connect();
     console.log('🔗 Connected to database');
 
+    const orgResult = await client.query(
+      "SELECT id FROM organizations WHERE slug = 'slmts' LIMIT 1"
+    );
+    const orgId = orgResult.rows[0]?.id;
+
+    if (!orgId) {
+      console.error("❌ SLMTS organization not found. Run db:seed-orgs first.");
+      return;
+    }
+
     // Get all batches created in the last few minutes (or all batches with these codes)
     const batchResult = await client.query(
       `SELECT id FROM batches WHERE batch_code IN ('BR01', 'GR01', 'BR02', 'GR02', 'BR03', 'GR03', 'BR04', 'GR04', 'BR05', 'GR05') ORDER BY id`
@@ -26,7 +36,17 @@ async function assignSecondaryInstructors() {
 
     // Get all available instructors
     const instructorResult = await client.query(
-      "SELECT id FROM users WHERE roles && ARRAY['instructor'::text] OR email = 'kashyap.kuchipudi@gmail.com' ORDER BY id"
+      `SELECT DISTINCT u.id
+       FROM users u
+       LEFT JOIN user_organizations uo ON uo.user_id = u.id
+       WHERE (
+         uo.org_id = $1
+         AND uo.status = 'active'
+         AND uo.roles && ARRAY['instructor'::text, 'admin'::text]
+       )
+       OR u.email = 'kashyap.kuchipudi@gmail.com'
+       ORDER BY id`,
+      [orgId]
     );
     const instructorIds = instructorResult.rows.map(r => r.id);
     console.log(`👨‍🏫 Found ${instructorIds.length} instructors`);

@@ -22,8 +22,8 @@ const DEFAULT_FIRST = "Dev";
 const DEFAULT_LAST = "SuperAdmin";
 
 /**
- * Idempotent dev seed: super-admin for `ADMIN_EMAIL`, legacy roles/status for current auth,
- * and minimal `user_organizations` rows (SLMTS active, RR pending).
+ * Idempotent dev seed: super-admin for `ADMIN_EMAIL` plus minimal
+ * `user_organizations` rows (SLMTS active, RR pending).
  * Run after `npm run db:seed-orgs`.
  */
 export async function seedDevBootstrap(): Promise<void> {
@@ -80,8 +80,6 @@ export async function seedDevBootstrap(): Promise<void> {
         lastName,
         passwordHash,
         provider: "local",
-        roles: ["admin", "student", "instructor"],
-        status: "active",
         isSuperAdmin: true,
         approvedAt: now,
         approvedBy: null,
@@ -97,19 +95,12 @@ export async function seedDevBootstrap(): Promise<void> {
     console.log(`  created user for ${adminEmail}`);
   } else {
     userId = existing.id;
-    const mergedRoles = Array.from(
-      new Set([...(existing.roles ?? []), "admin", "student"])
-    );
     const updates: {
       isSuperAdmin: boolean;
-      status: "active";
-      roles: string[];
       updatedAt: Date;
       passwordHash?: string;
     } = {
       isSuperAdmin: true,
-      status: "active",
-      roles: mergedRoles,
       updatedAt: now,
     };
 

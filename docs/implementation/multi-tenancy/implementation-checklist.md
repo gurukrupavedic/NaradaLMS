@@ -18,11 +18,11 @@ Mark items done only when verification for that slice passes (see [verification-
 
 ## 1) Layer 1 — Tenant foundation (schema)
 
-Layer 1 uses an **expand–contract** pattern so `multi-tenancy` stays buildable at every merge:
+Layer 1 used an **expand–contract** pattern so `multi-tenancy` could stay buildable at every merge:
 
 1. **Expand (slice `slice-1.1-org-schema`):** add `organizations`, `user_organizations`, and `users.is_super_admin` only. Keep legacy `users.roles` / `users.status` (and `users_status_check`) until application code no longer reads them.
 2. **Migrate (Layer 2):** move auth, JWT, routes, and portals to membership + `is_super_admin`. Track every remaining legacy reference in [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) until every row in that tracker is checked.
-3. **Contract (slice `slice-1.4-schema-contract`, after Layer 2):** drop `users.roles`, `users.status`, and `users_status_check` in a dedicated slice once the cleanup tracker is clear.
+3. **Contract (slice `slice-1.4-schema-contract`, after Layer 2):** drop `users.roles`, `users.status`, and `users_status_check` in a dedicated slice once the cleanup tracker is clear. This contract work is now complete on the slice branch.
 
 - **1.1** Add `organizations` table (additive; see [schema-design.md](./schema-design.md)). *(Drizzle in `@narada/types`; SQL under repo `migrations/`.)*
 - **1.2** Add `user_organizations` table with unique `(user_id, org_id)`, status + roles columns (additive).
@@ -31,11 +31,11 @@ Layer 1 uses an **expand–contract** pattern so `multi-tenancy` stays buildable
 - **1.5** Seed `slmts` and `rr` org rows + document slugs (`npm run db:seed-orgs`; [server/seed-organizations.ts](../../../server/seed-organizations.ts)).
 - **1.6** Seed dev super-admin + minimal test memberships (`npm run db:seed-dev`; [server/seed-dev-bootstrap.ts](../../../server/seed-dev-bootstrap.ts)).
 
-### Deferred — slice `slice-1.4-schema-contract` (after Layer 2 completes)
+### Completed — slice `slice-1.4-schema-contract`
 
-Do not start this block until [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) has no open items.
+This block landed after [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) was cleared.
 
-- **1.4-contract** Remove `users.roles`, `users.status`, and `users_status_check` (and any remaining code or scripts that depend on them). Generate/commit the contract migration. Re-verify fresh DB + typecheck.
+- [x] **1.4-contract** Remove `users.roles`, `users.status`, and `users_status_check` (and any remaining code or scripts that depend on them). Generate/commit the contract migration. Re-verify fresh DB + typecheck.
 
 ---
 

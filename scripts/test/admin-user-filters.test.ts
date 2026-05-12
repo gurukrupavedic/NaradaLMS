@@ -103,7 +103,7 @@ function testBuildAdminUsersSearchParamsMapsPendingTabToMembershipStatus() {
   const searchParams = buildAdminUsersSearchParams({
     limit: 25,
     offset: 0,
-    status: "pending_approval",
+    status: "pending",
     orgSlug: "slmts",
   });
 

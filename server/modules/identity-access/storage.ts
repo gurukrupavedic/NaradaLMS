@@ -248,8 +248,6 @@ export class IdentityStorage {
     passwordHash: string;
     firstName: string | null;
     lastName: string | null;
-    legacyRoles: string[];
-    legacyStatus: "active" | "pending_approval";
     isSuperAdmin?: boolean;
     orgId: string;
     membershipStatus: "pending" | "active";
@@ -258,7 +256,7 @@ export class IdentityStorage {
     /** When true, sets `approved_by` to the new user id (bootstrap admin self-approval). */
     membershipSelfApproved?: boolean;
     membershipApprovedByUserId?: string | null;
-  }): Promise<{ id: string; email: string; status: string }> {
+  }): Promise<{ id: string; email: string }> {
     const now = new Date();
     return db.transaction(async (tx) => {
       const [user] = await tx
@@ -269,13 +267,11 @@ export class IdentityStorage {
           provider: "local",
           firstName: input.firstName,
           lastName: input.lastName,
-          roles: input.legacyRoles,
-          status: input.legacyStatus,
           isSuperAdmin: input.isSuperAdmin ?? false,
           createdAt: now,
           updatedAt: now,
         })
-        .returning({ id: users.id, email: users.email, status: users.status });
+        .returning({ id: users.id, email: users.email });
 
       if (!user) {
         throw new Error("Failed to create user");
@@ -340,7 +336,19 @@ export class IdentityStorage {
     const result = await db
       .insert(users)
       .values({
-        ...userData,
+        email: userData.email,
+        firstName: userData.firstName ?? null,
+        lastName: userData.lastName ?? null,
+        profileImageUrl: userData.profileImageUrl ?? null,
+        passwordHash: userData.passwordHash ?? null,
+        provider: userData.provider ?? "local",
+        providerId: userData.providerId ?? null,
+        isSuperAdmin: userData.isSuperAdmin ?? false,
+        invitedBy: userData.invitedBy ?? null,
+        invitedAt: userData.invitedAt ?? null,
+        approvedAt: userData.approvedAt ?? null,
+        approvedBy: userData.approvedBy ?? null,
+        lastLoginAt: userData.lastLoginAt ?? null,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -357,7 +365,19 @@ export class IdentityStorage {
     const result = await db
       .insert(users)
       .values({
-        ...userData,
+        email: userData.email,
+        firstName: userData.firstName ?? null,
+        lastName: userData.lastName ?? null,
+        profileImageUrl: userData.profileImageUrl ?? null,
+        passwordHash: userData.passwordHash ?? null,
+        provider: userData.provider ?? "local",
+        providerId: userData.providerId ?? null,
+        isSuperAdmin: userData.isSuperAdmin ?? false,
+        invitedBy: userData.invitedBy ?? null,
+        invitedAt: userData.invitedAt ?? null,
+        approvedAt: userData.approvedAt ?? null,
+        approvedBy: userData.approvedBy ?? null,
+        lastLoginAt: userData.lastLoginAt ?? null,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -367,121 +387,21 @@ export class IdentityStorage {
           firstName: userData.firstName,
           lastName: userData.lastName,
           profileImageUrl: userData.profileImageUrl,
-          roles: userData.roles ?? sql`excluded.roles`,
-          status: userData.status ?? sql`excluded.status`,
           provider: userData.provider ?? sql`excluded.provider`,
           providerId: userData.providerId ?? sql`excluded.provider_id`,
+          passwordHash: userData.passwordHash ?? sql`excluded.password_hash`,
+          isSuperAdmin: userData.isSuperAdmin ?? sql`excluded.is_super_admin`,
+          invitedBy: userData.invitedBy ?? sql`excluded.invited_by`,
+          invitedAt: userData.invitedAt ?? sql`excluded.invited_at`,
+          approvedAt: userData.approvedAt ?? sql`excluded.approved_at`,
+          approvedBy: userData.approvedBy ?? sql`excluded.approved_by`,
+          lastLoginAt: userData.lastLoginAt ?? sql`excluded.last_login_at`,
           updatedAt: new Date(),
         },
       })
       .returning();
     const user = Array.isArray(result) ? result[0] : (result as any)?.rows?.[0];
     return user;
-  }
-
-  /**
-   * Get counts of users by status (for tab badges).
-   * Optionally filtered by search term (applied to same set of users as listUsersPaginated when search is used).
-   */
-  async getUserStatusCounts(search?: string): Promise<{
-    all: number;
-    pending_approval: number;
-    active: number;
-    inactive: number;
-  }> {
-    const searchCondition =
-      search && search.trim()
-        ? or(
-            ilike(users.email, `%${search.trim()}%`),
-            ilike(users.firstName, `%${search.trim()}%`),
-            ilike(users.lastName, `%${search.trim()}%`)
-          )
-        : undefined;
-
-    const base = db
-      .select({ status: users.status, count: sql<number>`count(*)::int` })
-      .from(users)
-      .groupBy(users.status);
-    const rows = searchCondition ? await base.where(searchCondition) : await base;
-
-    const counts = { all: 0, pending_approval: 0, active: 0, inactive: 0 };
-    for (const row of rows) {
-      const n = Number(row.count ?? 0);
-      counts.all += n;
-      if (row.status === "pending_approval") counts.pending_approval = n;
-      else if (row.status === "active") counts.active = n;
-      else if (row.status === "inactive") counts.inactive = n;
-    }
-    return counts;
-  }
-
-  /**
-   * Get users with database-level pagination and optional filters
-   */
-  async listUsersPaginated(
-    limit: number,
-    offset: number,
-    filters?: { status?: string; role?: string; search?: string }
-  ): Promise<{ items: any[]; total: number }> {
-    const conditions: any[] = [];
-    if (filters?.status && ["pending_approval", "active", "inactive"].includes(filters.status)) {
-      conditions.push(eq(users.status, filters.status));
-    }
-    if (filters?.role) {
-      conditions.push(sql`${filters.role} = ANY(${users.roles})`);
-    }
-    if (filters?.search?.trim()) {
-      const term = `%${filters.search.trim()}%`;
-      conditions.push(
-        or(
-          ilike(users.email, term),
-          ilike(users.firstName, term),
-          ilike(users.lastName, term)
-        )
-      );
-    }
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-
-    const countQuery = db.select({ count: sql<number>`count(*)` }).from(users);
-    const [countRow] = whereClause ? await countQuery.where(whereClause) : await countQuery;
-    const total = Number(countRow?.count ?? 0);
-
-    const baseSelect = db.select().from(users);
-    const withWhere = whereClause ? baseSelect.where(whereClause) : baseSelect;
-    const items = await withWhere.orderBy(users.createdAt).limit(limit).offset(offset);
-
-    return { items, total };
-  }
-
-  /**
-   * Update user roles
-   */
-  async updateUserRoles(userId: string, roles: string[]): Promise<any> {
-    const [user] = await db
-      .update(users)
-      .set({ roles, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
-  }
-
-  /**
-   * Update user status (active, pending_approval, inactive)
-   */
-  async updateUserStatus(userId: string, status: string): Promise<any> {
-    const [user] = await db
-      .update(users)
-      .set({ status, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
-  }
-
-  /**
-   * Delete user by ID
-   */
-  async deleteUser(userId: string): Promise<void> {
-    await db.delete(users).where(eq(users.id, userId));
   }
 
   async getMembershipWithUserOrg(membershipId: string): Promise<{
@@ -626,7 +546,6 @@ export class IdentityStorage {
       firstName: string | null;
       lastName: string | null;
       isSuperAdmin: boolean;
-      legacyStatus: string;
       memberships: {
         membershipId: string;
         orgId: string;
@@ -646,7 +565,6 @@ export class IdentityStorage {
         firstName: users.firstName,
         lastName: users.lastName,
         isSuperAdmin: users.isSuperAdmin,
-        legacyStatus: users.status,
       })
       .from(users)
       .where(inArray(users.id, userIds))
@@ -683,7 +601,6 @@ export class IdentityStorage {
       firstName: u.firstName,
       lastName: u.lastName,
       isSuperAdmin: u.isSuperAdmin,
-      legacyStatus: u.legacyStatus,
       memberships: (memByUser.get(u.id) ?? []).map((m) => ({
         membershipId: m.membershipId,
         orgId: m.orgId,

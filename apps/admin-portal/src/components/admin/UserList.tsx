@@ -70,7 +70,7 @@ const ALL_ROLES = ["student", "instructor", "admin"] as const;
 
 const DEFAULT_COUNTS = {
     all: 0,
-    pending_approval: 0,
+    pending: 0,
     active: 0,
     inactive: 0,
     rejected: 0,
@@ -235,24 +235,6 @@ export default function UserList() {
                 },
             },
             {
-                accessorKey: "legacyStatus",
-                header: ({ column }) => <SortableHeader column={column} label="Account" />,
-                cell: ({ row }) => {
-                    const status = row.original.legacyStatus;
-                    const variant =
-                        status === "active"
-                            ? "default"
-                            : status === "inactive"
-                              ? "secondary"
-                              : "outline";
-                    return (
-                        <Badge variant={variant}>
-                            {status === "pending_approval" ? "legacy pending" : status}
-                        </Badge>
-                    );
-                },
-            },
-            {
                 id: "actions",
                 cell: ({ row }) => {
                     const user = row.original;
@@ -366,8 +348,8 @@ export default function UserList() {
                         <TabsTrigger value="all" className={STATUS_TAB_TRIGGER_CLASS}>
                             All {statusCounts.all}
                         </TabsTrigger>
-                        <TabsTrigger value="pending_approval" className={STATUS_TAB_TRIGGER_CLASS}>
-                            Pending {statusCounts.pending_approval}
+                        <TabsTrigger value="pending" className={STATUS_TAB_TRIGGER_CLASS}>
+                            Pending {statusCounts.pending}
                         </TabsTrigger>
                         <TabsTrigger value="active" className={STATUS_TAB_TRIGGER_CLASS}>
                             Active {statusCounts.active}

@@ -13,15 +13,14 @@ References:
 
 The following **roadmap slices are implemented and merged** unless your checkout is behind `origin/multi-tenancy`:
 
-- **Layer 1:** 1.1 schema expand (orgs + memberships + `is_super_admin`), 1.2 seed orgs, 1.3 dev bootstrap. **Not** slice 1.4 contract (legacy `users.roles` / `users.status` still in DB).
+- **Layer 1:** 1.1 schema expand (orgs + memberships + `is_super_admin`), 1.2 seed orgs, 1.3 dev bootstrap, and 1.4 contract cleanup (legacy `users.roles` / `users.status` removed from the live schema).
 - **Layer 2:** **2.1**–**2.5** JWT, membership-first auth, org switch, **super-admin governance**, governance event/audit alignment, and org-admin **directory** API; student pending UX unchanged.
 - **Layer 3 Pass A:** core org isolation on `tracks`, `chapters`, `batches`, and `enrollments`, plus org-scoped handler/query enforcement and fresh DB verification.
 - **Layer 3 Pass B:** physical `org_id` coverage is now in place for media, progress, and audit tables, including backfills, route/service/storage org scoping, and physical `audit_logs.org_id` filtering.
 - **Layer 4.1 / 4.2 / 4.4:** tenant config foundation, authenticated student-shell branding, and tenant-aware OAuth propagation are now merged for the student portal: typed tenant configs for `slmts` / `rr`, `TENANT`-driven auth branding + root metadata with client-runtime mirroring, tenant-aware register request building, tenant-branded authenticated shell and pending state, dual student dev scripts on `3000` / `3010`, and Google OAuth start/callback handling that preserves the originating tenant and post-auth return target through server-signed state. The auth page's left hero intentionally remains Narada-branded across tenants.
 - **Admin portal:** **5.1**–**5.4** are now in place, including the dedicated user-management org filter UI plus the supporting governance query/count alignment for filtered pagination and status tabs.
 - **Pilot closeout:** checklists **6.1** through **6.4** are now confirmed or documented locally, including the explicit out-of-scope gap list captured during pilot validation.
-- **Next up:** the next foundational follow-up remains blocked **1.4-contract** until the legacy cleanup tracker is empty.
-- **Deferred:** checklist **2.12** OAuth parity unless Google OAuth becomes real product scope — see [implementation-status.md](./implementation-status.md).
+- **Next up:** the next deferred follow-up is checklist **2.12** OAuth parity unless Google OAuth becomes real product scope — see [implementation-status.md](./implementation-status.md).
 
 ---
 
@@ -42,7 +41,7 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
 
 ## Layer 1: Tenant foundation (schema + seeds)
 
-**Goal:** Org and membership tables exist; `users.is_super_admin` added. Legacy global `users.roles` / `users.status` are **removed only in slice 1.4** after Layer 2 migrates all consumers (expand–contract; see [implementation-checklist.md](./implementation-checklist.md) section 1).
+**Goal:** Org and membership tables exist; `users.is_super_admin` is the only global authority flag; legacy global `users.roles` / `users.status` have been removed after Layer 2 completed the migration.
 
 **Slices:**
 
@@ -60,8 +59,9 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
 4. **1.4 Schema contract (slice `slice-1.4-schema-contract`, after Layer 2)**
   - Drop `users.roles`, `users.status`, and `users_status_check` per [schema-design.md](./schema-design.md) once the cleanup tracker is empty.
   - Generate/commit the contract migration.
+  - Status: complete on the slice branch via generated migration `migrations/0004_dapper_zzzax.sql`.
 
-**Done when:** Migrations apply on empty DB; typecheck stays green after each merge to `multi-tenancy`. No legacy column drops until slice 1.4; after 1.4, no references to removed columns remain.
+**Done when:** Migrations apply on empty DB; typecheck stays green after each merge to `multi-tenancy`; after 1.4, no references to removed columns remain.
 
 ---
 
@@ -149,14 +149,13 @@ RR public onboarding can remain gated operationally (data/flags) even if code su
 
 ---
 
-## Slice 1.4: Schema contract (after Layer 2)
+## Slice 1.4: Schema contract
 
-This slice is **not** part of the initial Layer 1 expand work. Run branch `slice-1.4-schema-contract` only after:
+This slice is now complete on the active contract branch:
 
-- Layer 2 auth, JWT, governance, and portals no longer read `users.roles` or `users.status`.
-- [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) has zero unchecked items.
-
-Then drop the legacy columns and CHECK in one small migration and re-verify fresh DB + full typecheck.
+- Layer 2 auth, JWT, governance, portals, and scripts no longer read `users.roles` or `users.status`.
+- [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is fully checked off.
+- The generated migration [`migrations/0004_dapper_zzzax.sql`](../../../migrations/0004_dapper_zzzax.sql) drops `users.roles`, `users.status`, and `users_status_check`.
 
 ---
 
