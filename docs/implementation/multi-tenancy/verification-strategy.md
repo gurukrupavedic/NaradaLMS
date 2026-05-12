@@ -153,6 +153,19 @@ Before calling SLMTS pilot-ready:
 
 ---
 
+## Latest pilot evidence
+
+### 2026-05-12 — checklist 6.1 validated
+
+- **Environment reset:** `npm run build:types`, `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`, and `npm run check` all passed on a fresh local database in the slice worktree.
+- **Pending UX:** a new self-serve SLMTS user (`pilot+1747051589@test.local`) registered and logged in successfully, then landed on `http://localhost:3100/pending-approval` with the expected pending copy and the listed `slmts` membership.
+- **Super-admin approval:** the seeded super-admin approved the new SLMTS membership through `POST /api/auth/admin/memberships/:membershipId/approve`.
+- **Approved learning access:** after approval, the same user logged in with `hasActiveMembership: true`, `GET /api/auth/me` returned an active SLMTS membership, `GET /api/content/tracks` returned `200` with `9` tracks, and browser verification confirmed access to `http://localhost:3100/vedic-learning`.
+- **Supporting guard checks:** `npx tsx scripts/test/require-super-admin.test.ts`, `npx tsx scripts/test/audit-log-visibility.test.ts`, `npx tsx scripts/test/layer3-pass-a-isolation.test.ts`, `npx tsx scripts/test/layer3-pass-b-media-isolation.test.ts`, `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts`, and `npx tsx scripts/test/student-tenant-config.test.ts` all passed.
+- **Still outstanding in the pilot gate:** checklist `6.2` RR isolation smoke, `6.3` second-org join verification, and `6.4` documentation of known out-of-scope gaps.
+
+---
+
 ## Sign-off
 
 Record:

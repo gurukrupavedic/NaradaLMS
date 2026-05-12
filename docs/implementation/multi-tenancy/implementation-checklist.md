@@ -103,10 +103,17 @@ Verification note for **5.2**:
 
 ## 6) Pilot gate (SLMTS)
 
-- **6.1** Register -> pending -> super-admin approve -> SLMTS student access works.
-- **6.2** Cross-org isolation smoke with minimal RR data.
-- **6.3** Second-org join flow: RR portal -> pending RR membership -> approve.
-- **6.4** Document known gaps (email, questionnaire) as out of scope.
+- [x] **6.1** Register -> pending -> super-admin approve -> SLMTS student access works.
+- [ ] **6.2** Cross-org isolation smoke with minimal RR data.
+- [ ] **6.3** Second-org join flow: RR portal -> pending RR membership -> approve.
+- [ ] **6.4** Document known gaps (email, questionnaire) as out of scope.
+
+Verification note for **6.1**:
+- Fresh-db validation passed on `2026-05-12` via `npm run build:types`, `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`, and `npm run check`.
+- Browser verification against local SLMTS student portal confirmed `pilot+1747051589@test.local` reached `http://localhost:3100/pending-approval` after self-serve registration/login, with the expected pending-membership copy for `slmts`.
+- Super-admin API approval of the new SLMTS membership succeeded via `POST /api/auth/admin/memberships/:membershipId/approve`, after which the same user logged in with `hasActiveMembership: true`, `GET /api/auth/me` returned the active SLMTS membership, and `GET /api/content/tracks` returned `200` with `9` tracks.
+- Browser follow-up after approval confirmed the user reached `http://localhost:3100/vedic-learning` instead of the pending gate, with visible track/chapter content and the normal student shell.
+- Supporting tenancy checks also passed: `require-super-admin` (8 assertions), `audit-log-visibility` (4), `layer3-pass-a-isolation` (13), `layer3-pass-b-media-isolation` (8), `layer3-pass-b-progress-audit-isolation` (12), and `student-tenant-config` (20).
 
 ---
 

@@ -1,6 +1,6 @@
 # Implementation: Multi-Tenancy & Chameleonization
 
-**Active goal:** Continue the multi-tenancy rollout on branch `multi-tenancy`, with admin checklist `5.1`–`5.4` now complete and the default next slice moving to pilot validation (`6.1`) unless you intentionally want an optional Layer 4 auth-client follow-up first.
+**Active goal:** Continue the multi-tenancy rollout on branch `multi-tenancy`, with checklist `6.1` pilot validation now confirmed and the default next slice moving to `6.2` RR isolation smoke, then `6.3` second-org join verification, unless you intentionally want an optional Layer 4 auth-client follow-up first.
 
 **Execution & handoff:** [multi-tenancy/README.md](./multi-tenancy/README.md) and especially [multi-tenancy/implementation-status.md](./multi-tenancy/implementation-status.md)
 
