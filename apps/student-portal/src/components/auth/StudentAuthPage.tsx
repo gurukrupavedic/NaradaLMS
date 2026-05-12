@@ -1,31 +1,27 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
     Button,
     Input,
     Tabs, TabsContent, TabsList, TabsTrigger,
-    Card, CardContent, CardDescription, CardHeader, CardTitle,
+    Card, CardContent,
     Label,
     useToast
 } from "@narada/ui";
 import { apiRequest } from "@/lib/api";
+import { buildTenantRegisterRequest, getTenantConfig } from "@/lib/tenant";
 import { FcGoogle } from "react-icons/fc";
-
-// Assets
-import kolamPattern from "@/assets/branding/kolam-2.svg";
-import logoStacked from "@/assets/branding/logo-stacked-dark-notag.svg";
-import slmtsLogo from "@/assets/branding/SLMTS LOGO 01-2025 FINAL.png";
 import Image from "next/image";
 
 export function StudentAuthPage() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const initialTab = searchParams.get("tab") === "register" ? "register" : "login";
     const [activeTab, setActiveTab] = useState<"login" | "register">(initialTab);
     const queryClient = useQueryClient();
+    const tenantConfig = getTenantConfig();
 
     const handleGoogleLogin = () => {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -40,28 +36,11 @@ export function StudentAuthPage() {
         <div className="h-screen w-full flex overflow-hidden bg-background">
             {/* LEFT PANEL: Sacred Illumination */}
             <div className="hidden lg:flex w-1/2 relative bg-nila-base overflow-hidden items-center justify-center">
-                {/* Kolam Geometric Overlay */}
-                <div
-                    className="absolute inset-0 pointer-events-none opacity-60"
-                    style={{
-                        maskImage: `url(${kolamPattern.src})`,
-                        maskSize: "200%",
-                        maskPosition: "25% 8%",
-                        maskRepeat: "no-repeat",
-                        WebkitMaskImage: `url(${kolamPattern.src})`,
-                        WebkitMaskSize: "200%",
-                        WebkitMaskPosition: "25% 8%",
-                        WebkitMaskRepeat: "no-repeat",
-                    }}
-                >
-                    {/* Layer 1: Base Etching (Static Gold Lines) */}
-                    <div className="absolute inset-0 bg-hema-base opacity-40" />
-
-                    {/* Layer 2: The Blade Sheen (Intense Moving Highlight) */}
-                    <div className="absolute inset-0 overflow-hidden -skew-x-12">
-                        <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: 'linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)' }} />
-                        <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: 'linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)', animationDelay: '4s' }} />
-                    </div>
+                <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top,rgba(215,170,66,0.36),transparent_55%)]" />
+                <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(135deg,rgba(237,99,37,0.18),transparent_45%,rgba(215,170,66,0.22))]" />
+                <div className="absolute inset-0 overflow-hidden -skew-x-12 pointer-events-none">
+                    <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: "linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)" }} />
+                    <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: "linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)", animationDelay: "4s" }} />
                 </div>
 
                 {/* Atmospheric Fade Overlay */}
@@ -70,16 +49,17 @@ export function StudentAuthPage() {
                 {/* Central Hero Logo */}
                 <div className="relative z-10 p-12 flex flex-col items-center text-center">
                     <Image
-                        src={logoStacked}
-                        alt="Narada LMS"
-                        width={384}
-                        height={200}
-                        className="w-96 h-auto drop-shadow-2xl mb-8"
+                        src={tenantConfig.logoPath}
+                        alt={tenantConfig.logoAlt}
+                        width={320}
+                        height={320}
+                        className="w-72 h-auto drop-shadow-2xl mb-8"
                     />
                     <div className="space-y-2">
                         <h2 className="text-2xl font-semibold text-white tracking-wide">
-                            Vedic Wisdom. Modern Learning.
+                            {tenantConfig.tagline}
                         </h2>
+                        <p className="text-sm text-white/75 max-w-sm">{tenantConfig.displayName}</p>
                     </div>
                 </div>
             </div>
@@ -89,18 +69,19 @@ export function StudentAuthPage() {
                 <div className="w-full max-w-md space-y-6">
                     {/* Mobile Logo */}
                     <div className="lg:hidden text-center mb-8 shrink-0">
-                        <h1 className="text-2xl font-bold text-slate-900">Narada LMS</h1>
+                        <h1 className="text-2xl font-bold text-slate-900">{tenantConfig.logoAlt}</h1>
                     </div>
 
                     <div className="text-center space-y-2 shrink-0 mb-8">
                         <Image
-                            src={slmtsLogo}
-                            alt="SLMTS Learning"
+                            src={tenantConfig.logoPath}
+                            alt={tenantConfig.logoAlt}
                             width={128}
                             height={128}
                             className="h-32 w-auto mx-auto mb-4"
                         />
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome to SLMTS Learning</h1>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{tenantConfig.authHeading}</h1>
+                        <p className="text-sm text-slate-500">{tenantConfig.displayName}</p>
                     </div>
 
                     {/* Social Login */}
@@ -154,6 +135,7 @@ export function StudentAuthPage() {
 
                         <TabsContent value="register" className="mt-0">
                             <RegisterForm
+                                tenantSlug={tenantConfig.slug}
                                 onSuccess={() => {
                                     setActiveTab("login");
                                 }}
@@ -224,7 +206,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
                             placeholder="m@example.com"
                             required
                             value={email}
-                            onChange={e => setEmail(e.target.value)}
+                            onChange={(e) => setEmail(e.target.value)}
                             disabled={loading}
                             autoComplete="email"
                             spellCheck={false}
@@ -237,12 +219,12 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
                             type="password"
                             required
                             value={password}
-                            onChange={e => setPassword(e.target.value)}
+                            onChange={(e) => setPassword(e.target.value)}
                             disabled={loading}
                             autoComplete="current-password"
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !loading) {
-                                    handleSubmit(e as any);
+                                if (e.key === "Enter" && !loading) {
+                                    handleSubmit(e as React.FormEvent);
                                 }
                             }}
                         />
@@ -256,7 +238,13 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
     );
 }
 
-function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
+function RegisterForm({
+    onSuccess,
+    tenantSlug,
+}: {
+    onSuccess: (email: string) => void;
+    tenantSlug: "slmts" | "rr";
+}) {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -268,7 +256,7 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
+        setFormData((prev) => ({ ...prev, [e.target.id]: e.target.value }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -280,16 +268,20 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
 
         setLoading(true);
         try {
-            await apiRequest("/auth/register", {
-                method: "POST",
-                headers: { "X-Tenant-Slug": "slmts" },
-                body: JSON.stringify({
+            const registerRequest = buildTenantRegisterRequest(
+                {
                     email: formData.email.toLowerCase(),
                     password: formData.password,
                     firstName: formData.firstName,
                     lastName: formData.lastName,
-                    tenantSlug: "slmts",
-                }),
+                },
+                tenantSlug
+            );
+
+            await apiRequest("/auth/register", {
+                method: "POST",
+                headers: registerRequest.headers,
+                body: JSON.stringify(registerRequest.body),
             });
 
             toast({
