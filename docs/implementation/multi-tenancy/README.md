@@ -17,10 +17,10 @@ It captures both the locked product/architecture decisions and the current as-bu
 - Layer **1** expand/seed/bootstrap is merged.
 - Layer **2** slices **2.1–2.5** are merged.
 - Layer **3** Pass A and Pass B isolation are merged.
-- Student Layer **4.1 / 4.2** tenant-config and authenticated shell branding work are merged.
+- Student Layer **4.1 / 4.2 / 4.4** tenant-config, authenticated shell branding, and tenant-aware OAuth propagation work are merged.
 - Admin **5.1–5.4** are merged.
 - Checklists **6.1** pilot validation, **6.2** RR isolation smoke, **6.3** second-org join, and **6.4** known-gap documentation are now complete in the current docs baseline.
-- Default next work is the optional broader Layer **4.4** auth-client or OAuth follow-up; otherwise the next foundational slice remains blocked **1.4-contract** once [`legacy-users-columns-cleanup.md`](./legacy-users-columns-cleanup.md) is clear.
+- Default next work is the blocked foundational slice **1.4-contract** once [`legacy-users-columns-cleanup.md`](./legacy-users-columns-cleanup.md) is clear; checklist **2.12** remains deferred unless Google OAuth becomes real product scope.
 
 ---
 

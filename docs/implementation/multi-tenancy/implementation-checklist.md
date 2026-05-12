@@ -81,8 +81,14 @@ Pass A is implemented in slice `slice-3.a-core-org-isolation` and should now be 
 - [x] **4.1** Add tenant config structure + TypeScript types for tenant config. *(Repo-equivalent landed under `apps/student-portal/src/config/tenants/` for `slmts` and `rr`.)*
 - [x] **4.2** Wire `TENANT` env (and `PORT` for RR on `3010` if using separate dev processes).
 - [x] **4.3** Continue replacing remaining student-portal hardcoded branding with tenant config. *(The authenticated shell/header and pending-approval surface now resolve tenant branding from config; the auth page's left hero intentionally remains Narada-branded across tenants as a shared product-brand surface.)*
-- **4.4** Extend tenant-aware client behavior beyond the register flow as needed. *(Register already builds tenant-aware headers/body from config, and current student runtime now mirrors `TENANT` into browser-rendered shell/pending surfaces through `next.config`; broader shared auth-client and any future OAuth-specific handling remain follow-up work.)*
+- [x] **4.4** Extend tenant-aware client behavior beyond the register flow as needed. *(Student/admin auth pages now send tenant slug and post-auth return intent to `/auth/google`, the server signs/verifies the resulting OAuth `state`, the callback resolves the originating tenant before membership creation/backfill, and portal-initiated callbacks return to the originating student/admin instance instead of relying only on `DEFAULT_TENANT_SLUG` and `FRONTEND_URL`.)*
 - [x] **4.5** Document dev commands in app `package.json` (SLMTS :3000, RR :3010).
+
+Verification note for **4.4**:
+
+- Focused tenant-auth verification passed on `2026-05-12` in the slice worktree via `npm run build:types`, `npm run check`, `npx tsx scripts/test/student-tenant-config.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/oauth-tenant-context.test.ts`.
+- The student tenant helper now builds Google OAuth URLs with explicit `tenantSlug` plus a safe `returnTo`, and the server tenant-context helper now signs/verifies OAuth `state` before resolving tenant context or callback redirect targets.
+- `npx tsx scripts/test/identity-request-membership.test.ts` could not be re-run in the isolated worktree because `DATABASE_URL` was not available there; no behavior change was made to the request-membership contract itself in this slice.
 
 ---
 
@@ -138,7 +144,7 @@ Verification note for **6.4**:
 
 - Completed on `2026-05-12` as a documentation closeout slice using the already-recorded `6.1` through `6.3` evidence; no new runtime verification was required or invented for this step.
 - The canonical known-gap list is now recorded across the execution docs: email invites/notifications remain out of scope, questionnaire-driven onboarding remains deferred, Google OAuth parity remains deferred unless it becomes real product scope, production subdomain/TLS/cookie `SameSite` and `Domain` behavior remains unverified outside local dev, and RR onboarding still relies on smoke/API coverage rather than a separate full browser walkthrough.
-- Future chats should treat the pilot checklist as complete through **6.4** and choose between the optional Layer **4.4** follow-up, blocked **1.4-contract**, or deferred **2.12** based on priority.
+- Future chats should treat the pilot checklist as complete through **6.4**, the Layer **4.4** auth propagation follow-up as merged, and choose between blocked **1.4-contract** or deferred **2.12** based on priority.
 
 ---
 

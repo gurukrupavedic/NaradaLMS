@@ -5,6 +5,7 @@ import { Strategy as GoogleStrategy, type Profile as GoogleProfile } from "passp
 import bcrypt from "bcrypt";
 import { identityStorage } from "../modules/identity-access/storage";
 import { config } from "../config";
+import { resolveTenantSlugForRequest } from "../modules/identity-access/tenant-context";
 
 // Configure all passport strategies
 export function configurePassport() {
@@ -54,6 +55,7 @@ export function configurePassport() {
             const provider = "google";
             const providerId = profile.id;
             const email = profile.emails?.[0]?.value?.toLowerCase();
+            const resolvedTenantSlug = resolveTenantSlugForRequest(req);
 
             // Try provider match first
             let user = await identityStorage.getUserByProviderId(provider, providerId);
@@ -75,7 +77,7 @@ export function configurePassport() {
                 status: "active",
               });
               const defaultOrg = await identityStorage.getOrganizationBySlug(
-                config.defaultTenantSlug
+                resolvedTenantSlug
               );
               if (defaultOrg) {
                 await identityStorage.upsertOrgMembership({
@@ -96,7 +98,7 @@ export function configurePassport() {
             );
             if (memberships.length === 0) {
               const defaultOrg = await identityStorage.getOrganizationBySlug(
-                config.defaultTenantSlug
+                resolvedTenantSlug
               );
               if (defaultOrg) {
                 await identityStorage.upsertOrgMembership({

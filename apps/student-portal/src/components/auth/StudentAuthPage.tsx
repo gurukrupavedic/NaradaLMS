@@ -13,6 +13,7 @@ import {
 } from "@narada/ui";
 import { apiRequest } from "@/lib/api";
 import {
+    buildTenantGoogleAuthUrl,
     buildTenantRegisterRequest,
     getSharedStudentAuthBranding,
     getTenantConfig,
@@ -20,9 +21,17 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import Image from "next/image";
 
+const STUDENT_OAUTH_ERROR_MESSAGES: Record<string, string> = {
+    auth_failed: "Google sign-in could not be completed. Please try again.",
+    session_failed: "We could not finish creating your session. Please try again.",
+    access_denied: "This sign-in could not be completed for the current portal.",
+};
+
 export function StudentAuthPage() {
     const searchParams = useSearchParams();
     const initialTab = searchParams.get("tab") === "register" ? "register" : "login";
+    const oauthErrorMessage =
+        STUDENT_OAUTH_ERROR_MESSAGES[searchParams.get("error") ?? ""] ?? null;
     const [activeTab, setActiveTab] = useState<"login" | "register">(initialTab);
     const queryClient = useQueryClient();
     const sharedAuthBranding = getSharedStudentAuthBranding();
@@ -34,7 +43,12 @@ export function StudentAuthPage() {
             console.error('NEXT_PUBLIC_API_URL environment variable is not set');
             return;
         }
-        window.location.href = `${apiUrl}/auth/google`;
+        const returnTo = new URL("/vedic-learning", window.location.origin).toString();
+        window.location.href = buildTenantGoogleAuthUrl(
+            apiUrl,
+            returnTo,
+            tenantConfig.slug
+        );
     };
 
     return (
@@ -131,6 +145,12 @@ export function StudentAuthPage() {
                         first, then request access to {tenantConfig.displayName} from the
                         pending screen.
                     </p>
+
+                    {oauthErrorMessage ? (
+                        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                            {oauthErrorMessage}
+                        </div>
+                    ) : null}
 
                     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
                         <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-100 p-1 rounded-lg">

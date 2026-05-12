@@ -3,6 +3,7 @@ import * as tenantConfigModule from "../../apps/student-portal/src/config/tenant
 
 const {
   buildTenantMembershipRequest,
+  buildTenantGoogleAuthUrl,
   buildTenantRegisterRequest,
   getCurrentTenantSlug,
   getSharedStudentAuthBranding,
@@ -20,6 +21,11 @@ const {
     body: { tenantSlug: "slmts" | "rr" };
     headers: { "X-Tenant-Slug": "slmts" | "rr" };
   };
+  buildTenantGoogleAuthUrl?: (
+    apiUrl: string,
+    returnTo: string,
+    slug?: "slmts" | "rr"
+  ) => string;
   buildTenantRegisterRequest: typeof tenantModule.buildTenantRegisterRequest;
   getCurrentTenantSlug: typeof tenantModule.getCurrentTenantSlug;
   getSharedStudentAuthBranding: typeof tenantModule.getSharedStudentAuthBranding;
@@ -153,6 +159,41 @@ function testTenantMembershipRequestCarriesTenantSlug() {
   );
 }
 
+function testTenantGoogleAuthUrlCarriesTenantQueryParameters() {
+  assert(
+    typeof buildTenantGoogleAuthUrl === "function",
+    "tenant google auth helper exists",
+    "Expected buildTenantGoogleAuthUrl to be exported"
+  );
+
+  if (!buildTenantGoogleAuthUrl) {
+    return;
+  }
+
+  const authUrl = buildTenantGoogleAuthUrl(
+    "http://localhost:5000/api",
+    "http://localhost:3010/vedic-learning",
+    "rr"
+  );
+  const parsedUrl = new URL(authUrl);
+
+  assertEqual(
+    parsedUrl.origin + parsedUrl.pathname,
+    "http://localhost:5000/api/auth/google",
+    "google auth url targets auth/google endpoint"
+  );
+  assertEqual(
+    parsedUrl.searchParams.get("tenantSlug"),
+    "rr",
+    "google auth url includes tenant slug query parameter"
+  );
+  assertEqual(
+    parsedUrl.searchParams.get("returnTo"),
+    "http://localhost:3010/vedic-learning",
+    "google auth url includes post-auth return url query parameter"
+  );
+}
+
 function testTenantMetadataUsesTenantSpecificBranding() {
   const metadata = getTenantMetadata("rr");
 
@@ -247,6 +288,7 @@ try {
   testReturnsRrTenantConfig();
   testTenantRegisterRequestCarriesTenantSlug();
   testTenantMembershipRequestCarriesTenantSlug();
+  testTenantGoogleAuthUrlCarriesTenantQueryParameters();
   testTenantMetadataUsesTenantSpecificBranding();
   testSharedStudentAuthBrandingStaysNarada();
   testStudentShellBrandingUsesTenantAssets();

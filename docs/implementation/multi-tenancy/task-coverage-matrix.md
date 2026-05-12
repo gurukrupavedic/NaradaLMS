@@ -15,7 +15,7 @@ Sequenced execution reference. Execute rows in ascending **Seq** unless noted pa
 
 - Complete through **MT-6.4**, with the authenticated student-shell branding follow-up, the SLMTS pilot validation path, the dedicated RR isolation smoke path, the second-org join path, and the pilot-gap documentation closeout now recorded locally.
 - **MT-5.2**, **MT-5.3**, and the **MT-5.4** governance gate are complete, so the admin governance surface is functionally through the current checklist scope.
-- Main remaining execution areas are deferred **MT-1.4** and optional remaining **MT-4.3** / **MT-2.10** auth-client or OAuth propagation work.
+- Main remaining execution areas are blocked **MT-1.4** and deferred **MT-2.10** OAuth product-policy work.
 
 ---
 
@@ -87,7 +87,7 @@ Current status:
 
 - `MT-4.1` is merged on `multi-tenancy`.
 - `MT-4.2` is now merged on `multi-tenancy`; the authenticated student-shell/header and pending surface are tenant-branded, while the auth page's left hero intentionally remains Narada-branded.
-- `MT-4.3` now means any broader tenant propagation beyond the register flow and current shell/pending runtime wiring already in place.
+- `MT-4.3` is now merged on `multi-tenancy`; tenant propagation covers register/request-membership plus portal-initiated Google OAuth start parameters and verified post-auth return routing.
 
 ### Bundle F — Admin UI governance
 
@@ -101,4 +101,4 @@ MT-5.1 -> MT-5.2 -> MT-5.3 after MT-2.8 (and after Layer 3 org-scoped data is me
 - After Bundle G: legacy user columns dropped; full typecheck green on `multi-tenancy`.
 - After Bundle D: cross-org isolation smoke.
 - After Bundle E: two-tenant local branding smoke.
-- After `MT-6.4`: pilot closeout docs are synced; next work is optional `MT-4.3` follow-up or blocked `MT-1.4`.
+- After `MT-6.4`: pilot closeout docs are synced; with `MT-4.3` now merged, next work is blocked `MT-1.4` or deferred `MT-2.10`.

@@ -20,10 +20,19 @@ import kolamPattern from "@/assets/branding/kolam-2.svg";
 import logoStacked from "@/assets/branding/logo-stacked-dark-notag.svg";
 import Image from "next/image";
 
+const ADMIN_OAUTH_ERROR_MESSAGES: Record<string, string> = {
+    auth_failed: "Google sign-in could not be completed. Please try again.",
+    session_failed: "We could not finish creating your session. Please try again.",
+    access_denied: "You do not have the appropriate role to access the admin portal. Only administrators can sign in here.",
+};
+
 export function AdminAuthPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const queryClient = useQueryClient();
     const { toast } = useToast();
+    const oauthErrorMessage =
+        ADMIN_OAUTH_ERROR_MESSAGES[searchParams.get("error") ?? ""] ?? null;
 
     const handleGoogleLogin = () => {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -31,7 +40,14 @@ export function AdminAuthPage() {
             console.error('NEXT_PUBLIC_API_URL environment variable is not set');
             return;
         }
-        window.location.href = `${apiUrl}/auth/google`;
+        const authUrl = new URL("auth/google", apiUrl.endsWith("/") ? apiUrl : `${apiUrl}/`);
+        authUrl.searchParams.set(
+            "state",
+            new URLSearchParams({
+                returnTo: new URL("/admin", window.location.origin).toString(),
+            }).toString()
+        );
+        window.location.href = authUrl.toString();
     };
 
     return (
@@ -114,6 +130,12 @@ export function AdminAuthPage() {
                             </span>
                         </div>
                     </div>
+
+                    {oauthErrorMessage ? (
+                        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                            {oauthErrorMessage}
+                        </div>
+                    ) : null}
 
                     <LoginForm
                         onSuccess={(userData) => {

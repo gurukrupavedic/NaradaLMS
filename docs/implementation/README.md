@@ -1,6 +1,6 @@
 # Implementation: Multi-Tenancy & Chameleonization
 
-**Active goal:** Continue the multi-tenancy rollout on branch `multi-tenancy`, with checklists `6.1`, `6.2`, and `6.3` now confirmed and the default next slice moving to `6.4` documentation of known gaps, unless you intentionally want an optional Layer 4 auth-client follow-up first.
+**Active goal:** Continue the multi-tenancy rollout on branch `multi-tenancy`, with pilot closeout complete through `6.4` and the Layer `4.4` tenant-aware OAuth follow-up now implemented; the next foundational slice remains blocked on `1.4-contract`, while checklist `2.12` stays deferred unless Google OAuth becomes real product scope.
 
 **Execution & handoff:** [multi-tenancy/README.md](./multi-tenancy/README.md) and especially [multi-tenancy/implementation-status.md](./multi-tenancy/implementation-status.md)
 
@@ -48,10 +48,11 @@ The codebase is no longer at a pre-tenancy baseline. As of `multi-tenancy`:
 - **Layer 3** Pass A and Pass B are merged:
   - physical `org_id` coverage across core, media, progress, and audit tables
   - org-scoped query/handler enforcement
-- **Layer 4** student portal foundation plus shell-branding follow-up are merged:
+- **Layer 4** student portal foundation plus auth propagation follow-up are merged:
   - typed tenant config for `slmts` / `rr`
   - tenant-branded auth form area, root metadata, authenticated shell, and pending page
   - shared Narada branding intentionally preserved on the left auth hero
+  - Google OAuth initiation/callback now preserve the originating tenant and post-auth return target for portal-initiated flows
 - **Admin portal** `5.1`–`5.4` are in place:
   - super-admin user-management gate
   - user-management org filter
@@ -70,6 +71,7 @@ Use [multi-tenancy/implementation-status.md](./multi-tenancy/implementation-stat
   - `orgRoles`
   - optional `orgMembershipStatus`
 - **`GET /api/auth/me`** returns the session user plus `memberships[]` and `hasActiveMembership`.
+- Portal-initiated Google OAuth now carries tenant/return-to state so student logins can round-trip back to the originating tenant instance instead of relying only on the server default tenant or a single frontend URL.
 - **CSRF** still uses the double-submit pattern via `csrf-csrf`.
 
 ### Roles And Authority

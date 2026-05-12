@@ -10,7 +10,12 @@ import { validateRequest } from "../utils/validation";
 import { z } from "zod";
 import { config } from "../config";
 import { catchAsync } from "../utils/catchAsync";
-import { resolveTenantSlugForRequest } from "../modules/identity-access/tenant-context";
+import {
+  buildOAuthState,
+  resolveRequestedPostAuthRedirect,
+  resolveSafePostAuthRedirect,
+  resolveTenantSlugForRequest,
+} from "../modules/identity-access/tenant-context";
 
 // S-06: Rate limiting for auth endpoints
 const authLimiter = rateLimit({
@@ -60,6 +65,21 @@ function setAuthTokenCookie(res: Response, token: string) {
     sameSite: "strict",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
+}
+
+function clearAuthTokenCookie(res: Response) {
+  res.clearCookie("auth_token", {
+    httpOnly: true,
+    secure: config.env === "production",
+    sameSite: "strict",
+  });
+}
+
+function buildAuthPageRedirect(rawState: string | undefined, error: string): string {
+  const safeRedirectUrl = new URL(resolveSafePostAuthRedirect(rawState));
+  const authPageUrl = new URL("/", safeRedirectUrl.origin);
+  authPageUrl.searchParams.set("error", error);
+  return authPageUrl.toString();
 }
 
 /**
@@ -178,7 +198,17 @@ identityRouter.post(
  */
 identityRouter.get(
   "/google",
-  passport.authenticate("google", { session: false, scope: ["profile", "email"] })
+  (req: Request, res: Response, next: NextFunction) => {
+    const state = buildOAuthState({
+      tenantSlug: resolveTenantSlugForRequest(req),
+      returnTo: resolveRequestedPostAuthRedirect(req),
+    });
+    passport.authenticate("google", {
+      session: false,
+      scope: ["profile", "email"],
+      state,
+    })(req, res, next);
+  }
 );
 
 /**
@@ -187,25 +217,64 @@ identityRouter.get(
  */
 identityRouter.get(
   "/google/callback",
-  passport.authenticate("google", { session: false, failureRedirect: "/login?error=auth_failed" }),
+  (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate(
+      "google",
+      { session: false },
+      (
+        err: unknown,
+        user:
+          | false
+          | null
+          | {
+              id: string;
+            }
+      ) => {
+        const rawState =
+          typeof req.query.state === "string" ? req.query.state : undefined;
+
+        if (err) {
+          return next(err);
+        }
+
+        if (!user) {
+          return res.redirect(buildAuthPageRedirect(rawState, "auth_failed"));
+        }
+
+        req.user = user as Express.User;
+        return next();
+      }
+    )(req, res, next);
+  },
   catchAsync(async (req: Request, res: Response) => {
+    const rawState =
+      typeof req.query.state === "string" ? req.query.state : undefined;
+    const redirectUrl = new URL(resolveSafePostAuthRedirect(rawState));
+
     if (!req.user) {
-      return res.redirect("/login?error=pending_approval");
+      return res.redirect(buildAuthPageRedirect(rawState, "session_failed"));
     }
 
     const oauthUser = req.user as { id: string };
 
     const claims = await identityStorage.getJwtSignClaimsForUser(oauthUser.id);
     if (!claims) {
-      return res.redirect("/login?error=session_failed");
+      return res.redirect(buildAuthPageRedirect(rawState, "session_failed"));
     }
 
     const token = generateToken(claims);
 
     setAuthTokenCookie(res, token);
 
-    const frontendUrl = config.frontendUrl;
-    return res.redirect(frontendUrl);
+    const isAdminReturn = redirectUrl.pathname.startsWith("/admin");
+    const canAccessAdmin =
+      claims.isSuperAdmin || Boolean(claims.orgRoles?.includes("admin"));
+    if (isAdminReturn && !canAccessAdmin) {
+      clearAuthTokenCookie(res);
+      return res.redirect(buildAuthPageRedirect(rawState, "access_denied"));
+    }
+
+    return res.redirect(redirectUrl.toString());
   })
 );
 
@@ -303,11 +372,7 @@ identityRouter.post(
  */
 identityRouter.post("/logout", (req: Request, res: Response) => {
   // Clear the HttpOnly cookie
-  res.clearCookie('auth_token', {
-    httpOnly: true,
-    secure: config.env === 'production',
-    sameSite: 'strict',
-  });
+  clearAuthTokenCookie(res);
 
   res.json({ message: "Logged out" });
 });

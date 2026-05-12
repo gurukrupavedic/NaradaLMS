@@ -33,6 +33,7 @@ Add or extend tests when implementation lands (exact framework TBD per repo conv
 - **Layer 3 Pass B media/content isolation:** `npx tsx scripts/test/layer3-pass-b-media-isolation.test.ts` validates org-scoped create/read/update/delete behavior for audio, text segments, media segments, and mappings.
 - **Layer 3 Pass B progress/audit isolation:** `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts` validates org-scoped progress writes/reads, per-org enrollment semantics, and event-handler-backed audit persistence.
 - **Student tenant-config helpers:** `npx tsx scripts/test/student-tenant-config.test.ts` validates `TENANT` resolution, tenant metadata, and register header/body generation for `slmts` and `rr`.
+- **OAuth tenant propagation:** `npx tsx scripts/test/oauth-tenant-context.test.ts` validates server-signed OAuth `state`, verified tenant parsing, and safe post-auth redirect fallback for allowed, disallowed, and tampered inputs.
 - **Register:** creates `user_organizations` row `pending` for slug from tenant header/env.
 
 Until automated tests exist, use the manual scenarios below and record results in the PR/slice notes.
@@ -132,6 +133,7 @@ Run only on branch `slice-1.4-schema-contract` when [legacy-users-columns-cleanu
 - Confirm the tenant-facing auth form area and root metadata differ between the two instances.
 - Confirm the authenticated shell/header and pending-approval surface differ by tenant between the two instances.
 - Confirm register requests no longer hardcode `slmts`; tenant slug/header should match the running instance.
+- Confirm tenant-initiated Google OAuth sends the running tenant plus a safe post-auth return URL to `/auth/google`, and that callback handling returns to the originating portal instance only when the provider round-trip preserves verified `state`.
 - Admin portal on **3001** unchanged (Narada branding).
 - API on **5000** serves both; tenant header/env causes correct org on register.
 
@@ -190,11 +192,20 @@ Before calling SLMTS pilot-ready:
 
 ---
 
+### 2026-05-12 — checklist 4.4 validated
+
+- **Focused verification in the slice worktree:** `npm run build:types`, `npm run check`, `npx tsx scripts/test/student-tenant-config.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/oauth-tenant-context.test.ts` all passed.
+- **Student OAuth propagation covered:** the student tenant helper now builds Google OAuth URLs with explicit `tenantSlug` plus a safe `returnTo`, and the server tenant-context helper now signs/verifies OAuth `state` before resolving tenant context or callback redirect targets.
+- **Redirect safety covered:** callback redirect resolution now accepts configured local origins and falls back to `FRONTEND_URL` for unknown origins instead of trusting arbitrary callback destinations.
+- **Limit of current evidence:** `npx tsx scripts/test/identity-request-membership.test.ts` could not be rerun in the isolated worktree because `DATABASE_URL` was unavailable there, and no live Google provider/browser round-trip was run in this slice.
+
+---
+
 ### 2026-05-12 — checklist 6.4 documented
 
 - **Scope of this step:** documentation-only closeout using the already-recorded `6.1` through `6.3` evidence; no new runtime verification was added for `6.4`.
-- **Canonical known gaps now recorded across the execution docs:** email invites/notifications remain out of scope, questionnaire-driven onboarding remains deferred, Google OAuth parity remains deferred unless it becomes real product scope, production subdomain/TLS/cookie `SameSite` and `Domain` behavior remains unverified outside local dev, and RR onboarding browser coverage remains lighter than the SLMTS pilot browser pass.
-- **Result:** the pilot checklist is now complete through `6.4`, and future chats should choose between the optional Layer `4.4` follow-up, blocked `1.4-contract`, or deferred `2.12` rather than reopening pilot-closeout work.
+- **Canonical known gaps now recorded across the execution docs:** email invites/notifications remain out of scope, questionnaire-driven onboarding remains deferred, broader Google OAuth product-policy parity remains deferred unless it becomes real product scope, production subdomain/TLS/cookie `SameSite` and `Domain` behavior remains unverified outside local dev, and RR onboarding browser coverage remains lighter than the SLMTS pilot browser pass.
+- **Result:** the pilot checklist is now complete through `6.4`, the Layer `4.4` tenant-aware OAuth propagation follow-up is now merged, and future chats should choose between blocked `1.4-contract` or deferred `2.12` rather than reopening pilot-closeout work.
 
 ---
 
