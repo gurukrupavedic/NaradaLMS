@@ -180,11 +180,12 @@ Before calling SLMTS pilot-ready:
 
 ### 2026-05-12 — checklist 6.3 validated
 
-- **Targeted regression checks:** `npm run check`, `npx tsx scripts/test/identity-request-membership.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/student-tenant-config.test.ts` all passed on the slice branch.
-- **Dedicated smoke command:** `API_BASE_URL=http://localhost:5202 DEV_SUPERADMIN_PASSWORD=dev-superadmin-pass npm run test:second-org-join-smoke`
+- **Targeted regression checks:** `npm run check`, `npx tsx scripts/test/identity-request-membership.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/student-tenant-config.test.ts` all passed on merged `multi-tenancy`.
+- **Dedicated smoke command:** `API_BASE_URL=http://localhost:5203 DEV_SUPERADMIN_PASSWORD=dev-superadmin-pass npm run test:second-org-join-smoke`
 - **Smoke setup:** the new harness in `scripts/test/second-org-join-smoke.test.ts` registers a unique SLMTS user, approves the SLMTS membership as super-admin, creates a tenant-scoped RR marker track, requests RR membership through `POST /api/auth/request-membership`, and then uses live cookies plus `POST /api/auth/switch-org` to verify session truth before and after approval.
 - **Pending RR assertion:** after the request, `/api/auth/me` showed active SLMTS plus pending RR membership, and `POST /api/auth/switch-org` returned `403` for the RR org while approval was still pending.
 - **Approved RR assertion:** after super-admin approval, `POST /api/auth/switch-org` returned `200`, `/api/auth/me` reported `currentOrgId = rr`, and `GET /api/content/tracks` included the RR marker track.
+- **Portal behavior covered by this slice:** the student portal now computes current-tenant access state from `memberships[]`, exposes the RR request-access action on the pending page, and latches failed auto-switch attempts so users do not get trapped in a retry loop.
 - **Result:** `npm run test:second-org-join-smoke` passed with `second-org-join-smoke: 17 assertions passed.`
 
 ---

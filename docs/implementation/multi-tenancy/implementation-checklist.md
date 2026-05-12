@@ -94,9 +94,11 @@ Pass A is implemented in slice `slice-3.a-core-org-isolation` and should now be 
 - [x] **5.4** Ensure org admins cannot access user-governance API routes (403).
 
 Verification note for **5.3**:
+
 - Confirmed admin shell org switcher refreshes `auth/me`, content queries, batch queries, and org-directory query families on switch. Focused utility coverage lives in [`scripts/test/admin-org-switcher-utils.test.ts`](../../../scripts/test/admin-org-switcher-utils.test.ts). Local browser verification used a temporary dual-active admin fixture by resetting the seeded super-admin password and promoting the RR membership from pending to active/admin for the session.
 
 Verification note for **5.2**:
+
 - Focused regression coverage now lives in [`scripts/test/admin-user-filters.test.ts`](../../../scripts/test/admin-user-filters.test.ts) and [`scripts/test/governance-org-filter-storage.test.ts`](../../../scripts/test/governance-org-filter-storage.test.ts). Local browser verification confirmed `All organizations`, `SLMTS`, and `RR` each drive the expected `GET /api/auth/admin/users` request shape and return filtered results successfully.
 
 ---
@@ -109,6 +111,7 @@ Verification note for **5.2**:
 - [ ] **6.4** Document known gaps (email, questionnaire) as out of scope.
 
 Verification note for **6.1**:
+
 - Fresh-db validation passed on `2026-05-12` via `npm run build:types`, `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`, and `npm run check`.
 - Browser verification against local SLMTS student portal confirmed `pilot+1747051589@test.local` reached `http://localhost:3100/pending-approval` after self-serve registration/login, with the expected pending-membership copy for `slmts`.
 - Super-admin API approval of the new SLMTS membership succeeded via `POST /api/auth/admin/memberships/:membershipId/approve`, after which the same user logged in with `hasActiveMembership: true`, `GET /api/auth/me` returned the active SLMTS membership, and `GET /api/content/tracks` returned `200` with `9` tracks.
@@ -116,6 +119,7 @@ Verification note for **6.1**:
 - Supporting tenancy checks also passed: `require-super-admin` (8 assertions), `audit-log-visibility` (4), `layer3-pass-a-isolation` (13), `layer3-pass-b-media-isolation` (8), `layer3-pass-b-progress-audit-isolation` (12), and `student-tenant-config` (20).
 
 Verification note for **6.2**:
+
 - Fresh-db verification passed on `2026-05-12` via `npm run build:types`, `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`, and `npm run check`.
 - The dedicated RR smoke harness now lives at [`scripts/test/rr-isolation-smoke.test.ts`](../../../scripts/test/rr-isolation-smoke.test.ts) and is exposed as `npm run test:rr-isolation-smoke`; it authenticates as the seeded super-admin using `ADMIN_EMAIL` and `DEV_SUPERADMIN_PASSWORD`.
 - Official slice verification passed against a local API instance using `API_BASE_URL=http://localhost:5201 npm run test:rr-isolation-smoke`.
@@ -123,10 +127,11 @@ Verification note for **6.2**:
 - In SLMTS context, the smoke saw only the SLMTS marker data and got `404` for direct RR track/batch lookups; after switching to RR, it saw only the RR marker data and got `404` for direct SLMTS track/batch lookups.
 
 Verification note for **6.3**:
-- Local slice verification passed on `2026-05-12` via `npm run check`, `npx tsx scripts/test/identity-request-membership.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/student-tenant-config.test.ts`.
-- The student portal now evaluates access against the **current tenant membership** rather than global `hasActiveMembership`, exposes a tenant-aware pending/no-access screen, and allows an authenticated existing user to request membership in the current tenant through `POST /api/auth/request-membership`.
+
+- Local 6.3 verification passed on `2026-05-12` via `npm run check`, `npx tsx scripts/test/identity-request-membership.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/student-tenant-config.test.ts`.
+- The student portal now evaluates access against the **current tenant membership** rather than global `hasActiveMembership`, exposes a tenant-aware pending/no-access screen, allows an authenticated existing user to request membership in the current tenant through `POST /api/auth/request-membership`, and avoids infinite retry loops if an automatic org switch fails.
 - The dedicated smoke harness now lives at [`scripts/test/second-org-join-smoke.test.ts`](../../../scripts/test/second-org-join-smoke.test.ts) and is exposed as `npm run test:second-org-join-smoke`.
-- Official slice verification passed against the branch API using `API_BASE_URL=http://localhost:5202 DEV_SUPERADMIN_PASSWORD=dev-superadmin-pass npm run test:second-org-join-smoke`.
+- Official merged-branch verification passed against a local API instance using `API_BASE_URL=http://localhost:5203 DEV_SUPERADMIN_PASSWORD=dev-superadmin-pass npm run test:second-org-join-smoke`.
 - The smoke created a new SLMTS user, approved the SLMTS membership through the super-admin governance API, requested RR membership through the new authenticated tenant-aware endpoint, verified `/api/auth/me` reported RR as `pending`, confirmed `POST /api/auth/switch-org` returned `403` while RR remained pending, then approved RR and verified `switch-org` succeeded and RR-scoped content became visible.
 
 ---

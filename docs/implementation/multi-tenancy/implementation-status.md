@@ -24,6 +24,7 @@
   - `slice-5.3-admin-org-switcher` — admin shell org switcher + auth/query refresh behavior
 - `slice-4.1-tenant-config` — student tenant config foundation, tenant-aware auth branding + metadata, and dual-instance student dev scripts
 - `slice-4.3-student-shell-branding` — tenant-aware authenticated student shell/pending branding, client-safe tenant env wiring, and explicit preservation of the shared Narada auth-left hero
+- `slice-6.3-second-org-join` — authenticated tenant membership requests, tenant-scoped student access state, RR auto-switch behavior, second-org smoke coverage, and 6.3 docs refresh
 
 ---
 
@@ -63,7 +64,7 @@
 
 | Slice | Summary | Key files |
 | ----- | ------- | --------- |
-| **4.1** Tenant config foundation + shell follow-up | Student portal now resolves **`TENANT`** to typed configs for **`slmts`** and **`rr`**, mirrors that tenant into the client runtime for browser-rendered branding, drives tenant-specific branding for the auth form area, root metadata, authenticated shell, and pending-approval surface, and builds tenant-aware register headers/body instead of hardcoding **`slmts`**. The auth page's **left hero remains Narada-branded across tenants by design** so the product identity stays consistent. Dev scripts support the documented dual-instance local setup on **`3000`** and **`3010`**. Remaining Layer 4 work is limited to any broader tenant-aware auth client follow-up you still want beyond the current register flow and runtime shell rendering. | [`apps/student-portal/src/config/tenants/index.ts`](../../../apps/student-portal/src/config/tenants/index.ts), [`apps/student-portal/src/config/tenants/slmts.ts`](../../../apps/student-portal/src/config/tenants/slmts.ts), [`apps/student-portal/src/config/tenants/rr.ts`](../../../apps/student-portal/src/config/tenants/rr.ts), [`apps/student-portal/src/lib/tenant.ts`](../../../apps/student-portal/src/lib/tenant.ts), [`apps/student-portal/src/components/auth/StudentAuthPage.tsx`](../../../apps/student-portal/src/components/auth/StudentAuthPage.tsx), [`apps/student-portal/src/app/layout.tsx`](../../../apps/student-portal/src/app/layout.tsx), [`apps/student-portal/src/app/(portal)/layout.tsx`](../../../apps/student-portal/src/app/(portal)/layout.tsx), [`apps/student-portal/src/app/(portal)/pending-approval/page.tsx`](../../../apps/student-portal/src/app/(portal)/pending-approval/page.tsx), [`apps/student-portal/next.config.ts`](../../../apps/student-portal/next.config.ts), [`packages/ui/src/components/layout/app-shell.tsx`](../../../packages/ui/src/components/layout/app-shell.tsx), [`packages/ui/src/components/layout/app-sidebar.tsx`](../../../packages/ui/src/components/layout/app-sidebar.tsx), [`packages/ui/src/components/layout/brand-header.tsx`](../../../packages/ui/src/components/layout/brand-header.tsx), [`apps/student-portal/package.json`](../../../apps/student-portal/package.json), [`scripts/test/student-tenant-config.test.ts`](../../../scripts/test/student-tenant-config.test.ts) |
+| **4.1** Tenant config foundation + shell follow-up | Student portal now resolves **`TENANT`** to typed configs for **`slmts`** and **`rr`**, mirrors that tenant into the client runtime for browser-rendered branding, drives tenant-specific branding for the auth form area, root metadata, authenticated shell, and pending-approval surface, builds tenant-aware register headers/body instead of hardcoding **`slmts`**, and now computes **current-tenant** access state so RR users can request membership, see tenant-specific pending copy, and auto-switch into RR after approval without relying on global `hasActiveMembership`. The auth page's **left hero remains Narada-branded across tenants by design** so the product identity stays consistent. Dev scripts support the documented dual-instance local setup on **`3000`** and **`3010`**. Remaining Layer 4 work is limited to any broader tenant-aware auth client follow-up you still want beyond the current register flow and current-tenant access/session behavior. | [`apps/student-portal/src/config/tenants/index.ts`](../../../apps/student-portal/src/config/tenants/index.ts), [`apps/student-portal/src/config/tenants/slmts.ts`](../../../apps/student-portal/src/config/tenants/slmts.ts), [`apps/student-portal/src/config/tenants/rr.ts`](../../../apps/student-portal/src/config/tenants/rr.ts), [`apps/student-portal/src/lib/tenant.ts`](../../../apps/student-portal/src/lib/tenant.ts), [`apps/student-portal/src/lib/tenant-session.ts`](../../../apps/student-portal/src/lib/tenant-session.ts), [`apps/student-portal/src/components/auth/StudentAuthPage.tsx`](../../../apps/student-portal/src/components/auth/StudentAuthPage.tsx), [`apps/student-portal/src/app/layout.tsx`](../../../apps/student-portal/src/app/layout.tsx), [`apps/student-portal/src/app/(portal)/layout.tsx`](../../../apps/student-portal/src/app/(portal)/layout.tsx), [`apps/student-portal/src/app/(portal)/pending-approval/page.tsx`](../../../apps/student-portal/src/app/(portal)/pending-approval/page.tsx), [`apps/student-portal/next.config.ts`](../../../apps/student-portal/next.config.ts), [`packages/ui/src/components/layout/app-shell.tsx`](../../../packages/ui/src/components/layout/app-shell.tsx), [`packages/ui/src/components/layout/app-sidebar.tsx`](../../../packages/ui/src/components/layout/app-sidebar.tsx), [`packages/ui/src/components/layout/brand-header.tsx`](../../../packages/ui/src/components/layout/brand-header.tsx), [`apps/student-portal/package.json`](../../../apps/student-portal/package.json), [`scripts/test/student-tenant-config.test.ts`](../../../scripts/test/student-tenant-config.test.ts), [`scripts/test/student-tenant-session.test.ts`](../../../scripts/test/student-tenant-session.test.ts) |
 
 ---
 
@@ -109,6 +110,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 | POST | `/api/auth/login` | Public (+ rate limit) | Cookie + `loginState` / user session fields. |
 | POST | `/api/auth/logout` | Cookie | Clear session. |
 | GET | `/api/auth/me` | JWT cookie | Profile + `memberships[]` + `hasActiveMembership`. |
+| POST | `/api/auth/request-membership` | JWT + CSRF | Create a pending membership request for the current tenant when the user is already authenticated. Returns explicit result states for created, already pending, already active, inactive, and rejected memberships. |
 | POST | `/api/auth/switch-org` | JWT + CSRF | Body `{ orgId }`; active membership required. |
 | GET | `/api/auth/admin/users` | JWT + **super-admin** | Paginated users + nested `memberships[]`; governance filters. |
 | GET | `/api/auth/admin/users/:userId` | JWT + **super-admin** | Single user + memberships. |
@@ -141,6 +143,9 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 13. **Membership approve/reject** updates **`user_organizations`** only; org-only admins receive **403** on governance routes.
 14. **Legacy DB columns** `users.roles` / `users.status` still exist and are still read in some paths (Passport inactive check, seeds, old service methods). Pilot listing must use **membership** APIs, not `users.status === pending_approval` alone.
 15. **Student auth and portal surfaces** now split branding intentionally: the auth page's **left hero stays Narada-branded** across tenants, while the auth form area, root metadata, authenticated shared shell, and pending-approval surface resolve tenant-specific branding from typed config under [`apps/student-portal/src/config/tenants/`](../../../apps/student-portal/src/config/tenants/).
+16. **`POST /api/auth/request-membership`** now supports the real 6.3 path: an authenticated user can request access to the current tenant without creating a second account. The route is idempotent for active/pending memberships and preserves inactive/rejected memberships instead of silently reopening them.
+17. **Student portal access is now tenant-scoped.** The portal derives current-tenant membership state from `memberships[]`, not just global `hasActiveMembership`, so an SLMTS-active user on the RR portal can still see RR pending/no-membership states correctly.
+18. **Student portal auto-switches only once per tenant org.** If the current tenant has an active membership but the JWT still points at another org, the portal attempts `POST /api/auth/switch-org`; failures are latched to avoid retry loops and surface a user-visible error instead of spinning forever.
 
 ---
 
@@ -185,7 +190,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 
 Use the distinction below so slice selection is not misleading:
 
-1. **Recommended next slice: checklist 6.4** — document the known out-of-scope gaps captured during pilot validation (email, questionnaire, OAuth edge cases as applicable).
+1. **Recommended next slice: checklist 6.4** — document the known out-of-scope gaps captured during pilot validation (email, questionnaire, OAuth edge cases, and any remaining browser-only validation gaps as applicable).
 2. **Optional Layer 4 follow-up:** continue only if you want broader tenant-aware auth client or OAuth propagation beyond the current register flow and shell rendering.
 3. **Blocked foundational follow-up: slice 1.4-contract** — only after [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is fully cleared.
 4. **Deferred slice: Checklist 2.12** — OAuth vs membership pending policy. Only reprioritize this if Google OAuth becomes real product scope.
@@ -198,7 +203,7 @@ Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` afte
 
 When continuing in a brand-new chat, do this first:
 
-1. Confirm checkout is on **`multi-tenancy`** and includes merge commit **`826a6bfc`** or later.
+1. Confirm checkout is on **`multi-tenancy`** and includes merge commit **`ed0a504d`** or later.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
 3. Treat **6.1**, **6.2**, and **6.3** as already validated and default to **6.4** documentation of known gaps next, unless you intentionally want the optional broader Layer 4 auth-client propagation work first.
 4. Keep **2.12** deferred unless Google OAuth becomes product scope; if you do touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.

@@ -4,7 +4,7 @@ This document defines backend contract changes needed to move from global user r
 
 **Migration sequencing (physical schema):** Layer 2 updates JWT payloads, middleware, and routes to use `user_organizations` and `users.is_super_admin`. The database columns `users.roles` and `users.status` remain until **all** code paths stop reading them; then slice **`slice-1.4-schema-contract`** drops those columns (see [implementation-checklist.md](./implementation-checklist.md) deferred block and [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md)). API contracts below describe the **target** behavior; implementation may still read legacy columns temporarily during Layer 2.
 
-**Implementation snapshot:** Slices **2.1**–**2.5** (JWT, membership-first auth, org switch, **super-admin governance APIs** + org-admin directory, governance event/audit alignment) are merged to `multi-tenancy`. See [implementation-status.md](./implementation-status.md) for remaining optional governance extras (for example add/delete membership routes) and the current downstream admin-portal slice status.
+**Implementation snapshot:** Slices **2.1**–**2.5** (JWT, membership-first auth, org switch, **super-admin governance APIs** + org-admin directory, governance event/audit alignment) are merged to `multi-tenancy`, and checklist **6.3** now adds the real authenticated second-org request path through **`POST /api/auth/request-membership`** plus tenant-scoped student pending/no-access handling. See [implementation-status.md](./implementation-status.md) for remaining optional governance extras (for example add/delete membership routes) and the current downstream admin-portal slice status.
 
 Grounded references:
 
@@ -117,6 +117,11 @@ Target endpoints remain in identity module but switch to membership model.
     - set default `currentOrgId`
     - include org-scoped claims in JWT
 
+- `POST /api/auth/request-membership`
+  - authenticated endpoint for an existing user to request membership in the tenant resolved from request context
+  - creates a pending membership when none exists
+  - returns explicit result states for already pending, already active, inactive, and rejected memberships
+
 - `POST /api/auth/switch-org`
   - authenticated endpoint
   - validates user has membership in target org
@@ -205,7 +210,7 @@ Backend should be completed first; UI can then adapt incrementally.
 Student portal contract changes:
 
 1. Registration and login responses must include pending/no-active-membership states.
-2. Add explicit org join request endpoint for second-org onboarding.
+2. Add explicit org join request endpoint for second-org onboarding. **Implemented as `POST /api/auth/request-membership` in the current 6.3 baseline.**
 3. Add clear API response codes/messages for:
    - pending membership
    - inactive membership
