@@ -32,6 +32,7 @@ Add or extend tests when implementation lands (exact framework TBD per repo conv
 - **Layer 3 Pass B schema + backfill:** `npx tsx scripts/test/layer3-pass-b-schema-and-guards.test.ts` validates the remaining `org_id` columns, nullable `audit_logs.org_id`, and migration guard/backfill shape.
 - **Layer 3 Pass B media/content isolation:** `npx tsx scripts/test/layer3-pass-b-media-isolation.test.ts` validates org-scoped create/read/update/delete behavior for audio, text segments, media segments, and mappings.
 - **Layer 3 Pass B progress/audit isolation:** `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts` validates org-scoped progress writes/reads, per-org enrollment semantics, and event-handler-backed audit persistence.
+- **Enrollment schema contract:** `npx tsx scripts/test/layer3-pass-b-schema-and-guards.test.ts` also validates the partial unique enrollment index on `(org_id, student_id)` for active rows.
 - **Student tenant-config helpers:** `npx tsx scripts/test/student-tenant-config.test.ts` validates `TENANT` resolution, tenant metadata, and register header/body generation for `slmts` and `rr`.
 - **OAuth tenant propagation:** `npx tsx scripts/test/oauth-tenant-context.test.ts` validates server-signed OAuth `state`, verified tenant parsing, and safe post-auth redirect fallback for allowed, disallowed, and tampered inputs.
 - **OAuth membership parity:** `npx tsx scripts/test/oauth-membership-parity.test.ts` validates that Google OAuth creates pending target-tenant memberships when none exist, preserves pending/active/inactive/rejected memberships as-is, and does not reopen closed memberships.
@@ -128,6 +129,7 @@ Verification note for **1.4-contract**:
 
 ### Enrollment rule
 
+- Schema guard: `unique_active_enrollment_idx` must be a partial **unique** index on `(org_id, student_id)` where `status = 'active'`.
 - Verify the same student can hold independent active enrollments in different orgs.
 - Verify the same student cannot create a second active enrollment inside the same org.
 

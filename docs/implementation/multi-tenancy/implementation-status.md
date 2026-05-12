@@ -2,7 +2,7 @@
 
 **Purpose:** Single entry point for humans and agents continuing work in a **new chat**. It reflects what is already merged to the integration branch **`multi-tenancy`**, how the system behaves today, known gaps, and the recommended next steps.
 
-**Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
+**Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md), [implementation-checklist.md](./implementation-checklist.md), and the DB/runbook cleanup tracker [db-audit-remediation-checklist.md](./db-audit-remediation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
 
 **Last updated:** Reflects Layer **1** through **1.4 contract** (including fresh-DB verification on the merged branch), Layer **2** roadmap slices **2.1–2.5** plus **2.12** OAuth parity, Layer **3** Pass A and Pass B, student Layer **4.1 / 4.2 / 4.4**, admin checklist **5.1**–**5.4**, and pilot closeout through checklist **6.4** on the current multi-tenancy slice flow.
 
@@ -147,7 +147,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 9. **Super-admin** uses **`GET /api/auth/admin/users`** (+ mutations) for user governance; the admin user-management screen now exposes a dedicated organization filter that drives the existing server-side **`orgSlug`** query parameter, and the returned status-tab counts now stay aligned with the active org filter instead of remaining global. **Org admins** use **`GET /api/admin/directory/users`** for in-org student/instructor pickers (requires JWT org context).
 10. **`GET /api/admin/audit-logs`** now respects authority boundaries using physical `audit_logs.org_id`: super-admin sees the full audit stream, org admins see only current-org rows, and platform rows (`org_id IS NULL`) remain super-admin only.
 11. **Pass B media/content flows** now reject or hide foreign-org audio, text segment, media-segment, and mapping rows even when IDs are guessed correctly.
-12. **Batch and learning progress** now use physical `student_progress.org_id`; runtime enrollment semantics allow one active enrollment per org, and foreign-org enrollment drop attempts no longer mutate the target row.
+12. **Batch and learning progress** now use physical `student_progress.org_id`; active enrollment semantics are enforced per org via a partial unique index on `(org_id, student_id)` for `status = 'active'`, and foreign-org enrollment drop attempts no longer mutate the target row.
 13. **Membership approve/reject** updates **`user_organizations`** only; org-only admins receive **403** on governance routes.
 14. **Legacy DB columns are gone.** `users.roles`, `users.status`, and `users_status_check` were removed in slice `1.4`; live code and scripts now use memberships plus `isSuperAdmin` only.
 15. **Student auth and portal surfaces** now split branding intentionally: the auth page's **left hero stays Narada-branded** across tenants, while the auth form area, root metadata, authenticated shared shell, and pending-approval surface resolve tenant-specific branding from typed config under [`apps/student-portal/src/config/tenants/`](../../../apps/student-portal/src/config/tenants/).
@@ -209,8 +209,9 @@ These are now intentionally documented rather than left as implied follow-up:
 
 Use the distinction below so slice selection is not misleading:
 
-1. **Optional governance extras:** implement `POST …/users/:userId/memberships` and/or `DELETE …/memberships/:id` only when a real operator workflow needs them.
-2. **Operational follow-up:** verify production subdomain/TLS/cookie behavior and expand RR browser-only onboarding coverage when rollout readiness needs deeper production confidence.
+1. **DB/runbook remediation:** complete the cleanup in [db-audit-remediation-checklist.md](./db-audit-remediation-checklist.md) so schema authority, reset paths, and seed expectations are explicit.
+2. **Optional governance extras:** implement `POST …/users/:userId/memberships` and/or `DELETE …/memberships/:id` only when a real operator workflow needs them.
+3. **Operational follow-up:** verify production subdomain/TLS/cookie behavior and expand RR browser-only onboarding coverage when rollout readiness needs deeper production confidence.
 
 Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` after `npm run check`.
 
@@ -223,7 +224,7 @@ When continuing in a brand-new chat, do this first:
 1. Confirm checkout is on **`multi-tenancy`** and up to date with `origin/multi-tenancy`.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
 3. Treat **1.4-contract** as already merged, **6.1** through **6.4** as already complete, and the Layer **4.4** tenant-aware OAuth propagation follow-up as merged.
-4. Treat **2.4** and **2.12** as complete, and default next work to optional governance extras or operational verification follow-up rather than reopening auth naming or OAuth policy work. If you touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.
+4. Treat **2.4** and **2.12** as complete, and default next work to the DB/remediation checklist or later operational follow-up rather than reopening auth naming or OAuth policy work. If you touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.
 
 ---
 
@@ -263,6 +264,7 @@ When continuing in a brand-new chat, do this first:
 | **This file** | Status + handoff |
 | [implementation-roadmap.md](./implementation-roadmap.md) | Sequenced slices by layer |
 | [implementation-checklist.md](./implementation-checklist.md) | Checkbox execution |
+| [db-audit-remediation-checklist.md](./db-audit-remediation-checklist.md) | Canonical DB/reset/seed support matrix + audit cleanup tracker |
 | [api-contract-changes.md](./api-contract-changes.md) | Target API/JWT contracts (some sections are ahead of remaining work) |
 | [verification-strategy.md](./verification-strategy.md) | How to prove each layer |
 | [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) | DB column removal gate for slice 1.4 |

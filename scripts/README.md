@@ -1,97 +1,84 @@
-# VedicLMS Scripts Directory
+# Scripts Directory
 
-This directory contains utility scripts for database management, testing, data seeding, and administrative tasks.
+This directory contains database reset helpers, local seed utilities, verification harnesses, and one-off operational scripts.
 
-## ⚠️ Important Safety Warning
+## Safety
 
-**NEVER run these scripts against the PRODUCTION database unless you are absolutely certain of what you are doing.**
-Most scripts in `seed/` and `db/` are destructive or modify data significantly.
+Do not run destructive scripts against production.
 
-## Quick Reference
+## Supported DB path
 
-| Category | Path | Description |
-|----------|------|-------------|
-| **Database** | `db/reset-db.ts` | **DESTRUCTIVE**: Drops all tables and recreates schema |
-| **Database** | `test/db-reset.ps1` | **DESTRUCTIVE**: Windows PowerShell wrapper for full DB reset |
-| **Seeding** | `seed/create-30-students.ts` | Creates 30 SLMTS users with active student memberships |
-| **Seeding** | `seed/create-sample-batches.ts` | Creates 10 sample SLMTS batches using membership-based instructor lookup |
-| **Proficiency** | `utils/full-proficiency-reset.ts` | **DESTRUCTIVE**: Resets/Generates proficiency for ALL students |
+For the current multi-tenancy repo state, the supported local DB workflow is:
 
-## Script Categories
+1. `npm run db:reset`
+2. `npm run build:types`
+3. `npm run db:seed-orgs`
+4. `npm run db:seed-dev`
+5. `npm run db:seed` when curriculum data is needed
 
-### 🛠️ Database Management
+The canonical schema authority for that flow is `drizzle.config.ts` -> `packages/types/src/schema.ts` -> repo-root `migrations/`. See `docs/implementation/multi-tenancy/db-audit-remediation-checklist.md` for the full support matrix.
 
-- **`db/reset-db.ts`**
-  - *Usage*: `npm run db:reset` (via package.json)
-  - *Purpose*: Completely wipes the database schema and recreates it using Drizzle.
-  - *Note*: Development only.
+## Support status
 
-- **`test/db-reset.ps1`**
-  - *Usage*: `.\scripts\test\db-reset.ps1`
-  - *Purpose*: Robust PowerShell script for Windows users to reset the DB. Handles connection checking and Drizzle push.
+| Path | Status | Notes |
+| --- | --- | --- |
+| `test/db-reset.ps1` | `official` | Package-wired reset path. Drops `public` and `drizzle`, then runs `drizzle-kit migrate`. |
+| `db/reset-db.ts` | `manual utility` | Cross-platform helper that mirrors reset + migrate, but is not the package-wired entrypoint. |
+| `seed/` | `manual utility` | Optional local/dev data helpers outside the canonical clean-bootstrap path. |
+| `utils/` | `manual utility` | One-off admin or repair helpers; read each script before use. |
+| `test/` | `manual utility` | Verification harnesses. Prefer the multi-tenancy contract tests listed below for DB/auth/isolation work. |
 
-### 🌱 Data Seeding
+## Database helpers
 
-- **`seed/create-sample-users.ts`**
-  - *Usage*: `npx tsx scripts/seed/create-sample-users.ts`
-  - *Purpose*: Creates 10 basic users (`test1` to `test10`) with password `welcome123` and pending SLMTS student memberships.
+- `test/db-reset.ps1`
+  - Usage: `npm run db:reset` or `.\scripts\test\db-reset.ps1`
+  - Purpose: supported full reset on this repo state
 
-- **`seed/create-30-students.ts`**
-  - *Usage*: `npx tsx scripts/seed/create-30-students.ts`
-  - *Purpose*: Creates 30 realistic SLMTS users with active student memberships.
+- `db/reset-db.ts`
+  - Usage: `npx tsx scripts/db/reset-db.ts`
+  - Purpose: manual cross-platform fallback for the same reset + migrate flow
 
-- **`seed/create-approved-users.ts`**
-  - *Usage*: `npx tsx scripts/seed/create-approved-users.ts`
-  - *Purpose*: Creates users (`test11` to `test30`) with active SLMTS memberships and mixed membership roles.
+## Canonical seed scripts
 
-- **`seed/create-sample-batches.ts`**
-  - *Usage*: `npx tsx scripts/seed/create-sample-batches.ts`
-  - *Purpose*: Creates 10 standard SLMTS batches (Morning/Evening, etc.) for testing enrollment flows.
+- `server/seed-organizations.ts`
+  - Usage: `npm run db:seed-orgs`
+  - Purpose: create or update the canonical `slmts` and `rr` organizations
 
-- **`seed/assign-secondary-instructors.ts`**
-  - *Usage*: `npx tsx scripts/seed/assign-secondary-instructors.ts`
-  - *Purpose*: Assigns 2 co-instructors to existing SLMTS batches using active membership roles. Run this *after* creating batches.
+- `server/seed-dev-bootstrap.ts`
+  - Usage: `npm run db:seed-dev`
+  - Purpose: create/update the `ADMIN_EMAIL` super-admin and baseline memberships
 
-### 📊 Proficiency & Progress
+- `server/seed-vedic-curriculum.ts`
+  - Usage: `npm run db:seed`
+  - Purpose: seed SLMTS curriculum tracks and chapters from `server/seeds/curriculum.json`
 
-- **`utils/check-and-reset-proficiency.ts`**
-  - *Usage*: `npx tsx scripts/utils/check-and-reset-proficiency.ts`
-  - *Purpose*: Ensures all *enrolled* students have proficiency records. Fills gaps if found.
+## Optional local/dev seeds
 
-- **`utils/full-proficiency-reset.ts`**
-  - *Usage*: `npx tsx scripts/utils/full-proficiency-reset.ts`
-  - *Purpose*: Checks *every* student (enrolled or not) against *every* chapter and creates missing records.
-  - *Warning*: high volume operation.
+- `seed/create-sample-users.ts`: create pending SLMTS student memberships for local testing
+- `seed/create-30-students.ts`: create a larger active SLMTS student set
+- `seed/create-approved-users.ts`: create additional approved users with mixed roles
+- `seed/create-sample-batches.ts`: create sample SLMTS batches for local testing
+- `seed/assign-secondary-instructors.ts`: attach co-instructors to existing batches
 
-- **`utils/reset-all-proficiency.ts`**
-  - *Usage*: `npx tsx scripts/utils/reset-all-proficiency.ts`
-  - *Purpose*: Sets `proficiency_level = 9` (Not Started) for all existing records.
+## Utilities
 
-### 🔧 Utilities
+- `utils/list-users.ts`: inspect recent users and memberships
+- `utils/update-user-role.ts`: hardcoded local role/membership adjustment helper
+- `utils/check-instructor-batches.ts`: inspect instructor-to-batch assignments
+- `utils/test-e2e-batches.ts`: local batch/enrollment flow helper
+- `utils/check-and-reset-proficiency.ts`: fill missing proficiency rows for enrolled students
+- `utils/full-proficiency-reset.ts`: destructive full proficiency rebuild
+- `utils/reset-all-proficiency.ts`: set all existing proficiency rows to not-started
 
-- **`utils/list-users.ts`**
-  - *Usage*: `npx tsx scripts/utils/list-users.ts`
-  - *Purpose*: Lists the most recent 20 users with membership summaries by org.
+## Recommended verification scripts
 
-- **`utils/update-user-role.ts`**
-  - *Usage*: `npx tsx scripts/utils/update-user-role.ts`
-  - *Purpose*: Hardcoded utility to grant `student, admin` roles on the SLMTS membership for `kashyap.kuchipudi@gmail.com`.
+For multi-tenancy DB or auth changes, start with:
 
-- **`utils/check-instructor-batches.ts`**
-  - *Usage*: `npx tsx scripts/utils/check-instructor-batches.ts`
-  - *Purpose*: Visualizes which instructors are assigned to which batches.
-
-- **`utils/test-e2e-batches.ts`**
-  - *Usage*: `npx tsx scripts/utils/test-e2e-batches.ts`
-  - *Purpose*: Simulates an end-to-end batch creation and enrollment flow.
-
-### 🧪 Tests & Smoke Scripts
-
-Located in `test/`, these are used for manual verification of specific features:
-- `admin-batches-smoke.ts`: Verifies batch management.
-- `auth-test.ts`: Verifies authentication flows.
-  - Uses membership approval semantics rather than legacy account status toggles.
-- `content-smoke.ts`: Verifies content structure.
-
----
-*Maintained by the Antigravity Team*
+- `npx tsx scripts/test/layer3-pass-a-schema-and-guards.test.ts`
+- `npx tsx scripts/test/layer3-pass-a-isolation.test.ts`
+- `npx tsx scripts/test/layer3-pass-b-schema-and-guards.test.ts`
+- `npx tsx scripts/test/layer3-pass-b-script-compat.test.ts`
+- `npx tsx scripts/test/layer3-pass-b-media-isolation.test.ts`
+- `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts`
+- `npx tsx scripts/test/require-super-admin.test.ts`
+- `npx tsx scripts/test/audit-log-visibility.test.ts`

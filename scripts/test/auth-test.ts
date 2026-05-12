@@ -140,7 +140,7 @@
  * "Database error" (only in --full mode)
  *   → Check .env file has correct DATABASE_URL or PG* variables
  *   → Make sure database is running
- *   → Try: npm run db:push
+ *   → Try: npm run db:reset, then re-run the needed seed commands
  * 
  * "Server did not start in time"
  *   → Check for compilation errors: npm run check

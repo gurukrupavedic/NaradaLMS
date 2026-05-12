@@ -9,6 +9,7 @@ import {
   integer,
   real,
   unique,
+  uniqueIndex,
   check,
   foreignKey,
   uuid,
@@ -297,9 +298,9 @@ export const enrollments = pgTable("enrollments", {
   droppedReason: text("dropped_reason"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
-  // Partial unique index: Only one active enrollment per student
-  index("unique_active_enrollment_idx")
-    .on(table.studentId)
+  // Partial unique index: only one active enrollment per student within an org.
+  uniqueIndex("unique_active_enrollment_idx")
+    .on(table.orgId, table.studentId)
     .where(sql`status = 'active'`),
   index("idx_enrollments_org").on(table.orgId),
   index("idx_enrollments_batch").on(table.batchId),

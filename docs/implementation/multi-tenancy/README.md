@@ -11,6 +11,7 @@ It captures both the locked product/architecture decisions and the current as-bu
 1. Read **[implementation-status.md](./implementation-status.md)** — what is already merged to `multi-tenancy`, current behavior, remaining gaps, and the current follow-up priority.
 2. Follow **[implementation-roadmap.md](./implementation-roadmap.md)** and **[implementation-checklist.md](./implementation-checklist.md)** for execution order.
 3. Use **[verification-strategy.md](./verification-strategy.md)** before marking checklist items done.
+4. If the work touches DB setup, reset, migrations, or seeds, read **[db-audit-remediation-checklist.md](./db-audit-remediation-checklist.md)** to confirm which files are official, manual, or historical.
 
 ### Current merged baseline
 
@@ -20,7 +21,7 @@ It captures both the locked product/architecture decisions and the current as-bu
 - Student Layer **4.1 / 4.2 / 4.4** tenant-config, authenticated shell branding, and tenant-aware OAuth propagation work are merged.
 - Admin **5.1–5.4** are merged.
 - Checklists **6.1** pilot validation, **6.2** RR isolation smoke, **6.3** second-org join, and **6.4** known-gap documentation are now complete in the current docs baseline.
-- The next meaningful follow-up is optional cleanup or operational verification; the former deferred checklist **2.12** (OAuth product-policy parity) is now implemented, so remaining work is outside the old OAuth-policy gap.
+- The current follow-up priority is the DB/runbook cleanup tracked in [db-audit-remediation-checklist.md](./db-audit-remediation-checklist.md), followed by any remaining operational verification work.
 
 ---
 
@@ -57,17 +58,18 @@ Wave 3 execution docs are now available:
 3. [implementation-checklist.md](./implementation-checklist.md)
 4. [task-coverage-matrix.md](./task-coverage-matrix.md)
 5. [verification-strategy.md](./verification-strategy.md)
+6. [db-audit-remediation-checklist.md](./db-audit-remediation-checklist.md)
 
 Use the roadmap and checklist as the primary execution guide. The root [roadmap.md](../roadmap.md) remains historical context for earlier planning; multi-tenant execution follows this folder.
 
 ### Local DB seed order (multi-tenancy dev)
 
-After migrations (`npm run db:migrate` or `npm run db:reset`; the reset path now clears both `public` and Drizzle's `drizzle` schema so fresh-migrate verification is real):
+After migrations (`npm run db:migrate` or `npm run db:reset`; the supported reset path clears both `public` and Drizzle's `drizzle` schema so fresh-migrate verification is real):
 
-1. `npm run build:types` — useful in a fresh worktree so the emitted `@narada/types` package matches the current schema before seeding.
+1. `npm run build:types` — recommended before seeding so the emitted `@narada/types` package matches the current schema.
 2. `npm run db:seed-orgs` — canonical org rows (`slmts`, `rr`).
 3. `npm run db:seed-dev` — super-admin for `ADMIN_EMAIL` plus minimal `user_organizations` (SLMTS active, RR pending); first-time bootstrap needs `DEV_SUPERADMIN_PASSWORD` set (see [environment-setup.md](../../essentials/environment-setup.md)).
-4. Optionally `npm run db:seed` — Vedic curriculum structure.
+4. Optionally `npm run db:seed` — SLMTS curriculum tracks and chapters from `server/seeds/curriculum.json`. Use it when the local DB needs curriculum data.
 
 The RR isolation smoke (`npm run test:rr-isolation-smoke`) also uses those seeded super-admin credentials, so keep `DEV_SUPERADMIN_PASSWORD` available in `.env` or pass it inline when running the smoke outside the slice worktree.
 

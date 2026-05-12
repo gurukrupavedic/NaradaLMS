@@ -25,7 +25,7 @@ Executed:
 
 Result:
 
-- DB reset succeeded (drop public schema, recreate schema, drizzle push applied).
+- DB reset succeeded (drop `public` / `drizzle`, recreate `public`, `drizzle-kit migrate` applied).
 - Table list after reset confirmed schema objects are present:
   - `users`
   - `tracks`

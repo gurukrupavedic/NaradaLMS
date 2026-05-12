@@ -19,8 +19,6 @@ async function createUserWithMembership(input: {
       passwordHash: "not-used",
       firstName: input.membershipStatus === "active" ? "Active" : "Pending",
       lastName: "Membership",
-      status: "inactive",
-      roles: [],
     })
     .returning({ id: users.id });
 

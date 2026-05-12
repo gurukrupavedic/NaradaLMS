@@ -36,8 +36,6 @@ async function main() {
         passwordHash: "not-used",
         firstName: "Eligible",
         lastName: "Student",
-        status: "inactive",
-        roles: [],
       })
       .returning({ id: users.id });
 

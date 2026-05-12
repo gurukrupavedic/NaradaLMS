@@ -68,7 +68,7 @@ npm run db:seed-orgs
 
 ### Phase 0b: Dev super-admin and memberships (multi-tenancy)
 
-Seeds the account matching **`ADMIN_EMAIL`** as a platform super-admin (`users.is_super_admin`) with legacy **`users.roles` / `users.status`** kept compatible with current auth until Layer 2. Also upserts **`user_organizations`**: active membership on **`slmts`** (roles `student` + `admin`) and a **pending** membership on **`rr`** (role `student`) for second-org smoke tests.
+Seeds the account matching **`ADMIN_EMAIL`** as a platform super-admin (`users.is_super_admin`) and upserts **`user_organizations`** rows: active membership on **`slmts`** (roles `student` + `admin`) and a **pending** membership on **`rr`** (role `student`) for second-org smoke tests.
 
 ```bash
 npm run db:seed-dev
@@ -80,9 +80,9 @@ npm run db:seed-dev
 - **Optional:** `DEV_SUPERADMIN_FIRST_NAME`, `DEV_SUPERADMIN_LAST_NAME` (defaults: Dev / SuperAdmin).
 - **Optional (dev only):** `DEV_SUPERADMIN_RESET_PASSWORD=1` plus **`DEV_SUPERADMIN_PASSWORD`** to re-hash the password for an existing user.
 
-### Phase A: Vedic Curriculum (Mandatory)
+### Phase A: Vedic Curriculum (Optional but supported)
 
-Populates the primary structure (Tracks and Chapters). This script has been streamlined to ensure the latest pedagogical structure is applied.
+Populates the SLMTS curriculum structure from the checked-in source asset. Use this after the org and dev bootstrap seeds when the local database needs curriculum data.
 
 ```bash
 npm run db:seed
@@ -126,14 +126,14 @@ If your database becomes inconsistent during development, you can perform a "fac
 npm run db:reset
 ```
 
-*Platform Note: This command runs `scripts/test/db-reset.ps1` on Windows and `scripts/db/reset-db.ts` on other platforms.*
+*Support note: the package-wired reset entrypoint on this repo state is `scripts/test/db-reset.ps1`. `scripts/db/reset-db.ts` is kept as a manual cross-platform fallback, but it is not the primary runbook path.*
 
 **Reset Sequence**:
 
-1. Drops the `public` schema.
+1. Drops the `public` and `drizzle` schemas.
 2. Recreates the `public` schema.
 3. Grants necessary permissions.
-4. Executes `drizzle-kit migrate` against `./migrations/`.
+4. Executes `drizzle-kit migrate` against repo-root `migrations/`.
 
 ---
 
@@ -153,4 +153,4 @@ npm run db:reset
 
 - **`psql` not found**: Ensure PostgreSQL bin folder is in your system PATH.
 - **Connection Refused**: Check if your local Postgres service is running or if your firewall blocks port 5432.
-- **Schema Mismatch**: Run `npm run db:push` again if you pull new changes that include schema modifications.
+- **Schema Mismatch**: Re-run the supported path: `npm run db:reset`, then the needed seed commands (`db:seed-orgs`, `db:seed-dev`, and optionally `db:seed`).
