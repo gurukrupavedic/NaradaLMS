@@ -1,9 +1,11 @@
 import * as tenantModule from "../../apps/student-portal/src/lib/tenant";
+import * as tenantConfigModule from "../../apps/student-portal/src/config/tenants";
 
 const {
   buildTenantRegisterRequest,
   getCurrentTenantSlug,
   getSharedStudentAuthBranding,
+  getStudentShellBranding,
   getTenantConfig,
   getTenantMetadata,
 } = (
@@ -14,6 +16,12 @@ const {
   buildTenantRegisterRequest: typeof tenantModule.buildTenantRegisterRequest;
   getCurrentTenantSlug: typeof tenantModule.getCurrentTenantSlug;
   getSharedStudentAuthBranding: typeof tenantModule.getSharedStudentAuthBranding;
+  getStudentShellBranding?: (slug?: "slmts" | "rr") => {
+    displayName: string;
+    logoPath: string;
+    iconPath: string;
+    logoAlt: string;
+  };
   getTenantConfig: typeof tenantModule.getTenantConfig;
   getTenantMetadata: typeof tenantModule.getTenantMetadata;
 };
@@ -21,6 +29,14 @@ const {
 const passed: string[] = [];
 const failed: { name: string; error: string }[] = [];
 const originalTenant = process.env.TENANT;
+const originalPublicTenant = process.env.NEXT_PUBLIC_TENANT;
+const tenantConfigExports = (
+  "default" in tenantConfigModule
+    ? (tenantConfigModule.default as typeof tenantConfigModule)
+    : tenantConfigModule
+) as Record<string, unknown>;
+const getTenantBuildDirectory = tenantConfigExports
+  .getTenantBuildDirectory as undefined | ((slug?: "slmts" | "rr") => string);
 
 function assert(condition: boolean, name: string, message?: string) {
   if (condition) {
@@ -68,6 +84,17 @@ function testReturnsRrTenantConfig() {
     rrConfig.logoPath,
     "/branding/tenants/rr-logo.svg",
     "rr config exposes tenant logo path"
+  );
+}
+
+function testPrefersPublicTenantEnvForClientSafeResolution() {
+  delete process.env.TENANT;
+  process.env.NEXT_PUBLIC_TENANT = "rr";
+
+  assertEqual(
+    getCurrentTenantSlug(),
+    "rr",
+    "NEXT_PUBLIC_TENANT resolves tenant when TENANT is unavailable"
   );
 }
 
@@ -129,17 +156,79 @@ function testSharedStudentAuthBrandingStaysNarada() {
   );
 }
 
+function testStudentShellBrandingUsesTenantAssets() {
+  assert(
+    typeof getStudentShellBranding === "function",
+    "student shell branding helper exists",
+    "Expected getStudentShellBranding to be exported"
+  );
+
+  if (!getStudentShellBranding) {
+    return;
+  }
+
+  const rrBranding = getStudentShellBranding("rr");
+
+  assertEqual(
+    rrBranding.displayName,
+    "Raja Rajeswari Pathasala",
+    "student shell branding uses tenant display name"
+  );
+  assertEqual(
+    rrBranding.logoPath,
+    "/branding/tenants/rr-logo.svg",
+    "student shell branding uses tenant logo"
+  );
+  assertEqual(
+    rrBranding.iconPath,
+    "/branding/tenants/rr-icon.svg",
+    "student shell branding uses tenant icon"
+  );
+}
+
+function testTenantBuildDirectorySeparatesTenantDevArtifacts() {
+  assert(
+    typeof getTenantBuildDirectory === "function",
+    "tenant build directory helper exists",
+    "Expected getTenantBuildDirectory to be exported"
+  );
+
+  if (!getTenantBuildDirectory) {
+    return;
+  }
+
+  assertEqual(
+    getTenantBuildDirectory("slmts"),
+    ".next-slmts",
+    "slmts uses tenant-specific build directory"
+  );
+  assertEqual(
+    getTenantBuildDirectory("rr"),
+    ".next-rr",
+    "rr uses tenant-specific build directory"
+  );
+}
+
 try {
   testDefaultsToSlmtsForMissingOrInvalidTenant();
+  testPrefersPublicTenantEnvForClientSafeResolution();
   testReturnsRrTenantConfig();
   testTenantRegisterRequestCarriesTenantSlug();
   testTenantMetadataUsesTenantSpecificBranding();
   testSharedStudentAuthBrandingStaysNarada();
+  testStudentShellBrandingUsesTenantAssets();
+  testTenantBuildDirectorySeparatesTenantDevArtifacts();
 } finally {
   if (originalTenant === undefined) {
     delete process.env.TENANT;
   } else {
     process.env.TENANT = originalTenant;
+  }
+
+  if (originalPublicTenant === undefined) {
+    delete process.env.NEXT_PUBLIC_TENANT;
+  } else {
+    process.env.NEXT_PUBLIC_TENANT = originalPublicTenant;
   }
 }
 

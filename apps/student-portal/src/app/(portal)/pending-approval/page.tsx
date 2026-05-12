@@ -1,8 +1,10 @@
 "use client";
 
 import { useAuth, type AuthSession } from "@/hooks/useAuth";
+import { getStudentShellBranding } from "@/lib/tenant";
 import { Card, CardContent, CardHeader, CardTitle } from "@narada/ui";
 import { LoadingSpinner } from "@narada/ui";
+import Image from "next/image";
 
 export default function PendingApprovalPage() {
     const { user, isLoading, logout } = useAuth();
@@ -17,11 +19,24 @@ export default function PendingApprovalPage() {
 
     const session = user as AuthSession;
     const pending = session.memberships.filter((m) => m.status === "pending");
+    const tenantBranding = getStudentShellBranding();
 
     return (
         <div className="mx-auto flex max-w-lg flex-col gap-6 p-6">
             <Card>
                 <CardHeader>
+                    <div className="flex flex-col items-center gap-4 text-center">
+                        <Image
+                            src={tenantBranding.logoPath}
+                            alt={tenantBranding.logoAlt}
+                            width={96}
+                            height={96}
+                            className="h-20 w-auto"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                            {tenantBranding.displayName}
+                        </p>
+                    </div>
                     <CardTitle>Awaiting approval</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-muted-foreground">

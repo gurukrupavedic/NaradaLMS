@@ -80,8 +80,8 @@ Pass A is implemented in slice `slice-3.a-core-org-isolation` and should now be 
 
 - [x] **4.1** Add tenant config structure + TypeScript types for tenant config. *(Repo-equivalent landed under `apps/student-portal/src/config/tenants/` for `slmts` and `rr`.)*
 - [x] **4.2** Wire `TENANT` env (and `PORT` for RR on `3010` if using separate dev processes).
-- **4.3** Continue replacing remaining student-portal hardcoded branding with tenant config. *(Slice `4.1` covered the auth page and root metadata; the shared authenticated shell/header/nav still needs a follow-up pass.)*
-- **4.4** Extend tenant-aware client behavior beyond the register flow as needed. *(Slice `4.1` now builds tenant-aware register headers/body from config; broader shared auth client and any future OAuth-specific handling remain follow-up work.)*
+- [x] **4.3** Continue replacing remaining student-portal hardcoded branding with tenant config. *(The authenticated shell/header and pending-approval surface now resolve tenant branding from config; the auth page's left hero intentionally remains Narada-branded across tenants as a shared product-brand surface.)*
+- **4.4** Extend tenant-aware client behavior beyond the register flow as needed. *(Register already builds tenant-aware headers/body from config, and current student runtime now mirrors `TENANT` into browser-rendered shell/pending surfaces through `next.config`; broader shared auth-client and any future OAuth-specific handling remain follow-up work.)*
 - [x] **4.5** Document dev commands in app `package.json` (SLMTS :3000, RR :3010).
 
 ---

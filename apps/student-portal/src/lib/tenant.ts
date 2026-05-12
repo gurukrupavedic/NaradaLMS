@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import {
   DEFAULT_TENANT_SLUG,
   TENANT_CONFIGS,
+  resolveTenantSlug,
   type TenantConfig,
   type TenantSlug,
 } from "../config/tenants";
@@ -28,6 +29,13 @@ export interface SharedStudentAuthBranding {
   tagline: string;
 }
 
+export interface StudentShellBranding {
+  displayName: string;
+  logoPath: string;
+  iconPath: string;
+  logoAlt: string;
+}
+
 const SHARED_STUDENT_AUTH_BRANDING: SharedStudentAuthBranding = {
   logoPath: "/branding/shared/logo-stacked-dark-notag.svg",
   logoAlt: "Narada LMS",
@@ -35,12 +43,8 @@ const SHARED_STUDENT_AUTH_BRANDING: SharedStudentAuthBranding = {
   tagline: "Vedic Wisdom. Modern Learning.",
 };
 
-export function resolveTenantSlug(rawTenant?: string | null): TenantSlug {
-  return rawTenant === "rr" ? "rr" : DEFAULT_TENANT_SLUG;
-}
-
 export function getCurrentTenantSlug(): TenantSlug {
-  return resolveTenantSlug(process.env.TENANT);
+  return resolveTenantSlug(process.env.NEXT_PUBLIC_TENANT ?? process.env.TENANT);
 }
 
 export function getSharedStudentAuthBranding(): SharedStudentAuthBranding {
@@ -49,6 +53,19 @@ export function getSharedStudentAuthBranding(): SharedStudentAuthBranding {
 
 export function getTenantConfig(slug: TenantSlug = getCurrentTenantSlug()): TenantConfig {
   return TENANT_CONFIGS[slug];
+}
+
+export function getStudentShellBranding(
+  slug: TenantSlug = getCurrentTenantSlug()
+): StudentShellBranding {
+  const tenantConfig = getTenantConfig(slug);
+
+  return {
+    displayName: tenantConfig.displayName,
+    logoPath: tenantConfig.logoPath,
+    iconPath: tenantConfig.iconPath,
+    logoAlt: tenantConfig.logoAlt,
+  };
 }
 
 export function getTenantMetadata(

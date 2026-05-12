@@ -25,9 +25,10 @@ This file captures the agreed decisions that implementation must follow.
 2. Admin portal is always Narada-branded.
 3. Tenant branding is config-based, not DB-driven:
    - `config/tenants/<slug>/...`
-4. No runtime `themes` table for this phase.
-5. No admin theme editor for this phase.
-6. v1 tenant branding variance is small (primarily name + logo).
+4. The student auth page keeps a shared Narada-branded left hero across tenants; tenant branding applies to the tenant-facing auth form area and authenticated student experience.
+5. No runtime `themes` table for this phase.
+6. No admin theme editor for this phase.
+7. v1 tenant branding variance is small (primarily name + logo).
 
 ---
 

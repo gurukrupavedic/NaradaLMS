@@ -12,7 +12,7 @@ import {
 
 import { NavMain } from "./nav-main"
 import { NavUser } from "./nav-user"
-import { BrandHeader } from "./brand-header"
+import { BrandHeader, type BrandHeaderBranding } from "./brand-header"
 import { getNavigationForRole, UserRole, getSectionLabel } from "../../lib/navigation-config"
 
 const enhanceWithContextualItems = (items: any[], currentPath: string | null | undefined, contextualNav?: Map<string, any>, contentContextLabel?: string | null) => {
@@ -113,6 +113,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     customNavigation?: any;
     contextualNavigation?: Map<string, any>;
     contentContextLabel?: string | null;
+    brandHeaderBranding?: BrandHeaderBranding;
 }
 
 export function AppSidebar({
@@ -124,6 +125,7 @@ export function AppSidebar({
     customNavigation,
     contextualNavigation,
     contentContextLabel,
+    brandHeaderBranding,
     ...props
 }: AppSidebarProps) {
 
@@ -133,7 +135,7 @@ export function AppSidebar({
     return (
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader>
-                <BrandHeader homeHref={homeHref} />
+                <BrandHeader homeHref={homeHref} branding={brandHeaderBranding} />
             </SidebarHeader>
             <SidebarContent>
                 {/* Render Sections based on Role Config */}

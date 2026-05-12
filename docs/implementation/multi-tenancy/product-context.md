@@ -35,6 +35,7 @@ Both are independent learning communities with different logos/naming and separa
 - Student portal is white-labeled per tenant.
 - Admin portal remains Narada-branded and acts as a shared operations console.
 - Per tenant differences in v1 are primarily name + logo (minimal visual divergence).
+- The student auth page keeps a shared Narada-branded left hero across tenants so the product remains recognizably Narada LMS; tenant branding applies to the tenant-facing auth form area, pending state, and authenticated shell.
 
 ---
 
