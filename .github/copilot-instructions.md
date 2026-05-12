@@ -194,7 +194,7 @@ npm run check     # TypeScript type checking
   ```
 - File uploads: Configured multer for audio files in `/uploads` (50MB max)
 - Module contract pattern: Each module owns specific tables with public service APIs (see module-contracts.md)
-- Authentication middleware: `requireAuth`, `requireApproved`, `requireRole('role')` (in `server/shared/middleware/auth.ts`)
+- Authentication middleware: `authMiddleware`, `requireOrgRole('role')`, `requireRole('role')` compatibility alias, and `requireSuperAdmin` (in `server/shared/middleware/auth.ts`)
 
 ## Critical Project-Specific Conventions
 
@@ -343,7 +343,7 @@ const isAuthorized = useRoleGuard(['instructor', 'admin']);
 2. **Published chapters:** Check `status === 'published'` before allowing deletion
 3. **Audio uploads:** Ensure multer config matches file size limits (50MB max)
 4. **Font rendering:** Always apply script-specific font classes (`font-telugu`, etc.)
-5. **Multi-role users:** Check role arrays with `requireRole()` middleware, not string equality
+5. **Multi-role users:** Check org role arrays with `requireOrgRole()` middleware, not string equality. `requireRole()` remains a compatibility alias during cleanup.
 6. **Progress tracking:** Proficiency is 0-4 scale, not binary pass/fail
 7. **Batch context:** Student progress evaluation requires batch assignment context
 8. **Module boundaries:** Routes must call module services (e.g., `contentService.listTracks()`), never direct Drizzle queries

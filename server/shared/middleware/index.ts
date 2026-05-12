@@ -1,5 +1,6 @@
 import {
   authMiddleware,
+  requireOrgRole,
   requireRole,
   requireAdmin,
   requireInstructor,
@@ -10,6 +11,7 @@ import { attachOrgContext, requireOrgContext } from "./org-context";
 // Re-export auth helpers
 export {
   authMiddleware,
+  requireOrgRole,
   requireRole,
   requireAdmin,
   requireInstructor,

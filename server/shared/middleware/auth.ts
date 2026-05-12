@@ -16,7 +16,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
  * Role guard using org-scoped roles on `req.user` (JWT `orgRoles`), populated by jwt-auth.
  * Super-admin bypasses org role checks for this guard.
  */
-export const requireRole = (...roles: string[]) => {
+export const requireOrgRole = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as Express.User | undefined;
     if (!user) {
@@ -41,6 +41,12 @@ export const requireRole = (...roles: string[]) => {
 };
 
 /**
+ * Backward-compatible alias for org-scoped role checks.
+ * Prefer `requireOrgRole` in new code and docs.
+ */
+export const requireRole = requireOrgRole;
+
+/**
  * Platform governance: only users with `isSuperAdmin` on the JWT may proceed.
  */
 export const requireSuperAdmin = (
@@ -59,5 +65,5 @@ export const requireSuperAdmin = (
 };
 
 // Role hierarchy: admin has access to everything (including content management)
-export const requireAdmin = requireRole("admin");
-export const requireInstructor = requireRole("instructor", "admin");
+export const requireAdmin = requireOrgRole("admin");
+export const requireInstructor = requireOrgRole("instructor", "admin");
