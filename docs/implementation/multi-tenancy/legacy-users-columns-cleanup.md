@@ -2,14 +2,16 @@
 
 Physical columns `users.roles`, `users.status`, and constraint `users_status_check` remain until **slice `slice-1.4-schema-contract`** (checklist **1.4-contract**). Layer 2 work must migrate every consumer to `user_organizations` and `users.is_super_admin`.
 
+Current execution baseline: the branch is now documented through Layer **2.1–2.5**, Layer **3** Pass A/B, student Layer **4.1 / 4.2**, admin **5.1–5.4**, and pilot closeout through checklist **6.4**. This tracker remains the gate for the blocked schema-contract slice, not a summary of the overall multi-tenancy rollout.
+
 When every row below is checked, run slice 1.4 to drop the columns and regenerate the contract migration.
 
 ## Layer 2 progress (JWT vs database)
 
-As of slices **2.1** and **2.2** merged to `multi-tenancy`:
+As of the current `multi-tenancy` baseline:
 
 - **JWT / `req.user` (post–2.1):** No global `roles` / `status` claims; use `orgRoles`, `orgMembershipStatus`, `isSuperAdmin`, `currentOrgId` ([`server/auth/jwt.utils.ts`](../../../server/auth/jwt.utils.ts)).
-- **Database columns:** Still read/written in many paths (Passport **inactive** check, `IdentityService` approve/disable, admin user listing, seeds, etc.). Rows in the tables below track **removal of dependency on DB columns**, not JWT work already done.
+- **Database columns:** Still read or written in the remaining paths listed below (Passport **inactive** check, `IdentityService` approve/disable, admin user listing, seeds, etc.). Rows in the tables below track **removal of dependency on DB columns**, not the broader rollout work that already landed after Layer 2.
 - **New self-serve users:** `users.status` is typically **`active`** with pending **`user_organizations`**; admin UIs that list “pending” users by `users.status = pending_approval` will **miss** them until governance/list APIs use membership state ([implementation-status.md](./implementation-status.md)).
 
 ## Runtime — server

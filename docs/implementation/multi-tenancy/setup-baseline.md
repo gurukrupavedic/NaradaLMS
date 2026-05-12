@@ -2,6 +2,8 @@
 
 This file records the execution evidence for checklist section `0) Setup` in [implementation-checklist.md](./implementation-checklist.md).
 
+This is intentionally historical setup evidence from the beginning of the rollout. For the current merged branch state after the completed `6.4` docs slice, use [implementation-status.md](./implementation-status.md) as the primary resume point.
+
 ## Capture metadata
 
 - Date/time: `2026-05-08T09:41:18.8556371-04:00`
