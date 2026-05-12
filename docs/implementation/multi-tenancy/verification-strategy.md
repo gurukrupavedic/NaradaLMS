@@ -2,7 +2,7 @@
 
 This document defines how we know each layer is **done** and the platform is safe to expand (RR) after SLMTS pilot.
 
-**Current build:** Layer 2 includes **2.1**–**2.5** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory, governance event/audit alignment). Layer **3 Pass A** and **3 Pass B** are now implemented for the core, media, progress, and audit tables, including physical `audit_logs.org_id` support — see [implementation-status.md](./implementation-status.md).
+**Current build:** Layer 2 includes **2.1**–**2.5** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory, governance event/audit alignment). Layer **3 Pass A** and **3 Pass B** are now implemented for the core, media, progress, and audit tables, including physical `audit_logs.org_id` support. Layer **4.1** tenant-config foundation is also merged for the student portal auth surface and root metadata — see [implementation-status.md](./implementation-status.md).
 
 ---
 
@@ -32,6 +32,7 @@ Add or extend tests when implementation lands (exact framework TBD per repo conv
 - **Layer 3 Pass B schema + backfill:** `npx tsx scripts/test/layer3-pass-b-schema-and-guards.test.ts` validates the remaining `org_id` columns, nullable `audit_logs.org_id`, and migration guard/backfill shape.
 - **Layer 3 Pass B media/content isolation:** `npx tsx scripts/test/layer3-pass-b-media-isolation.test.ts` validates org-scoped create/read/update/delete behavior for audio, text segments, media segments, and mappings.
 - **Layer 3 Pass B progress/audit isolation:** `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts` validates org-scoped progress writes/reads, per-org enrollment semantics, and event-handler-backed audit persistence.
+- **Student tenant-config helpers:** `npx tsx scripts/test/student-tenant-config.test.ts` validates `TENANT` resolution, tenant metadata, and register header/body generation for `slmts` and `rr`.
 - **Register:** creates `user_organizations` row `pending` for slug from tenant header/env.
 
 Until automated tests exist, use the manual scenarios below and record results in the PR/slice notes.
@@ -127,6 +128,8 @@ Run only on branch `slice-1.4-schema-contract` when [legacy-users-columns-cleanu
 
 - Start student portal with `TENANT=slmts` on port **3000**: logo and display name match SLMTS config.
 - Start second instance with `TENANT=rr` on port **3010**: logo and display name match RR config.
+- Confirm the auth page copy/logo and root metadata differ between the two instances.
+- Confirm register requests no longer hardcode `slmts`; tenant slug/header should match the running instance.
 - Admin portal on **3001** unchanged (Narada branding).
 - API on **5000** serves both; tenant header/env causes correct org on register.
 

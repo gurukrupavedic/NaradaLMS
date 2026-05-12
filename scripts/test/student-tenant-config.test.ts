@@ -3,6 +3,7 @@ import * as tenantModule from "../../apps/student-portal/src/lib/tenant";
 const {
   buildTenantRegisterRequest,
   getCurrentTenantSlug,
+  getSharedStudentAuthBranding,
   getTenantConfig,
   getTenantMetadata,
 } = (
@@ -12,6 +13,7 @@ const {
 ) as {
   buildTenantRegisterRequest: typeof tenantModule.buildTenantRegisterRequest;
   getCurrentTenantSlug: typeof tenantModule.getCurrentTenantSlug;
+  getSharedStudentAuthBranding: typeof tenantModule.getSharedStudentAuthBranding;
   getTenantConfig: typeof tenantModule.getTenantConfig;
   getTenantMetadata: typeof tenantModule.getTenantMetadata;
 };
@@ -107,11 +109,32 @@ function testTenantMetadataUsesTenantSpecificBranding() {
   );
 }
 
+function testSharedStudentAuthBrandingStaysNarada() {
+  const sharedBranding = getSharedStudentAuthBranding();
+
+  assertEqual(
+    sharedBranding.logoPath,
+    "/branding/shared/logo-stacked-dark-notag.svg",
+    "left auth hero keeps Narada logo"
+  );
+  assertEqual(
+    sharedBranding.patternPath,
+    "/branding/shared/kolam-2.svg",
+    "left auth hero keeps Narada pattern"
+  );
+  assertEqual(
+    sharedBranding.logoAlt,
+    "Narada LMS",
+    "left auth hero keeps Narada alt text"
+  );
+}
+
 try {
   testDefaultsToSlmtsForMissingOrInvalidTenant();
   testReturnsRrTenantConfig();
   testTenantRegisterRequestCarriesTenantSlug();
   testTenantMetadataUsesTenantSpecificBranding();
+  testSharedStudentAuthBrandingStaysNarada();
 } finally {
   if (originalTenant === undefined) {
     delete process.env.TENANT;

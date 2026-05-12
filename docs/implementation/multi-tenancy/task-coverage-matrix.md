@@ -13,9 +13,9 @@ Sequenced execution reference. Execute rows in ascending **Seq** unless noted pa
 
 **Progress snapshot on `multi-tenancy`:**
 
-- Complete through **MT-3.B.3** (Layer 3 Pass A + Pass B).
+- Complete through **MT-4.1**, with the first visible Layer 4 foundation now merged for the student portal.
 - **MT-5.3** is complete; **MT-5.2** remains partial because the backend filter exists but the admin UI still lacks a dedicated org filter control.
-- Main remaining execution areas are **MT-4.x**, deferred **MT-1.4**, optional **MT-2.10** (OAuth parity), and pilot validation **MT-6.1**.
+- Main remaining execution areas are the rest of **MT-4.x** (`4.2` / `4.3` follow-up), deferred **MT-1.4**, optional **MT-2.10** (OAuth parity), and pilot validation **MT-6.1**.
 
 ---
 
@@ -81,6 +81,11 @@ MT-3.B.1 -> MT-3.B.2 -> MT-3.B.3
 ### Bundle E — Student chameleon
 
 MT-4.1 -> MT-4.2 -> MT-4.3
+
+Current status:
+- `MT-4.1` is merged on `multi-tenancy`.
+- `MT-4.2` now means the remaining authenticated student-shell/header/nav branding pass.
+- `MT-4.3` now means any broader tenant propagation beyond the register flow already wired in `4.1`.
 
 ### Bundle F — Admin UI governance
 

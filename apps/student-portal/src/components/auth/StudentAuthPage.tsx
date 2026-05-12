@@ -12,7 +12,11 @@ import {
     useToast
 } from "@narada/ui";
 import { apiRequest } from "@/lib/api";
-import { buildTenantRegisterRequest, getTenantConfig } from "@/lib/tenant";
+import {
+    buildTenantRegisterRequest,
+    getSharedStudentAuthBranding,
+    getTenantConfig,
+} from "@/lib/tenant";
 import { FcGoogle } from "react-icons/fc";
 import Image from "next/image";
 
@@ -21,6 +25,7 @@ export function StudentAuthPage() {
     const initialTab = searchParams.get("tab") === "register" ? "register" : "login";
     const [activeTab, setActiveTab] = useState<"login" | "register">(initialTab);
     const queryClient = useQueryClient();
+    const sharedAuthBranding = getSharedStudentAuthBranding();
     const tenantConfig = getTenantConfig();
 
     const handleGoogleLogin = () => {
@@ -36,11 +41,28 @@ export function StudentAuthPage() {
         <div className="h-screen w-full flex overflow-hidden bg-background">
             {/* LEFT PANEL: Sacred Illumination */}
             <div className="hidden lg:flex w-1/2 relative bg-nila-base overflow-hidden items-center justify-center">
-                <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top,rgba(215,170,66,0.36),transparent_55%)]" />
-                <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(135deg,rgba(237,99,37,0.18),transparent_45%,rgba(215,170,66,0.22))]" />
-                <div className="absolute inset-0 overflow-hidden -skew-x-12 pointer-events-none">
-                    <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: "linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)" }} />
-                    <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: "linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)", animationDelay: "4s" }} />
+                {/* Kolam Geometric Overlay */}
+                <div
+                    className="absolute inset-0 pointer-events-none opacity-60"
+                    style={{
+                        maskImage: `url(${sharedAuthBranding.patternPath})`,
+                        maskSize: "200%",
+                        maskPosition: "25% 8%",
+                        maskRepeat: "no-repeat",
+                        WebkitMaskImage: `url(${sharedAuthBranding.patternPath})`,
+                        WebkitMaskSize: "200%",
+                        WebkitMaskPosition: "25% 8%",
+                        WebkitMaskRepeat: "no-repeat",
+                    }}
+                >
+                    {/* Layer 1: Base Etching (Static Gold Lines) */}
+                    <div className="absolute inset-0 bg-hema-base opacity-40" />
+
+                    {/* Layer 2: The Blade Sheen (Intense Moving Highlight) */}
+                    <div className="absolute inset-0 overflow-hidden -skew-x-12">
+                        <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: "linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)" }} />
+                        <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: "linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)", animationDelay: "4s" }} />
+                    </div>
                 </div>
 
                 {/* Atmospheric Fade Overlay */}
@@ -49,17 +71,16 @@ export function StudentAuthPage() {
                 {/* Central Hero Logo */}
                 <div className="relative z-10 p-12 flex flex-col items-center text-center">
                     <Image
-                        src={tenantConfig.logoPath}
-                        alt={tenantConfig.logoAlt}
-                        width={320}
-                        height={320}
-                        className="w-72 h-auto drop-shadow-2xl mb-8"
+                        src={sharedAuthBranding.logoPath}
+                        alt={sharedAuthBranding.logoAlt}
+                        width={384}
+                        height={200}
+                        className="w-96 h-auto drop-shadow-2xl mb-8"
                     />
                     <div className="space-y-2">
                         <h2 className="text-2xl font-semibold text-white tracking-wide">
-                            {tenantConfig.tagline}
+                            {sharedAuthBranding.tagline}
                         </h2>
-                        <p className="text-sm text-white/75 max-w-sm">{tenantConfig.displayName}</p>
                     </div>
                 </div>
             </div>

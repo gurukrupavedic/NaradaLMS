@@ -21,12 +21,30 @@ export interface TenantRegisterRequest {
   };
 }
 
+export interface SharedStudentAuthBranding {
+  logoPath: string;
+  logoAlt: string;
+  patternPath: string;
+  tagline: string;
+}
+
+const SHARED_STUDENT_AUTH_BRANDING: SharedStudentAuthBranding = {
+  logoPath: "/branding/shared/logo-stacked-dark-notag.svg",
+  logoAlt: "Narada LMS",
+  patternPath: "/branding/shared/kolam-2.svg",
+  tagline: "Vedic Wisdom. Modern Learning.",
+};
+
 export function resolveTenantSlug(rawTenant?: string | null): TenantSlug {
   return rawTenant === "rr" ? "rr" : DEFAULT_TENANT_SLUG;
 }
 
 export function getCurrentTenantSlug(): TenantSlug {
   return resolveTenantSlug(process.env.TENANT);
+}
+
+export function getSharedStudentAuthBranding(): SharedStudentAuthBranding {
+  return SHARED_STUDENT_AUTH_BRANDING;
 }
 
 export function getTenantConfig(slug: TenantSlug = getCurrentTenantSlug()): TenantConfig {

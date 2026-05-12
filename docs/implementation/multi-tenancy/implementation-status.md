@@ -21,6 +21,7 @@
   - `slice-3b-progress-audit-isolation` — Pass B progress/audit runtime isolation and event wiring
   - `slice-3b-docs-verification` — Pass B docs refresh plus merged-baseline verification closeout
   - `slice-5.3-admin-org-switcher` — admin shell org switcher + auth/query refresh behavior
+- `slice-4.1-tenant-config` — student tenant config foundation, tenant-aware auth branding + metadata, and dual-instance student dev scripts
 
 ---
 
@@ -124,7 +125,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 ## Current runtime behavior (quick reference)
 
 1. **JWT** carries org context from memberships (active preferred, else pending) plus `isSuperAdmin`.
-2. **Register** must target a real org slug; student portal sends `X-Tenant-Slug: slmts` and body `tenantSlug: slmts` for the default SLMTS path.
+2. **Register** must target a real org slug; the student portal now derives tenant slug/header from **`TENANT`** config so the same app can send SLMTS context on `3000` and RR context on `3010`.
 3. **Login** succeeds for valid credentials unless user is **inactive**; pending **membership** does not block login.
 4. **`/api/auth/me`** is the source for portals: use `hasActiveMembership` and `memberships`, not only JWT fields.
 5. **Super-admin** without any org membership still bypasses `requireRole` via `isSuperAdmin` on the server; student UI also skips the pending gate for `isSuperAdmin`.
@@ -137,6 +138,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 12. **Batch and learning progress** now use physical `student_progress.org_id`; runtime enrollment semantics allow one active enrollment per org, and foreign-org enrollment drop attempts no longer mutate the target row.
 13. **Membership approve/reject** updates **`user_organizations`** only; org-only admins receive **403** on governance routes.
 14. **Legacy DB columns** `users.roles` / `users.status` still exist and are still read in some paths (Passport inactive check, seeds, old service methods). Pilot listing must use **membership** APIs, not `users.status === pending_approval` alone.
+15. **Student auth entry surfaces** (auth hero/logo/mobile heading/root metadata) now resolve from typed tenant config under [`apps/student-portal/src/config/tenants/`](../../../apps/student-portal/src/config/tenants/); the authenticated shared shell is still the next Layer 4 follow-up.
 
 ---
 
