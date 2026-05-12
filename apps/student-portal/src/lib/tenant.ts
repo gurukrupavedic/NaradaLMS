@@ -29,6 +29,11 @@ export interface TenantMembershipRequest {
   };
 }
 
+export interface TenantGoogleAuthState {
+  tenantSlug: TenantSlug;
+  returnTo: string;
+}
+
 export interface SharedStudentAuthBranding {
   logoPath: string;
   logoAlt: string;
@@ -115,4 +120,16 @@ export function buildTenantMembershipRequest(
       tenantSlug: slug,
     },
   };
+}
+
+export function buildTenantGoogleAuthUrl(
+  apiUrl: string,
+  returnTo: string,
+  slug: TenantSlug = getCurrentTenantSlug()
+): string {
+  const authUrl = new URL("auth/google", apiUrl.endsWith("/") ? apiUrl : `${apiUrl}/`);
+  authUrl.searchParams.set("tenantSlug", slug);
+  authUrl.searchParams.set("returnTo", returnTo);
+
+  return authUrl.toString();
 }

@@ -17,10 +17,10 @@ The following **roadmap slices are implemented and merged** unless your checkout
 - **Layer 2:** **2.1**–**2.5** JWT, membership-first auth, org switch, **super-admin governance**, governance event/audit alignment, and org-admin **directory** API; student pending UX unchanged.
 - **Layer 3 Pass A:** core org isolation on `tracks`, `chapters`, `batches`, and `enrollments`, plus org-scoped handler/query enforcement and fresh DB verification.
 - **Layer 3 Pass B:** physical `org_id` coverage is now in place for media, progress, and audit tables, including backfills, route/service/storage org scoping, and physical `audit_logs.org_id` filtering.
-- **Layer 4.1 / 4.2:** tenant config foundation and the authenticated student-shell branding follow-up are now merged for the student portal: typed tenant configs for `slmts` / `rr`, `TENANT`-driven auth branding + root metadata with client-runtime mirroring, tenant-aware register request building, tenant-branded authenticated shell and pending state, and dual student dev scripts on `3000` / `3010`. The auth page's left hero intentionally remains Narada-branded across tenants.
+- **Layer 4.1 / 4.2 / 4.4:** tenant config foundation, authenticated student-shell branding, and tenant-aware OAuth propagation are now merged for the student portal: typed tenant configs for `slmts` / `rr`, `TENANT`-driven auth branding + root metadata with client-runtime mirroring, tenant-aware register request building, tenant-branded authenticated shell and pending state, dual student dev scripts on `3000` / `3010`, and Google OAuth start/callback handling that preserves the originating tenant and post-auth return target through server-signed state. The auth page's left hero intentionally remains Narada-branded across tenants.
 - **Admin portal:** **5.1**–**5.4** are now in place, including the dedicated user-management org filter UI plus the supporting governance query/count alignment for filtered pagination and status tabs.
 - **Pilot closeout:** checklists **6.1** through **6.4** are now confirmed or documented locally, including the explicit out-of-scope gap list captured during pilot validation.
-- **Next up:** if you want more user-facing polish, continue with optional Layer **4.4** broader auth-client or OAuth tenant propagation beyond the current register flow; otherwise the next foundational follow-up remains blocked **1.4-contract** until the legacy cleanup tracker is empty.
+- **Next up:** the next foundational follow-up remains blocked **1.4-contract** until the legacy cleanup tracker is empty.
 - **Deferred:** checklist **2.12** OAuth parity unless Google OAuth becomes real product scope — see [implementation-status.md](./implementation-status.md).
 
 ---
@@ -129,7 +129,7 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
   - Status: **merged** via `slice-4.3-student-shell-branding`. Auth form area, root metadata, authenticated student shell/header, and pending-approval surface now resolve tenant branding from config, while the auth page's left hero intentionally stays Narada-branded across tenants.
 3. **4.3 API client: tenant hint**
   - Student portal passes agreed header (e.g. `X-Tenant-Slug`) or uses deploy-time API base config so register/login attach correct org.
-  - Status: **partially complete**. Register already builds tenant-aware header/body from config, and current student portal runtime now mirrors `TENANT` into client-rendered shell/pending surfaces through `next.config`. Broader shared auth-client or OAuth-specific propagation can stay as a later follow-up if needed.
+  - Status: **merged**. Register/request-membership already build tenant-aware header/body from config, current student portal runtime mirrors `TENANT` into client-rendered shell/pending surfaces through `next.config`, and the student Google OAuth flow now sends tenant/return intent to the server so callback handling can use verified state rather than trusting caller-supplied callback parameters. Admin Google login can also carry a safe return target without inheriting student tenant context.
 
 **Done when:** Running two student dev instances shows correct logo/name per tenant; same code, different env.
 
