@@ -2,7 +2,7 @@
 
 This document defines how we know each layer is **done** and the platform is safe to expand (RR) after SLMTS pilot.
 
-**Current build:** Layer 2 includes **2.1**–**2.5** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory, governance event/audit alignment). Layer **3 Pass A** and **3 Pass B** are now implemented for the core, media, progress, and audit tables, including physical `audit_logs.org_id` support. Layer **4.1** tenant-config foundation plus the authenticated student-shell branding follow-up are also merged for the student portal, and pilot closeout documentation is now complete through checklist **6.4** — see [implementation-status.md](./implementation-status.md).
+**Current build:** Layer 2 includes **2.1**–**2.5** plus **2.12** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory, governance event/audit alignment, and Google OAuth membership-policy parity). Layer **3 Pass A** and **3 Pass B** are now implemented for the core, media, progress, and audit tables, including physical `audit_logs.org_id` support. Layer **4.1** tenant-config foundation plus the authenticated student-shell branding follow-up are also merged for the student portal, and pilot closeout documentation is now complete through checklist **6.4** — see [implementation-status.md](./implementation-status.md).
 
 ---
 
@@ -34,6 +34,7 @@ Add or extend tests when implementation lands (exact framework TBD per repo conv
 - **Layer 3 Pass B progress/audit isolation:** `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts` validates org-scoped progress writes/reads, per-org enrollment semantics, and event-handler-backed audit persistence.
 - **Student tenant-config helpers:** `npx tsx scripts/test/student-tenant-config.test.ts` validates `TENANT` resolution, tenant metadata, and register header/body generation for `slmts` and `rr`.
 - **OAuth tenant propagation:** `npx tsx scripts/test/oauth-tenant-context.test.ts` validates server-signed OAuth `state`, verified tenant parsing, and safe post-auth redirect fallback for allowed, disallowed, and tampered inputs.
+- **OAuth membership parity:** `npx tsx scripts/test/oauth-membership-parity.test.ts` validates that Google OAuth creates pending target-tenant memberships when none exist, preserves pending/active/inactive/rejected memberships as-is, and does not reopen closed memberships.
 - **Register:** creates `user_organizations` row `pending` for slug from tenant header/env.
 
 Until automated tests exist, use the manual scenarios below and record results in the PR/slice notes.
@@ -102,7 +103,9 @@ Verification note for **1.4-contract**:
 
 ### OAuth (if enabled in dev)
 
-1. New Google user: membership policy matches local register (pending until super-admin approve) unless explicitly documented otherwise.
+1. New Google user: membership policy matches local register (pending until super-admin approve).
+2. Existing user with no membership in the resolved tenant: Google OAuth creates a **pending** membership for that tenant instead of requiring a separate Google-only path.
+3. Existing user with **inactive** or **rejected** membership in the resolved tenant: Google OAuth preserves that closed membership and does not silently reopen access.
 
 ---
 
@@ -208,11 +211,19 @@ Before calling SLMTS pilot-ready:
 
 ---
 
+### 2026-05-12 — checklist 2.12 validated
+
+- **Focused OAuth-policy verification:** `npm run check`, `npx tsx scripts/test/oauth-membership-parity.test.ts`, `npx tsx scripts/test/oauth-tenant-context.test.ts`, and `npx tsx scripts/test/identity-request-membership.test.ts` all passed on the slice branch.
+- **Policy outcome covered:** Google OAuth now reuses the shared membership-first tenant policy, so new or cross-org users without a target-tenant membership land in `pending`, active memberships continue to log in normally, and inactive/rejected memberships stay closed.
+- **Scope boundary held:** tenant resolution, signed OAuth `state`, and safe post-auth redirect handling from Layer `4.4` were preserved; this slice changed policy outcomes, not tenant propagation.
+
+---
+
 ### 2026-05-12 — checklist 6.4 documented
 
 - **Scope of this step:** documentation-only closeout using the already-recorded `6.1` through `6.3` evidence; no new runtime verification was added for `6.4`.
-- **Canonical known gaps now recorded across the execution docs:** email invites/notifications remain out of scope, questionnaire-driven onboarding remains deferred, broader Google OAuth product-policy parity remains deferred unless it becomes real product scope, production subdomain/TLS/cookie `SameSite` and `Domain` behavior remains unverified outside local dev, and RR onboarding browser coverage remains lighter than the SLMTS pilot browser pass.
-- **Result:** the pilot checklist is now complete through `6.4`, the Layer `4.4` tenant-aware OAuth propagation follow-up is now merged, and future chats should default to deferred `2.12` or other optional cleanup rather than reopening `1.4-contract` or pilot-closeout work.
+- **Canonical known gaps now recorded across the execution docs:** email invites/notifications remain out of scope, questionnaire-driven onboarding remains deferred, production subdomain/TLS/cookie `SameSite` and `Domain` behavior remains unverified outside local dev, and RR onboarding browser coverage remains lighter than the SLMTS pilot browser pass.
+- **Result:** the pilot checklist is now complete through `6.4`, the Layer `4.4` tenant-aware OAuth propagation follow-up is now merged, checklist `2.12` is now validated, and future chats should default to optional cleanup or operational verification rather than reopening `1.4-contract`, pilot-closeout work, or OAuth policy parity.
 
 ---
 
@@ -223,7 +234,7 @@ Record:
 - Date
 - Git commit or tag
 - Person
-- Notes on known limitations (email, questionnaire, OAuth edge cases)
+- Notes on known limitations (email, questionnaire, production cookie/subdomain behavior)
 
 ---
 

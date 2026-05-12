@@ -54,7 +54,13 @@ This block landed after [legacy-users-columns-cleanup.md](./legacy-users-columns
 - **2.9** User governance routes: gate with `requireSuperAdmin`; operate on memberships (approve/reject/roles/disable), not global user status.
 - **2.10** Super-admin grant/revoke endpoints + audit events.
 - **2.11** Remove or redirect old `/api/auth/admin/`* semantics that assume global `users.roles` / `users.status`.
-- **2.12** OAuth path: align with membership model (no auto-active bypass that skips super-admin approval if product requires parity with local register).
+- **2.12** OAuth path: align with membership model so Google OAuth follows the same tenant membership policy as local register and second-org join. *(Implemented: Google OAuth now reuses the membership-first tenant policy, creates a pending target-tenant membership when none exists, preserves pending/active/inactive/rejected memberships as-is, and avoids silently reopening closed memberships.)*
+
+Verification note for **2.12**:
+
+- Focused OAuth membership-policy verification passed on `2026-05-12` via `npm run check`, `npx tsx scripts/test/oauth-membership-parity.test.ts`, `npx tsx scripts/test/oauth-tenant-context.test.ts`, and `npx tsx scripts/test/identity-request-membership.test.ts`.
+- The Google OAuth strategy now delegates target-tenant membership handling to the shared identity-service membership policy path instead of relying on ad hoc `memberships.length === 0` checks.
+- Covered states include: new Google user -> `created_pending`, existing cross-org user with no target membership -> `created_pending`, existing target membership `pending` -> `already_pending`, existing target membership `active` -> `already_active`, and existing target membership `inactive` / `rejected` -> preserved without reopening.
 
 ---
 
@@ -116,7 +122,7 @@ Verification note for **5.2**:
 - [x] **6.1** Register -> pending -> super-admin approve -> SLMTS student access works.
 - [x] **6.2** Cross-org isolation smoke with minimal RR data.
 - [x] **6.3** Second-org join flow: RR portal -> pending RR membership -> approve.
-- [x] **6.4** Document the known out-of-scope and deferred gaps from pilot validation: email invites/notifications, questionnaire workflow, OAuth parity edge cases, production subdomain/TLS/cookie behavior, and remaining RR browser-only onboarding validation.
+- [x] **6.4** Document the known out-of-scope and deferred gaps from pilot validation: email invites/notifications, questionnaire workflow, production subdomain/TLS/cookie behavior, and remaining RR browser-only onboarding validation.
 
 Verification note for **6.1**:
 
@@ -145,8 +151,8 @@ Verification note for **6.3**:
 Verification note for **6.4**:
 
 - Completed on `2026-05-12` as a documentation closeout slice using the already-recorded `6.1` through `6.3` evidence; no new runtime verification was required or invented for this step.
-- The canonical known-gap list is now recorded across the execution docs: email invites/notifications remain out of scope, questionnaire-driven onboarding remains deferred, Google OAuth parity remains deferred unless it becomes real product scope, production subdomain/TLS/cookie `SameSite` and `Domain` behavior remains unverified outside local dev, and RR onboarding still relies on smoke/API coverage rather than a separate full browser walkthrough.
-- Future chats should treat the pilot checklist as complete through **6.4**, the Layer **4.4** auth propagation follow-up as merged, and default next work to deferred **2.12** or optional cleanup/API-surface follow-up rather than reopening **1.4-contract**.
+- The canonical known-gap list is now recorded across the execution docs: email invites/notifications remain out of scope, questionnaire-driven onboarding remains deferred, production subdomain/TLS/cookie `SameSite` and `Domain` behavior remains unverified outside local dev, and RR onboarding still relies on smoke/API coverage rather than a separate full browser walkthrough.
+- Future chats should treat the pilot checklist as complete through **6.4**, the Layer **4.4** auth propagation follow-up as merged, **2.12** as complete, and default next work to optional cleanup/API-surface follow-up or operational verification rather than reopening **1.4-contract** or OAuth policy parity.
 
 ---
 

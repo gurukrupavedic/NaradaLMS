@@ -4,7 +4,7 @@
 
 **Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
 
-**Last updated:** Reflects Layer **1** through **1.4 contract** (including fresh-DB verification on the merged branch), Layer **2** roadmap slices **2.1–2.5**, Layer **3** Pass A and Pass B, student Layer **4.1 / 4.2 / 4.4**, admin checklist **5.1**–**5.4**, and pilot closeout through checklist **6.4** on the current multi-tenancy slice flow.
+**Last updated:** Reflects Layer **1** through **1.4 contract** (including fresh-DB verification on the merged branch), Layer **2** roadmap slices **2.1–2.5** plus **2.12** OAuth parity, Layer **3** Pass A and Pass B, student Layer **4.1 / 4.2 / 4.4**, admin checklist **5.1**–**5.4**, and pilot closeout through checklist **6.4** on the current multi-tenancy slice flow.
 
 ---
 
@@ -15,6 +15,7 @@
   - `slice-2.3-switch-org` — `req.orgId`, `attachOrgContext`, `POST /api/auth/switch-org`
   - `slice-2.4-superadmin-governance` — `requireSuperAdmin`, membership governance routes, `GET /api/admin/directory/users`, admin UserList + hooks
   - `slice-2.5-governance-event-alignment` — governance event contract alignment, persisted audit subscriber alignment, org-scoped audit-log visibility
+  - `slice-2.12-oauth-parity` — Google OAuth now reuses the membership-first tenant policy so target-tenant access stays pending until approval when required
   - `slice-3.a-core-org-isolation` — `org_id` on core content/batch tables plus org-scoped handlers
   - `slice-3b-schema-foundation` — Pass B schema/backfill foundation for media, progress, and audit tables
   - `slice-3b-media-isolation` — Pass B media/content runtime org isolation
@@ -52,6 +53,7 @@ Contract verification now also has focused regression coverage for the last high
 | **2.3** Org context + switch-org | **`req.orgId`** set from JWT `currentOrgId` on every `jwtAuth` / `optionalJwtAuth` success via [`attachOrgContext`](../../../server/shared/middleware/org-context.ts). **`requireOrgContext`** returns **403** when `req.orgId` is missing (for Layer 3 composition). **`POST /api/auth/switch-org`** (body `orgId`): requires **active** `user_organizations` row for that org; otherwise **403**; reissues `auth_token` with `currentOrgId` / `orgRoles` / `orgMembershipStatus`. [`getJwtSignClaimsForUser`](../../../server/modules/identity-access/storage.ts) accepts optional `{ targetOrgId }` for switch vs default-org selection. | [`server/middleware/jwt-auth.middleware.ts`](../../../server/middleware/jwt-auth.middleware.ts), [`server/shared/middleware/org-context.ts`](../../../server/shared/middleware/org-context.ts), [`server/shared/types.ts`](../../../server/shared/types.ts), [`server/modules/identity-access/storage.ts`](../../../server/modules/identity-access/storage.ts), [`server/routes/identity.routes.ts`](../../../server/routes/identity.routes.ts) |
 | **2.4** Super-admin governance | **`requireSuperAdmin`** on governance routes under [`/api/auth/admin/…`](../../../server/routes/identity.routes.ts). **`GET /api/auth/admin/users`** returns users with nested **`memberships[]`**; query filters: **`membershipStatus`**, **`role`** (membership role in any org), **`orgSlug`**, **`search`**. **`GET /api/auth/admin/users/:userId`** returns one user + memberships. **`POST`** …`/memberships/:membershipId/{approve,reject,disable,enable}`; **`PATCH`** …`/memberships/:membershipId/roles`; **`POST`** …`/users/:userId/super-admin/{grant,revoke}` (revoke blocks self and last super-admin). **`GET /api/admin/directory/users`** ([`server/routes/admin.routes.ts`](../../../server/routes/admin.routes.ts)): **`jwtAuth` + `requireAdmin` + `requireOrgContext`** — lists users in **current JWT org** with optional **`membershipRole`** / legacy **`role`** + **`search`** (used by instructor/student pickers). Admin portal: [`UserList.tsx`](../../../apps/admin-portal/src/components/admin/UserList.tsx) **super-admin gate** + membership-based actions; [`useAdminUsers.ts`](../../../apps/admin-portal/src/lib/hooks/useAdminUsers.ts); [`useSearchStudents.ts`](../../../apps/admin-portal/src/lib/hooks/useSearchStudents.ts) + [`useBatchRelations.ts`](../../../packages/ui/src/hooks/data/useBatchRelations.ts) call **directory** API, not governance list. | [`server/shared/middleware/auth.ts`](../../../server/shared/middleware/auth.ts), [`server/routes/identity.routes.ts`](../../../server/routes/identity.routes.ts), [`server/routes/admin.routes.ts`](../../../server/routes/admin.routes.ts), [`server/modules/identity-access/service.ts`](../../../server/modules/identity-access/service.ts), [`server/modules/identity-access/storage.ts`](../../../server/modules/identity-access/storage.ts) |
 | **2.5** Governance event + audit alignment | Membership governance events now use a consistent contract: membership actions publish **`actorUserId`**, **`targetUserId`**, **`membershipId`**, **`orgId`**, and **`timestamp`**; platform-scoped super-admin actions publish **`actorUserId`**, **`targetUserId`**, and **`timestamp`** with **no `orgId`**. **`setMembershipActiveFlag`** now emits **`MembershipEnabled`** / **`MembershipDisabled`**; role updates emit **`MembershipRolesChanged`**. [`initializeEventHandlers`](../../../server/modules/system-admin/events.ts) now auto-logs membership governance and super-admin actions to persisted audit rows with explicit scope metadata in `changes` (`scope: 'org'` vs `scope: 'platform'`). Layer **3.B** now extends that model with physical `audit_logs.org_id` persistence and filtering for org-scoped rows. | [`server/modules/identity-access/service.ts`](../../../server/modules/identity-access/service.ts), [`server/modules/system-admin/events.ts`](../../../server/modules/system-admin/events.ts), [`server/routes/admin.routes.ts`](../../../server/routes/admin.routes.ts), [`server/shared/events/types.ts`](../../../server/shared/events/types.ts), [`scripts/test/identity-governance-events.test.ts`](../../../scripts/test/identity-governance-events.test.ts), [`scripts/test/require-super-admin.test.ts`](../../../scripts/test/require-super-admin.test.ts), [`scripts/test/audit-log-visibility.test.ts`](../../../scripts/test/audit-log-visibility.test.ts) |
+| **2.12** OAuth parity with local register | Google OAuth now reuses the same membership-first tenant policy as local registration and second-org join. New Google users and existing users without a membership in the resolved tenant get a **pending** membership for that tenant; existing **pending**, **active**, **inactive**, and **rejected** tenant memberships are preserved as-is, so OAuth no longer relies on ad hoc membership backfills or silently reopens closed memberships. | [`server/auth/passport-config.ts`](../../../server/auth/passport-config.ts), [`server/modules/identity-access/service.ts`](../../../server/modules/identity-access/service.ts), [`scripts/test/oauth-membership-parity.test.ts`](../../../scripts/test/oauth-membership-parity.test.ts), [`scripts/test/oauth-tenant-context.test.ts`](../../../scripts/test/oauth-tenant-context.test.ts), [`scripts/test/identity-request-membership.test.ts`](../../../scripts/test/identity-request-membership.test.ts) |
 
 ### Layer 3 — Pass A core org isolation
 
@@ -90,7 +92,7 @@ Use this to map [implementation-checklist.md](./implementation-checklist.md) lin
 | **2.9** Governance on memberships + super-admin gate | **Done** | Slice **2.4**; legacy user-level approve/reject **routes removed**. |
 | **2.10** Super-admin grant/revoke | **Done** | Slice **2.4** routes + slice **2.5** event/audit alignment. |
 | **2.11** Remove legacy `/api/auth/admin/*` user-status semantics | **Done** | Old approve/reject/roles/disable/enable **user** routes are gone, the service/storage cleanup removed the remaining legacy user-level helpers, and the admin UI now speaks membership status directly. |
-| **2.12** OAuth parity with local register | **Not done** | Tenant-aware OAuth propagation is now in place via Layer `4.4`, but broader product-policy parity should still be evaluated explicitly if Google OAuth becomes real product scope; see [api-contract-changes.md](./api-contract-changes.md). |
+| **2.12** OAuth parity with local register | **Done** | Google OAuth now follows the same tenant membership policy as local register and `POST /api/auth/request-membership`; new or cross-org users land on pending membership for the resolved tenant, while inactive/rejected memberships stay closed. |
 
 ---
 
@@ -152,9 +154,10 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 16. **Portal-initiated Google OAuth now preserves tenant context and return target.** Student/admin auth pages send tenant slug and return intent to `/auth/google`, the server mints and verifies a signed OAuth `state`, the callback resolves tenant context from that verified state before falling back to query/header/body/default resolution, and successful callbacks redirect back to the originating portal instance instead of always using the single configured `FRONTEND_URL`.
 17. **OAuth callback failures are now surfaced on the auth pages.** The callback redirects failed or unauthorized flows back to `/` with explicit error codes (`auth_failed`, `session_failed`, `access_denied`) instead of sending users into confusing protected-route redirects; admin callbacks also clear the auth cookie if the Google account lacks admin access.
 18. **Local dev callback safety now matches the documented ports.** In non-production environments, safe post-auth redirects explicitly accept the documented portal origins on `3000`, `3001`, and `3010` in addition to configured origins so the RR local instance continues to work even if a developer's local env has stale CORS values.
-19. **`POST /api/auth/request-membership`** now supports the real 6.3 path: an authenticated user can request access to the current tenant without creating a second account. The route is idempotent for active/pending memberships and preserves inactive/rejected memberships instead of silently reopening them.
-20. **Student portal access is now tenant-scoped.** The portal derives current-tenant membership state from `memberships[]`, not just global `hasActiveMembership`, so an SLMTS-active user on the RR portal can still see RR pending/no-membership states correctly.
-21. **Student portal auto-switches only once per tenant org.** If the current tenant has an active membership but the JWT still points at another org, the portal attempts `POST /api/auth/switch-org`; failures are latched to avoid retry loops and surface a user-visible error instead of spinning forever.
+19. **Google OAuth now follows the same membership policy as local register and second-org join.** New Google users or existing users without a membership in the current tenant get a **pending** membership for that tenant; existing **pending** memberships stay pending, **active** memberships log in normally, and **inactive** / **rejected** memberships are preserved instead of being silently reopened.
+20. **`POST /api/auth/request-membership`** now supports the real 6.3 path: an authenticated user can request access to the current tenant without creating a second account. The route is idempotent for active/pending memberships and preserves inactive/rejected memberships instead of silently reopening them.
+21. **Student portal access is now tenant-scoped.** The portal derives current-tenant membership state from `memberships[]`, not just global `hasActiveMembership`, so an SLMTS-active user on the RR portal can still see RR pending/no-membership states correctly.
+22. **Student portal auto-switches only once per tenant org.** If the current tenant has an active membership but the JWT still points at another org, the portal attempts `POST /api/auth/switch-org`; failures are latched to avoid retry loops and surface a user-visible error instead of spinning forever.
 
 ---
 
@@ -179,7 +182,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
   - `npx tsx scripts/test/student-tenant-config.test.ts`
 - RR isolation is now covered by `npm run test:rr-isolation-smoke`, which logs in with the seeded super-admin (`ADMIN_EMAIL` + `DEV_SUPERADMIN_PASSWORD`), creates temporary dual-org marker data, proves the default session remains on SLMTS, switches to RR through `POST /api/auth/switch-org`, and verifies that list endpoints plus direct track/batch lookups stay org-scoped in both directions.
 - Second-org join is now covered by `npm run test:second-org-join-smoke`, which registers a new SLMTS user, approves the initial SLMTS membership, requests RR membership through `POST /api/auth/request-membership`, confirms RR stays pending in `/api/auth/me`, verifies `POST /api/auth/switch-org` returns `403` while RR is pending, then approves RR and verifies `switch-org` plus RR-scoped content access succeed afterward.
-- Pilot closeout is now complete through **6.4**. The known out-of-scope or deferred gaps are: email invites/notifications, questionnaire-driven onboarding, Google OAuth parity unless it becomes real product scope, production subdomain/TLS/cookie `SameSite` and `Domain` behavior outside local dev, and RR onboarding browser coverage beyond the current smoke/API path.
+- Pilot closeout is now complete through **6.4**. The known out-of-scope or deferred gaps are: email invites/notifications, questionnaire-driven onboarding, production subdomain/TLS/cookie `SameSite` and `Domain` behavior outside local dev, and RR onboarding browser coverage beyond the current smoke/API path.
 
 ---
 
@@ -189,9 +192,8 @@ These are now intentionally documented rather than left as implied follow-up:
 
 1. **Email invites and notifications** remain out of scope for this phase; approval and onboarding are still manual and super-admin driven.
 2. **Questionnaire-driven onboarding** remains deferred; the current membership-first flow stops at pending membership plus super-admin approval.
-3. **Google OAuth parity** remains deferred unless OAuth becomes real product scope; the local credential flow is still the implementation baseline for membership approval behavior.
-4. **Production subdomain/TLS/cookie behavior** remains unverified outside local dev, especially `SameSite` and `Domain` interactions for subdomain routing.
-5. **RR browser-only onboarding coverage** remains lighter than SLMTS pilot coverage; RR readiness is currently evidenced by targeted smoke/API validation while public onboarding remains operationally gated.
+3. **Production subdomain/TLS/cookie behavior** remains unverified outside local dev, especially `SameSite` and `Domain` interactions for subdomain routing.
+4. **RR browser-only onboarding coverage** remains lighter than SLMTS pilot coverage; RR readiness is currently evidenced by targeted smoke/API validation while public onboarding remains operationally gated.
 
 ---
 
@@ -200,7 +202,6 @@ These are now intentionally documented rather than left as implied follow-up:
 | Area | Checklist / roadmap | Notes |
 | ---- | -------------------- | ----- |
 | `requireOrgRole` rename (optional) | **2.4** | `requireRole` still enforces org-scoped JWT roles today; rename/alias cleanup is optional only. |
-| OAuth parity with local register | **2.12** | Deferred unless Google OAuth becomes real product scope; current flow preserves tenant context and return routing, but broader product-policy parity is still a follow-up decision. |
 | Governance extras | **api-contract** | Optional: `POST …/users/:userId/memberships`, `DELETE …/memberships/:id` are still not implemented. |
 
 ---
@@ -209,8 +210,8 @@ These are now intentionally documented rather than left as implied follow-up:
 
 Use the distinction below so slice selection is not misleading:
 
-1. **Deferred slice: Checklist 2.12** — OAuth vs membership pending policy. The tenant-aware propagation work is now merged, but broader product-policy parity should still be reprioritized only if Google OAuth becomes real product scope.
-2. **Optional cleanup:** decide whether `requireRole` should be renamed to `requireOrgRole` and whether the optional governance extras in [api-contract-changes.md](./api-contract-changes.md) are worth implementing.
+1. **Optional cleanup:** decide whether `requireRole` should be renamed to `requireOrgRole` and whether the optional governance extras in [api-contract-changes.md](./api-contract-changes.md) are worth implementing.
+2. **Operational follow-up:** verify production subdomain/TLS/cookie behavior and expand RR browser-only onboarding coverage when rollout readiness needs deeper production confidence.
 
 Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` after `npm run check`.
 
@@ -223,7 +224,7 @@ When continuing in a brand-new chat, do this first:
 1. Confirm checkout is on **`multi-tenancy`** and up to date with `origin/multi-tenancy`.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
 3. Treat **1.4-contract** as already merged, **6.1** through **6.4** as already complete, and the Layer **4.4** tenant-aware OAuth propagation follow-up as merged.
-4. Default next work to deferred **2.12** unless Google OAuth becomes product scope; optional cleanup work is limited to small governance/auth naming or API-surface follow-ups. If you touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.
+4. Treat **2.12** as complete, and default next work to optional cleanup or operational verification follow-up rather than reopening OAuth policy work. If you touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.
 
 ---
 
@@ -246,6 +247,7 @@ When continuing in a brand-new chat, do this first:
 - **Slice 1.4 admin-stats contract:** `npx tsx scripts/test/admin-stats-membership.test.ts`.
 - **Admin org-switcher helper coverage:** `npx tsx scripts/test/admin-org-switcher-utils.test.ts`.
 - **Identity request-membership contract:** `npx tsx scripts/test/identity-request-membership.test.ts`.
+- **OAuth membership parity:** `npx tsx scripts/test/oauth-membership-parity.test.ts`.
 - **Student tenant-config helpers:** `npx tsx scripts/test/student-tenant-config.test.ts`.
 - **Student tenant-session helpers:** `npx tsx scripts/test/student-tenant-session.test.ts`.
 - **DB:** `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed` (see [README.md](./README.md) seed order; first-time dev bootstrap needs `DEV_SUPERADMIN_PASSWORD`).
