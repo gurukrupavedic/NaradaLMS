@@ -5,6 +5,11 @@ import { config } from "../../config";
 
 export const ALLOWED_TENANT_SLUGS = ["slmts", "rr"] as const;
 export type TenantSlug = (typeof ALLOWED_TENANT_SLUGS)[number];
+const LOCAL_PORTAL_ORIGINS = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:3010",
+] as const;
 
 interface OAuthStateContext {
   tenantSlug?: TenantSlug;
@@ -59,8 +64,12 @@ function sanitizeReturnTo(returnTo?: string): string {
       return config.frontendUrl;
     }
 
+    const allowedOriginSources =
+      config.env === "production"
+        ? [config.frontendUrl, ...config.corsOrigins]
+        : [config.frontendUrl, ...config.corsOrigins, ...LOCAL_PORTAL_ORIGINS];
     const allowedOrigins = new Set(
-      [config.frontendUrl, ...config.corsOrigins].flatMap((value) => {
+      allowedOriginSources.flatMap((value) => {
         try {
           return [new URL(value).origin];
         } catch {
