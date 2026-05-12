@@ -19,7 +19,7 @@ It captures both the locked product/architecture decisions and the current as-bu
 - Layer **3** Pass A and Pass B isolation are merged.
 - Student Layer **4.1 / 4.2** tenant-config and authenticated shell branding work are merged.
 - Admin **5.1–5.4** are merged.
-- Checklist **6.1** pilot validation is now confirmed locally; default next slices are **6.2** (RR isolation smoke) and **6.3** (second-org join verification), unless you intentionally want the optional broader Layer 4 auth-client follow-up first.
+- Checklists **6.1** pilot validation and **6.2** RR isolation smoke are now confirmed locally; default next slices are **6.3** (second-org join verification) and **6.4** (document known gaps), unless you intentionally want the optional broader Layer 4 auth-client follow-up first.
 
 ---
 

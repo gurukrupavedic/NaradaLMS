@@ -13,9 +13,9 @@ Sequenced execution reference. Execute rows in ascending **Seq** unless noted pa
 
 **Progress snapshot on `multi-tenancy`:**
 
-- Complete through **MT-6.1**, with the authenticated student-shell branding follow-up and the SLMTS pilot validation path now verified locally.
+- Complete through **MT-6.2**, with the authenticated student-shell branding follow-up, the SLMTS pilot validation path, and the dedicated RR isolation smoke path now verified locally.
 - **MT-5.2**, **MT-5.3**, and the **MT-5.4** governance gate are complete, so the admin governance surface is functionally through the current checklist scope.
-- Main remaining execution areas are checklist **6.2** / **6.3** / **6.4** pilot follow-through, deferred **MT-1.4**, and optional remaining **MT-4.3** / **MT-2.10** auth-client or OAuth propagation work.
+- Main remaining execution areas are checklist **6.3** / **6.4** pilot follow-through, deferred **MT-1.4**, and optional remaining **MT-4.3** / **MT-2.10** auth-client or OAuth propagation work.
 
 ---
 

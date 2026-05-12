@@ -162,7 +162,19 @@ Before calling SLMTS pilot-ready:
 - **Super-admin approval:** the seeded super-admin approved the new SLMTS membership through `POST /api/auth/admin/memberships/:membershipId/approve`.
 - **Approved learning access:** after approval, the same user logged in with `hasActiveMembership: true`, `GET /api/auth/me` returned an active SLMTS membership, `GET /api/content/tracks` returned `200` with `9` tracks, and browser verification confirmed access to `http://localhost:3100/vedic-learning`.
 - **Supporting guard checks:** `npx tsx scripts/test/require-super-admin.test.ts`, `npx tsx scripts/test/audit-log-visibility.test.ts`, `npx tsx scripts/test/layer3-pass-a-isolation.test.ts`, `npx tsx scripts/test/layer3-pass-b-media-isolation.test.ts`, `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts`, and `npx tsx scripts/test/student-tenant-config.test.ts` all passed.
-- **Still outstanding in the pilot gate:** checklist `6.2` RR isolation smoke, `6.3` second-org join verification, and `6.4` documentation of known out-of-scope gaps.
+- **Still outstanding after `6.1`:** checklist `6.2` RR isolation smoke, `6.3` second-org join verification, and `6.4` documentation of known out-of-scope gaps.
+
+---
+
+### 2026-05-12 — checklist 6.2 validated
+
+- **Environment reset:** `npm run build:types`, `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`, and `npm run check` all passed on a fresh local database in the slice worktree.
+- **Dedicated smoke command:** `API_BASE_URL=http://localhost:5201 npm run test:rr-isolation-smoke`
+- **Smoke setup:** the new harness in `scripts/test/rr-isolation-smoke.test.ts` temporarily upserts an active RR membership for the seeded super-admin, creates unique SLMTS/RR marker tracks and batches, and uses live cookies plus `POST /api/auth/switch-org` to verify session truth.
+- **SLMTS assertion:** initial `/api/auth/me` stayed on active SLMTS, `GET /api/content/tracks` and `GET /api/batches` included only SLMTS marker data, and direct RR lookups returned `404`.
+- **RR assertion:** after switching org to RR, `/api/auth/me` reported `currentOrgId = rr`, `GET /api/content/tracks` and `GET /api/batches` included only RR marker data, and direct SLMTS lookups returned `404`.
+- **Result:** `npm run test:rr-isolation-smoke` passed with `rr-isolation-smoke: 16 assertions passed.`
+- **Still outstanding in the pilot gate:** checklist `6.3` second-org join verification and `6.4` documentation of known out-of-scope gaps.
 
 ---
 

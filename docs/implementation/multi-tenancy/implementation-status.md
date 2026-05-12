@@ -4,7 +4,7 @@
 
 **Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
 
-**Last updated:** Reflects Layer **1** (expand/seed/bootstrap), Layer **2** roadmap slices **2.1–2.5**, Layer **3** Pass A and Pass B, student Layer **4.1 / 4.2**, admin checklist **5.1**–**5.4** on `multi-tenancy`, and local checklist **6.1** pilot validation evidence on `slice-6.1-pilot-validation`.
+**Last updated:** Reflects Layer **1** (expand/seed/bootstrap), Layer **2** roadmap slices **2.1–2.5**, Layer **3** Pass A and Pass B, student Layer **4.1 / 4.2**, admin checklist **5.1**–**5.4** on `multi-tenancy`, local checklist **6.1** pilot validation evidence on `slice-6.1-pilot-validation`, and local checklist **6.2** RR isolation smoke evidence on `slice-6.2-rr-isolation-smoke`.
 
 ---
 
@@ -147,6 +147,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 ## Pilot gate status
 
 - **Checklist 6.1 is now validated** on a fresh local database.
+- **Checklist 6.2 is now validated** with a dedicated RR isolation smoke harness.
 - Fresh baseline passed via `npm run build:types`, `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`, and `npm run check`.
 - Browser verification confirmed the end-to-end SLMTS flow for `pilot+1747051589@test.local`:
   - self-serve registration and login landed on `http://localhost:3100/pending-approval`
@@ -160,7 +161,8 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
   - `npx tsx scripts/test/layer3-pass-b-media-isolation.test.ts`
   - `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts`
   - `npx tsx scripts/test/student-tenant-config.test.ts`
-- Remaining pilot work is now **6.2** RR isolation smoke, **6.3** second-org join validation, and **6.4** documenting known gaps as explicitly out of scope.
+- RR isolation is now covered by `npm run test:rr-isolation-smoke`, which creates temporary dual-org marker data, proves the default session remains on SLMTS, switches to RR through `POST /api/auth/switch-org`, and verifies that list endpoints plus direct track/batch lookups stay org-scoped in both directions.
+- Remaining pilot work is now **6.3** second-org join validation and **6.4** documenting known gaps as explicitly out of scope.
 
 ---
 
@@ -173,7 +175,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 | Governance extras | **api-contract** | Optional: `POST …/users/:userId/memberships`, `DELETE …/memberships/:id` not implemented in slice 2.4. |
 | Slice **1.4-contract** | **1.4-contract** | Blocked until [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is fully cleared. |
 | Layer 4 student chameleon | **4.x** | Typed tenant configs, `TENANT`-driven auth/root metadata branding (mirrored into the client runtime), tenant-aware register requests, and tenant-branded authenticated shell/pending surfaces are now in place. Remaining work is limited to any broader auth-client or OAuth tenant propagation you still want after this slice. |
-| Pilot gate **6.x** | **6** | **6.1** is now validated locally; remaining work is **6.2** RR isolation smoke, **6.3** second-org join verification, and **6.4** explicit documentation of known out-of-scope gaps. |
+| Pilot gate **6.x** | **6** | **6.1** and **6.2** are now validated locally; remaining work is **6.3** second-org join verification and **6.4** explicit documentation of known out-of-scope gaps. |
 
 ---
 
@@ -181,12 +183,11 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 
 Use the distinction below so slice selection is not misleading:
 
-1. **Recommended next slice: checklist 6.2** — run RR isolation smoke now that checklist **6.1** is validated.
-2. **Then checklist 6.3** — verify the second-org join flow (`rr` portal -> pending RR membership -> super-admin approve).
-3. **Checklist 6.4** — document the known out-of-scope gaps captured during pilot validation (email, questionnaire, OAuth edge cases as applicable).
-4. **Optional Layer 4 follow-up:** continue only if you want broader tenant-aware auth client or OAuth propagation beyond the current register flow and shell rendering.
-5. **Blocked foundational follow-up: slice 1.4-contract** — only after [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is fully cleared.
-6. **Deferred slice: Checklist 2.12** — OAuth vs membership pending policy. Only reprioritize this if Google OAuth becomes real product scope.
+1. **Recommended next slice: checklist 6.3** — verify the second-org join flow (`rr` portal -> pending RR membership -> super-admin approve).
+2. **Then checklist 6.4** — document the known out-of-scope gaps captured during pilot validation (email, questionnaire, OAuth edge cases as applicable).
+3. **Optional Layer 4 follow-up:** continue only if you want broader tenant-aware auth client or OAuth propagation beyond the current register flow and shell rendering.
+4. **Blocked foundational follow-up: slice 1.4-contract** — only after [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is fully cleared.
+5. **Deferred slice: Checklist 2.12** — OAuth vs membership pending policy. Only reprioritize this if Google OAuth becomes real product scope.
 
 Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` after `npm run check`.
 
@@ -198,7 +199,7 @@ When continuing in a brand-new chat, do this first:
 
 1. Confirm checkout is on **`multi-tenancy`** and includes merge commit **`ba3a728c`** or later.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
-3. Treat **6.1** as already validated and default to **6.2** isolation smoke next, followed by **6.3** second-org join verification unless you intentionally want the optional broader Layer 4 auth-client propagation work first.
+3. Treat **6.1** and **6.2** as already validated and default to **6.3** second-org join verification next, unless you intentionally want the optional broader Layer 4 auth-client propagation work first.
 4. Keep **2.12** deferred unless Google OAuth becomes product scope; if you do touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.
 
 ---
@@ -220,6 +221,7 @@ When continuing in a brand-new chat, do this first:
 - **Admin org-switcher helper coverage:** `npx tsx scripts/test/admin-org-switcher-utils.test.ts`.
 - **Student tenant-config helpers:** `npx tsx scripts/test/student-tenant-config.test.ts`.
 - **DB:** `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed` (see [README.md](./README.md) seed order; first-time dev bootstrap needs `DEV_SUPERADMIN_PASSWORD`).
+- **RR isolation smoke (server running):** `npx tsx scripts/test/rr-isolation-smoke.test.ts` or `npm run test:rr-isolation-smoke` (set `API_BASE_URL` if the API is not on `http://localhost:5000`).
 - **Smoke (optional, server running):** `npx tsx scripts/test/api-smoke-test.ts` — auth section includes register + pending login; when seeded **super-admin** login succeeds: **`GET /api/auth/admin/users`** (expects `memberships[]` on users), **`GET /api/admin/directory/users`**, **`POST /api/auth/switch-org`** (403 pending RR / 200 active SLMTS per seed data).
 
 ---
