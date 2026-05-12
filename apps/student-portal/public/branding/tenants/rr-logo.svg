@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title desc">
+  <title id="title">RR Learning</title>
+  <desc id="desc">Raja Rajeswari Pathasala student portal logo.</desc>
+  <rect width="320" height="320" rx="40" fill="#081431" />
+  <circle cx="160" cy="112" r="58" fill="none" stroke="#ED6325" stroke-width="10" />
+  <path d="M120 148c12-26 28-38 40-38 16 0 28 18 28 36 0 23-17 42-38 42h-30v-76h30c34 0 56 22 56 52 0 30-23 54-58 54h-28" fill="none" stroke="#D7AA42" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+  <text x="160" y="236" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="42" font-weight="700">RR</text>
+  <text x="160" y="272" text-anchor="middle" fill="#ED6325" font-family="Arial, sans-serif" font-size="20" letter-spacing="2">LEARNING</text>
+</svg>

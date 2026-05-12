@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">SLMTS icon</title>
+  <rect width="128" height="128" rx="24" fill="#081431" />
+  <circle cx="64" cy="50" r="24" fill="none" stroke="#D7AA42" stroke-width="8" />
+  <circle cx="64" cy="50" r="8" fill="#ED6325" />
+  <path d="M42 84h44" stroke="#D7AA42" stroke-width="8" stroke-linecap="round" />
+  <text x="64" y="111" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="24" font-weight="700">S</text>
+</svg>

@@ -78,11 +78,11 @@ Pass A is implemented in slice `slice-3.a-core-org-isolation` and should now be 
 
 ## 4) Layer 4 — Student chameleon (config)
 
-- **4.1** Add `config/tenants/<slug>/` structure + TypeScript types for tenant config.
-- **4.2** Wire `TENANT` env (and `PORT` for RR on `3010` if using separate dev processes).
-- **4.3** Student portal: replace hardcoded branding with tenant config (auth shell, headers).
-- **4.4** Student API client: send tenant slug header (or equivalent) on auth/register so server creates correct org membership. *(SLMTS student register already sends `X-Tenant-Slug` + `tenantSlug`; RR-dedicated dev instance / shared client abstraction still Layer 4.)*
-- **4.5** Document dev commands in root or app `package.json` (SLMTS :3000, RR :3010).
+- [x] **4.1** Add tenant config structure + TypeScript types for tenant config. *(Repo-equivalent landed under `apps/student-portal/src/config/tenants/` for `slmts` and `rr`.)*
+- [x] **4.2** Wire `TENANT` env (and `PORT` for RR on `3010` if using separate dev processes).
+- **4.3** Continue replacing remaining student-portal hardcoded branding with tenant config. *(Slice `4.1` covered the auth page and root metadata; the shared authenticated shell/header/nav still needs a follow-up pass.)*
+- **4.4** Extend tenant-aware client behavior beyond the register flow as needed. *(Slice `4.1` now builds tenant-aware register headers/body from config; broader shared auth client and any future OAuth-specific handling remain follow-up work.)*
+- [x] **4.5** Document dev commands in app `package.json` (SLMTS :3000, RR :3010).
 
 ---
 
