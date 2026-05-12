@@ -14,7 +14,7 @@ Sequenced execution reference. Execute rows in ascending **Seq** unless noted pa
 **Progress snapshot on `multi-tenancy`:**
 
 - Complete through **MT-4.2**, with the authenticated student-shell branding follow-up now merged for the student portal.
-- **MT-5.2** and **MT-5.3** are complete, and the admin governance surface is now functionally through **MT-5.3**.
+- **MT-5.2**, **MT-5.3**, and the **MT-5.4** governance gate are complete, so the admin governance surface is functionally through the current checklist scope.
 - Main remaining execution areas are pilot validation **MT-6.1**, deferred **MT-1.4**, and optional remaining **MT-4.3** / **MT-2.10** auth-client or OAuth propagation work.
 
 ---

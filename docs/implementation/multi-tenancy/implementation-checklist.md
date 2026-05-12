@@ -89,7 +89,7 @@ Pass A is implemented in slice `slice-3.a-core-org-isolation` and should now be 
 ## 5) Admin portal (incremental, after backend)
 
 - [x] **5.1** Gate existing User Management module: **super-admin only** (not org admin).
-- [x] **5.2** API integration: list users with all memberships; add org filter (server-side). *(The admin User Management screen now exposes `All organizations`, `SLMTS`, and `RR`, threads `orgSlug` through the governance hook/query key, and the governance storage query now supports filtered pagination without the previous Postgres `SELECT DISTINCT ... ORDER BY` failure.)*
+- [x] **5.2** API integration: list users with all memberships; add org filter (server-side). *(The admin User Management screen now exposes `All organizations`, `SLMTS`, and `RR`, threads `orgSlug` through the governance hook/query key, and the governance service/storage queries now keep filtered pagination and status-tab counts aligned without the previous Postgres `SELECT DISTINCT ... ORDER BY` failure.)*
 - [x] **5.3** Org switcher: JWT switch + refresh admin data for active org.
 - [x] **5.4** Ensure org admins cannot access user-governance API routes (403).
 
