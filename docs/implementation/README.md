@@ -71,7 +71,7 @@ Use [multi-tenancy/implementation-status.md](./multi-tenancy/implementation-stat
   - `orgRoles`
   - optional `orgMembershipStatus`
 - **`GET /api/auth/me`** returns the session user plus `memberships[]` and `hasActiveMembership`.
-- Portal-initiated Google OAuth now carries tenant/return-to state so student logins can round-trip back to the originating tenant instance instead of relying only on the server default tenant or a single frontend URL.
+- Portal-initiated Google OAuth now sends tenant/return intent to the server so callback handling can use a signed, verified state payload and round-trip back to the originating tenant instance instead of relying only on the server default tenant or a single frontend URL.
 - **CSRF** still uses the double-submit pattern via `csrf-csrf`.
 
 ### Roles And Authority

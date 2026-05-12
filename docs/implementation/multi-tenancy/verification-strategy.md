@@ -195,8 +195,10 @@ Before calling SLMTS pilot-ready:
 ### 2026-05-12 — checklist 4.4 validated
 
 - **Focused verification in the slice worktree:** `npm run build:types`, `npm run check`, `npx tsx scripts/test/student-tenant-config.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/oauth-tenant-context.test.ts` all passed.
+- **Merged-branch verification also passed:** after the local-origin follow-up landed on `multi-tenancy`, `npm run build:types`, `npm run check`, `npx tsx scripts/test/student-tenant-config.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/oauth-tenant-context.test.ts` passed again on the integration branch.
 - **Student OAuth propagation covered:** the student tenant helper now builds Google OAuth URLs with explicit `tenantSlug` plus a safe `returnTo`, and the server tenant-context helper now signs/verifies OAuth `state` before resolving tenant context or callback redirect targets.
 - **Redirect safety covered:** callback redirect resolution now accepts configured local origins and falls back to `FRONTEND_URL` for unknown origins instead of trusting arbitrary callback destinations.
+- **Callback UX covered in code:** failed or unauthorized OAuth callbacks now return to the auth pages with explicit error codes instead of dropping users into protected-route redirect loops.
 - **Limit of current evidence:** `npx tsx scripts/test/identity-request-membership.test.ts` could not be rerun in the isolated worktree because `DATABASE_URL` was unavailable there, and no live Google provider/browser round-trip was run in this slice.
 
 ---

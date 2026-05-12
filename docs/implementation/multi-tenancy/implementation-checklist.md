@@ -88,6 +88,8 @@ Verification note for **4.4**:
 
 - Focused tenant-auth verification passed on `2026-05-12` in the slice worktree via `npm run build:types`, `npm run check`, `npx tsx scripts/test/student-tenant-config.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/oauth-tenant-context.test.ts`.
 - The student tenant helper now builds Google OAuth URLs with explicit `tenantSlug` plus a safe `returnTo`, and the server tenant-context helper now signs/verifies OAuth `state` before resolving tenant context or callback redirect targets.
+- The merged `multi-tenancy` branch re-passed `npm run build:types`, `npm run check`, `npx tsx scripts/test/student-tenant-config.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/oauth-tenant-context.test.ts` after the local-origin follow-up.
+- Failed or unauthorized OAuth callbacks now return to the auth pages with explicit error codes instead of dropping users into protected-route redirect loops.
 - `npx tsx scripts/test/identity-request-membership.test.ts` could not be re-run in the isolated worktree because `DATABASE_URL` was not available there; no behavior change was made to the request-membership contract itself in this slice.
 
 ---
