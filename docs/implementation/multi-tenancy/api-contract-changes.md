@@ -1,6 +1,6 @@
 # API Contract Changes: Multi-Tenancy Wave 2
 
-This document defines backend contract changes needed to move from global user role/status to org-scoped membership with super-admin governance.
+This document records the backend contract changes that shipped to move from global user role/status to org-scoped membership with super-admin governance.
 
 **Migration sequencing (physical schema):** Layer 2 moved JWT payloads, middleware, and routes to `user_organizations` plus `users.is_super_admin`, and slice **`slice-1.4-schema-contract`** has now removed the physical `users.roles` / `users.status` columns and `users_status_check`. The API contracts below now describe the **live** membership-first behavior unless a section explicitly says otherwise.
 
@@ -26,7 +26,7 @@ Grounded references:
 - `roles` (global)
 - `status` (global)
 
-Target payload:
+Live payload:
 
 - `id`
 - `email`
@@ -44,37 +44,28 @@ Rationale:
 
 ## 2) Express user typing updates
 
-Current Express augmentation in `server/shared/types.ts` includes:
-
-- `roles: string[]`
-- `status: string`
-
-Target typing:
+Current Express augmentation in `server/shared/types.ts` includes the JWT-backed membership fields:
 
 - `isSuperAdmin: boolean`
 - `currentOrgId?: string`
 - `orgRoles?: string[]`
 - `orgMembershipStatus?: 'pending' | 'active' | 'inactive' | 'rejected'`
+- `Request.orgId?: string`
 
-Update middleware and route assumptions accordingly.
+There are no remaining `roles` / `status` global fields on `Express.User`.
 
 ---
 
 ## 3) Auth and authorization middleware
 
-### Current
-
-`requireRole` in `server/shared/middleware/auth.ts` evaluates global `user.roles`.
-
-### Target
-
-Introduce layered guards:
+Live guard stack:
 
 1. `authMiddleware` (existing): require authenticated user
-2. `requireOrgContext`: require resolved org context
-3. `requireOrgRole(...roles)`: check roles against membership in current org
+2. `requireOrgRole(...roles)`: canonical org-scoped role check against JWT `orgRoles`
+3. `requireRole(...roles)`: backward-compatible alias to `requireOrgRole(...roles)`
 4. `requireSuperAdmin`: check `user.isSuperAdmin`
-5. Keep `requireInstructor` and `requireAdmin` as wrappers around `requireOrgRole`
+5. `requireInstructor` and `requireAdmin`: wrappers around `requireOrgRole`
+6. `requireOrgContext`: require `req.orgId` when a route needs resolved org context
 
 Behavior notes:
 
@@ -85,23 +76,19 @@ Behavior notes:
 
 ## 4) Tenant/org context resolution
 
-Add an org context resolver middleware for API routes:
+Live API org context resolution is session/JWT based:
 
-Resolution order:
+1. `jwtAuth` populates `req.user.currentOrgId`
+2. `attachOrgContext` copies that value onto `req.orgId`
+3. `requireOrgContext` returns `403` when org context is missing on scoped routes
 
-1. Explicit request override for dev/testing (if allowed)
-2. JWT `currentOrgId`
-3. Fail with 403 when org context is missing on scoped routes
-
-Future-ready for host-based resolution in production subdomains.
+Host-based org resolution remains future production follow-up; it is not part of the current server contract.
 
 ---
 
-## 5) Identity route redesign
+## 5) Identity route surface
 
-Current identity admin endpoints under `/api/auth/admin/*` are global-role based and user-status based.
-
-Target endpoints remain in identity module but switch to membership model.
+Identity/admin endpoints now live on the membership-first model.
 
 ### Authentication endpoints
 
@@ -124,7 +111,7 @@ Target endpoints remain in identity module but switch to membership model.
 
 - `POST /api/auth/switch-org`
   - authenticated endpoint
-  - validates user has membership in target org
+  - validates user has an active membership in the target org
   - reissues JWT with new `currentOrgId` and `orgRoles`
 
 - `GET /api/auth/me`
@@ -146,27 +133,26 @@ All gated by `requireSuperAdmin`.
 - `POST /api/auth/admin/memberships/:membershipId/disable`
 - `POST /api/auth/admin/memberships/:membershipId/enable`
 
-- `POST /api/auth/admin/users/:userId/memberships`
-  - add membership in org (default includes student role)
-
 - `PATCH /api/auth/admin/memberships/:membershipId/roles`
   - replace/merge org roles
-
-- `DELETE /api/auth/admin/memberships/:membershipId`
-  - remove org membership
 
 - `POST /api/auth/admin/users/:userId/super-admin/grant`
 - `POST /api/auth/admin/users/:userId/super-admin/revoke`
 
-Route naming can be refined, but authority boundary should not.
+### Optional governance extras (not implemented in current branch)
+
+- `POST /api/auth/admin/users/:userId/memberships`
+  - would add membership in org (default includes student role)
+- `DELETE /api/auth/admin/memberships/:membershipId`
+  - would remove org membership
+
+Authority boundaries are already settled even though those extras remain out of scope for the current branch.
 
 ---
 
-## 6) Service layer changes (`IdentityService`)
+## 6) Service layer shape (`IdentityService`)
 
-Current service methods are user-status/global-role centric (`approveUser`, `assignRoles`, `disableUser`, etc.).
-
-Target service capabilities:
+Live service capabilities are membership- and super-admin-centric:
 
 1. Account/auth methods
    - `registerUserForOrg(...)`
@@ -185,23 +171,22 @@ Target service capabilities:
 5. User-management query APIs
    - `listUsersWithMemberships(...)`
    - `getUserWithMemberships(...)`
+6. OAuth parity helper
+   - `resolveOAuthLogin(...)`
 
-Keep the identity module but shift its domain model from user-level governance to membership-level governance.
+The live identity module is already membership-level governance; legacy user-level approval/status helpers are no longer the contract center.
 
 ---
 
 ## 7) Admin portal contract impact
 
-Existing user management UI currently queries single-org/global mixed data under admin role.
-
-Updated contract expectations:
+Current admin portal expectations:
 
 - only super-admin can access user-management routes
 - route payloads include multi-org membership arrays
-- support org filter and pending filter server-side
+- org/status/search filters run server-side
 - responses include enough metadata for data-grid display without client-side joins
-
-Backend should be completed first; UI can then adapt incrementally.
+- org-admin pickers use the separate `/api/admin/directory/users` route with current-org scoping
 
 ---
 
@@ -222,22 +207,21 @@ Portal should show pending screen when authenticated but lacking active membersh
 
 ## 9) Audit event contract updates
 
-Current eventing already exists in identity service (`UserApproved`, `UserRoleChanged`, etc.).
+Live identity/governance event semantics are membership/super-admin based:
 
-Update event semantics to membership/super-admin actions:
-
-- `MembershipRequested`
 - `MembershipApproved`
 - `MembershipRejected`
+- `MembershipEnabled`
+- `MembershipDisabled`
 - `MembershipRolesChanged`
-- `MembershipRemoved`
 - `SuperAdminGranted`
 - `SuperAdminRevoked`
 
-Each event should carry:
+Current event payload shape:
 
 - actor user id
 - target user id
+- membership id when applicable
 - org id when applicable
 - timestamp
 - correlation/request id when available
@@ -255,15 +239,15 @@ This allows cleaner API contracts without temporary dual semantics.
 
 ---
 
-## 11) OpenAPI/typing updates required
+## 11) Typing sync expectations
 
-1. Update auth schemas to new payload shape (no global roles/status).
-2. Add membership DTOs:
+1. Auth schemas/types should reflect the live payload shape (no global roles/status).
+2. Membership DTOs should cover:
    - `MembershipSummary`
    - `MembershipApprovalRequest`
    - `MembershipRoleUpdate`
-3. Update admin user-management endpoint schemas for multi-org data.
-4. Ensure generated client types in portals consume new contracts.
+3. Admin user-management endpoint schemas/types should expose multi-org data.
+4. Portal-facing generated or shared client types should consume the membership-first contracts.
 
 ---
 

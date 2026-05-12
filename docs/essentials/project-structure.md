@@ -456,7 +456,7 @@ const chapter = await storage.chapters.get(chapterId);
 
 1. Add route in `server/modules/module-name/routes.ts`
 2. Use `storage` for all database operations
-3. Add auth middleware if needed: `requireAuth`, `requireRole('role')`
+3. Add auth middleware if needed: `authMiddleware`, `requireOrgRole('role')`, or `requireSuperAdmin`
 4. Use `createErrorResponse()` for error handling
 5. Endpoint will be available at `/api/[module-path]`
 

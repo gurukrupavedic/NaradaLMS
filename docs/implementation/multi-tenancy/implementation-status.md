@@ -84,7 +84,7 @@ Use this to map [implementation-checklist.md](./implementation-checklist.md) lin
 | **2.1** JWT / `verifyToken` / claims | **Done** | See slice **2.1**. |
 | **2.2** `Express.User` / typing | **Done** | Includes `Request.orgId` for org context. |
 | **2.3** Org context on request | **Done** | `attachOrgContext` + `requireOrgContext`; JWT `currentOrgId` → `req.orgId`. |
-| **2.4** `requireOrgRole` + `requireSuperAdmin` | **Partial** | **`requireSuperAdmin`** implemented. **`requireRole`** / **`requireAdmin`** still org-scoped via JWT `orgRoles`; no rename to `requireOrgRole` yet (optional cleanup). |
+| **2.4** `requireOrgRole` + `requireSuperAdmin` | **Done** | `requireOrgRole` is now the canonical org-scoped guard over JWT `orgRoles`; `requireRole` remains as a backward-compatible alias, and `requireAdmin` / `requireInstructor` continue to wrap the org-scoped helper. |
 | **2.5** Register + pending membership | **Done** | Covered in slice **2.2**. |
 | **2.6** Login + pending UX | **Done** | Passport + `loginState`; slice **2.2**. |
 | **2.7** `GET /api/auth/me` | **Done** | Slice **2.2**. |
@@ -140,7 +140,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 2. **Register** must target a real org slug; the student portal now derives tenant slug/header from **`TENANT`** config so the same app can send SLMTS context on `3000` and RR context on `3010`.
 3. **Login** succeeds for valid credentials; there is no remaining global user-status gate, and pending **membership** does not block login.
 4. **`/api/auth/me`** is the source for portals: use `hasActiveMembership` and `memberships`, not only JWT fields.
-5. **Super-admin** without any org membership still bypasses `requireRole` via `isSuperAdmin` on the server; student UI also skips the pending gate for `isSuperAdmin`.
+5. **Super-admin** without any org membership still bypasses `requireOrgRole` (and the compatibility alias `requireRole`) via `isSuperAdmin` on the server; student UI also skips the pending gate for `isSuperAdmin`.
 6. **`POST /api/auth/switch-org`** only succeeds when the target **`orgId`** has an **active** membership; pending orgs return **403**. Authenticated requests that ran through **`jwtAuth`** expose **`req.orgId`** (mirror of JWT `currentOrgId`).
 7. **Admin shell** now exposes a header org switcher whenever the current admin has more than one switchable active org; org-admin users only see active orgs where they still have admin access, while super-admins can switch across all active memberships.
 8. After admin org switch, the portal refreshes **`auth/me`** and invalidates org-sensitive query families before `router.refresh()`. Local verification on the slice branch confirmed RR content collapsed to the single RR track and SLMTS content restored to the 10 SLMTS tracks after switching back.
@@ -201,7 +201,6 @@ These are now intentionally documented rather than left as implied follow-up:
 
 | Area | Checklist / roadmap | Notes |
 | ---- | -------------------- | ----- |
-| `requireOrgRole` rename (optional) | **2.4** | `requireRole` still enforces org-scoped JWT roles today; rename/alias cleanup is optional only. |
 | Governance extras | **api-contract** | Optional: `POST …/users/:userId/memberships`, `DELETE …/memberships/:id` are still not implemented. |
 
 ---
@@ -210,7 +209,7 @@ These are now intentionally documented rather than left as implied follow-up:
 
 Use the distinction below so slice selection is not misleading:
 
-1. **Optional cleanup:** decide whether `requireRole` should be renamed to `requireOrgRole` and whether the optional governance extras in [api-contract-changes.md](./api-contract-changes.md) are worth implementing.
+1. **Optional governance extras:** implement `POST …/users/:userId/memberships` and/or `DELETE …/memberships/:id` only when a real operator workflow needs them.
 2. **Operational follow-up:** verify production subdomain/TLS/cookie behavior and expand RR browser-only onboarding coverage when rollout readiness needs deeper production confidence.
 
 Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` after `npm run check`.
@@ -224,7 +223,7 @@ When continuing in a brand-new chat, do this first:
 1. Confirm checkout is on **`multi-tenancy`** and up to date with `origin/multi-tenancy`.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
 3. Treat **1.4-contract** as already merged, **6.1** through **6.4** as already complete, and the Layer **4.4** tenant-aware OAuth propagation follow-up as merged.
-4. Treat **2.12** as complete, and default next work to optional cleanup or operational verification follow-up rather than reopening OAuth policy work. If you touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.
+4. Treat **2.4** and **2.12** as complete, and default next work to optional governance extras or operational verification follow-up rather than reopening auth naming or OAuth policy work. If you touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.
 
 ---
 

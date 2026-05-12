@@ -46,7 +46,7 @@ This block landed after [legacy-users-columns-cleanup.md](./legacy-users-columns
 - **2.1** Update `JWTPayload` / `generateToken` / `verifyToken` for new claims ([api-contract-changes.md](./api-contract-changes.md)).
 - **2.2** Update `server/shared/types.ts` `Express.User` augmentation.
 - **2.3** Implement org context resolution middleware (JWT `currentOrgId` first; extensible for host later).
-- **2.4** Replace `requireRole` global checks with `requireOrgRole` + `requireSuperAdmin` pattern; keep `requireAdmin`/`requireInstructor` as org-scoped wrappers.
+- **2.4** Use `requireOrgRole` + `requireSuperAdmin` as the Layer 2 auth pattern; keep `requireRole` as a compatibility alias and `requireAdmin`/`requireInstructor` as org-scoped wrappers.
 - **2.5** Register: create user + pending `user_organizations` row for tenant from request.
 - **2.6** Login: do not block solely on removed global status; enforce access via membership state + return pending UX contract.
 - **2.7** `GET /api/auth/me`: return profile + memberships + current org context.
