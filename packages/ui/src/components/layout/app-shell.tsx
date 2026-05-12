@@ -3,6 +3,7 @@
 import * as React from "react"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "../sidebar"
 import { AppSidebar } from "./app-sidebar"
+import { type BrandHeaderBranding } from "./brand-header"
 import { ThemeToggle } from "../theme-toggle"
 import { Separator } from "../separator"
 import {
@@ -36,9 +37,11 @@ interface AppShellProps {
     documentScrollPaths?: string[]
     /** Optional header actions rendered beside the theme toggle. */
     headerActions?: React.ReactNode
+    /** Optional brand override for sidebar header usage. */
+    brandHeaderBranding?: BrandHeaderBranding
 }
 
-export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation, contentContextLabel, documentScrollPaths, headerActions }: AppShellProps) {
+export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation, contentContextLabel, documentScrollPaths, headerActions, brandHeaderBranding }: AppShellProps) {
     // We need to pass currentPath to Sidebar for active state
     // Since this is in @narada/ui, we assume usage in Next.js app context
     const pathname = usePathname()
@@ -62,6 +65,7 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                 customNavigation={customNavigation}
                 contextualNavigation={contextualNavigation}
                 contentContextLabel={contentContextLabel}
+                brandHeaderBranding={brandHeaderBranding}
             />
             <SidebarInset>
                 <header className="flex shrink-0 items-center justify-between gap-2 min-h-[4.25rem] h-[4.25rem] sm:min-h-16 sm:h-16 lg:min-h-14 lg:h-14 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:min-h-12 group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b bg-background px-3 sm:px-4">

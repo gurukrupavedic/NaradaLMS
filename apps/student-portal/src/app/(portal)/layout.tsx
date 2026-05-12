@@ -2,6 +2,7 @@
 
 import { AppShell, type UserRole } from "@narada/ui";
 import { useAuth, type AuthSession } from "@/hooks/useAuth";
+import { getStudentShellBranding } from "@/lib/tenant";
 import { LoadingSpinner } from "@narada/ui";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
@@ -77,6 +78,16 @@ export default function PortalLayout({
         );
         return (allowed.length > 0 ? [...allowed] : ["student"]) as UserRole[];
     }, [user?.orgRoles]);
+    const brandHeaderBranding = useMemo(() => {
+        const tenantBranding = getStudentShellBranding();
+        return {
+            name: tenantBranding.displayName,
+            logoSrc: tenantBranding.logoPath,
+            iconSrc: tenantBranding.iconPath,
+            logoAlt: tenantBranding.logoAlt,
+            iconAlt: tenantBranding.logoAlt,
+        };
+    }, []);
 
     if (isLoading) {
         return (
@@ -104,6 +115,7 @@ export default function PortalLayout({
                 contentContextLabel={contentContextLabel}
                 contextualNavigation={instructorContextualNavigation}
                 documentScrollPaths={["/vedic-learning", "/instructor/students"]}
+                brandHeaderBranding={brandHeaderBranding}
             >
                 {children}
             </AppShell>

@@ -2,7 +2,7 @@
 
 This document defines how we know each layer is **done** and the platform is safe to expand (RR) after SLMTS pilot.
 
-**Current build:** Layer 2 includes **2.1**–**2.5** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory, governance event/audit alignment). Layer **3 Pass A** and **3 Pass B** are now implemented for the core, media, progress, and audit tables, including physical `audit_logs.org_id` support. Layer **4.1** tenant-config foundation is also merged for the student portal auth surface and root metadata — see [implementation-status.md](./implementation-status.md).
+**Current build:** Layer 2 includes **2.1**–**2.5** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory, governance event/audit alignment). Layer **3 Pass A** and **3 Pass B** are now implemented for the core, media, progress, and audit tables, including physical `audit_logs.org_id` support. Layer **4.1** tenant-config foundation plus the authenticated student-shell branding follow-up are also merged for the student portal — see [implementation-status.md](./implementation-status.md).
 
 ---
 
@@ -128,7 +128,9 @@ Run only on branch `slice-1.4-schema-contract` when [legacy-users-columns-cleanu
 
 - Start student portal with `TENANT=slmts` on port **3000**: logo and display name match SLMTS config.
 - Start second instance with `TENANT=rr` on port **3010**: logo and display name match RR config.
-- Confirm the auth page copy/logo and root metadata differ between the two instances.
+- Confirm the auth page's **left half remains Narada-branded** on both student instances.
+- Confirm the tenant-facing auth form area and root metadata differ between the two instances.
+- Confirm the authenticated shell/header and pending-approval surface differ by tenant between the two instances.
 - Confirm register requests no longer hardcode `slmts`; tenant slug/header should match the running instance.
 - Admin portal on **3001** unchanged (Narada branding).
 - API on **5000** serves both; tenant header/env causes correct org on register.

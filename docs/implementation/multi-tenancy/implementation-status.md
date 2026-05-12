@@ -4,7 +4,7 @@
 
 **Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
 
-**Last updated:** Reflects Layer **1** (expand), Layer **2** roadmap slices **2.1–2.5**, Layer **3 Pass A** and **Pass B**, checklist **5.3**, and Layer **4.1** tenant-config foundation on `multi-tenancy`.
+**Last updated:** Reflects Layer **1** (expand), Layer **2** roadmap slices **2.1–2.5**, Layer **3 Pass A** and **Pass B**, checklist **5.3**, Layer **4.1** tenant-config foundation, and the authenticated student-shell branding follow-up on `multi-tenancy`.
 
 ---
 
@@ -22,6 +22,7 @@
   - `slice-3b-docs-verification` — Pass B docs refresh plus merged-baseline verification closeout
   - `slice-5.3-admin-org-switcher` — admin shell org switcher + auth/query refresh behavior
 - `slice-4.1-tenant-config` — student tenant config foundation, tenant-aware auth branding + metadata, and dual-instance student dev scripts
+- `slice-4.3-student-shell-branding` — tenant-aware authenticated student shell/pending branding, client-safe tenant env wiring, and explicit preservation of the shared Narada auth-left hero
 
 ---
 
@@ -57,11 +58,11 @@
 | ----- | ------- | --------- |
 | **3.B** Schema + runtime isolation | Added **`org_id`** to `audio_files`, `text_segments`, `media_segments`, `segment_mappings`, `student_progress`, `proficiency_evaluation_log`, and `audit_logs` (nullable for platform rows) in migration **`0003_wakeful_warhawk.sql`**, with deterministic backfills, indexes, and guard rails. Media/content routes and storage now validate parent ownership and active-org ownership on create/read/update/delete, learning and batch progress reads now use physical **`student_progress.org_id`**, active enrollment checks are enforced **per org**, and audit writes/reads now persist/filter on physical **`audit_logs.org_id`** rather than JSON-only metadata. Domain events for content, media, batch, and progress flows now carry enough org/actor data for audit consumers. | [`packages/types/src/schema.ts`](../../../packages/types/src/schema.ts), [`migrations/0003_wakeful_warhawk.sql`](../../../migrations/0003_wakeful_warhawk.sql), [`server/modules/content-publishing/service.ts`](../../../server/modules/content-publishing/service.ts), [`server/modules/media-pipeline/service.ts`](../../../server/modules/media-pipeline/service.ts), [`server/modules/learning-delivery/storage.ts`](../../../server/modules/learning-delivery/storage.ts), [`server/modules/batch-cohort/service.ts`](../../../server/modules/batch-cohort/service.ts), [`server/modules/system-admin/storage.ts`](../../../server/modules/system-admin/storage.ts), [`server/modules/system-admin/events.ts`](../../../server/modules/system-admin/events.ts), [`scripts/test/layer3-pass-b-schema-and-guards.test.ts`](../../../scripts/test/layer3-pass-b-schema-and-guards.test.ts), [`scripts/test/layer3-pass-b-media-isolation.test.ts`](../../../scripts/test/layer3-pass-b-media-isolation.test.ts), [`scripts/test/layer3-pass-b-progress-audit-isolation.test.ts`](../../../scripts/test/layer3-pass-b-progress-audit-isolation.test.ts), [`scripts/test/layer3-pass-b-script-compat.test.ts`](../../../scripts/test/layer3-pass-b-script-compat.test.ts) |
 
-### Layer 4 — student tenant-config foundation
+### Layer 4 — student tenant-config foundation and shell branding
 
 | Slice | Summary | Key files |
 | ----- | ------- | --------- |
-| **4.1** Tenant config foundation | Student portal now resolves **`TENANT`** to typed configs for **`slmts`** and **`rr`**, drives auth-page branding plus root metadata from tenant config, and builds tenant-aware register headers/body instead of hardcoding **`slmts`**. Dev scripts now support the documented dual-instance local setup on **`3000`** and **`3010`**. Remaining Layer 4 work is the broader shared student-shell/header/nav branding pass and any wider tenant-aware auth client follow-up you choose to do later. | [`apps/student-portal/src/config/tenants/index.ts`](../../../apps/student-portal/src/config/tenants/index.ts), [`apps/student-portal/src/config/tenants/slmts.ts`](../../../apps/student-portal/src/config/tenants/slmts.ts), [`apps/student-portal/src/config/tenants/rr.ts`](../../../apps/student-portal/src/config/tenants/rr.ts), [`apps/student-portal/src/lib/tenant.ts`](../../../apps/student-portal/src/lib/tenant.ts), [`apps/student-portal/src/components/auth/StudentAuthPage.tsx`](../../../apps/student-portal/src/components/auth/StudentAuthPage.tsx), [`apps/student-portal/src/app/layout.tsx`](../../../apps/student-portal/src/app/layout.tsx), [`apps/student-portal/package.json`](../../../apps/student-portal/package.json), [`scripts/test/student-tenant-config.test.ts`](../../../scripts/test/student-tenant-config.test.ts) |
+| **4.1** Tenant config foundation + shell follow-up | Student portal now resolves **`TENANT`** to typed configs for **`slmts`** and **`rr`**, mirrors that tenant into the client runtime for browser-rendered branding, drives tenant-specific branding for the auth form area, root metadata, authenticated shell, and pending-approval surface, and builds tenant-aware register headers/body instead of hardcoding **`slmts`**. The auth page's **left hero remains Narada-branded across tenants by design** so the product identity stays consistent. Dev scripts support the documented dual-instance local setup on **`3000`** and **`3010`**. Remaining Layer 4 work is limited to any broader tenant-aware auth client follow-up you still want beyond the current register flow and runtime shell rendering. | [`apps/student-portal/src/config/tenants/index.ts`](../../../apps/student-portal/src/config/tenants/index.ts), [`apps/student-portal/src/config/tenants/slmts.ts`](../../../apps/student-portal/src/config/tenants/slmts.ts), [`apps/student-portal/src/config/tenants/rr.ts`](../../../apps/student-portal/src/config/tenants/rr.ts), [`apps/student-portal/src/lib/tenant.ts`](../../../apps/student-portal/src/lib/tenant.ts), [`apps/student-portal/src/components/auth/StudentAuthPage.tsx`](../../../apps/student-portal/src/components/auth/StudentAuthPage.tsx), [`apps/student-portal/src/app/layout.tsx`](../../../apps/student-portal/src/app/layout.tsx), [`apps/student-portal/src/app/(portal)/layout.tsx`](../../../apps/student-portal/src/app/(portal)/layout.tsx), [`apps/student-portal/src/app/(portal)/pending-approval/page.tsx`](../../../apps/student-portal/src/app/(portal)/pending-approval/page.tsx), [`apps/student-portal/next.config.ts`](../../../apps/student-portal/next.config.ts), [`packages/ui/src/components/layout/app-shell.tsx`](../../../packages/ui/src/components/layout/app-shell.tsx), [`packages/ui/src/components/layout/app-sidebar.tsx`](../../../packages/ui/src/components/layout/app-sidebar.tsx), [`packages/ui/src/components/layout/brand-header.tsx`](../../../packages/ui/src/components/layout/brand-header.tsx), [`apps/student-portal/package.json`](../../../apps/student-portal/package.json), [`scripts/test/student-tenant-config.test.ts`](../../../scripts/test/student-tenant-config.test.ts) |
 
 ---
 
@@ -138,7 +139,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 12. **Batch and learning progress** now use physical `student_progress.org_id`; runtime enrollment semantics allow one active enrollment per org, and foreign-org enrollment drop attempts no longer mutate the target row.
 13. **Membership approve/reject** updates **`user_organizations`** only; org-only admins receive **403** on governance routes.
 14. **Legacy DB columns** `users.roles` / `users.status` still exist and are still read in some paths (Passport inactive check, seeds, old service methods). Pilot listing must use **membership** APIs, not `users.status === pending_approval` alone.
-15. **Student auth entry surfaces** (auth hero/logo/mobile heading/root metadata) now resolve from typed tenant config under [`apps/student-portal/src/config/tenants/`](../../../apps/student-portal/src/config/tenants/); the authenticated shared shell is still the next Layer 4 follow-up.
+15. **Student auth and portal surfaces** now split branding intentionally: the auth page's **left hero stays Narada-branded** across tenants, while the auth form area, root metadata, authenticated shared shell, and pending-approval surface resolve tenant-specific branding from typed config under [`apps/student-portal/src/config/tenants/`](../../../apps/student-portal/src/config/tenants/).
 
 ---
 
@@ -151,7 +152,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 | Governance extras | **api-contract** | Optional: `POST …/users/:userId/memberships`, `DELETE …/memberships/:id` not implemented in slice 2.4. |
 | Slice **1.4-contract** | **1.4-contract** | Blocked until [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is fully cleared. |
 | Admin user-management org filter UI | **5.2** | Backend `orgSlug` filtering already exists on the governance API, but the current admin user-management UI still lacks a dedicated org filter control. |
-| Layer 4 student chameleon | **4.x** | **4.1 foundation is now in place**: typed tenant configs, `TENANT`-driven auth/root metadata branding, tenant-aware register requests, and dual student dev scripts. Remaining work is the broader student-shell branding follow-up plus any wider client-side tenant propagation you still want after this slice. |
+| Layer 4 student chameleon | **4.x** | Typed tenant configs, `TENANT`-driven auth/root metadata branding (mirrored into the client runtime), tenant-aware register requests, and tenant-branded authenticated shell/pending surfaces are now in place. Remaining work is limited to any broader auth-client or OAuth tenant propagation you still want after this slice. |
 | Pilot gate **6.x** | **6** | End-to-end pilot scenarios in [verification-strategy.md](./verification-strategy.md) — run after Layer 3 + any remaining Layer 2 gaps you care about. |
 
 ---
@@ -160,8 +161,8 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 
 Use the distinction below so slice selection is not misleading:
 
-1. **Recommended next slice: continue Layer 4** — follow the tenant-config foundation with the broader student-shell/header/nav branding pass so the authenticated student experience matches the auth entry surface.
-2. **Smaller follow-up if you want an admin-only task first: checklist 5.2** — expose the existing `orgSlug` governance filter in the admin user-management UI.
+1. **Recommended next slice: checklist 5.2** — expose the existing `orgSlug` governance filter in the admin user-management UI now that the student Layer 4 branding follow-up is in place.
+2. **Optional Layer 4 follow-up:** continue only if you want broader tenant-aware auth client or OAuth propagation beyond the current register flow and shell rendering.
 3. **Deferred slice: Checklist 2.12** — OAuth vs membership pending policy. Only reprioritize this if Google OAuth becomes real product scope.
 
 Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` after `npm run check`.
@@ -174,7 +175,7 @@ When continuing in a brand-new chat, do this first:
 
 1. Confirm checkout is on **`multi-tenancy`** and includes merge commit **`a0462f8e`** or later.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
-3. Default to the **next Layer 4 follow-up** next, unless you intentionally want the smaller admin **5.2** follow-up first.
+3. Default to the smaller admin **5.2** follow-up next, unless you intentionally want to continue the optional broader Layer 4 auth-client propagation work first.
 4. Keep **2.12** deferred unless Google OAuth becomes product scope; if you do touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.
 
 ---

@@ -13,9 +13,9 @@ Sequenced execution reference. Execute rows in ascending **Seq** unless noted pa
 
 **Progress snapshot on `multi-tenancy`:**
 
-- Complete through **MT-4.1**, with the first visible Layer 4 foundation now merged for the student portal.
+- Complete through **MT-4.2**, with the authenticated student-shell branding follow-up now merged for the student portal.
 - **MT-5.3** is complete; **MT-5.2** remains partial because the backend filter exists but the admin UI still lacks a dedicated org filter control.
-- Main remaining execution areas are the rest of **MT-4.x** (`4.2` / `4.3` follow-up), deferred **MT-1.4**, optional **MT-2.10** (OAuth parity), and pilot validation **MT-6.1**.
+- Main remaining execution areas are **MT-5.2**, deferred **MT-1.4**, optional remaining **MT-4.3** / **MT-2.10** auth-client or OAuth propagation work, and pilot validation **MT-6.1**.
 
 ---
 
@@ -46,8 +46,8 @@ Sequenced execution reference. Execute rows in ascending **Seq** unless noted pa
 | 20  | MT-3.B.2  | API           | Individual    | Handlers filter Pass B by org                                                                      | route modules                                                   | no cross-org joins                                    |
 | 21  | MT-3.B.3  | Data          | Individual    | Enrollment/progress uniqueness org-scoped if required                                              | migration + queries                                             | one-active rule per org semantics                     |
 | 22  | MT-4.1    | Student UI    | Individual    | Tenant config module + `TENANT` env                                                                | `config/tenants`                                                | two ports show two brands                             |
-| 23  | MT-4.2    | Student UI    | Parallel-safe | Replace hardcoded SLMTS assets                                                                     | components                                                      | visual parity SLMTS                                   |
-| 24  | MT-4.3    | Client        | Parallel-safe | Tenant header on auth API calls                                                                    | student `api` layer                                             | correct org on register                               |
+| 23  | MT-4.2    | Student UI    | Parallel-safe | Replace remaining student-portal hardcoded branding in the authenticated shell/header/pending surfaces while keeping the auth page's left hero Narada-branded | student shell + shared layout components                        | tenant shell branding + Narada auth-left invariant    |
+| 24  | MT-4.3    | Client        | Parallel-safe | Broader tenant propagation beyond register, including any shared auth-client or OAuth-specific follow-up still needed | student runtime/auth client                                     | correct org on register and any later auth follow-up  |
 | 25  | MT-5.1    | Admin UI      | Individual    | Super-admin gate on User Management                                                                | admin routes/pages                                              | non-super-admin blocked                               |
 | 26  | MT-5.2    | Admin UI      | Parallel-safe | Multi-org user list + org filter                                                                   | grid + query params                                             | matches API                                           |
 | 27  | MT-5.3    | Admin UI      | Parallel-safe | Admin shell org switcher + auth refresh + org-scoped admin cache invalidation                     | shell/header UI + switch hook                                   | switch updates `auth/me` and refreshes org data       |
@@ -84,8 +84,8 @@ MT-4.1 -> MT-4.2 -> MT-4.3
 
 Current status:
 - `MT-4.1` is merged on `multi-tenancy`.
-- `MT-4.2` now means the remaining authenticated student-shell/header/nav branding pass.
-- `MT-4.3` now means any broader tenant propagation beyond the register flow already wired in `4.1`.
+- `MT-4.2` is now merged on `multi-tenancy`; the authenticated student-shell/header and pending surface are tenant-branded, while the auth page's left hero intentionally remains Narada-branded.
+- `MT-4.3` now means any broader tenant propagation beyond the register flow and current shell/pending runtime wiring already in place.
 
 ### Bundle F — Admin UI governance
 

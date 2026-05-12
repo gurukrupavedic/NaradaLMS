@@ -16,7 +16,7 @@ All environment variables required by NaradaLMS.
 | `PGDATABASE` | Yes* | — | PostgreSQL database name |
 | `JWT_SECRET` | Yes | — | Secret for signing JWT tokens |
 | `JWT_EXPIRY` | No | `7d` | JWT token expiration |
-| `CORS_ORIGINS` | No | `http://localhost:3000,http://localhost:3001` | Comma-separated allowed origins |
+| `CORS_ORIGINS` | No | `http://localhost:3000,http://localhost:3001,http://localhost:3010` | Comma-separated allowed origins |
 | `FRONTEND_URL` | No | `http://localhost:3000` | URL of the student portal |
 | `GOOGLE_CLIENT_ID` | No | — | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | No | — | Google OAuth client secret |
