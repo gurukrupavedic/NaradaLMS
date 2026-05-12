@@ -22,7 +22,7 @@ Layer 1 used an **expand–contract** pattern so `multi-tenancy` could stay buil
 
 1. **Expand (slice `slice-1.1-org-schema`):** add `organizations`, `user_organizations`, and `users.is_super_admin` only. Keep legacy `users.roles` / `users.status` (and `users_status_check`) until application code no longer reads them.
 2. **Migrate (Layer 2):** move auth, JWT, routes, and portals to membership + `is_super_admin`. Track every remaining legacy reference in [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) until every row in that tracker is checked.
-3. **Contract (slice `slice-1.4-schema-contract`, after Layer 2):** drop `users.roles`, `users.status`, and `users_status_check` in a dedicated slice once the cleanup tracker is clear. This contract work is now complete on the slice branch.
+3. **Contract (slice `slice-1.4-schema-contract`, after Layer 2):** drop `users.roles`, `users.status`, and `users_status_check` in a dedicated slice once the cleanup tracker is clear. This contract work is now complete and merged to `multi-tenancy`.
 
 - **1.1** Add `organizations` table (additive; see [schema-design.md](./schema-design.md)). *(Drizzle in `@narada/types`; SQL under repo `migrations/`.)*
 - **1.2** Add `user_organizations` table with unique `(user_id, org_id)`, status + roles columns (additive).
@@ -146,7 +146,7 @@ Verification note for **6.4**:
 
 - Completed on `2026-05-12` as a documentation closeout slice using the already-recorded `6.1` through `6.3` evidence; no new runtime verification was required or invented for this step.
 - The canonical known-gap list is now recorded across the execution docs: email invites/notifications remain out of scope, questionnaire-driven onboarding remains deferred, Google OAuth parity remains deferred unless it becomes real product scope, production subdomain/TLS/cookie `SameSite` and `Domain` behavior remains unverified outside local dev, and RR onboarding still relies on smoke/API coverage rather than a separate full browser walkthrough.
-- Future chats should treat the pilot checklist as complete through **6.4**, the Layer **4.4** auth propagation follow-up as merged, and choose between blocked **1.4-contract** or deferred **2.12** based on priority.
+- Future chats should treat the pilot checklist as complete through **6.4**, the Layer **4.4** auth propagation follow-up as merged, and default next work to deferred **2.12** or optional cleanup/API-surface follow-up rather than reopening **1.4-contract**.
 
 ---
 

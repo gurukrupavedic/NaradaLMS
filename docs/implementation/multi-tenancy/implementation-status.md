@@ -4,7 +4,7 @@
 
 **Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
 
-**Last updated:** Reflects Layer **1** through **1.4 contract**, Layer **2** roadmap slices **2.1–2.5**, Layer **3** Pass A and Pass B, student Layer **4.1 / 4.2 / 4.4**, admin checklist **5.1**–**5.4**, and pilot closeout through checklist **6.4** on the current multi-tenancy slice flow.
+**Last updated:** Reflects Layer **1** through **1.4 contract** (including fresh-DB verification on the merged branch), Layer **2** roadmap slices **2.1–2.5**, Layer **3** Pass A and Pass B, student Layer **4.1 / 4.2 / 4.4**, admin checklist **5.1**–**5.4**, and pilot closeout through checklist **6.4** on the current multi-tenancy slice flow.
 
 ---
 
@@ -20,6 +20,7 @@
   - `slice-3b-media-isolation` — Pass B media/content runtime org isolation
   - `slice-3b-progress-audit-isolation` — Pass B progress/audit runtime isolation and event wiring
   - `slice-3b-docs-verification` — Pass B docs refresh plus merged-baseline verification closeout
+  - `slice-1.4-schema-contract` — remove `users.roles` / `users.status` / `users_status_check`, migrate remaining runtime/UI/script consumers, and refresh the execution docs
   - `slice-5.2-admin-user-org-filter` — admin user-management org filter UI, hook/query wiring, and filtered-governance pagination fix
   - `slice-5.3-admin-org-switcher` — admin shell org switcher + auth/query refresh behavior
 - `slice-4.1-tenant-config` — student tenant config foundation, tenant-aware auth branding + metadata, and dual-instance student dev scripts
@@ -36,9 +37,11 @@
 
 | Roadmap / checklist | What was delivered |
 | ------------------- | ------------------- |
-| **1.1–1.4** (expand / seed / bootstrap / contract) | `organizations`, `user_organizations`, `users.is_super_admin`, and the generated contract migration [`0004_dapper_zzzax.sql`](../../../migrations/0004_dapper_zzzax.sql) that removes `users.roles`, `users.status`, and `users_status_check`. Drizzle schema lives in `@narada/types`; SQL lives under repo root [`migrations/`](../../../migrations/). |
+| **1.1–1.4** (expand / seed / bootstrap / contract) | `organizations`, `user_organizations`, `users.is_super_admin`, and the generated contract migration [`0004_dapper_zzzax.sql`](../../../migrations/0004_dapper_zzzax.sql) that removes `users.roles`, `users.status`, and `users_status_check`. Drizzle schema lives in `@narada/types`; SQL lives under repo root [`migrations/`](../../../migrations/). Remaining seeds/scripts/bootstrap flows were also migrated so the fresh reset path works without the removed columns. |
 | **1.5** | `npm run db:seed-orgs` — orgs `slmts`, `rr`. See [`server/seed-organizations.ts`](../../../server/seed-organizations.ts). |
 | **1.6** | `npm run db:seed-dev` — super-admin for `ADMIN_EMAIL`, SLMTS active + RR **pending** memberships. See [`server/seed-dev-bootstrap.ts`](../../../server/seed-dev-bootstrap.ts). Requires `ADMIN_EMAIL`; new super-admin creation needs `DEV_SUPERADMIN_PASSWORD` (see script / `.env.example`). |
+
+Contract verification now also has focused regression coverage for the last high-risk consumers that blocked slice `1.4`: local passport auth without global status gates, membership-based eligible-student selection, and membership-based admin stats (see the verification list below).
 
 ### Layer 2 — slices implemented so far
 
@@ -196,11 +199,9 @@ These are now intentionally documented rather than left as implied follow-up:
 
 | Area | Checklist / roadmap | Notes |
 | ---- | -------------------- | ----- |
-| `requireOrgRole` rename (optional) | **2.4** | `requireRole` still org-scoped via JWT `orgRoles`; optional alias/split only. |
-| OAuth parity with local register | **2.12** | Deferred unless Google OAuth becomes real product scope; current flow is placeholder-only and should not drive slice ordering right now. Review [`server/auth/passport-config.ts`](../../../server/auth/passport-config.ts) / Google callback vs product pending story when OAuth is promoted. |
-| Governance extras | **api-contract** | Optional: `POST …/users/:userId/memberships`, `DELETE …/memberships/:id` not implemented in slice 2.4. |
-| Layer 4 student chameleon | **4.x** | Typed tenant configs, `TENANT`-driven auth/root metadata branding (mirrored into the client runtime), tenant-aware register requests, tenant-branded authenticated shell/pending surfaces, and tenant-aware OAuth start/callback return routing are now in place. |
-| Pilot gate **6.x** | **6** | **6.1** through **6.4** are now complete. Remaining work moves to optional or deferred follow-up slices rather than pilot-closeout tasks. |
+| `requireOrgRole` rename (optional) | **2.4** | `requireRole` still enforces org-scoped JWT roles today; rename/alias cleanup is optional only. |
+| OAuth parity with local register | **2.12** | Deferred unless Google OAuth becomes real product scope; current flow preserves tenant context and return routing, but broader product-policy parity is still a follow-up decision. |
+| Governance extras | **api-contract** | Optional: `POST …/users/:userId/memberships`, `DELETE …/memberships/:id` are still not implemented. |
 
 ---
 
@@ -209,6 +210,7 @@ These are now intentionally documented rather than left as implied follow-up:
 Use the distinction below so slice selection is not misleading:
 
 1. **Deferred slice: Checklist 2.12** — OAuth vs membership pending policy. The tenant-aware propagation work is now merged, but broader product-policy parity should still be reprioritized only if Google OAuth becomes real product scope.
+2. **Optional cleanup:** decide whether `requireRole` should be renamed to `requireOrgRole` and whether the optional governance extras in [api-contract-changes.md](./api-contract-changes.md) are worth implementing.
 
 Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` after `npm run check`.
 
@@ -220,8 +222,8 @@ When continuing in a brand-new chat, do this first:
 
 1. Confirm checkout is on **`multi-tenancy`** and up to date with `origin/multi-tenancy`.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
-3. Treat **6.1** through **6.4** as already complete, and treat the Layer **4.4** tenant-aware OAuth propagation follow-up as merged.
-4. Default next work to deferred **2.12** unless Google OAuth becomes product scope; if you do touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.
+3. Treat **1.4-contract** as already merged, **6.1** through **6.4** as already complete, and the Layer **4.4** tenant-aware OAuth propagation follow-up as merged.
+4. Default next work to deferred **2.12** unless Google OAuth becomes product scope; optional cleanup work is limited to small governance/auth naming or API-surface follow-ups. If you touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.
 
 ---
 
@@ -239,6 +241,9 @@ When continuing in a brand-new chat, do this first:
 - **Layer 3 Pass B script compatibility:** `npx tsx scripts/test/layer3-pass-b-script-compat.test.ts`.
 - **Layer 3 Pass B media isolation:** `npx tsx scripts/test/layer3-pass-b-media-isolation.test.ts`.
 - **Layer 3 Pass B progress/audit isolation:** `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts`.
+- **Slice 1.4 local auth contract:** `npx tsx scripts/test/passport-local-membership-auth.test.ts`.
+- **Slice 1.4 eligible-student contract:** `npx tsx scripts/test/batch-eligible-students-membership.test.ts`.
+- **Slice 1.4 admin-stats contract:** `npx tsx scripts/test/admin-stats-membership.test.ts`.
 - **Admin org-switcher helper coverage:** `npx tsx scripts/test/admin-org-switcher-utils.test.ts`.
 - **Identity request-membership contract:** `npx tsx scripts/test/identity-request-membership.test.ts`.
 - **Student tenant-config helpers:** `npx tsx scripts/test/student-tenant-config.test.ts`.

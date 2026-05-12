@@ -59,7 +59,7 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
 4. **1.4 Schema contract (slice `slice-1.4-schema-contract`, after Layer 2)**
   - Drop `users.roles`, `users.status`, and `users_status_check` per [schema-design.md](./schema-design.md) once the cleanup tracker is empty.
   - Generate/commit the contract migration.
-  - Status: complete on the slice branch via generated migration `migrations/0004_dapper_zzzax.sql`.
+  - Status: complete and merged to `multi-tenancy` via generated migration `migrations/0004_dapper_zzzax.sql`.
 
 **Done when:** Migrations apply on empty DB; typecheck stays green after each merge to `multi-tenancy`; after 1.4, no references to removed columns remain.
 

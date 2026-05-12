@@ -212,7 +212,7 @@ Before calling SLMTS pilot-ready:
 
 - **Scope of this step:** documentation-only closeout using the already-recorded `6.1` through `6.3` evidence; no new runtime verification was added for `6.4`.
 - **Canonical known gaps now recorded across the execution docs:** email invites/notifications remain out of scope, questionnaire-driven onboarding remains deferred, broader Google OAuth product-policy parity remains deferred unless it becomes real product scope, production subdomain/TLS/cookie `SameSite` and `Domain` behavior remains unverified outside local dev, and RR onboarding browser coverage remains lighter than the SLMTS pilot browser pass.
-- **Result:** the pilot checklist is now complete through `6.4`, the Layer `4.4` tenant-aware OAuth propagation follow-up is now merged, and future chats should choose between blocked `1.4-contract` or deferred `2.12` rather than reopening pilot-closeout work.
+- **Result:** the pilot checklist is now complete through `6.4`, the Layer `4.4` tenant-aware OAuth propagation follow-up is now merged, and future chats should default to deferred `2.12` or other optional cleanup rather than reopening `1.4-contract` or pilot-closeout work.
 
 ---
 

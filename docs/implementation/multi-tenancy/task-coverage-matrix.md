@@ -9,13 +9,13 @@ Sequenced execution reference. Execute rows in ascending **Seq** unless noted pa
 - **Individual** — do in isolation (touches many files or high risk).
 - **Parallel-safe** — may batch if no file overlap.
 
-**Note:** Seq **16** (`MT-1.4`) runs **after** Layer 2 tasks **6–15** complete, even though it appears mid-table for readability.
+**Note:** Seq **16** (`MT-1.4`) ran **after** Layer 2 tasks **6–15** completed, even though it appears mid-table for readability.
 
 ## Progress snapshot on `multi-tenancy`
 
-- Complete through **MT-6.4**, with the authenticated student-shell branding follow-up, the SLMTS pilot validation path, the dedicated RR isolation smoke path, the second-org join path, and the pilot-gap documentation closeout now recorded locally.
+- Complete through **MT-6.4**, with the authenticated student-shell branding follow-up, the SLMTS pilot validation path, the dedicated RR isolation smoke path, the second-org join path, the pilot-gap documentation closeout, and the schema-contract cleanup now recorded locally.
 - **MT-5.2**, **MT-5.3**, and the **MT-5.4** governance gate are complete, so the admin governance surface is functionally through the current checklist scope.
-- Main remaining execution areas are blocked **MT-1.4** and deferred **MT-2.10** OAuth product-policy work.
+- The only named follow-up still deferred in this matrix is **MT-2.10** OAuth product-policy work.
 
 ---
 
@@ -69,7 +69,7 @@ MT-2.1 -> MT-2.5 -> MT-2.8 (do not parallelize until JWT+middleware stable)
 
 ### Bundle G — Schema contract (after Bundle B)
 
-MT-1.4 only — requires [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) complete.
+MT-1.4 only — now complete. The cleanup tracker is fully checked off and the contract migration is merged.
 
 ### Bundle C — Data isolation Pass A
 
@@ -101,4 +101,4 @@ MT-5.1 -> MT-5.2 -> MT-5.3 after MT-2.8 (and after Layer 3 org-scoped data is me
 - After Bundle G: legacy user columns dropped; full typecheck green on `multi-tenancy`.
 - After Bundle D: cross-org isolation smoke.
 - After Bundle E: two-tenant local branding smoke.
-- After `MT-6.4`: pilot closeout docs are synced; with `MT-4.3` now merged, next work is blocked `MT-1.4` or deferred `MT-2.10`.
+- After `MT-6.4` and `MT-1.4`: pilot closeout docs are synced, the schema contract is merged, and the remaining named follow-up in this matrix is deferred `MT-2.10`.

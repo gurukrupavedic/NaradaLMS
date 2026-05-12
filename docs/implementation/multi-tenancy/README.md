@@ -8,19 +8,19 @@ It captures both the locked product/architecture decisions and the current as-bu
 
 ## Start here (continuing work)
 
-1. Read **[implementation-status.md](./implementation-status.md)** — what is already merged to `multi-tenancy`, current behavior, gaps, and the distinction between the next **foundational** slice and the next **small ready** slice.
+1. Read **[implementation-status.md](./implementation-status.md)** — what is already merged to `multi-tenancy`, current behavior, remaining gaps, and the current follow-up priority.
 2. Follow **[implementation-roadmap.md](./implementation-roadmap.md)** and **[implementation-checklist.md](./implementation-checklist.md)** for execution order.
 3. Use **[verification-strategy.md](./verification-strategy.md)** before marking checklist items done.
 
 ### Current merged baseline
 
-- Layer **1** expand/seed/bootstrap is merged.
+- Layer **1** through **1.4 schema contract** is merged.
 - Layer **2** slices **2.1–2.5** are merged.
 - Layer **3** Pass A and Pass B isolation are merged.
 - Student Layer **4.1 / 4.2 / 4.4** tenant-config, authenticated shell branding, and tenant-aware OAuth propagation work are merged.
 - Admin **5.1–5.4** are merged.
 - Checklists **6.1** pilot validation, **6.2** RR isolation smoke, **6.3** second-org join, and **6.4** known-gap documentation are now complete in the current docs baseline.
-- Default next work is the blocked foundational slice **1.4-contract** once [`legacy-users-columns-cleanup.md`](./legacy-users-columns-cleanup.md) is clear; checklist **2.12** remains deferred unless Google OAuth becomes real product scope.
+- The next meaningful follow-up is deferred checklist **2.12** (OAuth product-policy parity) unless Google OAuth becomes real product scope; everything else in the current doc set is optional cleanup or small API-surface follow-up.
 
 ---
 
@@ -64,9 +64,10 @@ Use the roadmap and checklist as the primary execution guide. The root [roadmap.
 
 After migrations (`npm run db:migrate` or `npm run db:reset`; the reset path now clears both `public` and Drizzle's `drizzle` schema so fresh-migrate verification is real):
 
-1. `npm run db:seed-orgs` — canonical org rows (`slmts`, `rr`).
-2. `npm run db:seed-dev` — super-admin for `ADMIN_EMAIL` plus minimal `user_organizations` (SLMTS active, RR pending); first-time bootstrap needs `DEV_SUPERADMIN_PASSWORD` set (see [environment-setup.md](../../essentials/environment-setup.md)).
-3. Optionally `npm run db:seed` — Vedic curriculum structure.
+1. `npm run build:types` — useful in a fresh worktree so the emitted `@narada/types` package matches the current schema before seeding.
+2. `npm run db:seed-orgs` — canonical org rows (`slmts`, `rr`).
+3. `npm run db:seed-dev` — super-admin for `ADMIN_EMAIL` plus minimal `user_organizations` (SLMTS active, RR pending); first-time bootstrap needs `DEV_SUPERADMIN_PASSWORD` set (see [environment-setup.md](../../essentials/environment-setup.md)).
+4. Optionally `npm run db:seed` — Vedic curriculum structure.
 
 The RR isolation smoke (`npm run test:rr-isolation-smoke`) also uses those seeded super-admin credentials, so keep `DEV_SUPERADMIN_PASSWORD` available in `.env` or pass it inline when running the smoke outside the slice worktree.
 

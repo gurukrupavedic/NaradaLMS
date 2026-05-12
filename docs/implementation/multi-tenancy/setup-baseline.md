@@ -60,7 +60,7 @@ Baseline summary:
 
 ### Typecheck issue categories
 
-No typecheck failures in this baseline (`npm run check` passed cleanly). There are no `users.roles`/`users.status` compiler failures at baseline; these may still appear as runtime or lint-level concerns once schema/auth refactors begin.
+No typecheck failures in this baseline (`npm run check` passed cleanly). This note is now historical: on the current merged `multi-tenancy` branch, slice `1.4-contract` has already removed the live `users.roles` / `users.status` references from server, apps, packages, and scripts.
 
 ### Lint highlights (non-blocking baseline noise)
 

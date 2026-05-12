@@ -1,18 +1,18 @@
 # Legacy `users.roles` / `users.status` cleanup tracker
 
-Physical columns `users.roles`, `users.status`, and constraint `users_status_check` remain until **slice `slice-1.4-schema-contract`** (checklist **1.4-contract**). Layer 2 work must migrate every consumer to `user_organizations` and `users.is_super_admin`.
+This tracker is now a **historical record** of the cleanup surface that blocked **slice `slice-1.4-schema-contract`**. The physical columns `users.roles`, `users.status`, and constraint `users_status_check` have been removed from the live schema on `multi-tenancy`.
 
-Current execution baseline: the branch is now documented through Layer **2.1–2.5**, Layer **3** Pass A/B, student Layer **4.1 / 4.2 / 4.4**, admin **5.1–5.4**, and pilot closeout through checklist **6.4**. This tracker remains the gate for the blocked schema-contract slice, not a summary of the overall multi-tenancy rollout.
+Current execution baseline: the branch is now documented through Layer **1.4 contract**, Layer **2.1–2.5**, Layer **3** Pass A/B, student Layer **4.1 / 4.2 / 4.4**, admin **5.1–5.4**, and pilot closeout through checklist **6.4**. This file is preserved so future chats can see exactly which consumers were cleared before the contract migration landed.
 
-When every row below is checked, run slice 1.4 to drop the columns and regenerate the contract migration.
+All rows below are now checked; the generated contract migration has already landed.
 
 ## Layer 2 progress (JWT vs database)
 
 As of the current `multi-tenancy` baseline:
 
 - **JWT / `req.user` (post–2.1):** No global `roles` / `status` claims; use `orgRoles`, `orgMembershipStatus`, `isSuperAdmin`, `currentOrgId` ([`server/auth/jwt.utils.ts`](../../../server/auth/jwt.utils.ts)).
-- **Database columns:** Still read or written in the remaining paths listed below (Passport **inactive** check, `IdentityService` approve/disable, admin user listing, seeds, etc.). Rows in the tables below track **removal of dependency on DB columns**, not the broader rollout work that already landed after Layer 2. This tracker was refreshed for slice `1.4` planning so already-migrated guards are marked done and missing script/test consumers are listed explicitly.
-- **New self-serve users:** `users.status` is typically **`active`** with pending **`user_organizations`**; admin UIs that list “pending” users by `users.status = pending_approval` will **miss** them until governance/list APIs use membership state ([implementation-status.md](./implementation-status.md)).
+- **Database columns:** No live server/app/script code paths on `multi-tenancy` now read or write the removed columns. Rows in the tables below capture the contract-clearing work that made that true.
+- **New self-serve users:** Access is now governed entirely by `user_organizations` plus `users.is_super_admin`; the old account-level `pending_approval` split no longer exists in the live schema.
 
 ## Runtime — server
 
