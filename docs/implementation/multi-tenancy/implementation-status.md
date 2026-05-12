@@ -4,7 +4,7 @@
 
 **Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
 
-**Last updated:** Reflects Layer **1** (expand/seed/bootstrap), Layer **2** roadmap slices **2.1–2.5**, Layer **3** Pass A and Pass B, student Layer **4.1 / 4.2**, and admin checklist **5.1**, **5.3**, and **5.4** on `multi-tenancy`.
+**Last updated:** Reflects Layer **1** (expand/seed/bootstrap), Layer **2** roadmap slices **2.1–2.5**, Layer **3** Pass A and Pass B, student Layer **4.1 / 4.2**, and admin checklist **5.1**–**5.4** on `multi-tenancy`.
 
 ---
 
@@ -20,6 +20,7 @@
   - `slice-3b-media-isolation` — Pass B media/content runtime org isolation
   - `slice-3b-progress-audit-isolation` — Pass B progress/audit runtime isolation and event wiring
   - `slice-3b-docs-verification` — Pass B docs refresh plus merged-baseline verification closeout
+  - `slice-5.2-admin-user-org-filter` — admin user-management org filter UI, hook/query wiring, and filtered-governance pagination fix
   - `slice-5.3-admin-org-switcher` — admin shell org switcher + auth/query refresh behavior
 - `slice-4.1-tenant-config` — student tenant config foundation, tenant-aware auth branding + metadata, and dual-instance student dev scripts
 - `slice-4.3-student-shell-branding` — tenant-aware authenticated student shell/pending branding, client-safe tenant env wiring, and explicit preservation of the shared Narada auth-left hero
@@ -92,7 +93,7 @@ Use this to map [implementation-checklist.md](./implementation-checklist.md) lin
 | Checklist | Status | Notes |
 | --------- | ------ | ----- |
 | **5.1** User management super-admin only | **Done** (UI + server) | [`UserList.tsx`](../../../apps/admin-portal/src/components/admin/UserList.tsx) shows **Super-admin only** for others; APIs return **403**. |
-| **5.2** List + memberships + org filter | **Partial** | The governance API already supports nested **`memberships[]`**, **`membershipStatus`**, **`role`**, and **`orgSlug`** filters, and the admin grid renders membership details. The remaining gap is the admin user-management UI: it still lacks a dedicated org filter control/wiring for the existing **`orgSlug`** backend filter. |
+| **5.2** List + memberships + org filter | **Done** | The admin user-management UI now exposes a dedicated org filter with **All organizations**, **SLMTS**, and **RR** options, threads **`orgSlug`** through the governance hook/query key, and the supporting governance storage query now paginates filtered results without the prior Postgres `SELECT DISTINCT ... ORDER BY` error. Key files: [`apps/admin-portal/src/components/admin/UserList.tsx`](../../../apps/admin-portal/src/components/admin/UserList.tsx), [`apps/admin-portal/src/lib/hooks/useAdminUsers.ts`](../../../apps/admin-portal/src/lib/hooks/useAdminUsers.ts), [`apps/admin-portal/src/lib/admin-user-filters.ts`](../../../apps/admin-portal/src/lib/admin-user-filters.ts), [`server/modules/identity-access/storage.ts`](../../../server/modules/identity-access/storage.ts), [`scripts/test/admin-user-filters.test.ts`](../../../scripts/test/admin-user-filters.test.ts), [`scripts/test/governance-org-filter-storage.test.ts`](../../../scripts/test/governance-org-filter-storage.test.ts). |
 | **5.3** Org switcher in admin UI | **Done** | Admin shell now renders an org switcher in the shared header, calls **`POST /api/auth/switch-org`**, refetches **`GET /api/auth/me`**, and invalidates org-scoped admin query families before a conservative `router.refresh()`. Verified locally against a temporary dual-active admin fixture (seeded super-admin password reset + RR membership promoted from pending to active/admin for the verification session). Key files: [`apps/admin-portal/src/components/layout/AdminOrgSwitcher.tsx`](../../../apps/admin-portal/src/components/layout/AdminOrgSwitcher.tsx), [`apps/admin-portal/src/hooks/useSwitchOrg.ts`](../../../apps/admin-portal/src/hooks/useSwitchOrg.ts), [`apps/admin-portal/src/lib/org-switcher.ts`](../../../apps/admin-portal/src/lib/org-switcher.ts), [`packages/ui/src/components/layout/app-shell.tsx`](../../../packages/ui/src/components/layout/app-shell.tsx), [`scripts/test/admin-org-switcher-utils.test.ts`](../../../scripts/test/admin-org-switcher-utils.test.ts). |
 | **5.4** Org admins cannot governance APIs | **Done** | **403** without `isSuperAdmin`; directory uses separate route. |
 
@@ -133,7 +134,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 6. **`POST /api/auth/switch-org`** only succeeds when the target **`orgId`** has an **active** membership; pending orgs return **403**. Authenticated requests that ran through **`jwtAuth`** expose **`req.orgId`** (mirror of JWT `currentOrgId`).
 7. **Admin shell** now exposes a header org switcher whenever the current admin has more than one switchable active org; org-admin users only see active orgs where they still have admin access, while super-admins can switch across all active memberships.
 8. After admin org switch, the portal refreshes **`auth/me`** and invalidates org-sensitive query families before `router.refresh()`. Local verification on the slice branch confirmed RR content collapsed to the single RR track and SLMTS content restored to the 10 SLMTS tracks after switching back.
-9. **Super-admin** uses **`GET /api/auth/admin/users`** (+ mutations) for user governance; **org admins** use **`GET /api/admin/directory/users`** for in-org student/instructor pickers (requires JWT org context).
+9. **Super-admin** uses **`GET /api/auth/admin/users`** (+ mutations) for user governance; the admin user-management screen now exposes a dedicated organization filter that drives the existing server-side **`orgSlug`** query parameter. **Org admins** use **`GET /api/admin/directory/users`** for in-org student/instructor pickers (requires JWT org context).
 10. **`GET /api/admin/audit-logs`** now respects authority boundaries using physical `audit_logs.org_id`: super-admin sees the full audit stream, org admins see only current-org rows, and platform rows (`org_id IS NULL`) remain super-admin only.
 11. **Pass B media/content flows** now reject or hide foreign-org audio, text segment, media-segment, and mapping rows even when IDs are guessed correctly.
 12. **Batch and learning progress** now use physical `student_progress.org_id`; runtime enrollment semantics allow one active enrollment per org, and foreign-org enrollment drop attempts no longer mutate the target row.
@@ -151,7 +152,6 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 | OAuth parity with local register | **2.12** | Deferred unless Google OAuth becomes real product scope; current flow is placeholder-only and should not drive slice ordering right now. Review [`server/auth/passport-config.ts`](../../../server/auth/passport-config.ts) / Google callback vs product pending story when OAuth is promoted. |
 | Governance extras | **api-contract** | Optional: `POST …/users/:userId/memberships`, `DELETE …/memberships/:id` not implemented in slice 2.4. |
 | Slice **1.4-contract** | **1.4-contract** | Blocked until [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is fully cleared. |
-| Admin user-management org filter UI | **5.2** | Backend `orgSlug` filtering already exists on the governance API, but the current admin user-management UI still lacks a dedicated org filter control. |
 | Layer 4 student chameleon | **4.x** | Typed tenant configs, `TENANT`-driven auth/root metadata branding (mirrored into the client runtime), tenant-aware register requests, and tenant-branded authenticated shell/pending surfaces are now in place. Remaining work is limited to any broader auth-client or OAuth tenant propagation you still want after this slice. |
 | Pilot gate **6.x** | **6** | End-to-end pilot scenarios in [verification-strategy.md](./verification-strategy.md) — run after Layer 3 + any remaining Layer 2 gaps you care about. |
 
@@ -161,9 +161,10 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 
 Use the distinction below so slice selection is not misleading:
 
-1. **Recommended next slice: checklist 5.2** — expose the existing `orgSlug` governance filter in the admin user-management UI now that the student Layer 4 branding follow-up is in place.
+1. **Recommended next slice: checklist 6.1** — run pilot validation now that the admin governance UI is functionally complete through **5.4**.
 2. **Optional Layer 4 follow-up:** continue only if you want broader tenant-aware auth client or OAuth propagation beyond the current register flow and shell rendering.
-3. **Deferred slice: Checklist 2.12** — OAuth vs membership pending policy. Only reprioritize this if Google OAuth becomes real product scope.
+3. **Blocked foundational follow-up: slice 1.4-contract** — only after [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is fully cleared.
+4. **Deferred slice: Checklist 2.12** — OAuth vs membership pending policy. Only reprioritize this if Google OAuth becomes real product scope.
 
 Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` after `npm run check`.
 
@@ -175,7 +176,7 @@ When continuing in a brand-new chat, do this first:
 
 1. Confirm checkout is on **`multi-tenancy`** and includes merge commit **`a0462f8e`** or later.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
-3. Default to the smaller admin **5.2** follow-up next, unless you intentionally want to continue the optional broader Layer 4 auth-client propagation work first.
+3. Default to **6.1** pilot validation next, unless you intentionally want to continue the optional broader Layer 4 auth-client propagation work first.
 4. Keep **2.12** deferred unless Google OAuth becomes product scope; if you do touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.
 
 ---
@@ -185,6 +186,8 @@ When continuing in a brand-new chat, do this first:
 - **Typecheck:** `npm run check` (root `tsc`).
 - **Governance event contract:** `npx tsx scripts/test/identity-governance-events.test.ts`.
 - **Governance super-admin gate:** `npx tsx scripts/test/require-super-admin.test.ts`.
+- **Admin user filter helpers:** `npx tsx scripts/test/admin-user-filters.test.ts`.
+- **Governance org filter storage:** `npx tsx scripts/test/governance-org-filter-storage.test.ts`.
 - **Audit visibility:** `npx tsx scripts/test/audit-log-visibility.test.ts`.
 - **Layer 3 schema + guards:** `npx tsx scripts/test/layer3-pass-a-schema-and-guards.test.ts`.
 - **Layer 3 isolation:** `npx tsx scripts/test/layer3-pass-a-isolation.test.ts`.

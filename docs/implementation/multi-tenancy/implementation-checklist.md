@@ -88,13 +88,16 @@ Pass A is implemented in slice `slice-3.a-core-org-isolation` and should now be 
 
 ## 5) Admin portal (incremental, after backend)
 
-- **5.1** Gate existing User Management module: **super-admin only** (not org admin).
-- **5.2** API integration: list users with all memberships; add org filter (server-side).
+- [x] **5.1** Gate existing User Management module: **super-admin only** (not org admin).
+- [x] **5.2** API integration: list users with all memberships; add org filter (server-side). *(The admin User Management screen now exposes `All organizations`, `SLMTS`, and `RR`, threads `orgSlug` through the governance hook/query key, and the governance storage query now supports filtered pagination without the previous Postgres `SELECT DISTINCT ... ORDER BY` failure.)*
 - [x] **5.3** Org switcher: JWT switch + refresh admin data for active org.
-- **5.4** Ensure org admins cannot access user-governance API routes (403).
+- [x] **5.4** Ensure org admins cannot access user-governance API routes (403).
 
 Verification note for **5.3**:
 - Confirmed admin shell org switcher refreshes `auth/me`, content queries, batch queries, and org-directory query families on switch. Focused utility coverage lives in [`scripts/test/admin-org-switcher-utils.test.ts`](../../../scripts/test/admin-org-switcher-utils.test.ts). Local browser verification used a temporary dual-active admin fixture by resetting the seeded super-admin password and promoting the RR membership from pending to active/admin for the session.
+
+Verification note for **5.2**:
+- Focused regression coverage now lives in [`scripts/test/admin-user-filters.test.ts`](../../../scripts/test/admin-user-filters.test.ts) and [`scripts/test/governance-org-filter-storage.test.ts`](../../../scripts/test/governance-org-filter-storage.test.ts). Local browser verification confirmed `All organizations`, `SLMTS`, and `RR` each drive the expected `GET /api/auth/admin/users` request shape and return filtered results successfully.
 
 ---
 

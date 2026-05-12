@@ -369,8 +369,15 @@ export class IdentityService {
       filters
     );
     const users = await identityStorage.getGovernanceUsersHydrated(ids);
-    const statusCounts =
-      await identityStorage.getGovernanceMembershipTabCounts(filters?.search);
+    const statusCounts = await identityStorage.getGovernanceMembershipTabCounts({
+      search: filters?.search,
+      orgSlug: filters?.orgSlug,
+      membershipHasRole: filters?.membershipHasRole as
+        | "student"
+        | "instructor"
+        | "admin"
+        | undefined,
+    });
     return { users, total, statusCounts };
   }
 

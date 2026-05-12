@@ -14,8 +14,8 @@ Sequenced execution reference. Execute rows in ascending **Seq** unless noted pa
 **Progress snapshot on `multi-tenancy`:**
 
 - Complete through **MT-4.2**, with the authenticated student-shell branding follow-up now merged for the student portal.
-- **MT-5.3** is complete; **MT-5.2** remains partial because the backend filter exists but the admin UI still lacks a dedicated org filter control.
-- Main remaining execution areas are **MT-5.2**, deferred **MT-1.4**, optional remaining **MT-4.3** / **MT-2.10** auth-client or OAuth propagation work, and pilot validation **MT-6.1**.
+- **MT-5.2** and **MT-5.3** are complete, and the admin governance surface is now functionally through **MT-5.3**.
+- Main remaining execution areas are pilot validation **MT-6.1**, deferred **MT-1.4**, and optional remaining **MT-4.3** / **MT-2.10** auth-client or OAuth propagation work.
 
 ---
 

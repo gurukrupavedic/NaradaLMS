@@ -1,6 +1,6 @@
 # Implementation: Multi-Tenancy & Chameleonization
 
-**Active goal:** Continue the multi-tenancy rollout on branch `multi-tenancy`, with the default next slice now the admin user-management org filter follow-up (`5.2`).
+**Active goal:** Continue the multi-tenancy rollout on branch `multi-tenancy`, with admin checklist `5.1`–`5.4` now complete and the default next slice moving to pilot validation (`6.1`) unless you intentionally want an optional Layer 4 auth-client follow-up first.
 
 **Execution & handoff:** [multi-tenancy/README.md](./multi-tenancy/README.md) and especially [multi-tenancy/implementation-status.md](./multi-tenancy/implementation-status.md)
 
@@ -52,8 +52,9 @@ The codebase is no longer at a pre-tenancy baseline. As of `multi-tenancy`:
   - typed tenant config for `slmts` / `rr`
   - tenant-branded auth form area, root metadata, authenticated shell, and pending page
   - shared Narada branding intentionally preserved on the left auth hero
-- **Admin portal** `5.1`, `5.3`, and `5.4` are in place:
+- **Admin portal** `5.1`–`5.4` are in place:
   - super-admin user-management gate
+  - user-management org filter
   - org switcher
   - governance route restrictions for org admins
 

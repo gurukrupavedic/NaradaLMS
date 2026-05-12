@@ -1,6 +1,11 @@
 'use client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/api';
+import {
+    buildAdminUsersSearchParams,
+    type AdminUserOrgFilter,
+    type AdminUserStatusFilter,
+} from '@/lib/admin-user-filters';
 
 export type GovernanceMembership = {
     membershipId: string;
@@ -41,25 +46,12 @@ export function useAdminUsers(params: {
     limit: number;
     offset: number;
     /** Tab: all | pending_approval | active | inactive | rejected */
-    status?: string;
+    status?: AdminUserStatusFilter;
     search?: string;
+    orgSlug?: AdminUserOrgFilter;
 }) {
     const queryFn = async () => {
-        const searchParams = new URLSearchParams({
-            limit: params.limit.toString(),
-            offset: params.offset.toString(),
-        });
-        if (params.search?.trim()) searchParams.append('search', params.search.trim());
-        if (params.status && params.status !== 'all') {
-            const map: Record<string, string> = {
-                pending_approval: 'pending',
-                active: 'active',
-                inactive: 'inactive',
-                rejected: 'rejected',
-            };
-            const ms = map[params.status];
-            if (ms) searchParams.append('membershipStatus', ms);
-        }
+        const searchParams = buildAdminUsersSearchParams(params);
         const response = await apiRequest<AdminUsersResponse>(
             `/auth/admin/users?${searchParams.toString()}`
         );
