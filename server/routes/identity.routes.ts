@@ -41,6 +41,12 @@ const registerSchema = z.object({
   }),
 });
 
+const requestMembershipSchema = z.object({
+  body: z.object({
+    tenantSlug: z.enum(["slmts", "rr"]).optional(),
+  }),
+});
+
 const switchOrgSchema = z.object({
   body: z.object({
     orgId: z.string().uuid(),
@@ -200,6 +206,53 @@ identityRouter.get(
 
     const frontendUrl = config.frontendUrl;
     return res.redirect(frontendUrl);
+  })
+);
+
+/**
+ * POST /api/auth/request-membership
+ * Authenticated user requests membership in the tenant resolved for the current portal.
+ */
+identityRouter.post(
+  "/request-membership",
+  jwtAuth,
+  validateRequest(requestMembershipSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    const { tenantSlug } = req.body as { tenantSlug?: string };
+    const resolvedTenant = resolveTenantSlugForRequest(req, tenantSlug);
+
+    try {
+      const result = await identityService.requestMembership({
+        userId: session.id,
+        tenantSlug: resolvedTenant,
+      });
+
+      const messageByResult: Record<
+        typeof result.result,
+        string
+      > = {
+        created_pending:
+          "Your membership request is pending approval.",
+        already_pending:
+          "Your membership request is already pending approval.",
+        already_active:
+          "You already have access to this organization.",
+        inactive_membership:
+          "Your membership is inactive. Contact a super-admin to restore access.",
+        rejected_membership:
+          "Your membership request was rejected. Contact a super-admin if you need to reapply.",
+      };
+
+      return res.json({
+        ...result,
+        message: messageByResult[result.result],
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Request failed";
+      const status = message.toLowerCase().includes("not available") ? 404 : 400;
+      return res.status(status).json({ error: message });
+    }
   })
 );
 

@@ -22,6 +22,13 @@ export interface TenantRegisterRequest {
   };
 }
 
+export interface TenantMembershipRequest {
+  body: { tenantSlug: TenantSlug };
+  headers: {
+    "X-Tenant-Slug": TenantSlug;
+  };
+}
+
 export interface SharedStudentAuthBranding {
   logoPath: string;
   logoAlt: string;
@@ -92,6 +99,19 @@ export function buildTenantRegisterRequest(
     },
     body: {
       ...payload,
+      tenantSlug: slug,
+    },
+  };
+}
+
+export function buildTenantMembershipRequest(
+  slug: TenantSlug = getCurrentTenantSlug()
+): TenantMembershipRequest {
+  return {
+    headers: {
+      "X-Tenant-Slug": slug,
+    },
+    body: {
       tenantSlug: slug,
     },
   };

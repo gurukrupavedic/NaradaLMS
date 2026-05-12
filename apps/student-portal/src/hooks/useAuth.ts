@@ -3,6 +3,14 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "../lib/api";
+import { getCurrentTenantSlug } from "../lib/tenant";
+import {
+    getCurrentTenantMembership,
+    getTenantAccessState,
+    getTenantSwitchOrgId,
+    type TenantAccessState,
+    type TenantMembershipSummary,
+} from "../lib/tenant-session";
 
 export type OrgMembershipStatusClient =
     | "pending"
@@ -25,19 +33,15 @@ export interface AuthUser {
     updatedAt?: string;
 }
 
-export interface MembershipSummary {
-    membershipId: string;
-    orgId: string;
-    orgSlug: string;
-    orgName: string;
-    roles: string[];
-    status: string;
-}
+export interface MembershipSummary extends TenantMembershipSummary {}
 
 /** `/auth/me` payload: session user plus membership list from the server. */
 export interface AuthSession extends AuthUser {
     memberships: MembershipSummary[];
     hasActiveMembership: boolean;
+    currentTenantMembership: MembershipSummary | null;
+    currentTenantAccessState: TenantAccessState;
+    currentTenantSwitchOrgId: string | null;
 }
 
 export function useAuth() {
@@ -54,10 +58,32 @@ export function useAuth() {
             try {
                 const response = await apiRequest("/auth/me");
                 const u = response.user as AuthUser;
+                const memberships = (response.memberships ?? []) as MembershipSummary[];
+                const hasActiveMembership = Boolean(response.hasActiveMembership);
+                const tenantScopedSession = {
+                    currentOrgId: u.currentOrgId,
+                    memberships,
+                    hasActiveMembership,
+                    isSuperAdmin: u.isSuperAdmin,
+                };
+                const tenantSlug = getCurrentTenantSlug();
+
                 return {
                     ...u,
-                    memberships: (response.memberships ?? []) as MembershipSummary[],
-                    hasActiveMembership: Boolean(response.hasActiveMembership),
+                    memberships,
+                    hasActiveMembership,
+                    currentTenantMembership: getCurrentTenantMembership(
+                        tenantScopedSession,
+                        tenantSlug
+                    ),
+                    currentTenantAccessState: getTenantAccessState(
+                        tenantScopedSession,
+                        tenantSlug
+                    ),
+                    currentTenantSwitchOrgId: getTenantSwitchOrgId(
+                        tenantScopedSession,
+                        tenantSlug
+                    ),
                 } satisfies AuthSession;
             } catch (err: unknown) {
                 // 401 means not authenticated — this is expected
@@ -89,10 +115,19 @@ export function useAuth() {
         }
     };
 
+    const switchOrg = async (orgId: string) => {
+        await apiRequest("/auth/switch-org", {
+            method: "POST",
+            body: JSON.stringify({ orgId }),
+        });
+        await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+    };
+
     return {
         user: (userData as AuthSession | null) || null,
         isLoading,
         isAuthenticated: !!userData,
         logout,
+        switchOrg,
     };
 }

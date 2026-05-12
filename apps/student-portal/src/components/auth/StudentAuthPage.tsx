@@ -126,6 +126,12 @@ export function StudentAuthPage() {
                         </div>
                     </div>
 
+                    <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                        Already have a Narada LMS account from another pathasala? Sign in
+                        first, then request access to {tenantConfig.displayName} from the
+                        pending screen.
+                    </p>
+
                     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
                         <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-100 p-1 rounded-lg">
                             <TabsTrigger

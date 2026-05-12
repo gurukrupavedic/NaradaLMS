@@ -2,6 +2,7 @@ import * as tenantModule from "../../apps/student-portal/src/lib/tenant";
 import * as tenantConfigModule from "../../apps/student-portal/src/config/tenants";
 
 const {
+  buildTenantMembershipRequest,
   buildTenantRegisterRequest,
   getCurrentTenantSlug,
   getSharedStudentAuthBranding,
@@ -13,6 +14,12 @@ const {
     ? (tenantModule.default as typeof tenantModule)
     : tenantModule
 ) as {
+  buildTenantMembershipRequest?: (
+    slug?: "slmts" | "rr"
+  ) => {
+    body: { tenantSlug: "slmts" | "rr" };
+    headers: { "X-Tenant-Slug": "slmts" | "rr" };
+  };
   buildTenantRegisterRequest: typeof tenantModule.buildTenantRegisterRequest;
   getCurrentTenantSlug: typeof tenantModule.getCurrentTenantSlug;
   getSharedStudentAuthBranding: typeof tenantModule.getSharedStudentAuthBranding;
@@ -121,6 +128,31 @@ function testTenantRegisterRequestCarriesTenantSlug() {
   );
 }
 
+function testTenantMembershipRequestCarriesTenantSlug() {
+  assert(
+    typeof buildTenantMembershipRequest === "function",
+    "membership request helper exists",
+    "Expected buildTenantMembershipRequest to be exported"
+  );
+
+  if (!buildTenantMembershipRequest) {
+    return;
+  }
+
+  const request = buildTenantMembershipRequest("rr");
+
+  assertEqual(
+    request.headers["X-Tenant-Slug"],
+    "rr",
+    "membership request includes tenant header"
+  );
+  assertEqual(
+    request.body.tenantSlug,
+    "rr",
+    "membership request includes tenant slug in body"
+  );
+}
+
 function testTenantMetadataUsesTenantSpecificBranding() {
   const metadata = getTenantMetadata("rr");
 
@@ -214,6 +246,7 @@ try {
   testPrefersPublicTenantEnvForClientSafeResolution();
   testReturnsRrTenantConfig();
   testTenantRegisterRequestCarriesTenantSlug();
+  testTenantMembershipRequestCarriesTenantSlug();
   testTenantMetadataUsesTenantSpecificBranding();
   testSharedStudentAuthBrandingStaysNarada();
   testStudentShellBrandingUsesTenantAssets();

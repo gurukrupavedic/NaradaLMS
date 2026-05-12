@@ -3,7 +3,7 @@
 import { AppShell, type UserRole } from "@narada/ui";
 import { useAuth, type AuthSession } from "@/hooks/useAuth";
 import { getStudentShellBranding } from "@/lib/tenant";
-import { LoadingSpinner } from "@narada/ui";
+import { LoadingSpinner, useToast } from "@narada/ui";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { ContentContextLabelContext } from "@narada/ui";
@@ -35,10 +35,13 @@ export default function PortalLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const { user, isLoading, logout } = useAuth();
+    const { user, isLoading, logout, switchOrg } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     const [contentContextLabel, setContentContextLabel] = useState<string | null>(null);
+    const [isTenantOrgSwitching, setIsTenantOrgSwitching] = useState(false);
+    const [failedAutoSwitchOrgId, setFailedAutoSwitchOrgId] = useState<string | null>(null);
+    const { toast } = useToast();
 
     useEffect(() => {
         if (!isLoading && !user) {
@@ -50,18 +53,52 @@ export default function PortalLayout({
         if (isLoading || !user) return;
         const session = user as AuthSession;
         const onPendingPage = pathname?.startsWith("/pending-approval");
-        if (session.hasActiveMembership && onPendingPage) {
+        if (
+            session.currentTenantSwitchOrgId &&
+            session.currentTenantSwitchOrgId !== failedAutoSwitchOrgId &&
+            !isTenantOrgSwitching
+        ) {
+            setIsTenantOrgSwitching(true);
+            void switchOrg(session.currentTenantSwitchOrgId)
+                .catch((error) => {
+                    console.error("Tenant org switch failed", error);
+                    setFailedAutoSwitchOrgId(session.currentTenantSwitchOrgId ?? null);
+                    toast({
+                        title: "Could not switch organizations",
+                        description:
+                            "We could not switch into the current tenant automatically. Please refresh or sign in again.",
+                        variant: "destructive",
+                    });
+                })
+                .finally(() => {
+                    setIsTenantOrgSwitching(false);
+                });
+            return;
+        }
+        if (!session.currentTenantSwitchOrgId && failedAutoSwitchOrgId) {
+            setFailedAutoSwitchOrgId(null);
+        }
+        if (session.currentTenantAccessState === "active" && onPendingPage) {
             router.replace("/vedic-learning");
             return;
         }
         if (
             !session.isSuperAdmin &&
-            !session.hasActiveMembership &&
+            session.currentTenantAccessState !== "active" &&
             !onPendingPage
         ) {
             router.replace("/pending-approval");
         }
-    }, [isLoading, user, pathname, router]);
+    }, [
+        failedAutoSwitchOrgId,
+        isLoading,
+        isTenantOrgSwitching,
+        pathname,
+        router,
+        switchOrg,
+        toast,
+        user,
+    ]);
 
     useEffect(() => {
         if (pathname && !pathname.match(/\/learning\/chapter\/\d+/)) {
@@ -89,7 +126,7 @@ export default function PortalLayout({
         };
     }, []);
 
-    if (isLoading) {
+    if (isLoading || isTenantOrgSwitching) {
         return (
             <div className="h-screen w-full flex items-center justify-center">
                 <LoadingSpinner size="lg" />

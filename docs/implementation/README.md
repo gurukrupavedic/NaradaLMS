@@ -1,6 +1,6 @@
 # Implementation: Multi-Tenancy & Chameleonization
 
-**Active goal:** Continue the multi-tenancy rollout on branch `multi-tenancy`, with checklists `6.1` and `6.2` now confirmed and the default next slice moving to `6.3` second-org join verification, then `6.4` documentation of known gaps, unless you intentionally want an optional Layer 4 auth-client follow-up first.
+**Active goal:** Continue the multi-tenancy rollout on branch `multi-tenancy`, with checklists `6.1`, `6.2`, and `6.3` now confirmed and the default next slice moving to `6.4` documentation of known gaps, unless you intentionally want an optional Layer 4 auth-client follow-up first.
 
 **Execution & handoff:** [multi-tenancy/README.md](./multi-tenancy/README.md) and especially [multi-tenancy/implementation-status.md](./multi-tenancy/implementation-status.md)
 
