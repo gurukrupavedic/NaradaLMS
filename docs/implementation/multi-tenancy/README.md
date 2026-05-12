@@ -15,12 +15,12 @@ It captures both the locked product/architecture decisions and the current as-bu
 ### Current merged baseline
 
 - Layer **1** through **1.4 schema contract** is merged.
-- Layer **2** slices **2.1–2.5** are merged.
+- Layer **2** slices **2.1–2.5** and **2.12** are merged.
 - Layer **3** Pass A and Pass B isolation are merged.
 - Student Layer **4.1 / 4.2 / 4.4** tenant-config, authenticated shell branding, and tenant-aware OAuth propagation work are merged.
 - Admin **5.1–5.4** are merged.
 - Checklists **6.1** pilot validation, **6.2** RR isolation smoke, **6.3** second-org join, and **6.4** known-gap documentation are now complete in the current docs baseline.
-- The next meaningful follow-up is deferred checklist **2.12** (OAuth product-policy parity) unless Google OAuth becomes real product scope; everything else in the current doc set is optional cleanup or small API-surface follow-up.
+- The next meaningful follow-up is optional cleanup or operational verification; the former deferred checklist **2.12** (OAuth product-policy parity) is now implemented, so remaining work is outside the old OAuth-policy gap.
 
 ---
 

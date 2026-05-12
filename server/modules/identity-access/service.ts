@@ -247,6 +247,52 @@ export class IdentityService {
     });
   }
 
+  /**
+   * Resolve an OAuth login against the target tenant without bypassing
+   * membership-first approval rules.
+   */
+  async resolveOAuthLogin(data: {
+    provider: string;
+    providerId: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    profileImageUrl?: string;
+    tenantSlug: string;
+  }) {
+    const normalizedEmail = data.email?.toLowerCase();
+
+    let user = await identityStorage.getUserByProviderId(
+      data.provider,
+      data.providerId
+    );
+
+    if (!user && normalizedEmail) {
+      user = await identityStorage.getUserByEmail(normalizedEmail);
+    }
+
+    if (!user) {
+      user = await identityStorage.createUser({
+        email: normalizedEmail ?? `${data.providerId}@google-oauth.local`,
+        provider: data.provider,
+        providerId: data.providerId,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        profileImageUrl: data.profileImageUrl,
+      });
+    }
+
+    const membershipResult = await this.requestMembership({
+      userId: user.id,
+      tenantSlug: data.tenantSlug,
+    });
+
+    return {
+      user,
+      membershipResult,
+    };
+  }
+
   async listGovernanceUsers(
     limit: number,
     offset: number,

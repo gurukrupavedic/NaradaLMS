@@ -4,6 +4,7 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy, type Profile as GoogleProfile } from "passport-google-oauth20";
 import bcrypt from "bcrypt";
 import { identityStorage } from "../modules/identity-access/storage";
+import { identityService } from "../modules/identity-access/service";
 import { config } from "../config";
 import { resolveTenantSlugForRequest } from "../modules/identity-access/tenant-context";
 
@@ -48,57 +49,15 @@ export function configurePassport() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         async (req: Request, _accessToken: string, _refreshToken: string, _params: unknown, profile: GoogleProfile, done: (err: Error | null, user?: any, info?: { message?: string }) => void) => {
           try {
-            const provider = "google";
-            const providerId = profile.id;
-            const email = profile.emails?.[0]?.value?.toLowerCase();
-            const resolvedTenantSlug = resolveTenantSlugForRequest(req);
-
-            // Try provider match first
-            let user = await identityStorage.getUserByProviderId(provider, providerId);
-
-            // If not found by provider, try by email to avoid duplicates
-            if (!user && email) {
-              user = await identityStorage.getUserByEmail(email);
-            }
-
-            if (!user) {
-              user = await identityStorage.createUser({
-                email: email ?? `${providerId}@google-oauth.local`,
-                provider,
-                providerId,
-                firstName: profile.name?.givenName,
-                lastName: profile.name?.familyName,
-                profileImageUrl: profile.photos?.[0]?.value,
-              });
-              const defaultOrg = await identityStorage.getOrganizationBySlug(
-                resolvedTenantSlug
-              );
-              if (defaultOrg) {
-                await identityStorage.upsertOrgMembership({
-                  userId: user.id,
-                  orgId: defaultOrg.id,
-                  roles: ["student"],
-                  status: "pending",
-                });
-              }
-            }
-
-            const memberships = await identityStorage.listUserMembershipsWithOrgs(
-              user.id
-            );
-            if (memberships.length === 0) {
-              const defaultOrg = await identityStorage.getOrganizationBySlug(
-                resolvedTenantSlug
-              );
-              if (defaultOrg) {
-                await identityStorage.upsertOrgMembership({
-                  userId: user.id,
-                  orgId: defaultOrg.id,
-                  roles: ["student"],
-                  status: "pending",
-                });
-              }
-            }
+            const { user } = await identityService.resolveOAuthLogin({
+              provider: "google",
+              providerId: profile.id,
+              email: profile.emails?.[0]?.value,
+              firstName: profile.name?.givenName,
+              lastName: profile.name?.familyName,
+              profileImageUrl: profile.photos?.[0]?.value,
+              tenantSlug: resolveTenantSlugForRequest(req),
+            });
 
             return done(null, user);
           } catch (err) {

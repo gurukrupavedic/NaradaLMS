@@ -1,6 +1,6 @@
 # Implementation: Multi-Tenancy & Chameleonization
 
-**Active goal:** Continue the multi-tenancy rollout on branch `multi-tenancy`, with pilot closeout complete through `6.4` and the Layer `4.4` tenant-aware OAuth follow-up now implemented; the next foundational slice remains blocked on `1.4-contract`, while checklist `2.12` stays deferred unless Google OAuth becomes real product scope.
+**Active goal:** Continue the multi-tenancy rollout on branch `multi-tenancy`, with pilot closeout complete through `6.4`, the Layer `4.4` tenant-aware OAuth follow-up implemented, and checklist `2.12` OAuth parity now implemented. The remaining follow-up surface is optional cleanup or operational verification, not the old `1.4-contract` or deferred OAuth-policy work.
 
 **Execution & handoff:** [multi-tenancy/README.md](./multi-tenancy/README.md) and especially [multi-tenancy/implementation-status.md](./multi-tenancy/implementation-status.md)
 
@@ -39,12 +39,13 @@ The codebase is no longer at a pre-tenancy baseline. As of `multi-tenancy`:
   - `organizations`
   - `user_organizations`
   - `users.is_super_admin`
-- **Layer 2** slices `2.1`–`2.5` are merged:
+- **Layer 2** slices `2.1`–`2.5` plus `2.12` are merged:
   - membership-first auth
   - JWT org context
   - `/api/auth/switch-org`
   - super-admin governance APIs
   - governance event/audit alignment
+  - Google OAuth now follows the same tenant membership policy as local register and second-org join
 - **Layer 3** Pass A and Pass B are merged:
   - physical `org_id` coverage across core, media, progress, and audit tables
   - org-scoped query/handler enforcement
@@ -72,6 +73,7 @@ Use [multi-tenancy/implementation-status.md](./multi-tenancy/implementation-stat
   - optional `orgMembershipStatus`
 - **`GET /api/auth/me`** returns the session user plus `memberships[]` and `hasActiveMembership`.
 - Portal-initiated Google OAuth now sends tenant/return intent to the server so callback handling can use a signed, verified state payload and round-trip back to the originating tenant instance instead of relying only on the server default tenant or a single frontend URL.
+- Google OAuth now also reuses the same membership-first tenant policy as local register and `POST /api/auth/request-membership`: new or cross-org users without a membership in the resolved tenant land in `pending`, and inactive/rejected memberships are not silently reopened.
 - **CSRF** still uses the double-submit pattern via `csrf-csrf`.
 
 ### Roles And Authority
@@ -82,7 +84,7 @@ Use [multi-tenancy/implementation-status.md](./multi-tenancy/implementation-stat
   - `instructor`
   - `student`
 - Org-scoped membership status also lives on `user_organizations`.
-- Legacy `users.roles` / `users.status` still physically exist and remain tracked for the deferred `1.4` contract slice.
+- Legacy `users.roles` / `users.status` and `users_status_check` are gone; live code now uses `user_organizations` plus `users.is_super_admin` only.
 
 ### Database And Isolation
 

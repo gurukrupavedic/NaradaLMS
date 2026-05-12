@@ -13,9 +13,9 @@ Sequenced execution reference. Execute rows in ascending **Seq** unless noted pa
 
 ## Progress snapshot on `multi-tenancy`
 
-- Complete through **MT-6.4**, with the authenticated student-shell branding follow-up, the SLMTS pilot validation path, the dedicated RR isolation smoke path, the second-org join path, the pilot-gap documentation closeout, and the schema-contract cleanup now recorded locally.
+- Complete through **MT-6.4** and **MT-2.10**, with the authenticated student-shell branding follow-up, the SLMTS pilot validation path, the dedicated RR isolation smoke path, the second-org join path, the pilot-gap documentation closeout, the OAuth policy-parity slice, and the schema-contract cleanup now recorded locally.
 - **MT-5.2**, **MT-5.3**, and the **MT-5.4** governance gate are complete, so the admin governance surface is functionally through the current checklist scope.
-- The only named follow-up still deferred in this matrix is **MT-2.10** OAuth product-policy work.
+- The remaining named follow-ups in this matrix are optional cleanup or operational verification outside the original execution-critical slice list.
 
 ---
 
@@ -37,7 +37,7 @@ Sequenced execution reference. Execute rows in ascending **Seq** unless noted pa
 | 12 | MT-2.7 | Identity | Parallel-safe | `POST /api/auth/switch-org` | route | JWT updates `currentOrgId` |
 | 13 | MT-2.8 | Governance | Individual | Super-admin-only membership approve/reject/roles | admin user routes | org admin gets 403 |
 | 14 | MT-2.9 | Governance | Parallel-safe | Super-admin grant/revoke | routes + audit | audit event recorded |
-| 15 | MT-2.10 | OAuth | Individual | Google OAuth parity with membership approval policy | passport callbacks | no stray global status bypass |
+| 15 | MT-2.10 | OAuth | Individual | Google OAuth parity with membership approval policy *(done)* | passport callbacks | no stray global status bypass |
 | 16 | MT-1.4 | Schema | Individual | **After Layer 2:** drop `users.roles`/`users.status`/`users_status_check`; cleanup tracker empty; contract migration | Drizzle + SQL | [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) clear; typecheck no legacy refs |
 | 17 | MT-3.A.1 | Data | Individual | `org_id` Pass A tables + backfill + uniques | migrations | NOT NULL enforced |
 | 18 | MT-3.A.2 | API | Individual | Handlers filter Pass A by org | route modules | isolation spot-check |
@@ -101,4 +101,4 @@ MT-5.1 -> MT-5.2 -> MT-5.3 after MT-2.8 (and after Layer 3 org-scoped data is me
 - After Bundle G: legacy user columns dropped; full typecheck green on `multi-tenancy`.
 - After Bundle D: cross-org isolation smoke.
 - After Bundle E: two-tenant local branding smoke.
-- After `MT-6.4` and `MT-1.4`: pilot closeout docs are synced, the schema contract is merged, and the remaining named follow-up in this matrix is deferred `MT-2.10`.
+- After `MT-6.4`, `MT-2.10`, and `MT-1.4`: pilot closeout docs are synced, OAuth policy parity is in place, the schema contract is merged, and remaining work is optional cleanup or operational hardening rather than a still-open matrix slice.
