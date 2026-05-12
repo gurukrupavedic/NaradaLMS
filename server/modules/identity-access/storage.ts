@@ -544,7 +544,7 @@ export class IdentityStorage {
       const total = Number(countRow?.c ?? 0);
 
       const idRows = await db
-        .selectDistinct({ id: users.id })
+        .selectDistinct({ id: users.id, createdAt: users.createdAt })
         .from(users)
         .innerJoin(userOrganizations, eq(users.id, userOrganizations.userId))
         .innerJoin(organizations, eq(organizations.id, userOrganizations.orgId))
@@ -648,30 +648,78 @@ export class IdentityStorage {
   /**
    * Tab counts for super-admin user list (distinct users per membership status).
    */
-  async getGovernanceMembershipTabCounts(search?: string): Promise<{
+  async getGovernanceMembershipTabCounts(filters?: {
+    search?: string;
+    orgSlug?: string;
+    membershipHasRole?: string;
+  }): Promise<{
     all: number;
     pending: number;
     active: number;
     inactive: number;
     rejected: number;
   }> {
-    const searchCond = this.userSearchCondition(search);
+    const searchCond = this.userSearchCondition(filters?.search);
+    const membershipConds: Parameters<typeof and>[0][] = [];
 
-    const [allRow] = searchCond
-      ? await db
-          .select({ c: sql<number>`count(*)::int` })
-          .from(users)
-          .where(searchCond)
-      : await db.select({ c: sql<number>`count(*)::int` }).from(users);
-    const all = Number(allRow?.c ?? 0);
+    if (filters?.orgSlug) {
+      membershipConds.push(eq(organizations.slug, filters.orgSlug));
+    }
+    if (filters?.membershipHasRole === "student") {
+      membershipConds.push(
+        sql`${userOrganizations.roles}::text[] @> ARRAY['student']::text[]`
+      );
+    } else if (filters?.membershipHasRole === "instructor") {
+      membershipConds.push(
+        sql`${userOrganizations.roles}::text[] @> ARRAY['instructor']::text[]`
+      );
+    } else if (filters?.membershipHasRole === "admin") {
+      membershipConds.push(
+        sql`${userOrganizations.roles}::text[] @> ARRAY['admin']::text[]`
+      );
+    }
+
+    const hasMembershipScope = membershipConds.length > 0;
+    const buildMembershipWhere = (
+      st?: "pending" | "active" | "inactive" | "rejected"
+    ) => and(searchCond, ...(st ? [eq(userOrganizations.status, st)] : []), ...membershipConds);
+
+    const all = hasMembershipScope
+      ? Number(
+          (
+            await db
+              .select({ c: countDistinct(users.id) })
+              .from(users)
+              .innerJoin(userOrganizations, eq(users.id, userOrganizations.userId))
+              .innerJoin(organizations, eq(organizations.id, userOrganizations.orgId))
+              .where(buildMembershipWhere())
+          )[0]?.c ?? 0
+        )
+      : Number(
+          (
+            searchCond
+              ? await db
+                  .select({ c: sql<number>`count(*)::int` })
+                  .from(users)
+                  .where(searchCond)
+              : await db.select({ c: sql<number>`count(*)::int` }).from(users)
+          )[0]?.c ?? 0
+        );
 
     const countForStatus = async (st: "pending" | "active" | "inactive" | "rejected") => {
-      const where = and(searchCond, eq(userOrganizations.status, st));
-      const [r] = await db
-        .select({ c: countDistinct(users.id) })
-        .from(users)
-        .innerJoin(userOrganizations, eq(users.id, userOrganizations.userId))
-        .where(where);
+      const where = buildMembershipWhere(st);
+      const [r] = hasMembershipScope
+        ? await db
+            .select({ c: countDistinct(users.id) })
+            .from(users)
+            .innerJoin(userOrganizations, eq(users.id, userOrganizations.userId))
+            .innerJoin(organizations, eq(organizations.id, userOrganizations.orgId))
+            .where(where)
+        : await db
+            .select({ c: countDistinct(users.id) })
+            .from(users)
+            .innerJoin(userOrganizations, eq(users.id, userOrganizations.userId))
+            .where(where);
       return Number(r?.c ?? 0);
     };
 

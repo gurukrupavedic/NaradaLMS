@@ -11,6 +11,11 @@ import {
     useReactTable,
 } from "@tanstack/react-table";
 import {
+    ADMIN_USER_ORG_FILTER_OPTIONS,
+    type AdminUserOrgFilter,
+    type AdminUserStatusFilter,
+} from "@/lib/admin-user-filters";
+import {
     useAdminUsers,
     useApproveMembership,
     useRejectMembership,
@@ -45,6 +50,11 @@ import {
     Tabs,
     TabsList,
     TabsTrigger,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
     DataTablePagination,
 } from "@narada/ui";
 import { RefreshCw, MoreVertical, Check, X, AlertCircle, Users, ShieldAlert } from "lucide-react";
@@ -105,7 +115,8 @@ export default function UserList() {
     const { user: sessionUser, isLoading: authLoading } = useAuth();
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(25);
-    const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [statusFilter, setStatusFilter] = useState<AdminUserStatusFilter>("all");
+    const [orgFilter, setOrgFilter] = useState<AdminUserOrgFilter>("all");
     const [searchInput, setSearchInput] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [sorting, setSorting] = useState<SortingState>([]);
@@ -123,8 +134,9 @@ export default function UserList() {
     const { data, isLoading, error, refetch, isRefetching } = useAdminUsers({
         limit,
         offset,
-        status: statusFilter === "all" ? undefined : statusFilter,
+        status: statusFilter,
         search: debouncedSearch || undefined,
+        orgSlug: orgFilter,
     });
 
     const approve = useApproveMembership();
@@ -370,6 +382,27 @@ export default function UserList() {
                 </Tabs>
 
                 <div className="ml-auto flex items-center gap-3">
+                    <Select
+                        value={orgFilter}
+                        onValueChange={(value) => {
+                            setOrgFilter(value as AdminUserOrgFilter);
+                            setPage(1);
+                        }}
+                    >
+                        <SelectTrigger
+                            className="h-9 w-[180px] shrink-0 bg-card"
+                            aria-label="Filter users by organization"
+                        >
+                            <SelectValue placeholder="All organizations" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {ADMIN_USER_ORG_FILTER_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                     <Input
                         type="search"
                         placeholder="Search users…"

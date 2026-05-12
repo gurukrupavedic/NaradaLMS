@@ -18,8 +18,8 @@ It captures both the locked product/architecture decisions and the current as-bu
 - Layer **2** slices **2.1–2.5** are merged.
 - Layer **3** Pass A and Pass B isolation are merged.
 - Student Layer **4.1 / 4.2** tenant-config and authenticated shell branding work are merged.
-- Admin **5.1**, **5.3**, and **5.4** are merged.
-- Default next slice is **5.2** (admin user-management org filter UI).
+- Admin **5.1–5.4** are merged.
+- Default next slice is **6.1** (pilot validation), unless you intentionally want the optional broader Layer 4 auth-client follow-up first.
 
 ---
 
