@@ -1,6 +1,6 @@
 import { db } from "../../db";
 import { eq, sql, and, inArray, or, getTableColumns } from "drizzle-orm";
-import { batches, enrollments, batchCoInstructors, users, tracks, studentProgress, chapters, proficiencyEvaluationLog } from "@narada/types";
+import { batches, enrollments, batchCoInstructors, users, userOrganizations, tracks, studentProgress, chapters, proficiencyEvaluationLog } from "@narada/types";
 import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, EnrollmentDropInput, CoInstructorAssignInput } from "./types";
 import {
   getPostgresConstraintName,
@@ -381,25 +381,23 @@ export class BatchStorage {
 
     const enrolledIds = enrolled.map(e => e.studentId);
 
-    // Build query for eligible students
-    let query = db
+    // Eligible students are driven by active org memberships, not legacy account roles/status.
+    const allEligible = await db
       .select({
         id: users.id,
         firstName: users.firstName,
         lastName: users.lastName,
         email: users.email,
-        roles: users.roles,
       })
-      .from(users)
+      .from(userOrganizations)
+      .innerJoin(users, eq(users.id, userOrganizations.userId))
       .where(
         and(
-          sql`${users.status} = 'active'`,
-          sql`'student' = ANY(${users.roles})`
+          eq(userOrganizations.orgId, orgId),
+          eq(userOrganizations.status, "active"),
+          sql`'student' = ANY(${userOrganizations.roles})`
         )
       );
-
-    // Execute and filter
-    const allEligible = await query;
 
     // Exclude already enrolled students
     let filtered = allEligible.filter(u => !enrolledIds.includes(u.id));

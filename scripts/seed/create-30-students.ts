@@ -1,10 +1,11 @@
 import { db } from "../../server/db";
-import { users } from "@narada/types";
+import { organizations, userOrganizations, users } from "@narada/types";
 import bcrypt from "bcrypt";
+import { eq } from "drizzle-orm";
 
 /**
  * Generate 30 student users with all fields populated
- * All users are active and have student role
+ * All users receive an active SLMTS student membership.
  */
 
 const studentData = [
@@ -46,19 +47,38 @@ async function createStudents() {
 
   // Default password for all test users
   const hashedPassword = await bcrypt.hash("welcome123", 10);
+  const [slmtsOrg] = await db
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.slug, "slmts"))
+    .limit(1);
+
+  if (!slmtsOrg) {
+    throw new Error("SLMTS organization not found. Run db:seed-orgs first.");
+  }
 
   for (const student of studentData) {
     try {
-      await db.insert(users).values({
-        firstName: student.firstName,
-        lastName: student.lastName,
-        email: student.email,
-        password: hashedPassword,
+      const [createdUser] = await db
+        .insert(users)
+        .values({
+          firstName: student.firstName,
+          lastName: student.lastName,
+          email: student.email,
+          passwordHash: hashedPassword,
+          provider: "local",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning({ id: users.id });
+
+      await db.insert(userOrganizations).values({
+        userId: createdUser.id,
+        orgId: slmtsOrg.id,
         roles: ["student"],
         status: "active",
-        phone: student.phone,
-        timezone: student.timezone,
-        preferredLanguage: student.preferredLanguage,
+        requestedAt: new Date(),
+        approvedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -75,9 +95,9 @@ async function createStudents() {
 
   console.log("\n✨ Done! Created 30 students with password: welcome123");
   console.log("All students are:");
-  console.log("  - Status: active");
-  console.log("  - Role: student");
-  console.log("  - All fields populated (phone, timezone, preferredLanguage)");
+  console.log("  - Membership status: active");
+  console.log("  - Membership role: student");
+  console.log("  - Tenant: slmts");
 }
 
 createStudents()

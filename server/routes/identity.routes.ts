@@ -458,22 +458,10 @@ identityRouter.get(
         ? (req.query.orgSlug as "slmts" | "rr")
         : undefined;
 
-    let membershipStatus = req.query.membershipStatus as string | undefined;
-    const legacyStatus = req.query.status as string | undefined;
-    if (!membershipStatus && legacyStatus === "pending_approval") {
-      membershipStatus = "pending";
-    }
-    if (!membershipStatus && legacyStatus === "active") {
-      membershipStatus = "active";
-    }
-    if (!membershipStatus && legacyStatus === "inactive") {
-      membershipStatus = "inactive";
-    }
-
     const ms =
-      membershipStatus &&
-      ["pending", "active", "inactive", "rejected"].includes(membershipStatus)
-        ? (membershipStatus as "pending" | "active" | "inactive" | "rejected")
+      req.query.membershipStatus &&
+      ["pending", "active", "inactive", "rejected"].includes(req.query.membershipStatus as string)
+        ? (req.query.membershipStatus as "pending" | "active" | "inactive" | "rejected")
         : undefined;
 
     const roleParam = req.query.role as string | undefined;
@@ -499,7 +487,7 @@ identityRouter.get(
         pagination: { limit, offset, total },
         statusCounts: {
           all: statusCounts.all,
-          pending_approval: statusCounts.pending,
+          pending: statusCounts.pending,
           active: statusCounts.active,
           inactive: statusCounts.inactive,
           rejected: statusCounts.rejected,

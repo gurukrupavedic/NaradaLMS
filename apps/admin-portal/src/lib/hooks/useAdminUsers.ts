@@ -22,7 +22,6 @@ export type GovernanceUser = {
     firstName?: string | null;
     lastName?: string | null;
     isSuperAdmin: boolean;
-    legacyStatus: string;
     memberships: GovernanceMembership[];
 };
 
@@ -35,7 +34,7 @@ export type AdminUsersResponse = {
     };
     statusCounts: {
         all: number;
-        pending_approval: number;
+        pending: number;
         active: number;
         inactive: number;
         rejected: number;
@@ -45,7 +44,7 @@ export type AdminUsersResponse = {
 export function useAdminUsers(params: {
     limit: number;
     offset: number;
-    /** Tab: all | pending_approval | active | inactive | rejected */
+    /** Tab: all | pending | active | inactive | rejected */
     status?: AdminUserStatusFilter;
     search?: string;
     orgSlug?: AdminUserOrgFilter;

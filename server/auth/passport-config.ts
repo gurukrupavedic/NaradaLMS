@@ -18,10 +18,6 @@ export function configurePassport() {
           return done(null, false, { message: "Invalid email or password" }); // S-08 prevent enumeration
         }
 
-        if (user.status === "inactive") {
-          return done(null, false, { message: "Your account has been disabled" });
-        }
-
         if (!user.passwordHash) {
           return done(null, false, { message: "Invalid email or password" });
         }
@@ -73,8 +69,6 @@ export function configurePassport() {
                 firstName: profile.name?.givenName,
                 lastName: profile.name?.familyName,
                 profileImageUrl: profile.photos?.[0]?.value,
-                roles: [],
-                status: "active",
               });
               const defaultOrg = await identityStorage.getOrganizationBySlug(
                 resolvedTenantSlug
@@ -87,10 +81,6 @@ export function configurePassport() {
                   status: "pending",
                 });
               }
-            }
-
-            if (user.status === "inactive") {
-              return done(null, false, { message: "Your account has been disabled" });
             }
 
             const memberships = await identityStorage.listUserMembershipsWithOrgs(

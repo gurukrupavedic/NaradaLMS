@@ -30,8 +30,6 @@ async function checkInstructorBatches() {
     const user = kashyapUser[0];
     console.log(`\n✅ Found user: ${user.firstName} ${user.lastName} (ID: ${user.id})`);
     console.log(`   Email: ${user.email}`);
-    console.log(`   Roles: ${user.roles?.join(", ")}`);
-
     // Find batches where user is primary instructor
     const primaryBatches = await db
       .select()

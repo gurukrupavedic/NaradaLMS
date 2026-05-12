@@ -34,8 +34,6 @@ export const users = pgTable("users", {
   providerId: varchar("provider_id"), // Provider user ID
 
   // Authorization
-  roles: text("roles").array().notNull().default(sql`ARRAY[]::text[]`),
-  status: varchar("status").notNull().default("pending_approval"), // 'pending_approval' | 'active' | 'inactive'
   isSuperAdmin: boolean("is_super_admin").notNull().default(false),
 
   // Audit / invitations (self-FKs in table callback)
@@ -57,10 +55,6 @@ export const users = pgTable("users", {
     foreignColumns: [table.id],
     name: "users_approved_by_fkey",
   }).onDelete("set null"),
-  check(
-    "users_status_check",
-    sql`status IN ('pending_approval', 'active', 'inactive')`
-  ),
   check("users_provider_check", sql`provider IN ('local', 'google')`),
 ]);
 

@@ -13,7 +13,7 @@
  * PURPOSE:
  * To verify the authentication system works correctly by testing:
  * - User registration
- * - User activation (with database)
+ * - Membership approval (with database)
  * - Login/logout functionality
  * - Protected route access
  * - Basic API endpoint responses
@@ -25,7 +25,7 @@
  * Quick Test (no database needed, 2-3 seconds):
  *   npx tsx tests/auth-test.ts --quick
  *   
- * Full Test (with database activation, 5 seconds):
+ * Full Test (with database membership approval, 5 seconds):
  *   npx tsx tests/auth-test.ts --full
  *   
  * Auto Test (starts server automatically, 10-15 seconds):
@@ -48,7 +48,7 @@
  *   Expected results:
  *     - Register: 200 (account created)
  *     - Me: 401 (not logged in yet - correct!)
- *     - Login: 401 (pending approval - correct!)
+ *     - Login: 200 (session created even while membership is pending)
  *     - Logout: 200
  *   When to use:
  *     - Quick sanity check during development
@@ -56,13 +56,13 @@
  *     - After minor code changes
  * 
  * --full (END-TO-END TEST)
- *   What it does: Complete test including database activation
+ *   What it does: Complete test including database membership approval
  *   Requirements: Dev server + database running
  *   Time: 5 seconds
- *   Database: Required (activates users)
+ *   Database: Required (approves memberships)
  *   Expected results:
  *     - Register: 200 (account created)
- *     - Activate: User activated in database
+ *     - Approve membership: SLMTS membership activated in database
  *     - Login: 200 (login successful)
  *     - Me: 200 (can access profile)
  *     - Logout: 200
@@ -149,7 +149,7 @@
  * 
  * All tests pass but 401 errors shown
  *   → This is correct for --quick mode!
- *   → 401 = "pending approval" is the expected behavior
+ *   → 401 means the server rejected credentials or the session, not pending membership
  *   → Use --full mode if you want successful login
  * 
  * ============================================================================
@@ -261,8 +261,17 @@ async function activateUser(email: string): Promise<string | null> {
   });
   try {
     const res = await pool.query(
-      'UPDATE users SET status = $1, updated_at = NOW() WHERE email = $2 RETURNING id', 
-      ['active', email.toLowerCase()]
+      `UPDATE user_organizations uo
+       SET status = 'active',
+           approved_at = NOW(),
+           updated_at = NOW()
+       FROM users u
+       JOIN organizations o ON o.slug = 'slmts'
+       WHERE uo.user_id = u.id
+         AND uo.org_id = o.id
+         AND u.email = $1
+       RETURNING u.id`,
+      [email.toLowerCase()]
     );
     return res.rowCount > 0 ? res.rows[0].id : null;
   } finally {
@@ -298,7 +307,7 @@ async function quickTest() {
   res = await fetch(`${baseUrl}/api/auth/me`, { headers: jar.headers() });
   console.log('   Status:', res.status, res.status === 401 ? '✓' : '✗');
 
-  console.log('\n3️⃣  Login attempt (expect 401 - pending approval)');
+  console.log('\n3️⃣  Login attempt (expect 200 - pending membership still allows auth)');
   res = await fetch(`${baseUrl}/api/auth/login`, {
     method: 'POST',
     headers: jar.headers({ 'Content-Type': 'application/json' }),
@@ -306,7 +315,7 @@ async function quickTest() {
   });
   let loginText = await res.text();
   try { loginText = JSON.stringify(JSON.parse(loginText)); } catch {}
-  console.log('   Status:', res.status, res.status === 401 ? '✓' : '✗');
+  console.log('   Status:', res.status, res.status === 200 ? '✓' : '✗');
   console.log('   Response:', loginText);
   jar.capture(res as any);
 
@@ -316,7 +325,7 @@ async function quickTest() {
 
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('✅ Quick smoke test complete!');
-  console.log('Note: 401 errors are expected - they verify pending approval works');
+  console.log('Note: successful login is expected even while membership is pending');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 }
 
@@ -340,9 +349,9 @@ async function fullTest() {
   console.log('   Response:', regJson);
   jar.capture(res as any);
 
-  console.log('\n2️⃣  Activate user in database');
+  console.log('\n2️⃣  Approve SLMTS membership in database');
   const userId = await activateUser(email);
-  console.log('   Activated user ID:', userId, userId ? '✓' : '✗');
+  console.log('   Approved user ID:', userId, userId ? '✓' : '✗');
 
   console.log('\n3️⃣  Login with credentials');
   res = await fetch(`${baseUrl}/api/auth/login`, {

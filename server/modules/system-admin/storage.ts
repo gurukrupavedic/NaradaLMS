@@ -4,7 +4,7 @@
  */
 
 import { db } from '../../db';
-import { auditLogs, systemSettings, users, batches, tracks, chapters } from '@narada/types';
+import { auditLogs, systemSettings, users, userOrganizations, batches, tracks, chapters } from '@narada/types';
 import { eq, gte, lte, and, sql, desc } from 'drizzle-orm';
 
 export interface AuditLogFilter {
@@ -172,14 +172,18 @@ export class AdminStorage {
       .from(users);
 
     const [{ pendingApprovals }] = await db
-      .select({ pendingApprovals: sql<number>`count(*)` })
-      .from(users)
-      .where(eq(users.status, 'pending_approval'));
+      .select({
+        pendingApprovals: sql<number>`count(*)::int`,
+      })
+      .from(userOrganizations)
+      .where(eq(userOrganizations.status, 'pending'));
 
     const [{ activeUsers }] = await db
-      .select({ activeUsers: sql<number>`count(*)` })
-      .from(users)
-      .where(eq(users.status, 'active'));
+      .select({
+        activeUsers: sql<number>`count(distinct ${userOrganizations.userId})::int`,
+      })
+      .from(userOrganizations)
+      .where(eq(userOrganizations.status, 'active'));
 
     const [{ totalBatches }] = await db
       .select({ totalBatches: sql<number>`count(*)` })

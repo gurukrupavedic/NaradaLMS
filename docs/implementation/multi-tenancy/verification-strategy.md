@@ -42,7 +42,7 @@ Until automated tests exist, use the manual scenarios below and record results i
 
 ## Layer 1 — Schema verification
 
-- [ ] `pnpm`/`npm` workspace typecheck: passes after each merge (legacy `users.roles` / `users.status` may still exist until slice 1.4 contract; **zero** references is required only after [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is complete and item **1.4-contract** is done).
+- [ ] `pnpm`/`npm` workspace typecheck: passes after each merge; after slice 1.4 contract, there should be **zero** remaining references to `users.roles` or `users.status` outside historical/archive docs and migrations.
 - [ ] Migration on fresh DB succeeds (`drizzle-kit migrate` after reset; `npm run db:reset` must clear both `public` and Drizzle's `drizzle` schema).
 - [ ] After slice 1.1 expand: `\d users` shows `is_super_admin` alongside legacy columns; `\dt` includes `organizations` and `user_organizations`.
 - [ ] Seed creates two orgs with expected `slug` values (after seed slice 1.5 / checklist 1.5).
@@ -51,10 +51,15 @@ Until automated tests exist, use the manual scenarios below and record results i
 
 ## Slice 1.4 — Schema contract verification (after Layer 2)
 
-Run only on branch `slice-1.4-schema-contract` when [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) has no open items.
+Run on branch `slice-1.4-schema-contract` once [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) has no open items.
 
 - [ ] Contract migration applies on fresh DB; `\d users` no longer lists `roles`, `status`, or `users_status_check`.
 - [ ] Full workspace typecheck: no remaining references to `users.roles` or `users.status` in server, packages, apps, or scripts.
+
+Verification note for **1.4-contract**:
+
+- Verified on `2026-05-12` in the contract slice worktree via `npm run check`, `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`, `npx tsx scripts/test/require-super-admin.test.ts`, `npx tsx scripts/test/audit-log-visibility.test.ts`, `npx tsx scripts/test/admin-user-filters.test.ts`, and `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts`.
+- Additional focused contract regressions now live in `scripts/test/passport-local-membership-auth.test.ts`, `scripts/test/batch-eligible-students-membership.test.ts`, and `scripts/test/admin-stats-membership.test.ts`.
 
 ---
 
@@ -63,7 +68,7 @@ Run only on branch `slice-1.4-schema-contract` when [legacy-users-columns-cleanu
 ### Registration (new user, SLMTS tenant)
 
 1. POST `/api/auth/register` with tenant context for `slmts` (`X-Tenant-Slug: slmts` and/or JSON `tenantSlug: "slmts"`; default server slug from `DEFAULT_TENANT_SLUG` / `slmts` if omitted).
-2. **Implemented behavior:** `users` row exists with `status = active` and legacy `roles = []` for self-serve signups; **`user_organizations`** row for SLMTS with `status = pending` and roles `['student']`.
+2. **Implemented behavior:** `users` row exists without any global role/status semantics; **`user_organizations`** row for SLMTS has `status = pending` and roles `['student']`.
 3. POST `/api/auth/login` succeeds (200, `auth_token` cookie); response includes `loginState.hasActiveMembership === false` until membership is approved.
 4. Student portal shows **`/pending-approval`** until an active membership exists (unless `isSuperAdmin`).
 5. Learning/content APIs remain **403 or empty** until membership is **active** (enforced by existing route logic + org roles in JWT).

@@ -13,8 +13,8 @@ Most scripts in `seed/` and `db/` are destructive or modify data significantly.
 |----------|------|-------------|
 | **Database** | `db/reset-db.ts` | **DESTRUCTIVE**: Drops all tables and recreates schema |
 | **Database** | `test/db-reset.ps1` | **DESTRUCTIVE**: Windows PowerShell wrapper for full DB reset |
-| **Seeding** | `seed/create-30-students.ts` | Creates 30 test students with full profile data |
-| **Seeding** | `seed/create-sample-batches.ts` | Creates 10 sample batches (Brahmacharya/Grihastha) |
+| **Seeding** | `seed/create-30-students.ts` | Creates 30 SLMTS users with active student memberships |
+| **Seeding** | `seed/create-sample-batches.ts` | Creates 10 sample SLMTS batches using membership-based instructor lookup |
 | **Proficiency** | `utils/full-proficiency-reset.ts` | **DESTRUCTIVE**: Resets/Generates proficiency for ALL students |
 
 ## Script Categories
@@ -34,23 +34,23 @@ Most scripts in `seed/` and `db/` are destructive or modify data significantly.
 
 - **`seed/create-sample-users.ts`**
   - *Usage*: `npx tsx scripts/seed/create-sample-users.ts`
-  - *Purpose*: Creates 10 basic users (`test1` to `test10`) with password `welcome123`.
+  - *Purpose*: Creates 10 basic users (`test1` to `test10`) with password `welcome123` and pending SLMTS student memberships.
 
 - **`seed/create-30-students.ts`**
   - *Usage*: `npx tsx scripts/seed/create-30-students.ts`
-  - *Purpose*: Creates 30 realistic student profiles with Indian names, phones, and timezones.
+  - *Purpose*: Creates 30 realistic SLMTS users with active student memberships.
 
 - **`seed/create-approved-users.ts`**
   - *Usage*: `npx tsx scripts/seed/create-approved-users.ts`
-  - *Purpose*: Creates users (`test11` to `test30`) that are already approved and have mixed roles.
+  - *Purpose*: Creates users (`test11` to `test30`) with active SLMTS memberships and mixed membership roles.
 
 - **`seed/create-sample-batches.ts`**
   - *Usage*: `npx tsx scripts/seed/create-sample-batches.ts`
-  - *Purpose*: Creates 10 standard batches (Morning/Evening, etc.) for testing enrollment flows.
+  - *Purpose*: Creates 10 standard SLMTS batches (Morning/Evening, etc.) for testing enrollment flows.
 
 - **`seed/assign-secondary-instructors.ts`**
   - *Usage*: `npx tsx scripts/seed/assign-secondary-instructors.ts`
-  - *Purpose*: Assigns 2 co-instructors to existing batches. Run this *after* creating batches.
+  - *Purpose*: Assigns 2 co-instructors to existing SLMTS batches using active membership roles. Run this *after* creating batches.
 
 ### 📊 Proficiency & Progress
 
@@ -71,11 +71,11 @@ Most scripts in `seed/` and `db/` are destructive or modify data significantly.
 
 - **`utils/list-users.ts`**
   - *Usage*: `npx tsx scripts/utils/list-users.ts`
-  - *Purpose*: Lists the most recent 20 users with their roles and status.
+  - *Purpose*: Lists the most recent 20 users with membership summaries by org.
 
 - **`utils/update-user-role.ts`**
   - *Usage*: `npx tsx scripts/utils/update-user-role.ts`
-  - *Purpose*: Hardcoded utility to promote a specific user (currently `kashyap.kuchipudi@gmail.com`) to admin.
+  - *Purpose*: Hardcoded utility to grant `student, admin` roles on the SLMTS membership for `kashyap.kuchipudi@gmail.com`.
 
 - **`utils/check-instructor-batches.ts`**
   - *Usage*: `npx tsx scripts/utils/check-instructor-batches.ts`
@@ -90,6 +90,7 @@ Most scripts in `seed/` and `db/` are destructive or modify data significantly.
 Located in `test/`, these are used for manual verification of specific features:
 - `admin-batches-smoke.ts`: Verifies batch management.
 - `auth-test.ts`: Verifies authentication flows.
+  - Uses membership approval semantics rather than legacy account status toggles.
 - `content-smoke.ts`: Verifies content structure.
 
 ---

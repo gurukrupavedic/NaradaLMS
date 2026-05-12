@@ -75,8 +75,21 @@ async function createSampleBatches() {
     await client.connect();
     console.log('🔗 Connected to database');
 
+    const orgResult = await client.query(
+      "SELECT id FROM organizations WHERE slug = 'slmts' LIMIT 1"
+    );
+    const orgId = orgResult.rows[0]?.id;
+
+    if (!orgId) {
+      console.error("❌ SLMTS organization not found. Run db:seed-orgs first.");
+      return;
+    }
+
     // Get first track ID
-    const trackResult = await client.query('SELECT id FROM tracks LIMIT 1');
+    const trackResult = await client.query(
+      'SELECT id FROM tracks WHERE org_id = $1 ORDER BY id LIMIT 1',
+      [orgId]
+    );
     const trackId = trackResult.rows[0]?.id;
     
     if (!trackId) {
@@ -87,7 +100,17 @@ async function createSampleBatches() {
 
     // Get instructor IDs (use both kashyap and sample users)
     const instructorResult = await client.query(
-      "SELECT id FROM users WHERE roles && ARRAY['instructor'::text] OR email = 'kashyap.kuchipudi@gmail.com' LIMIT 10"
+      `SELECT DISTINCT u.id
+       FROM users u
+       LEFT JOIN user_organizations uo ON uo.user_id = u.id
+       WHERE (
+         uo.org_id = $1
+         AND uo.status = 'active'
+         AND uo.roles && ARRAY['instructor'::text, 'admin'::text]
+       )
+       OR u.email = 'kashyap.kuchipudi@gmail.com'
+       LIMIT 10`,
+      [orgId]
     );
     
     if (instructorResult.rows.length === 0) {
@@ -117,10 +140,10 @@ async function createSampleBatches() {
 
       try {
         const result = await client.query(
-          `INSERT INTO batches (batch_code, batch_name, track_id, primary_instructor_id, cohort_type, description, created_by, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+          `INSERT INTO batches (org_id, batch_code, batch_name, track_id, primary_instructor_id, cohort_type, description, created_by, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
            RETURNING id, batch_code, batch_name`,
-          [batch.batchCode, batch.batchName, trackId, primaryInstructorId, batch.cohortType, batch.description, createdBy]
+          [orgId, batch.batchCode, batch.batchName, trackId, primaryInstructorId, batch.cohortType, batch.description, createdBy]
         );
         
         console.log(`✅ Created: ${result.rows[0].batch_code} - ${result.rows[0].batch_name}`);

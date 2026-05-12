@@ -6,6 +6,7 @@ import {
   enrollments,
   organizations,
   studentProgress,
+  userOrganizations,
   users,
 } from "../../packages/types/src/schema";
 import { batchService } from "../../server/modules/batch-cohort/service";
@@ -45,11 +46,13 @@ async function getFixture() {
     .limit(1);
   const [studentUser] = await db
     .select({ id: users.id })
-    .from(users)
+    .from(userOrganizations)
+    .innerJoin(users, eq(users.id, userOrganizations.userId))
     .where(
       and(
-        eq(users.status, "active"),
-        sql`'student' = ANY(${users.roles})`
+        eq(userOrganizations.orgId, slmtsOrg!.id),
+        eq(userOrganizations.status, "active"),
+        sql`'student' = ANY(${userOrganizations.roles})`
       )
     )
     .limit(1);

@@ -11,9 +11,23 @@ async function listUsers() {
   try {
     await client.connect();
     const result = await client.query(
-      `SELECT id, email, first_name, last_name, roles, status 
-       FROM users 
-       ORDER BY created_at DESC 
+      `SELECT
+         u.id,
+         u.email,
+         u.first_name,
+         u.last_name,
+         COALESCE(
+           string_agg(
+             o.slug || ': ' || uo.status || ' [' || array_to_string(uo.roles, ', ') || ']',
+             ' | ' ORDER BY o.slug
+           ),
+           'none'
+         ) AS memberships
+       FROM users u
+       LEFT JOIN user_organizations uo ON uo.user_id = u.id
+       LEFT JOIN organizations o ON o.id = uo.org_id
+       GROUP BY u.id, u.email, u.first_name, u.last_name, u.created_at
+       ORDER BY u.created_at DESC 
        LIMIT 20`
     );
     
@@ -21,8 +35,7 @@ async function listUsers() {
     result.rows.forEach((user, idx) => {
       console.log(`${idx + 1}. ${user.email}`);
       console.log(`   Name: ${user.first_name || ''} ${user.last_name || ''}`);
-      console.log(`   Roles: ${user.roles?.join(', ') || 'none'}`);
-      console.log(`   Status: ${user.status}\n`);
+      console.log(`   Memberships: ${user.memberships}\n`);
     });
     
     console.log(`Total users: ${result.rows.length}`);

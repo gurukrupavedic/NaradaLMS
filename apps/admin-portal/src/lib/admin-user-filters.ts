@@ -1,6 +1,6 @@
 export type AdminUserStatusFilter =
   | "all"
-  | "pending_approval"
+  | "pending"
   | "active"
   | "inactive"
   | "rejected";
@@ -34,7 +34,7 @@ export function buildAdminUsersSearchParams(params: {
 
   if (params.status && params.status !== "all") {
     const statusMap: Record<Exclude<AdminUserStatusFilter, "all">, string> = {
-      pending_approval: "pending",
+      pending: "pending",
       active: "active",
       inactive: "inactive",
       rejected: "rejected",

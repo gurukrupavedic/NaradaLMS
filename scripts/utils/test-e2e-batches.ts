@@ -33,8 +33,6 @@ async function testEndToEnd() {
     const user = kashyapUser[0];
     const instructorId = user.id;
     console.log(`✅ Found: ${user.firstName} ${user.lastName} (ID: ${instructorId})`);
-    console.log(`   Roles: ${user.roles?.join(", ")}`);
-
     // Step 2: Find primary instructor batches
     console.log("\nSTEP 2: Query primary instructor batches...");
     const primaryBatches = await db
