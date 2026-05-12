@@ -2,7 +2,7 @@
 
 This document defines how we know each layer is **done** and the platform is safe to expand (RR) after SLMTS pilot.
 
-**Current build:** Layer 2 includes **2.1**–**2.5** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory, governance event/audit alignment). Layer **3 Pass A** and **3 Pass B** are now implemented for the core, media, progress, and audit tables, including physical `audit_logs.org_id` support. Layer **4.1** tenant-config foundation plus the authenticated student-shell branding follow-up are also merged for the student portal — see [implementation-status.md](./implementation-status.md).
+**Current build:** Layer 2 includes **2.1**–**2.5** on `multi-tenancy` (JWT, membership-first auth, pending student UX, org switch, **super-admin governance**, org-admin directory, governance event/audit alignment). Layer **3 Pass A** and **3 Pass B** are now implemented for the core, media, progress, and audit tables, including physical `audit_logs.org_id` support. Layer **4.1** tenant-config foundation plus the authenticated student-shell branding follow-up are also merged for the student portal, and pilot closeout documentation is now complete through checklist **6.4** — see [implementation-status.md](./implementation-status.md).
 
 ---
 
@@ -162,7 +162,7 @@ Before calling SLMTS pilot-ready:
 - **Super-admin approval:** the seeded super-admin approved the new SLMTS membership through `POST /api/auth/admin/memberships/:membershipId/approve`.
 - **Approved learning access:** after approval, the same user logged in with `hasActiveMembership: true`, `GET /api/auth/me` returned an active SLMTS membership, `GET /api/content/tracks` returned `200` with `9` tracks, and browser verification confirmed access to `http://localhost:3100/vedic-learning`.
 - **Supporting guard checks:** `npx tsx scripts/test/require-super-admin.test.ts`, `npx tsx scripts/test/audit-log-visibility.test.ts`, `npx tsx scripts/test/layer3-pass-a-isolation.test.ts`, `npx tsx scripts/test/layer3-pass-b-media-isolation.test.ts`, `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts`, and `npx tsx scripts/test/student-tenant-config.test.ts` all passed.
-- **Still outstanding after `6.1`:** checklist `6.2` RR isolation smoke, `6.3` second-org join verification, and `6.4` documentation of known out-of-scope gaps.
+- **At that point, still outstanding after `6.1`:** checklist `6.2` RR isolation smoke, `6.3` second-org join verification, and `6.4` documentation of known out-of-scope gaps.
 
 ---
 
@@ -174,7 +174,7 @@ Before calling SLMTS pilot-ready:
 - **SLMTS assertion:** initial `/api/auth/me` stayed on active SLMTS, `GET /api/content/tracks` and `GET /api/batches` included only SLMTS marker data, and direct RR lookups returned `404`.
 - **RR assertion:** after switching org to RR, `/api/auth/me` reported `currentOrgId = rr`, `GET /api/content/tracks` and `GET /api/batches` included only RR marker data, and direct SLMTS lookups returned `404`.
 - **Result:** `npm run test:rr-isolation-smoke` passed with `rr-isolation-smoke: 16 assertions passed.`
-- **Still outstanding in the pilot gate:** checklist `6.4` documentation of known out-of-scope gaps.
+- **At that point, still outstanding in the pilot gate:** checklist `6.4` documentation of known out-of-scope gaps.
 
 ---
 
@@ -187,6 +187,14 @@ Before calling SLMTS pilot-ready:
 - **Approved RR assertion:** after super-admin approval, `POST /api/auth/switch-org` returned `200`, `/api/auth/me` reported `currentOrgId = rr`, and `GET /api/content/tracks` included the RR marker track.
 - **Portal behavior covered by this slice:** the student portal now computes current-tenant access state from `memberships[]`, exposes the RR request-access action on the pending page, and latches failed auto-switch attempts so users do not get trapped in a retry loop.
 - **Result:** `npm run test:second-org-join-smoke` passed with `second-org-join-smoke: 17 assertions passed.`
+
+---
+
+### 2026-05-12 — checklist 6.4 documented
+
+- **Scope of this step:** documentation-only closeout using the already-recorded `6.1` through `6.3` evidence; no new runtime verification was added for `6.4`.
+- **Canonical known gaps now recorded across the execution docs:** email invites/notifications remain out of scope, questionnaire-driven onboarding remains deferred, Google OAuth parity remains deferred unless it becomes real product scope, production subdomain/TLS/cookie `SameSite` and `Domain` behavior remains unverified outside local dev, and RR onboarding browser coverage remains lighter than the SLMTS pilot browser pass.
+- **Result:** the pilot checklist is now complete through `6.4`, and future chats should choose between the optional Layer `4.4` follow-up, blocked `1.4-contract`, or deferred `2.12` rather than reopening pilot-closeout work.
 
 ---
 

@@ -108,7 +108,7 @@ Verification note for **5.2**:
 - [x] **6.1** Register -> pending -> super-admin approve -> SLMTS student access works.
 - [x] **6.2** Cross-org isolation smoke with minimal RR data.
 - [x] **6.3** Second-org join flow: RR portal -> pending RR membership -> approve.
-- [ ] **6.4** Document known gaps (email, questionnaire) as out of scope.
+- [x] **6.4** Document the known out-of-scope and deferred gaps from pilot validation: email invites/notifications, questionnaire workflow, OAuth parity edge cases, production subdomain/TLS/cookie behavior, and remaining RR browser-only onboarding validation.
 
 Verification note for **6.1**:
 
@@ -133,6 +133,12 @@ Verification note for **6.3**:
 - The dedicated smoke harness now lives at [`scripts/test/second-org-join-smoke.test.ts`](../../../scripts/test/second-org-join-smoke.test.ts) and is exposed as `npm run test:second-org-join-smoke`.
 - Official merged-branch verification passed against a local API instance using `API_BASE_URL=http://localhost:5203 DEV_SUPERADMIN_PASSWORD=dev-superadmin-pass npm run test:second-org-join-smoke`.
 - The smoke created a new SLMTS user, approved the SLMTS membership through the super-admin governance API, requested RR membership through the new authenticated tenant-aware endpoint, verified `/api/auth/me` reported RR as `pending`, confirmed `POST /api/auth/switch-org` returned `403` while RR remained pending, then approved RR and verified `switch-org` succeeded and RR-scoped content became visible.
+
+Verification note for **6.4**:
+
+- Completed on `2026-05-12` as a documentation closeout slice using the already-recorded `6.1` through `6.3` evidence; no new runtime verification was required or invented for this step.
+- The canonical known-gap list is now recorded across the execution docs: email invites/notifications remain out of scope, questionnaire-driven onboarding remains deferred, Google OAuth parity remains deferred unless it becomes real product scope, production subdomain/TLS/cookie `SameSite` and `Domain` behavior remains unverified outside local dev, and RR onboarding still relies on smoke/API coverage rather than a separate full browser walkthrough.
+- Future chats should treat the pilot checklist as complete through **6.4** and choose between the optional Layer **4.4** follow-up, blocked **1.4-contract**, or deferred **2.12** based on priority.
 
 ---
 
