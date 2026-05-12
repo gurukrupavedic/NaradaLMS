@@ -19,7 +19,8 @@ It captures both the locked product/architecture decisions and the current as-bu
 - Layer **3** Pass A and Pass B isolation are merged.
 - Student Layer **4.1 / 4.2** tenant-config and authenticated shell branding work are merged.
 - Admin **5.1–5.4** are merged.
-- Checklists **6.1** pilot validation, **6.2** RR isolation smoke, and **6.3** second-org join are now confirmed locally; default next slice is **6.4** (document known gaps), unless you intentionally want the optional broader Layer 4 auth-client follow-up first.
+- Checklists **6.1** pilot validation, **6.2** RR isolation smoke, **6.3** second-org join, and **6.4** known-gap documentation are now complete in the current docs baseline.
+- Default next work is the optional broader Layer **4.4** auth-client or OAuth follow-up; otherwise the next foundational slice remains blocked **1.4-contract** once [`legacy-users-columns-cleanup.md`](./legacy-users-columns-cleanup.md) is clear.
 
 ---
 

@@ -13,9 +13,9 @@ Sequenced execution reference. Execute rows in ascending **Seq** unless noted pa
 
 ## Progress snapshot on `multi-tenancy`
 
-- Complete through **MT-6.3**, with the authenticated student-shell branding follow-up, the SLMTS pilot validation path, the dedicated RR isolation smoke path, and the second-org join path now verified locally.
+- Complete through **MT-6.4**, with the authenticated student-shell branding follow-up, the SLMTS pilot validation path, the dedicated RR isolation smoke path, the second-org join path, and the pilot-gap documentation closeout now recorded locally.
 - **MT-5.2**, **MT-5.3**, and the **MT-5.4** governance gate are complete, so the admin governance surface is functionally through the current checklist scope.
-- Main remaining execution areas are checklist **6.4** pilot follow-through, deferred **MT-1.4**, and optional remaining **MT-4.3** / **MT-2.10** auth-client or OAuth propagation work.
+- Main remaining execution areas are deferred **MT-1.4** and optional remaining **MT-4.3** / **MT-2.10** auth-client or OAuth propagation work.
 
 ---
 
@@ -53,6 +53,7 @@ Sequenced execution reference. Execute rows in ascending **Seq** unless noted pa
 | 28 | MT-6.1 | Pilot | Individual | Pilot checklist execution | notes in [verification-strategy.md](./verification-strategy.md) | sign-off |
 | 29 | MT-6.2 | Pilot | Individual | RR isolation smoke with dedicated dual-org marker coverage | `rr-isolation-smoke` evidence | cross-org reads stay isolated |
 | 30 | MT-6.3 | Pilot | Individual | Existing-user second-org join: RR request -> pending -> super-admin approval -> RR access | `request-membership` flow + second-org smoke evidence | pending RR blocks switch until approval |
+| 31 | MT-6.4 | Pilot | Individual | Document the known out-of-scope and deferred pilot gaps across the execution docs so future chats stop treating pilot closeout as pending | synced execution docs + explicit limitation list | roadmap/checklist/status/verification all reflect pilot complete through `6.4` |
 
 ---
 
@@ -100,3 +101,4 @@ MT-5.1 -> MT-5.2 -> MT-5.3 after MT-2.8 (and after Layer 3 org-scoped data is me
 - After Bundle G: legacy user columns dropped; full typecheck green on `multi-tenancy`.
 - After Bundle D: cross-org isolation smoke.
 - After Bundle E: two-tenant local branding smoke.
+- After `MT-6.4`: pilot closeout docs are synced; next work is optional `MT-4.3` follow-up or blocked `MT-1.4`.
