@@ -169,8 +169,8 @@ Before calling SLMTS pilot-ready:
 ### 2026-05-12 — checklist 6.2 validated
 
 - **Environment reset:** `npm run build:types`, `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`, and `npm run check` all passed on a fresh local database in the slice worktree.
-- **Dedicated smoke command:** `API_BASE_URL=http://localhost:5201 npm run test:rr-isolation-smoke`
-- **Smoke setup:** the new harness in `scripts/test/rr-isolation-smoke.test.ts` temporarily upserts an active RR membership for the seeded super-admin, creates unique SLMTS/RR marker tracks and batches, and uses live cookies plus `POST /api/auth/switch-org` to verify session truth.
+- **Dedicated smoke command:** `API_BASE_URL=http://localhost:5201 DEV_SUPERADMIN_PASSWORD=dev-superadmin-pass npm run test:rr-isolation-smoke`
+- **Smoke setup:** the new harness in `scripts/test/rr-isolation-smoke.test.ts` logs in as the seeded super-admin (`ADMIN_EMAIL` + `DEV_SUPERADMIN_PASSWORD`), temporarily upserts an active RR membership, creates unique SLMTS/RR marker tracks and batches, and uses live cookies plus `POST /api/auth/switch-org` to verify session truth.
 - **SLMTS assertion:** initial `/api/auth/me` stayed on active SLMTS, `GET /api/content/tracks` and `GET /api/batches` included only SLMTS marker data, and direct RR lookups returned `404`.
 - **RR assertion:** after switching org to RR, `/api/auth/me` reported `currentOrgId = rr`, `GET /api/content/tracks` and `GET /api/batches` included only RR marker data, and direct SLMTS lookups returned `404`.
 - **Result:** `npm run test:rr-isolation-smoke` passed with `rr-isolation-smoke: 16 assertions passed.`

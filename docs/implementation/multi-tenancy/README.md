@@ -67,6 +67,8 @@ After migrations (`npm run db:migrate` or `npm run db:reset`; the reset path now
 2. `npm run db:seed-dev` — super-admin for `ADMIN_EMAIL` plus minimal `user_organizations` (SLMTS active, RR pending); first-time bootstrap needs `DEV_SUPERADMIN_PASSWORD` set (see [environment-setup.md](../../essentials/environment-setup.md)).
 3. Optionally `npm run db:seed` — Vedic curriculum structure.
 
+The RR isolation smoke (`npm run test:rr-isolation-smoke`) also uses those seeded super-admin credentials, so keep `DEV_SUPERADMIN_PASSWORD` available in `.env` or pass it inline when running the smoke outside the slice worktree.
+
 ---
 
 ## Key Principles

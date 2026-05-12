@@ -117,7 +117,7 @@ Verification note for **6.1**:
 
 Verification note for **6.2**:
 - Fresh-db verification passed on `2026-05-12` via `npm run build:types`, `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`, and `npm run check`.
-- The dedicated RR smoke harness now lives at [`scripts/test/rr-isolation-smoke.test.ts`](../../../scripts/test/rr-isolation-smoke.test.ts) and is exposed as `npm run test:rr-isolation-smoke`.
+- The dedicated RR smoke harness now lives at [`scripts/test/rr-isolation-smoke.test.ts`](../../../scripts/test/rr-isolation-smoke.test.ts) and is exposed as `npm run test:rr-isolation-smoke`; it authenticates as the seeded super-admin using `ADMIN_EMAIL` and `DEV_SUPERADMIN_PASSWORD`.
 - Official slice verification passed against a local API instance using `API_BASE_URL=http://localhost:5201 npm run test:rr-isolation-smoke`.
 - The smoke upserted an active RR membership for the seeded super-admin without changing seed defaults, created unique SLMTS/RR marker tracks and batches, confirmed the default session stayed on active SLMTS, then switched to RR with `POST /api/auth/switch-org`.
 - In SLMTS context, the smoke saw only the SLMTS marker data and got `404` for direct RR track/batch lookups; after switching to RR, it saw only the RR marker data and got `404` for direct SLMTS track/batch lookups.

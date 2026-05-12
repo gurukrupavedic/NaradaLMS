@@ -4,7 +4,7 @@
 
 **Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
 
-**Last updated:** Reflects Layer **1** (expand/seed/bootstrap), Layer **2** roadmap slices **2.1–2.5**, Layer **3** Pass A and Pass B, student Layer **4.1 / 4.2**, admin checklist **5.1**–**5.4** on `multi-tenancy`, local checklist **6.1** pilot validation evidence on `slice-6.1-pilot-validation`, and local checklist **6.2** RR isolation smoke evidence on `slice-6.2-rr-isolation-smoke`.
+**Last updated:** Reflects Layer **1** (expand/seed/bootstrap), Layer **2** roadmap slices **2.1–2.5**, Layer **3** Pass A and Pass B, student Layer **4.1 / 4.2**, admin checklist **5.1**–**5.4**, local checklist **6.1** pilot validation evidence, and local checklist **6.2** RR isolation smoke evidence merged into `multi-tenancy` through commit `826a6bfc`.
 
 ---
 
@@ -161,7 +161,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
   - `npx tsx scripts/test/layer3-pass-b-media-isolation.test.ts`
   - `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts`
   - `npx tsx scripts/test/student-tenant-config.test.ts`
-- RR isolation is now covered by `npm run test:rr-isolation-smoke`, which creates temporary dual-org marker data, proves the default session remains on SLMTS, switches to RR through `POST /api/auth/switch-org`, and verifies that list endpoints plus direct track/batch lookups stay org-scoped in both directions.
+- RR isolation is now covered by `npm run test:rr-isolation-smoke`, which logs in with the seeded super-admin (`ADMIN_EMAIL` + `DEV_SUPERADMIN_PASSWORD`), creates temporary dual-org marker data, proves the default session remains on SLMTS, switches to RR through `POST /api/auth/switch-org`, and verifies that list endpoints plus direct track/batch lookups stay org-scoped in both directions.
 - Remaining pilot work is now **6.3** second-org join validation and **6.4** documenting known gaps as explicitly out of scope.
 
 ---
@@ -197,7 +197,7 @@ Pick one vertical per PR; keep **`git merge --no-ff`** into `multi-tenancy` afte
 
 When continuing in a brand-new chat, do this first:
 
-1. Confirm checkout is on **`multi-tenancy`** and includes merge commit **`ba3a728c`** or later.
+1. Confirm checkout is on **`multi-tenancy`** and includes merge commit **`826a6bfc`** or later.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
 3. Treat **6.1** and **6.2** as already validated and default to **6.3** second-org join verification next, unless you intentionally want the optional broader Layer 4 auth-client propagation work first.
 4. Keep **2.12** deferred unless Google OAuth becomes product scope; if you do touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.
@@ -221,7 +221,7 @@ When continuing in a brand-new chat, do this first:
 - **Admin org-switcher helper coverage:** `npx tsx scripts/test/admin-org-switcher-utils.test.ts`.
 - **Student tenant-config helpers:** `npx tsx scripts/test/student-tenant-config.test.ts`.
 - **DB:** `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed` (see [README.md](./README.md) seed order; first-time dev bootstrap needs `DEV_SUPERADMIN_PASSWORD`).
-- **RR isolation smoke (server running):** `npx tsx scripts/test/rr-isolation-smoke.test.ts` or `npm run test:rr-isolation-smoke` (set `API_BASE_URL` if the API is not on `http://localhost:5000`).
+- **RR isolation smoke (server running):** `npx tsx scripts/test/rr-isolation-smoke.test.ts` or `npm run test:rr-isolation-smoke` (set `API_BASE_URL` if the API is not on `http://localhost:5000`; if `DEV_SUPERADMIN_PASSWORD` is not present in `.env`, supply it inline for the seeded admin login).
 - **Smoke (optional, server running):** `npx tsx scripts/test/api-smoke-test.ts` — auth section includes register + pending login; when seeded **super-admin** login succeeds: **`GET /api/auth/admin/users`** (expects `memberships[]` on users), **`GET /api/admin/directory/users`**, **`POST /api/auth/switch-org`** (403 pending RR / 200 active SLMTS per seed data).
 
 ---
