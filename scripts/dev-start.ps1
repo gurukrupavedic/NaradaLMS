@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 <#
 DEVELOPMENT QUICK START
-Starts the API server and both portal apps for local development.
+Starts the API server, both student tenant portals, and the admin portal for local development.
 Usage: powershell -ExecutionPolicy Bypass -File scripts/dev-start.ps1
 #>
 
@@ -28,8 +28,11 @@ Start-Process -FilePath "npm" -ArgumentList "run", "dev" -WorkingDirectory $Repo
 
 Start-Sleep -Seconds 3
 
-Write-Host "Starting Student Portal (port 3000)..." -ForegroundColor Cyan
-Start-Process -FilePath "npm" -ArgumentList "run", "dev" -WorkingDirectory "$RepoRoot\apps\student-portal" -WindowStyle Normal
+Write-Host "Starting Student Portal (SLMTS, port 3000)..." -ForegroundColor Cyan
+Start-Process -FilePath "npm" -ArgumentList "run", "dev:slmts" -WorkingDirectory "$RepoRoot\apps\student-portal" -WindowStyle Normal
+
+Write-Host "Starting Student Portal (RR, port 3001)..." -ForegroundColor Cyan
+Start-Process -FilePath "npm" -ArgumentList "run", "dev:rr" -WorkingDirectory "$RepoRoot\apps\student-portal" -WindowStyle Normal
 
 Write-Host "Starting Admin Portal (port 3010)..." -ForegroundColor Cyan
 Start-Process -FilePath "npm" -ArgumentList "run", "dev" -WorkingDirectory "$RepoRoot\apps\admin-portal" -WindowStyle Normal
@@ -37,7 +40,8 @@ Start-Process -FilePath "npm" -ArgumentList "run", "dev" -WorkingDirectory "$Rep
 Start-Sleep -Seconds 2
 
 Write-Host "`nAll services starting:" -ForegroundColor Green
-Write-Host "  API Server:      http://localhost:5000" -ForegroundColor White
-Write-Host "  Student Portal:  http://localhost:3000" -ForegroundColor White
-Write-Host "  Admin Portal:   http://localhost:3010" -ForegroundColor White
+Write-Host "  API Server:          http://localhost:5000" -ForegroundColor White
+Write-Host "  Student Portal:      http://localhost:3000 (SLMTS)" -ForegroundColor White
+Write-Host "  Student Portal RR:   http://localhost:3001" -ForegroundColor White
+Write-Host "  Admin Portal:        http://localhost:3010" -ForegroundColor White
 Write-Host "`nWait 5-10 seconds for Next.js to compile..." -ForegroundColor Yellow

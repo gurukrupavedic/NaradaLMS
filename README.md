@@ -38,13 +38,14 @@ Domain modules (Identity & Access, Content Publishing, Media Pipeline, Batch & C
    npm run db:seed
    ```
    `npm run db:seed` is optional if you do not need curriculum data immediately.
-5. Start all services (API + both portals):
+5. Start all services (API + all portals):
    ```bash
    npm run dev:all
    ```
    Or start individually:
    - API: `npm run dev` (root)
-   - Student portal: `cd apps/student-portal && npm run dev`
+   - Student portal (SLMTS): `cd apps/student-portal && npm run dev:slmts`
+   - Student portal (RR): `cd apps/student-portal && npm run dev:rr`
    - Admin portal: `cd apps/admin-portal && npm run dev`
 
 ### Production build
