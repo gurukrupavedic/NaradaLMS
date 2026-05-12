@@ -32,6 +32,21 @@ function getColumn(table: TableWithColumns, columnName: string) {
   return table[columnName] as ColumnWithMetadata | undefined;
 }
 
+function readMigrationByPrefix(prefix: string) {
+  const migrationsDir = join(process.cwd(), "migrations");
+  const filename = readdirSync(migrationsDir)
+    .filter((entry) => entry.startsWith(prefix) && entry.endsWith(".sql"))
+    .sort()
+    .at(-1);
+
+  assert(Boolean(filename), `${prefix} migration exists`);
+  if (!filename) {
+    return null;
+  }
+
+  return readFileSync(join(migrationsDir, filename), "utf8");
+}
+
 function assertOrgColumn(
   table: TableWithColumns,
   tableName: string,
@@ -71,18 +86,10 @@ function testPassBSchemaColumns() {
 }
 
 function testLatestPassBMigrationShape() {
-  const migrationsDir = join(process.cwd(), "migrations");
-  const latestMigration = readdirSync(migrationsDir)
-    .filter((entry) => /^\d+_.+\.sql$/.test(entry))
-    .sort()
-    .at(-1);
-
-  assert(Boolean(latestMigration), "latest migration exists");
-  if (!latestMigration) {
+  const sql = readMigrationByPrefix("0003_");
+  if (!sql) {
     return;
   }
-
-  const sql = readFileSync(join(migrationsDir, latestMigration), "utf8");
 
   assert(sql.includes('DO $$'), "migration includes ordered backfill block");
   assert(sql.includes('UPDATE audio_files'), "migration backfills audio_files org_id");
@@ -110,8 +117,45 @@ function testLatestPassBMigrationShape() {
   );
 }
 
+function testEnrollmentUniquenessContract() {
+  const schemaSource = readFileSync(
+    join(process.cwd(), "packages", "types", "src", "schema.ts"),
+    "utf8"
+  );
+  const migrationSql = readMigrationByPrefix("0005_");
+
+  assert(
+    schemaSource.includes('uniqueIndex("unique_active_enrollment_idx")'),
+    "schema declares a unique enrollment index"
+  );
+  assert(
+    schemaSource.includes(".on(table.orgId, table.studentId)"),
+    "schema scopes active enrollment uniqueness by org and student"
+  );
+  assert(
+    schemaSource.includes(".where(sql`status = 'active'`)"),
+    "schema keeps the active-only partial enrollment constraint"
+  );
+
+  if (!migrationSql) {
+    return;
+  }
+
+  assert(
+    migrationSql.includes('DROP INDEX IF EXISTS "unique_active_enrollment_idx"'),
+    "enrollment migration drops the old enrollment index"
+  );
+  assert(
+    migrationSql.includes(
+      'CREATE UNIQUE INDEX "unique_active_enrollment_idx" ON "enrollments" USING btree ("org_id","student_id") WHERE status = \'active\';'
+    ),
+    "enrollment migration creates a per-org unique active enrollment index"
+  );
+}
+
 testPassBSchemaColumns();
 testLatestPassBMigrationShape();
+testEnrollmentUniquenessContract();
 
 if (failed.length > 0) {
   console.error("Failed:", failed);

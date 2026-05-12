@@ -108,7 +108,7 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
 3. **3.3 Middleware and handlers**
   - Resolve `req.orgId` from JWT + membership validation.
   - Enforce org filter on all CRUD for scoped resources.
-  - Runtime enrollment semantics are now one active enrollment per org; only revisit schema-level uniqueness if product rules or DB enforcement require it later.
+  - Runtime and schema-level enrollment semantics are now one active enrollment per org, enforced by a partial unique index on `(org_id, student_id)` for active rows.
 
 **Done when:** Automated or manual checks show Org A data never returned under Org B context; indexes in place for `org_id` filters.
 

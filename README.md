@@ -31,8 +31,13 @@ Domain modules (Identity & Access, Content Publishing, Media Pipeline, Batch & C
    See [Environment Variables](docs/essentials/environment-variables.md) for all variables.
 4. Initialize the database:
    ```bash
-   npm run db:push
+   npm run db:reset
+   npm run build:types
+   npm run db:seed-orgs
+   npm run db:seed-dev
+   npm run db:seed
    ```
+   `npm run db:seed` is optional if you do not need curriculum data immediately.
 5. Start all services (API + both portals):
    ```bash
    npm run dev:all

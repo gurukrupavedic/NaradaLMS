@@ -24,7 +24,7 @@ Schema work landed in an expand/migrate/contract sequence so the integration bra
 | **Migrate** | Layer 2 | Application code moved to memberships plus `is_super_admin` instead of global role/status. The rollout was tracked in [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md). |
 | **Contract** | Slice `slice-1.4-schema-contract` (after Layer 2) | Removed `users.roles`, `users.status`, and `users_status_check` once the cleanup tracker reached zero. |
 
-Dev and CI apply versioned SQL from `./migrations/` via `drizzle-kit migrate` after a clean schema reset (see [implementation-checklist.md](./implementation-checklist.md) item 1.4).
+Dev and CI apply versioned SQL from repo-root `migrations/` via `drizzle-kit migrate` after a clean schema reset. The canonical local reset path is `npm run db:reset` via `scripts/test/db-reset.ps1`; see [db-audit-remediation-checklist.md](./db-audit-remediation-checklist.md) for support status across DB helpers.
 
 ---
 
@@ -120,7 +120,7 @@ Current shape:
 Constraints:
 
 - unique membership per user/org: `UNIQUE (user_id, org_id)`
-- role values are still policy-validated in application code; there is no DB-level role enum/check today
+- role values are policy-validated in application code and also constrained by the live `user_organizations_roles_subset_check` DB check so only supported role labels can be stored
 - status CHECK: `('pending','active','inactive','rejected')`
 - student-role invariants remain policy-level rather than DB-enforced
 
@@ -172,6 +172,7 @@ Examples:
 
 - `tracks.title` is now `UNIQUE (org_id, title)`
 - `batches.batch_code` is now `UNIQUE (org_id, batch_code)`
+- active enrollments now use a partial unique index on `(org_id, student_id)` where `status = 'active'`
 - progress/enrollment uniqueness and indexes now carry org context where the live schema needs it
 
 These constraints now ship together with org-scoped queries and guards in the live server code.
@@ -209,12 +210,13 @@ In `packages/types/src/schema.ts`:
 
 Per product decision, legacy backfill complexity was skipped in favor of clean dev resets/reseeds:
 
-- reset/purge dev database (drop `public` schema, recreate empty `public`)
-- apply **versioned** migrations on clean DB (`drizzle-kit generate` produces SQL under `./migrations/`; `drizzle-kit migrate` applies them in order — see dev reset script)
+- reset/purge dev database (supported path drops `public` and `drizzle`, then recreates empty `public`)
+- apply **versioned** migrations on clean DB (`drizzle-kit generate` produces SQL under repo-root `migrations/`; `drizzle-kit migrate` applies them in order)
 - reseed with:
   - org rows (`slmts`, `rr`)
   - super-admin user (Kashyap account in dev)
   - baseline memberships/roles for testing
+  - optional curriculum data from `server/seeds/curriculum.json`
 
 During expand (slice 1.1), legacy `users.roles` / `users.status` remained temporarily; no dual-write bridge was introduced. After contract (slice 1.4), those columns are gone for the live schema.
 
