@@ -105,7 +105,7 @@ Verification note for **5.2**:
 
 - [x] **6.1** Register -> pending -> super-admin approve -> SLMTS student access works.
 - [x] **6.2** Cross-org isolation smoke with minimal RR data.
-- [ ] **6.3** Second-org join flow: RR portal -> pending RR membership -> approve.
+- [x] **6.3** Second-org join flow: RR portal -> pending RR membership -> approve.
 - [ ] **6.4** Document known gaps (email, questionnaire) as out of scope.
 
 Verification note for **6.1**:
@@ -121,6 +121,13 @@ Verification note for **6.2**:
 - Official slice verification passed against a local API instance using `API_BASE_URL=http://localhost:5201 npm run test:rr-isolation-smoke`.
 - The smoke upserted an active RR membership for the seeded super-admin without changing seed defaults, created unique SLMTS/RR marker tracks and batches, confirmed the default session stayed on active SLMTS, then switched to RR with `POST /api/auth/switch-org`.
 - In SLMTS context, the smoke saw only the SLMTS marker data and got `404` for direct RR track/batch lookups; after switching to RR, it saw only the RR marker data and got `404` for direct SLMTS track/batch lookups.
+
+Verification note for **6.3**:
+- Local slice verification passed on `2026-05-12` via `npm run check`, `npx tsx scripts/test/identity-request-membership.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/student-tenant-config.test.ts`.
+- The student portal now evaluates access against the **current tenant membership** rather than global `hasActiveMembership`, exposes a tenant-aware pending/no-access screen, and allows an authenticated existing user to request membership in the current tenant through `POST /api/auth/request-membership`.
+- The dedicated smoke harness now lives at [`scripts/test/second-org-join-smoke.test.ts`](../../../scripts/test/second-org-join-smoke.test.ts) and is exposed as `npm run test:second-org-join-smoke`.
+- Official slice verification passed against the branch API using `API_BASE_URL=http://localhost:5202 DEV_SUPERADMIN_PASSWORD=dev-superadmin-pass npm run test:second-org-join-smoke`.
+- The smoke created a new SLMTS user, approved the SLMTS membership through the super-admin governance API, requested RR membership through the new authenticated tenant-aware endpoint, verified `/api/auth/me` reported RR as `pending`, confirmed `POST /api/auth/switch-org` returned `403` while RR remained pending, then approved RR and verified `switch-org` succeeded and RR-scoped content became visible.
 
 ---
 

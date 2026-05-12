@@ -174,7 +174,18 @@ Before calling SLMTS pilot-ready:
 - **SLMTS assertion:** initial `/api/auth/me` stayed on active SLMTS, `GET /api/content/tracks` and `GET /api/batches` included only SLMTS marker data, and direct RR lookups returned `404`.
 - **RR assertion:** after switching org to RR, `/api/auth/me` reported `currentOrgId = rr`, `GET /api/content/tracks` and `GET /api/batches` included only RR marker data, and direct SLMTS lookups returned `404`.
 - **Result:** `npm run test:rr-isolation-smoke` passed with `rr-isolation-smoke: 16 assertions passed.`
-- **Still outstanding in the pilot gate:** checklist `6.3` second-org join verification and `6.4` documentation of known out-of-scope gaps.
+- **Still outstanding in the pilot gate:** checklist `6.4` documentation of known out-of-scope gaps.
+
+---
+
+### 2026-05-12 — checklist 6.3 validated
+
+- **Targeted regression checks:** `npm run check`, `npx tsx scripts/test/identity-request-membership.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/student-tenant-config.test.ts` all passed on the slice branch.
+- **Dedicated smoke command:** `API_BASE_URL=http://localhost:5202 DEV_SUPERADMIN_PASSWORD=dev-superadmin-pass npm run test:second-org-join-smoke`
+- **Smoke setup:** the new harness in `scripts/test/second-org-join-smoke.test.ts` registers a unique SLMTS user, approves the SLMTS membership as super-admin, creates a tenant-scoped RR marker track, requests RR membership through `POST /api/auth/request-membership`, and then uses live cookies plus `POST /api/auth/switch-org` to verify session truth before and after approval.
+- **Pending RR assertion:** after the request, `/api/auth/me` showed active SLMTS plus pending RR membership, and `POST /api/auth/switch-org` returned `403` for the RR org while approval was still pending.
+- **Approved RR assertion:** after super-admin approval, `POST /api/auth/switch-org` returned `200`, `/api/auth/me` reported `currentOrgId = rr`, and `GET /api/content/tracks` included the RR marker track.
+- **Result:** `npm run test:second-org-join-smoke` passed with `second-org-join-smoke: 17 assertions passed.`
 
 ---
 

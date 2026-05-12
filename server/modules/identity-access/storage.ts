@@ -154,6 +154,56 @@ export class IdentityStorage {
   }
 
   /**
+   * Lookup one membership row for a given user and organization.
+   */
+  async getMembershipByUserAndOrg(
+    userId: string,
+    orgId: string
+  ): Promise<{
+    membershipId: string;
+    userId: string;
+    orgId: string;
+    orgSlug: string;
+    orgName: string;
+    roles: string[];
+    status: string;
+  } | null> {
+    const [row] = await db
+      .select({
+        membershipId: userOrganizations.id,
+        userId: userOrganizations.userId,
+        orgId: userOrganizations.orgId,
+        orgSlug: organizations.slug,
+        orgName: organizations.name,
+        roles: userOrganizations.roles,
+        status: userOrganizations.status,
+      })
+      .from(userOrganizations)
+      .innerJoin(organizations, eq(organizations.id, userOrganizations.orgId))
+      .where(
+        and(
+          eq(userOrganizations.userId, userId),
+          eq(userOrganizations.orgId, orgId)
+        )
+      )
+      .limit(1);
+
+    if (!row) {
+      return null;
+    }
+
+    return {
+      membershipId: row.membershipId,
+      userId: row.userId,
+      orgId: row.orgId,
+      orgSlug: row.orgSlug,
+      orgName: row.orgName,
+      roles: [...(row.roles ?? [])],
+      status: row.status,
+    };
+  }
+
+  /**
    * Insert or update a single org membership row (register / OAuth bootstrap).
    */
   async upsertOrgMembership(params: {

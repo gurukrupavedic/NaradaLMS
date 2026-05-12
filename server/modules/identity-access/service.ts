@@ -117,6 +117,78 @@ export class IdentityService {
     };
   }
 
+  async requestMembership(data: { userId: string; tenantSlug: string }) {
+    const org = await identityStorage.getOrganizationBySlug(data.tenantSlug);
+    if (!org) {
+      throw new Error("Organization not available for membership request");
+    }
+
+    const existingMembership = await identityStorage.getMembershipByUserAndOrg(
+      data.userId,
+      org.id
+    );
+
+    if (existingMembership?.status === "active") {
+      return {
+        result: "already_active" as const,
+        membership: {
+          orgId: existingMembership.orgId,
+          orgSlug: existingMembership.orgSlug,
+          status: existingMembership.status,
+        },
+      };
+    }
+
+    if (existingMembership?.status === "pending") {
+      return {
+        result: "already_pending" as const,
+        membership: {
+          orgId: existingMembership.orgId,
+          orgSlug: existingMembership.orgSlug,
+          status: existingMembership.status,
+        },
+      };
+    }
+
+    if (existingMembership?.status === "inactive") {
+      return {
+        result: "inactive_membership" as const,
+        membership: {
+          orgId: existingMembership.orgId,
+          orgSlug: existingMembership.orgSlug,
+          status: existingMembership.status,
+        },
+      };
+    }
+
+    if (existingMembership?.status === "rejected") {
+      return {
+        result: "rejected_membership" as const,
+        membership: {
+          orgId: existingMembership.orgId,
+          orgSlug: existingMembership.orgSlug,
+          status: existingMembership.status,
+        },
+      };
+    }
+
+    await identityStorage.upsertOrgMembership({
+      userId: data.userId,
+      orgId: org.id,
+      roles: ["student"],
+      status: "pending",
+    });
+
+    return {
+      result: "created_pending" as const,
+      membership: {
+        orgId: org.id,
+        orgSlug: org.slug,
+        status: "pending" as const,
+      },
+    };
+  }
+
   /**
    * Authenticate user with email and password
    */

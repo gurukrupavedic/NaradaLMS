@@ -19,7 +19,7 @@ The following **roadmap slices are implemented and merged** unless your checkout
 - **Layer 3 Pass B:** physical `org_id` coverage is now in place for media, progress, and audit tables, including backfills, route/service/storage org scoping, and physical `audit_logs.org_id` filtering.
 - **Layer 4.1 / 4.2:** tenant config foundation and the authenticated student-shell branding follow-up are now merged for the student portal: typed tenant configs for `slmts` / `rr`, `TENANT`-driven auth branding + root metadata with client-runtime mirroring, tenant-aware register request building, tenant-branded authenticated shell and pending state, and dual student dev scripts on `3000` / `3010`. The auth page's left hero intentionally remains Narada-branded across tenants.
 - **Admin portal:** **5.1**–**5.4** are now in place, including the dedicated user-management org filter UI plus the supporting governance query/count alignment for filtered pagination and status tabs.
-- **Next up:** checklists **6.1** and **6.2** are now confirmed locally, so default to **6.3** second-org join verification next, then **6.4** documentation of known gaps, unless you intentionally want to keep pushing Layer 4 with broader auth-client or OAuth tenant propagation beyond the current register flow.
+- **Next up:** checklists **6.1**, **6.2**, and **6.3** are now confirmed locally, so default to **6.4** documentation of known gaps next, unless you intentionally want to keep pushing Layer 4 with broader auth-client or OAuth tenant propagation beyond the current register flow.
 - **Deferred:** checklist **2.12** OAuth parity unless Google OAuth becomes real product scope — see [implementation-status.md](./implementation-status.md).
 
 ---
