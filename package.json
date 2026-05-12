@@ -22,6 +22,7 @@
     "auth:test": "tsx scripts/test/auth-test.ts",
     "smoke:batches": "tsx scripts/test/admin-batches-smoke.ts",
     "test:smoke": "tsx scripts/test/api-smoke-test.ts",
+    "test:rr-isolation-smoke": "tsx scripts/test/rr-isolation-smoke.test.ts",
     "test:content": "tsx scripts/test/content-smoke.ts",
     "test:format-date": "tsx scripts/test/format-date.test.ts",
     "test:build": "powershell -ExecutionPolicy Bypass -File scripts/test/build-check.ps1",
