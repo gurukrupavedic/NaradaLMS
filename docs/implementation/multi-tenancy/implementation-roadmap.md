@@ -20,7 +20,7 @@ The following **roadmap slices are implemented and merged** unless your checkout
 - **Layer 4.1 / 4.2 / 4.4:** tenant config foundation, authenticated student-shell branding, and tenant-aware OAuth propagation are now merged for the student portal: typed tenant configs for `slmts` / `rr`, `TENANT`-driven auth branding + root metadata with client-runtime mirroring, tenant-aware register request building, tenant-branded authenticated shell and pending state, dual student dev scripts on `3000` / `3010`, and Google OAuth start/callback handling that preserves the originating tenant and post-auth return target through server-signed state. The auth page's left hero intentionally remains Narada-branded across tenants.
 - **Admin portal:** **5.1**–**5.4** are now in place, including the dedicated user-management org filter UI plus the supporting governance query/count alignment for filtered pagination and status tabs.
 - **Pilot closeout:** checklists **6.1** through **6.4** are now confirmed or documented locally, including the explicit out-of-scope gap list captured during pilot validation.
-- **Next up:** optional cleanup or operational follow-up, such as `requireOrgRole` naming cleanup, governance API-surface extras, or production cookie/subdomain verification — see [implementation-status.md](./implementation-status.md).
+- **Next up:** optional governance API-surface extras or operational follow-up, such as membership add/delete endpoints for real operator workflows, or production cookie/subdomain verification — see [implementation-status.md](./implementation-status.md).
 
 ---
 
