@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "cross-env TENANT=slmts PORT=3000 next dev -p 3000",
     "dev:slmts": "cross-env TENANT=slmts PORT=3000 next dev -p 3000",
-    "dev:rr": "cross-env TENANT=rr PORT=3010 next dev -p 3010",
+    "dev:rr": "cross-env TENANT=rr PORT=3001 next dev -p 3001",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

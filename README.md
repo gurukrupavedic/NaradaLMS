@@ -7,8 +7,8 @@ NaradaLMS is a modern, multilingual Learning Management System purpose-built for
 The project is a **monorepo** with a shared API server and two Next.js portals:
 
 - **Server** (Express API): Authentication, content, batches, media, admin. Runs on port 5000.
-- **Student Portal** (`apps/student-portal`): Student learning experience. Next.js on port 3000.
-- **Admin Portal** (`apps/admin-portal`): Admin, instructors, content studio. Next.js on port 3001.
+- **Student Portal** (`apps/student-portal`): Student learning experience. Local tenant instances run on port 3000 (SLMTS) and 3001 (RR).
+- **Admin Portal** (`apps/admin-portal`): Admin, instructors, content studio. Next.js on port 3010.
 - **Shared packages**: `packages/types`, `packages/ui` for types and shared UI.
 
 Domain modules (Identity & Access, Content Publishing, Media Pipeline, Batch & Cohort, Learning Delivery, System Admin) live in the server; the portals consume the API.

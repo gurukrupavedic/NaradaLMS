@@ -85,10 +85,10 @@ Pass A is implemented in slice `slice-3.a-core-org-isolation` and should now be 
 ## 4) Layer 4 — Student chameleon (config)
 
 - [x] **4.1** Add tenant config structure + TypeScript types for tenant config. *(Repo-equivalent landed under `apps/student-portal/src/config/tenants/` for `slmts` and `rr`.)*
-- [x] **4.2** Wire `TENANT` env (and `PORT` for RR on `3010` if using separate dev processes).
+- [x] **4.2** Wire `TENANT` env (and `PORT` for RR on `3001` if using separate dev processes).
 - [x] **4.3** Continue replacing remaining student-portal hardcoded branding with tenant config. *(The authenticated shell/header and pending-approval surface now resolve tenant branding from config; the auth page's left hero intentionally remains Narada-branded across tenants as a shared product-brand surface.)*
 - [x] **4.4** Extend tenant-aware client behavior beyond the register flow as needed. *(Student/admin auth pages now send tenant slug and post-auth return intent to `/auth/google`, the server signs/verifies the resulting OAuth `state`, the callback resolves the originating tenant before membership creation/backfill, and portal-initiated callbacks return to the originating student/admin instance instead of relying only on `DEFAULT_TENANT_SLUG` and `FRONTEND_URL`.)*
-- [x] **4.5** Document dev commands in app `package.json` (SLMTS :3000, RR :3010).
+- [x] **4.5** Document dev commands in app `package.json` (SLMTS :3000, RR :3001).
 
 Verification note for **4.4**:
 

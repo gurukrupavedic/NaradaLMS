@@ -15,8 +15,8 @@
 | Component | Location | Runtime |
 | --------- | -------- | ------- |
 | **API** | `server/` | Express on port `5000` |
-| **Student Portal** | `apps/student-portal/` | Next.js 15 App Router, tenant-aware local instances on `3000` (SLMTS) and `3010` (RR) |
-| **Admin Portal** | `apps/admin-portal/` | Next.js 15 App Router on `3001` |
+| **Student Portal** | `apps/student-portal/` | Next.js 15 App Router, tenant-aware local instances on `3000` (SLMTS) and `3001` (RR) |
+| **Admin Portal** | `apps/admin-portal/` | Next.js 15 App Router on `3010` |
 
 The repo is orchestrated by **Turborepo** (`turbo.json`) with **npm workspaces** across `apps/*` and `packages/*`.
 

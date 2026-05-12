@@ -17,7 +17,7 @@ The following **roadmap slices are implemented and merged** unless your checkout
 - **Layer 2:** **2.1**–**2.5** plus **2.12** JWT, membership-first auth, org switch, **super-admin governance**, governance event/audit alignment, org-admin **directory** API, and Google OAuth parity with the same tenant membership approval policy as local register / second-org join.
 - **Layer 3 Pass A:** core org isolation on `tracks`, `chapters`, `batches`, and `enrollments`, plus org-scoped handler/query enforcement and fresh DB verification.
 - **Layer 3 Pass B:** physical `org_id` coverage is now in place for media, progress, and audit tables, including backfills, route/service/storage org scoping, and physical `audit_logs.org_id` filtering.
-- **Layer 4.1 / 4.2 / 4.4:** tenant config foundation, authenticated student-shell branding, and tenant-aware OAuth propagation are now merged for the student portal: typed tenant configs for `slmts` / `rr`, `TENANT`-driven auth branding + root metadata with client-runtime mirroring, tenant-aware register request building, tenant-branded authenticated shell and pending state, dual student dev scripts on `3000` / `3010`, and Google OAuth start/callback handling that preserves the originating tenant and post-auth return target through server-signed state. The auth page's left hero intentionally remains Narada-branded across tenants.
+- **Layer 4.1 / 4.2 / 4.4:** tenant config foundation, authenticated student-shell branding, and tenant-aware OAuth propagation are now merged for the student portal: typed tenant configs for `slmts` / `rr`, `TENANT`-driven auth branding + root metadata with client-runtime mirroring, tenant-aware register request building, tenant-branded authenticated shell and pending state, dual student dev scripts on `3000` / `3001`, and Google OAuth start/callback handling that preserves the originating tenant and post-auth return target through server-signed state. The auth page's left hero intentionally remains Narada-branded across tenants.
 - **Admin portal:** **5.1**–**5.4** are now in place, including the dedicated user-management org filter UI plus the supporting governance query/count alignment for filtered pagination and status tabs.
 - **Pilot closeout:** checklists **6.1** through **6.4** are now confirmed or documented locally, including the explicit out-of-scope gap list captured during pilot validation.
 - **Next up:** optional governance API-surface extras or operational follow-up, such as membership add/delete endpoints for real operator workflows, or production cookie/subdomain verification — see [implementation-status.md](./implementation-status.md).
@@ -122,7 +122,7 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
 
 1. **4.1 Tenant config package**
   - `config/tenants/slmts/`, `config/tenants/rr/` (or repo-equivalent path) with typed config + assets.
-    - Document `npm` scripts: SLMTS on `3000`, RR on `3010` (admin `3001`, API `5000` unchanged).
+    - Document `npm` scripts: SLMTS on `3000`, RR on `3001` (admin `3010`, API `5000` unchanged).
     - Status: **merged** on `multi-tenancy` via `slice-4.1-tenant-config`, using the repo-equivalent layout under `apps/student-portal/src/config/tenants/`.
 2. **4.2 Replace hardcoded tenant assets in student portal**
   - e.g. auth page and headers: load from tenant config, not static SLMTS-only imports.

@@ -136,13 +136,13 @@ Verification note for **1.4-contract**:
 ## Layer 4 — Student chameleon verification
 
 - Start student portal with `TENANT=slmts` on port **3000**: logo and display name match SLMTS config.
-- Start second instance with `TENANT=rr` on port **3010**: logo and display name match RR config.
+- Start second instance with `TENANT=rr` on port **3001**: logo and display name match RR config.
 - Confirm the auth page's **left half remains Narada-branded** on both student instances.
 - Confirm the tenant-facing auth form area and root metadata differ between the two instances.
 - Confirm the authenticated shell/header and pending-approval surface differ by tenant between the two instances.
 - Confirm register requests no longer hardcode `slmts`; tenant slug/header should match the running instance.
 - Confirm tenant-initiated Google OAuth sends the running tenant plus a safe post-auth return URL to `/auth/google`, and that callback handling returns to the originating portal instance only when the provider round-trip preserves verified `state`.
-- Admin portal on **3001** unchanged (Narada branding).
+- Admin portal on **3010** unchanged (Narada branding).
 - API on **5000** serves both; tenant header/env causes correct org on register.
 
 ---

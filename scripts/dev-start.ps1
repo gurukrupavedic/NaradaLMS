@@ -31,7 +31,7 @@ Start-Sleep -Seconds 3
 Write-Host "Starting Student Portal (port 3000)..." -ForegroundColor Cyan
 Start-Process -FilePath "npm" -ArgumentList "run", "dev" -WorkingDirectory "$RepoRoot\apps\student-portal" -WindowStyle Normal
 
-Write-Host "Starting Admin Portal (port 3001)..." -ForegroundColor Cyan
+Write-Host "Starting Admin Portal (port 3010)..." -ForegroundColor Cyan
 Start-Process -FilePath "npm" -ArgumentList "run", "dev" -WorkingDirectory "$RepoRoot\apps\admin-portal" -WindowStyle Normal
 
 Start-Sleep -Seconds 2
@@ -39,5 +39,5 @@ Start-Sleep -Seconds 2
 Write-Host "`nAll services starting:" -ForegroundColor Green
 Write-Host "  API Server:      http://localhost:5000" -ForegroundColor White
 Write-Host "  Student Portal:  http://localhost:3000" -ForegroundColor White
-Write-Host "  Admin Portal:   http://localhost:3001" -ForegroundColor White
+Write-Host "  Admin Portal:   http://localhost:3010" -ForegroundColor White
 Write-Host "`nWait 5-10 seconds for Next.js to compile..." -ForegroundColor Yellow

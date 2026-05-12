@@ -172,7 +172,7 @@ function testTenantGoogleAuthUrlCarriesTenantQueryParameters() {
 
   const authUrl = buildTenantGoogleAuthUrl(
     "http://localhost:5000/api",
-    "http://localhost:3010/vedic-learning",
+    "http://localhost:3001/vedic-learning",
     "rr"
   );
   const parsedUrl = new URL(authUrl);
@@ -189,7 +189,7 @@ function testTenantGoogleAuthUrlCarriesTenantQueryParameters() {
   );
   assertEqual(
     parsedUrl.searchParams.get("returnTo"),
-    "http://localhost:3010/vedic-learning",
+    "http://localhost:3001/vedic-learning",
     "google auth url includes post-auth return url query parameter"
   );
 }

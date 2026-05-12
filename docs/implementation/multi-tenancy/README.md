@@ -90,8 +90,8 @@ The RR isolation smoke (`npm run test:rr-isolation-smoke`) also uses those seede
 To avoid collisions with existing services:
 
 - Student portal (SLMTS): `3000`
-- Student portal (RR): `3010`
-- Admin portal: `3001`
+- Student portal (RR): `3001`
+- Admin portal: `3010`
 - API server: `5000`
 
-This preserves current admin/server behavior while enabling side-by-side tenant verification for student portal.
+This keeps SLMTS on `3000`, moves the RR student instance onto `3001`, and leaves the admin portal isolated on `3010` for side-by-side local verification.

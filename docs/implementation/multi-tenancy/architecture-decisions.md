@@ -107,11 +107,11 @@ Org admins cannot perform user governance actions.
 To avoid collisions with existing services:
 
 - Student portal (SLMTS): `3000`
-- Student portal (RR): `3010`
-- Admin portal: `3001`
+- Student portal (RR): `3001`
+- Admin portal: `3010`
 - API server: `5000`
 
-This preserves current admin/backend behavior and enables optional side-by-side student tenant validation.
+This keeps SLMTS on `3000`, uses `3001` for the RR student instance, and keeps the admin portal isolated on `3010` for local tenant validation.
 
 ---
 
