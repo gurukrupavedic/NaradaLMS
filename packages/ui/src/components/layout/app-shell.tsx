@@ -34,9 +34,11 @@ interface AppShellProps {
     contentContextLabel?: string | null
     /** Paths on which the browser window scrolls instead of the main content (e.g. ['/vedic-learning']). Other pages keep viewport-constrained inner scroll. */
     documentScrollPaths?: string[]
+    profileHref?: string
+    settingsHref?: string
 }
 
-export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation, contentContextLabel, documentScrollPaths }: AppShellProps) {
+export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation, contentContextLabel, documentScrollPaths, profileHref, settingsHref }: AppShellProps) {
     // We need to pass currentPath to Sidebar for active state
     // Since this is in @narada/ui, we assume usage in Next.js app context
     const pathname = usePathname()
@@ -60,6 +62,8 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                 customNavigation={customNavigation}
                 contextualNavigation={contextualNavigation}
                 contentContextLabel={contentContextLabel}
+                profileHref={profileHref}
+                settingsHref={settingsHref}
             />
             <SidebarInset>
                 <header className="flex shrink-0 items-center justify-between gap-2 min-h-[4.25rem] h-[4.25rem] sm:min-h-16 sm:h-16 lg:min-h-14 lg:h-14 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:min-h-12 group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b bg-background px-3 sm:px-4">

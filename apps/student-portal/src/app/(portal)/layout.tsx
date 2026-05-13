@@ -84,6 +84,8 @@ export default function PortalLayout({
                 userRoles={userRoles}
                 onLogout={logout}
                 homeHref="/vedic-learning"
+                profileHref="/profile"
+                settingsHref="/settings"
                 contentContextLabel={contentContextLabel}
                 contextualNavigation={instructorContextualNavigation}
                 documentScrollPaths={["/vedic-learning", "/instructor/students"]}

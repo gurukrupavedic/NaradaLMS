@@ -32,6 +32,8 @@ import {
 export function NavUser({
     user,
     onLogout,
+    profileHref = "/app/profile",
+    settingsHref = "/app/settings",
 }: {
     user: {
         name: string;
@@ -39,6 +41,8 @@ export function NavUser({
         avatar?: string;
     };
     onLogout?: () => void;
+    profileHref?: string;
+    settingsHref?: string;
 }) {
     const { isMobile } = useSidebar();
 
@@ -89,13 +93,13 @@ export function NavUser({
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
                             <DropdownMenuItem asChild>
-                                <Link href="/app/profile">
+                                <Link href={profileHref}>
                                     <BadgeCheck className="h-4 w-4" />
                                     Profile
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                                <Link href="/app/settings">
+                                <Link href={settingsHref}>
                                     <Settings className="h-4 w-4" />
                                     Settings
                                 </Link>
