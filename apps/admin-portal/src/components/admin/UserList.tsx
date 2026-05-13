@@ -88,6 +88,7 @@ export default function UserList() {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [editingUserId, setEditingUserId] = useState<string | null>(null);
     const [editingRoles, setEditingRoles] = useState<string[]>([]);
+    const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
 
     useEffect(() => {
         const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 300);
@@ -118,11 +119,11 @@ export default function UserList() {
         if (user.status === "pending_approval") return;
         setEditingUserId(user.id);
         setEditingRoles(user.roles ?? []);
+        setIsRoleDialogOpen(true);
     };
 
     const cancelRoleEdit = () => {
-        setEditingUserId(null);
-        setEditingRoles([]);
+        setIsRoleDialogOpen(false);
     };
 
     const handleApprove = (userId: string) => {
@@ -317,8 +318,8 @@ export default function UserList() {
 
             {/* Edit roles dialog */}
             <Dialog
-                open={editingUserId !== null}
-                onOpenChange={(open) => !open && cancelRoleEdit()}
+                open={isRoleDialogOpen}
+                onOpenChange={setIsRoleDialogOpen}
             >
                 <DialogContent
                     className="sm:max-w-[420px] sm:rounded-xl shadow-xl border-border"
