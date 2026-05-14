@@ -54,7 +54,7 @@ export default function AdminLayout({
 
     // Map AuthUser to AppShell user shape (name, email, avatar)
     const shellUser = {
-        name: [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email,
+        name: [user.firstName, user.lastName].filter(Boolean).join(" ") || "User",
         email: user.email,
         avatar: user.profileImageUrl ?? "",
     };
@@ -67,6 +67,8 @@ export default function AdminLayout({
             contextualNavigation={showContextualNav ? contextualNavigation : undefined}
             contentContextLabel={contentContextLabel}
             homeHref="/admin"
+            profileHref="/admin/profile"
+            settingsHref="/admin/settings"
             onLogout={logout}
         >
             {children}
