@@ -178,6 +178,8 @@ export class BatchStorage {
     return {
       ...base,
       track,
+      trackName: track?.title ?? null,
+      status: 'active',   // batches table has no status column; defaulting to 'active'
       primaryInstructor,
       primaryInstructorName,
       coInstructors,
