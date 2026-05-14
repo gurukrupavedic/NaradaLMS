@@ -30,7 +30,28 @@ export class LearningService {
       filters.studentId = requestingUserId;
     }
 
-    return learningStorage.getStudentProgress(filters);
+    const progressRows = await learningStorage.getStudentProgress(filters);
+
+    // Resolve evaluatedBy UUID -> name
+    const evaluatorIds = [...new Set(
+      progressRows.map((p) => p.evaluatedBy).filter((id): id is string => !!id)
+    )];
+    let evaluatorNames: Record<string, string> = {};
+    if (evaluatorIds.length > 0) {
+      const evaluators = await db
+        .select({ id: users.id, firstName: users.firstName, lastName: users.lastName })
+        .from(users)
+        .where(inArray(users.id, evaluatorIds));
+      evaluators.forEach((u) => {
+        const name = [u.firstName, u.lastName].filter(Boolean).join(' ');
+        evaluatorNames[u.id] = name || u.id;
+      });
+    }
+
+    return progressRows.map((p) => ({
+      ...p,
+      evaluatedBy: p.evaluatedBy ? (evaluatorNames[p.evaluatedBy] || p.evaluatedBy) : null,
+    }));
   }
 
   /**
@@ -381,7 +402,8 @@ export class LearningService {
         .from(users)
         .where(inArray(users.id, Array.from(evaluatorIds)));
       evaluators.forEach((user) => {
-        evaluatorNames[user.id] = `${user.firstName} ${user.lastName}`;
+        const name = [user.firstName, user.lastName].filter(Boolean).join(' ');
+        evaluatorNames[user.id] = name || user.id;
       });
     }
 
