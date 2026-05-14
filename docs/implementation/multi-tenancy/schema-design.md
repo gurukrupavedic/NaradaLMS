@@ -24,7 +24,7 @@ Schema work landed in an expand/migrate/contract sequence so the integration bra
 | **Migrate** | Layer 2 | Application code moved to memberships plus `is_super_admin` instead of global role/status. The rollout was tracked in [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md). |
 | **Contract** | Slice `slice-1.4-schema-contract` (after Layer 2) | Removed `users.roles`, `users.status`, and `users_status_check` once the cleanup tracker reached zero. |
 
-Dev and CI apply versioned SQL from repo-root `migrations/` via `drizzle-kit migrate` after a clean schema reset. The canonical local reset path is `npm run db:reset` via `scripts/test/db-reset.ps1`; see [db-audit-remediation-checklist.md](./db-audit-remediation-checklist.md) for support status across DB helpers.
+Dev and CI apply versioned SQL from repo-root `migrations/` via `drizzle-kit migrate` after a clean schema reset. The canonical local reset path is `npm run db:reset` via `scripts/db/reset.ps1`; see [db-audit-remediation-checklist.md](./db-audit-remediation-checklist.md) for support status across DB helpers.
 
 ---
 
@@ -96,9 +96,9 @@ Seeded initial rows:
 - `slmts` (active)
 - `rr` (active)
 
-**Dev seeding:** after migrations (`npm run db:reset` or `npm run db:migrate`), run `npm run db:seed-orgs` to insert these rows idempotently. Implementation: [server/seed-organizations.ts](../../../server/seed-organizations.ts). Display names in the DB use **Pathasala** spelling; canonical API / tenant keys are the slugs `slmts` and `rr`.
+**Dev seeding:** after migrations (`npm run db:reset` or `npm run db:migrate`), run `npm run db:seed-orgs` to insert these rows idempotently. Implementation: [server/db-seeding/seed-organizations.ts](../../../server/db-seeding/seed-organizations.ts). Display names in the DB use **Pathasala** spelling; canonical API / tenant keys are the slugs `slmts` and `rr`.
 
-**Dev bootstrap (super-admin + memberships):** after org seed, run `npm run db:seed-dev` ([server/seed-dev-bootstrap.ts](../../../server/seed-dev-bootstrap.ts)). Requires `ADMIN_EMAIL`; see [environment-setup.md](../../essentials/environment-setup.md) Phase 0b for `DEV_SUPERADMIN_PASSWORD` and related env vars.
+**Dev bootstrap (super-admin + memberships):** after org seed, run `npm run db:seed-dev` ([server/db-seeding/seed-dev-bootstrap.ts](../../../server/db-seeding/seed-dev-bootstrap.ts)). Requires `ADMIN_EMAIL`; see [environment-setup.md](../../essentials/environment-setup.md) Phase 0b for `DEV_SUPERADMIN_PASSWORD` and related env vars.
 
 ---
 

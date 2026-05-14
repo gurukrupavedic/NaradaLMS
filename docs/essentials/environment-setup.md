@@ -62,7 +62,7 @@ After migrations, ensure canonical organization rows exist (`slmts`, `rr`):
 npm run db:seed-orgs
 ```
 
-- **Script**: `server/seed-organizations.ts`
+- **Script**: `server/db-seeding/seed-organizations.ts`
 - Idempotent: safe to re-run. Typical order: `npm run db:reset` (or `db:migrate`), then `db:seed-orgs`, then Phase 0b (below), then `db:seed` if you need curriculum data.
 - **API / registration:** Clients may send **`X-Tenant-Slug: slmts`** or **`rr`** (or JSON `tenantSlug` on `POST /api/auth/register`). If omitted, the API uses **`DEFAULT_TENANT_SLUG`** from `.env` (default `slmts`; see `.env.example`). Multi-tenancy status: [implementation-status.md](../implementation/multi-tenancy/implementation-status.md).
 
@@ -74,7 +74,7 @@ Seeds the account matching **`ADMIN_EMAIL`** as a platform super-admin (`users.i
 npm run db:seed-dev
 ```
 
-- **Script**: `server/seed-dev-bootstrap.ts`
+- **Script**: `server/db-seeding/seed-dev-bootstrap.ts`
 - **Required:** `ADMIN_EMAIL` (same as [server/config.ts](../../server/config.ts) auto-promotion).
 - **When the user row does not exist yet:** set **`DEV_SUPERADMIN_PASSWORD`** (bcrypt-hashed on insert). Re-runs without this variable are fine once the user exists.
 - **Optional:** `DEV_SUPERADMIN_FIRST_NAME`, `DEV_SUPERADMIN_LAST_NAME` (defaults: Dev / SuperAdmin).
@@ -88,7 +88,7 @@ Populates the SLMTS curriculum structure from the checked-in source asset. Use t
 npm run db:seed
 ```
 
-- **Script**: `server/seed-vedic-curriculum.ts`
+- **Script**: `server/db-seeding/seed-vedic-curriculum.ts`
 - **Source**: `server/seeds/curriculum.json`
 
 ### Phase B: First Admin User (Required)
@@ -99,20 +99,15 @@ There are three ways to establish the first administrator:
    Add `ADMIN_EMAIL=your.email@example.com` to your `.env` file. The first time you register via the UI using this email, you will be automatically granted the `admin` role and `active` status.
 2. **Dev seed (multi-tenancy Phase 0b)**:
    After `db:seed-orgs`, run `npm run db:seed-dev` with `ADMIN_EMAIL` and `DEV_SUPERADMIN_PASSWORD` set (see Phase 0b above). Creates or updates the user row, sets `is_super_admin`, and inserts minimal org memberships.
-3. **Manual Utility**:
-   If you have already registered, you can promote yourself via the CLI:
-
-   ```bash
-   npx tsx scripts/utils/update-user-role.ts
-   ```
+3. **Manual database update**:
+   If you have already registered and need to repair local access manually, inspect the current membership rows and update them deliberately. The old hardcoded `update-user-role` helper was removed during script cleanup because it only handled one developer email.
 
 ### Phase C: Sample Testing Data (Optional)
 
 Populates mock users, students, and batches for UI/UX testing.
 
-- **Users**: `npx tsx scripts/seed/create-sample-users.ts`
-- **Batches**: `npx tsx scripts/seed/create-sample-batches.ts`
-- **Students**: `npx tsx scripts/seed/create-30-students.ts`
+- **Pending users**: `npx tsx scripts/seeds/demo/create-sample-users.ts`
+- **Active students**: `npx tsx scripts/seeds/demo/create-30-students.ts`
 
 ---
 
@@ -126,7 +121,7 @@ If your database becomes inconsistent during development, you can perform a "fac
 npm run db:reset
 ```
 
-*Support note: the package-wired reset entrypoint on this repo state is `scripts/test/db-reset.ps1`. `scripts/db/reset-db.ts` is kept as a manual cross-platform fallback, but it is not the primary runbook path.*
+*Support note: the package-wired reset entrypoint on this repo state is `scripts/db/reset.ps1`.*
 
 **Reset Sequence**:
 

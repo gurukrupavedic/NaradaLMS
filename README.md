@@ -50,7 +50,7 @@ Domain modules (Identity & Access, Content Publishing, Media Pipeline, Batch & C
 
 ### Production build
 ```bash
-powershell -ExecutionPolicy Bypass -File scripts/build-all.ps1
+powershell -ExecutionPolicy Bypass -File scripts/build/build-all.ps1
 ```
 Builds the server to `dist/` and both Next.js apps to their `.next/` directories.
 

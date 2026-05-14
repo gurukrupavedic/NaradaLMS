@@ -1,12 +1,12 @@
 # Scripts Directory
 
-This directory contains database reset helpers, local seed utilities, verification harnesses, and one-off operational scripts.
+This directory is organized by what each script is for. Prefer root `npm` scripts for normal workflows; run files directly only when you need a specific manual helper.
 
 ## Safety
 
-Do not run destructive scripts against production.
+Do not run destructive scripts against production. Anything under `maintenance/` is local-only unless explicitly reviewed.
 
-## Supported DB path
+## Supported Local DB Path
 
 For the current multi-tenancy repo state, the supported local DB workflow is:
 
@@ -16,69 +16,83 @@ For the current multi-tenancy repo state, the supported local DB workflow is:
 4. `npm run db:seed-dev`
 5. `npm run db:seed` when curriculum data is needed
 
-The canonical schema authority for that flow is `drizzle.config.ts` -> `packages/types/src/schema.ts` -> repo-root `migrations/`. See `docs/implementation/multi-tenancy/db-audit-remediation-checklist.md` for the full support matrix.
+The canonical schema authority for that flow is `drizzle.config.ts` -> `packages/types/src/schema.ts` -> repo-root `migrations/`.
 
-## Support status
+## Folder Map
 
-| Path | Status | Notes |
+| Folder | Purpose | Status |
 | --- | --- | --- |
-| `test/db-reset.ps1` | `official` | Package-wired reset path. Drops `public` and `drizzle`, then runs `drizzle-kit migrate`. |
-| `db/reset-db.ts` | `manual utility` | Cross-platform helper that mirrors reset + migrate, but is not the package-wired entrypoint. |
-| `seed/` | `manual utility` | Optional local/dev data helpers outside the canonical clean-bootstrap path. |
-| `utils/` | `manual utility` | One-off admin or repair helpers; read each script before use. |
-| `test/` | `manual utility` | Verification harnesses. Prefer the multi-tenancy contract tests listed below for DB/auth/isolation work. |
+| `dev/` | Local startup helpers. | Supported |
+| `db/` | Database reset and inspection helpers. | Supported/manual |
+| `build/` | Build orchestration and build checks. | Supported |
+| `verify/` | Aggregate verification runner. | Supported |
+| `seeds/demo/` | Optional local demo data. | Manual |
+| `maintenance/proficiency/` | Destructive progress/proficiency repair tools. | Manual, high risk |
+| `test/smoke/` | API and flow smoke checks. | Supported where package-wired |
+| `test/contracts/` | Focused regression and contract checks. | Manual |
+| `test/unit/` | Small unit-style scripts. | Supported where package-wired |
 
-## Database helpers
+## Supported Commands
 
-- `test/db-reset.ps1`
-  - Usage: `npm run db:reset` or `.\scripts\test\db-reset.ps1`
-  - Purpose: supported full reset on this repo state
+| Command | Script | Purpose |
+| --- | --- | --- |
+| `npm run dev:all` | `dev/start-all.ps1` | Start API, both student portals, and admin portal. |
+| `npm run db:reset` | `db/reset.ps1` | Drop/recreate app schemas and rerun migrations. |
+| `npm run test:build` | `build/check.ps1` | Run TypeScript and build checks. |
+| `npm run verify` | `verify/all.ps1` | Run the aggregate local verification flow. |
+| `npm run auth:test` | `test/smoke/auth-test.ts` | Authentication smoke/e2e helper. |
+| `npm run smoke:batches` | `test/smoke/admin-batches-smoke.ts` | Batch API smoke check. |
+| `npm run test:smoke` | `test/smoke/api-smoke-test.ts` | General API smoke check. |
+| `npm run test:content` | `test/smoke/content-smoke.ts` | Content smoke check. |
+| `npm run test:rr-isolation-smoke` | `test/smoke/rr-isolation-smoke.test.ts` | RR tenant isolation smoke check. |
+| `npm run test:second-org-join-smoke` | `test/smoke/second-org-join-smoke.test.ts` | Second-organization join flow smoke check. |
+| `npm run test:format-date` | `test/unit/format-date.test.ts` | Date formatting regression check. |
 
-- `db/reset-db.ts`
-  - Usage: `npx tsx scripts/db/reset-db.ts`
-  - Purpose: manual cross-platform fallback for the same reset + migrate flow
+## Canonical Seed Scripts
 
-## Canonical seed scripts
+The canonical seed entrypoints live under `server/db-seeding/` because they are app-level bootstrap scripts:
 
-- `server/seed-organizations.ts`
-  - Usage: `npm run db:seed-orgs`
-  - Purpose: create or update the canonical `slmts` and `rr` organizations
+- `server/db-seeding/seed-organizations.ts`: `npm run db:seed-orgs`
+- `server/db-seeding/seed-dev-bootstrap.ts`: `npm run db:seed-dev`
+- `server/db-seeding/seed-vedic-curriculum.ts`: `npm run db:seed`
 
-- `server/seed-dev-bootstrap.ts`
-  - Usage: `npm run db:seed-dev`
-  - Purpose: create/update the `ADMIN_EMAIL` super-admin and baseline memberships
+## Manual Demo Seeds
 
-- `server/seed-vedic-curriculum.ts`
-  - Usage: `npm run db:seed`
-  - Purpose: seed SLMTS curriculum tracks and chapters from `server/seeds/curriculum.json`
+- `seeds/demo/create-sample-users.ts`: creates pending SLMTS student memberships for local testing.
+- `seeds/demo/create-30-students.ts`: creates a larger active SLMTS student set.
 
-## Optional local/dev seeds
+These are not part of the canonical clean bootstrap path.
 
-- `seed/create-sample-users.ts`: create pending SLMTS student memberships for local testing
-- `seed/create-30-students.ts`: create a larger active SLMTS student set
-- `seed/create-approved-users.ts`: create additional approved users with mixed roles
-- `seed/create-sample-batches.ts`: create sample SLMTS batches for local testing
-- `seed/assign-secondary-instructors.ts`: attach co-instructors to existing batches
+## Maintenance Scripts
 
-## Utilities
+- `maintenance/proficiency/check-and-reset.ts`: fills missing progress rows for enrolled students, then resets proficiency.
+- `maintenance/proficiency/full-reset.ts`: rebuilds proficiency coverage from active student memberships, then resets proficiency.
+- `maintenance/proficiency/reset-all.ts`: resets every existing proficiency row.
 
-- `utils/list-users.ts`: inspect recent users and memberships
-- `utils/update-user-role.ts`: hardcoded local role/membership adjustment helper
-- `utils/check-instructor-batches.ts`: inspect instructor-to-batch assignments
-- `utils/test-e2e-batches.ts`: local batch/enrollment flow helper
-- `utils/check-and-reset-proficiency.ts`: fill missing proficiency rows for enrolled students
-- `utils/full-proficiency-reset.ts`: destructive full proficiency rebuild
-- `utils/reset-all-proficiency.ts`: set all existing proficiency rows to not-started
+These scripts mutate progress data in bulk. Use only on disposable/local data.
 
-## Recommended verification scripts
+## Contract Tests
 
 For multi-tenancy DB or auth changes, start with:
 
-- `npx tsx scripts/test/layer3-pass-a-schema-and-guards.test.ts`
-- `npx tsx scripts/test/layer3-pass-a-isolation.test.ts`
-- `npx tsx scripts/test/layer3-pass-b-schema-and-guards.test.ts`
-- `npx tsx scripts/test/layer3-pass-b-script-compat.test.ts`
-- `npx tsx scripts/test/layer3-pass-b-media-isolation.test.ts`
-- `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts`
-- `npx tsx scripts/test/require-super-admin.test.ts`
-- `npx tsx scripts/test/audit-log-visibility.test.ts`
+- `npx tsx scripts/test/contracts/layer3-pass-a-schema-and-guards.test.ts`
+- `npx tsx scripts/test/contracts/layer3-pass-a-isolation.test.ts`
+- `npx tsx scripts/test/contracts/layer3-pass-b-schema-and-guards.test.ts`
+- `npx tsx scripts/test/contracts/layer3-pass-b-script-compat.test.ts`
+- `npx tsx scripts/test/contracts/layer3-pass-b-media-isolation.test.ts`
+- `npx tsx scripts/test/contracts/layer3-pass-b-progress-audit-isolation.test.ts`
+- `npx tsx scripts/test/contracts/require-super-admin.test.ts`
+- `npx tsx scripts/test/contracts/audit-log-visibility.test.ts`
+
+## Removed Scripts
+
+The following local-only scripts were removed because they were duplicate, stale, hardcoded, or dependent on old assumptions:
+
+- `scripts/db/reset-db.ts`
+- `scripts/utils/check-theme-integrity.js`
+- `scripts/utils/update-user-role.ts`
+- `scripts/utils/check-instructor-batches.ts`
+- `scripts/utils/test-e2e-batches.ts`
+- `scripts/seed/create-approved-users.ts`
+- `scripts/seed/create-sample-batches.ts`
+- `scripts/seed/assign-secondary-instructors.ts`

@@ -50,19 +50,19 @@ Historical SQL only (no app runtime): [server/migrations/004_bundle_c_constraint
 
 | Done | File | Notes |
 | ---- | ---- | ----- |
-| [x] | [scripts/test/api-smoke-test.ts](../../../scripts/test/api-smoke-test.ts) | Governance + directory smoke paths updated |
-| [x] | [scripts/test/layer3-pass-b-progress-audit-isolation.test.ts](../../../scripts/test/layer3-pass-b-progress-audit-isolation.test.ts) | Fixture lookup now resolves students through active org memberships. |
-| [x] | [scripts/test/auth-test.ts](../../../scripts/test/auth-test.ts) | Helper now approves memberships instead of toggling removed user status. |
-| [x] | [scripts/seed/create-approved-users.ts](../../../scripts/seed/create-approved-users.ts) | Seed now creates active SLMTS memberships with membership roles. |
-| [x] | [scripts/seed/create-sample-users.ts](../../../scripts/seed/create-sample-users.ts) | Seed now creates pending SLMTS student memberships. |
-| [x] | [scripts/seed/create-30-students.ts](../../../scripts/seed/create-30-students.ts) | Seed now creates active SLMTS student memberships. |
-| [x] | [scripts/seed/create-sample-batches.ts](../../../scripts/seed/create-sample-batches.ts) | Instructor lookup now uses active SLMTS membership roles. |
-| [x] | [scripts/seed/assign-secondary-instructors.ts](../../../scripts/seed/assign-secondary-instructors.ts) | Instructor lookup now uses active SLMTS membership roles. |
-| [x] | [scripts/utils/list-users.ts](../../../scripts/utils/list-users.ts) | CLI output now summarizes memberships by org. |
-| [x] | [scripts/utils/full-proficiency-reset.ts](../../../scripts/utils/full-proficiency-reset.ts) | Already migrated to active `user_organizations` memberships plus chapter org scoping. |
-| [x] | [scripts/utils/check-instructor-batches.ts](../../../scripts/utils/check-instructor-batches.ts) | Utility no longer reads removed global role/status fields. |
-| [x] | [scripts/utils/test-e2e-batches.ts](../../../scripts/utils/test-e2e-batches.ts) | E2E helper no longer reads removed global role/status fields. |
-| [x] | [scripts/utils/update-user-role.ts](../../../scripts/utils/update-user-role.ts) | Utility now updates SLMTS membership roles instead of `users.roles`. |
+| [x] | [scripts/test/smoke/api-smoke-test.ts](../../../scripts/test/smoke/api-smoke-test.ts) | Governance + directory smoke paths updated |
+| [x] | [scripts/test/contracts/layer3-pass-b-progress-audit-isolation.test.ts](../../../scripts/test/contracts/layer3-pass-b-progress-audit-isolation.test.ts) | Fixture lookup now resolves students through active org memberships. |
+| [x] | [scripts/test/smoke/auth-test.ts](../../../scripts/test/smoke/auth-test.ts) | Helper now approves memberships instead of toggling removed user status. |
+| [x] | `scripts/seed/create-approved-users.ts` | Removed during script cleanup because it depended on a hardcoded approver and random roles. |
+| [x] | [scripts/seeds/demo/create-sample-users.ts](../../../scripts/seeds/demo/create-sample-users.ts) | Seed now creates pending SLMTS student memberships. |
+| [x] | [scripts/seeds/demo/create-30-students.ts](../../../scripts/seeds/demo/create-30-students.ts) | Seed now creates active SLMTS student memberships. |
+| [x] | `scripts/seed/create-sample-batches.ts` | Removed during script cleanup because batch demo data depended on hardcoded creator/instructor assumptions. |
+| [x] | `scripts/seed/assign-secondary-instructors.ts` | Removed during script cleanup because it depended on the removed sample batch helper. |
+| [x] | [scripts/db/list-users.ts](../../../scripts/db/list-users.ts) | CLI output now summarizes memberships by org. |
+| [x] | [scripts/maintenance/proficiency/full-reset.ts](../../../scripts/maintenance/proficiency/full-reset.ts) | Already migrated to active `user_organizations` memberships plus chapter org scoping. |
+| [x] | `scripts/utils/check-instructor-batches.ts` | Removed during script cleanup because it was a hardcoded personal inspection helper. |
+| [x] | `scripts/utils/test-e2e-batches.ts` | Removed during script cleanup because it was a hardcoded personal flow helper. |
+| [x] | `scripts/utils/update-user-role.ts` | Removed during script cleanup because it directly mutated one hardcoded user's SLMTS roles. |
 
 ## Sign-off for slice 1.4
 

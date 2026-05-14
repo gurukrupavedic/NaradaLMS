@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { seedOrganizations } from "./seed-organizations";
-import { seedVedicCurriculum } from "./seed-vedic-curriculum";
+import { seedOrganizations } from "./db-seeding/seed-organizations";
+import { seedVedicCurriculum } from "./db-seeding/seed-vedic-curriculum";
 
 export async function initializeDatabase(): Promise<void> {
   console.log("Initializing database via compatibility wrapper...");

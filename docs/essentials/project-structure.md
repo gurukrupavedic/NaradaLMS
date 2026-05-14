@@ -230,7 +230,10 @@ server/
 ├── db.ts                      # Drizzle database initialization
 ├── database-storage.ts        # Centralized database operations
 ├── init-database.ts           # Compatibility seed wrapper (not primary runbook)
-├── seed-vedic-curriculum.ts   # Canonical curriculum seeding
+├── db-seeding/                # Canonical fresh-database seeds (orgs, dev user, curriculum)
+│   ├── seed-organizations.ts
+│   ├── seed-dev-bootstrap.ts
+│   └── seed-vedic-curriculum.ts
 │
 ├── modules/                   # 6 domain modules
 │   ├── identity-access/

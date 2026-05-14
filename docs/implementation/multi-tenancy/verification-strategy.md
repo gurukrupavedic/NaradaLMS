@@ -23,19 +23,19 @@ Add or extend tests when implementation lands (exact framework TBD per repo conv
 - **Org guard:** scoped route without org context returns 403.
 - **Isolation:** given user A active only in `slmts`, requests with `currentOrgId` = `rr` return 403 or empty for RR-scoped resources.
 - **Governance:** org admin token receives 403 on `membership approve` endpoint; super-admin receives 200.
-- **Governance events:** `npx tsx scripts/test/identity-governance-events.test.ts` validates aligned payloads plus audit subscriber mappings for membership and super-admin governance actions.
-- **Governance gate:** `npx tsx scripts/test/require-super-admin.test.ts` validates 401-without-user, 403-for-org-admin, and pass-through for `isSuperAdmin`.
-- **Audit visibility:** `npx tsx scripts/test/audit-log-visibility.test.ts` validates that org admins are constrained to current-org audit scope while super-admins remain unrestricted.
-- **Admin org switcher helpers:** `npx tsx scripts/test/admin-org-switcher-utils.test.ts` validates switchable-membership filtering, current-org resolution, and org-scoped admin query invalidation predicates used by the admin shell switcher.
-- **Layer 3 schema + guards:** `npx tsx scripts/test/layer3-pass-a-schema-and-guards.test.ts` validates `org_id` columns and `requireOrgContext` wiring on core routers.
-- **Layer 3 isolation:** `npx tsx scripts/test/layer3-pass-a-isolation.test.ts` creates SLMTS/RR fixtures on the same DB and asserts content + batch isolation.
-- **Layer 3 Pass B schema + backfill:** `npx tsx scripts/test/layer3-pass-b-schema-and-guards.test.ts` validates the remaining `org_id` columns, nullable `audit_logs.org_id`, and migration guard/backfill shape.
-- **Layer 3 Pass B media/content isolation:** `npx tsx scripts/test/layer3-pass-b-media-isolation.test.ts` validates org-scoped create/read/update/delete behavior for audio, text segments, media segments, and mappings.
-- **Layer 3 Pass B progress/audit isolation:** `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts` validates org-scoped progress writes/reads, per-org enrollment semantics, and event-handler-backed audit persistence.
-- **Enrollment schema contract:** `npx tsx scripts/test/layer3-pass-b-schema-and-guards.test.ts` also validates the partial unique enrollment index on `(org_id, student_id)` for active rows.
-- **Student tenant-config helpers:** `npx tsx scripts/test/student-tenant-config.test.ts` validates `TENANT` resolution, tenant metadata, and register header/body generation for `slmts` and `rr`.
-- **OAuth tenant propagation:** `npx tsx scripts/test/oauth-tenant-context.test.ts` validates server-signed OAuth `state`, verified tenant parsing, and safe post-auth redirect fallback for allowed, disallowed, and tampered inputs.
-- **OAuth membership parity:** `npx tsx scripts/test/oauth-membership-parity.test.ts` validates that Google OAuth creates pending target-tenant memberships when none exist, preserves pending/active/inactive/rejected memberships as-is, and does not reopen closed memberships.
+- **Governance events:** `npx tsx scripts/test/contracts/identity-governance-events.test.ts` validates aligned payloads plus audit subscriber mappings for membership and super-admin governance actions.
+- **Governance gate:** `npx tsx scripts/test/contracts/require-super-admin.test.ts` validates 401-without-user, 403-for-org-admin, and pass-through for `isSuperAdmin`.
+- **Audit visibility:** `npx tsx scripts/test/contracts/audit-log-visibility.test.ts` validates that org admins are constrained to current-org audit scope while super-admins remain unrestricted.
+- **Admin org switcher helpers:** `npx tsx scripts/test/contracts/admin-org-switcher-utils.test.ts` validates switchable-membership filtering, current-org resolution, and org-scoped admin query invalidation predicates used by the admin shell switcher.
+- **Layer 3 schema + guards:** `npx tsx scripts/test/contracts/layer3-pass-a-schema-and-guards.test.ts` validates `org_id` columns and `requireOrgContext` wiring on core routers.
+- **Layer 3 isolation:** `npx tsx scripts/test/contracts/layer3-pass-a-isolation.test.ts` creates SLMTS/RR fixtures on the same DB and asserts content + batch isolation.
+- **Layer 3 Pass B schema + backfill:** `npx tsx scripts/test/contracts/layer3-pass-b-schema-and-guards.test.ts` validates the remaining `org_id` columns, nullable `audit_logs.org_id`, and migration guard/backfill shape.
+- **Layer 3 Pass B media/content isolation:** `npx tsx scripts/test/contracts/layer3-pass-b-media-isolation.test.ts` validates org-scoped create/read/update/delete behavior for audio, text segments, media segments, and mappings.
+- **Layer 3 Pass B progress/audit isolation:** `npx tsx scripts/test/contracts/layer3-pass-b-progress-audit-isolation.test.ts` validates org-scoped progress writes/reads, per-org enrollment semantics, and event-handler-backed audit persistence.
+- **Enrollment schema contract:** `npx tsx scripts/test/contracts/layer3-pass-b-schema-and-guards.test.ts` also validates the partial unique enrollment index on `(org_id, student_id)` for active rows.
+- **Student tenant-config helpers:** `npx tsx scripts/test/contracts/student-tenant-config.test.ts` validates `TENANT` resolution, tenant metadata, and register header/body generation for `slmts` and `rr`.
+- **OAuth tenant propagation:** `npx tsx scripts/test/contracts/oauth-tenant-context.test.ts` validates server-signed OAuth `state`, verified tenant parsing, and safe post-auth redirect fallback for allowed, disallowed, and tampered inputs.
+- **OAuth membership parity:** `npx tsx scripts/test/contracts/oauth-membership-parity.test.ts` validates that Google OAuth creates pending target-tenant memberships when none exist, preserves pending/active/inactive/rejected memberships as-is, and does not reopen closed memberships.
 - **Register:** creates `user_organizations` row `pending` for slug from tenant header/env.
 
 Until automated tests exist, use the manual scenarios below and record results in the PR/slice notes.
@@ -60,8 +60,8 @@ Run on branch `slice-1.4-schema-contract` once [legacy-users-columns-cleanup.md]
 
 Verification note for **1.4-contract**:
 
-- Verified on `2026-05-12` in the contract slice worktree via `npm run check`, `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`, `npx tsx scripts/test/require-super-admin.test.ts`, `npx tsx scripts/test/audit-log-visibility.test.ts`, `npx tsx scripts/test/admin-user-filters.test.ts`, and `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts`.
-- Additional focused contract regressions now live in `scripts/test/passport-local-membership-auth.test.ts`, `scripts/test/batch-eligible-students-membership.test.ts`, and `scripts/test/admin-stats-membership.test.ts`.
+- Verified on `2026-05-12` in the contract slice worktree via `npm run check`, `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`, `npx tsx scripts/test/contracts/require-super-admin.test.ts`, `npx tsx scripts/test/contracts/audit-log-visibility.test.ts`, `npx tsx scripts/test/contracts/admin-user-filters.test.ts`, and `npx tsx scripts/test/contracts/layer3-pass-b-progress-audit-isolation.test.ts`.
+- Additional focused contract regressions now live in `scripts/test/contracts/passport-local-membership-auth.test.ts`, `scripts/test/contracts/batch-eligible-students-membership.test.ts`, and `scripts/test/contracts/admin-stats-membership.test.ts`.
 
 ---
 
@@ -173,7 +173,7 @@ Before calling SLMTS pilot-ready:
 - **Pending UX:** a new self-serve SLMTS user (`pilot+1747051589@test.local`) registered and logged in successfully, then landed on `http://localhost:3100/pending-approval` with the expected pending copy and the listed `slmts` membership.
 - **Super-admin approval:** the seeded super-admin approved the new SLMTS membership through `POST /api/auth/admin/memberships/:membershipId/approve`.
 - **Approved learning access:** after approval, the same user logged in with `hasActiveMembership: true`, `GET /api/auth/me` returned an active SLMTS membership, `GET /api/content/tracks` returned `200` with `9` tracks, and browser verification confirmed access to `http://localhost:3100/vedic-learning`.
-- **Supporting guard checks:** `npx tsx scripts/test/require-super-admin.test.ts`, `npx tsx scripts/test/audit-log-visibility.test.ts`, `npx tsx scripts/test/layer3-pass-a-isolation.test.ts`, `npx tsx scripts/test/layer3-pass-b-media-isolation.test.ts`, `npx tsx scripts/test/layer3-pass-b-progress-audit-isolation.test.ts`, and `npx tsx scripts/test/student-tenant-config.test.ts` all passed.
+- **Supporting guard checks:** `npx tsx scripts/test/contracts/require-super-admin.test.ts`, `npx tsx scripts/test/contracts/audit-log-visibility.test.ts`, `npx tsx scripts/test/contracts/layer3-pass-a-isolation.test.ts`, `npx tsx scripts/test/contracts/layer3-pass-b-media-isolation.test.ts`, `npx tsx scripts/test/contracts/layer3-pass-b-progress-audit-isolation.test.ts`, and `npx tsx scripts/test/contracts/student-tenant-config.test.ts` all passed.
 - **At that point, still outstanding after `6.1`:** checklist `6.2` RR isolation smoke, `6.3` second-org join verification, and `6.4` documentation of known out-of-scope gaps.
 
 ---
@@ -182,7 +182,7 @@ Before calling SLMTS pilot-ready:
 
 - **Environment reset:** `npm run build:types`, `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`, and `npm run check` all passed on a fresh local database in the slice worktree.
 - **Dedicated smoke command:** `API_BASE_URL=http://localhost:5201 DEV_SUPERADMIN_PASSWORD=dev-superadmin-pass npm run test:rr-isolation-smoke`
-- **Smoke setup:** the new harness in `scripts/test/rr-isolation-smoke.test.ts` logs in as the seeded super-admin (`ADMIN_EMAIL` + `DEV_SUPERADMIN_PASSWORD`), temporarily upserts an active RR membership, creates unique SLMTS/RR marker tracks and batches, and uses live cookies plus `POST /api/auth/switch-org` to verify session truth.
+- **Smoke setup:** the new harness in `scripts/test/smoke/rr-isolation-smoke.test.ts` logs in as the seeded super-admin (`ADMIN_EMAIL` + `DEV_SUPERADMIN_PASSWORD`), temporarily upserts an active RR membership, creates unique SLMTS/RR marker tracks and batches, and uses live cookies plus `POST /api/auth/switch-org` to verify session truth.
 - **SLMTS assertion:** initial `/api/auth/me` stayed on active SLMTS, `GET /api/content/tracks` and `GET /api/batches` included only SLMTS marker data, and direct RR lookups returned `404`.
 - **RR assertion:** after switching org to RR, `/api/auth/me` reported `currentOrgId = rr`, `GET /api/content/tracks` and `GET /api/batches` included only RR marker data, and direct SLMTS lookups returned `404`.
 - **Result:** `npm run test:rr-isolation-smoke` passed with `rr-isolation-smoke: 16 assertions passed.`
@@ -192,9 +192,9 @@ Before calling SLMTS pilot-ready:
 
 ### 2026-05-12 — checklist 6.3 validated
 
-- **Targeted regression checks:** `npm run check`, `npx tsx scripts/test/identity-request-membership.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/student-tenant-config.test.ts` all passed on merged `multi-tenancy`.
+- **Targeted regression checks:** `npm run check`, `npx tsx scripts/test/contracts/identity-request-membership.test.ts`, `npx tsx scripts/test/contracts/student-tenant-session.test.ts`, and `npx tsx scripts/test/contracts/student-tenant-config.test.ts` all passed on merged `multi-tenancy`.
 - **Dedicated smoke command:** `API_BASE_URL=http://localhost:5203 DEV_SUPERADMIN_PASSWORD=dev-superadmin-pass npm run test:second-org-join-smoke`
-- **Smoke setup:** the new harness in `scripts/test/second-org-join-smoke.test.ts` registers a unique SLMTS user, approves the SLMTS membership as super-admin, creates a tenant-scoped RR marker track, requests RR membership through `POST /api/auth/request-membership`, and then uses live cookies plus `POST /api/auth/switch-org` to verify session truth before and after approval.
+- **Smoke setup:** the new harness in `scripts/test/smoke/second-org-join-smoke.test.ts` registers a unique SLMTS user, approves the SLMTS membership as super-admin, creates a tenant-scoped RR marker track, requests RR membership through `POST /api/auth/request-membership`, and then uses live cookies plus `POST /api/auth/switch-org` to verify session truth before and after approval.
 - **Pending RR assertion:** after the request, `/api/auth/me` showed active SLMTS plus pending RR membership, and `POST /api/auth/switch-org` returned `403` for the RR org while approval was still pending.
 - **Approved RR assertion:** after super-admin approval, `POST /api/auth/switch-org` returned `200`, `/api/auth/me` reported `currentOrgId = rr`, and `GET /api/content/tracks` included the RR marker track.
 - **Portal behavior covered by this slice:** the student portal now computes current-tenant access state from `memberships[]`, exposes the RR request-access action on the pending page, and latches failed auto-switch attempts so users do not get trapped in a retry loop.
@@ -204,18 +204,18 @@ Before calling SLMTS pilot-ready:
 
 ### 2026-05-12 — checklist 4.4 validated
 
-- **Focused verification in the slice worktree:** `npm run build:types`, `npm run check`, `npx tsx scripts/test/student-tenant-config.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/oauth-tenant-context.test.ts` all passed.
-- **Merged-branch verification also passed:** after the local-origin follow-up landed on `multi-tenancy`, `npm run build:types`, `npm run check`, `npx tsx scripts/test/student-tenant-config.test.ts`, `npx tsx scripts/test/student-tenant-session.test.ts`, and `npx tsx scripts/test/oauth-tenant-context.test.ts` passed again on the integration branch.
+- **Focused verification in the slice worktree:** `npm run build:types`, `npm run check`, `npx tsx scripts/test/contracts/student-tenant-config.test.ts`, `npx tsx scripts/test/contracts/student-tenant-session.test.ts`, and `npx tsx scripts/test/contracts/oauth-tenant-context.test.ts` all passed.
+- **Merged-branch verification also passed:** after the local-origin follow-up landed on `multi-tenancy`, `npm run build:types`, `npm run check`, `npx tsx scripts/test/contracts/student-tenant-config.test.ts`, `npx tsx scripts/test/contracts/student-tenant-session.test.ts`, and `npx tsx scripts/test/contracts/oauth-tenant-context.test.ts` passed again on the integration branch.
 - **Student OAuth propagation covered:** the student tenant helper now builds Google OAuth URLs with explicit `tenantSlug` plus a safe `returnTo`, and the server tenant-context helper now signs/verifies OAuth `state` before resolving tenant context or callback redirect targets.
 - **Redirect safety covered:** callback redirect resolution now accepts configured local origins and falls back to `FRONTEND_URL` for unknown origins instead of trusting arbitrary callback destinations.
 - **Callback UX covered in code:** failed or unauthorized OAuth callbacks now return to the auth pages with explicit error codes instead of dropping users into protected-route redirect loops.
-- **Limit of current evidence:** `npx tsx scripts/test/identity-request-membership.test.ts` could not be rerun in the isolated worktree because `DATABASE_URL` was unavailable there, and no live Google provider/browser round-trip was run in this slice.
+- **Limit of current evidence:** `npx tsx scripts/test/contracts/identity-request-membership.test.ts` could not be rerun in the isolated worktree because `DATABASE_URL` was unavailable there, and no live Google provider/browser round-trip was run in this slice.
 
 ---
 
 ### 2026-05-12 — checklist 2.12 validated
 
-- **Focused OAuth-policy verification:** `npm run check`, `npx tsx scripts/test/oauth-membership-parity.test.ts`, `npx tsx scripts/test/oauth-tenant-context.test.ts`, and `npx tsx scripts/test/identity-request-membership.test.ts` all passed on the slice branch.
+- **Focused OAuth-policy verification:** `npm run check`, `npx tsx scripts/test/contracts/oauth-membership-parity.test.ts`, `npx tsx scripts/test/contracts/oauth-tenant-context.test.ts`, and `npx tsx scripts/test/contracts/identity-request-membership.test.ts` all passed on the slice branch.
 - **Policy outcome covered:** Google OAuth now reuses the shared membership-first tenant policy, so new or cross-org users without a target-tenant membership land in `pending`, active memberships continue to log in normally, and inactive/rejected memberships stay closed.
 - **Scope boundary held:** tenant resolution, signed OAuth `state`, and safe post-auth redirect handling from Layer `4.4` were preserved; this slice changed policy outcomes, not tenant propagation.
 

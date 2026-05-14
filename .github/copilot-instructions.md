@@ -167,17 +167,20 @@ npm run check     # TypeScript type checking
 4. Update TypeScript types in `shared/types.ts`
 
 ### Scripts Organization
-**Keep the repository root clean** - all utility scripts belong in `scripts/` folder:
-- **scripts/db/** - Database utilities (reset-db.ts for development resets)
-- **scripts/seed/** - Data seeding and sample data generation (create users, batches, etc.)
-- **scripts/test/** - Manual smoke tests and testing utilities
-- **scripts/utils/** - One-off utilities (list users, update roles, etc.)
+**Keep the repository root clean** - all utility scripts belong in purpose-named folders:
+- **scripts/dev/** - Local startup helpers
+- **scripts/db/** - Database reset and inspection helpers
+- **scripts/build/** - Build orchestration and build checks
+- **scripts/verify/** - Aggregate verification runners
+- **scripts/seeds/demo/** - Optional local demo data
+- **scripts/maintenance/** - Local-only repair/reset helpers
+- **scripts/test/smoke/**, **scripts/test/contracts/**, **scripts/test/unit/** - Focused checks by intent
 
 **Rules:**
 - Never create standalone `.ts` scripts in root folder
 - Use Drizzle's `npm run db:push` for schema changes (not SQL migration files)
 - Temporary one-time scripts should be deleted after use or moved to appropriate subfolder
-- Test scripts use `npx tsx` for execution (e.g., `npx tsx scripts/seed/create-full-batches.ts`)
+- Test scripts use `npx tsx` for execution (e.g., `npx tsx scripts/test/contracts/require-super-admin.test.ts`)
 
 ### API Development (server/modules/*/service.ts + routes in server/routes/*.routes.ts)
 - **Modular architecture**: 6 domain modules with dedicated storage and service layers
