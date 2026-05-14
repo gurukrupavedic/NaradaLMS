@@ -399,6 +399,7 @@ export class LearningService {
           chapterOrder: ch.sortOrder,
           chapterTitle: ch.title,
           chapterCode: `CH${ch.sortOrder}`,
+          status: ch.status as 'draft' | 'published',
           proficiencyLevel: progress?.proficiencyLevel ?? null,
           lastEvaluatedAt: progress?.lastEvaluatedAt
             ? progress.lastEvaluatedAt.toISOString()

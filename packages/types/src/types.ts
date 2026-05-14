@@ -83,6 +83,7 @@ export interface ChapterProgress {
   chapterOrder: number;
   chapterTitle: string;
   chapterCode: string;
+  status?: 'draft' | 'published';
   proficiencyLevel: number | null; // 0-4, 8 (absent), 9 (not started), or null
   lastEvaluatedAt: string | null; // ISO Date string
   evaluatedBy: string | null;
