@@ -7,6 +7,8 @@ This document is the **execution blueprint** for work discussed across:
 
 Use this plan to split work across agents or PRs. Each **slice** is intended to merge independently where dependencies allow; follow the **slice order** when parallel work would conflict.
 
+**Locked product decision:** **§3.4 policy A** — platform super admin **does not** access org-scoped data without an **active** `user_organizations` membership in that org. There is **no** “master key” / header-only super-admin access to tenant orgs; future impersonation would be explicit and auditable.
+
 ---
 
 ## Related references (read-only context)
@@ -29,7 +31,7 @@ Use this plan to split work across agents or PRs. Each **slice** is intended to 
 1. **Student learning APIs** resolve **which organization’s curriculum** using the **same tenant** the student portal build represents, not only JWT `currentOrgId`, so RR and SLMTS data cannot cross on the wrong skin.
 2. **Admin portal admission:** allow access only if the user **`isSuperAdmin`** **or** has **`admin` in at least one organization** with **`active`** membership (membership-wide check, not only `orgRoles` for the JWT’s default org).
 3. **Users / governance (platform):** only **`isSuperAdmin`** may use governance APIs and the **Users** UI (approve, reject, disable, enable, patch membership roles, grant/revoke super admin). Org admins must not see or call these surfaces.
-4. **Org-scoped admin work:** mutating or reading org-sensitive admin surfaces should require **appropriate membership in `currentOrgId`** (e.g. `admin` for content/settings/batches as today). **Super admin must not implicitly inherit org `admin`/`instructor`** unless you explicitly keep a narrow exception (default recommendation: **no blanket bypass**).
+4. **Org-scoped admin work:** mutating or reading org-sensitive admin surfaces requires **appropriate active membership in `currentOrgId`** (e.g. `admin` for content/settings/batches). **Platform super admin does not grant access to org X data without an active membership in org X** (see **§3.4 — locked policy A**). **`requireOrgRole` must not treat `isSuperAdmin` as org admin/instructor** (slice 4 removes that bypass).
 
 ### 1.2 Non-goals (unless later slices add them)
 
@@ -73,22 +75,27 @@ Use this plan to split work across agents or PRs. Each **slice** is intended to 
 | ----- | ---- |
 | May open admin portal | `isSuperAdmin` **OR** ∃ active membership with `'admin' ∈ roles` |
 | Users / governance | `requireSuperAdmin` (already on `/api/auth/admin/*`) + hide nav + client route guard |
-| Batches, Content, Audit (org), Settings | Authenticated + **`requireAdmin`** (and after slice 4, **no super-admin bypass** unless explicitly re-added per route) + valid `req.orgId` |
+| Batches, Content, Audit (org), Settings | Authenticated + **`requireAdmin`** (strict org role after slice 4 — **no** super-admin bypass) + valid `req.orgId` + user has the required role **in that org** (§3.4) |
 
 ### 3.3 Student portal / learning
 
 | Check | Rule |
 | ----- | ---- |
-| Org for `/api/learning/*` (and optionally other student-org reads) | Resolve from **`X-Tenant-Slug`** (must match portal tenant), map slug → `orgId`, verify user may access that org (**active membership** for that `orgId`, plus explicit **super-admin policy**—see slice 5). Set `req.orgId` from that resolution **after** `jwtAuth`. |
+| Org for `/api/learning/*` (and optionally other student-org reads) | Resolve from **`X-Tenant-Slug`** (must match portal tenant), map slug → `orgId`, authorize with **active membership** for that `orgId` only (**§3.4 — no super-admin bypass**). Set `req.orgId` from that resolution **after** `jwtAuth`. |
 
-### 3.4 Super admin access to org data (policy choice — record in PR)
+### 3.4 Super admin access to org-scoped data (**LOCKED — policy A**)
 
-Pick **one** and implement consistently in slice 5 and slice 4:
+**Decision (final):** A super admin **never** gains read/write access to an organization’s tenant data (learning, content, batches, media, org-scoped audit rows, directory-in-org, settings-as-applied-to-that-org, etc.) **purely** because `users.is_super_admin === true`. They must have an **`active`** row in **`user_organizations`** for that **`org_id`** with whatever role the route requires (e.g. `student` for student learning, `admin` for admin mutations).
 
-- **A (recommended):** Super admin **without** active membership in org X **cannot** load or mutate org X data via org-scoped APIs (governance-only until they have membership or use a future impersonation feature).
-- **B:** Super admin may access any canonical org by tenant header **without** membership (higher risk; document and audit).
+| Situation | Allowed org-scoped APIs for that org? |
+| --------- | --------------------------------------- |
+| Super admin, **no** active membership in org X | **No** (use governance APIs + Users module for platform work; obtain membership first if they need to operate inside org X). |
+| Super admin, **active** membership in org X (any roles) | **Yes**, only to the extent that membership’s **roles** satisfy the route (same as any other user). |
+| Org admin (`admin` in org X), not super admin | **Yes**, per existing org-admin rules. |
 
-Default this plan to **A** unless product overrides.
+**Out of scope:** “Master key” access (formerly option **B**) — **not** implemented; do not add `isSuperAdmin` shortcuts on org-scoped routes. Future **impersonation** or break-glass would be a **separate** feature with explicit audit, not an implicit flag bypass.
+
+Implementers: apply **the same rule** in **slice 4** (middleware / mutations), **slice 5** (learning tenant authz), and **slices 2–3** (nav: super-admin–only Users; org modules require **active `admin` in at least one org** — super admin with **zero** org admin memberships sees **only** Users / governance entry points, not Batches/Content/etc.).
 
 ---
 
@@ -127,12 +134,11 @@ Each slice lists **primary files**, **acceptance criteria**, and **suggested ver
 
 ### Slice 0 — Documentation and contracts freeze (optional, small)
 
-**Objective:** Lock vocabulary and policy (section 3.4) so parallel agents do not diverge.
+**Objective:** Lock vocabulary; **§3.4 policy A is final** — no parallel “option B” track.
 
 **Deliverables**
 
-- This file is the source of truth; add a one-line link from [docs/implementation/README.md](../README.md) and [multi-tenancy/README.md](./README.md) “Planned / in-flight work” pointing here.
-- If policy B is chosen, amend section 3.4 before coding slice 5.
+- This file remains the source of truth; links from [docs/implementation/README.md](../README.md) and [multi-tenancy/README.md](./README.md) already reference it.
 
 **Acceptance**
 
@@ -188,12 +194,13 @@ Each slice lists **primary files**, **acceptance criteria**, and **suggested ver
 
 2. **`AdminLayout.tsx`:** Same rule replacing `user.orgRoles?.includes('admin')` only.
 
-3. **`admin-navigation-config.ts`:** Refactor `getAdminNavigationForRole` to accept something like `{ isSuperAdmin: boolean; hasOrgAdminCapabilities: boolean }` or separate **platform** and **org** nav arrays:
+3. **`admin-navigation-config.ts`:** Refactor navigation so **§3.4** is obvious in code:
 
-   - **Users** item: only if `isSuperAdmin`
-   - **Batches, Content, Audit Logs, Settings:** if `hasOrgAdminCapabilities` (active admin in any org) **or** `isSuperAdmin` **only if** product wants super admins to see org modules without org admin—**default:** require `hasOrgAdminCapabilities` **or** document that super admins always get org nav for UX (product call). Recommended: show org modules if `canAccessAdminPortal && (hasOrgAdminAnywhere || isSuperAdmin)` where for **strict** model, `isSuperAdmin` without any org admin membership might only see **Users**—confirm with product; if awkward, seed/dev super admins keep dual role.
+   - **`hasOrgAdminAnywhere`:** `memberships.some(m => m.status === 'active' && m.roles.includes('admin'))` (same idea as slice 1 helper).
+   - **Users** nav item: **`isSuperAdmin` only** (governance / platform).
+   - **Batches, Content, Audit Logs, Settings:** show only if **`hasOrgAdminAnywhere`** — **not** merely `isSuperAdmin`. A super admin with **no** active org `admin` anywhere sees **only** Users (until given an org admin membership or a future impersonation feature).
 
-4. **Deep links:** `/admin/users` direct URL for org-only admin should redirect to **unauthorized** or **admin home** with toast (optional polish).
+4. **Deep links:** `/admin/users` for non–super-admin → redirect to **unauthorized** or **admin home** with toast. Non–`hasOrgAdminAnywhere` user who is only super admin hitting `/admin/batches` etc. → same (they should not have those links; deep link must still deny).
 
 **Primary files**
 
@@ -204,8 +211,9 @@ Each slice lists **primary files**, **acceptance criteria**, and **suggested ver
 
 **Acceptance**
 
-- Org admin without super admin: **no** Users nav item; cannot use governance hooks successfully (403 already from API).
-- Super admin with no admin membership: behavior per policy in 3.4 (either only Users, or Users + org modules—**document choice**).
+- Org admin without super admin: **no** Users nav item; governance APIs 403 as today.
+- Super admin **without** `hasOrgAdminAnywhere`: **Users** (platform) only in nav; **no** Batches/Content/Audit/Settings links; deep links to those routes **403** or redirect.
+- Super admin **with** `hasOrgAdminAnywhere`: Users + org modules (same as org admin plus Users).
 
 **Depends on:** slice 1 (preferred for single source of truth); can prototype with client-only membership scan before slice 1 lands.
 
@@ -219,13 +227,9 @@ Each slice lists **primary files**, **acceptance criteria**, and **suggested ver
 
 **Steps**
 
-1. **`useRoleGuard.ts`:** For `requiredRoles` including `admin`, require:
+1. **`useRoleGuard.ts`:** For `requiredRoles` including `admin`, require an **active** membership for **`user.currentOrgId`** with `'admin' ∈ roles`. **Do not** treat `isSuperAdmin` alone as satisfying `admin` (**§3.4**).
 
-   `user.isSuperAdmin && <productAllows>` **OR** membership row for `user.currentOrgId` with active + `admin` in roles
-
-   Prefer reading `user.memberships` from `useAuth` (ensure `/auth/me` includes memberships—already does).
-
-2. **`admin/content/page.tsx`** (and similar): same pattern for the “can edit content” gate.
+2. **`admin/content/page.tsx`** (and similar): same rule — **membership in current org** with `admin`, not `isSuperAdmin` OR JWT `orgRoles` shortcut alone.
 
 **Primary files**
 
@@ -234,7 +238,8 @@ Each slice lists **primary files**, **acceptance criteria**, and **suggested ver
 
 **Acceptance**
 
-- User with admin on RR, JWT org SLMTS: after switch org to RR, content guard passes; before switch, fails (unless super admin per policy).
+- User with admin on RR, JWT org SLMTS: after **switch-org** to RR, content guard passes; before switch, **fails** (no admin in current org on JWT).
+- Super admin with no `admin` in current org: **fails** admin guard (**§3.4**).
 
 **Depends on:** slice 2 optional (nav); logically pairs with org switcher UX
 
@@ -254,11 +259,11 @@ Each slice lists **primary files**, **acceptance criteria**, and **suggested ver
    - `server/routes/media.routes.ts`
    - `server/routes/batch.routes.ts` — routes using `requireAdmin` for mutations; **evaluate reads** separately
 
-3. **Replace** `requireAdmin` import with `requireOrgRoleStrict('admin')` **or** redefine `requireAdmin` to strict and add `requireAdminAllowSuperAdmin` for the rare routes that still need bypass (prefer explicit second name).
+3. **Replace** `requireAdmin` usages on org-scoped mutations with **`requireOrgRoleStrict('admin')`** (or redefine `requireAdmin` to mean strict everywhere org data is touched). **Do not** add `AllowSuperAdmin` shims — **§3.4 A** forbids implicit super-admin org power.
 
-4. **Ad-hoc checks** in `batch.routes.ts` (`user.isSuperAdmin` alongside instructor/admin for progress/evaluate): remove super-admin shortcut **or** replace with “super admin + active membership in org with instructor/admin” per policy 3.4.
+4. **Ad-hoc checks** in `batch.routes.ts` (`user.isSuperAdmin` alongside instructor/admin for progress/evaluate): remove super-admin shortcut **or** replace with “**active** membership in `req.orgId` + `instructor`/`admin` in roles” (**§3.4**).
 
-5. **`requireOrgRole`:** Either delete bypass entirely, or keep **only** for a documented allowlist (discouraged).
+5. **`requireOrgRole`:** Remove the super-admin bypass from the default export used by org routes, or delete bypass entirely (**§3.4**).
 
 **Primary files**
 
@@ -266,7 +271,7 @@ Each slice lists **primary files**, **acceptance criteria**, and **suggested ver
 - `server/routes/content.routes.ts`
 - `server/routes/media.routes.ts`
 - `server/routes/batch.routes.ts`
-- `server/routes/admin.routes.ts` — `requireAdmin` on directory/settings/audit: migrate to strict unless audit intentionally allows super-admin read without org admin (then split handlers).
+- `server/routes/admin.routes.ts` — `requireAdmin` on directory/settings/audit: migrate to **strict** (**§3.4**). Super admin reads org audit/directory only with **active membership + required role** in `currentOrgId`; platform-wide audit remains super-admin–governed per existing product rules (see handler comments when splitting).
 
 **Acceptance**
 
@@ -296,8 +301,8 @@ Each slice lists **primary files**, **acceptance criteria**, and **suggested ver
    - Read `X-Tenant-Slug` header; normalize with same allowlist as `server/modules/identity-access/tenant-context.ts` (`ALLOWED_TENANT_SLUGS`).
    - If missing or invalid → **403** with clear JSON message (forces client to always send header from student portal).
    - Resolve slug → `orgId` via `identityStorage.getOrganizationBySlug` or existing query.
-   - **Authorize:** user has **active** membership for that `orgId` **OR** policy 3.4B for super admin (if product selects B).
-   - Set `req.orgId` to resolved org id for downstream handlers.
+   - **Authorize:** require an **active** `user_organizations` row for `(user.id, orgId)` (**§3.4 A** — no `isSuperAdmin`-only bypass). If a route also requires `student` / `instructor` / `admin` in that org, enforce after membership exists (match existing `learningService` / route semantics).
+   - Set **`req.orgId`** to the resolved org id for downstream handlers.
 
 2. **Order of middleware** on `learning.routes.ts`:
 
@@ -324,6 +329,7 @@ Each slice lists **primary files**, **acceptance criteria**, and **suggested ver
 
 - `scripts/test/smoke/rr-isolation-smoke.test.ts` extended: same cookie, `X-Tenant-Slug: rr` vs `slmts` returns correct track sets (mirror existing content isolation tests).
 - Manual: RR portal shows RR org tracks (or empty if no RR curriculum), never SLMTS IDs.
+- **§3.4 A:** Authenticated **super admin** with **no** active membership in RR receives **403** on `/api/learning/*` when `X-Tenant-Slug` resolves to RR (must not see SLMTS-by-JWT behavior).
 
 **Depends on:** slice 4 **not** required; can parallelize with slice 2–4 if file conflicts avoided
 
@@ -381,7 +387,8 @@ Each slice lists **primary files**, **acceptance criteria**, and **suggested ver
 
 | Risk | Mitigation |
 | ---- | ---------- |
-| Super admins locked out of org tooling after slice 4 | Ensure dev seeds keep **active admin** membership where needed; document operational requirement |
+| Super admins locked out of org tooling after slice 4 | **Expected under §3.4 A:** grant **active** org `admin` (or other needed role) via governance or seeds. Document in [environment-setup.md](../../essentials/environment-setup.md) / seed scripts that dev super admins keep **membership** on each pilot org they must operate in. |
+| Pure super admin opens admin portal but sees only Users | **By design** until `hasOrgAdminAnywhere`; ensure slice 2 nav matches so they are not stranded on broken routes |
 | Breaking mobile/other clients calling learning API without header | Student-only contract; document breaking change; version API if needed |
 | Duplicate org resolution logic drifting from `tenant-context.ts` | Extract shared `normalizeTenantSlug` / `parseXTenantSlug` helper |
 | Google OAuth admin return still wrong | Slice 1 must update callback path |
@@ -404,6 +411,7 @@ Serialize **C** and **D** if both touch `jwtAuth` pipeline heavily; otherwise me
 
 ## 9. Completion checklist (repo-wide)
 
+- [ ] **§3.4 policy A** enforced everywhere: no org-scoped reads/writes without **active** `user_organizations` for that org; no `isSuperAdmin` shims on org routes
 - [ ] `canAccessAdminPortal` on login + `/auth/me`; OAuth admin redirect uses membership scan
 - [ ] Admin portal nav hides Users for non–super-admin
 - [ ] AdminLayout / AdminAuthPage use `canAccessAdminPortal` or membership scan
