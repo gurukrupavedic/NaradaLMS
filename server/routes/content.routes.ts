@@ -50,7 +50,7 @@ router.get('/tracks/:id', async (req: Request, res: Response, next: NextFunction
 router.post('/tracks', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, description } = req.body;
-    if (!title || !description) {
+    if (!title || description === undefined) {
       return res.status(400).json(createErrorResponse('title and description are required', 'MISSING_REQUIRED_FIELDS'));
     }
     const user = req.user as Express.User;
