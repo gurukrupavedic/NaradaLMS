@@ -5,6 +5,7 @@ import { authMiddleware, requireSuperAdmin } from "../shared/middleware/auth";
 import { jwtAuth } from "../middleware/jwt-auth.middleware";
 import { generateToken } from "../auth/jwt.utils";
 import { identityStorage } from "../modules/identity-access/storage";
+import { canAccessAdminPortal } from "../modules/identity-access/admin-portal-access";
 import rateLimit from "express-rate-limit";
 import { validateRequest } from "../utils/validation";
 import { z } from "zod";
@@ -161,6 +162,10 @@ identityRouter.post(
             const hasActiveMembership = memberships.some(
               (m) => m.status === "active"
             );
+            const canAccessAdminPortalFlag = canAccessAdminPortal({
+              isSuperAdmin: claims.isSuperAdmin,
+              memberships,
+            });
 
             return res.json({
               user: {
@@ -182,6 +187,7 @@ identityRouter.post(
                   roles: m.roles,
                 })),
               },
+              canAccessAdminPortal: canAccessAdminPortalFlag,
             });
           } catch (e) {
             next(e);
@@ -266,9 +272,15 @@ identityRouter.get(
 
     setAuthTokenCookie(res, token);
 
+    const memberships = await identityStorage.listUserMembershipsWithOrgs(
+      oauthUser.id
+    );
+    const canAccessAdmin = canAccessAdminPortal({
+      isSuperAdmin: claims.isSuperAdmin,
+      memberships,
+    });
+
     const isAdminReturn = redirectUrl.pathname.startsWith("/admin");
-    const canAccessAdmin =
-      claims.isSuperAdmin || Boolean(claims.orgRoles?.includes("admin"));
     if (isAdminReturn && !canAccessAdmin) {
       clearAuthTokenCookie(res);
       return res.redirect(buildAuthPageRedirect(rawState, "access_denied"));
@@ -395,6 +407,10 @@ identityRouter.get(
       session.id
     );
     const hasActiveMembership = memberships.some((m) => m.status === "active");
+    const canAccessAdminPortalFlag = canAccessAdminPortal({
+      isSuperAdmin: session.isSuperAdmin,
+      memberships,
+    });
 
     return res.json({
       user: {
@@ -410,6 +426,7 @@ identityRouter.get(
       },
       memberships,
       hasActiveMembership,
+      canAccessAdminPortal: canAccessAdminPortalFlag,
     });
   })
 );
