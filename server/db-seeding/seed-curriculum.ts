@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { chapters, organizations, tracks, users } from "@narada/types";
 import { db } from "../db";
-import { CURRICULUM_IMPORT_ACTOR_PROFILE } from "../shared/constants/system-actors";
+import { SYSTEM_USER } from "../shared/constants/system-user";
 
 const SEEDS_DIR = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -105,15 +105,24 @@ async function seedCurriculum(): Promise<void> {
       );
     }
 
-    console.log("Ensuring dedicated curriculum import actor exists...");
+    console.log("Ensuring system user exists...");
+    const systemUserNow = new Date();
     await db
       .insert(users)
       .values({
-        ...CURRICULUM_IMPORT_ACTOR_PROFILE,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        ...SYSTEM_USER,
+        createdAt: systemUserNow,
+        updatedAt: systemUserNow,
       })
-      .onConflictDoNothing();
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          email: SYSTEM_USER.email,
+          firstName: SYSTEM_USER.firstName,
+          lastName: SYSTEM_USER.lastName,
+          updatedAt: systemUserNow,
+        },
+      });
 
     console.log(
       `Syncing ${curriculum.tracks.length} tracks for organization "${targetOrg.slug}"...`
@@ -129,7 +138,7 @@ async function seedCurriculum(): Promise<void> {
         title: trackData.title,
         description: trackData.description ?? "",
         sortOrder: trackData.number,
-        createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id,
+        createdBy: SYSTEM_USER.id,
         createdAt: now,
         updatedAt: now,
       };
@@ -163,7 +172,7 @@ async function seedCurriculum(): Promise<void> {
             sortOrder: chapter.number,
             status: chapter.status ?? "published",
             content: chapter.content ?? {},
-            createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id,
+            createdBy: SYSTEM_USER.id,
             createdAt: chapterNow,
             updatedAt: chapterNow,
           };

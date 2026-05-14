@@ -227,20 +227,23 @@ async function run() {
             if (status !== 403) throw new Error(`Expected 403, got ${status}`);
         });
 
-        await test('POST /api/auth/switch-org returns 403 for pending membership (rr)', async () => {
+        await test('POST /api/auth/switch-org succeeds for active RR org', async () => {
             const { status: meStatus, data: meData } = await authenticatedFetch('/api/auth/me');
             if (meStatus !== 200) throw new Error(`Expected 200 from /me, got ${meStatus}`);
             const rr = (meData.memberships as { orgSlug: string; orgId: string; status: string }[] | undefined)?.find(
-                (m) => m.orgSlug === 'rr'
+                (m) => m.orgSlug === 'rr' && m.status === 'active'
             );
             if (!rr) {
-                throw new Error('Expected RR membership in seed for admin user');
+                throw new Error('Expected active RR membership in seed for admin user');
             }
-            const { status } = await authenticatedFetch('/api/auth/switch-org', {
+            const { status, data } = await authenticatedFetch('/api/auth/switch-org', {
                 method: 'POST',
                 body: JSON.stringify({ orgId: rr.orgId }),
             });
-            if (status !== 403) throw new Error(`Expected 403 for pending RR org, got ${status}`);
+            if (status !== 200) throw new Error(`Expected 200 for active RR org, got ${status}: ${JSON.stringify(data)}`);
+            if (data.user?.currentOrgId !== rr.orgId) {
+                throw new Error('switch-org response should echo RR org as currentOrgId');
+            }
         });
 
         await test('POST /api/auth/switch-org succeeds for active SLMTS org', async () => {

@@ -18,12 +18,14 @@ All environment variables required by NaradaLMS.
 | `JWT_EXPIRY` | No | `7d` | JWT token expiration |
 | `CORS_ORIGINS` | No | `http://localhost:3000,http://localhost:3001,http://localhost:3010` | Comma-separated allowed origins |
 | `FRONTEND_URL` | No | `http://localhost:3000` | URL of the student portal |
+| `SUPER_ADMIN_EMAIL` | No* | — | Dev bootstrap + registration auto-promotion; legacy alias `ADMIN_EMAIL` |
+| `SUPER_ADMIN_PASSWORD` | No* | — | First `db:seed-dev` insert only; legacy alias `DEV_SUPERADMIN_PASSWORD` |
 | `CURRICULUM_SEED_FILE` | No | `curriculum-slmts.json` | Basename (or absolute path) of a curriculum JSON under `server/seeds/`; used by `npm run db:seed` / `seed-curriculum.ts` |
 | `GOOGLE_CLIENT_ID` | No | — | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | No | — | Google OAuth client secret |
 | `GOOGLE_CALLBACK_URL` | No | — | Google OAuth callback URL |
 
-*Either `DATABASE_URL` or individual `PG*` variables must be set.
+*Either `DATABASE_URL` or individual `PG*` variables must be set. `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_PASSWORD` are required for first-time `npm run db:seed-dev` when that user row does not exist yet.
 
 ## Student Portal (Next.js)
 

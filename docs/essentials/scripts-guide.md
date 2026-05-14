@@ -7,7 +7,7 @@ This document explains the current script layout in plain English. The scripts w
 Use this decision order when you add a helper, seed, or test runner.
 
 1. **Is it part of normal app bootstrap (orgs, dev admin, curriculum)?**
-   Put it in `server/db-seeding/` next to the other canonical seeds, wire it with a root `npm run db:seed-*` if the team should run it often, and keep it idempotent where possible. Read configuration from environment variables (for example `ADMIN_EMAIL`), not hardcoded emails or passwords in source.
+   Put it in `server/db-seeding/` next to the other canonical seeds, wire it with a root `npm run db:seed-*` if the team should run it often, and keep it idempotent where possible. Read configuration from environment variables (for example `SUPER_ADMIN_EMAIL`), not hardcoded emails or passwords in source.
 2. **Is it optional fake data for local UI only?**
   Put it under `scripts/seeds/demo/`. Do not add it to the canonical reset-and-seed sequence in this guide unless the product team explicitly adopts it.
 3. **Does it start multiple local processes or wrap dev tooling?**
@@ -77,7 +77,7 @@ What that gives you:
 
 - a database schema built from migrations,
 - two organizations: SLMTS and RR,
-- one developer super-admin account from `ADMIN_EMAIL`,
+- one developer super-admin account from `SUPER_ADMIN_EMAIL`,
 - baseline SLMTS/RR memberships for that account,
 - SLMTS curriculum tracks and chapters if you run `db:seed`; RR file is separate (`db:seed:curriculum:rr`) and starts with an empty `tracks` array until you add Puranokta content.
 
@@ -205,15 +205,15 @@ Run this after migrations and before other seeds that need organizations.
 
 Runs `server/db-seeding/seed-dev-bootstrap.ts`.
 
-Creates or updates one local developer account from `ADMIN_EMAIL`.
+Creates or updates one local developer account from `SUPER_ADMIN_EMAIL`.
 
-On a fresh database it also needs `DEV_SUPERADMIN_PASSWORD` so it can create the password hash.
+On a fresh database it also needs `SUPER_ADMIN_PASSWORD` so it can create the password hash.
 
 It creates:
 
 - one user with `isSuperAdmin: true`,
 - an active SLMTS membership with roles `student` and `admin`,
-- a pending RR membership with role `student`.
+- an active RR membership with roles `student` and `admin`.
 
 This is useful for local testing, but it combines user creation and membership setup in one script. A future cleanup could split it into smaller seeds.
 

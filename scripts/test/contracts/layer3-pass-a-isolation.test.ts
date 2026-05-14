@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../../../server/db";
 import { batchService } from "../../../server/modules/batch-cohort";
 import { contentService } from "../../../server/modules/content-publishing";
-import { CURRICULUM_IMPORT_ACTOR_PROFILE } from "../../../server/shared/constants/system-actors";
+import { SYSTEM_USER } from "../../../server/shared/constants/system-user";
 import { organizations, users } from "@narada/types";
 
 const passed: string[] = [];
@@ -44,10 +44,10 @@ async function run() {
   const unique = Date.now();
 
   await ensureUser({
-    id: CURRICULUM_IMPORT_ACTOR_PROFILE.id,
-    email: CURRICULUM_IMPORT_ACTOR_PROFILE.email,
-    firstName: CURRICULUM_IMPORT_ACTOR_PROFILE.firstName ?? "Curriculum",
-    lastName: CURRICULUM_IMPORT_ACTOR_PROFILE.lastName ?? "Importer",
+    id: SYSTEM_USER.id,
+    email: SYSTEM_USER.email,
+    firstName: SYSTEM_USER.firstName,
+    lastName: SYSTEM_USER.lastName,
     roles: ["admin", "instructor"],
   });
 
@@ -79,27 +79,27 @@ async function run() {
     orgId: slmtsOrg.id,
     title: `SLMTS Pass A Track ${unique}`,
     description: "Scoped to SLMTS",
-    createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id,
+    createdBy: SYSTEM_USER.id,
   });
   const rrTrack = await contentService.createTrack({
     orgId: rrOrg.id,
     title: `RR Pass A Track ${unique}`,
     description: "Scoped to RR",
-    createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id,
+    createdBy: SYSTEM_USER.id,
   });
 
   const slmtsChapter = await contentService.createChapter({
     orgId: slmtsOrg.id,
     trackId: slmtsTrack.id,
     title: `SLMTS Chapter ${unique}`,
-    createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id,
+    createdBy: SYSTEM_USER.id,
     content: { en: "SLMTS chapter" },
   });
   const rrChapter = await contentService.createChapter({
     orgId: rrOrg.id,
     trackId: rrTrack.id,
     title: `RR Chapter ${unique}`,
-    createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id,
+    createdBy: SYSTEM_USER.id,
     content: { en: "RR chapter" },
   });
 
@@ -140,15 +140,15 @@ async function run() {
     batchCode: `RR-${unique}`,
     batchName: `RR Batch ${unique}`,
     trackId: rrTrack.id,
-    primaryInstructorId: CURRICULUM_IMPORT_ACTOR_PROFILE.id,
-    createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id,
+    primaryInstructorId: SYSTEM_USER.id,
+    createdBy: SYSTEM_USER.id,
   });
 
   await batchService.addEnrollment({
     orgId: rrOrg.id,
     batchId: rrBatch.id,
     studentId: rrStudentId,
-    enrolledBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id,
+    enrolledBy: SYSTEM_USER.id,
   });
 
   const slmtsBatches = await batchService.listBatchesPaginated(100, 0, slmtsOrg.id);

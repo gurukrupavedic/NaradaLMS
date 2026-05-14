@@ -3,7 +3,7 @@ import { contentService } from '../../../server/modules/content-publishing';
 import { mediaService } from '../../../server/modules/media-pipeline/service';
 import { db } from '../../../server/db';
 import { organizations, tracks, users } from '@narada/types';
-import { CURRICULUM_IMPORT_ACTOR_PROFILE } from '../../../server/shared/constants/system-actors';
+import { SYSTEM_USER } from '../../../server/shared/constants/system-user';
 import { eq } from 'drizzle-orm';
 
 function assert(condition: unknown, message: string): void {
@@ -25,7 +25,7 @@ async function run() {
     assert(Boolean(slmtsOrg), 'Expected seeded SLMTS organization');
 
     await db.insert(users).values({
-      ...CURRICULUM_IMPORT_ACTOR_PROFILE,
+      ...SYSTEM_USER,
       createdAt: new Date(),
       updatedAt: new Date(),
     }).onConflictDoNothing();
@@ -36,7 +36,7 @@ async function run() {
     // Query max sort order from tracks table
     const maxOrderRows = await (db as any).execute("SELECT COALESCE(MAX(sort_order), 0) AS max_order FROM tracks");
     const nextOrder = Number(maxOrderRows?.rows?.[0]?.max_order ?? 0) + 1;
-    const [track] = await db.insert(tracks).values({ orgId: slmtsOrg!.id, title: `Smoke Track ${unique}`, description: `Smoke description ${unique}`, sortOrder: nextOrder, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id, createdAt: new Date(), updatedAt: new Date() }).returning();
+    const [track] = await db.insert(tracks).values({ orgId: slmtsOrg!.id, title: `Smoke Track ${unique}`, description: `Smoke description ${unique}`, sortOrder: nextOrder, createdBy: SYSTEM_USER.id, createdAt: new Date(), updatedAt: new Date() }).returning();
     console.log('Track created:', track);
 
     // List Tracks
@@ -46,7 +46,7 @@ async function run() {
 
     // Create Chapter
     console.log('Creating chapter...');
-    const chapter = await contentService.createChapter({ orgId: slmtsOrg!.id, trackId: track.id, title: `Smoke Chapter ${unique}`, content: { te: '', hi: '', en: '' }, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
+    const chapter = await contentService.createChapter({ orgId: slmtsOrg!.id, trackId: track.id, title: `Smoke Chapter ${unique}`, content: { te: '', hi: '', en: '' }, createdBy: SYSTEM_USER.id });
     console.log('Chapter created:', chapter);
 
     // Get Chapter Details
@@ -55,9 +55,9 @@ async function run() {
 
     // Create Segments
     console.log('Creating segments...');
-    const seg1 = await contentService.createSegment({ chapterId: chapter.id, script: 'en', startPosition: 0, endPosition: 10, order: 0, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
-    const seg2 = await contentService.createSegment({ chapterId: chapter.id, script: 'en', startPosition: 10, endPosition: 20, order: 1, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
-    const seg3 = await contentService.createSegment({ chapterId: chapter.id, script: 'en', startPosition: 20, endPosition: 30, order: 2, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
+    const seg1 = await contentService.createSegment({ chapterId: chapter.id, script: 'en', startPosition: 0, endPosition: 10, order: 0, createdBy: SYSTEM_USER.id });
+    const seg2 = await contentService.createSegment({ chapterId: chapter.id, script: 'en', startPosition: 10, endPosition: 20, order: 1, createdBy: SYSTEM_USER.id });
+    const seg3 = await contentService.createSegment({ chapterId: chapter.id, script: 'en', startPosition: 20, endPosition: 30, order: 2, createdBy: SYSTEM_USER.id });
     const segs = await contentService.getSegmentsByChapter(chapter.id, 'en');
     console.log('Segments created:', segs.length);
     assert(segs.length === 3, 'Expected 3 created segments');
@@ -97,12 +97,12 @@ async function run() {
 
     // Upload Audio (DB insert via service)
     console.log('Uploading audio (DB)...');
-    const audio = await mediaService.uploadAudioFile({ chapterId: chapter.id, filename: `smoke-${unique}.mp3`, displayName: `smoke-${unique}.mp3`, fileSize: 12345, duration: 30, mimeType: 'audio/mpeg', uploadedBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
+    const audio = await mediaService.uploadAudioFile({ chapterId: chapter.id, filename: `smoke-${unique}.mp3`, displayName: `smoke-${unique}.mp3`, fileSize: 12345, duration: 30, mimeType: 'audio/mpeg', uploadedBy: SYSTEM_USER.id });
     console.log('Audio created:', audio);
 
     // Create Mapping (ms contract)
     console.log('Creating mapping...');
-    const mapping = await mediaService.createMapping({ audioFileId: audio.id, textSegmentId: seg2.id, startMs: 0, endMs: 5000, createdBy: CURRICULUM_IMPORT_ACTOR_PROFILE.id });
+    const mapping = await mediaService.createMapping({ audioFileId: audio.id, textSegmentId: seg2.id, startMs: 0, endMs: 5000, createdBy: SYSTEM_USER.id });
     console.log('Mapping created:', mapping);
 
     // List mappings

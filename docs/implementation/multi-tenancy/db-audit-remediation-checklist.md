@@ -23,7 +23,7 @@ Use this chain as the default source of truth for schema and reset behavior on t
 | `migrations/` | `official` | Versioned SQL that defines the supported schema history. |
 | `scripts/db/reset.ps1` | `official` | Package-wired reset path for this repo. Drops `public` and `drizzle`, then runs `drizzle-kit migrate`. |
 | `server/db-seeding/seed-organizations.ts` | `official` | Canonical org seed for `slmts` and `rr`. |
-| `server/db-seeding/seed-dev-bootstrap.ts` | `official` | Canonical dev super-admin + membership bootstrap. |
+| `server/db-seeding/seed-dev-bootstrap.ts` | `official` | Canonical dev super-admin + membership bootstrap (active `student`+`admin` on `slmts` and `rr`). |
 | `server/db-seeding/seed-curriculum.ts` | `official` | Canonical curriculum seed. Reads `server/seeds/<file>`; default file is `curriculum-slmts.json`. Override with `CURRICULUM_SEED_FILE`. |
 | `server/seeds/curriculum-slmts.json` | `official` | SLMTS (Vedic) curriculum source for `npm run db:seed`. |
 | `server/seeds/curriculum-rr.json` | `official` | RR (Puranokta) curriculum placeholder; load with `npm run db:seed:curriculum:rr`. |
@@ -88,7 +88,7 @@ Verified on `2026-05-12` on branch `mt-audit-remediation` using the supported lo
 
 1. `npm run build:types`
 2. `npm run db:reset`
-3. `DEV_SUPERADMIN_PASSWORD=dev-superadmin-pass npm run db:seed-dev` after `npm run db:seed-orgs` on the fresh DB
+3. `SUPER_ADMIN_PASSWORD=dev-superadmin-pass npm run db:seed-dev` after `npm run db:seed-orgs` on the fresh DB
 4. `npm run db:seed`
 5. `npm run check`
 6. Focused contract checks:

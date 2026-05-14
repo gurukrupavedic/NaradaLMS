@@ -68,17 +68,18 @@ npm run db:seed-orgs
 
 ### Phase 0b: Dev super-admin and memberships (multi-tenancy)
 
-Seeds the account matching **`ADMIN_EMAIL`** as a platform super-admin (`users.is_super_admin`) and upserts **`user_organizations`** rows: active membership on **`slmts`** (roles `student` + `admin`) and a **pending** membership on **`rr`** (role `student`) for second-org smoke tests.
+Seeds the account matching **`SUPER_ADMIN_EMAIL`** as a platform super-admin (`users.is_super_admin`) and upserts **`user_organizations`** rows: **active** membership on **`slmts`** and **`rr`** (roles `student` + `admin` on each). Second-org join smoke uses a separate test user, not this seed shape.
 
 ```bash
 npm run db:seed-dev
 ```
 
 - **Script**: `server/db-seeding/seed-dev-bootstrap.ts`
-- **Required:** `ADMIN_EMAIL` (same as [server/config.ts](../../server/config.ts) auto-promotion).
-- **When the user row does not exist yet:** set **`DEV_SUPERADMIN_PASSWORD`** (bcrypt-hashed on insert). Re-runs without this variable are fine once the user exists.
+- **Required:** `SUPER_ADMIN_EMAIL` (same as [server/config.ts](../../server/config.ts) auto-promotion).
+- **When the user row does not exist yet:** set **`SUPER_ADMIN_PASSWORD`** (bcrypt-hashed on insert). Re-runs without this variable are fine once the user exists.
 - **Optional:** `DEV_SUPERADMIN_FIRST_NAME`, `DEV_SUPERADMIN_LAST_NAME` (defaults: Dev / SuperAdmin).
-- **Optional (dev only):** `DEV_SUPERADMIN_RESET_PASSWORD=1` plus **`DEV_SUPERADMIN_PASSWORD`** to re-hash the password for an existing user.
+- **Optional (dev only):** `DEV_SUPERADMIN_RESET_PASSWORD=1` plus **`SUPER_ADMIN_PASSWORD`** to re-hash the password for an existing user.
+- **Legacy aliases:** `ADMIN_EMAIL` and `DEV_SUPERADMIN_PASSWORD` are still read if `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_PASSWORD` are unset.
 
 ### Phase A: Curriculum (optional)
 
@@ -96,9 +97,9 @@ npm run db:seed
 There are three ways to establish the first administrator:
 
 1. **Recommended (Auto-Promotion)**:
-   Add `ADMIN_EMAIL=your.email@example.com` to your `.env` file. The first time you register via the UI using this email, you will be automatically granted the `admin` role and `active` status.
+   Add `SUPER_ADMIN_EMAIL=your.email@example.com` to your `.env` file. The first time you register via the UI using this email, you will be automatically granted the `admin` role and `active` status.
 2. **Dev seed (multi-tenancy Phase 0b)**:
-   After `db:seed-orgs`, run `npm run db:seed-dev` with `ADMIN_EMAIL` and `DEV_SUPERADMIN_PASSWORD` set (see Phase 0b above). Creates or updates the user row, sets `is_super_admin`, and inserts minimal org memberships.
+   After `db:seed-orgs`, run `npm run db:seed-dev` with `SUPER_ADMIN_EMAIL` and `SUPER_ADMIN_PASSWORD` set (see Phase 0b above). Creates or updates the user row, sets `is_super_admin`, and inserts minimal org memberships.
 3. **Manual database update**:
    If you have already registered and need to repair local access manually, inspect the current membership rows and update them deliberately. The old hardcoded `update-user-role` helper was removed during script cleanup because it only handled one developer email.
 
@@ -138,7 +139,8 @@ npm run db:reset
 | :--- | :--- | :--- |
 | `DATABASE_URL` | Yes | PostgreSQL connection string. |
 | `SESSION_SECRET` | Yes | Random string for signing session cookies. |
-| `ADMIN_EMAIL` | No | Email address that gets auto-promoted to Admin on registration. |
+| `SUPER_ADMIN_EMAIL` | No | Email that receives auto-promotion on first registration and matches dev bootstrap seed. |
+| `SUPER_ADMIN_PASSWORD` | No | Plain password for **first** `db:seed-dev` insert only (then optional). |
 | `GOOGLE_CLIENT_ID` | Opt | Required for Google OAuth 2.0. |
 | `GOOGLE_CLIENT_SECRET` | Opt | Required for Google OAuth 2.0. |
 

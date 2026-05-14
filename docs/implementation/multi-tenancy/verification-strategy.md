@@ -116,7 +116,7 @@ Verification note for **1.4-contract**:
 
 - Create Track `T-SLMTS` in org SLMTS and `T-RR` in org RR (distinct titles or same title per org after `UNIQUE (org_id, title)`).
 - Create batch/enrollment under each org.
-- Fresh DB path: `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`. First-time `db:seed-dev` requires `DEV_SUPERADMIN_PASSWORD`.
+- Fresh DB path: `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`. First-time `db:seed-dev` requires `SUPER_ADMIN_PASSWORD`.
 
 ### Assertions
 
@@ -181,8 +181,8 @@ Before calling SLMTS pilot-ready:
 ### 2026-05-12 — checklist 6.2 validated
 
 - **Environment reset:** `npm run build:types`, `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`, and `npm run check` all passed on a fresh local database in the slice worktree.
-- **Dedicated smoke command:** `API_BASE_URL=http://localhost:5201 DEV_SUPERADMIN_PASSWORD=dev-superadmin-pass npm run test:rr-isolation-smoke`
-- **Smoke setup:** the new harness in `scripts/test/smoke/rr-isolation-smoke.test.ts` logs in as the seeded super-admin (`ADMIN_EMAIL` + `DEV_SUPERADMIN_PASSWORD`), temporarily upserts an active RR membership, creates unique SLMTS/RR marker tracks and batches, and uses live cookies plus `POST /api/auth/switch-org` to verify session truth.
+- **Dedicated smoke command:** `API_BASE_URL=http://localhost:5201 SUPER_ADMIN_PASSWORD=dev-superadmin-pass npm run test:rr-isolation-smoke`
+- **Smoke setup:** the harness in `scripts/test/smoke/rr-isolation-smoke.test.ts` logs in as the seeded super-admin (`SUPER_ADMIN_EMAIL` + `SUPER_ADMIN_PASSWORD`), upserts an active RR membership (idempotent with canonical `db:seed-dev`), creates unique SLMTS/RR marker tracks and batches, and uses live cookies plus `POST /api/auth/switch-org` to verify session truth.
 - **SLMTS assertion:** initial `/api/auth/me` stayed on active SLMTS, `GET /api/content/tracks` and `GET /api/batches` included only SLMTS marker data, and direct RR lookups returned `404`.
 - **RR assertion:** after switching org to RR, `/api/auth/me` reported `currentOrgId = rr`, `GET /api/content/tracks` and `GET /api/batches` included only RR marker data, and direct SLMTS lookups returned `404`.
 - **Result:** `npm run test:rr-isolation-smoke` passed with `rr-isolation-smoke: 16 assertions passed.`
@@ -193,7 +193,7 @@ Before calling SLMTS pilot-ready:
 ### 2026-05-12 — checklist 6.3 validated
 
 - **Targeted regression checks:** `npm run check`, `npx tsx scripts/test/contracts/identity-request-membership.test.ts`, `npx tsx scripts/test/contracts/student-tenant-session.test.ts`, and `npx tsx scripts/test/contracts/student-tenant-config.test.ts` all passed on merged `multi-tenancy`.
-- **Dedicated smoke command:** `API_BASE_URL=http://localhost:5203 DEV_SUPERADMIN_PASSWORD=dev-superadmin-pass npm run test:second-org-join-smoke`
+- **Dedicated smoke command:** `API_BASE_URL=http://localhost:5203 SUPER_ADMIN_PASSWORD=dev-superadmin-pass npm run test:second-org-join-smoke`
 - **Smoke setup:** the new harness in `scripts/test/smoke/second-org-join-smoke.test.ts` registers a unique SLMTS user, approves the SLMTS membership as super-admin, creates a tenant-scoped RR marker track, requests RR membership through `POST /api/auth/request-membership`, and then uses live cookies plus `POST /api/auth/switch-org` to verify session truth before and after approval.
 - **Pending RR assertion:** after the request, `/api/auth/me` showed active SLMTS plus pending RR membership, and `POST /api/auth/switch-org` returned `403` for the RR org while approval was still pending.
 - **Approved RR assertion:** after super-admin approval, `POST /api/auth/switch-org` returned `200`, `/api/auth/me` reported `currentOrgId = rr`, and `GET /api/content/tracks` included the RR marker track.

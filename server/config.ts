@@ -28,7 +28,9 @@ export const config = {
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
-    adminEmail: process.env.ADMIN_EMAIL,
+    /** Registration auto-promotion target; same email as dev bootstrap seed. Prefer SUPER_ADMIN_EMAIL; ADMIN_EMAIL is a deprecated alias. */
+    superAdminEmail:
+      process.env.SUPER_ADMIN_EMAIL?.trim() || process.env.ADMIN_EMAIL?.trim(),
     /** Default org slug for register/OAuth when no `X-Tenant-Slug` (must be `slmts` or `rr`). */
     defaultTenantSlug: (() => {
         const raw = (process.env.DEFAULT_TENANT_SLUG || "slmts").trim().toLowerCase();

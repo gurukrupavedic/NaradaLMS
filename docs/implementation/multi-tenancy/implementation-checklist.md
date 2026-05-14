@@ -135,7 +135,7 @@ Verification note for **6.1**:
 Verification note for **6.2**:
 
 - Fresh-db verification passed on `2026-05-12` via `npm run build:types`, `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed`, and `npm run check`.
-- The dedicated RR smoke harness now lives at [`scripts/test/smoke/rr-isolation-smoke.test.ts`](../../../scripts/test/smoke/rr-isolation-smoke.test.ts) and is exposed as `npm run test:rr-isolation-smoke`; it authenticates as the seeded super-admin using `ADMIN_EMAIL` and `DEV_SUPERADMIN_PASSWORD`.
+- The dedicated RR smoke harness now lives at [`scripts/test/smoke/rr-isolation-smoke.test.ts`](../../../scripts/test/smoke/rr-isolation-smoke.test.ts) and is exposed as `npm run test:rr-isolation-smoke`; it authenticates as the seeded super-admin using `SUPER_ADMIN_EMAIL` and `SUPER_ADMIN_PASSWORD`.
 - Official slice verification passed against a local API instance using `API_BASE_URL=http://localhost:5201 npm run test:rr-isolation-smoke`.
 - The smoke upserted an active RR membership for the seeded super-admin without changing seed defaults, created unique SLMTS/RR marker tracks and batches, confirmed the default session stayed on active SLMTS, then switched to RR with `POST /api/auth/switch-org`.
 - In SLMTS context, the smoke saw only the SLMTS marker data and got `404` for direct RR track/batch lookups; after switching to RR, it saw only the RR marker data and got `404` for direct SLMTS track/batch lookups.
@@ -145,7 +145,7 @@ Verification note for **6.3**:
 - Local 6.3 verification passed on `2026-05-12` via `npm run check`, `npx tsx scripts/test/contracts/identity-request-membership.test.ts`, `npx tsx scripts/test/contracts/student-tenant-session.test.ts`, and `npx tsx scripts/test/contracts/student-tenant-config.test.ts`.
 - The student portal now evaluates access against the **current tenant membership** rather than global `hasActiveMembership`, exposes a tenant-aware pending/no-access screen, allows an authenticated existing user to request membership in the current tenant through `POST /api/auth/request-membership`, and avoids infinite retry loops if an automatic org switch fails.
 - The dedicated smoke harness now lives at [`scripts/test/smoke/second-org-join-smoke.test.ts`](../../../scripts/test/smoke/second-org-join-smoke.test.ts) and is exposed as `npm run test:second-org-join-smoke`.
-- Official merged-branch verification passed against a local API instance using `API_BASE_URL=http://localhost:5203 DEV_SUPERADMIN_PASSWORD=dev-superadmin-pass npm run test:second-org-join-smoke`.
+- Official merged-branch verification passed against a local API instance using `API_BASE_URL=http://localhost:5203 SUPER_ADMIN_PASSWORD=dev-superadmin-pass npm run test:second-org-join-smoke`.
 - The smoke created a new SLMTS user, approved the SLMTS membership through the super-admin governance API, requested RR membership through the new authenticated tenant-aware endpoint, verified `/api/auth/me` reported RR as `pending`, confirmed `POST /api/auth/switch-org` returned `403` while RR remained pending, then approved RR and verified `switch-org` succeeded and RR-scoped content became visible.
 
 Verification note for **6.4**:

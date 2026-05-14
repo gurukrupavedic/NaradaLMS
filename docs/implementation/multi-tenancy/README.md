@@ -68,10 +68,10 @@ After migrations (`npm run db:migrate` or `npm run db:reset`; the supported rese
 
 1. `npm run build:types` — recommended before seeding so the emitted `@narada/types` package matches the current schema.
 2. `npm run db:seed-orgs` — canonical org rows (`slmts`, `rr`).
-3. `npm run db:seed-dev` — super-admin for `ADMIN_EMAIL` plus minimal `user_organizations` (SLMTS active, RR pending); first-time bootstrap needs `DEV_SUPERADMIN_PASSWORD` set (see [environment-setup.md](../../essentials/environment-setup.md)).
+3. `npm run db:seed-dev` — super-admin for `SUPER_ADMIN_EMAIL` plus minimal `user_organizations` (**active** on `slmts` and `rr`, `student` + `admin` each); first-time bootstrap needs `SUPER_ADMIN_PASSWORD` set (see [environment-setup.md](../../essentials/environment-setup.md)).
 4. Optionally `npm run db:seed` — curriculum tracks and chapters from `server/seeds/curriculum-slmts.json` (default). For RR placeholder file, `npm run db:seed:curriculum:rr`. Use when the local DB needs curriculum data.
 
-The RR isolation smoke (`npm run test:rr-isolation-smoke`) also uses those seeded super-admin credentials, so keep `DEV_SUPERADMIN_PASSWORD` available in `.env` or pass it inline when running the smoke outside the slice worktree.
+The RR isolation smoke (`npm run test:rr-isolation-smoke`) also uses those seeded super-admin credentials, so keep `SUPER_ADMIN_PASSWORD` available in `.env` or pass it inline when running the smoke outside the slice worktree.
 
 ---
 

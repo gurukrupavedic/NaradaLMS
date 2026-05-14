@@ -32,7 +32,7 @@ After the **required** path below, you typically have:
 | --- | --- |
 | Schema | All tables from `./migrations/` (Drizzle). |
 | Tenants | Two organizations: `slmts`, `rr`. |
-| Users | One local super-admin aligned to `ADMIN_EMAIL`, with **active** SLMTS membership (`student` + `admin`) and **pending** RR membership (`student`) for second-org flows. |
+| Users | One local super-admin aligned to `SUPER_ADMIN_EMAIL`, with **active** SLMTS and **active** RR memberships (`student` + `admin` on each). Second-org join smoke uses a separate registered user, not this account. |
 | Curriculum (optional) | SLMTS tracks and chapters from `server/seeds/curriculum-slmts.json` via `npm run db:seed`; RR placeholder via `npm run db:seed:curriculum:rr`. |
 
 You **do not** get demo batches, secondary instructors, or bulk fake students unless you run **optional** scripts under `scripts/seeds/demo/` (those paths are intentionally not part of the canonical bootstrap).
@@ -127,9 +127,9 @@ The application resolves the DB connection from **`DATABASE_URL` only** (`server
 
 | Variable | When required |
 | --- | --- |
-| `ADMIN_EMAIL` | **Always** for `db:seed-dev` (script throws if missing). |
-| `DEV_SUPERADMIN_PASSWORD` | **Only when** the user row for `ADMIN_EMAIL` **does not exist yet** (first insert). |
-| `DEV_SUPERADMIN_RESET_PASSWORD=1` | Optional: with `DEV_SUPERADMIN_PASSWORD`, re-hash password for an **existing** user. |
+| `SUPER_ADMIN_EMAIL` | **Always** for `db:seed-dev` (script throws if missing). |
+| `SUPER_ADMIN_PASSWORD` | **Only when** the user row for `SUPER_ADMIN_EMAIL` **does not exist yet** (first insert). |
+| `DEV_SUPERADMIN_RESET_PASSWORD=1` | Optional: with `SUPER_ADMIN_PASSWORD`, re-hash password for an **existing** user. |
 | `DEV_SUPERADMIN_FIRST_NAME`, `DEV_SUPERADMIN_LAST_NAME` | Optional display names. |
 
 **Status:** **Your `.env`**
@@ -201,7 +201,7 @@ Run these from the **repository root** after Phase D.
 **Preconditions:**
 
 - Phase E.1 completed (`slmts` and `rr` rows exist).
-- `ADMIN_EMAIL` set; `DEV_SUPERADMIN_PASSWORD` set **on first create**.
+- `SUPER_ADMIN_EMAIL` set; `SUPER_ADMIN_PASSWORD` set **on first create**.
 
 **Postcondition (intended local story):**
 
@@ -297,7 +297,7 @@ See [scripts-guide](scripts-guide.md) for `npm run auth:test`, `npm run test:smo
 - [ ] `.env` present  
 - [ ] **`DATABASE_URL` set** (required for app + seeds using `server/db.ts`)  
 - [ ] `JWT_SECRET`, `CORS_ORIGINS`, `FRONTEND_URL` set appropriately  
-- [ ] `ADMIN_EMAIL` (+ `DEV_SUPERADMIN_PASSWORD` on first user) for dev bootstrap  
+- [ ] `SUPER_ADMIN_EMAIL` (+ `SUPER_ADMIN_PASSWORD` on first user) for dev bootstrap  
 
 **Canonical seeds (order)**
 
@@ -325,7 +325,7 @@ See [scripts-guide](scripts-guide.md) for `npm run auth:test`, `npm run test:smo
 | `.env` with valid `DATABASE_URL` and secrets | **Your environment** |
 | Applying migrations | **You run** `db:migrate` or `db:reset` |
 | Tenant rows (`slmts`, `rr`) | **You run** `db:seed-orgs` unless you intentionally want an org-less DB |
-| First super-admin + memberships | **You run** `db:seed-dev` (or register via UI with `ADMIN_EMAIL` auto-promotion per [environment-setup](environment-setup.md)) |
+| First super-admin + memberships | **You run** `db:seed-dev` (or register via UI with `SUPER_ADMIN_EMAIL` auto-promotion per [environment-setup](environment-setup.md)) |
 | Curriculum JSON load | **You run** `db:seed` if needed |
 | Demo users / batches / old helper scripts | **Not** in default path; several legacy scripts were **removed** (see [scripts-guide](scripts-guide.md) “Removed Scripts”) |
 
@@ -345,7 +345,7 @@ See [scripts-guide](scripts-guide.md) for `npm run auth:test`, `npm run test:smo
 
 ```bash
 npm install
-# Ensure .env has DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, DEV_SUPERADMIN_PASSWORD (first time)
+# Ensure .env has DATABASE_URL, JWT_SECRET, SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD (first time)
 npm run db:reset
 npm run build:types
 npm run db:seed-orgs

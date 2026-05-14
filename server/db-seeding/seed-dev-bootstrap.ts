@@ -6,12 +6,22 @@ import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { organizations, userOrganizations, users } from "@narada/types";
 
-function requireEnv(name: string): string {
-  const v = process.env[name];
-  if (!v?.trim()) {
-    throw new Error(`${name} must be set in the environment`);
+function readSuperAdminEmail(): string {
+  const v =
+    process.env.SUPER_ADMIN_EMAIL?.trim() || process.env.ADMIN_EMAIL?.trim();
+  if (!v) {
+    throw new Error(
+      "SUPER_ADMIN_EMAIL must be set in the environment (deprecated alias: ADMIN_EMAIL)."
+    );
   }
-  return v.trim();
+  return v;
+}
+
+function readSuperAdminPassword(): string | undefined {
+  const v =
+    process.env.SUPER_ADMIN_PASSWORD?.trim() ||
+    process.env.DEV_SUPERADMIN_PASSWORD?.trim();
+  return v || undefined;
 }
 
 function parseBool(v: string | undefined): boolean {
@@ -22,13 +32,13 @@ const DEFAULT_FIRST = "Dev";
 const DEFAULT_LAST = "SuperAdmin";
 
 /**
- * Idempotent dev seed: super-admin for `ADMIN_EMAIL` plus minimal
- * `user_organizations` rows (SLMTS active, RR pending).
+ * Idempotent dev seed: super-admin for `SUPER_ADMIN_EMAIL` plus minimal
+ * `user_organizations` rows (active **student** + **admin** on both `slmts` and `rr`).
  * Run after `npm run db:seed-orgs`.
  */
 export async function seedDevBootstrap(): Promise<void> {
   console.log("Dev bootstrap seed (super-admin + memberships)...");
-  const adminEmail = requireEnv("ADMIN_EMAIL");
+  const adminEmail = readSuperAdminEmail();
   const resetPassword = parseBool(process.env.DEV_SUPERADMIN_RESET_PASSWORD);
   const now = new Date();
 
@@ -65,10 +75,10 @@ export async function seedDevBootstrap(): Promise<void> {
   let userId: string;
 
   if (!existing) {
-    const password = process.env.DEV_SUPERADMIN_PASSWORD?.trim();
+    const password = readSuperAdminPassword();
     if (!password) {
       throw new Error(
-        "DEV_SUPERADMIN_PASSWORD is required when creating a new dev super-admin (no user row for ADMIN_EMAIL yet)."
+        "SUPER_ADMIN_PASSWORD is required when creating a new dev super-admin (no user row for SUPER_ADMIN_EMAIL yet). Deprecated alias: DEV_SUPERADMIN_PASSWORD."
       );
     }
     const passwordHash = await bcrypt.hash(password, 10);
@@ -105,10 +115,10 @@ export async function seedDevBootstrap(): Promise<void> {
     };
 
     if (resetPassword) {
-      const password = process.env.DEV_SUPERADMIN_PASSWORD?.trim();
+      const password = readSuperAdminPassword();
       if (!password) {
         throw new Error(
-          "DEV_SUPERADMIN_RESET_PASSWORD=1 requires DEV_SUPERADMIN_PASSWORD to set a new password hash."
+          "DEV_SUPERADMIN_RESET_PASSWORD=1 requires SUPER_ADMIN_PASSWORD to set a new password hash (deprecated alias: DEV_SUPERADMIN_PASSWORD)."
         );
       }
       updates.passwordHash = await bcrypt.hash(password, 10);
@@ -151,25 +161,25 @@ export async function seedDevBootstrap(): Promise<void> {
     .values({
       userId,
       orgId: rrOrg.id,
-      roles: ["student"],
-      status: "pending",
+      roles: ["student", "admin"],
+      status: "active",
       requestedAt: now,
-      approvedAt: null,
-      approvedBy: null,
+      approvedAt: now,
+      approvedBy: userId,
       createdAt: now,
       updatedAt: now,
     })
     .onConflictDoUpdate({
       target: [userOrganizations.userId, userOrganizations.orgId],
       set: {
-        roles: ["student"],
-        status: "pending",
-        approvedAt: null,
-        approvedBy: null,
+        roles: ["student", "admin"],
+        status: "active",
+        approvedAt: now,
+        approvedBy: userId,
         updatedAt: now,
       },
     });
-  console.log("  RR membership: pending (student)");
+  console.log("  RR membership: active (student + admin)");
 
   console.log("Dev bootstrap seed complete.");
 }

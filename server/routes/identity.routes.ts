@@ -100,7 +100,7 @@ identityRouter.post(
       password,
       firstName,
       lastName,
-      adminEmail: config.adminEmail,
+      adminEmail: config.superAdminEmail,
       tenantSlug: resolvedTenant,
     });
 

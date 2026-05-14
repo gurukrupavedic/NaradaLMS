@@ -115,8 +115,21 @@ async function run() {
   const unique = Date.now();
   const email = `second-org+${unique}@test.local`;
   const password = "SecondOrg123!";
-  const adminEmail = requireEnv("ADMIN_EMAIL");
-  const adminPassword = requireEnv("DEV_SUPERADMIN_PASSWORD");
+  const adminEmail =
+    process.env.SUPER_ADMIN_EMAIL?.trim() || process.env.ADMIN_EMAIL?.trim();
+  if (!adminEmail) {
+    throw new Error(
+      "SUPER_ADMIN_EMAIL (or deprecated ADMIN_EMAIL) must be set for seeded admin login."
+    );
+  }
+  const adminPassword =
+    process.env.SUPER_ADMIN_PASSWORD?.trim() ||
+    process.env.DEV_SUPERADMIN_PASSWORD?.trim();
+  if (!adminPassword) {
+    throw new Error(
+      "SUPER_ADMIN_PASSWORD (or deprecated DEV_SUPERADMIN_PASSWORD) must be set for seeded admin login."
+    );
+  }
 
   const [adminUser] = await db
     .select({ id: users.id })

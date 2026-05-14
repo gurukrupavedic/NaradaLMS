@@ -40,7 +40,7 @@
 | ------------------- | ------------------- |
 | **1.1–1.4** (expand / seed / bootstrap / contract) | `organizations`, `user_organizations`, `users.is_super_admin`, and the generated contract migration [`0004_dapper_zzzax.sql`](../../../migrations/0004_dapper_zzzax.sql) that removes `users.roles`, `users.status`, and `users_status_check`. Drizzle schema lives in `@narada/types`; SQL lives under repo root [`migrations/`](../../../migrations/). Remaining seeds/scripts/bootstrap flows were also migrated so the fresh reset path works without the removed columns. |
 | **1.5** | `npm run db:seed-orgs` — orgs `slmts`, `rr`. See [`server/db-seeding/seed-organizations.ts`](../../../server/db-seeding/seed-organizations.ts). |
-| **1.6** | `npm run db:seed-dev` — super-admin for `ADMIN_EMAIL`, SLMTS active + RR **pending** memberships. See [`server/db-seeding/seed-dev-bootstrap.ts`](../../../server/db-seeding/seed-dev-bootstrap.ts). Requires `ADMIN_EMAIL`; new super-admin creation needs `DEV_SUPERADMIN_PASSWORD` (see script / `.env.example`). |
+| **1.6** | `npm run db:seed-dev` — super-admin for `SUPER_ADMIN_EMAIL`, **active** memberships on `slmts` and `rr` (`student` + `admin` each). See [`server/db-seeding/seed-dev-bootstrap.ts`](../../../server/db-seeding/seed-dev-bootstrap.ts). Requires `SUPER_ADMIN_EMAIL`; new super-admin creation needs `SUPER_ADMIN_PASSWORD` (see script / `.env.example`). |
 
 Contract verification now also has focused regression coverage for the last high-risk consumers that blocked slice `1.4`: local passport auth without global status gates, membership-based eligible-student selection, and membership-based admin stats (see the verification list below).
 
@@ -180,7 +180,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
   - `npx tsx scripts/test/contracts/layer3-pass-b-media-isolation.test.ts`
   - `npx tsx scripts/test/contracts/layer3-pass-b-progress-audit-isolation.test.ts`
   - `npx tsx scripts/test/contracts/student-tenant-config.test.ts`
-- RR isolation is now covered by `npm run test:rr-isolation-smoke`, which logs in with the seeded super-admin (`ADMIN_EMAIL` + `DEV_SUPERADMIN_PASSWORD`), creates temporary dual-org marker data, proves the default session remains on SLMTS, switches to RR through `POST /api/auth/switch-org`, and verifies that list endpoints plus direct track/batch lookups stay org-scoped in both directions.
+- RR isolation is now covered by `npm run test:rr-isolation-smoke`, which logs in with the seeded super-admin (`SUPER_ADMIN_EMAIL` + `SUPER_ADMIN_PASSWORD`), creates temporary dual-org marker data, proves the default session remains on SLMTS, switches to RR through `POST /api/auth/switch-org`, and verifies that list endpoints plus direct track/batch lookups stay org-scoped in both directions.
 - Second-org join is now covered by `npm run test:second-org-join-smoke`, which registers a new SLMTS user, approves the initial SLMTS membership, requests RR membership through `POST /api/auth/request-membership`, confirms RR stays pending in `/api/auth/me`, verifies `POST /api/auth/switch-org` returns `403` while RR is pending, then approves RR and verifies `switch-org` plus RR-scoped content access succeed afterward.
 - Pilot closeout is now complete through **6.4**. The known out-of-scope or deferred gaps are: email invites/notifications, questionnaire-driven onboarding, production subdomain/TLS/cookie `SameSite` and `Domain` behavior outside local dev, and RR onboarding browser coverage beyond the current smoke/API path.
 
@@ -250,10 +250,10 @@ When continuing in a brand-new chat, do this first:
 - **OAuth membership parity:** `npx tsx scripts/test/contracts/oauth-membership-parity.test.ts`.
 - **Student tenant-config helpers:** `npx tsx scripts/test/contracts/student-tenant-config.test.ts`.
 - **Student tenant-session helpers:** `npx tsx scripts/test/contracts/student-tenant-session.test.ts`.
-- **DB:** `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed` (see [README.md](./README.md) seed order; first-time dev bootstrap needs `DEV_SUPERADMIN_PASSWORD`).
-- **RR isolation smoke (server running):** `npx tsx scripts/test/smoke/rr-isolation-smoke.test.ts` or `npm run test:rr-isolation-smoke` (set `API_BASE_URL` if the API is not on `http://localhost:5000`; if `DEV_SUPERADMIN_PASSWORD` is not present in `.env`, supply it inline for the seeded admin login).
-- **Second-org join smoke (server running):** `npx tsx scripts/test/smoke/second-org-join-smoke.test.ts` or `npm run test:second-org-join-smoke` (set `API_BASE_URL` if the API is not on `http://localhost:5000`; if `DEV_SUPERADMIN_PASSWORD` is not present in `.env`, supply it inline for the seeded admin login).
-- **Smoke (optional, server running):** `npx tsx scripts/test/smoke/api-smoke-test.ts` — auth section includes register + pending login; when seeded **super-admin** login succeeds: **`GET /api/auth/admin/users`** (expects `memberships[]` on users), **`GET /api/admin/directory/users`**, **`POST /api/auth/switch-org`** (403 pending RR / 200 active SLMTS per seed data).
+- **DB:** `npm run db:reset`, `npm run db:seed-orgs`, `npm run db:seed-dev`, `npm run db:seed` (see [README.md](./README.md) seed order; first-time dev bootstrap needs `SUPER_ADMIN_PASSWORD`).
+- **RR isolation smoke (server running):** `npx tsx scripts/test/smoke/rr-isolation-smoke.test.ts` or `npm run test:rr-isolation-smoke` (set `API_BASE_URL` if the API is not on `http://localhost:5000`; if `SUPER_ADMIN_PASSWORD` is not present in `.env`, supply it inline for the seeded admin login).
+- **Second-org join smoke (server running):** `npx tsx scripts/test/smoke/second-org-join-smoke.test.ts` or `npm run test:second-org-join-smoke` (set `API_BASE_URL` if the API is not on `http://localhost:5000`; if `SUPER_ADMIN_PASSWORD` is not present in `.env`, supply it inline for the seeded admin login).
+- **Smoke (optional, server running):** `npx tsx scripts/test/smoke/api-smoke-test.ts` — auth section includes register + pending login; when seeded **super-admin** login succeeds: **`GET /api/auth/admin/users`** (expects `memberships[]` on users), **`GET /api/admin/directory/users`**, **`POST /api/auth/switch-org`** (403 unknown org; 200 when switching between active `rr` and `slmts` per seed data).
 
 ---
 
