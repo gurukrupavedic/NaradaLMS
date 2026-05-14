@@ -9,7 +9,8 @@ import {
     Tabs, TabsContent, TabsList, TabsTrigger,
     Card, CardContent, CardDescription, CardHeader, CardTitle,
     Label,
-    useToast
+    useToast,
+    cn
 } from "@narada/ui";
 import { apiRequest } from "@/lib/api";
 import { FcGoogle } from "react-icons/fc";
@@ -175,14 +176,18 @@ export function StudentAuthPage() {
 }
 
 // Helper for 'Force Light' inputs
-const LightInput = (props: React.ComponentProps<typeof Input>) => (
+const LightInput = ({ className, ...props }: React.ComponentProps<typeof Input>) => (
     <Input
         {...props}
-        className={`bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-hema-base focus-visible:ring-offset-0 [&:-webkit-autofill]:bg-white [&:-webkit-autofill]:shadow-[0_0_0_1000px_white_inset] [&:-webkit-autofill]:-webkit-text-fill-color:rgb(15_23_42) ${props.className}`}
+        className={cn(
+            "bg-white border-slate-200 !text-slate-900 placeholder:text-slate-400 focus-visible:ring-hema-base focus-visible:ring-offset-0",
+            "[&:-webkit-autofill]:bg-white [&:-webkit-autofill]:shadow-[0_0_0_1000px_white_inset] [&:-webkit-autofill]:-webkit-text-fill-color:rgb(15_23_42)",
+            className
+        )}
     />
 );
-const LightLabel = (props: React.ComponentProps<typeof Label>) => (
-    <Label {...props} className={`text-slate-600 font-medium ${props.className}`} />
+const LightLabel = ({ className, ...props }: React.ComponentProps<typeof Label>) => (
+    <Label {...props} className={cn("text-slate-600 font-medium", className)} />
 );
 
 function LoginForm({ onSuccess }: { onSuccess: () => void }) {
