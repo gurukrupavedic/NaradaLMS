@@ -40,7 +40,7 @@ The most important commands are:
 - `npm run db:reset`: wipes the configured app database schemas and rebuilds them from migrations.
 - `npm run db:seed-orgs`: creates the SLMTS and RR organization rows.
 - `npm run db:seed-dev`: creates one local developer/admin account and baseline memberships.
-- `npm run db:seed`: loads the SLMTS curriculum from the checked-in curriculum file.
+- `npm run db:seed`: loads curriculum from `server/seeds/curriculum-slmts.json` by default (`CURRICULUM_SEED_FILE` overrides). `npm run db:seed:curriculum:rr` loads `curriculum-rr.json`.
 - `npm run check`: runs TypeScript checks.
 - `npm run lint`: runs ESLint.
 - `npm run verify`: runs the larger local verification script.
@@ -71,7 +71,7 @@ For a fresh local database with useful starter data, the intended order is:
 2. `npm run build:types`
 3. `npm run db:seed-orgs`
 4. `npm run db:seed-dev`
-5. `npm run db:seed` when curriculum data is needed
+5. `npm run db:seed` when SLMTS curriculum data is needed (`npm run db:seed:curriculum:rr` for RR file)
 
 What that gives you:
 
@@ -79,7 +79,7 @@ What that gives you:
 - two organizations: SLMTS and RR,
 - one developer super-admin account from `ADMIN_EMAIL`,
 - baseline SLMTS/RR memberships for that account,
-- SLMTS curriculum tracks and chapters if you run `db:seed`.
+- SLMTS curriculum tracks and chapters if you run `db:seed`; RR file is separate (`db:seed:curriculum:rr`) and starts with an empty `tracks` array until you add Puranokta content.
 
 If you want a completely empty database, run migrations only and do not run seed scripts.
 
@@ -219,11 +219,11 @@ This is useful for local testing, but it combines user creation and membership s
 
 ### `npm run db:seed`
 
-Runs `server/db-seeding/seed-vedic-curriculum.ts`.
+Runs `server/db-seeding/seed-curriculum.ts`. Loads from `server/seeds/` using env `CURRICULUM_SEED_FILE` (basename only unless you pass an absolute path); default is `curriculum-slmts.json`. Current SLMTS file has 9 tracks and 72 chapters.
 
-Loads SLMTS curriculum from `server/seeds/curriculum.json`.
+### `npm run db:seed:curriculum:rr`
 
-Current curriculum source contains 9 tracks and 72 chapters. RR does not currently have an equivalent canonical curriculum seed.
+Same script with `CURRICULUM_SEED_FILE=curriculum-rr.json`. Use after `db:seed-orgs`. The RR file is a structured placeholder for Puranokta content (`tracks` may be empty until you add rows).
 
 ## Optional Demo Seeds
 

@@ -80,16 +80,16 @@ npm run db:seed-dev
 - **Optional:** `DEV_SUPERADMIN_FIRST_NAME`, `DEV_SUPERADMIN_LAST_NAME` (defaults: Dev / SuperAdmin).
 - **Optional (dev only):** `DEV_SUPERADMIN_RESET_PASSWORD=1` plus **`DEV_SUPERADMIN_PASSWORD`** to re-hash the password for an existing user.
 
-### Phase A: Vedic Curriculum (Optional but supported)
+### Phase A: Curriculum (optional)
 
-Populates the SLMTS curriculum structure from the checked-in source asset. Use this after the org and dev bootstrap seeds when the local database needs curriculum data.
+Populates tracks and chapters for the org declared in the seed file (`curriculum-slmts.json` by default). Use after org and dev bootstrap when the local database needs curriculum data.
 
 ```bash
 npm run db:seed
 ```
 
-- **Script**: `server/db-seeding/seed-vedic-curriculum.ts`
-- **Source**: `server/seeds/curriculum.json`
+- **Script**: `server/db-seeding/seed-curriculum.ts`
+- **Source**: `server/seeds/curriculum-slmts.json` by default; set `CURRICULUM_SEED_FILE` to another basename under `server/seeds/` (for example `curriculum-rr.json`) or use `npm run db:seed:curriculum:rr`
 
 ### Phase B: First Admin User (Required)
 

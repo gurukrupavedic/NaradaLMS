@@ -233,7 +233,7 @@ server/
 ├── db-seeding/                # Canonical fresh-database seeds (orgs, dev user, curriculum)
 │   ├── seed-organizations.ts
 │   ├── seed-dev-bootstrap.ts
-│   └── seed-vedic-curriculum.ts
+│   └── seed-curriculum.ts
 │
 ├── modules/                   # 6 domain modules
 │   ├── identity-access/
@@ -274,7 +274,8 @@ server/
 │   └── DatabaseMonitor.ts
 │
 └── seeds/
-    └── curriculum.json
+    ├── curriculum-slmts.json
+    ├── curriculum-rr.json
 ```
 
 ### Module Contracts

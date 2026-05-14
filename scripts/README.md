@@ -54,7 +54,7 @@ The canonical seed entrypoints live under `server/db-seeding/` because they are 
 
 - `server/db-seeding/seed-organizations.ts`: `npm run db:seed-orgs`
 - `server/db-seeding/seed-dev-bootstrap.ts`: `npm run db:seed-dev`
-- `server/db-seeding/seed-vedic-curriculum.ts`: `npm run db:seed`
+- `server/db-seeding/seed-curriculum.ts`: `npm run db:seed` (default `curriculum-slmts.json`); `npm run db:seed:curriculum:rr` for RR
 
 ## Manual Demo Seeds
 

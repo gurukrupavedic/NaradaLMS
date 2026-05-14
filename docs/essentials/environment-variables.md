@@ -18,6 +18,7 @@ All environment variables required by NaradaLMS.
 | `JWT_EXPIRY` | No | `7d` | JWT token expiration |
 | `CORS_ORIGINS` | No | `http://localhost:3000,http://localhost:3001,http://localhost:3010` | Comma-separated allowed origins |
 | `FRONTEND_URL` | No | `http://localhost:3000` | URL of the student portal |
+| `CURRICULUM_SEED_FILE` | No | `curriculum-slmts.json` | Basename (or absolute path) of a curriculum JSON under `server/seeds/`; used by `npm run db:seed` / `seed-curriculum.ts` |
 | `GOOGLE_CLIENT_ID` | No | — | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | No | — | Google OAuth client secret |
 | `GOOGLE_CALLBACK_URL` | No | — | Google OAuth callback URL |

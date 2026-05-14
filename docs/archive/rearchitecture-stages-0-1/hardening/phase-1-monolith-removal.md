@@ -300,7 +300,7 @@ import { SCRIPT_KEYS } from '@narada/types';
 - `server/routes/identity.routes.ts`
 - `server/routes/student.routes.ts`
 - `server/routes/admin.routes.ts`
-- `server/db-seeding/seed-vedic-curriculum.ts`
+- `server/db-seeding/seed-curriculum.ts`
 - `server/init-database.ts`
 - `drizzle.config.ts` (root level)
 

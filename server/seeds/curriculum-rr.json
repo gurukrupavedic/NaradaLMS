@@ -1,0 +1,23 @@
+{
+  "organizationSlug": "rr",
+  "editorGuide": "Raja Rajeswari Pathasala — Puranokta curriculum. Only the `tracks` array is loaded into Postgres. Keys `_exampleSingleTrack` and this `editorGuide` are documentation; delete `_exampleSingleTrack` when you no longer need the template. Each live track must match the shape of `_exampleSingleTrack` (extra keys like title_te are allowed on tracks and are ignored by the seeder). Run `npm run db:seed:curriculum:rr` after `npm run db:seed-orgs`.",
+  "_exampleSingleTrack": {
+    "title": "Example track title (unique per organization in the database)",
+    "number": 1,
+    "description": "<p>Optional HTML description for the track.</p>",
+    "title_te": "Optional: extra display fields are preserved in JSON but not mapped to columns unless product adds them.",
+    "chapters": [
+      {
+        "title": "Example chapter title (unique per track in the database)",
+        "number": 1,
+        "status": "draft",
+        "content": {
+          "en": "<p>Optional locale buckets; values are HTML strings.</p>",
+          "te": "",
+          "hi": ""
+        }
+      }
+    ]
+  },
+  "tracks": []
+}

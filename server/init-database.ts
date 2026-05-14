@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { seedOrganizations } from "./db-seeding/seed-organizations";
-import { seedVedicCurriculum } from "./db-seeding/seed-vedic-curriculum";
+import { seedCurriculum } from "./db-seeding/seed-curriculum";
 
 export async function initializeDatabase(): Promise<void> {
   console.log("Initializing database via compatibility wrapper...");
@@ -9,7 +9,7 @@ export async function initializeDatabase(): Promise<void> {
   await seedOrganizations();
 
   console.log("Step 2/2: seeding curriculum...");
-  await seedVedicCurriculum();
+  await seedCurriculum();
 
   console.log(
     "Initialization complete. For local super-admin bootstrap, run `npm run db:seed-dev` separately."

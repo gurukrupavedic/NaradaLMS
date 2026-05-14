@@ -216,7 +216,7 @@ Per product decision, legacy backfill complexity was skipped in favor of clean d
   - org rows (`slmts`, `rr`)
   - super-admin user (Kashyap account in dev)
   - baseline memberships/roles for testing
-  - optional curriculum data from `server/seeds/curriculum.json`
+  - optional curriculum data from `server/seeds/curriculum-slmts.json` (or `CURRICULUM_SEED_FILE`)
 
 During expand (slice 1.1), legacy `users.roles` / `users.status` remained temporarily; no dual-write bridge was introduced. After contract (slice 1.4), those columns are gone for the live schema.
 

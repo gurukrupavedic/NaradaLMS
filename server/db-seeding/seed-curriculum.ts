@@ -1,46 +1,108 @@
 import "dotenv/config";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { chapters, organizations, tracks, users } from "@narada/types";
-import curriculumData from "../seeds/curriculum.json";
 import { db } from "../db";
 import { CURRICULUM_IMPORT_ACTOR_PROFILE } from "../shared/constants/system-actors";
 
-type CurriculumChapter = {
-  title: string;
-  number: number;
-  status?: string;
-  content?: Record<string, unknown>;
-};
+const SEEDS_DIR = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../seeds"
+);
+const DEFAULT_CURRICULUM_FILE = "curriculum-slmts.json";
 
-type CurriculumTrack = {
-  title: string;
-  description?: string | null;
-  number: number;
-  chapters?: CurriculumChapter[];
-};
+const curriculumChapterSchema = z.object({
+  title: z.string(),
+  number: z.number(),
+  status: z.string().optional(),
+  content: z.record(z.unknown()).optional(),
+});
 
-const curriculum = curriculumData as {
-  tracks: CurriculumTrack[];
-};
+const curriculumTrackSchema = z
+  .object({
+    title: z.string(),
+    description: z.string().nullable().optional(),
+    number: z.number(),
+    chapters: z.array(curriculumChapterSchema).optional(),
+  })
+  .passthrough();
 
 /**
- * Seed the SLMTS curriculum structure from the checked-in JSON asset.
- * This script upserts tracks and chapters, including chapter content payloads.
+ * Root shape for JSON files under `server/seeds/` (for example `curriculum-slmts.json`).
+ * `organizationSlug` must match `organizations.slug` (for example `slmts`, `rr`).
+ * `editorGuide` and `_exampleSingleTrack` are optional documentation only; they are not written to the database.
  */
-async function seedVedicCurriculum() {
-  console.log("🌱 Starting Vedic curriculum seed...");
+const curriculumFileSchema = z.object({
+  organizationSlug: z
+    .string()
+    .min(1, "organizationSlug is required")
+    .transform((s) => s.trim().toLowerCase()),
+  editorGuide: z.string().optional(),
+  /** Same shape as one element of `tracks`; validated but not imported. Remove when no longer needed. */
+  _exampleSingleTrack: curriculumTrackSchema.optional(),
+  tracks: z.array(curriculumTrackSchema),
+});
+
+type CurriculumFile = z.infer<typeof curriculumFileSchema>;
+
+function resolveCurriculumSeedPath(): string {
+  const raw = (process.env.CURRICULUM_SEED_FILE ?? DEFAULT_CURRICULUM_FILE).trim();
+  if (!raw) {
+    throw new Error(
+      "CURRICULUM_SEED_FILE is empty. Set it to a filename under server/seeds (for example curriculum-rr.json) or rely on the default curriculum-slmts.json."
+    );
+  }
+  if (path.isAbsolute(raw)) {
+    return raw;
+  }
+  return path.join(SEEDS_DIR, path.basename(raw));
+}
+
+function loadCurriculumDocument(seedPath: string): unknown {
+  try {
+    const text = readFileSync(seedPath, "utf8");
+    return JSON.parse(text) as unknown;
+  } catch (e) {
+    throw new Error(
+      `Unable to read curriculum seed file at ${seedPath}. Set CURRICULUM_SEED_FILE or create the default ${DEFAULT_CURRICULUM_FILE} under server/seeds. (${e instanceof Error ? e.message : String(e)})`
+    );
+  }
+}
+
+/**
+ * Seeds tracks and chapters for one organization from a curriculum JSON file.
+ * Which file is loaded: absolute `CURRICULUM_SEED_FILE`, or `server/seeds/<basename>`,
+ * defaulting to `curriculum-slmts.json`.
+ */
+async function seedCurriculum(): Promise<void> {
+  const seedPath = resolveCurriculumSeedPath();
+  console.log(`🌱 Starting curriculum seed from ${seedPath}...`);
 
   try {
-    const [slmtsOrg] = await db
-      .select({ id: organizations.id })
+    const raw = loadCurriculumDocument(seedPath);
+    const parsed = curriculumFileSchema.safeParse(raw);
+    if (!parsed.success) {
+      const detail = parsed.error.flatten().fieldErrors;
+      throw new Error(
+        `Invalid curriculum file (${path.basename(seedPath)}): ${JSON.stringify(detail)}`
+      );
+    }
+    const curriculum: CurriculumFile = parsed.data;
+
+    const orgSlug = curriculum.organizationSlug;
+    const [targetOrg] = await db
+      .select({ id: organizations.id, slug: organizations.slug })
       .from(organizations)
-      .where(eq(organizations.slug, "slmts"))
+      .where(eq(organizations.slug, orgSlug))
       .limit(1);
 
-    if (!slmtsOrg) {
-      throw new Error("SLMTS organization not found. Run `npm run db:seed-orgs` first.");
+    if (!targetOrg) {
+      throw new Error(
+        `No organization with slug "${orgSlug}". Run \`npm run db:seed-orgs\` first, then align organizationSlug in the seed file.`
+      );
     }
 
     console.log("Ensuring dedicated curriculum import actor exists...");
@@ -53,7 +115,9 @@ async function seedVedicCurriculum() {
       })
       .onConflictDoNothing();
 
-    console.log(`Syncing ${curriculum.tracks.length} tracks for SLMTS...`);
+    console.log(
+      `Syncing ${curriculum.tracks.length} tracks for organization "${targetOrg.slug}"...`
+    );
 
     let totalTracks = 0;
     let totalChapters = 0;
@@ -61,7 +125,7 @@ async function seedVedicCurriculum() {
     for (const trackData of curriculum.tracks) {
       const now = new Date();
       const trackValues = {
-        orgId: slmtsOrg.id,
+        orgId: targetOrg.id,
         title: trackData.title,
         description: trackData.description ?? "",
         sortOrder: trackData.number,
@@ -93,7 +157,7 @@ async function seedVedicCurriculum() {
         for (const chapter of trackData.chapters) {
           const chapterNow = new Date();
           const chapterValues = {
-            orgId: slmtsOrg.id,
+            orgId: targetOrg.id,
             trackId: syncedTrack.id,
             title: chapter.title,
             sortOrder: chapter.number,
@@ -125,11 +189,11 @@ async function seedVedicCurriculum() {
       }
     }
 
-    console.log("\n✅ Vedic curriculum seed complete.");
+    console.log("\n✅ Curriculum seed complete.");
     console.log(`   ${totalTracks} tracks synced`);
     console.log(`   ${totalChapters} chapters synced`);
     console.log(
-      "\n📝 This seed syncs SLMTS curriculum structure from server/seeds/curriculum.json."
+      `   organizationSlug=${orgSlug} (org_id on all rows). Source: ${path.basename(seedPath)}`
     );
   } catch (error) {
     console.error("❌ Error seeding curriculum:", error);
@@ -142,9 +206,9 @@ const isMainModule =
   path.normalize(process.argv[1]) === path.normalize(fileURLToPath(import.meta.url));
 
 if (isMainModule) {
-  seedVedicCurriculum()
+  seedCurriculum()
     .then(() => process.exit(0))
     .catch(() => process.exit(1));
 }
 
-export { seedVedicCurriculum };
+export { seedCurriculum };
