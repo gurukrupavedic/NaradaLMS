@@ -4,6 +4,7 @@ import type { BatchCreateInput, BatchUpdateInput, EnrollmentCreateInput, Enrollm
 import { eventBus } from "../../shared/events/event-bus";
 import { BATCH_EVENTS } from "./events";
 import { LEARNING_DELIVERY_EVENTS } from "../learning-delivery/events";
+import { contentService } from "../content-publishing";
 import {
   getPostgresConstraintName,
   isPostgresUniqueViolation,
@@ -219,9 +220,10 @@ export class BatchService {
     const studentExists = await batchStorage.userExists(input.studentId);
     if (!studentExists) throw Object.assign(new Error('Student not found'), { status: 400 });
 
-    // Validate chapter exists
-    const chapterExists = await batchStorage.chapterExists(input.chapterId);
-    if (!chapterExists) throw Object.assign(new Error('Chapter not found'), { status: 400 });
+    // Validate chapter exists and is published
+    const chapter = await contentService.getChapter(input.chapterId);
+    if (!chapter) throw Object.assign(new Error('Chapter not found'), { status: 400 });
+    if (chapter.status === 'draft') throw Object.assign(new Error('Cannot evaluate an unpublished chapter'), { status: 400 });
 
     // If batchId provided, validate batch exists
     if (input.batchId) {

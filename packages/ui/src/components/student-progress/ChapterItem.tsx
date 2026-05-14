@@ -13,26 +13,29 @@ interface ChapterItemProps {
 }
 
 export function ChapterItem({ chapter, onClick }: ChapterItemProps) {
+  const isDraft = chapter.status === 'draft';
+  const isClickable = Boolean(onClick && !isDraft);
   const status = getProficiencyStatus(chapter.proficiencyLevel);
   const colors = getProficiencyBadgeClasses(chapter.proficiencyLevel ?? 9, status);
   const label = getProficiencyLabel(chapter.proficiencyLevel);
   const hasInfo = Boolean(chapter.notes || chapter.lastEvaluatedAt);
 
   const handleClick = () => {
-    if (onClick) onClick(chapter);
+    if (isClickable && onClick) onClick(chapter);
   };
 
   return (
     <div
       className={cn(
         "relative flex flex-col justify-between p-3 rounded-lg border transition-colors transition-shadow bg-card/80",
-        onClick ? "cursor-pointer hover:shadow-md hover:border-primary/40" : "cursor-default hover:shadow-sm"
+        isClickable ? "cursor-pointer hover:shadow-md hover:border-primary/40" : "cursor-default hover:shadow-sm",
+        isDraft && "opacity-75"
       )}
       onClick={handleClick}
-      role={onClick ? "button" : undefined}
-      tabIndex={onClick ? 0 : -1}
+      role={isClickable ? "button" : undefined}
+      tabIndex={isClickable ? 0 : -1}
       onKeyDown={(e) => {
-        if (!onClick) return;
+        if (!isClickable) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           handleClick();
@@ -40,10 +43,17 @@ export function ChapterItem({ chapter, onClick }: ChapterItemProps) {
       }}
     >
       <div className="flex justify-between items-start gap-2 mb-2">
-        <span className="text-xs font-bold uppercase tracking-wider opacity-70 text-muted-foreground">
-          {chapter.chapterCode}
-        </span>
-        {chapter.lastEvaluatedAt && (
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-bold uppercase tracking-wider opacity-70 text-muted-foreground">
+            {chapter.chapterCode}
+          </span>
+          {isDraft && (
+            <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 uppercase tracking-wider text-muted-foreground bg-muted/50 border-muted-foreground/20">
+              Draft
+            </Badge>
+          )}
+        </div>
+        {!isDraft && chapter.lastEvaluatedAt && (
           <span className="text-[10px] opacity-70 font-medium text-muted-foreground">
             {format(new Date(chapter.lastEvaluatedAt), "MMM d")}
           </span>
