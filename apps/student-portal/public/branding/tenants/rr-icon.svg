@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
-  <title id="title">RR icon</title>
-  <rect width="128" height="128" rx="24" fill="#081431" />
-  <circle cx="64" cy="50" r="24" fill="none" stroke="#ED6325" stroke-width="8" />
-  <path d="M46 88V40h20c12 0 20 8 20 18s-8 18-20 18H46m0 0 24 12" fill="none" stroke="#D7AA42" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
-  <text x="64" y="111" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="24" font-weight="700">R</text>
-</svg>

@@ -1,5 +1,5 @@
-import * as tenantModule from "../../apps/student-portal/src/lib/tenant";
-import * as tenantConfigModule from "../../apps/student-portal/src/config/tenants";
+import * as tenantModule from "../../../apps/student-portal/src/lib/tenant";
+import * as tenantConfigModule from "../../../apps/student-portal/src/config/tenants";
 
 const {
   buildTenantMembershipRequest,
@@ -90,12 +90,12 @@ function testReturnsRrTenantConfig() {
   assertEqual(rrConfig.slug, "rr", "rr config keeps rr slug");
   assertEqual(
     rrConfig.displayName,
-    "Raja Rajeswari Pathasala",
+    "Sri Raja Rajeswari Pathasala",
     "rr config exposes display name"
   );
   assertEqual(
     rrConfig.logoPath,
-    "/branding/tenants/rr-logo.svg",
+    "/branding/tenants/rr-logo.png",
     "rr config exposes tenant logo path"
   );
 }
@@ -172,7 +172,7 @@ function testTenantGoogleAuthUrlCarriesTenantQueryParameters() {
 
   const authUrl = buildTenantGoogleAuthUrl(
     "http://localhost:5000/api",
-    "http://localhost:3001/vedic-learning",
+    "http://localhost:3001/my-learning",
     "rr"
   );
   const parsedUrl = new URL(authUrl);
@@ -189,7 +189,7 @@ function testTenantGoogleAuthUrlCarriesTenantQueryParameters() {
   );
   assertEqual(
     parsedUrl.searchParams.get("returnTo"),
-    "http://localhost:3001/vedic-learning",
+    "http://localhost:3001/my-learning",
     "google auth url includes post-auth return url query parameter"
   );
 }
@@ -199,12 +199,12 @@ function testTenantMetadataUsesTenantSpecificBranding() {
 
   assertEqual(
     metadata.title,
-    "Raja Rajeswari Pathasala",
+    "Sri Raja Rajeswari Pathasala",
     "metadata uses tenant title"
   );
   assertEqual(
     metadata.icons.icon[0]?.url,
-    "/branding/tenants/rr-icon.svg",
+    "/branding/tenants/rr-logo.png",
     "metadata uses tenant icon"
   );
 }
@@ -244,17 +244,17 @@ function testStudentShellBrandingUsesTenantAssets() {
 
   assertEqual(
     rrBranding.displayName,
-    "Raja Rajeswari Pathasala",
+    "Sri Raja Rajeswari Pathasala",
     "student shell branding uses tenant display name"
   );
   assertEqual(
     rrBranding.logoPath,
-    "/branding/tenants/rr-logo.svg",
+    "/branding/tenants/rr-logo.png",
     "student shell branding uses tenant logo"
   );
   assertEqual(
     rrBranding.iconPath,
-    "/branding/tenants/rr-icon.svg",
+    "/branding/tenants/rr-logo.png",
     "student shell branding uses tenant icon"
   );
 }

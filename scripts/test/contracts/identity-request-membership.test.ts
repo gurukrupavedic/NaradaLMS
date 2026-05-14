@@ -56,7 +56,7 @@ async function testRequestMembershipCreatesPendingMembership() {
     {
       getOrganizationBySlug: async (slug: string) =>
         slug === "rr"
-          ? { id: "org-rr", slug: "rr", name: "Raja Rajeswari Pathasala" }
+          ? { id: "org-rr", slug: "rr", name: "Sri Raja Rajeswari Pathasala" }
           : null,
       getMembershipByUserAndOrg: async () => null,
       upsertOrgMembership: async (args) => {
@@ -133,14 +133,14 @@ async function testRequestMembershipIsIdempotentForPendingMembership() {
       getOrganizationBySlug: async () => ({
         id: "org-rr",
         slug: "rr",
-        name: "Raja Rajeswari Pathasala",
+        name: "Sri Raja Rajeswari Pathasala",
       }),
       getMembershipByUserAndOrg: async () => ({
         membershipId: "membership-rr",
         userId: "user-1",
         orgId: "org-rr",
         orgSlug: "rr",
-        orgName: "Raja Rajeswari Pathasala",
+        orgName: "Sri Raja Rajeswari Pathasala",
         roles: ["student"],
         status: "pending",
       }),
@@ -199,14 +199,14 @@ async function testRequestMembershipIsIdempotentForActiveMembership() {
       getOrganizationBySlug: async () => ({
         id: "org-rr",
         slug: "rr",
-        name: "Raja Rajeswari Pathasala",
+        name: "Sri Raja Rajeswari Pathasala",
       }),
       getMembershipByUserAndOrg: async () => ({
         membershipId: "membership-rr-active",
         userId: "user-1",
         orgId: "org-rr",
         orgSlug: "rr",
-        orgName: "Raja Rajeswari Pathasala",
+        orgName: "Sri Raja Rajeswari Pathasala",
         roles: ["student"],
         status: "active",
       }),
@@ -265,14 +265,14 @@ async function testRequestMembershipDoesNotReopenInactiveMembership() {
       getOrganizationBySlug: async () => ({
         id: "org-rr",
         slug: "rr",
-        name: "Raja Rajeswari Pathasala",
+        name: "Sri Raja Rajeswari Pathasala",
       }),
       getMembershipByUserAndOrg: async () => ({
         membershipId: "membership-rr-inactive",
         userId: "user-1",
         orgId: "org-rr",
         orgSlug: "rr",
-        orgName: "Raja Rajeswari Pathasala",
+        orgName: "Sri Raja Rajeswari Pathasala",
         roles: ["student"],
         status: "inactive",
       }),
@@ -331,14 +331,14 @@ async function testRequestMembershipDoesNotReopenRejectedMembership() {
       getOrganizationBySlug: async () => ({
         id: "org-rr",
         slug: "rr",
-        name: "Raja Rajeswari Pathasala",
+        name: "Sri Raja Rajeswari Pathasala",
       }),
       getMembershipByUserAndOrg: async () => ({
         membershipId: "membership-rr-rejected",
         userId: "user-1",
         orgId: "org-rr",
         orgSlug: "rr",
-        orgName: "Raja Rajeswari Pathasala",
+        orgName: "Sri Raja Rajeswari Pathasala",
         roles: ["student"],
         status: "rejected",
       }),

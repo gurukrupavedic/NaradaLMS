@@ -8,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
   useToast,
+  useSidebar,
+  cn,
 } from "@narada/ui";
 import type { MembershipSummary } from "@/hooks/useAuth";
 import {
@@ -29,6 +31,8 @@ export function AdminOrgSwitcher({
 }: AdminOrgSwitcherProps) {
   const { toast } = useToast();
   const switchOrg = useSwitchOrg();
+  const { state: sidebarState } = useSidebar();
+  const isSidebarCollapsed = sidebarState === "collapsed";
 
   const switchableMemberships = useMemo(
     () => getAdminSwitcherMemberships(memberships, isSuperAdmin),
@@ -57,7 +61,7 @@ export function AdminOrgSwitcher({
       toast({
         title: "Organization switched",
         description: nextMembership
-          ? `Now viewing ${nextMembership.orgName}.`
+          ? `Now viewing ${nextMembership.orgSlug.toUpperCase()}.`
           : "Your admin context was updated.",
       });
     } catch (error) {
@@ -73,17 +77,16 @@ export function AdminOrgSwitcher({
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="hidden text-sm text-muted-foreground lg:inline">
-        Organization
-      </span>
-      <Select
+    <Select
         value={currentMembership.orgId}
         onValueChange={handleValueChange}
         disabled={switchOrg.isPending}
       >
         <SelectTrigger
-          className="h-9 w-[180px] bg-background"
+          className={cn(
+            "h-9 shrink-0 border-input bg-card px-2.5 text-card-foreground [&>span]:line-clamp-1",
+            isSidebarCollapsed ? "w-20" : "w-[104px]"
+          )}
           aria-label="Switch organization"
         >
           <SelectValue placeholder="Select organization" />
@@ -91,11 +94,10 @@ export function AdminOrgSwitcher({
         <SelectContent>
           {switchableMemberships.map((membership) => (
             <SelectItem key={membership.membershipId} value={membership.orgId}>
-              {membership.orgName}
+              {membership.orgSlug.toUpperCase()}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-    </div>
   );
 }

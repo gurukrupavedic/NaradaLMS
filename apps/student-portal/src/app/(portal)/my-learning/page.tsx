@@ -9,7 +9,7 @@ import { useMyDetails } from '@/hooks/useMyDetails';
 import { useMyTrackProgress } from '@/hooks/useMyTrackProgress';
 import type { ChapterProgress, TrackProgress } from '@narada/types';
 
-export default function VedicLearningPage() {
+export default function MyLearningPage() {
     const router = useRouter();
 
     const {

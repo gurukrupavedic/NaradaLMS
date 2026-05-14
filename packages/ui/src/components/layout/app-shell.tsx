@@ -33,7 +33,7 @@ interface AppShellProps {
     contextualNavigation?: Map<string, any>
     /** Optional label for content chapter (e.g. "Track 1. Chapter 3") for breadcrumb and sidebar */
     contentContextLabel?: string | null
-    /** Paths on which the browser window scrolls instead of the main content (e.g. ['/vedic-learning']). Other pages keep viewport-constrained inner scroll. */
+    /** Paths on which the browser window scrolls instead of the main content (e.g. ['/my-learning']). Other pages keep viewport-constrained inner scroll. */
     documentScrollPaths?: string[]
     /** Optional header actions rendered beside the theme toggle. */
     headerActions?: React.ReactNode
@@ -85,11 +85,11 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                                     // Simple path-based breadcrumb generation (path is pathname ?? "" to avoid null in SSR)
                                     let segments: { label: string, href?: string }[] = [];
 
-                                    if (path === '/vedic-learning' || path === '/app/learning') {
-                                        segments = [{ label: 'Vedic Learning' }];
+                                    if (path === '/my-learning' || path === '/app/learning') {
+                                        segments = [{ label: 'My Learning' }];
                                     } else if (path.match(/\/learning\/chapter\/\d+/)) {
                                         segments = [
-                                            { label: 'Vedic Learning', href: '/vedic-learning' },
+                                            { label: 'My Learning', href: '/my-learning' },
                                             { label: contentContextLabel ?? 'Learn Chapter' }
                                         ];
                                     } else if (path.startsWith('/admin') && !path.startsWith('/admin/content') && !path.startsWith('/admin/tracks')) {
@@ -149,7 +149,7 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                                         }
                                     } else {
                                         // Fallback for unknown routes
-                                        segments = [{ label: 'Vedic Learning' }];
+                                        segments = [{ label: 'My Learning' }];
                                     }
 
                                     return segments.map((segment, index) => (

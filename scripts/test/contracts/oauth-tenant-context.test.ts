@@ -85,7 +85,7 @@ function testOAuthStateTenantOverridesDefaultTenant() {
   const req = createRequest({
     state: buildOAuthState({
       tenantSlug: "rr",
-      returnTo: "http://localhost:3001/vedic-learning",
+      returnTo: "http://localhost:3001/my-learning",
     }),
   });
 
@@ -138,13 +138,13 @@ function testSafePostAuthRedirectAcceptsAllowedOrigin() {
 
   const redirect = resolveSafePostAuthRedirect(
     buildOAuthState({
-      returnTo: "http://localhost:3001/vedic-learning",
+      returnTo: "http://localhost:3001/my-learning",
     })
   );
 
   assertEqual(
     redirect,
-    "http://localhost:3001/vedic-learning",
+    "http://localhost:3001/my-learning",
     "safe post-auth redirect keeps allowed student return url"
   );
 }
@@ -168,7 +168,7 @@ function testSafePostAuthRedirectFallsBackForUnknownOrigin() {
   const redirect = resolveSafePostAuthRedirect(
     buildOAuthState({
       tenantSlug: "rr",
-      returnTo: "https://evil.example.com/vedic-learning",
+      returnTo: "https://evil.example.com/my-learning",
     })
   );
 
@@ -197,7 +197,7 @@ function testSafePostAuthRedirectRejectsTamperedState() {
 
   const state = buildOAuthState({
     tenantSlug: "rr",
-    returnTo: "http://localhost:3001/vedic-learning",
+    returnTo: "http://localhost:3001/my-learning",
   });
   const tamperedState = `${state}tampered`;
 

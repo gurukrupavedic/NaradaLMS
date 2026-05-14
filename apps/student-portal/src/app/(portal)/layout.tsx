@@ -79,7 +79,7 @@ export default function PortalLayout({
             setFailedAutoSwitchOrgId(null);
         }
         if (session.currentTenantAccessState === "active" && onPendingPage) {
-            router.replace("/vedic-learning");
+            router.replace("/my-learning");
             return;
         }
         if (
@@ -148,10 +148,10 @@ export default function PortalLayout({
                 }}
                 userRoles={userRoles}
                 onLogout={logout}
-                homeHref="/vedic-learning"
+                homeHref="/my-learning"
                 contentContextLabel={contentContextLabel}
                 contextualNavigation={instructorContextualNavigation}
-                documentScrollPaths={["/vedic-learning", "/instructor/students"]}
+                documentScrollPaths={["/my-learning", "/instructor/students"]}
                 brandHeaderBranding={brandHeaderBranding}
             >
                 {children}

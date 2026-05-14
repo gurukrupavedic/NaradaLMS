@@ -11,7 +11,7 @@ const BASELINE_ORGS = [
     status: "active" as const,
   },
   {
-    name: "Raja Rajeswari Pathasala",
+    name: "Sri Raja Rajeswari Pathasala",
     slug: "rr",
     status: "active" as const,
   },

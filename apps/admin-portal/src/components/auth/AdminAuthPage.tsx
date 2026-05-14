@@ -101,34 +101,8 @@ export function AdminAuthPage() {
             {/* RIGHT PANEL: Authentication Forms */}
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white h-full overflow-y-auto border-l border-slate-200">
                 <div className="w-full max-w-md space-y-6">
-                    {/* Mobile Logo */}
-                    <div className="lg:hidden text-center mb-8 shrink-0">
-                        <h1 className="text-2xl font-bold text-slate-900">Narada LMS</h1>
-                    </div>
-
                     <div className="text-center space-y-2 shrink-0 mb-8">
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Admin portal</h1>
-                    </div>
-
-                    {/* Social Login */}
-                    <Button
-                        variant="outline"
-                        className="w-full py-5 flex items-center gap-2 border-slate-200 text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900 mb-6 shrink-0"
-                        onClick={handleGoogleLogin}
-                    >
-                        <FcGoogle className="h-5 w-5" />
-                        Continue with Google
-                    </Button>
-
-                    <div className="relative shrink-0 mb-6">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-slate-200" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-white px-2 text-slate-400 font-medium">
-                                Or continue with email
-                            </span>
-                        </div>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Narada LMS - Admin portal</h1>
                     </div>
 
                     {oauthErrorMessage ? (
@@ -158,6 +132,24 @@ export function AdminAuthPage() {
                             }, 500);
                         }}
                     />
+
+                    <div className="relative shrink-0 mb-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t border-slate-200" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-white px-2 text-slate-400 font-medium">Or</span>
+                        </div>
+                    </div>
+
+                    <Button
+                        variant="outline"
+                        className="w-full py-5 flex items-center gap-2 border-slate-200 text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900 shrink-0"
+                        onClick={handleGoogleLogin}
+                    >
+                        <FcGoogle className="h-5 w-5" />
+                        Sign in with Google
+                    </Button>
 
                     <p className="px-8 text-center text-sm text-slate-400 mt-8 shrink-0">
                         By clicking continue, you agree to our{" "}

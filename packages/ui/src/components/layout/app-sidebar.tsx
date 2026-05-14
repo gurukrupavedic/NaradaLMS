@@ -58,7 +58,7 @@ const enhanceWithContextualItems = (items: any[], currentPath: string | null | u
         }
 
         // 2. Hardcoded fallbacks for existing patterns
-        if (item.url === '/vedic-learning' || item.url === '/app/learning') {
+        if (item.url === '/my-learning' || item.url === '/app/learning') {
             const chapterMatch = normalizedPath.match(/\/learning\/chapter\/(\d+)/);
             if (chapterMatch) {
                 // Same convention as ops portal: full label in breadcrumb, short label (no ": Title") in sidebar

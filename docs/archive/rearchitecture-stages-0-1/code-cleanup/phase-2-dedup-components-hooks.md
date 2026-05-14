@@ -275,7 +275,7 @@ These hooks differ meaningfully between portals. Extract ONLY the shared query l
 ### `useAuth.ts` and `useRoleGuard.ts`
 
 **DO NOT consolidate.** These have portal-specific redirect logic that must remain different:
-- Student-portal `useRoleGuard` redirects to `/` and `/vedic-learning`
+- Student-portal `useRoleGuard` redirects to `/` and `/my-learning`
 - Admin-portal `useRoleGuard` redirects to `/login` and `/unauthorized`
 
 Keep separate in each portal. No changes needed.

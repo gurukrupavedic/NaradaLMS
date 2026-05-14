@@ -21,7 +21,7 @@ export function useRoleGuard(requiredRoles: string[]) {
             user.isSuperAdmin ||
             requiredRoles.some((role) => user.orgRoles?.includes(role));
         if (!hasRequiredRole) {
-            router.push("/vedic-learning");
+            router.push("/my-learning");
         }
     }, [user, isLoading, requiredRoles, router]);
 }

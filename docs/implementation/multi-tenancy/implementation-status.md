@@ -172,7 +172,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
   - self-serve registration and login landed on `http://localhost:3100/pending-approval`
   - visible copy confirmed the `slmts` membership was pending
   - super-admin approval through `POST /api/auth/admin/memberships/:membershipId/approve` succeeded
-  - post-approval login reached `http://localhost:3100/vedic-learning` with normal student content visible
+  - post-approval login reached `http://localhost:3100/my-learning` with normal student content visible
 - Supporting high-signal guard checks also passed:
   - `npx tsx scripts/test/contracts/require-super-admin.test.ts`
   - `npx tsx scripts/test/contracts/audit-log-visibility.test.ts`
