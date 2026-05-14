@@ -67,7 +67,7 @@ export function useAssignRoles() {
     return useMutation({
         mutationFn: ({ userId, roles }: { userId: string; roles: string[] }) =>
             apiRequest(`/auth/admin/users/${userId}/roles`, {
-                method: 'PUT',
+                method: 'POST',
                 body: JSON.stringify({ roles })
             }),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
