@@ -4,6 +4,8 @@
 
 **Execution & handoff:** [multi-tenancy/README.md](./multi-tenancy/README.md) and especially [multi-tenancy/implementation-status.md](./multi-tenancy/implementation-status.md)
 
+**Planned work (multi-agent slices):** [multi-tenancy/platform-org-rbac-and-tenant-scoped-learning-plan.md](./multi-tenancy/platform-org-rbac-and-tenant-scoped-learning-plan.md) — platform vs org admin RBAC, admin portal admission/nav, `requireOrgRole` strictness, and tenant-scoped student learning APIs (`X-Tenant-Slug`).
+
 **Archive:** Previous implementation docs (Stages 0–1, hardening, code-cleanup, reshuffle) are in `docs/archive/rearchitecture-stages-0-1/`.
 
 ---

@@ -9,9 +9,10 @@ It captures both the locked product/architecture decisions and the current as-bu
 ## Start here (continuing work)
 
 1. Read **[implementation-status.md](./implementation-status.md)** — what is already merged to `multi-tenancy`, current behavior, remaining gaps, and the current follow-up priority.
-2. Follow **[implementation-roadmap.md](./implementation-roadmap.md)** and **[implementation-checklist.md](./implementation-checklist.md)** for execution order.
-3. Use **[verification-strategy.md](./verification-strategy.md)** before marking checklist items done.
-4. If the work touches DB setup, reset, migrations, or seeds, read **[db-audit-remediation-checklist.md](./db-audit-remediation-checklist.md)** to confirm which files are official, manual, or historical.
+2. For the **next cross-cutting rollout** (platform vs org RBAC, admin portal gates, tenant-scoped `/api/learning/*`), follow **[platform-org-rbac-and-tenant-scoped-learning-plan.md](./platform-org-rbac-and-tenant-scoped-learning-plan.md)** and execute by slice there.
+3. Follow **[implementation-roadmap.md](./implementation-roadmap.md)** and **[implementation-checklist.md](./implementation-checklist.md)** for execution order.
+4. Use **[verification-strategy.md](./verification-strategy.md)** before marking checklist items done.
+5. If the work touches DB setup, reset, migrations, or seeds, read **[db-audit-remediation-checklist.md](./db-audit-remediation-checklist.md)** to confirm which files are official, manual, or historical.
 
 ### Current merged baseline
 
@@ -59,6 +60,7 @@ Wave 3 execution docs are now available:
 4. [task-coverage-matrix.md](./task-coverage-matrix.md)
 5. [verification-strategy.md](./verification-strategy.md)
 6. [db-audit-remediation-checklist.md](./db-audit-remediation-checklist.md)
+7. [platform-org-rbac-and-tenant-scoped-learning-plan.md](./platform-org-rbac-and-tenant-scoped-learning-plan.md) — **planned slices** (RBAC + tenant-scoped learning)
 
 Use the roadmap and checklist as the primary execution guide. The root [roadmap.md](../roadmap.md) remains historical context for earlier planning; multi-tenant execution follows this folder.
 
