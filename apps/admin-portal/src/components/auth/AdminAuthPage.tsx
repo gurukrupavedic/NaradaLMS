@@ -4,9 +4,11 @@ import React, { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+    AuthRotatingTagline,
     Button,
     Input,
     Card, CardContent,
+    KolamIlluminationOverlay,
     Label,
     useToast
 } from "@narada/ui";
@@ -54,29 +56,7 @@ export function AdminAuthPage() {
         <div className="h-screen w-full flex overflow-hidden bg-background">
             {/* LEFT PANEL: Sacred Illumination */}
             <div className="hidden lg:flex w-1/2 relative bg-nila-base overflow-hidden items-center justify-center">
-                {/* Kolam Geometric Overlay */}
-                <div
-                    className="absolute inset-0 pointer-events-none opacity-60"
-                    style={{
-                        maskImage: `url(${kolamPattern.src})`,
-                        maskSize: "200%",
-                        maskPosition: "25% 8%",
-                        maskRepeat: "no-repeat",
-                        WebkitMaskImage: `url(${kolamPattern.src})`,
-                        WebkitMaskSize: "200%",
-                        WebkitMaskPosition: "25% 8%",
-                        WebkitMaskRepeat: "no-repeat",
-                    }}
-                >
-                    {/* Layer 1: Base Etching (Static Gold Lines) */}
-                    <div className="absolute inset-0 bg-hema-base opacity-40" />
-
-                    {/* Layer 2: The Blade Sheen (Intense Moving Highlight) */}
-                    <div className="absolute inset-0 overflow-hidden -skew-x-12">
-                        <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: 'linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)' }} />
-                        <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: 'linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)', animationDelay: '4s' }} />
-                    </div>
-                </div>
+                <KolamIlluminationOverlay patternSrc={kolamPattern.src} />
 
                 {/* Atmospheric Fade Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-nila-base pointer-events-none" />
@@ -88,12 +68,10 @@ export function AdminAuthPage() {
                         alt="Narada LMS"
                         width={384}
                         height={200}
-                        className="w-96 h-auto drop-shadow-2xl mb-8"
+                        className="mb-8 h-auto w-96 drop-shadow-2xl"
                     />
                     <div className="space-y-2">
-                        <h2 className="text-2xl font-semibold text-white tracking-wide">
-                            Vedic Wisdom. Modern Learning.
-                        </h2>
+                        <AuthRotatingTagline />
                     </div>
                 </div>
             </div>

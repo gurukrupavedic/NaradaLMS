@@ -31,6 +31,8 @@ export * from "./textarea";
 export * from "./alert-dialog";
 export * from "./student-progress";
 export * from "./skip-link";
+export * from "./auth-rotating-tagline";
+export * from "./auth/kolam-illumination-overlay";
 // Layout Components
 export * from "./layout/app-shell";
 export * from "./layout/app-sidebar";
