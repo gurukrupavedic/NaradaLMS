@@ -146,3 +146,16 @@ This keeps SLMTS on `3000`, uses `3001` for the RR student instance, and keeps t
 - cross-org content reuse
 - production hosting and domain setup details
 - advanced seed automation policy for future org creation
+
+---
+
+## 12) Tenant-scoped learning APIs (`/api/learning/*`) — slice 5
+
+Aligned with [platform-org-rbac-and-tenant-scoped-learning-plan.md](./platform-org-rbac-and-tenant-scoped-learning-plan.md) **§3.4 policy A**.
+
+1. **Tenant header is mandatory** for all routes under **`/api/learning/*`**. Clients send **`X-Tenant-Slug`** with an allowlisted value (same slugs as tenant foundation: e.g. `slmts`, `rr`). Missing or unknown slug values yield **403** with stable machine-readable `code` values (`TENANT_SLUG_REQUIRED`, `TENANT_SLUG_INVALID`, `TENANT_ORG_NOT_FOUND`).
+2. **Org resolution:** the server maps slug → `organizations` row and sets **`req.orgId`** to that org for the learning router chain. This runs **after** `jwtAuth` (which still runs `attachOrgContext` from JWT); the learning middleware **overwrites** `req.orgId` for learning only.
+3. **Active membership required:** the user must have **`user_organizations.status === 'active'`** for `(user, org)`. There is **no** `is_super_admin`-only bypass for these routes (**§3.4 A**). Inactive or missing membership yields **403** with `TENANT_MEMBERSHIP_REQUIRED` (or related messaging).
+4. **Student portal:** the shared **`apiRequest`** wrapper merges **`X-Tenant-Slug`** from build-time tenant config so browser learning calls stay aligned with the deployed tenant instance.
+5. **CORS:** browser preflight for student portals must allow **`X-Tenant-Slug`** on credentialed requests; server CORS **`allowedHeaders`** includes it.
+6. **Out of scope for this slice:** **`/api/content/*`** and other org-scoped routes continue to use JWT **`currentOrgId`** → `req.orgId` unless a future slice extends the same header pattern.

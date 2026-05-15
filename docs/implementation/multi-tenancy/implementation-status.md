@@ -4,7 +4,7 @@
 
 **Execution source of truth:** [implementation-roadmap.md](./implementation-roadmap.md), [implementation-checklist.md](./implementation-checklist.md), and the DB/runbook cleanup tracker [db-audit-remediation-checklist.md](./db-audit-remediation-checklist.md). This file does not replace them; it **summarizes current reality** so the roadmap/checklist are easier to interpret.
 
-**Last updated:** Reflects Layer **1** through **1.4 contract** (including fresh-DB verification on the merged branch), Layer **2** roadmap slices **2.1–2.5** plus **2.12** OAuth parity, Layer **3** Pass A and Pass B, student Layer **4.1 / 4.2 / 4.4**, admin checklist **5.1**–**5.4**, and pilot closeout through checklist **6.4** on the current multi-tenancy slice flow.
+**Last updated:** Reflects Layer **1** through **1.4 contract** (including fresh-DB verification on the merged branch), Layer **2** roadmap slices **2.1–2.5** plus **2.12** OAuth parity, Layer **3** Pass A and Pass B, student Layer **4.1 / 4.2 / 4.4**, admin checklist **5.1**–**5.4**, pilot closeout through checklist **6.4**, and **slices 5–6** tenant-scoped **`/api/learning/*`** delivery (header + active membership, no super-admin bypass per **§3.4 A**).
 
 ---
 
@@ -29,6 +29,8 @@
 - `slice-4.4-tenant-aware-oauth` — student/admin OAuth start parameters, server-signed callback state, safe post-auth redirect handling, and tenant-aware Google membership resolution
 - `slice-6.3-second-org-join` — authenticated tenant membership requests, tenant-scoped student access state, RR auto-switch behavior, second-org smoke coverage, and 6.3 docs refresh
 - `slice-6.4-known-gaps-docs` — pilot closeout documentation, canonical known-gap wording, and execution-doc sync so new chats stop treating `6.4` as pending
+- `slice-5-tenant-learning-org` — **`/api/learning/*`** resolves **`req.orgId`** from **`X-Tenant-Slug`** with **active** `user_organizations` only (**§3.4 A**, no super-admin bypass); CORS **`allowedHeaders`**; student portal **`apiRequest`** merges tenant slug; RR isolation smoke asserts learning header + inactive-membership denial
+- `slice-6-mt-docs-verification` — this status file + **architecture-decisions** ADR for tenant learning APIs; contract smoke pass notes
 
 ---
 
@@ -72,6 +74,13 @@ Contract verification now also has focused regression coverage for the last high
 | Slice | Summary | Key files |
 | ----- | ------- | --------- |
 | **4.1 / 4.2 / 4.4** Tenant config foundation + shell/OAuth follow-up | Student portal now resolves **`TENANT`** to typed configs for **`slmts`** and **`rr`**, mirrors that tenant into the client runtime for browser-rendered branding, drives tenant-specific branding for the auth form area, root metadata, authenticated shell, and pending-approval surface, builds tenant-aware register headers/body instead of hardcoding **`slmts`**, computes **current-tenant** access state so RR users can request membership, see tenant-specific pending copy, and auto-switch into RR after approval without relying on global `hasActiveMembership`, and now sends tenant slug plus post-auth return intent to `/auth/google` so the server can mint a signed OAuth `state`, safely validate callback redirects, preserve the originating tenant during Google membership creation/backfill, and return callback failures to the auth pages with explicit error codes instead of silent route bounces. The auth page's **left hero remains Narada-branded across tenants by design** so the product identity stays consistent. Dev scripts support the documented dual-instance local setup on **`3000`** and **`3001`**, and local OAuth return handling explicitly allows those documented portal origins even if a developer's CORS env lags behind. | [`apps/student-portal/src/config/tenants/index.ts`](../../../apps/student-portal/src/config/tenants/index.ts), [`apps/student-portal/src/config/tenants/slmts.ts`](../../../apps/student-portal/src/config/tenants/slmts.ts), [`apps/student-portal/src/config/tenants/rr.ts`](../../../apps/student-portal/src/config/tenants/rr.ts), [`apps/student-portal/src/lib/tenant.ts`](../../../apps/student-portal/src/lib/tenant.ts), [`apps/student-portal/src/lib/tenant-session.ts`](../../../apps/student-portal/src/lib/tenant-session.ts), [`apps/student-portal/src/components/auth/StudentAuthPage.tsx`](../../../apps/student-portal/src/components/auth/StudentAuthPage.tsx), [`apps/student-portal/src/app/layout.tsx`](../../../apps/student-portal/src/app/layout.tsx), [`apps/student-portal/src/app/(portal)/layout.tsx`](../../../apps/student-portal/src/app/(portal)/layout.tsx), [`apps/student-portal/src/app/(portal)/pending-approval/page.tsx`](../../../apps/student-portal/src/app/(portal)/pending-approval/page.tsx), [`apps/student-portal/next.config.ts`](../../../apps/student-portal/next.config.ts), [`apps/admin-portal/src/components/auth/AdminAuthPage.tsx`](../../../apps/admin-portal/src/components/auth/AdminAuthPage.tsx), [`server/routes/identity.routes.ts`](../../../server/routes/identity.routes.ts), [`server/auth/passport-config.ts`](../../../server/auth/passport-config.ts), [`server/modules/identity-access/tenant-context.ts`](../../../server/modules/identity-access/tenant-context.ts), [`scripts/test/contracts/student-tenant-config.test.ts`](../../../scripts/test/contracts/student-tenant-config.test.ts), [`scripts/test/contracts/student-tenant-session.test.ts`](../../../scripts/test/contracts/student-tenant-session.test.ts), [`scripts/test/contracts/oauth-tenant-context.test.ts`](../../../scripts/test/contracts/oauth-tenant-context.test.ts) |
+
+### Tenant-scoped learning delivery (slices **5–6**)
+
+| Slice | Summary | Key files |
+| ----- | ------- | --------- |
+| **5** | **`/api/learning/*`** requires **`X-Tenant-Slug`** (allowlisted slug). Middleware **`attachLearningTenantOrgContext`** runs after **`jwtAuth`**, parses the header with **`parseXTenantSlugHeader`**, loads the org by slug, requires an **active** `user_organizations` row for `(user.id, org.id)` (**no `isSuperAdmin` bypass** — **§3.4 A**), then sets **`req.orgId`** before **`requireOrgContext`**. Stable **403** bodies: `TENANT_SLUG_REQUIRED`, `TENANT_SLUG_INVALID`, `TENANT_ORG_NOT_FOUND`, `TENANT_MEMBERSHIP_REQUIRED`. CORS preflight allows **`X-Tenant-Slug`**. Student portal shared **`apiRequest`** merges **`X-Tenant-Slug: getCurrentTenantSlug()`**. **`GET /api/learning/progress`** still branches student vs instructor using JWT **`orgRoles`** (current JWT org); follow-up if multi-org power users need roles derived from tenant-org membership. | [`server/shared/middleware/tenant-learning-org-context.ts`](../../../server/shared/middleware/tenant-learning-org-context.ts), [`server/modules/identity-access/tenant-context.ts`](../../../server/modules/identity-access/tenant-context.ts), [`server/routes/learning.routes.ts`](../../../server/routes/learning.routes.ts), [`server/index.ts`](../../../server/index.ts), [`apps/student-portal/src/lib/api.ts`](../../../apps/student-portal/src/lib/api.ts), [`scripts/test/smoke/rr-isolation-smoke.test.ts`](../../../scripts/test/smoke/rr-isolation-smoke.test.ts) |
+| **6** | Documentation: this file + [`architecture-decisions.md`](./architecture-decisions.md) §12. | This file; [`architecture-decisions.md`](./architecture-decisions.md) |
 
 ---
 
@@ -131,6 +140,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 | POST | `/api/auth/admin/users/:userId/super-admin/revoke` | JWT + **super-admin** + CSRF | |
 | GET | `/api/admin/directory/users` | JWT + org **admin** + **`req.orgId`** | Query `membershipRole` or `role`, `search`, `limit`; in-org directory for pickers. |
 | GET | `/api/admin/audit-logs` | JWT + **admin** | Super-admin sees full stream; org admin sees only current-org rows whose physical `audit_logs.org_id` matches the active org. |
+| GET / POST | `/api/learning/*` | JWT cookie + **`X-Tenant-Slug`** | Learning delivery facade; **`req.orgId`** is the org for the resolved tenant slug. Requires **active** membership in that org (**403** with stable `code` if header missing/invalid or membership missing/inactive). **`isSuperAdmin` does not** substitute for membership (**§3.4 A**). |
 
 ---
 
@@ -140,7 +150,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 2. **Register** must target a real org slug; the student portal now derives tenant slug/header from **`TENANT`** config so the same app can send SLMTS context on `3000` and RR context on `3001`.
 3. **Login** succeeds for valid credentials; there is no remaining global user-status gate, and pending **membership** does not block login.
 4. **`/api/auth/me`** is the source for portals: use `hasActiveMembership` and `memberships`, not only JWT fields.
-5. **Super-admin** without any org membership still bypasses `requireOrgRole` (and the compatibility alias `requireRole`) via `isSuperAdmin` on the server; student UI also skips the pending gate for `isSuperAdmin`.
+5. **Super-admin** without any org membership still bypasses `requireOrgRole` (and the compatibility alias `requireRole`) via `isSuperAdmin` on the server for typical org routes; **exception:** **`/api/learning/*`** always requires **`X-Tenant-Slug`** plus an **active** membership in the resolved org (**no** super-admin-only access). Student UI still skips the pending gate for `isSuperAdmin`.
 6. **`POST /api/auth/switch-org`** only succeeds when the target **`orgId`** has an **active** membership; pending orgs return **403**. Authenticated requests that ran through **`jwtAuth`** expose **`req.orgId`** (mirror of JWT `currentOrgId`).
 7. **Admin shell** now exposes a header org switcher whenever the current admin has more than one switchable active org; org-admin users only see active orgs where they still have admin access, while super-admins can switch across all active memberships.
 8. After admin org switch, the portal refreshes **`auth/me`** and invalidates org-sensitive query families before `router.refresh()`. Local verification on the slice branch confirmed RR content collapsed to the single RR track and SLMTS content restored to the 10 SLMTS tracks after switching back.
@@ -158,6 +168,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
 20. **`POST /api/auth/request-membership`** now supports the real 6.3 path: an authenticated user can request access to the current tenant without creating a second account. The route is idempotent for active/pending memberships and preserves inactive/rejected memberships instead of silently reopening them.
 21. **Student portal access is now tenant-scoped.** The portal derives current-tenant membership state from `memberships[]`, not just global `hasActiveMembership`, so an SLMTS-active user on the RR portal can still see RR pending/no-membership states correctly.
 22. **Student portal auto-switches only once per tenant org.** If the current tenant has an active membership but the JWT still points at another org, the portal attempts `POST /api/auth/switch-org`; failures are latched to avoid retry loops and surface a user-visible error instead of spinning forever.
+23. **`/api/learning/*` org context follows the student build tenant, not JWT `currentOrgId`.** Callers must send **`X-Tenant-Slug`**; the student portal **`apiRequest`** wrapper adds it automatically. **`/api/content/*`** and other routes still use JWT org context unless extended in a future slice.
 
 ---
 
@@ -180,7 +191,7 @@ Base URL in dev is typically `http://localhost:5000` with routes under **`/api`*
   - `npx tsx scripts/test/contracts/layer3-pass-b-media-isolation.test.ts`
   - `npx tsx scripts/test/contracts/layer3-pass-b-progress-audit-isolation.test.ts`
   - `npx tsx scripts/test/contracts/student-tenant-config.test.ts`
-- RR isolation is now covered by `npm run test:rr-isolation-smoke`, which logs in with the seeded super-admin (`SUPER_ADMIN_EMAIL` + `SUPER_ADMIN_PASSWORD`), creates temporary dual-org marker data, proves the default session remains on SLMTS, switches to RR through `POST /api/auth/switch-org`, and verifies that list endpoints plus direct track/batch lookups stay org-scoped in both directions.
+- RR isolation is now covered by `npm run test:rr-isolation-smoke`, which logs in with the seeded super-admin (`SUPER_ADMIN_EMAIL` + `SUPER_ADMIN_PASSWORD`), creates temporary dual-org marker data, proves the default session remains on SLMTS, switches to RR through `POST /api/auth/switch-org`, verifies that list endpoints plus direct track/batch lookups stay org-scoped in both directions, and asserts **`/api/learning/tracks`** isolation via **`X-Tenant-Slug`** (including **403** when the header is missing/invalid and **403** `TENANT_MEMBERSHIP_REQUIRED` when RR membership is temporarily **inactive**).
 - Second-org join is now covered by `npm run test:second-org-join-smoke`, which registers a new SLMTS user, approves the initial SLMTS membership, requests RR membership through `POST /api/auth/request-membership`, confirms RR stays pending in `/api/auth/me`, verifies `POST /api/auth/switch-org` returns `403` while RR is pending, then approves RR and verifies `switch-org` plus RR-scoped content access succeed afterward.
 - Pilot closeout is now complete through **6.4**. The known out-of-scope or deferred gaps are: email invites/notifications, questionnaire-driven onboarding, production subdomain/TLS/cookie `SameSite` and `Domain` behavior outside local dev, and RR onboarding browser coverage beyond the current smoke/API path.
 
@@ -202,6 +213,7 @@ These are now intentionally documented rather than left as implied follow-up:
 | Area | Checklist / roadmap | Notes |
 | ---- | -------------------- | ----- |
 | Governance extras | **api-contract** | Optional: `POST …/users/:userId/memberships`, `DELETE …/memberships/:id` are still not implemented. |
+| Non–student-portal **`/api/learning/*` callers** | **platform-org-rbac plan** | **Breaking:** mobile or third-party clients must send **`X-Tenant-Slug`**; there is no JWT-only fallback for learning routes. |
 
 ---
 
@@ -223,7 +235,7 @@ When continuing in a brand-new chat, do this first:
 
 1. Confirm checkout is on **`multi-tenancy`** and up to date with `origin/multi-tenancy`.
 2. Read **this file first**, then re-check [implementation-roadmap.md](./implementation-roadmap.md) and [implementation-checklist.md](./implementation-checklist.md).
-3. Treat **1.4-contract** as already merged, **6.1** through **6.4** as already complete, and the Layer **4.4** tenant-aware OAuth propagation follow-up as merged.
+3. Treat **1.4-contract** as already merged, **6.1** through **6.4** as already complete, the Layer **4.4** tenant-aware OAuth propagation follow-up as merged, and **slices 5–6** (tenant-scoped **`/api/learning/*`**) as merged.
 4. Treat **2.4** and **2.12** as complete, and default next work to the DB/remediation checklist or later operational follow-up rather than reopening auth naming or OAuth policy work. If you touch Layer 2/3 governance or audit behavior again, rerun the targeted checks listed below before merging.
 
 ---
