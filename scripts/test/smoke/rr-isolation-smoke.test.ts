@@ -253,6 +253,113 @@ async function run() {
     "Smoke setup should activate RR membership for the seeded admin"
   );
 
+  const learningNoSlug = await session.request<{ code?: string }>(
+    "/api/learning/tracks"
+  );
+  assert(
+    learningNoSlug.status === 403,
+    `Expected /api/learning/tracks without X-Tenant-Slug to be 403, got ${learningNoSlug.status}`
+  );
+  assert(
+    learningNoSlug.data?.code === "TENANT_SLUG_REQUIRED",
+    "Missing tenant slug should return TENANT_SLUG_REQUIRED"
+  );
+
+  const learningBadSlug = await session.request<{ code?: string }>(
+    "/api/learning/tracks",
+    { headers: { "X-Tenant-Slug": "not-a-tenant" } }
+  );
+  assert(
+    learningBadSlug.status === 403,
+    `Expected invalid X-Tenant-Slug to be 403, got ${learningBadSlug.status}`
+  );
+  assert(
+    learningBadSlug.data?.code === "TENANT_SLUG_INVALID",
+    "Invalid tenant slug should return TENANT_SLUG_INVALID"
+  );
+
+  const learningSlmts = await session.request<{ id: number; title: string }[]>(
+    "/api/learning/tracks",
+    { headers: { "X-Tenant-Slug": "slmts" } }
+  );
+  assert(
+    learningSlmts.status === 200 && Array.isArray(learningSlmts.data),
+    `Expected learning tracks with slmts header 200 array, got ${learningSlmts.status}`
+  );
+  assert(
+    learningSlmts.data.some((track) => track.id === slmtsTrack.id),
+    "Learning + X-Tenant-Slug: slmts should list SLMTS marker track"
+  );
+  assert(
+    !learningSlmts.data.some((track) => track.id === rrTrack.id),
+    "Learning + X-Tenant-Slug: slmts should not list RR marker track"
+  );
+
+  const learningRr = await session.request<{ id: number; title: string }[]>(
+    "/api/learning/tracks",
+    { headers: { "X-Tenant-Slug": "rr" } }
+  );
+  assert(
+    learningRr.status === 200 && Array.isArray(learningRr.data),
+    `Expected learning tracks with rr header 200 array, got ${learningRr.status}`
+  );
+  assert(
+    learningRr.data.some((track) => track.id === rrTrack.id),
+    "Learning + X-Tenant-Slug: rr should list RR marker track"
+  );
+  assert(
+    !learningRr.data.some((track) => track.id === slmtsTrack.id),
+    "Learning + X-Tenant-Slug: rr should not list SLMTS marker track"
+  );
+
+  await db
+    .update(userOrganizations)
+    .set({ status: "inactive", updatedAt: new Date() })
+    .where(
+      and(
+        eq(userOrganizations.userId, adminUser.id),
+        eq(userOrganizations.orgId, rrOrg.id)
+      )
+    );
+
+  const learningRrNoMembership = await session.request<{ code?: string }>(
+    "/api/learning/tracks",
+    { headers: { "X-Tenant-Slug": "rr" } }
+  );
+  assert(
+    learningRrNoMembership.status === 403,
+    `Expected learning with rr header and inactive RR membership to be 403, got ${learningRrNoMembership.status}`
+  );
+  assert(
+    learningRrNoMembership.data?.code === "TENANT_MEMBERSHIP_REQUIRED",
+    "Inactive RR membership should yield TENANT_MEMBERSHIP_REQUIRED (no super-admin bypass)"
+  );
+
+  const learningSlmtsAfterInactiveRr = await session.request<{ id: number; title: string }[]>(
+    "/api/learning/tracks",
+    { headers: { "X-Tenant-Slug": "slmts" } }
+  );
+  assert(
+    learningSlmtsAfterInactiveRr.status === 200 &&
+      learningSlmtsAfterInactiveRr.data.some((track) => track.id === slmtsTrack.id),
+    "Learning + slmts header should still work when RR membership is inactive"
+  );
+
+  await db
+    .update(userOrganizations)
+    .set({
+      status: "active",
+      updatedAt: new Date(),
+      approvedAt: now,
+      approvedBy: adminUser.id,
+    })
+    .where(
+      and(
+        eq(userOrganizations.userId, adminUser.id),
+        eq(userOrganizations.orgId, rrOrg.id)
+      )
+    );
+
   const slmtsTracks = await session.request<{ id: number; title: string }[]>(
     "/api/content/tracks"
   );
@@ -367,7 +474,7 @@ async function run() {
     `Expected SLMTS batch lookup under RR to return 404, got ${rrForeignBatch.status}`
   );
 
-  console.log("rr-isolation-smoke: 16 assertions passed.");
+  console.log("rr-isolation-smoke: 41 assertions passed.");
 }
 
 run().catch((error) => {

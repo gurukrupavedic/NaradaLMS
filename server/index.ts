@@ -49,6 +49,13 @@ app.use(cors({
     }
   },
   credentials: true,
+  allowedHeaders: [
+    'Content-Type',
+    'X-CSRF-Token',
+    'X-Tenant-Slug',
+    'Authorization',
+    'Cookie',
+  ],
 }));
 
 app.use(express.json());

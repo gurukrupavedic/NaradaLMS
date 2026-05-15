@@ -6,14 +6,16 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { jwtAuth } from '../middleware/jwt-auth.middleware';
 import { requireOrgContext } from '../shared/middleware/org-context';
+import { attachLearningTenantOrgContext } from '../shared/middleware/tenant-learning-org-context';
 import { learningService } from '../modules/learning-delivery';
 import type { ChapterAccessDTO, ProgressQueryFilters, ChapterInclude } from '../modules/learning-delivery/types';
 import { catchAsync } from '../utils/catchAsync';
 
 const router = Router();
 
-// Protect all learning routes - users must be authenticated
+// Protect all learning routes - users must be authenticated, then tenant org from X-Tenant-Slug
 router.use(jwtAuth);
+router.use(attachLearningTenantOrgContext);
 router.use(requireOrgContext);
 
 /**
@@ -66,6 +68,8 @@ router.get('/progress', catchAsync(async (req: Request, res: Response) => {
   }
 
   const roles = user.orgRoles ?? [];
+  // Note: roles reflect JWT current org; req.orgId is tenant-scoped via X-Tenant-Slug.
+  // If these diverge for a power user, consider loading roles from membership for req.orgId.
   const isStudent =
     roles.includes("student") &&
     !roles.includes("instructor") &&

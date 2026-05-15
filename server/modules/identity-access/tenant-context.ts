@@ -20,6 +20,24 @@ function isTenantSlug(value: string): value is TenantSlug {
   return (ALLOWED_TENANT_SLUGS as readonly string[]).includes(value);
 }
 
+/**
+ * Parse `X-Tenant-Slug` (or similar) raw header value into a canonical tenant slug.
+ * Returns `null` if missing, empty, or not in {@link ALLOWED_TENANT_SLUGS}.
+ */
+export function parseXTenantSlugHeader(value: unknown): TenantSlug | null {
+  const raw =
+    typeof value === "string"
+      ? value
+      : Array.isArray(value) && typeof value[0] === "string"
+        ? value[0]
+        : "";
+  const trimmed = raw.trim().toLowerCase();
+  if (!trimmed) {
+    return null;
+  }
+  return isTenantSlug(trimmed) ? trimmed : null;
+}
+
 function getOAuthStateFromRequest(req: Request): string | null {
   const state = req.query.state;
   if (typeof state === "string") {
