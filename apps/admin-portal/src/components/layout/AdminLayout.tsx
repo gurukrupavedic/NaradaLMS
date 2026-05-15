@@ -122,11 +122,13 @@ export default function AdminLayout({
             homeHref="/admin"
             onLogout={logout}
             headerActions={
-                <AdminOrgSwitcher
-                    memberships={user.memberships}
-                    currentOrgId={user.currentOrgId}
-                    isSuperAdmin={user.isSuperAdmin}
-                />
+                isUsersAdminPath(pathname) ? undefined : (
+                    <AdminOrgSwitcher
+                        memberships={user.memberships}
+                        currentOrgId={user.currentOrgId}
+                        isSuperAdmin={user.isSuperAdmin}
+                    />
+                )
             }
         >
             {children}

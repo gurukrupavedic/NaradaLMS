@@ -28,6 +28,7 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from '../sidebar';
+import { cn } from '../../lib/utils';
 
 export function NavUser({
     user,
@@ -103,7 +104,14 @@ export function NavUser({
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
-                            <DropdownMenuItem onClick={onLogout} className="cursor-pointer gap-2">
+                            <DropdownMenuItem
+                                onClick={onLogout}
+                                className={cn(
+                                    'cursor-pointer gap-2 text-destructive',
+                                    'focus-visible:bg-destructive/10 focus-visible:text-destructive',
+                                    'data-[highlighted]:bg-destructive/10 data-[highlighted]:text-destructive',
+                                )}
+                            >
                                 <LogOut className="h-4 w-4" />
                                 Log out
                             </DropdownMenuItem>

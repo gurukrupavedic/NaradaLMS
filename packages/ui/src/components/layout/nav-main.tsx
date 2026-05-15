@@ -3,6 +3,7 @@
 import { ChevronRight, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 
+import { cn } from '../../lib/utils';
 import {
     Collapsible,
     CollapsibleContent,
@@ -83,10 +84,19 @@ export function NavMain({
                                 <CollapsibleTrigger asChild>
                                     <SidebarMenuButton tooltip={item.title} asChild isActive={isActive}>
                                         <Link href={item.url}>
-                                            {item.icon && <item.icon />}
-                                            <span>{item.title}</span>
+                                            {item.icon && (
+                                                <item.icon className={cn(isActive && 'text-sidebar-primary')} />
+                                            )}
+                                            <span className={cn(isActive && 'text-sidebar-primary')}>
+                                                {item.title}
+                                            </span>
                                             {showChevron && (
-                                                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                                <ChevronRight
+                                                    className={cn(
+                                                        'ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90',
+                                                        isActive && 'text-sidebar-primary',
+                                                    )}
+                                                />
                                             )}
                                         </Link>
                                     </SidebarMenuButton>
@@ -98,7 +108,13 @@ export function NavMain({
                                                 <SidebarMenuSubItem key={subItem.isContextual ? subItem.url : subItem.title}>
                                                     <SidebarMenuSubButton asChild isActive={path === subItem.url}>
                                                         <Link href={subItem.url}>
-                                                            <span>{subItem.title}</span>
+                                                            <span
+                                                                className={cn(
+                                                                    path === subItem.url && 'text-sidebar-primary',
+                                                                )}
+                                                            >
+                                                                {subItem.title}
+                                                            </span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
                                                 </SidebarMenuSubItem>

@@ -89,7 +89,10 @@ export function getTenantMetadata(
     title: tenantConfig.metadataTitle,
     description: tenantConfig.metadataDescription,
     icons: {
-      icon: [{ url: tenantConfig.iconPath }],
+      icon: [
+        { url: "/favicon-symbol-light.svg", media: "(prefers-color-scheme: light)" },
+        { url: "/favicon-symbol-dark.svg", media: "(prefers-color-scheme: dark)" },
+      ],
     },
   };
 }

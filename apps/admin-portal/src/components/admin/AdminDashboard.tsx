@@ -7,6 +7,7 @@ import { Users, FileText, Settings, BookOpen, LibraryBig } from "lucide-react";
 import Link from 'next/link';
 import { useAuth } from "@/hooks/useAuth";
 import { hasOrgAdminAnywhere } from "@/lib/admin-portal-access";
+import { AdminWipBanner } from "@/components/admin/admin-wip-banner";
 
 type DashboardLink = {
     title: string;
@@ -89,7 +90,7 @@ export default function AdminDashboard() {
 
     return (
         <div className="p-8 space-y-8">
-            <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+            <AdminWipBanner />
 
             {visibleLinks.length > 0 ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

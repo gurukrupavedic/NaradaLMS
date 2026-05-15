@@ -8,6 +8,6 @@ export const rrTenantConfig: TenantConfig = {
   logoPath: "/branding/tenants/rr-logo.png",
   logoAlt: "RR Learning",
   iconPath: "/branding/tenants/rr-logo.png",
-  metadataTitle: "Sri Raja Rajeswari Pathasala",
+  metadataTitle: "Narada LMS - RR",
   metadataDescription: "Student portal for Sri Raja Rajeswari Pathasala.",
 };

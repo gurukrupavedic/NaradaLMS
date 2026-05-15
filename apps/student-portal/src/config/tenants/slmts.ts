@@ -8,7 +8,7 @@ export const slmtsTenantConfig: TenantConfig = {
   logoPath: "/branding/tenants/slmts-logo.png",
   logoAlt: "SLMTS Learning",
   iconPath: "/branding/tenants/slmts-logo.png",
-  metadataTitle: "Sri Lalita Maha Tripura Sundari Pathasala",
+  metadataTitle: "Narada LMS - SLMTS",
   metadataDescription:
     "Student portal for Sri Lalita Maha Tripura Sundari Pathasala.",
 };
