@@ -149,6 +149,8 @@ export default function PortalLayout({
                 userRoles={userRoles}
                 onLogout={logout}
                 homeHref="/my-learning"
+                profileHref="/profile"
+                settingsHref="/settings"
                 contentContextLabel={contentContextLabel}
                 contextualNavigation={instructorContextualNavigation}
                 documentScrollPaths={["/my-learning", "/instructor/students"]}

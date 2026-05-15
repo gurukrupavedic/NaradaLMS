@@ -39,9 +39,11 @@ interface AppShellProps {
     headerActions?: React.ReactNode
     /** Optional brand override for sidebar header usage. */
     brandHeaderBranding?: BrandHeaderBranding
+    profileHref?: string
+    settingsHref?: string
 }
 
-export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation, contentContextLabel, documentScrollPaths, headerActions, brandHeaderBranding }: AppShellProps) {
+export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation, contentContextLabel, documentScrollPaths, headerActions, brandHeaderBranding, profileHref, settingsHref }: AppShellProps) {
     // We need to pass currentPath to Sidebar for active state
     // Since this is in @narada/ui, we assume usage in Next.js app context
     const pathname = usePathname()
@@ -66,6 +68,8 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                 contextualNavigation={contextualNavigation}
                 contentContextLabel={contentContextLabel}
                 brandHeaderBranding={brandHeaderBranding}
+                profileHref={profileHref}
+                settingsHref={settingsHref}
             />
             <SidebarInset>
                 <header className="flex shrink-0 items-center justify-between gap-2 min-h-[4.25rem] h-[4.25rem] sm:min-h-16 sm:h-16 lg:min-h-14 lg:h-14 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:min-h-12 group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b bg-background px-3 sm:px-4">

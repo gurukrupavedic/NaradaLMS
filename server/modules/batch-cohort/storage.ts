@@ -175,11 +175,21 @@ export class BatchStorage {
       .leftJoin(users, eq(users.id, batchCoInstructors.instructorId))
       .where(eq(batchCoInstructors.batchId, id));
 
+    const primaryInstructorName = primaryInstructor
+      ? `${primaryInstructor.firstName || ''} ${primaryInstructor.lastName || ''}`.trim() || primaryInstructor.email
+      : null;
+
+    const coInstructorNames = coInstructors.length > 0
+      ? coInstructors.map(c => `${c.firstName || ''} ${c.lastName || ''}`.trim() || c.email).join(', ')
+      : null;
+
     return {
       ...base,
       track,
       primaryInstructor,
+      primaryInstructorName,
       coInstructors,
+      coInstructorNames,
     };
   }
 

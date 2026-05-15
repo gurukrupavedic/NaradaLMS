@@ -114,6 +114,8 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     contextualNavigation?: Map<string, any>;
     contentContextLabel?: string | null;
     brandHeaderBranding?: BrandHeaderBranding;
+    profileHref?: string;
+    settingsHref?: string;
 }
 
 export function AppSidebar({
@@ -126,6 +128,8 @@ export function AppSidebar({
     contextualNavigation,
     contentContextLabel,
     brandHeaderBranding,
+    profileHref,
+    settingsHref,
     ...props
 }: AppSidebarProps) {
 
@@ -174,7 +178,7 @@ export function AppSidebar({
 
             </SidebarContent>
             <SidebarFooter>
-                <NavUser user={user} onLogout={onLogout} />
+                <NavUser user={user} onLogout={onLogout} profileHref={profileHref} settingsHref={settingsHref} />
             </SidebarFooter>
             <SidebarRail />
         </Sidebar>
