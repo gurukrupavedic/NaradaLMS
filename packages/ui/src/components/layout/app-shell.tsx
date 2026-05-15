@@ -3,6 +3,7 @@
 import * as React from "react"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "../sidebar"
 import { AppSidebar } from "./app-sidebar"
+import { type BrandHeaderBranding } from "./brand-header"
 import { ThemeToggle } from "../theme-toggle"
 import { Separator } from "../separator"
 import {
@@ -32,13 +33,17 @@ interface AppShellProps {
     contextualNavigation?: Map<string, any>
     /** Optional label for content chapter (e.g. "Track 1. Chapter 3") for breadcrumb and sidebar */
     contentContextLabel?: string | null
-    /** Paths on which the browser window scrolls instead of the main content (e.g. ['/vedic-learning']). Other pages keep viewport-constrained inner scroll. */
+    /** Paths on which the browser window scrolls instead of the main content (e.g. ['/my-learning']). Other pages keep viewport-constrained inner scroll. */
     documentScrollPaths?: string[]
+    /** Optional header actions rendered beside the theme toggle. */
+    headerActions?: React.ReactNode
+    /** Optional brand override for sidebar header usage. */
+    brandHeaderBranding?: BrandHeaderBranding
     profileHref?: string
     settingsHref?: string
 }
 
-export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation, contentContextLabel, documentScrollPaths, profileHref, settingsHref }: AppShellProps) {
+export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app", customNavigation, contextualNavigation, contentContextLabel, documentScrollPaths, headerActions, brandHeaderBranding, profileHref, settingsHref }: AppShellProps) {
     // We need to pass currentPath to Sidebar for active state
     // Since this is in @narada/ui, we assume usage in Next.js app context
     const pathname = usePathname()
@@ -62,6 +67,7 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                 customNavigation={customNavigation}
                 contextualNavigation={contextualNavigation}
                 contentContextLabel={contentContextLabel}
+                brandHeaderBranding={brandHeaderBranding}
                 profileHref={profileHref}
                 settingsHref={settingsHref}
             />
@@ -83,11 +89,11 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                                     // Simple path-based breadcrumb generation (path is pathname ?? "" to avoid null in SSR)
                                     let segments: { label: string, href?: string }[] = [];
 
-                                    if (path === '/vedic-learning' || path === '/app/learning') {
-                                        segments = [{ label: 'Vedic Learning' }];
+                                    if (path === '/my-learning' || path === '/app/learning') {
+                                        segments = [{ label: 'My Learning' }];
                                     } else if (path.match(/\/learning\/chapter\/\d+/)) {
                                         segments = [
-                                            { label: 'Vedic Learning', href: '/vedic-learning' },
+                                            { label: 'My Learning', href: '/my-learning' },
                                             { label: contentContextLabel ?? 'Learn Chapter' }
                                         ];
                                     } else if (path.startsWith('/admin') && !path.startsWith('/admin/content') && !path.startsWith('/admin/tracks')) {
@@ -147,7 +153,7 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                                         }
                                     } else {
                                         // Fallback for unknown routes
-                                        segments = [{ label: 'Vedic Learning' }];
+                                        segments = [{ label: 'My Learning' }];
                                     }
 
                                     return segments.map((segment, index) => (
@@ -171,6 +177,7 @@ export function AppShell({ children, user, userRoles, onLogout, homeHref = "/app
                         </Breadcrumb>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
+                        {headerActions}
                         <ThemeToggle />
                     </div>
                 </header>

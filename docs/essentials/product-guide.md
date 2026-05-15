@@ -446,7 +446,7 @@ StudentProgress {
 **Solution:** Multi-layer authentication with role-based access control
 
 **Architecture:**
-- **Backend:** Passport.js + Express middleware (authMiddleware + requireRole)
+- **Backend:** Passport.js + Express middleware (authMiddleware + requireOrgRole)
 - **Frontend:** Component-level route guards (useRoleGuard hook)
 - **Defense in depth:** Both layers enforce authorization independently
 
@@ -455,11 +455,11 @@ StudentProgress {
 // All learning routes require authentication
 router.use(authMiddleware);
 
-// Admin routes require admin role
-router.use(authMiddleware, requireRole('admin'));
+// Admin routes require admin role in the current org context
+router.use(authMiddleware, requireOrgRole('admin'));
 
-// Multi-role support (instructor OR admin)
-router.use(authMiddleware, requireRole('instructor', 'admin'));
+// Multi-role support (instructor OR admin) in the current org context
+router.use(authMiddleware, requireOrgRole('instructor', 'admin'));
 ```
 
 **Frontend Protection (MANDATORY for all protected pages):**
@@ -563,7 +563,7 @@ export default function ProtectedPage() {
 
 **Multi-Role System:**
 - Roles stored as array: `roles: ['student', 'instructor']`
-- Role checks via middleware: `requireRole('admin')`, `requireRole('instructor', 'admin')`
+- Role checks via middleware: `requireOrgRole('admin')`, `requireOrgRole('instructor', 'admin')`
 - Users can have multiple roles
 - Admin has all permissions
 
@@ -784,7 +784,7 @@ server/modules/
 **Middleware:**
 - `requireAuth`: Blocks unauthenticated requests
 - `requireApproved`: Blocks pending users
-- `requireRole('role')`: Role-based authorization
+- `requireOrgRole('role')`: Org-scoped role-based authorization
 - Error handler: Centralized error responses
 
 ### 6.5 Frontend Architecture

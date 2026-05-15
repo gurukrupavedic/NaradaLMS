@@ -10,7 +10,7 @@ export const config = {
     host: process.env.HOST || '0.0.0.0',
     port: parseInt(process.env.PORT || '5000', 10),
     frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
-    corsOrigins: (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001')
+    corsOrigins: (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001,http://localhost:3010')
         .split(',')
         .map(s => s.trim()),
     database: {
@@ -28,7 +28,14 @@ export const config = {
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
-    adminEmail: process.env.ADMIN_EMAIL,
+    /** Registration auto-promotion target; same email as dev bootstrap seed. Prefer SUPER_ADMIN_EMAIL; ADMIN_EMAIL is a deprecated alias. */
+    superAdminEmail:
+      process.env.SUPER_ADMIN_EMAIL?.trim() || process.env.ADMIN_EMAIL?.trim(),
+    /** Default org slug for register/OAuth when no `X-Tenant-Slug` (must be `slmts` or `rr`). */
+    defaultTenantSlug: (() => {
+        const raw = (process.env.DEFAULT_TENANT_SLUG || "slmts").trim().toLowerCase();
+        return raw === "rr" ? "rr" : "slmts";
+    })(),
 };
 
 // Validation for critical settings in production

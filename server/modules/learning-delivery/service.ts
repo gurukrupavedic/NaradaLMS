@@ -22,6 +22,7 @@ export class LearningService {
    */
   async getStudentProgress(
     requestingUserId: string,
+    orgId: string,
     isStudent: boolean,
     filters: ProgressQueryFilters = {}
   ): Promise<StudentProgressDTO[]> {
@@ -30,30 +31,30 @@ export class LearningService {
       filters.studentId = requestingUserId;
     }
 
-    return learningStorage.getStudentProgress(filters);
+    return learningStorage.getStudentProgress({ ...filters, orgId });
   }
 
   /**
    * Track chapter access (auto-update lastAccessed)
    */
   async trackChapterAccess(accessData: ChapterAccessDTO): Promise<void> {
-    const { chapterId, studentId, batchId } = accessData;
+    const { orgId, chapterId, studentId, batchId } = accessData;
 
     // Validate chapter exists
-    const chapterExists = await learningStorage.chapterExists(chapterId);
+    const chapterExists = await learningStorage.chapterExists(chapterId, orgId);
     if (!chapterExists) {
       throw new Error(`Chapter ${chapterId} not found`);
     }
 
     // If batchId provided, validate enrollment
     if (batchId) {
-      const isEnrolled = await learningStorage.isStudentEnrolled(studentId, batchId);
+      const isEnrolled = await learningStorage.isStudentEnrolled(studentId, batchId, orgId);
       if (!isEnrolled) {
         throw new Error(`Student ${studentId} not enrolled in batch ${batchId}`);
       }
     }
 
-    await learningStorage.trackChapterAccess(studentId, chapterId, batchId);
+    await learningStorage.trackChapterAccess(studentId, chapterId, orgId, batchId);
 
     eventBus.publish(LEARNING_DELIVERY_EVENTS.CHAPTER_ACCESSED, {
       chapterId,
@@ -66,22 +67,22 @@ export class LearningService {
   /**
    * Get chapters available to student (based on active enrollments)
    */
-  async getAvailableChapters(studentId: string): Promise<AvailableChapterDTO[]> {
-    return learningStorage.getAvailableChapters(studentId);
+  async getAvailableChapters(studentId: string, orgId: string): Promise<AvailableChapterDTO[]> {
+    return learningStorage.getAvailableChapters(studentId, orgId);
   }
 
   /**
    * Facade: List tracks for learning (proxy to content module)
    */
-  async listTracks() {
-    return contentService.listTracks();
+  async listTracks(orgId: string) {
+    return contentService.listTracks(orgId);
   }
 
   /**
    * Facade: List chapters by track (proxy to content module)
    */
-  async listChaptersByTrack(trackId: number) {
-    return contentService.getChaptersByTrack(trackId);
+  async listChaptersByTrack(trackId: number, orgId: string) {
+    return contentService.getChaptersByTrack(trackId, orgId);
   }
 
   /**
@@ -97,6 +98,7 @@ export class LearningService {
    */
   async getChapterBundle(
     requestingUserId: string,
+    orgId: string,
     chapterId: number,
     query: ChapterBundleQuery = {}
   ): Promise<ChapterBundleDTO> {
@@ -107,27 +109,31 @@ export class LearningService {
     const script = query.script;
 
     const result: ChapterBundleDTO = {};
+    const chapter = await contentService.getChapter(chapterId, orgId);
+    if (!chapter) {
+      throw Object.assign(new Error("Chapter not found"), { status: 404 });
+    }
 
     if (include.includes('chapter')) {
-      result.chapter = await contentService.getChapter(chapterId);
+      result.chapter = chapter;
     }
 
     if (include.includes('segments')) {
       // If no script provided, default to 'te' to avoid tripling payload
       const segScript = (script || 'te') as 'te' | 'hi' | 'en';
-      result.textSegments = await contentService.getSegmentsByChapter(chapterId, segScript);
+      result.textSegments = await contentService.getSegmentsByChapter(chapterId, segScript, orgId);
     }
 
     if (include.includes('audio')) {
-      result.audioFiles = await mediaService.listAudioFilesByChapter(chapterId);
+      result.audioFiles = await mediaService.listAudioFilesByChapter(chapterId, orgId);
     }
 
     if (include.includes('mappings')) {
-      result.segmentMappings = await mediaService.listMappingsByChapter(chapterId);
+      result.segmentMappings = await mediaService.listMappingsByChapter(chapterId, orgId);
     }
 
     if (include.includes('progress')) {
-      const rows = await learningStorage.getStudentProgress({ studentId: requestingUserId, chapterId });
+      const rows = await learningStorage.getStudentProgress({ studentId: requestingUserId, chapterId, orgId });
       result.progress = rows[0] || null;
     }
 
@@ -138,8 +144,8 @@ export class LearningService {
    * Get student details with proficiency matrix (instructor view)
    * Instructors can only see students in their batches
    */
-  async getStudentDetails(requestingUserId: string, studentId: string, isAdmin: boolean): Promise<any> {
-    const studentDetails = await learningStorage.getStudentDetailsWithProgress(studentId);
+  async getStudentDetails(requestingUserId: string, orgId: string, studentId: string, isAdmin: boolean): Promise<any> {
+    const studentDetails = await learningStorage.getStudentDetailsWithProgress(studentId, orgId);
 
     if (!studentDetails) {
       return null;
@@ -153,6 +159,7 @@ export class LearningService {
         .where(
           and(
             eq(batches.id, studentDetails.enrollment.batchId),
+                eq(batches.orgId, orgId),
             eq(batches.primaryInstructorId, requestingUserId)
           )
         )
@@ -194,6 +201,7 @@ export class LearningService {
    */
   async getStudentTrackProgress(
     requestingUserId: string,
+    orgId: string,
     studentId: string,
     isAdmin: boolean
   ): Promise<any> {
@@ -219,6 +227,8 @@ export class LearningService {
       .where(
         and(
           eq(enrollments.studentId, studentId),
+            eq(enrollments.orgId, orgId),
+            eq(batches.orgId, orgId),
           eq(enrollments.status, 'active')
         )
       );
@@ -234,6 +244,7 @@ export class LearningService {
             .where(
               and(
                 eq(batches.id, enrollment.batchId),
+                eq(batches.orgId, orgId),
                 eq(batches.primaryInstructorId, requestingUserId)
               )
             )
@@ -266,6 +277,7 @@ export class LearningService {
     const allTracks = await db
       .select()
       .from(tracks)
+      .where(eq(tracks.orgId, orgId))
       .orderBy(tracks.sortOrder);
 
     if (allTracks.length === 0) {
@@ -282,7 +294,7 @@ export class LearningService {
 
     // For each track, fetch chapters + proficiency (even if no progress exists)
     const trackProgress = await Promise.all(
-      allTracks.map((track) => this.buildTrackProgress(studentId, track.id))
+      allTracks.map((track) => this.buildTrackProgress(studentId, orgId, track.id))
     );
 
     return {
@@ -301,15 +313,15 @@ export class LearningService {
   /**
    * Convenience: student fetching their own track progress (no instructor checks)
    */
-  async getSelfTrackProgress(studentId: string) {
-    return this.getStudentTrackProgress(studentId, studentId, true);
+  async getSelfTrackProgress(studentId: string, orgId: string) {
+    return this.getStudentTrackProgress(studentId, orgId, studentId, true);
   }
 
   /**
    * Convenience: student fetching their own profile + proficiency matrix
    */
-  async getSelfDetails(studentId: string) {
-    return learningStorage.getStudentDetailsWithProgress(studentId);
+  async getSelfDetails(studentId: string, orgId: string) {
+    return learningStorage.getStudentDetailsWithProgress(studentId, orgId);
   }
 
   /**
@@ -322,12 +334,13 @@ export class LearningService {
    */
   private async buildTrackProgress(
     studentId: string,
+    orgId: string,
     trackId: number
   ): Promise<any> {
     const [track] = await db
       .select()
       .from(tracks)
-      .where(eq(tracks.id, trackId))
+      .where(and(eq(tracks.id, trackId), eq(tracks.orgId, orgId)))
       .limit(1);
 
     if (!track) return null;
@@ -336,7 +349,13 @@ export class LearningService {
     const chapterList = await db
       .select()
       .from(chapters)
-      .where(and(eq(chapters.trackId, trackId), isNull(chapters.deletedAt)))
+      .where(
+        and(
+          eq(chapters.trackId, trackId),
+          eq(chapters.orgId, orgId),
+          isNull(chapters.deletedAt)
+        )
+      )
       .orderBy(chapters.sortOrder);
 
     // Get all student progress for this track's chapters
@@ -350,6 +369,7 @@ export class LearningService {
         .where(
           and(
             eq(studentProgress.studentId, studentId),
+            eq(studentProgress.orgId, orgId),
             inArray(studentProgress.chapterId, chapterIds)
           )
         );

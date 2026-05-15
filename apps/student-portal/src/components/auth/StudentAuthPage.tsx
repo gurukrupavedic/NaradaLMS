@@ -1,31 +1,41 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
     Button,
     Input,
     Tabs, TabsContent, TabsList, TabsTrigger,
-    Card, CardContent, CardDescription, CardHeader, CardTitle,
+    Card, CardContent,
     Label,
     useToast
 } from "@narada/ui";
 import { apiRequest } from "@/lib/api";
+import {
+    buildTenantGoogleAuthUrl,
+    buildTenantRegisterRequest,
+    getSharedStudentAuthBranding,
+    getTenantConfig,
+} from "@/lib/tenant";
 import { FcGoogle } from "react-icons/fc";
-
-// Assets
-import kolamPattern from "@/assets/branding/kolam-2.svg";
-import logoStacked from "@/assets/branding/logo-stacked-dark-notag.svg";
-import slmtsLogo from "@/assets/branding/SLMTS LOGO 01-2025 FINAL.png";
 import Image from "next/image";
 
+const STUDENT_OAUTH_ERROR_MESSAGES: Record<string, string> = {
+    auth_failed: "Google sign-in could not be completed. Please try again.",
+    session_failed: "We could not finish creating your session. Please try again.",
+    access_denied: "This sign-in could not be completed for the current portal.",
+};
+
 export function StudentAuthPage() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const initialTab = searchParams.get("tab") === "register" ? "register" : "login";
+    const oauthErrorMessage =
+        STUDENT_OAUTH_ERROR_MESSAGES[searchParams.get("error") ?? ""] ?? null;
     const [activeTab, setActiveTab] = useState<"login" | "register">(initialTab);
     const queryClient = useQueryClient();
+    const sharedAuthBranding = getSharedStudentAuthBranding();
+    const tenantConfig = getTenantConfig();
 
     const handleGoogleLogin = () => {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -33,7 +43,12 @@ export function StudentAuthPage() {
             console.error('NEXT_PUBLIC_API_URL environment variable is not set');
             return;
         }
-        window.location.href = `${apiUrl}/auth/google`;
+        const returnTo = new URL("/my-learning", window.location.origin).toString();
+        window.location.href = buildTenantGoogleAuthUrl(
+            apiUrl,
+            returnTo,
+            tenantConfig.slug
+        );
     };
 
     return (
@@ -44,11 +59,11 @@ export function StudentAuthPage() {
                 <div
                     className="absolute inset-0 pointer-events-none opacity-60"
                     style={{
-                        maskImage: `url(${kolamPattern.src})`,
+                        maskImage: `url(${sharedAuthBranding.patternPath})`,
                         maskSize: "200%",
                         maskPosition: "25% 8%",
                         maskRepeat: "no-repeat",
-                        WebkitMaskImage: `url(${kolamPattern.src})`,
+                        WebkitMaskImage: `url(${sharedAuthBranding.patternPath})`,
                         WebkitMaskSize: "200%",
                         WebkitMaskPosition: "25% 8%",
                         WebkitMaskRepeat: "no-repeat",
@@ -59,8 +74,8 @@ export function StudentAuthPage() {
 
                     {/* Layer 2: The Blade Sheen (Intense Moving Highlight) */}
                     <div className="absolute inset-0 overflow-hidden -skew-x-12">
-                        <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: 'linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)' }} />
-                        <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: 'linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)', animationDelay: '4s' }} />
+                        <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: "linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)" }} />
+                        <div className="absolute inset-0 -translate-x-full animate-shimmer" style={{ background: "linear-gradient(to right, transparent 0%, oklch(0.95 0.14 85 / 0.9) 50%, transparent 100%)", animationDelay: "4s" }} />
                     </div>
                 </div>
 
@@ -70,15 +85,15 @@ export function StudentAuthPage() {
                 {/* Central Hero Logo */}
                 <div className="relative z-10 p-12 flex flex-col items-center text-center">
                     <Image
-                        src={logoStacked}
-                        alt="Narada LMS"
+                        src={sharedAuthBranding.logoPath}
+                        alt={sharedAuthBranding.logoAlt}
                         width={384}
                         height={200}
                         className="w-96 h-auto drop-shadow-2xl mb-8"
                     />
                     <div className="space-y-2">
                         <h2 className="text-2xl font-semibold text-white tracking-wide">
-                            Vedic Wisdom. Modern Learning.
+                            {sharedAuthBranding.tagline}
                         </h2>
                     </div>
                 </div>
@@ -87,42 +102,23 @@ export function StudentAuthPage() {
             {/* RIGHT PANEL: Authentication Forms */}
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white h-full overflow-y-auto border-l border-slate-200">
                 <div className="w-full max-w-md space-y-6">
-                    {/* Mobile Logo */}
-                    <div className="lg:hidden text-center mb-8 shrink-0">
-                        <h1 className="text-2xl font-bold text-slate-900">Narada LMS</h1>
-                    </div>
-
                     <div className="text-center space-y-2 shrink-0 mb-8">
                         <Image
-                            src={slmtsLogo}
-                            alt="SLMTS Learning"
+                            src={tenantConfig.logoPath}
+                            alt={tenantConfig.logoAlt}
                             width={128}
                             height={128}
                             className="h-32 w-auto mx-auto mb-4"
                         />
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Welcome to SLMTS Learning</h1>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{tenantConfig.displayName}</h1>
+                        <p className="text-sm text-slate-500">{tenantConfig.authHeading}</p>
                     </div>
 
-                    {/* Social Login */}
-                    <Button
-                        variant="outline"
-                        className="w-full py-5 flex items-center gap-2 border-slate-200 text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900 mb-6 shrink-0"
-                        onClick={handleGoogleLogin}
-                    >
-                        <FcGoogle className="h-5 w-5" />
-                        Continue with Google
-                    </Button>
-
-                    <div className="relative shrink-0 mb-6">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-slate-200" />
+                    {oauthErrorMessage ? (
+                        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                            {oauthErrorMessage}
                         </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-white px-2 text-slate-400 font-medium">
-                                Or continue with email
-                            </span>
-                        </div>
-                    </div>
+                    ) : null}
 
                     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
                         <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-100 p-1 rounded-lg">
@@ -146,7 +142,7 @@ export function StudentAuthPage() {
                                     queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
                                     // Force hard redirect to ensure fresh state/sidebar context
                                     setTimeout(() => {
-                                        window.location.href = "/vedic-learning";
+                                        window.location.href = "/my-learning";
                                     }, 500);
                                 }}
                             />
@@ -154,12 +150,31 @@ export function StudentAuthPage() {
 
                         <TabsContent value="register" className="mt-0">
                             <RegisterForm
+                                tenantSlug={tenantConfig.slug}
                                 onSuccess={() => {
                                     setActiveTab("login");
                                 }}
                             />
                         </TabsContent>
                     </Tabs>
+
+                    <div className="relative shrink-0 mb-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t border-slate-200" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-white px-2 text-slate-400 font-medium">Or</span>
+                        </div>
+                    </div>
+
+                    <Button
+                        variant="outline"
+                        className="w-full py-5 flex items-center gap-2 border-slate-200 text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900 shrink-0"
+                        onClick={handleGoogleLogin}
+                    >
+                        <FcGoogle className="h-5 w-5" />
+                        Continue with Google
+                    </Button>
 
                     <p className="px-8 text-center text-sm text-slate-400 mt-8 shrink-0">
                         By clicking continue, you agree to our{" "}
@@ -224,7 +239,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
                             placeholder="m@example.com"
                             required
                             value={email}
-                            onChange={e => setEmail(e.target.value)}
+                            onChange={(e) => setEmail(e.target.value)}
                             disabled={loading}
                             autoComplete="email"
                             spellCheck={false}
@@ -237,12 +252,12 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
                             type="password"
                             required
                             value={password}
-                            onChange={e => setPassword(e.target.value)}
+                            onChange={(e) => setPassword(e.target.value)}
                             disabled={loading}
                             autoComplete="current-password"
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !loading) {
-                                    handleSubmit(e as any);
+                                if (e.key === "Enter" && !loading) {
+                                    handleSubmit(e as React.FormEvent);
                                 }
                             }}
                         />
@@ -256,7 +271,13 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
     );
 }
 
-function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
+function RegisterForm({
+    onSuccess,
+    tenantSlug,
+}: {
+    onSuccess: (email: string) => void;
+    tenantSlug: "slmts" | "rr";
+}) {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -268,7 +289,7 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
+        setFormData((prev) => ({ ...prev, [e.target.id]: e.target.value }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -280,19 +301,26 @@ function RegisterForm({ onSuccess }: { onSuccess: (email: string) => void }) {
 
         setLoading(true);
         try {
-            await apiRequest("/auth/register", {
-                method: "POST",
-                body: JSON.stringify({
+            const registerRequest = buildTenantRegisterRequest(
+                {
                     email: formData.email.toLowerCase(),
                     password: formData.password,
                     firstName: formData.firstName,
                     lastName: formData.lastName,
-                }),
+                },
+                tenantSlug
+            );
+
+            await apiRequest("/auth/register", {
+                method: "POST",
+                headers: registerRequest.headers,
+                body: JSON.stringify(registerRequest.body),
             });
 
             toast({
                 title: "Account created",
-                description: "Please login with your new credentials."
+                description:
+                    "Your membership is pending approval. You can sign in to check status.",
             });
             onSuccess(formData.email);
         } catch (err: any) {

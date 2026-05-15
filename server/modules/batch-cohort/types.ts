@@ -1,6 +1,7 @@
 // Batch & Cohort shared types
 
 export interface BatchCreateInput {
+	orgId: string;
 	batchCode: string;
 	batchName: string;
 	trackId?: number;
@@ -22,6 +23,7 @@ export interface BatchUpdateInput {
 
 export interface BatchDetail {
 	id: number;
+	orgId: string;
 	batchCode: string;
 	batchName: string;
 	trackId: number | null;
@@ -38,17 +40,21 @@ export interface BatchDetail {
 }
 
 export interface EnrollmentCreateInput {
+	orgId: string;
 	batchId: number;
 	studentId: string;
 	enrolledBy: string;
 }
 
 export interface EnrollmentDropInput {
+	orgId: string;
 	enrollmentId: number;
+	droppedBy: string;
 	droppedReason?: string;
 }
 
 export interface CoInstructorAssignInput {
+	orgId: string;
 	batchId: number;
 	instructorId: string;
 	role?: 'co_instructor' | 'ta';

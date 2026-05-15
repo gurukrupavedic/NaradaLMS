@@ -26,7 +26,7 @@
 | `MAX_FILE_SIZE` | Max upload size (bytes) | `104857600` (100MB) | No |
 | `GOOGLE_CLIENT_ID` | Google OAuth Client ID | — | No |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret | — | No |
-| `ADMIN_EMAIL` | Admin email (optional) | — | No |
+| `SUPER_ADMIN_EMAIL` | Admin email (optional) | — | No |
 
 **Student Portal & Admin Portal (Next.js)**
 

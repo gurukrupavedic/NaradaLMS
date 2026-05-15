@@ -55,6 +55,7 @@ import {
 import { Separator } from '@narada/ui';
 import { useToast } from '@narada/ui';
 import { useAuth } from '@/hooks/useAuth';
+import { hasActiveOrgRole } from '@/lib/admin-portal-access';
 import { TrackListItem, TrackRow } from '@/components/content/TrackListItem';
 import { ChapterListItem, ChapterRow } from '@/components/content/ChapterListItem';
 import { useLocalStorage } from '@/hooks/content/useLocalStorage';
@@ -80,7 +81,7 @@ interface DeleteState {
 export default function TracksAndChapters() {
   useRoleGuard(['admin']);
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -90,7 +91,10 @@ export default function TracksAndChapters() {
   const [deleteState, setDeleteState] = useState<DeleteState>({ isOpen: false, itemType: 'track' });
   const [formData, setFormData] = useState<{ title: string; description: string; trackId?: number }>({ title: '', description: '' });
 
-  const isAdmin = user?.roles?.includes('admin');
+  const isAdmin = Boolean(
+    user &&
+      hasActiveOrgRole(user.memberships, user.currentOrgId, 'admin')
+  );
 
   const tracksQuery = useQuery<TrackRow[]>({
     queryKey: ['content', 'tracks'],
@@ -361,11 +365,19 @@ export default function TracksAndChapters() {
     reorderChapterMutation.mutate({ chapterId: Number(active.id), direction, steps });
   };
 
+  if (authLoading) {
+    return (
+      <div className="p-6">
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      </div>
+    );
+  }
+
   if (!isAdmin) {
     return (
       <div className="p-6">
         <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">You need the admin role to access Content Studio.</CardContent>
+          <CardContent className="py-8 text-center text-muted-foreground">You need the admin role in this organization to access Content Studio.</CardContent>
         </Card>
       </div>
     );

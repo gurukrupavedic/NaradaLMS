@@ -28,6 +28,7 @@ export interface StudentProgressDTO {
 
 // DTO for chapter access (learning content delivery)
 export interface ChapterAccessDTO {
+  orgId: string;
   chapterId: number;
   studentId: string;
   batchId?: number;
@@ -49,6 +50,7 @@ export interface AvailableChapterDTO {
 
 // Query filters for student progress
 export interface ProgressQueryFilters {
+  orgId?: string;
   studentId?: string;
   trackId?: number;
   chapterId?: number;

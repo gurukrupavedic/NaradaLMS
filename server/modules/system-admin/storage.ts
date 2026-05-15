@@ -4,7 +4,7 @@
  */
 
 import { db } from '../../db';
-import { auditLogs, systemSettings, users, batches, tracks, chapters } from '@narada/types';
+import { auditLogs, systemSettings, users, userOrganizations, batches, tracks, chapters } from '@narada/types';
 import { eq, gte, lte, and, sql, desc } from 'drizzle-orm';
 
 export interface AuditLogFilter {
@@ -13,6 +13,8 @@ export interface AuditLogFilter {
   resourceType?: string;
   startDate?: Date;
   endDate?: Date;
+  scope?: 'org' | 'platform';
+  orgId?: string;
   limit: number;
   offset: number;
 }
@@ -26,9 +28,11 @@ export class AdminStorage {
     action: string,
     resourceType: string,
     resourceId: string,
-    changes?: any
+    changes?: any,
+    orgId?: string
   ): Promise<void> {
     await db.insert(auditLogs).values({
+      orgId: orgId ?? null,
       userId,
       action,
       resourceType,
@@ -58,6 +62,16 @@ export class AdminStorage {
     }
     if (filters.endDate) {
       conditions.push(lte(auditLogs.timestamp, filters.endDate));
+    }
+    if (filters.scope) {
+      if (filters.scope === 'org') {
+        conditions.push(sql`${auditLogs.orgId} IS NOT NULL`);
+      } else {
+        conditions.push(sql`${auditLogs.orgId} IS NULL`);
+      }
+    }
+    if (filters.orgId) {
+      conditions.push(eq(auditLogs.orgId, filters.orgId));
     }
 
     let query = db
@@ -158,14 +172,18 @@ export class AdminStorage {
       .from(users);
 
     const [{ pendingApprovals }] = await db
-      .select({ pendingApprovals: sql<number>`count(*)` })
-      .from(users)
-      .where(eq(users.status, 'pending_approval'));
+      .select({
+        pendingApprovals: sql<number>`count(*)::int`,
+      })
+      .from(userOrganizations)
+      .where(eq(userOrganizations.status, 'pending'));
 
     const [{ activeUsers }] = await db
-      .select({ activeUsers: sql<number>`count(*)` })
-      .from(users)
-      .where(eq(users.status, 'active'));
+      .select({
+        activeUsers: sql<number>`count(distinct ${userOrganizations.userId})::int`,
+      })
+      .from(userOrganizations)
+      .where(eq(userOrganizations.status, 'active'));
 
     const [{ totalBatches }] = await db
       .select({ totalBatches: sql<number>`count(*)` })

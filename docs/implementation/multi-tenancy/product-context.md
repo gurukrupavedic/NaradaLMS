@@ -1,4 +1,4 @@
-# Product Context: Multi-Tenancy for Patasala Model
+# Product Context: Multi-Tenancy for Pathasala Model
 
 ## Why this exists
 
@@ -19,8 +19,8 @@ This document defines the product intent behind the technical implementation so 
 
 Two initial orgs:
 
-- `slmts`: Sri Lalita Maha Tripura Sundari Patasala
-- `rr`: Raja Rajeswari Patasala
+- `slmts`: Sri Lalita Maha Tripura Sundari Pathasala
+- `rr`: Raja Rajeswari Pathasala
 
 Both are independent learning communities with different logos/naming and separate curriculum.
 
@@ -35,6 +35,7 @@ Both are independent learning communities with different logos/naming and separa
 - Student portal is white-labeled per tenant.
 - Admin portal remains Narada-branded and acts as a shared operations console.
 - Per tenant differences in v1 are primarily name + logo (minimal visual divergence).
+- The student auth page keeps a shared Narada-branded left hero across tenants so the product remains recognizably Narada LMS; tenant branding applies to the tenant-facing auth form area, pending state, and authenticated shell.
 
 ---
 

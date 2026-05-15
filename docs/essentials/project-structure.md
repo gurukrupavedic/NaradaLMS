@@ -229,8 +229,11 @@ server/
 ├── index.ts                   # Express setup and module mounting
 ├── db.ts                      # Drizzle database initialization
 ├── database-storage.ts        # Centralized database operations
-├── init-database.ts           # Schema initialization
-├── seed-vedic-curriculum.ts   # Initial data seeding
+├── init-database.ts           # Compatibility seed wrapper (not primary runbook)
+├── db-seeding/                # Canonical fresh-database seeds (orgs, dev user, curriculum)
+│   ├── seed-organizations.ts
+│   ├── seed-dev-bootstrap.ts
+│   └── seed-curriculum.ts
 │
 ├── modules/                   # 6 domain modules
 │   ├── identity-access/
@@ -271,7 +274,8 @@ server/
 │   └── DatabaseMonitor.ts
 │
 └── seeds/
-    └── curriculum.json
+    ├── curriculum-slmts.json
+    ├── curriculum-rr.json
 ```
 
 ### Module Contracts
@@ -446,17 +450,17 @@ const chapter = await storage.chapters.get(chapterId);
 
 ### Adding a Database Table
 
-1. Define in `shared/schema.ts` using Drizzle ORM
-2. Update `shared/types.ts` with TypeScript types
-3. Add to appropriate server module's scope
-4. Create CRUD methods in `server/database-storage.ts`
-5. Run `npm run db:push` to apply migration
+1. Define in `packages/types/src/schema.ts` using Drizzle ORM
+2. Generate a migration under repo-root `migrations/`
+3. Add to the appropriate server module's scope
+4. Create or update the needed storage/service methods
+5. Verify with `npm run db:reset` (or `npm run db:migrate` when appropriate) instead of `db:push`
 
 ### Adding a Server Endpoint
 
 1. Add route in `server/modules/module-name/routes.ts`
 2. Use `storage` for all database operations
-3. Add auth middleware if needed: `requireAuth`, `requireRole('role')`
+3. Add auth middleware if needed: `authMiddleware`, `requireOrgRole('role')`, or `requireSuperAdmin`
 4. Use `createErrorResponse()` for error handling
 5. Endpoint will be available at `/api/[module-path]`
 

@@ -38,8 +38,8 @@ export interface NavSection {
 const learnSection: NavSection = {
     items: [
         {
-            title: 'Vedic Learning',
-            url: '/vedic-learning',
+            title: 'My Learning',
+            url: '/my-learning',
             icon: BookOpenText,
             isActive: true,
         },
@@ -113,7 +113,7 @@ export function getNavigationForRole(roles?: UserRole[] | UserRole): {
 
     const nav: any = {};
 
-    // Vedic Learning: Available to Students
+    // My Learning: Available to Students
     if (roleArray.includes('student')) {
         nav.learn = learnSection;
     }

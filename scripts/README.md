@@ -1,96 +1,98 @@
-# VedicLMS Scripts Directory
+# Scripts Directory
 
-This directory contains utility scripts for database management, testing, data seeding, and administrative tasks.
+This directory is organized by what each script is for. Prefer root `npm` scripts for normal workflows; run files directly only when you need a specific manual helper.
 
-## ⚠️ Important Safety Warning
+## Safety
 
-**NEVER run these scripts against the PRODUCTION database unless you are absolutely certain of what you are doing.**
-Most scripts in `seed/` and `db/` are destructive or modify data significantly.
+Do not run destructive scripts against production. Anything under `maintenance/` is local-only unless explicitly reviewed.
 
-## Quick Reference
+## Supported Local DB Path
 
-| Category | Path | Description |
-|----------|------|-------------|
-| **Database** | `db/reset-db.ts` | **DESTRUCTIVE**: Drops all tables and recreates schema |
-| **Database** | `test/db-reset.ps1` | **DESTRUCTIVE**: Windows PowerShell wrapper for full DB reset |
-| **Seeding** | `seed/create-30-students.ts` | Creates 30 test students with full profile data |
-| **Seeding** | `seed/create-sample-batches.ts` | Creates 10 sample batches (Brahmacharya/Grihastha) |
-| **Proficiency** | `utils/full-proficiency-reset.ts` | **DESTRUCTIVE**: Resets/Generates proficiency for ALL students |
+For the current multi-tenancy repo state, the supported local DB workflow is:
 
-## Script Categories
+1. `npm run db:reset`
+2. `npm run build:types`
+3. `npm run db:seed-orgs`
+4. `npm run db:seed-dev`
+5. `npm run db:seed` when curriculum data is needed
 
-### 🛠️ Database Management
+The canonical schema authority for that flow is `drizzle.config.ts` -> `packages/types/src/schema.ts` -> repo-root `migrations/`.
 
-- **`db/reset-db.ts`**
-  - *Usage*: `npm run db:reset` (via package.json)
-  - *Purpose*: Completely wipes the database schema and recreates it using Drizzle.
-  - *Note*: Development only.
+## Folder Map
 
-- **`test/db-reset.ps1`**
-  - *Usage*: `.\scripts\test\db-reset.ps1`
-  - *Purpose*: Robust PowerShell script for Windows users to reset the DB. Handles connection checking and Drizzle push.
+| Folder | Purpose | Status |
+| --- | --- | --- |
+| `dev/` | Local startup helpers. | Supported |
+| `db/` | Database reset and inspection helpers. | Supported/manual |
+| `build/` | Build orchestration and build checks. | Supported |
+| `verify/` | Aggregate verification runner. | Supported |
+| `seeds/demo/` | Optional local demo data. | Manual |
+| `maintenance/proficiency/` | Destructive progress/proficiency repair tools. | Manual, high risk |
+| `test/smoke/` | API and flow smoke checks. | Supported where package-wired |
+| `test/contracts/` | Focused regression and contract checks. | Manual |
+| `test/unit/` | Small unit-style scripts. | Supported where package-wired |
 
-### 🌱 Data Seeding
+## Supported Commands
 
-- **`seed/create-sample-users.ts`**
-  - *Usage*: `npx tsx scripts/seed/create-sample-users.ts`
-  - *Purpose*: Creates 10 basic users (`test1` to `test10`) with password `welcome123`.
+| Command | Script | Purpose |
+| --- | --- | --- |
+| `npm run dev:all` | `dev/start-all.ps1` | Start API, both student portals, and admin portal. |
+| `npm run db:reset` | `db/reset.ps1` | Drop/recreate app schemas and rerun migrations. |
+| `npm run test:build` | `build/check.ps1` | Run TypeScript and build checks. |
+| `npm run verify` | `verify/all.ps1` | Run the aggregate local verification flow. |
+| `npm run auth:test` | `test/smoke/auth-test.ts` | Authentication smoke/e2e helper. |
+| `npm run smoke:batches` | `test/smoke/admin-batches-smoke.ts` | Batch API smoke check. |
+| `npm run test:smoke` | `test/smoke/api-smoke-test.ts` | General API smoke check. |
+| `npm run test:content` | `test/smoke/content-smoke.ts` | Content smoke check. |
+| `npm run test:rr-isolation-smoke` | `test/smoke/rr-isolation-smoke.test.ts` | RR tenant isolation smoke check. |
+| `npm run test:second-org-join-smoke` | `test/smoke/second-org-join-smoke.test.ts` | Second-organization join flow smoke check. |
+| `npm run test:format-date` | `test/unit/format-date.test.ts` | Date formatting regression check. |
 
-- **`seed/create-30-students.ts`**
-  - *Usage*: `npx tsx scripts/seed/create-30-students.ts`
-  - *Purpose*: Creates 30 realistic student profiles with Indian names, phones, and timezones.
+## Canonical Seed Scripts
 
-- **`seed/create-approved-users.ts`**
-  - *Usage*: `npx tsx scripts/seed/create-approved-users.ts`
-  - *Purpose*: Creates users (`test11` to `test30`) that are already approved and have mixed roles.
+The canonical seed entrypoints live under `server/db-seeding/` because they are app-level bootstrap scripts:
 
-- **`seed/create-sample-batches.ts`**
-  - *Usage*: `npx tsx scripts/seed/create-sample-batches.ts`
-  - *Purpose*: Creates 10 standard batches (Morning/Evening, etc.) for testing enrollment flows.
+- `server/db-seeding/seed-organizations.ts`: `npm run db:seed-orgs`
+- `server/db-seeding/seed-dev-bootstrap.ts`: `npm run db:seed-dev`
+- `server/db-seeding/seed-curriculum.ts`: `npm run db:seed` (default `curriculum-slmts.json`); `npm run db:seed:curriculum:rr` for RR
 
-- **`seed/assign-secondary-instructors.ts`**
-  - *Usage*: `npx tsx scripts/seed/assign-secondary-instructors.ts`
-  - *Purpose*: Assigns 2 co-instructors to existing batches. Run this *after* creating batches.
+## Manual Demo Seeds
 
-### 📊 Proficiency & Progress
+- `seeds/demo/create-sample-users.ts`: creates pending SLMTS student memberships for local testing.
+- `seeds/demo/create-30-students.ts`: creates a larger active SLMTS student set.
 
-- **`utils/check-and-reset-proficiency.ts`**
-  - *Usage*: `npx tsx scripts/utils/check-and-reset-proficiency.ts`
-  - *Purpose*: Ensures all *enrolled* students have proficiency records. Fills gaps if found.
+These are not part of the canonical clean bootstrap path.
 
-- **`utils/full-proficiency-reset.ts`**
-  - *Usage*: `npx tsx scripts/utils/full-proficiency-reset.ts`
-  - *Purpose*: Checks *every* student (enrolled or not) against *every* chapter and creates missing records.
-  - *Warning*: high volume operation.
+## Maintenance Scripts
 
-- **`utils/reset-all-proficiency.ts`**
-  - *Usage*: `npx tsx scripts/utils/reset-all-proficiency.ts`
-  - *Purpose*: Sets `proficiency_level = 9` (Not Started) for all existing records.
+- `maintenance/proficiency/check-and-reset.ts`: fills missing progress rows for enrolled students, then resets proficiency.
+- `maintenance/proficiency/full-reset.ts`: rebuilds proficiency coverage from active student memberships, then resets proficiency.
+- `maintenance/proficiency/reset-all.ts`: resets every existing proficiency row.
 
-### 🔧 Utilities
+These scripts mutate progress data in bulk. Use only on disposable/local data.
 
-- **`utils/list-users.ts`**
-  - *Usage*: `npx tsx scripts/utils/list-users.ts`
-  - *Purpose*: Lists the most recent 20 users with their roles and status.
+## Contract Tests
 
-- **`utils/update-user-role.ts`**
-  - *Usage*: `npx tsx scripts/utils/update-user-role.ts`
-  - *Purpose*: Hardcoded utility to promote a specific user (currently `kashyap.kuchipudi@gmail.com`) to admin.
+For multi-tenancy DB or auth changes, start with:
 
-- **`utils/check-instructor-batches.ts`**
-  - *Usage*: `npx tsx scripts/utils/check-instructor-batches.ts`
-  - *Purpose*: Visualizes which instructors are assigned to which batches.
+- `npx tsx scripts/test/contracts/layer3-pass-a-schema-and-guards.test.ts`
+- `npx tsx scripts/test/contracts/layer3-pass-a-isolation.test.ts`
+- `npx tsx scripts/test/contracts/layer3-pass-b-schema-and-guards.test.ts`
+- `npx tsx scripts/test/contracts/layer3-pass-b-script-compat.test.ts`
+- `npx tsx scripts/test/contracts/layer3-pass-b-media-isolation.test.ts`
+- `npx tsx scripts/test/contracts/layer3-pass-b-progress-audit-isolation.test.ts`
+- `npx tsx scripts/test/contracts/require-super-admin.test.ts`
+- `npx tsx scripts/test/contracts/audit-log-visibility.test.ts`
 
-- **`utils/test-e2e-batches.ts`**
-  - *Usage*: `npx tsx scripts/utils/test-e2e-batches.ts`
-  - *Purpose*: Simulates an end-to-end batch creation and enrollment flow.
+## Removed Scripts
 
-### 🧪 Tests & Smoke Scripts
+The following local-only scripts were removed because they were duplicate, stale, hardcoded, or dependent on old assumptions:
 
-Located in `test/`, these are used for manual verification of specific features:
-- `admin-batches-smoke.ts`: Verifies batch management.
-- `auth-test.ts`: Verifies authentication flows.
-- `content-smoke.ts`: Verifies content structure.
-
----
-*Maintained by the Antigravity Team*
+- `scripts/db/reset-db.ts`
+- `scripts/utils/check-theme-integrity.js`
+- `scripts/utils/update-user-role.ts`
+- `scripts/utils/check-instructor-batches.ts`
+- `scripts/utils/test-e2e-batches.ts`
+- `scripts/seed/create-approved-users.ts`
+- `scripts/seed/create-sample-batches.ts`
+- `scripts/seed/assign-secondary-instructors.ts`

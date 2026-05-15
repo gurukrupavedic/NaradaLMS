@@ -12,6 +12,7 @@ import {
 } from '@narada/ui';
 import { StretchHorizontal, Zap, Maximize, Minimize } from 'lucide-react';
 import { apiRequest } from '@/lib/api';
+import type { TextSegment } from '@narada/types';
 
 import { SelectableTextPanel } from '../TextSegmentationTab/SelectableTextPanel';
 import { useChapterEditor } from '@/lib/content/context/ChapterEditorContext';
@@ -22,15 +23,6 @@ interface PreviewTabProps {
     selectedAudioFileId: number | null;
     onAudioFileChange: (id: number) => void;
     audioFiles: Array<{ id: number; filename: string; displayName?: string }>;
-}
-
-interface TextSegment {
-    id: number;
-    chapterId: number;
-    script: string;
-    startPosition: number;
-    endPosition: number;
-    order: number;
 }
 
 interface AudioTextMapping {

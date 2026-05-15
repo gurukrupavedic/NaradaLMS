@@ -15,10 +15,11 @@ export class ContentStorage {
   /**
    * Track Operations
    */
-  async getAllTracks(): Promise<any[]> {
+  async getAllTracks(orgId: string): Promise<any[]> {
     const result = await db
       .select({
         id: tracks.id,
+        orgId: tracks.orgId,
         title: tracks.title,
         description: tracks.description,
         sortOrder: tracks.sortOrder,
@@ -29,6 +30,7 @@ export class ContentStorage {
       })
       .from(tracks)
       .leftJoin(chapters, and(eq(chapters.trackId, tracks.id), isNull(chapters.deletedAt)))
+      .where(eq(tracks.orgId, orgId))
       .groupBy(tracks.id)
       .orderBy(tracks.sortOrder);
 
@@ -38,15 +40,19 @@ export class ContentStorage {
     }));
   }
 
-  async getTrack(id: number): Promise<any | null> {
-    const [track] = await db.select().from(tracks).where(eq(tracks.id, id));
+  async getTrack(id: number, orgId: string): Promise<any | null> {
+    const [track] = await db
+      .select()
+      .from(tracks)
+      .where(and(eq(tracks.id, id), eq(tracks.orgId, orgId)));
     return track || null;
   }
 
   async createTrack(track: any): Promise<any> {
     const maxOrderResult = await db
       .select({ maxOrder: sql<number>`COALESCE(MAX(${tracks.sortOrder}), 0)` })
-      .from(tracks);
+      .from(tracks)
+      .where(eq(tracks.orgId, track.orgId));
 
     const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
 
@@ -60,27 +66,33 @@ export class ContentStorage {
     return newTrack;
   }
 
-  async updateTrack(id: number, trackUpdate: any): Promise<any> {
+  async updateTrack(id: number, orgId: string, trackUpdate: any): Promise<any> {
     const [track] = await db
       .update(tracks)
       .set({ ...trackUpdate, updatedAt: new Date() })
-      .where(eq(tracks.id, id))
+      .where(and(eq(tracks.id, id), eq(tracks.orgId, orgId)))
       .returning();
     return track;
   }
 
-  async deleteTrack(id: number): Promise<void> {
-    await db.delete(tracks).where(eq(tracks.id, id));
+  async deleteTrack(id: number, orgId: string): Promise<void> {
+    await db.delete(tracks).where(and(eq(tracks.id, id), eq(tracks.orgId, orgId)));
   }
 
   /**
    * Chapter Operations
    */
-  async getChaptersByTrack(trackId: number): Promise<any[]> {
+  async getChaptersByTrack(trackId: number, orgId: string): Promise<any[]> {
     const chapterList = await db
       .select()
       .from(chapters)
-      .where(and(eq(chapters.trackId, trackId), isNull(chapters.deletedAt)))
+      .where(
+        and(
+          eq(chapters.trackId, trackId),
+          eq(chapters.orgId, orgId),
+          isNull(chapters.deletedAt)
+        )
+      )
       .orderBy(chapters.sortOrder);
 
     if (chapterList.length === 0) return [];
@@ -132,10 +144,11 @@ export class ContentStorage {
     });
   }
 
-  async getChapter(id: number): Promise<any | null> {
+  async getChapter(id: number, orgId: string): Promise<any | null> {
     const result = await db
       .select({
         id: chapters.id,
+        orgId: chapters.orgId,
         trackId: chapters.trackId,
         title: chapters.title,
         sortOrder: chapters.sortOrder,
@@ -155,7 +168,13 @@ export class ContentStorage {
       })
       .from(chapters)
       .leftJoin(tracks, eq(chapters.trackId, tracks.id))
-      .where(and(eq(chapters.id, id), isNull(chapters.deletedAt)));
+      .where(
+        and(
+          eq(chapters.id, id),
+          eq(chapters.orgId, orgId),
+          isNull(chapters.deletedAt)
+        )
+      );
 
     if (result.length === 0) return null;
     const chapter = result[0];
@@ -175,7 +194,13 @@ export class ContentStorage {
     const maxOrderResult = await db
       .select({ maxOrder: sql<number>`COALESCE(MAX(${chapters.sortOrder}), 0)` })
       .from(chapters)
-      .where(and(eq(chapters.trackId, chapter.trackId), isNull(chapters.deletedAt)));
+      .where(
+        and(
+          eq(chapters.trackId, chapter.trackId),
+          eq(chapters.orgId, chapter.orgId),
+          isNull(chapters.deletedAt)
+        )
+      );
 
     const nextOrder = (maxOrderResult[0]?.maxOrder || 0) + 1;
 
@@ -190,9 +215,12 @@ export class ContentStorage {
     return newChapter;
   }
 
-  async updateChapter(id: number, chapterUpdate: any): Promise<any> {
+  async updateChapter(id: number, orgId: string, chapterUpdate: any): Promise<any> {
     if (chapterUpdate.content) {
-      const [existingChapter] = await db.select().from(chapters).where(eq(chapters.id, id));
+      const [existingChapter] = await db
+        .select()
+        .from(chapters)
+        .where(and(eq(chapters.id, id), eq(chapters.orgId, orgId)));
       if (existingChapter && existingChapter.content) {
         const existingContent = typeof existingChapter.content === 'string'
           ? JSON.parse(existingChapter.content)
@@ -208,37 +236,69 @@ export class ContentStorage {
     const [chapter] = await db
       .update(chapters)
       .set({ ...chapterUpdate, updatedAt: new Date() })
-      .where(eq(chapters.id, id))
+      .where(and(eq(chapters.id, id), eq(chapters.orgId, orgId)))
       .returning();
 
     return chapter;
   }
 
-  async deleteChapter(id: number): Promise<void> {
+  async deleteChapter(id: number, orgId: string): Promise<void> {
     await db
       .update(chapters)
       .set({ deletedAt: new Date(), updatedAt: new Date() })
-      .where(eq(chapters.id, id));
+      .where(and(eq(chapters.id, id), eq(chapters.orgId, orgId)));
   }
 
   /**
    * Text Segment Operations
    */
-  async getSegmentsByChapter(chapterId: number, script?: string): Promise<any[]> {
-    const whereConditions = script
-      ? and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script))
-      : eq(textSegments.chapterId, chapterId);
+  async getSegmentsByChapter(
+    chapterId: number,
+    script?: string,
+    orgId?: string
+  ): Promise<any[]> {
+    const conditions = [eq(textSegments.chapterId, chapterId)];
 
-    return await db.select().from(textSegments).where(whereConditions).orderBy(asc(textSegments.order));
+    if (script) {
+      conditions.push(eq(textSegments.script, script));
+    }
+
+    if (orgId) {
+      conditions.push(eq(textSegments.orgId, orgId));
+    }
+
+    return await db
+      .select()
+      .from(textSegments)
+      .where(and(...conditions))
+      .orderBy(asc(textSegments.order));
   }
 
-  async createTextSegment(segment: any): Promise<any> {
+  async createTextSegment(segment: any, orgId?: string): Promise<any> {
     if (!segment.chapterId || !segment.script ||
       segment.startPosition === undefined || segment.endPosition === undefined) {
       throw new Error("Missing required fields: chapterId, script, startPosition, endPosition");
     }
 
     return db.transaction(async (tx) => {
+      const [chapter] = await tx
+        .select({ orgId: chapters.orgId })
+        .from(chapters)
+        .where(eq(chapters.id, segment.chapterId))
+        .limit(1);
+
+      if (!chapter) {
+        throw createHttpError("Chapter not found", 404, "CHAPTER_NOT_FOUND");
+      }
+
+      if (orgId && chapter.orgId !== orgId) {
+        throw createHttpError(
+          "Chapter does not belong to the active organization",
+          404,
+          "CHAPTER_NOT_FOUND"
+        );
+      }
+
       await tx
         .select({ id: textSegments.id })
         .from(textSegments)
@@ -263,6 +323,7 @@ export class ContentStorage {
       const nextOrder = (maxOrderResult[0]?.maxOrder ?? -1) + 1;
 
       const [newSegment] = await tx.insert(textSegments).values({
+        orgId: chapter.orgId,
         chapterId: segment.chapterId,
         script: segment.script,
         startPosition: segment.startPosition,
@@ -276,7 +337,7 @@ export class ContentStorage {
     });
   }
 
-  async updateTextSegment(id: number, segmentUpdate: any): Promise<any> {
+  async updateTextSegment(id: number, orgId: string, segmentUpdate: any): Promise<any> {
     if (segmentUpdate.order !== undefined) {
       throw createHttpError(
         "Direct segment order updates are not allowed. Use the reorder endpoint.",
@@ -288,14 +349,20 @@ export class ContentStorage {
     const [segment] = await db
       .update(textSegments)
       .set(segmentUpdate)
-      .where(eq(textSegments.id, id))
+      .where(and(eq(textSegments.id, id), eq(textSegments.orgId, orgId)))
       .returning();
+
+    if (!segment) {
+      throw createHttpError("Segment not found", 404, "SEGMENT_NOT_FOUND");
+    }
+
     return segment;
   }
 
   async updateSegmentOrder(
     chapterId: number,
     script: "te" | "hi" | "en",
+    orgId: string,
     segmentOrders: { id: number; order: number }[]
   ): Promise<void> {
     await db.transaction(async (tx) => {
@@ -305,7 +372,13 @@ export class ContentStorage {
           order: textSegments.order,
         })
         .from(textSegments)
-        .where(and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script)))
+        .where(
+          and(
+            eq(textSegments.chapterId, chapterId),
+            eq(textSegments.script, script),
+            eq(textSegments.orgId, orgId)
+          )
+        )
         .orderBy(asc(textSegments.order), asc(textSegments.id))
         .for("update");
 
@@ -344,7 +417,13 @@ export class ContentStorage {
       await tx
         .update(textSegments)
         .set({ order: sql`${textSegments.order} + ${temporaryOffset}` })
-        .where(and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script)));
+        .where(
+          and(
+            eq(textSegments.chapterId, chapterId),
+            eq(textSegments.script, script),
+            eq(textSegments.orgId, orgId)
+          )
+        );
 
       const caseBranches = segmentOrders.map(({ id, order }) => sql`WHEN ${id} THEN ${order}`);
       await tx.execute(sql`
@@ -355,19 +434,29 @@ export class ContentStorage {
         END
         WHERE chapter_id = ${chapterId}
           AND script = ${script}
+          AND org_id = ${orgId}
       `);
     });
   }
 
-  async deleteTextSegment(id: number): Promise<void> {
-    await db.delete(textSegments).where(eq(textSegments.id, id));
-  }
-  async deleteTextSegmentsByChapter(chapterId: number, script?: string): Promise<void> {
-    const whereConditions = script
-      ? and(eq(textSegments.chapterId, chapterId), eq(textSegments.script, script))
-      : eq(textSegments.chapterId, chapterId);
+  async deleteTextSegment(id: number, orgId: string): Promise<void> {
+    const [deletedSegment] = await db
+      .delete(textSegments)
+      .where(and(eq(textSegments.id, id), eq(textSegments.orgId, orgId)))
+      .returning({ id: textSegments.id });
 
-    await db.delete(textSegments).where(whereConditions);
+    if (!deletedSegment) {
+      throw createHttpError("Segment not found", 404, "SEGMENT_NOT_FOUND");
+    }
+  }
+  async deleteTextSegmentsByChapter(chapterId: number, orgId: string, script?: string): Promise<void> {
+    const conditions = [eq(textSegments.chapterId, chapterId), eq(textSegments.orgId, orgId)];
+
+    if (script) {
+      conditions.push(eq(textSegments.script, script));
+    }
+
+    await db.delete(textSegments).where(and(...conditions));
   }
 }
 

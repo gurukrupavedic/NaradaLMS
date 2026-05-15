@@ -2,20 +2,23 @@ import { Router, Request, Response, NextFunction } from "express";
 import { batchService } from "../modules/batch-cohort";
 import { requireAdmin, requireInstructor } from "../shared/middleware/auth";
 import { jwtAuth } from "../middleware/jwt-auth.middleware";
+import { requireOrgContext } from "../shared/middleware/org-context";
 import { createErrorResponse } from "../shared/utils/api-response";
 
 const router = Router();
 
 // Protect all batch routes - authentication required
 router.use(jwtAuth);
+router.use(requireOrgContext);
 
 // GET /api/batches - List batches with pagination (admins and instructors can view all)
 router.get('/batches', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
     const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
 
-    const { items, total } = await batchService.listBatchesPaginated(limit, offset);
+    const { items, total } = await batchService.listBatchesPaginated(limit, offset, orgId);
 
     res.json({ items, pagination: { limit, offset, total } });
   } catch (error) { next(error); }
@@ -25,6 +28,7 @@ router.get('/batches', async (req: Request, res: Response, next: NextFunction) =
 router.get('/batches/my-batches', requireInstructor, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user as any;
+    const orgId = req.orgId as string;
     const instructorId = user?.id;
 
     if (!instructorId) {
@@ -34,7 +38,7 @@ router.get('/batches/my-batches', requireInstructor, async (req: Request, res: R
     const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
     const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
 
-    const allItems = await batchService.listInstructorBatches(instructorId);
+    const allItems = await batchService.listInstructorBatches(instructorId, orgId);
     const total = allItems.length;
     const paginatedItems = allItems.slice(offset, offset + limit);
 
@@ -46,6 +50,7 @@ router.get('/batches/my-batches', requireInstructor, async (req: Request, res: R
 router.get('/batches/my-students', requireInstructor, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user as any;
+    const orgId = req.orgId as string;
     const instructorId = user?.id;
 
     if (!instructorId) {
@@ -61,7 +66,7 @@ router.get('/batches/my-students', requireInstructor, async (req: Request, res: 
     if (req.query.batchId) filters.batchId = parseInt(req.query.batchId as string);
     if (req.query.status) filters.status = req.query.status as 'active' | 'dropped' | 'completed';
 
-    const allItems = await batchService.listStudentsByInstructor(instructorId, filters);
+    const allItems = await batchService.listStudentsByInstructor(instructorId, orgId, filters);
     const total = allItems.length;
     const paginatedItems = allItems.slice(offset, offset + limit);
 
@@ -72,8 +77,9 @@ router.get('/batches/my-students', requireInstructor, async (req: Request, res: 
 // GET /api/batches/:id - Get batch by ID
 router.get('/batches/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const id = parseInt(req.params.id);
-    const item = await batchService.getBatch(id);
+    const item = await batchService.getBatch(id, orgId);
     if (!item) return res.status(404).json(createErrorResponse('Batch not found', 'BATCH_NOT_FOUND'));
     res.json(item);
   } catch (error) { next(error); }
@@ -97,7 +103,9 @@ router.post('/batches', requireAdmin, async (req: Request, res: Response, next: 
 
   try {
     const user = req.user as Express.User;
+    const orgId = req.orgId as string;
     const created = await batchService.createBatch({
+      orgId,
       batchCode: req.body.batchCode,
       batchName: req.body.batchName,
       trackId: req.body.trackId ?? undefined,
@@ -122,8 +130,9 @@ router.patch('/batches/:id', requireAdmin, async (req: Request, res: Response, n
   }
 
   try {
+    const orgId = req.orgId as string;
     const id = parseInt(req.params.id);
-    const updated = await batchService.updateBatch(id, {
+    const updated = await batchService.updateBatch(id, orgId, {
       batchCode: req.body.batchCode,
       batchName: req.body.batchName,
       trackId: req.body.trackId,
@@ -144,8 +153,9 @@ router.patch('/batches/:id', requireAdmin, async (req: Request, res: Response, n
 // DELETE /api/batches/:id - Delete batch
 router.delete('/batches/:id', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const id = parseInt(req.params.id);
-    const deleted = await batchService.deleteBatch(id);
+    const deleted = await batchService.deleteBatch(id, orgId);
     res.json(deleted);
   } catch (error) { next(error); }
 });
@@ -154,8 +164,10 @@ router.delete('/batches/:id', requireAdmin, async (req: Request, res: Response, 
 router.post('/batches/:id/enrollments', requireInstructor, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user as Express.User;
+    const orgId = req.orgId as string;
     const batchId = parseInt(req.params.id);
     const created = await batchService.addEnrollment({
+      orgId,
       batchId,
       studentId: req.body.studentId,
       enrolledBy: user.id,
@@ -167,9 +179,13 @@ router.post('/batches/:id/enrollments', requireInstructor, async (req: Request, 
 // PATCH /api/enrollments/:id/drop - Drop an enrollment
 router.patch('/enrollments/:id/drop', requireInstructor, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const user = req.user as Express.User;
+    const orgId = req.orgId as string;
     const enrollmentId = parseInt(req.params.id);
     const updated = await batchService.dropEnrollment({
+      orgId,
       enrollmentId,
+      droppedBy: user.id,
       droppedReason: req.body.droppedReason,
     });
     res.json(updated);
@@ -179,8 +195,9 @@ router.patch('/enrollments/:id/drop', requireInstructor, async (req: Request, re
 // GET /api/batches/:id/enrollments - List enrollments in batch
 router.get('/batches/:id/enrollments', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const batchId = parseInt(req.params.id);
-    const items = await batchService.listEnrollments(batchId);
+    const items = await batchService.listEnrollments(batchId, orgId);
     res.json(items);
   } catch (error) { next(error); }
 });
@@ -188,9 +205,10 @@ router.get('/batches/:id/enrollments', async (req: Request, res: Response, next:
 // GET /api/batches/:id/eligible-students - List students eligible for enrollment
 router.get('/batches/:id/eligible-students', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const batchId = parseInt(req.params.id);
     const searchQuery = req.query.search as string | undefined;
-    const items = await batchService.listEligibleStudents(batchId, searchQuery);
+    const items = await batchService.listEligibleStudents(batchId, orgId, searchQuery);
     res.json(items);
   } catch (error) { next(error); }
 });
@@ -199,8 +217,10 @@ router.get('/batches/:id/eligible-students', async (req: Request, res: Response,
 router.post('/batches/:id/co-instructors', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user as Express.User;
+    const orgId = req.orgId as string;
     const batchId = parseInt(req.params.id);
     const created = await batchService.assignCoInstructor({
+      orgId,
       batchId,
       instructorId: req.body.instructorId,
       role: req.body.role,
@@ -222,8 +242,9 @@ router.delete('/co-instructors/:assignmentId', requireAdmin, async (req: Request
 // GET /api/batches/:id/co-instructors - List co-instructors for batch
 router.get('/batches/:id/co-instructors', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const batchId = parseInt(req.params.id);
-    const items = await batchService.listCoInstructors(batchId);
+    const items = await batchService.listCoInstructors(batchId, orgId);
     res.json(items);
   } catch (error) { next(error); }
 });
@@ -233,19 +254,22 @@ router.get('/batches/:id/co-instructors', async (req: Request, res: Response, ne
 // GET /api/batches/:id/progress - Get all student progress in batch (Excel-like grid)
 router.get('/batches/:id/progress', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const user = (req as any).user;
     if (!user) {
       return res.status(401).json(createErrorResponse('Unauthorized', 'UNAUTHORIZED'));
     }
 
-    // Only instructors and admins can view batch progress
-    const isInstructorOrAdmin = user.roles?.includes('instructor') || user.roles?.includes('admin');
+    // Only instructors and admins can view batch progress (JWT org roles; §3.4 — no super-admin bypass)
+    const isInstructorOrAdmin =
+      user.orgRoles?.includes("instructor") ||
+      user.orgRoles?.includes("admin");
     if (!isInstructorOrAdmin) {
       return res.status(403).json(createErrorResponse('Forbidden: Instructors only', 'FORBIDDEN'));
     }
 
     const batchId = parseInt(req.params.id);
-    const progress = await batchService.getBatchProgress(batchId);
+    const progress = await batchService.getBatchProgress(batchId, orgId);
     res.json(progress);
   } catch (error) { next(error); }
 });
@@ -253,20 +277,21 @@ router.get('/batches/:id/progress', async (req: Request, res: Response, next: Ne
 // POST /api/batches/:batchId/students/:studentId/evaluate - Evaluate student for chapter
 router.post('/batches/:batchId/students/:studentId/evaluate', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const orgId = req.orgId as string;
     const user = (req as any).user;
     if (!user) {
       return res.status(401).json(createErrorResponse('Unauthorized', 'UNAUTHORIZED'));
     }
 
-    // Only instructors can evaluate
-    if (!user.roles?.includes('instructor')) {
+    // Only instructors can evaluate (JWT org role; §3.4 — no super-admin bypass)
+    if (!user.orgRoles?.includes("instructor")) {
       return res.status(403).json(createErrorResponse('Forbidden: Instructors only', 'FORBIDDEN'));
     }
 
     const batchId = parseInt(req.params.batchId);
 
     // Verify user is assigned to this batch (primary or co-instructor)
-    const batch = await batchService.getBatch(batchId);
+    const batch = await batchService.getBatch(batchId, orgId);
     if (!batch) {
       return res.status(404).json(createErrorResponse('Batch not found', 'BATCH_NOT_FOUND'));
     }
@@ -288,7 +313,7 @@ router.post('/batches/:batchId/students/:studentId/evaluate', async (req: Reques
       return res.status(400).json(createErrorResponse('chapterId and proficiencyLevel are required', 'VALIDATION_ERROR'));
     }
 
-    const result = await batchService.evaluateStudent({
+    const result = await batchService.evaluateStudent(orgId, {
       studentId,
       chapterId: parseInt(chapterId),
       proficiencyLevel: parseInt(proficiencyLevel),

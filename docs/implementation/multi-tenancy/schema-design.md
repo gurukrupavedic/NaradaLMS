@@ -1,6 +1,6 @@
 # Schema Design: Multi-Tenancy Wave 2
 
-This document translates Wave 1 decisions into concrete database/schema changes, based on the current `packages/types/src/schema.ts`.
+This document records the multi-tenancy schema that shipped from Wave 2, grounded in the live `packages/types/src/schema.ts`.
 
 ---
 
@@ -14,14 +14,32 @@ This document translates Wave 1 decisions into concrete database/schema changes,
 
 ---
 
-## Current baseline (from code)
+## Expand / contract rollout (historical)
+
+Schema work landed in an expand/migrate/contract sequence so the integration branch never sat in a non-buildable state:
+
+| Phase | When | What |
+| ----- | ---- | ---- |
+| **Expand** | Slice `slice-1.1-org-schema` | Added `organizations`, `user_organizations`, and `users.is_super_admin` while legacy `users.roles` / `users.status` (and `users_status_check`) still existed. |
+| **Migrate** | Layer 2 | Application code moved to memberships plus `is_super_admin` instead of global role/status. The rollout was tracked in [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md). |
+| **Contract** | Slice `slice-1.4-schema-contract` (after Layer 2) | Removed `users.roles`, `users.status`, and `users_status_check` once the cleanup tracker reached zero. |
+
+Dev and CI apply versioned SQL from repo-root `migrations/` via `drizzle-kit migrate` after a clean schema reset. The canonical local reset path is `npm run db:reset` via `scripts/db/reset.ps1`; see [db-audit-remediation-checklist.md](./db-audit-remediation-checklist.md) for support status across DB helpers.
+
+---
+
+## Current live baseline (from code)
 
 Today:
 
-- `users.roles` (text[]) and `users.status` are global.
-- No `organizations` table.
-- No `user_organizations` table.
-- No `org_id` columns on domain tables.
+- `users.roles`, `users.status`, and `users_status_check` are gone.
+- `users.is_super_admin` is the only global authority flag.
+- `organizations` and `user_organizations` are live tables in the shared schema.
+- `org_id` is present on all tenant-owned tables already shipped in Layer 3:
+  - core: `tracks`, `chapters`, `batches`, `enrollments`
+  - media/content: `audio_files`, `text_segments`, `media_segments`, `segment_mappings`
+  - progress/audit: `student_progress`, `proficiency_evaluation_log`, `audit_logs`
+- `system_settings` remains global in the current design.
 
 Key references:
 
@@ -30,19 +48,19 @@ Key references:
 
 ---
 
-## Target model
+## Live model
 
 ### 1) `users` table changes
 
-#### Add
+#### Landed field
 
 - `is_super_admin boolean not null default false`
 
-#### Drop
+#### Removed in slice 1.4 contract
 
 - `roles` (text[])
 - `status` (varchar)
-- account-level status CHECK constraint tied to `users.status`
+- account-level status CHECK constraint tied to `users.status` (`users_status_check`)
 
 #### Keep
 
@@ -59,7 +77,7 @@ Notes:
 
 ### 2) New `organizations` table
 
-Proposed shape:
+Current shape:
 
 - `id uuid pk default gen_random_uuid()`
 - `name text not null`
@@ -76,13 +94,17 @@ Constraints:
 Seeded initial rows:
 
 - `slmts` (active)
-- `rr` (initially active/inactive can be operationally decided in seed data)
+- `rr` (active)
+
+**Dev seeding:** after migrations (`npm run db:reset` or `npm run db:migrate`), run `npm run db:seed-orgs` to insert these rows idempotently. Implementation: [server/db-seeding/seed-organizations.ts](../../../server/db-seeding/seed-organizations.ts). Display names in the DB use **Pathasala** spelling; canonical API / tenant keys are the slugs `slmts` and `rr`.
+
+**Dev bootstrap (super-admin + memberships):** after org seed, run `npm run db:seed-dev` ([server/db-seeding/seed-dev-bootstrap.ts](../../../server/db-seeding/seed-dev-bootstrap.ts)). Requires `SUPER_ADMIN_EMAIL`; see [environment-setup.md](../../essentials/environment-setup.md) Phase 0b for `SUPER_ADMIN_PASSWORD` and related env vars.
 
 ---
 
 ### 3) New `user_organizations` table
 
-Proposed shape:
+Current shape:
 
 - `id uuid pk default gen_random_uuid()` (or composite PK; UUID PK keeps API simpler)
 - `user_id uuid/text fk -> users.id not null`
@@ -98,11 +120,9 @@ Proposed shape:
 Constraints:
 
 - unique membership per user/org: `UNIQUE (user_id, org_id)`
-- role values CHECK (optional now, recommended): roles subset of `('student','instructor','admin')`
+- role values are policy-validated in application code and also constrained by the live `user_organizations_roles_subset_check` DB check so only supported role labels can be stored
 - status CHECK: `('pending','active','inactive','rejected')`
-- require student role invariant:
-  - policy-level now
-  - DB CHECK can be added later if desired
+- student-role invariants remain policy-level rather than DB-enforced
 
 Indexes:
 
@@ -113,13 +133,13 @@ Indexes:
 
 ---
 
-## `org_id` rollout plan across existing tables
+## `org_id` rollout (landed)
 
-To reduce blast radius, rollout in two passes.
+To reduce blast radius, the `org_id` rollout landed in two passes.
 
 ### Pass A (core flows first)
 
-Add `org_id` to:
+Added `org_id` to:
 
 - `tracks`
 - `chapters`
@@ -128,7 +148,7 @@ Add `org_id` to:
 
 ### Pass B (remaining scoped data)
 
-Add `org_id` to:
+Added `org_id` to:
 
 - `audio_files`
 - `text_segments`
@@ -146,64 +166,59 @@ Not scoped in this phase:
 
 ## Org-scoped uniqueness updates
 
-As `org_id` lands, move uniqueness semantics from global to org-scoped where applicable.
+As `org_id` landed, uniqueness semantics moved from global to org-scoped where applicable.
 
 Examples:
 
-- `tracks.title` unique -> `UNIQUE (org_id, title)`
-- `batches.batch_code` can become `UNIQUE (org_id, batch_code)` in tenancy phase
-- progress/enrollment uniqueness should include org context where needed
+- `tracks.title` is now `UNIQUE (org_id, title)`
+- `batches.batch_code` is now `UNIQUE (org_id, batch_code)`
+- active enrollments now use a partial unique index on `(org_id, student_id)` where `status = 'active'`
+- progress/enrollment uniqueness and indexes now carry org context where the live schema needs it
 
-These changes must be synchronized with API query scoping to avoid inconsistent constraints.
+These constraints now ship together with org-scoped queries and guards in the live server code.
 
 ---
 
-## Audit log schema direction
+## Audit log schema direction (current)
 
-`audit_logs` gets `org_id` for org-scoped operations, but global super-admin user-governance actions remain platform-scoped.
+`audit_logs.org_id` is live for org-scoped operations, while global super-admin user-governance actions remain platform-scoped with `org_id = null`.
 
-Recommended approach:
+Current approach:
 
 - `org_id` nullable
 - org action rows: `org_id` set
-- platform action rows: `org_id` null + action namespace prefix (e.g. `USER_APPROVED`, `ROLE_ASSIGNED`)
+- platform action rows: `org_id` null
 
 This supports clear visibility partitioning without extra audit tables.
 
 ---
 
-## Drizzle-level updates required
+## Drizzle implementation snapshot
 
 In `packages/types/src/schema.ts`:
 
-1. Add new table declarations:
-   - `organizations`
-   - `userOrganizations`
-2. Update `users` table definition:
-   - add `isSuperAdmin`
-   - remove `roles`, `status`, related CHECK
-3. Add `orgId` columns and FKs on scoped tables.
-4. Update indexes/uniques to include `orgId` where required.
-5. Add relations:
-   - users <-> userOrganizations
-   - organizations <-> userOrganizations
-   - organizations <-> scoped tables
-6. Update insert/select Zod schemas and exported TS types.
+1. `organizations` and `userOrganizations` are live table declarations.
+2. `users` now includes `isSuperAdmin`; legacy role/status columns are removed.
+3. Scoped tables carry `orgId` foreign keys where the rollout required them.
+4. Org-scoped indexes/uniques are in place for the core uniqueness boundaries that changed (`tracks`, `batches`, and related indexes).
+5. Relations are wired across users, memberships, organizations, and scoped tables.
+6. Insert/select Zod schemas and exported TS types reflect the org-scoped model.
 
 ---
 
-## Migration strategy for this phase
+## Migration strategy used for this phase
 
-Per product decision, skip legacy migration complexity:
+Per product decision, legacy backfill complexity was skipped in favor of clean dev resets/reseeds:
 
-- reset/purge dev database
-- apply new migrations on clean DB
+- reset/purge dev database (supported path drops `public` and `drizzle`, then recreates empty `public`)
+- apply **versioned** migrations on clean DB (`drizzle-kit generate` produces SQL under repo-root `migrations/`; `drizzle-kit migrate` applies them in order)
 - reseed with:
   - org rows (`slmts`, `rr`)
   - super-admin user (Kashyap account in dev)
   - baseline memberships/roles for testing
+  - optional curriculum data from `server/seeds/curriculum-slmts.json` (or `CURRICULUM_SEED_FILE`)
 
-No compatibility bridge for old `users.roles/status` is required.
+During expand (slice 1.1), legacy `users.roles` / `users.status` remained temporarily; no dual-write bridge was introduced. After contract (slice 1.4), those columns are gone for the live schema.
 
 ---
 

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { learningService } from "../modules/learning-delivery";
 import { jwtAuth } from "../middleware/jwt-auth.middleware";
+import { requireOrgContext } from "../shared/middleware/org-context";
 import { requireInstructor } from "../shared/middleware/auth";
 import { catchAsync } from "../utils/catchAsync";
 import { AppError } from "../utils/AppError";
@@ -9,6 +10,7 @@ const router = Router();
 
 // Protect all student routes - authentication required
 router.use(jwtAuth);
+router.use(requireOrgContext);
 
 /**
  * GET /api/students/:studentId/progress
@@ -17,6 +19,7 @@ router.use(jwtAuth);
  */
 router.get('/students/:studentId/progress', requireInstructor, catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
+  const orgId = req.orgId as string;
   if (!user) {
     throw new AppError('Unauthorized', 401);
   }
@@ -26,7 +29,7 @@ router.get('/students/:studentId/progress', requireInstructor, catchAsync(async 
 
   const studentId = req.params.studentId;
 
-  const studentDetails = await learningService.getStudentDetails(user.id, studentId, isInstructorOrAdmin);
+  const studentDetails = await learningService.getStudentDetails(user.id, orgId, studentId, isInstructorOrAdmin);
 
   if (!studentDetails) {
     throw new AppError('Student not found or you do not have access', 404);
@@ -43,6 +46,7 @@ router.get('/students/:studentId/progress', requireInstructor, catchAsync(async 
  */
 router.get('/students/:studentId/track-progress', requireInstructor, catchAsync(async (req: Request, res: Response) => {
   const user = (req as any).user;
+  const orgId = req.orgId as string;
   if (!user) {
     throw new AppError('Unauthorized', 401);
   }
@@ -51,7 +55,7 @@ router.get('/students/:studentId/track-progress', requireInstructor, catchAsync(
   const isInstructorOrAdmin = true;
 
   const studentId = req.params.studentId;
-  const trackProgress = await learningService.getStudentTrackProgress(user.id, studentId, isInstructorOrAdmin);
+  const trackProgress = await learningService.getStudentTrackProgress(user.id, orgId, studentId, isInstructorOrAdmin);
 
   if (!trackProgress) {
     throw new AppError('Student not found or you do not have access', 404);

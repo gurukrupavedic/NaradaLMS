@@ -14,6 +14,8 @@ export interface AuditFilter {
   resourceType?: string;
   startDate?: Date;
   endDate?: Date;
+  scope?: "org" | "platform";
+  orgId?: string;
   limit?: number;
   offset?: number;
 }
@@ -29,9 +31,10 @@ export class AdminService {
     action: string,
     resourceType: string,
     resourceId: string,
-    changes?: any
+    changes?: any,
+    orgId?: string
   ): Promise<void> {
-    await this.storage.insertAuditLog(userId, action, resourceType, resourceId, changes);
+    await this.storage.insertAuditLog(userId, action, resourceType, resourceId, changes, orgId);
   }
 
   /**
@@ -48,6 +51,8 @@ export class AdminService {
       resourceType: filters.resourceType,
       startDate: filters.startDate,
       endDate: filters.endDate,
+      scope: filters.scope,
+      orgId: filters.orgId,
       limit,
       offset,
     });

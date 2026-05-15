@@ -9,8 +9,11 @@ import {
   integer,
   real,
   unique,
+  uniqueIndex,
   check,
   foreignKey,
+  uuid,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
@@ -32,8 +35,7 @@ export const users = pgTable("users", {
   providerId: varchar("provider_id"), // Provider user ID
 
   // Authorization
-  roles: text("roles").array().notNull().default(sql`ARRAY[]::text[]`),
-  status: varchar("status").notNull().default("pending_approval"), // 'pending_approval' | 'active' | 'inactive'
+  isSuperAdmin: boolean("is_super_admin").notNull().default(false),
 
   // Audit / invitations (self-FKs in table callback)
   invitedBy: varchar("invited_by"),
@@ -54,27 +56,98 @@ export const users = pgTable("users", {
     foreignColumns: [table.id],
     name: "users_approved_by_fkey",
   }).onDelete("set null"),
-  check(
-    "users_status_check",
-    sql`status IN ('pending_approval', 'active', 'inactive')`
-  ),
   check("users_provider_check", sql`provider IN ('local', 'google')`),
 ]);
+
+// Organizations — tenant identity (multi-tenancy expand phase)
+export const organizations = pgTable(
+  "organizations",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull().unique(),
+    status: varchar("status").notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    check(
+      "organizations_status_check",
+      sql`${table.status} IN ('active', 'inactive')`
+    ),
+  ]
+);
+
+// User–organization membership (per-org roles and status)
+export const userOrganizations = pgTable(
+  "user_organizations",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    roles: text("roles")
+      .array()
+      .notNull()
+      .default(sql`ARRAY['student']::text[]`),
+    status: varchar("status").notNull().default("pending"),
+    requestedAt: timestamp("requested_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    approvedBy: varchar("approved_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    unique("user_organizations_user_org_uniq").on(table.userId, table.orgId),
+    check(
+      "user_organizations_status_check",
+      sql`${table.status} IN ('pending', 'active', 'inactive', 'rejected')`
+    ),
+    check(
+      "user_organizations_roles_subset_check",
+      sql`${table.roles} <@ ARRAY['student','instructor','admin']::text[]`
+    ),
+    index("idx_user_org_user_id").on(table.userId),
+    index("idx_user_org_org_id").on(table.orgId),
+    index("idx_user_org_status").on(table.status),
+    index("idx_user_org_org_status").on(table.orgId, table.status),
+  ]
+);
 
 // Learning tracks - Vedic curriculum structure
 export const tracks = pgTable("tracks", {
   id: serial("id").primaryKey(),
-  title: text("title").notNull().unique(), // Unique track titles as per requirements
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
+  title: text("title").notNull(), // Unique per organization in Pass A
   description: text("description").notNull(), // Made mandatory
   sortOrder: integer("sort_order").notNull(), // Sequential number starting from 1, 2, 3...
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
+}, (table) => [
+  index("idx_tracks_org").on(table.orgId),
+  unique("tracks_org_title_uniq").on(table.orgId, table.title),
+]);
 
 // Chapters - Wiki-style content with draft/published workflow
 export const chapters = pgTable("chapters", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   trackId: integer("track_id").notNull().references(() => tracks.id, { onDelete: "cascade" }),
   title: text("title").notNull(), // Single source of truth per Q9
   sortOrder: integer("sort_order").notNull(),
@@ -91,6 +164,7 @@ export const chapters = pgTable("chapters", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index("idx_chapters_org").on(table.orgId),
   index("idx_chapters_track").on(table.trackId),
   unique("chapters_track_title_uniq").on(table.trackId, table.title),
   check("chapters_status_check", sql`status IN ('draft', 'published')`),
@@ -99,6 +173,9 @@ export const chapters = pgTable("chapters", {
 // Audio files for chapters
 export const audioFiles = pgTable("audio_files", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
   filename: text("filename").notNull(),
   displayName: text("display_name").notNull(),
@@ -109,12 +186,16 @@ export const audioFiles = pgTable("audio_files", {
   uploadedBy: varchar("uploaded_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index("idx_audio_files_org").on(table.orgId),
   index("idx_audio_files_chapter").on(table.chapterId),
 ]);
 
 // Text segments - Script-specific approach for clean architecture
 export const textSegments = pgTable("text_segments", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
   script: varchar("script", { length: 2 }).notNull(), // 'te', 'hi', 'en'
   startPosition: integer("start_position").notNull(),
@@ -123,6 +204,7 @@ export const textSegments = pgTable("text_segments", {
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index("idx_text_segments_org").on(table.orgId),
   unique("text_segments_chapter_script_order_uniq").on(
     table.chapterId,
     table.script,
@@ -137,6 +219,9 @@ export const textSegments = pgTable("text_segments", {
 // Media segments - Audio file timestamp segments (integer milliseconds; Bundle E)
 export const mediaSegments = pgTable("media_segments", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   audioFileId: integer("audio_file_id").notNull().references(() => audioFiles.id, { onDelete: "cascade" }),
   startMs: integer("start_ms").notNull(), // in milliseconds
   endMs: integer("end_ms").notNull(), // in milliseconds
@@ -144,6 +229,7 @@ export const mediaSegments = pgTable("media_segments", {
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index("idx_media_segments_org").on(table.orgId),
   check(
     "media_segments_start_ms_nonneg_check",
     sql`${table.startMs} >= 0`
@@ -161,11 +247,15 @@ export const mediaSegments = pgTable("media_segments", {
 // Segment mapping - Maps media segments to text segments
 export const segmentMappings = pgTable("segment_mappings", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   mediaSegmentId: integer("media_segment_id").notNull().references(() => mediaSegments.id, { onDelete: "cascade" }),
   textSegmentId: integer("text_segment_id").notNull().references(() => textSegments.id, { onDelete: "cascade" }),
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index("idx_segment_mappings_org").on(table.orgId),
   unique("segment_mappings_media_text_uniq").on(
     table.mediaSegmentId,
     table.textSegmentId
@@ -175,6 +265,9 @@ export const segmentMappings = pgTable("segment_mappings", {
 // Batches - Flexible cohorts (track and instructor optional; assignable later)
 export const batches = pgTable("batches", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   batchCode: text("batch_code").notNull(),
   batchName: text("batch_name").notNull(),
   trackId: integer("track_id").references(() => tracks.id, { onDelete: "set null" }),
@@ -185,13 +278,17 @@ export const batches = pgTable("batches", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   createdBy: varchar("created_by").notNull().references(() => users.id),
 }, (table) => [
-  unique("batches_batch_code_uniq").on(table.batchCode),
+  index("idx_batches_org").on(table.orgId),
+  unique("batches_org_batch_code_uniq").on(table.orgId, table.batchCode),
 ]);
 
 // Enrollments - Student enrollment in batches
 // BUSINESS RULE: A student can only be enrolled in ONE batch at a time (one-to-many relationship)
 export const enrollments = pgTable("enrollments", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   batchId: integer("batch_id").notNull().references(() => batches.id, { onDelete: "cascade" }),
   studentId: varchar("student_id").notNull().references(() => users.id),
   status: varchar("status").default("active").notNull(), // 'active', 'dropped', 'completed'
@@ -201,10 +298,11 @@ export const enrollments = pgTable("enrollments", {
   droppedReason: text("dropped_reason"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
-  // Partial unique index: Only one active enrollment per student
-  index("unique_active_enrollment_idx")
-    .on(table.studentId)
+  // Partial unique index: only one active enrollment per student within an org.
+  uniqueIndex("unique_active_enrollment_idx")
+    .on(table.orgId, table.studentId)
     .where(sql`status = 'active'`),
+  index("idx_enrollments_org").on(table.orgId),
   index("idx_enrollments_batch").on(table.batchId),
   check(
     "enrollments_status_check",
@@ -232,6 +330,9 @@ export const batchCoInstructors = pgTable("batch_co_instructors", {
 // Student progress tracking
 export const studentProgress = pgTable("student_progress", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   studentId: varchar("student_id").notNull().references(() => users.id),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
   batchId: integer("batch_id").references(() => batches.id),
@@ -244,6 +345,7 @@ export const studentProgress = pgTable("student_progress", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index("idx_progress_org").on(table.orgId),
   index("idx_progress_student").on(table.studentId),
   index("idx_progress_chapter").on(table.chapterId),
   index("idx_progress_batch").on(table.batchId),
@@ -260,6 +362,9 @@ export const studentProgress = pgTable("student_progress", {
 // Proficiency Evaluation Log - Audit trail for proficiency changes
 export const proficiencyEvaluationLog = pgTable("proficiency_evaluation_log", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   studentId: varchar("student_id").notNull().references(() => users.id),
   chapterId: integer("chapter_id").notNull().references(() => chapters.id, { onDelete: "cascade" }),
   batchId: integer("batch_id").references(() => batches.id), // Current batch at time of evaluation
@@ -269,6 +374,7 @@ export const proficiencyEvaluationLog = pgTable("proficiency_evaluation_log", {
   notes: text("notes"),
   evaluatedAt: timestamp("evaluated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
+  index("idx_proficiency_log_org").on(table.orgId),
   index("idx_proficiency_log_student").on(table.studentId),
   index("idx_proficiency_log_chapter").on(table.chapterId),
   index("idx_proficiency_log_batch").on(table.batchId),
@@ -285,6 +391,9 @@ export const proficiencyEvaluationLog = pgTable("proficiency_evaluation_log", {
 // Audit logs - Track all sensitive operations
 export const auditLogs = pgTable("audit_logs", {
   id: serial("id").primaryKey(),
+  orgId: uuid("org_id").references(() => organizations.id, {
+    onDelete: "restrict",
+  }),
   userId: varchar("user_id").notNull().references(() => users.id),
   action: text("action").notNull(), // 'CREATE_CHAPTER', 'PUBLISH_CHAPTER', 'ENROLL_STUDENT', etc.
   resourceType: text("resource_type").notNull(), // 'chapter', 'batch', 'enrollment', etc.
@@ -293,6 +402,7 @@ export const auditLogs = pgTable("audit_logs", {
   timestamp: timestamp("timestamp", { withTimezone: true }).defaultNow(),
   requestId: text("request_id"), // for tracing
 }, (table) => [
+  index("idx_audit_logs_org_timestamp_desc").on(table.orgId, table.timestamp.desc()),
   index("idx_audit_logs_timestamp_desc").on(table.timestamp.desc()),
   index("idx_audit_logs_user_timestamp_desc").on(table.userId, table.timestamp.desc()),
   index("idx_audit_logs_resource_type_timestamp_desc").on(table.resourceType, table.timestamp.desc()),
@@ -309,6 +419,10 @@ export const systemSettings = pgTable("system_settings", {
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
+  memberships: many(userOrganizations, { relationName: "membershipUser" }),
+  membershipsApprovedByUser: many(userOrganizations, {
+    relationName: "membershipApprovedByUser",
+  }),
   createdTracks: many(tracks),
   createdChapters: many(chapters),
   uploadedAudioFiles: many(audioFiles),
@@ -330,7 +444,46 @@ export const usersRelations = relations(users, ({ many }) => ({
   }),
 }));
 
+export const organizationsRelations = relations(organizations, ({ many }) => ({
+  userOrganizations: many(userOrganizations),
+  tracks: many(tracks),
+  chapters: many(chapters),
+  audioFiles: many(audioFiles),
+  textSegments: many(textSegments),
+  mediaSegments: many(mediaSegments),
+  segmentMappings: many(segmentMappings),
+  studentProgress: many(studentProgress),
+  proficiencyEvaluationLogs: many(proficiencyEvaluationLog),
+  batches: many(batches),
+  enrollments: many(enrollments),
+  auditLogs: many(auditLogs),
+}));
+
+export const userOrganizationsRelations = relations(
+  userOrganizations,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userOrganizations.userId],
+      references: [users.id],
+      relationName: "membershipUser",
+    }),
+    organization: one(organizations, {
+      fields: [userOrganizations.orgId],
+      references: [organizations.id],
+    }),
+    approvedByUser: one(users, {
+      fields: [userOrganizations.approvedBy],
+      references: [users.id],
+      relationName: "membershipApprovedByUser",
+    }),
+  })
+);
+
 export const tracksRelations = relations(tracks, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [tracks.orgId],
+    references: [organizations.id],
+  }),
   createdBy: one(users, {
     fields: [tracks.createdBy],
     references: [users.id],
@@ -339,6 +492,10 @@ export const tracksRelations = relations(tracks, ({ one, many }) => ({
 }));
 
 export const chaptersRelations = relations(chapters, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [chapters.orgId],
+    references: [organizations.id],
+  }),
   track: one(tracks, {
     fields: [chapters.trackId],
     references: [tracks.id],
@@ -354,6 +511,10 @@ export const chaptersRelations = relations(chapters, ({ one, many }) => ({
 }));
 
 export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [audioFiles.orgId],
+    references: [organizations.id],
+  }),
   chapter: one(chapters, {
     fields: [audioFiles.chapterId],
     references: [chapters.id],
@@ -366,6 +527,10 @@ export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({
 }));
 
 export const textSegmentsRelations = relations(textSegments, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [textSegments.orgId],
+    references: [organizations.id],
+  }),
   chapter: one(chapters, {
     fields: [textSegments.chapterId],
     references: [chapters.id],
@@ -378,6 +543,10 @@ export const textSegmentsRelations = relations(textSegments, ({ one, many }) => 
 }));
 
 export const mediaSegmentsRelations = relations(mediaSegments, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [mediaSegments.orgId],
+    references: [organizations.id],
+  }),
   audioFile: one(audioFiles, {
     fields: [mediaSegments.audioFileId],
     references: [audioFiles.id],
@@ -390,6 +559,10 @@ export const mediaSegmentsRelations = relations(mediaSegments, ({ one, many }) =
 }));
 
 export const segmentMappingsRelations = relations(segmentMappings, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [segmentMappings.orgId],
+    references: [organizations.id],
+  }),
   mediaSegment: one(mediaSegments, {
     fields: [segmentMappings.mediaSegmentId],
     references: [mediaSegments.id],
@@ -405,6 +578,10 @@ export const segmentMappingsRelations = relations(segmentMappings, ({ one }) => 
 }));
 
 export const studentProgressRelations = relations(studentProgress, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [studentProgress.orgId],
+    references: [organizations.id],
+  }),
   student: one(users, {
     fields: [studentProgress.studentId],
     references: [users.id],
@@ -428,6 +605,10 @@ export const studentProgressRelations = relations(studentProgress, ({ one }) => 
 export const proficiencyEvaluationLogRelations = relations(
   proficiencyEvaluationLog,
   ({ one }) => ({
+    organization: one(organizations, {
+      fields: [proficiencyEvaluationLog.orgId],
+      references: [organizations.id],
+    }),
     student: one(users, {
       fields: [proficiencyEvaluationLog.studentId],
       references: [users.id],
@@ -450,6 +631,10 @@ export const proficiencyEvaluationLogRelations = relations(
 );
 
 export const batchesRelations = relations(batches, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [batches.orgId],
+    references: [organizations.id],
+  }),
   track: one(tracks, {
     fields: [batches.trackId],
     references: [tracks.id],
@@ -469,6 +654,10 @@ export const batchesRelations = relations(batches, ({ one, many }) => ({
 }));
 
 export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [enrollments.orgId],
+    references: [organizations.id],
+  }),
   batch: one(batches, {
     fields: [enrollments.batchId],
     references: [batches.id],
@@ -499,6 +688,10 @@ export const batchCoInstructorsRelations = relations(batchCoInstructors, ({ one 
 }));
 
 export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [auditLogs.orgId],
+    references: [organizations.id],
+  }),
   user: one(users, {
     fields: [auditLogs.userId],
     references: [users.id],
@@ -516,10 +709,16 @@ export const systemSettingsRelations = relations(systemSettings, ({ one }) => ({
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 
-export const insertTrackSchema = createInsertSchema(tracks).omit({ id: true, createdAt: true, updatedAt: true, createdBy: true, sortOrder: true });
+export const insertOrganizationSchema = createInsertSchema(organizations);
+export const selectOrganizationSchema = createSelectSchema(organizations);
+
+export const insertUserOrganizationSchema = createInsertSchema(userOrganizations);
+export const selectUserOrganizationSchema = createSelectSchema(userOrganizations);
+
+export const insertTrackSchema = createInsertSchema(tracks).omit({ id: true, orgId: true, createdAt: true, updatedAt: true, createdBy: true, sortOrder: true });
 export const selectTrackSchema = createSelectSchema(tracks);
 
-export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true, createdAt: true, updatedAt: true, sortOrder: true, createdBy: true, lastEditedBy: true, publishedAt: true, deletedAt: true });
+export const insertChapterSchema = createInsertSchema(chapters).omit({ id: true, orgId: true, createdAt: true, updatedAt: true, sortOrder: true, createdBy: true, lastEditedBy: true, publishedAt: true, deletedAt: true });
 export const selectChapterSchema = createSelectSchema(chapters);
 
 export const insertAudioFileSchema = createInsertSchema(audioFiles).omit({ id: true, createdAt: true });
@@ -537,10 +736,10 @@ export const selectSegmentMappingSchema = createSelectSchema(segmentMappings);
 export const insertStudentProgressSchema = createInsertSchema(studentProgress).omit({ id: true, createdAt: true, updatedAt: true });
 export const selectStudentProgressSchema = createSelectSchema(studentProgress);
 
-export const insertBatchSchema = createInsertSchema(batches).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertBatchSchema = createInsertSchema(batches).omit({ id: true, orgId: true, createdAt: true, updatedAt: true });
 export const selectBatchSchema = createSelectSchema(batches);
 
-export const insertEnrollmentSchema = createInsertSchema(enrollments).omit({ id: true, enrolledAt: true, updatedAt: true });
+export const insertEnrollmentSchema = createInsertSchema(enrollments).omit({ id: true, orgId: true, enrolledAt: true, updatedAt: true });
 export const selectEnrollmentSchema = createSelectSchema(enrollments);
 
 export const insertBatchCoInstructorSchema = createInsertSchema(batchCoInstructors).omit({ id: true, assignedAt: true });
@@ -555,6 +754,12 @@ export const selectSystemSettingSchema = createSelectSchema(systemSettings);
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = z.infer<typeof selectUserSchema>;
+
+export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
+export type Organization = z.infer<typeof selectOrganizationSchema>;
+
+export type InsertUserOrganization = z.infer<typeof insertUserOrganizationSchema>;
+export type UserOrganization = z.infer<typeof selectUserOrganizationSchema>;
 
 export type InsertTrack = z.infer<typeof insertTrackSchema>;
 export type Track = z.infer<typeof selectTrackSchema>;

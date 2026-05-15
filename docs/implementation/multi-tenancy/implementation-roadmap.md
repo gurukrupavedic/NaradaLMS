@@ -7,6 +7,20 @@ References:
 - [architecture-decisions.md](./architecture-decisions.md)
 - [schema-design.md](./schema-design.md)
 - [api-contract-changes.md](./api-contract-changes.md)
+- [implementation-status.md](./implementation-status.md) — **what is already implemented** on `multi-tenancy` (agent handoff)
+
+### Progress on branch `multi-tenancy` (high level)
+
+The following **roadmap slices are implemented and merged** unless your checkout is behind `origin/multi-tenancy`:
+
+- **Layer 1:** 1.1 schema expand (orgs + memberships + `is_super_admin`), 1.2 seed orgs, 1.3 dev bootstrap, and 1.4 contract cleanup (legacy `users.roles` / `users.status` removed from the live schema).
+- **Layer 2:** **2.1**–**2.5** plus **2.12** JWT, membership-first auth, org switch, **super-admin governance**, governance event/audit alignment, org-admin **directory** API, and Google OAuth parity with the same tenant membership approval policy as local register / second-org join.
+- **Layer 3 Pass A:** core org isolation on `tracks`, `chapters`, `batches`, and `enrollments`, plus org-scoped handler/query enforcement and fresh DB verification.
+- **Layer 3 Pass B:** physical `org_id` coverage is now in place for media, progress, and audit tables, including backfills, route/service/storage org scoping, and physical `audit_logs.org_id` filtering.
+- **Layer 4.1 / 4.2 / 4.4:** tenant config foundation, authenticated student-shell branding, and tenant-aware OAuth propagation are now merged for the student portal: typed tenant configs for `slmts` / `rr`, `TENANT`-driven auth branding + root metadata with client-runtime mirroring, tenant-aware register request building, tenant-branded authenticated shell and pending state, dual student dev scripts on `3000` / `3001`, and Google OAuth start/callback handling that preserves the originating tenant and post-auth return target through server-signed state. The auth page's left hero intentionally remains Narada-branded across tenants.
+- **Admin portal:** **5.1**–**5.4** are now in place, including the dedicated user-management org filter UI plus the supporting governance query/count alignment for filtered pagination and status tabs.
+- **Pilot closeout:** checklists **6.1** through **6.4** are now confirmed or documented locally, including the explicit out-of-scope gap list captured during pilot validation.
+- **Next up:** optional governance API-surface extras or operational follow-up, such as membership add/delete endpoints for real operator workflows, or production cookie/subdomain verification — see [implementation-status.md](./implementation-status.md).
 
 ---
 
@@ -27,25 +41,27 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
 
 ## Layer 1: Tenant foundation (schema + seeds)
 
-**Goal:** Org and membership tables exist; global `users.roles` / `users.status` removed; `users.is_super_admin` added.
+**Goal:** Org and membership tables exist; `users.is_super_admin` is the only global authority flag; legacy global `users.roles` / `users.status` have been removed after Layer 2 completed the migration.
 
 **Slices:**
 
-1. **1.1 Schema migration (clean DB)**
-   - Add `organizations`, `user_organizations`.
-   - Add `is_super_admin` on `users`.
-   - Drop `users.roles`, `users.status`, and related CHECKs (per [schema-design.md](./schema-design.md)).
-   - Generate/commit Drizzle migration.
-
+1. **1.1 Schema expand (clean DB, slice `slice-1.1-org-schema`)**
+  - Add `organizations`, `user_organizations`.
+  - Add `is_super_admin` on `users`.
+  - Commit Drizzle schema + **generated** SQL migrations (`drizzle-kit generate`; dev reset uses `drizzle-kit migrate`). Do **not** drop `users.roles` / `users.status` in this slice.
+  - Add [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) to track remaining references until contract slice.
 2. **1.2 Seed baseline orgs**
-   - Insert `slmts`, `rr` (status per operational choice).
-   - Document slugs used by tenant config and API (`slmts`, `rr`).
-
+  - Insert `slmts`, `rr` (status per operational choice).
+  - Document slugs used by tenant config and API (`slmts`, `rr`).
 3. **1.3 Dev bootstrap**
-   - Seed at least one super-admin account and minimal SLMTS memberships for smoke testing.
-   - No production hosting assumptions.
+  - Seed at least one super-admin account and minimal SLMTS memberships for smoke testing.
+  - No production hosting assumptions.
+4. **1.4 Schema contract (slice `slice-1.4-schema-contract`, after Layer 2)**
+  - Drop `users.roles`, `users.status`, and `users_status_check` per [schema-design.md](./schema-design.md) once the cleanup tracker is empty.
+  - Generate/commit the contract migration.
+  - Status: complete and merged to `multi-tenancy` via generated migration `migrations/0004_dapper_zzzax.sql`.
 
-**Done when:** Migrations apply on empty DB; typecheck shows no broken references to removed columns (may require Layer 2 for full compile green).
+**Done when:** Migrations apply on empty DB; typecheck stays green after each merge to `multi-tenancy`; after 1.4, no references to removed columns remain.
 
 ---
 
@@ -55,24 +71,23 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
 
 **Slices:**
 
-2. **2.1 JWT and Express typing**
-   - Replace global `roles`/`status` claims with `isSuperAdmin`, `currentOrgId`, `orgRoles`, optional `orgMembershipStatus`.
-   - Update `server/auth/jwt.utils.ts`, `server/shared/types.ts`, `server/middleware/jwt-auth.middleware.ts`.
-
-3. **2.2 Login / register behavior**
-   - Register: create user + **pending** membership for tenant inferred from request (header or agreed dev convention).
-   - Login: allow authentication even when user has **no active** memberships; return state for pending UI (per [product-context.md](./product-context.md)).
-   - Align with [api-contract-changes.md](./api-contract-changes.md) (remove dependence on `IdentityService.authenticateLocal` blocking on global status).
-
-4. **2.3 Org switch**
-   - `POST /api/auth/switch-org` (or equivalent): validate membership, reissue JWT.
-
-5. **2.4 Super-admin-only user management APIs**
-   - Replace or extend `/api/auth/admin/*` so only `is_super_admin` can approve/reject memberships, assign org roles, grant/revoke super-admin.
-   - Org admins retain non-user routes only (content/batches/audit within org).
-
-6. **2.5 Event and audit alignment**
-   - Emit membership-centric events; log governance actions with `org_id` null where platform-scoped (per architecture decisions).
+1. **2.1 JWT and Express typing**
+  - Replace global `roles`/`status` claims with `isSuperAdmin`, `currentOrgId`, `orgRoles`, optional `orgMembershipStatus`.
+  - Update `server/auth/jwt.utils.ts`, `server/shared/types.ts`, `server/middleware/jwt-auth.middleware.ts`.
+2. **2.2 Login / register behavior**
+  - Register: create user + **pending** membership for tenant inferred from request (header or agreed dev convention).
+  - Login: allow authentication even when user has **no active** memberships; return state for pending UI (per [product-context.md](./product-context.md)).
+  - Align with [api-contract-changes.md](./api-contract-changes.md) (remove dependence on `IdentityService.authenticateLocal` blocking on global status).
+3. **2.3 Org switch**
+  - `POST /api/auth/switch-org` (or equivalent): validate membership, reissue JWT.
+4. **2.4 Super-admin-only user management APIs**
+  - Replace or extend `/api/auth/admin/`* so only `is_super_admin` can approve/reject memberships, assign org roles, grant/revoke super-admin.
+  - Org admins retain non-user routes only (content/batches/audit within org).
+5. **2.5 Event and audit alignment**
+  - Emit membership-centric events; log governance actions with `org_id` null where platform-scoped (per architecture decisions).
+  - Standardize governance payloads around `actorUserId`, `targetUserId`, `membershipId`, `orgId` (membership actions only), and `timestamp`.
+  - Restrict the audit read path so org admins only see current-org audit rows.
+  - Persist scope metadata in audit `changes`; Layer 3 Pass B now also persists physical `audit_logs.org_id` for org-scoped rows.
 
 **Done when:** Super-admin can list users with memberships, approve pending membership, assign org roles; org admin cannot hit user-governance routes; login/register match pending-access story.
 
@@ -84,18 +99,16 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
 
 **Slices:**
 
-7. **3.1 Pass A — `org_id` on core tables**
-   - `tracks`, `chapters`, `batches`, `enrollments`
-   - Backfill seed data to SLMTS org; enforce NOT NULL after backfill.
-   - Update uniques: e.g. `tracks.title` -> `UNIQUE (org_id, title)` (coordinate with [schema-design.md](./schema-design.md)).
-
-8. **3.2 Pass B — remaining scoped tables**
-   - `audio_files`, `text_segments`, `media_segments`, `segment_mappings`, `student_progress`, `proficiency_evaluation_log`, `audit_logs` (nullable `org_id` for platform rows as designed).
-
-9. **3.3 Middleware and handlers**
-   - Resolve `req.orgId` from JWT + membership validation.
-   - Enforce org filter on all CRUD for scoped resources.
-   - Revisit enrollment: partial unique “one active enrollment per student” may need org-scoped variant when `enrollments.org_id` exists.
+1. **3.1 Pass A — `org_id` on core tables**
+  - `tracks`, `chapters`, `batches`, `enrollments`
+  - Backfill seed data to SLMTS org; enforce NOT NULL after backfill.
+  - Update uniques: e.g. `tracks.title` -> `UNIQUE (org_id, title)` (coordinate with [schema-design.md](./schema-design.md)).
+2. **3.2 Pass B — remaining scoped tables**
+  - `audio_files`, `text_segments`, `media_segments`, `segment_mappings`, `student_progress`, `proficiency_evaluation_log`, `audit_logs` (nullable `org_id` for platform rows as designed).
+3. **3.3 Middleware and handlers**
+  - Resolve `req.orgId` from JWT + membership validation.
+  - Enforce org filter on all CRUD for scoped resources.
+  - Runtime and schema-level enrollment semantics are now one active enrollment per org, enforced by a partial unique index on `(org_id, student_id)` for active rows.
 
 **Done when:** Automated or manual checks show Org A data never returned under Org B context; indexes in place for `org_id` filters.
 
@@ -107,15 +120,16 @@ Layer numbers increase toward the user-visible surface; **implement from Layer 1
 
 **Slices:**
 
-10. **4.1 Tenant config package**
-    - `config/tenants/slmts/`, `config/tenants/rr/` (or repo-equivalent path) with typed config + assets.
-    - Document `npm` scripts: SLMTS on `3000`, RR on `3010` (admin `3001`, API `5000` unchanged).
-
-11. **4.2 Replace hardcoded tenant assets in student portal**
-    - e.g. auth page and headers: load from tenant config, not static SLMTS-only imports.
-
-12. **4.3 API client: tenant hint**
-    - Student portal passes agreed header (e.g. `X-Tenant-Slug`) or uses deploy-time API base config so register/login attach correct org.
+1. **4.1 Tenant config package**
+  - `config/tenants/slmts/`, `config/tenants/rr/` (or repo-equivalent path) with typed config + assets.
+    - Document `npm` scripts: SLMTS on `3000`, RR on `3001` (admin `3010`, API `5000` unchanged).
+    - Status: **merged** on `multi-tenancy` via `slice-4.1-tenant-config`, using the repo-equivalent layout under `apps/student-portal/src/config/tenants/`.
+2. **4.2 Replace hardcoded tenant assets in student portal**
+  - e.g. auth page and headers: load from tenant config, not static SLMTS-only imports.
+  - Status: **merged** via `slice-4.3-student-shell-branding`. Auth form area, root metadata, authenticated student shell/header, and pending-approval surface now resolve tenant branding from config, while the auth page's left hero intentionally stays Narada-branded across tenants.
+3. **4.3 API client: tenant hint**
+  - Student portal passes agreed header (e.g. `X-Tenant-Slug`) or uses deploy-time API base config so register/login attach correct org.
+  - Status: **merged**. Register/request-membership already build tenant-aware header/body from config, current student portal runtime mirrors `TENANT` into client-rendered shell/pending surfaces through `next.config`, and the student Google OAuth flow now sends tenant/return intent to the server so callback handling can use verified state rather than trusting caller-supplied callback parameters. Admin Google login can also carry a safe return target without inheriting student tenant context.
 
 **Done when:** Running two student dev instances shows correct logo/name per tenant; same code, different env.
 
@@ -135,6 +149,16 @@ RR public onboarding can remain gated operationally (data/flags) even if code su
 
 ---
 
+## Slice 1.4: Schema contract
+
+This slice is now complete on the active contract branch:
+
+- Layer 2 auth, JWT, governance, portals, and scripts no longer read `users.roles` or `users.status`.
+- [legacy-users-columns-cleanup.md](./legacy-users-columns-cleanup.md) is fully checked off.
+- The generated migration [`migrations/0004_dapper_zzzax.sql`](../../../migrations/0004_dapper_zzzax.sql) drops `users.roles`, `users.status`, and `users_status_check`.
+
+---
+
 ## Parallel tracks (after Layer 2 is stable)
 
 - **API:** Layer 3 passes A/B, handler updates.
@@ -146,7 +170,7 @@ RR public onboarding can remain gated operationally (data/flags) even if code su
 ## Branching suggestion
 
 - Long-lived: `multi-tenancy`
-- Slice branches: `slice-1.1-org-schema`, `slice-2.2-auth-membership`, etc.
+- Slice branches: `slice-1.1-org-schema`, `slice-1.2-seed-orgs`, `slice-1.3-dev-bootstrap`, `slice-1.4-schema-contract` (after Layer 2), `slice-2.1-jwt-payload`, `slice-2.2-login-register`, `slice-4.1-tenant-config`, etc.
 - Merge to long-lived branch after each slice verification (see [verification-strategy.md](./verification-strategy.md)).
 
 ---

@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Narada LMS | Operations",
+  title: "Narada LMS - Admin portal",
   description: "Operations Portal for Narada LMS",
   icons: {
     icon: [

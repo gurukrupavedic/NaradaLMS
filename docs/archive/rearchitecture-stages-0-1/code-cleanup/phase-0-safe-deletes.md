@@ -79,7 +79,7 @@ After deleting:
 Delete these 3 files:
 
 ```
-server/add-tracks-4-8.ts                        # one-off seed script, data lives in server/seeds/tracks-4-8.json
+server/add-tracks-4-8.ts                        # one-off seed script (and its JSON asset; both removed from repo)
 server/monitoring/DatabaseMonitor.ts             # not imported by any server code, monitoring not active
 server/shared/monitoring/PerformanceMonitor.ts   # stub file, zero imports from any server code
 ```

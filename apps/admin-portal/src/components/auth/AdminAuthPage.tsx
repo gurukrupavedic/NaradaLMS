@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
     Button,
@@ -11,18 +11,28 @@ import {
     useToast
 } from "@narada/ui";
 import { apiRequest } from "@/lib/api";
+import { AUTH_ME_QUERY_KEY } from "@/lib/org-switcher";
 import { FcGoogle } from "react-icons/fc";
-import { useAuth, type AuthUser } from "@/hooks/useAuth";
+import type { AuthLoginPayload } from "@/lib/admin-portal-access";
+import { canAccessAdminPortalFromLoginResponse } from "@/lib/admin-portal-access";
 
 // Assets
 import kolamPattern from "@/assets/branding/kolam-2.svg";
 import logoStacked from "@/assets/branding/logo-stacked-dark-notag.svg";
 import Image from "next/image";
 
+const ADMIN_OAUTH_ERROR_MESSAGES: Record<string, string> = {
+    auth_failed: "Google sign-in could not be completed. Please try again.",
+    session_failed: "We could not finish creating your session. Please try again.",
+    access_denied: "You do not have the appropriate role to access the admin portal. Only administrators can sign in here.",
+};
+
 export function AdminAuthPage() {
-    const router = useRouter();
+    const searchParams = useSearchParams();
     const queryClient = useQueryClient();
     const { toast } = useToast();
+    const oauthErrorMessage =
+        ADMIN_OAUTH_ERROR_MESSAGES[searchParams.get("error") ?? ""] ?? null;
 
     const handleGoogleLogin = () => {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -30,7 +40,14 @@ export function AdminAuthPage() {
             console.error('NEXT_PUBLIC_API_URL environment variable is not set');
             return;
         }
-        window.location.href = `${apiUrl}/auth/google`;
+        const authUrl = new URL("auth/google", apiUrl.endsWith("/") ? apiUrl : `${apiUrl}/`);
+        authUrl.searchParams.set(
+            "state",
+            new URLSearchParams({
+                returnTo: new URL("/admin", window.location.origin).toString(),
+            }).toString()
+        );
+        window.location.href = authUrl.toString();
     };
 
     return (
@@ -84,40 +101,22 @@ export function AdminAuthPage() {
             {/* RIGHT PANEL: Authentication Forms */}
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white h-full overflow-y-auto border-l border-slate-200">
                 <div className="w-full max-w-md space-y-6">
-                    {/* Mobile Logo */}
-                    <div className="lg:hidden text-center mb-8 shrink-0">
-                        <h1 className="text-2xl font-bold text-slate-900">Narada LMS</h1>
-                    </div>
-
                     <div className="text-center space-y-2 shrink-0 mb-8">
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Admin portal</h1>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Narada LMS - Admin portal</h1>
                     </div>
 
-                    {/* Social Login */}
-                    <Button
-                        variant="outline"
-                        className="w-full py-5 flex items-center gap-2 border-slate-200 text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900 mb-6 shrink-0"
-                        onClick={handleGoogleLogin}
-                    >
-                        <FcGoogle className="h-5 w-5" />
-                        Continue with Google
-                    </Button>
-
-                    <div className="relative shrink-0 mb-6">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-slate-200" />
+                    {oauthErrorMessage ? (
+                        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                            {oauthErrorMessage}
                         </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-white px-2 text-slate-400 font-medium">
-                                Or continue with email
-                            </span>
-                        </div>
-                    </div>
+                    ) : null}
 
                     <LoginForm
-                        onSuccess={(userData) => {
-                            const roles = userData?.roles || [];
-                            if (!roles.includes('admin')) {
+                        onSuccess={(payload) => {
+                            const canAdmin = canAccessAdminPortalFromLoginResponse(
+                                payload as AuthLoginPayload
+                            );
+                            if (!canAdmin) {
                                 toast({
                                     title: "Access Denied",
                                     description: "You do not have the appropriate role to access the admin portal. Only administrators can sign in here.",
@@ -127,12 +126,30 @@ export function AdminAuthPage() {
                                 apiRequest("/auth/logout", { method: "POST" }).catch(console.error);
                                 return;
                             }
-                            queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+                            queryClient.invalidateQueries({ queryKey: AUTH_ME_QUERY_KEY });
                             setTimeout(() => {
                                 window.location.href = "/admin";
                             }, 500);
                         }}
                     />
+
+                    <div className="relative shrink-0 mb-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t border-slate-200" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-white px-2 text-slate-400 font-medium">Or</span>
+                        </div>
+                    </div>
+
+                    <Button
+                        variant="outline"
+                        className="w-full py-5 flex items-center gap-2 border-slate-200 text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900 shrink-0"
+                        onClick={handleGoogleLogin}
+                    >
+                        <FcGoogle className="h-5 w-5" />
+                        Sign in with Google
+                    </Button>
 
                     <p className="px-8 text-center text-sm text-slate-400 mt-8 shrink-0">
                         By clicking continue, you agree to our{" "}
@@ -158,7 +175,11 @@ const LightLabel = (props: React.ComponentProps<typeof Label>) => (
     <Label {...props} className={`text-slate-600 font-medium ${props.className}`} />
 );
 
-function LoginForm({ onSuccess }: { onSuccess: (userData: AuthUser) => void }) {
+function LoginForm({
+    onSuccess,
+}: {
+    onSuccess: (payload: unknown) => void;
+}) {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState("");
@@ -174,8 +195,7 @@ function LoginForm({ onSuccess }: { onSuccess: (userData: AuthUser) => void }) {
                 body: JSON.stringify({ email, password }),
             });
 
-            // Pass user data to onSuccess for RBAC check
-            onSuccess(response.user);
+            onSuccess(response);
         } catch (err: any) {
             toast({
                 title: "Login failed",

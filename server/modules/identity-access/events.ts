@@ -9,10 +9,19 @@
 
 export const IDENTITY_EVENTS = {
   USER_APPROVED: "UserApproved",
+  USER_REJECTED: "UserRejected",
   USER_ROLE_CHANGED: "UserRoleChanged",
+  MEMBERSHIP_APPROVED: "MembershipApproved",
+  MEMBERSHIP_REJECTED: "MembershipRejected",
+  MEMBERSHIP_ENABLED: "MembershipEnabled",
+  MEMBERSHIP_DISABLED: "MembershipDisabled",
+  MEMBERSHIP_ROLES_CHANGED: "MembershipRolesChanged",
+  SUPER_ADMIN_GRANTED: "SuperAdminGranted",
+  SUPER_ADMIN_REVOKED: "SuperAdminRevoked",
 };
 
-// Type definitions for reference:
+// Type definitions live in server/shared/events/types.ts.
+// This file is the authoritative event-name reference for the identity module.
 /*
 export type UserApprovedEvent = {
   type: 'UserApproved';

@@ -7,8 +7,8 @@ NaradaLMS is a modern, multilingual Learning Management System purpose-built for
 The project is a **monorepo** with a shared API server and two Next.js portals:
 
 - **Server** (Express API): Authentication, content, batches, media, admin. Runs on port 5000.
-- **Student Portal** (`apps/student-portal`): Student learning experience. Next.js on port 3000.
-- **Admin Portal** (`apps/admin-portal`): Admin, instructors, content studio. Next.js on port 3001.
+- **Student Portal** (`apps/student-portal`): Student learning experience. Local tenant instances run on port 3000 (SLMTS) and 3001 (RR).
+- **Admin Portal** (`apps/admin-portal`): Admin, instructors, content studio. Next.js on port 3010.
 - **Shared packages**: `packages/types`, `packages/ui` for types and shared UI.
 
 Domain modules (Identity & Access, Content Publishing, Media Pipeline, Batch & Cohort, Learning Delivery, System Admin) live in the server; the portals consume the API.
@@ -31,20 +31,26 @@ Domain modules (Identity & Access, Content Publishing, Media Pipeline, Batch & C
    See [Environment Variables](docs/essentials/environment-variables.md) for all variables.
 4. Initialize the database:
    ```bash
-   npm run db:push
+   npm run db:reset
+   npm run build:types
+   npm run db:seed-orgs
+   npm run db:seed-dev
+   npm run db:seed
    ```
-5. Start all services (API + both portals):
+   `npm run db:seed` is optional if you do not need curriculum data immediately.
+5. Start all services (API + all portals):
    ```bash
    npm run dev:all
    ```
    Or start individually:
    - API: `npm run dev` (root)
-   - Student portal: `cd apps/student-portal && npm run dev`
+   - Student portal (SLMTS): `cd apps/student-portal && npm run dev:slmts`
+   - Student portal (RR): `cd apps/student-portal && npm run dev:rr`
    - Admin portal: `cd apps/admin-portal && npm run dev`
 
 ### Production build
 ```bash
-powershell -ExecutionPolicy Bypass -File scripts/build-all.ps1
+powershell -ExecutionPolicy Bypass -File scripts/build/build-all.ps1
 ```
 Builds the server to `dist/` and both Next.js apps to their `.next/` directories.
 

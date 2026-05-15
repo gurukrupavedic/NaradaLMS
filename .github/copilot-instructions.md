@@ -167,17 +167,20 @@ npm run check     # TypeScript type checking
 4. Update TypeScript types in `shared/types.ts`
 
 ### Scripts Organization
-**Keep the repository root clean** - all utility scripts belong in `scripts/` folder:
-- **scripts/db/** - Database utilities (reset-db.ts for development resets)
-- **scripts/seed/** - Data seeding and sample data generation (create users, batches, etc.)
-- **scripts/test/** - Manual smoke tests and testing utilities
-- **scripts/utils/** - One-off utilities (list users, update roles, etc.)
+**Keep the repository root clean** - all utility scripts belong in purpose-named folders:
+- **scripts/dev/** - Local startup helpers
+- **scripts/db/** - Database reset and inspection helpers
+- **scripts/build/** - Build orchestration and build checks
+- **scripts/verify/** - Aggregate verification runners
+- **scripts/seeds/demo/** - Optional local demo data
+- **scripts/maintenance/** - Local-only repair/reset helpers
+- **scripts/test/smoke/**, **scripts/test/contracts/**, **scripts/test/unit/** - Focused checks by intent
 
 **Rules:**
 - Never create standalone `.ts` scripts in root folder
 - Use Drizzle's `npm run db:push` for schema changes (not SQL migration files)
 - Temporary one-time scripts should be deleted after use or moved to appropriate subfolder
-- Test scripts use `npx tsx` for execution (e.g., `npx tsx scripts/seed/create-full-batches.ts`)
+- Test scripts use `npx tsx` for execution (e.g., `npx tsx scripts/test/contracts/require-super-admin.test.ts`)
 
 ### API Development (server/modules/*/service.ts + routes in server/routes/*.routes.ts)
 - **Modular architecture**: 6 domain modules with dedicated storage and service layers
@@ -194,7 +197,7 @@ npm run check     # TypeScript type checking
   ```
 - File uploads: Configured multer for audio files in `/uploads` (50MB max)
 - Module contract pattern: Each module owns specific tables with public service APIs (see module-contracts.md)
-- Authentication middleware: `requireAuth`, `requireApproved`, `requireRole('role')` (in `server/shared/middleware/auth.ts`)
+- Authentication middleware: `authMiddleware`, `requireOrgRole('role')`, `requireRole('role')` compatibility alias, and `requireSuperAdmin` (in `server/shared/middleware/auth.ts`)
 
 ## Critical Project-Specific Conventions
 
@@ -343,7 +346,7 @@ const isAuthorized = useRoleGuard(['instructor', 'admin']);
 2. **Published chapters:** Check `status === 'published'` before allowing deletion
 3. **Audio uploads:** Ensure multer config matches file size limits (50MB max)
 4. **Font rendering:** Always apply script-specific font classes (`font-telugu`, etc.)
-5. **Multi-role users:** Check role arrays with `requireRole()` middleware, not string equality
+5. **Multi-role users:** Check org role arrays with `requireOrgRole()` middleware, not string equality. `requireRole()` remains a compatibility alias during cleanup.
 6. **Progress tracking:** Proficiency is 0-4 scale, not binary pass/fail
 7. **Batch context:** Student progress evaluation requires batch assignment context
 8. **Module boundaries:** Routes must call module services (e.g., `contentService.listTracks()`), never direct Drizzle queries

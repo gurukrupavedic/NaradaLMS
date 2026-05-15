@@ -10,7 +10,7 @@ import {
   isPostgresUniqueViolation,
 } from "../../shared/utils/postgres-unique-violation";
 
-const BATCH_CODE_UNIQ = "batches_batch_code_uniq";
+const BATCH_CODE_UNIQ = "batches_org_batch_code_uniq";
 
 function throwIfBatchCodeConflict(error: unknown): void {
   if (
@@ -25,16 +25,16 @@ function throwIfBatchCodeConflict(error: unknown): void {
 }
 
 export class BatchService {
-  async listBatchesPaginated(limit: number, offset: number) {
-    return batchStorage.listBatchesPaginated(limit, offset);
+  async listBatchesPaginated(limit: number, offset: number, orgId: string) {
+    return batchStorage.listBatchesPaginated(limit, offset, orgId);
   }
 
-  async listInstructorBatches(instructorId: string) {
-    return batchStorage.listInstructorBatches(instructorId);
+  async listInstructorBatches(instructorId: string, orgId: string) {
+    return batchStorage.listInstructorBatches(instructorId, orgId);
   }
 
-  async getBatch(id: number): Promise<BatchDetail | null> {
-    return batchStorage.getBatchById(id);
+  async getBatch(id: number, orgId: string): Promise<BatchDetail | null> {
+    return batchStorage.getBatchById(id, orgId);
   }
 
   async createBatch(input: BatchCreateInput) {
@@ -43,7 +43,7 @@ export class BatchService {
     }
 
     if (input.trackId !== undefined && input.trackId !== null) {
-      const exists = await batchStorage.trackExists(input.trackId);
+      const exists = await batchStorage.trackExists(input.trackId, input.orgId);
       if (!exists) throw Object.assign(new Error('Track does not exist'), { status: 400 });
     }
 
@@ -68,6 +68,7 @@ export class BatchService {
       throw e;
     }
     eventBus.publish(BATCH_EVENTS.created, {
+      orgId: input.orgId,
       batchId: batch.id,
       trackId: batch.trackId ?? undefined,
       createdBy: batch.createdBy ?? 'system',
@@ -76,9 +77,9 @@ export class BatchService {
     return batch;
   }
 
-  async updateBatch(id: number, input: BatchUpdateInput) {
+  async updateBatch(id: number, orgId: string, input: BatchUpdateInput) {
     if (input.trackId !== undefined && input.trackId !== null) {
-      const exists = await batchStorage.trackExists(input.trackId);
+      const exists = await batchStorage.trackExists(input.trackId, orgId);
       if (!exists) throw Object.assign(new Error('Track does not exist'), { status: 400 });
     }
 
@@ -89,7 +90,7 @@ export class BatchService {
 
     let updated;
     try {
-      updated = await batchStorage.updateBatch(id, input);
+      updated = await batchStorage.updateBatch(id, orgId, input);
     } catch (e) {
       if (input.batchCode !== undefined && input.batchCode !== null) {
         throwIfBatchCodeConflict(e);
@@ -106,10 +107,10 @@ export class BatchService {
     return updated;
   }
 
-  async deleteBatch(id: number) {
-    const batch = await this.getBatch(id);
+  async deleteBatch(id: number, orgId: string) {
+    const batch = await this.getBatch(id, orgId);
     if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });
-    return batchStorage.deleteBatch(id);
+    return batchStorage.deleteBatch(id, orgId);
   }
 
   async syncCoInstructors(batchId: number, instructorIds: string[], assignedBy: string) {
@@ -122,8 +123,11 @@ export class BatchService {
   }
 
   async addEnrollment(input: EnrollmentCreateInput) {
-    // ONE-TO-MANY CONSTRAINT: Check if student already has an active enrollment
-    const existingEnrollment = await batchStorage.getActiveEnrollmentForStudent(input.studentId);
+    // Enforce at most one active enrollment per org.
+    const existingEnrollment = await batchStorage.getActiveEnrollmentForStudent(
+      input.studentId,
+      input.orgId
+    );
     if (existingEnrollment) {
       throw Object.assign(
         new Error(`Student is already enrolled in batch ${existingEnrollment.batchId}`),
@@ -131,7 +135,7 @@ export class BatchService {
       );
     }
 
-    const batch = await this.getBatch(input.batchId);
+    const batch = await this.getBatch(input.batchId, input.orgId);
     if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });
 
     const studentExists = await batchStorage.userExists(input.studentId);
@@ -139,6 +143,7 @@ export class BatchService {
 
     const created = await batchStorage.addEnrollment(input);
     eventBus.publish(BATCH_EVENTS.enrollmentAdded, {
+      orgId: input.orgId,
       batchId: input.batchId,
       studentId: input.studentId,
       enrolledBy: input.enrolledBy,
@@ -151,24 +156,27 @@ export class BatchService {
     const updated = await batchStorage.dropEnrollment(input);
     if (updated) {
       eventBus.publish(BATCH_EVENTS.enrollmentDropped, {
+        orgId: updated.orgId,
         batchId: updated.batchId,
         studentId: updated.studentId,
+        droppedBy: input.droppedBy,
+        reason: input.droppedReason,
         timestamp: new Date().toISOString(),
       });
     }
     return updated;
   }
 
-  async listEnrollments(batchId: number) {
-    return batchStorage.listEnrollmentsByBatch(batchId);
+  async listEnrollments(batchId: number, orgId: string) {
+    return batchStorage.listEnrollmentsByBatch(batchId, orgId);
   }
 
-  async listEligibleStudents(batchId: number, searchQuery?: string) {
-    return batchStorage.listEligibleStudents(batchId, searchQuery);
+  async listEligibleStudents(batchId: number, orgId: string, searchQuery?: string) {
+    return batchStorage.listEligibleStudents(batchId, orgId, searchQuery);
   }
 
   async assignCoInstructor(input: CoInstructorAssignInput) {
-    const batch = await this.getBatch(input.batchId);
+    const batch = await this.getBatch(input.batchId, input.orgId);
     if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });
 
     const instructorExists = await batchStorage.userExists(input.instructorId);
@@ -176,8 +184,10 @@ export class BatchService {
 
     const created = await batchStorage.assignCoInstructor(input);
     eventBus.publish(BATCH_EVENTS.coInstructorAssigned, {
+      orgId: input.orgId,
       batchId: input.batchId,
       instructorId: input.instructorId,
+      assignedBy: input.assignedBy,
       timestamp: new Date().toISOString(),
     });
     return created;
@@ -195,19 +205,21 @@ export class BatchService {
     return removed;
   }
 
-  async listCoInstructors(batchId: number) {
+  async listCoInstructors(batchId: number, orgId: string) {
+    const batch = await this.getBatch(batchId, orgId);
+    if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });
     return batchStorage.listCoInstructorsByBatch(batchId);
   }
 
   // Phase 5: Evaluation methods
-  async getBatchProgress(batchId: number) {
-    const batch = await this.getBatch(batchId);
+  async getBatchProgress(batchId: number, orgId: string) {
+    const batch = await this.getBatch(batchId, orgId);
     if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });
 
-    return batchStorage.getBatchProgress(batchId);
+    return batchStorage.getBatchProgress(batchId, orgId);
   }
 
-  async evaluateStudent(input: { studentId: string; chapterId: number; proficiencyLevel: number; notes?: string; evaluatedBy: string; batchId?: number }) {
+  async evaluateStudent(orgId: string, input: { studentId: string; chapterId: number; proficiencyLevel: number; notes?: string; evaluatedBy: string; batchId?: number }) {
     // Validate proficiency level
     if (!VALID_PROFICIENCY_LEVELS.includes(input.proficiencyLevel as any)) {
       throw Object.assign(
@@ -220,22 +232,26 @@ export class BatchService {
     const studentExists = await batchStorage.userExists(input.studentId);
     if (!studentExists) throw Object.assign(new Error('Student not found'), { status: 400 });
 
-    // Validate chapter exists and is published
-    const chapter = await contentService.getChapter(input.chapterId);
+    const chapter = await contentService.getChapter(input.chapterId, orgId);
     if (!chapter) throw Object.assign(new Error('Chapter not found'), { status: 400 });
-    if (chapter.status === 'draft') throw Object.assign(new Error('Cannot evaluate an unpublished chapter'), { status: 400 });
+    if (chapter.status === 'draft') {
+      throw Object.assign(new Error('Cannot evaluate an unpublished chapter'), { status: 400 });
+    }
 
     // If batchId provided, validate batch exists
     if (input.batchId) {
-      const batch = await this.getBatch(input.batchId);
+      const batch = await this.getBatch(input.batchId, orgId);
       if (!batch) throw Object.assign(new Error('Batch not found'), { status: 404 });
     }
 
-    const result = await batchStorage.evaluateStudent(input);
+    const result = await batchStorage.evaluateStudent(orgId, input);
     eventBus.publish(LEARNING_DELIVERY_EVENTS.PROGRESS_UPDATED, {
+      orgId,
       studentId: input.studentId,
       chapterId: input.chapterId,
+      batchId: input.batchId,
       proficiencyLevel: input.proficiencyLevel,
+      evaluatedBy: input.evaluatedBy,
       timestamp: new Date().toISOString(),
     });
     return result;
@@ -243,13 +259,14 @@ export class BatchService {
 
   async listStudentsByInstructor(
     instructorId: string,
+    orgId: string,
     filters?: {
       search?: string;
       batchId?: number;
       status?: 'active' | 'dropped' | 'completed';
     }
   ) {
-    const rawStudents = await batchStorage.listStudentsByInstructor(instructorId, filters);
+    const rawStudents = await batchStorage.listStudentsByInstructor(instructorId, orgId, filters);
 
     // Format roll number as BATCH_CODE-XXX (using enrollment ID)
     // IMPORTANT: Maintain backward compatibility with monolith frontend

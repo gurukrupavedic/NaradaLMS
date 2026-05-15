@@ -4,6 +4,7 @@
 
 export interface Track {
   id: number;
+  orgId: string;
   title: string;
   description: string;
   sortOrder: number;
@@ -15,6 +16,7 @@ export interface Track {
 
 export interface Chapter {
   id: number;
+  orgId: string;
   trackId: number;
   title: string;
   content: {
@@ -59,12 +61,14 @@ export interface SegmentOrderUpdate {
 }
 
 export interface CreateTrackData {
+  orgId: string;
   title: string;
   description: string;
   createdBy: string;
 }
 
 export interface CreateChapterData {
+  orgId: string;
   trackId: number;
   title: string;
   content?: {

@@ -24,41 +24,34 @@ export interface NavSection {
     items: NavItem[];
 }
 
-/**
- * Admin Portal Navigation Configuration (Admin only)
- * Admin Center includes Users, Batches, Audit Logs, Settings, and Content Studio.
- */
-
-// Admin Center - Admin only (includes content management)
-const adminSection: NavSection = {
-    items: [
-        {
-            title: 'Users',
-            url: '/admin/users',
-            icon: UserCog,
-        },
-        {
-            title: 'Batches',
-            url: '/admin/batches',
-            icon: Users,
-        },
-        {
-            title: 'Content',
-            url: '/admin/content',
-            icon: LibraryBig,
-        },
-        {
-            title: 'Audit Logs',
-            url: '/admin/logs',
-            icon: Logs,
-        },
-        {
-            title: 'Settings',
-            url: '/admin/settings',
-            icon: Settings,
-        },
-    ],
+const usersNavItem: NavItem = {
+    title: 'Users',
+    url: '/admin/users',
+    icon: UserCog,
 };
+
+const orgAdminNavItems: NavItem[] = [
+    {
+        title: 'Batches',
+        url: '/admin/batches',
+        icon: Users,
+    },
+    {
+        title: 'Content',
+        url: '/admin/content',
+        icon: LibraryBig,
+    },
+    {
+        title: 'Audit Logs',
+        url: '/admin/logs',
+        icon: Logs,
+    },
+    {
+        title: 'Settings',
+        url: '/admin/settings',
+        icon: Settings,
+    },
+];
 
 // Contextual navigation mapping for dynamic routes (chapter editor)
 export const contextualNavigation = new Map([
@@ -74,18 +67,24 @@ export const contextualNavigation = new Map([
 ]);
 
 /**
- * Get navigation sections for admin portal (admin only)
+ * Admin sidebar: platform Users (super-admin only) vs org modules (active org admin anywhere).
  */
-export function getAdminNavigationForRole(roles?: UserRole[] | UserRole): {
+export function getAdminNavigationForAccess(input: {
+    isSuperAdmin: boolean;
+    hasOrgAdminAnywhere: boolean;
+}): {
     admin?: NavSection;
     content?: NavSection;
 } {
-    const roleArray = Array.isArray(roles) ? roles : (roles ? [roles] : []);
-    const nav: { admin?: NavSection; content?: NavSection } = {};
-
-    if (roleArray.includes('admin')) {
-        nav.admin = adminSection;
+    const items: NavItem[] = [];
+    if (input.isSuperAdmin) {
+        items.push(usersNavItem);
     }
-
-    return nav;
+    if (input.hasOrgAdminAnywhere) {
+        items.push(...orgAdminNavItems);
+    }
+    if (items.length === 0) {
+        return {};
+    }
+    return { admin: { items } };
 }

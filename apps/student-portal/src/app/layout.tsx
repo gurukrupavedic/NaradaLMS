@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "@narada/ui/src/globals.css"; // Use shared globals
 import "./globals.css"; // Local globals (Fonts)
 import { SkipLink } from "@narada/ui";
+import Providers from "@/components/providers";
+import { getTenantMetadata } from "@/lib/tenant";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,18 +16,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Narada LMS",
-  description: "A comprehensive Vedic learning platform.",
-  icons: {
-    icon: [
-      { url: '/favicon-symbol-light.svg', media: '(prefers-color-scheme: light)' },
-      { url: '/favicon-symbol-dark.svg', media: '(prefers-color-scheme: dark)' },
-    ],
-  },
-};
-
-import Providers from "@/components/providers";
+export const metadata: Metadata = getTenantMetadata();
 
 export default function RootLayout({
   children,

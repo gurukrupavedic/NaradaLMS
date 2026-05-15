@@ -1,6 +1,7 @@
 node_modules
 dist
 **/.next/
+**/.next-*/
 .DS_Store
 server/public
 vite.config.ts.*
@@ -33,3 +34,4 @@ uploads/
 VedicLMS/
 .agent/
 .agents/
+docs/implementation/multi-tenancy/setup-baseline.*.log

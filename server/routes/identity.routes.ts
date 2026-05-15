@@ -1,14 +1,22 @@
 import { Router, Request, Response, NextFunction } from "express";
 import passport from "passport";
 import { identityService } from "../modules/identity-access/service";
-import { authMiddleware, requireAdmin } from "../shared/middleware/auth";
+import { authMiddleware, requireSuperAdmin } from "../shared/middleware/auth";
 import { jwtAuth } from "../middleware/jwt-auth.middleware";
-import { generateToken, type JWTPayload } from "../auth/jwt.utils";
+import { generateToken } from "../auth/jwt.utils";
+import { identityStorage } from "../modules/identity-access/storage";
+import { canAccessAdminPortal } from "../modules/identity-access/admin-portal-access";
 import rateLimit from "express-rate-limit";
 import { validateRequest } from "../utils/validation";
 import { z } from "zod";
 import { config } from "../config";
 import { catchAsync } from "../utils/catchAsync";
+import {
+  buildOAuthState,
+  resolveRequestedPostAuthRedirect,
+  resolveSafePostAuthRedirect,
+  resolveTenantSlugForRequest,
+} from "../modules/identity-access/tenant-context";
 
 // S-06: Rate limiting for auth endpoints
 const authLimiter = rateLimit({
@@ -35,8 +43,45 @@ const registerSchema = z.object({
     password: z.string().min(8),
     firstName: z.string().optional(),
     lastName: z.string().optional(),
+    tenantSlug: z.enum(["slmts", "rr"]).optional(),
   }),
 });
+
+const requestMembershipSchema = z.object({
+  body: z.object({
+    tenantSlug: z.enum(["slmts", "rr"]).optional(),
+  }),
+});
+
+const switchOrgSchema = z.object({
+  body: z.object({
+    orgId: z.string().uuid(),
+  }),
+});
+
+function setAuthTokenCookie(res: Response, token: string) {
+  res.cookie("auth_token", token, {
+    httpOnly: true,
+    secure: config.env === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+}
+
+function clearAuthTokenCookie(res: Response) {
+  res.clearCookie("auth_token", {
+    httpOnly: true,
+    secure: config.env === "production",
+    sameSite: "strict",
+  });
+}
+
+function buildAuthPageRedirect(rawState: string | undefined, error: string): string {
+  const safeRedirectUrl = new URL(resolveSafePostAuthRedirect(rawState));
+  const authPageUrl = new URL("/", safeRedirectUrl.origin);
+  authPageUrl.searchParams.set("error", error);
+  return authPageUrl.toString();
+}
 
 /**
  * POST /api/auth/register
@@ -47,14 +92,17 @@ identityRouter.post(
   authLimiter,
   validateRequest(registerSchema),
   catchAsync(async (req: Request, res: Response) => {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, firstName, lastName, tenantSlug } = req.body;
+
+    const resolvedTenant = resolveTenantSlugForRequest(req, tenantSlug);
 
     const result = await identityService.registerUser({
       email,
       password,
       firstName,
       lastName,
-      adminEmail: config.adminEmail,
+      adminEmail: config.superAdminEmail,
+      tenantSlug: resolvedTenant,
     });
 
     return res.json(result);
@@ -69,42 +117,84 @@ identityRouter.post(
   "/login",
   authLimiter,
   (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate("local", { session: false }, (err: any, user: any, info: any) => {
-      if (err) {
-        return next(err);
-      }
-      if (!user) {
-        return res.status(401).json({ error: info?.message || "Invalid credentials" });
-      }
-
-      // Generate token
-      const token = generateToken({
-        id: user.id || user._id,
-        email: user.email,
-        roles: user.roles || [],
-        status: user.status || 'active',
-      });
-
-      // Set HttpOnly cookie (prevents XSS attacks)
-      res.cookie('auth_token', token, {
-        httpOnly: true,
-        secure: config.env === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
-
-      // Don't send token in response body - it's in the cookie
-      return res.json({
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          roles: user.roles,
-          status: user.status
+    passport.authenticate(
+      "local",
+      { session: false },
+      (
+        err: unknown,
+        user:
+          | false
+          | null
+          | {
+              id: string;
+              email: string;
+              firstName?: string | null;
+              lastName?: string | null;
+            },
+        info: { message?: string }
+      ) => {
+        if (err) {
+          return next(err);
         }
-      });
-    })(req, res, next);
+        if (!user) {
+          return res
+            .status(401)
+            .json({ error: info?.message || "Invalid credentials" });
+        }
+
+        void (async () => {
+          try {
+            const claims = await identityStorage.getJwtSignClaimsForUser(
+              user.id
+            );
+            if (!claims) {
+              return res
+                .status(500)
+                .json({ error: "Failed to build session" });
+            }
+
+            const token = generateToken(claims);
+
+            setAuthTokenCookie(res, token);
+
+            const memberships =
+              await identityStorage.listUserMembershipsWithOrgs(user.id);
+            const hasActiveMembership = memberships.some(
+              (m) => m.status === "active"
+            );
+            const canAccessAdminPortalFlag = canAccessAdminPortal({
+              isSuperAdmin: claims.isSuperAdmin,
+              memberships,
+            });
+
+            return res.json({
+              user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                isSuperAdmin: claims.isSuperAdmin,
+                currentOrgId: claims.currentOrgId,
+                orgRoles: claims.orgRoles,
+                orgMembershipStatus: claims.orgMembershipStatus,
+              },
+              loginState: {
+                hasActiveMembership,
+                memberships: memberships.map((m) => ({
+                  orgSlug: m.orgSlug,
+                  orgName: m.orgName,
+                  status: m.status,
+                  roles: m.roles,
+                })),
+              },
+              canAccessAdminPortal: canAccessAdminPortalFlag,
+            });
+          } catch (e) {
+            next(e);
+          }
+        })();
+      }
+    )(req, res, next);
   }
 );
 
@@ -114,7 +204,17 @@ identityRouter.post(
  */
 identityRouter.get(
   "/google",
-  passport.authenticate("google", { session: false, scope: ["profile", "email"] })
+  (req: Request, res: Response, next: NextFunction) => {
+    const state = buildOAuthState({
+      tenantSlug: resolveTenantSlugForRequest(req),
+      returnTo: resolveRequestedPostAuthRedirect(req),
+    });
+    passport.authenticate("google", {
+      session: false,
+      scope: ["profile", "email"],
+      state,
+    })(req, res, next);
+  }
 );
 
 /**
@@ -123,33 +223,159 @@ identityRouter.get(
  */
 identityRouter.get(
   "/google/callback",
-  passport.authenticate("google", { session: false, failureRedirect: "/login?error=auth_failed" }),
-  (req: Request, res: Response) => {
+  (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate(
+      "google",
+      { session: false },
+      (
+        err: unknown,
+        user:
+          | false
+          | null
+          | {
+              id: string;
+            }
+      ) => {
+        const rawState =
+          typeof req.query.state === "string" ? req.query.state : undefined;
+
+        if (err) {
+          return next(err);
+        }
+
+        if (!user) {
+          return res.redirect(buildAuthPageRedirect(rawState, "auth_failed"));
+        }
+
+        req.user = user as Express.User;
+        return next();
+      }
+    )(req, res, next);
+  },
+  catchAsync(async (req: Request, res: Response) => {
+    const rawState =
+      typeof req.query.state === "string" ? req.query.state : undefined;
+    const redirectUrl = new URL(resolveSafePostAuthRedirect(rawState));
+
     if (!req.user) {
-      return res.redirect("/login?error=pending_approval");
+      return res.redirect(buildAuthPageRedirect(rawState, "session_failed"));
     }
 
-    const user = req.user as any;
+    const oauthUser = req.user as { id: string };
 
-    const token = generateToken({
-      id: user.id,
-      email: user.email,
-      roles: user.roles || [],
-      status: user.status || 'active',
+    const claims = await identityStorage.getJwtSignClaimsForUser(oauthUser.id);
+    if (!claims) {
+      return res.redirect(buildAuthPageRedirect(rawState, "session_failed"));
+    }
+
+    const token = generateToken(claims);
+
+    setAuthTokenCookie(res, token);
+
+    const memberships = await identityStorage.listUserMembershipsWithOrgs(
+      oauthUser.id
+    );
+    const canAccessAdmin = canAccessAdminPortal({
+      isSuperAdmin: claims.isSuperAdmin,
+      memberships,
     });
 
-    // Set HttpOnly cookie
-    res.cookie('auth_token', token, {
-      httpOnly: true,
-      secure: config.env === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    const isAdminReturn = redirectUrl.pathname.startsWith("/admin");
+    if (isAdminReturn && !canAccessAdmin) {
+      clearAuthTokenCookie(res);
+      return res.redirect(buildAuthPageRedirect(rawState, "access_denied"));
+    }
 
-    // Redirect to frontend without token in URL (it's in the cookie)
-    const frontendUrl = config.frontendUrl;
-    return res.redirect(frontendUrl);
-  }
+    return res.redirect(redirectUrl.toString());
+  })
+);
+
+/**
+ * POST /api/auth/request-membership
+ * Authenticated user requests membership in the tenant resolved for the current portal.
+ */
+identityRouter.post(
+  "/request-membership",
+  jwtAuth,
+  validateRequest(requestMembershipSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    const { tenantSlug } = req.body as { tenantSlug?: string };
+    const resolvedTenant = resolveTenantSlugForRequest(req, tenantSlug);
+
+    try {
+      const result = await identityService.requestMembership({
+        userId: session.id,
+        tenantSlug: resolvedTenant,
+      });
+
+      const messageByResult: Record<
+        typeof result.result,
+        string
+      > = {
+        created_pending:
+          "Your membership request is pending approval.",
+        already_pending:
+          "Your membership request is already pending approval.",
+        already_active:
+          "You already have access to this organization.",
+        inactive_membership:
+          "Your membership is inactive. Contact a super-admin to restore access.",
+        rejected_membership:
+          "Your membership request was rejected. Contact a super-admin if you need to reapply.",
+      };
+
+      return res.json({
+        ...result,
+        message: messageByResult[result.result],
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Request failed";
+      const status = message.toLowerCase().includes("not available") ? 404 : 400;
+      return res.status(status).json({ error: message });
+    }
+  })
+);
+
+/**
+ * POST /api/auth/switch-org
+ * Active membership required for target org; reissues JWT + auth cookie.
+ */
+identityRouter.post(
+  "/switch-org",
+  jwtAuth,
+  validateRequest(switchOrgSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const { orgId } = req.body as { orgId: string };
+    const session = req.user as Express.User;
+
+    const claims = await identityStorage.getJwtSignClaimsForUser(session.id, {
+      targetOrgId: orgId,
+    });
+    if (!claims) {
+      return res.status(403).json({
+        error: "No active membership for this organization",
+      });
+    }
+
+    const token = generateToken(claims);
+    setAuthTokenCookie(res, token);
+
+    const profile = await identityStorage.getUser(session.id);
+
+    return res.json({
+      user: {
+        id: session.id,
+        email: session.email,
+        firstName: profile?.firstName ?? undefined,
+        lastName: profile?.lastName ?? undefined,
+        isSuperAdmin: claims.isSuperAdmin,
+        currentOrgId: claims.currentOrgId,
+        orgRoles: claims.orgRoles,
+        orgMembershipStatus: claims.orgMembershipStatus,
+      },
+    });
+  })
 );
 
 /**
@@ -158,11 +384,7 @@ identityRouter.get(
  */
 identityRouter.post("/logout", (req: Request, res: Response) => {
   // Clear the HttpOnly cookie
-  res.clearCookie('auth_token', {
-    httpOnly: true,
-    secure: config.env === 'production',
-    sameSite: 'strict',
-  });
+  clearAuthTokenCookie(res);
 
   res.json({ message: "Logged out" });
 });
@@ -171,207 +393,287 @@ identityRouter.post("/logout", (req: Request, res: Response) => {
  * GET /api/auth/me
  * Get current authenticated user
  */
-identityRouter.get("/me", jwtAuth, (req: Request, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({ error: "Not authenticated" });
-  }
-  return res.json({ user: req.user });
-});
+identityRouter.get(
+  "/me",
+  jwtAuth,
+  catchAsync(async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const session = req.user;
+    const profile = await identityStorage.getUser(session.id);
+    const memberships = await identityStorage.listUserMembershipsWithOrgs(
+      session.id
+    );
+    const hasActiveMembership = memberships.some((m) => m.status === "active");
+    const canAccessAdminPortalFlag = canAccessAdminPortal({
+      isSuperAdmin: session.isSuperAdmin,
+      memberships,
+    });
+
+    return res.json({
+      user: {
+        id: session.id,
+        email: session.email,
+        firstName: profile?.firstName ?? undefined,
+        lastName: profile?.lastName ?? undefined,
+        profileImageUrl: profile?.profileImageUrl ?? undefined,
+        isSuperAdmin: session.isSuperAdmin,
+        currentOrgId: session.currentOrgId,
+        orgRoles: session.orgRoles,
+        orgMembershipStatus: session.orgMembershipStatus,
+      },
+      memberships,
+      hasActiveMembership,
+      canAccessAdminPortal: canAccessAdminPortalFlag,
+    });
+  })
+);
 
 // ======================
-// Admin Routes
+// Super-admin governance (membership model)
 // ======================
+
+const membershipIdParamSchema = z.object({
+  params: z.object({ membershipId: z.string().uuid() }),
+});
+
+const patchMembershipRolesSchema = z.object({
+  params: z.object({ membershipId: z.string().uuid() }),
+  body: z.object({
+    roles: z
+      .array(z.enum(["student", "instructor", "admin"]))
+      .min(1, "At least one role is required"),
+  }),
+});
+
+function governanceError(res: Response, err: unknown, fallbackStatus = 400) {
+  const message = err instanceof Error ? err.message : "Request failed";
+  const lower = message.toLowerCase();
+  const status =
+    lower.includes("not found") || lower.includes("membership not found")
+      ? 404
+      : fallbackStatus;
+  return res.status(status).json({ error: message });
+}
 
 /**
  * GET /api/auth/admin/users
- * Get all users (pending + active) with pagination and filtering
- * Query params: limit, offset, status (optional), role (optional), search (optional)
- * Requires: Admin role
+ * Super-admin: users with nested org memberships; filters by membership state / org.
  */
 identityRouter.get(
   "/admin/users",
   jwtAuth,
-  requireAdmin,
+  requireSuperAdmin,
   catchAsync(async (req: Request, res: Response) => {
-    const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string), 100) : 50;
-    const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
-    const statusFilter = req.query.status as string | undefined;
-    const roleFilter = req.query.role as string | undefined;
+    const limit = req.query.limit ? Math.min(parseInt(req.query.limit as string, 10), 100) : 50;
+    const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : 0;
     const search = (req.query.search as string)?.trim() || undefined;
+    const orgSlug =
+      req.query.orgSlug === "slmts" || req.query.orgSlug === "rr"
+        ? (req.query.orgSlug as "slmts" | "rr")
+        : undefined;
 
-    const filters: { status?: string; role?: string; search?: string } = {};
-    if (statusFilter && ["pending_approval", "active", "inactive"].includes(statusFilter)) {
-      filters.status = statusFilter;
+    const ms =
+      req.query.membershipStatus &&
+      ["pending", "active", "inactive", "rejected"].includes(req.query.membershipStatus as string)
+        ? (req.query.membershipStatus as "pending" | "active" | "inactive" | "rejected")
+        : undefined;
+
+    const roleParam = req.query.role as string | undefined;
+    const membershipHasRole =
+      roleParam && ["student", "instructor", "admin"].includes(roleParam)
+        ? roleParam
+        : undefined;
+
+    try {
+      const { users, total, statusCounts } = await identityService.listGovernanceUsers(
+        limit,
+        offset,
+        {
+          membershipStatus: ms,
+          orgSlug,
+          membershipHasRole,
+          search,
+        }
+      );
+
+      return res.json({
+        users,
+        pagination: { limit, offset, total },
+        statusCounts: {
+          all: statusCounts.all,
+          pending: statusCounts.pending,
+          active: statusCounts.active,
+          inactive: statusCounts.inactive,
+          rejected: statusCounts.rejected,
+        },
+      });
+    } catch (err: unknown) {
+      return governanceError(res, err);
     }
-    if (roleFilter) filters.role = roleFilter;
-    if (search) filters.search = search;
-
-    const [statusCounts, { items: paginatedUsers, total }] = await Promise.all([
-      identityService.getUserStatusCounts(search),
-      identityService.listUsersPaginated(limit, offset, Object.keys(filters).length ? filters : undefined),
-    ]);
-
-    const sanitized = paginatedUsers.map((u: any) => ({
-      id: u.id,
-      email: u.email,
-      status: u.status,
-      roles: u.roles || [],
-      firstName: u.firstName,
-      lastName: u.lastName,
-      createdAt: u.createdAt,
-    }));
-
-    return res.json({
-      users: sanitized,
-      pagination: { limit, offset, total },
-      statusCounts,
-    });
-  })
-);
-
-/**
- * POST /api/auth/admin/users/:userId/approve
- * Approve a pending user and add student role
- * Requires: Admin role
- */
-identityRouter.post(
-  "/admin/users/:userId/approve",
-  jwtAuth,
-  requireAdmin,
-  catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
-    const user = req.user as any;
-
-    const approvedUser = await identityService.approveUser(userId, user.id);
-
-    return res.json({
-      message: "User approved",
-      user: approvedUser,
-    });
-  })
-);
-
-/**
- * POST /api/auth/admin/users/:userId/roles
- * Assign roles to a user
- * Requires: Admin role
- * Body: { roles: ['student', 'instructor', ...] }
- */
-identityRouter.post(
-  "/admin/users/:userId/roles",
-  jwtAuth,
-  requireAdmin,
-  catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
-    const { roles } = req.body;
-    const user = req.user as any;
-
-    if (!Array.isArray(roles)) {
-      return res.status(400).json({ error: "Roles must be an array" });
-    }
-
-    const updatedUser = await identityService.assignRoles(
-      userId,
-      roles,
-      user.id
-    );
-
-    return res.json({
-      message: "Roles assigned",
-      user: updatedUser,
-    });
-  })
-);
-
-/**
- * POST /api/auth/admin/users/:userId/disable
- * Disable a user account (set status to inactive)
- * Requires: Admin role
- */
-identityRouter.post(
-  "/admin/users/:userId/disable",
-  jwtAuth,
-  requireAdmin,
-  catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
-
-    const disabledUser = await identityService.disableUser(userId);
-
-    return res.json({
-      message: "User disabled",
-      user: {
-        id: disabledUser.id,
-        email: disabledUser.email,
-        status: disabledUser.status,
-      },
-    });
-  })
-);
-
-/**
- * POST /api/auth/admin/users/:userId/enable
- * Enable a user account (set status to active)
- * Requires: Admin role
- */
-identityRouter.post(
-  "/admin/users/:userId/enable",
-  jwtAuth,
-  requireAdmin,
-  catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
-
-    const enabledUser = await identityService.enableUser(userId);
-
-    return res.json({
-      message: "User enabled",
-      user: {
-        id: enabledUser.id,
-        email: enabledUser.email,
-        status: enabledUser.status,
-      },
-    });
-  })
-);
-
-/**
- * POST /api/auth/admin/users/:userId/reject
- * Reject a pending user (delete from database)
- * Requires: Admin role
- */
-identityRouter.post(
-  "/admin/users/:userId/reject",
-  jwtAuth,
-  requireAdmin,
-  catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
-    const result = await identityService.rejectUser(userId);
-    return res.json({ success: true, message: "User rejected", user: result });
   })
 );
 
 /**
  * GET /api/auth/admin/users/:userId
- * Get details of a specific user
- * Requires: Admin role
+ * Super-admin: user + memberships
  */
 identityRouter.get(
   "/admin/users/:userId",
   jwtAuth,
-  requireAdmin,
+  requireSuperAdmin,
   catchAsync(async (req: Request, res: Response) => {
-    const { userId } = req.params;
-    const user = await identityService.getUser(userId);
+    try {
+      const user = await identityService.getUserWithMembershipsForGovernance(
+        req.params.userId
+      );
+      return res.json(user);
+    } catch (err: unknown) {
+      return governanceError(res, err, 404);
+    }
+  })
+);
 
-    return res.json({
-      id: user.id,
-      email: user.email,
-      status: user.status,
-      roles: user.roles || [],
-      firstName: user.firstName,
-      lastName: user.lastName,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    });
+identityRouter.post(
+  "/admin/memberships/:membershipId/approve",
+  jwtAuth,
+  requireSuperAdmin,
+  validateRequest(membershipIdParamSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    try {
+      const result = await identityService.approveMembership(
+        req.params.membershipId,
+        session.id
+      );
+      return res.json(result);
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
+  })
+);
+
+identityRouter.post(
+  "/admin/memberships/:membershipId/reject",
+  jwtAuth,
+  requireSuperAdmin,
+  validateRequest(membershipIdParamSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    try {
+      const result = await identityService.rejectMembership(
+        req.params.membershipId,
+        session.id
+      );
+      return res.json(result);
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
+  })
+);
+
+identityRouter.post(
+  "/admin/memberships/:membershipId/disable",
+  jwtAuth,
+  requireSuperAdmin,
+  validateRequest(membershipIdParamSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    try {
+      const result = await identityService.setMembershipActiveFlag(
+        req.params.membershipId,
+        "inactive",
+        session.id
+      );
+      return res.json(result);
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
+  })
+);
+
+identityRouter.post(
+  "/admin/memberships/:membershipId/enable",
+  jwtAuth,
+  requireSuperAdmin,
+  validateRequest(membershipIdParamSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    try {
+      const result = await identityService.setMembershipActiveFlag(
+        req.params.membershipId,
+        "active",
+        session.id
+      );
+      return res.json(result);
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
+  })
+);
+
+identityRouter.patch(
+  "/admin/memberships/:membershipId/roles",
+  jwtAuth,
+  requireSuperAdmin,
+  validateRequest(patchMembershipRolesSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    const { roles } = req.body as { roles: string[] };
+    try {
+      const result = await identityService.setMembershipRoles(
+        req.params.membershipId,
+        roles,
+        session.id
+      );
+      return res.json(result);
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
+  })
+);
+
+const userIdParamSchema = z.object({
+  params: z.object({ userId: z.string().min(1) }),
+});
+
+identityRouter.post(
+  "/admin/users/:userId/super-admin/grant",
+  jwtAuth,
+  requireSuperAdmin,
+  validateRequest(userIdParamSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    try {
+      const result = await identityService.grantSuperAdmin(
+        req.params.userId,
+        session.id
+      );
+      return res.json(result);
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
+  })
+);
+
+identityRouter.post(
+  "/admin/users/:userId/super-admin/revoke",
+  jwtAuth,
+  requireSuperAdmin,
+  validateRequest(userIdParamSchema),
+  catchAsync(async (req: Request, res: Response) => {
+    const session = req.user as Express.User;
+    try {
+      const result = await identityService.revokeSuperAdmin(
+        req.params.userId,
+        session.id
+      );
+      return res.json(result);
+    } catch (err: unknown) {
+      return governanceError(res, err);
+    }
   })
 );
 

@@ -12,7 +12,7 @@ import {
 
 import { NavMain } from "./nav-main"
 import { NavUser } from "./nav-user"
-import { BrandHeader } from "./brand-header"
+import { BrandHeader, type BrandHeaderBranding } from "./brand-header"
 import { getNavigationForRole, UserRole, getSectionLabel } from "../../lib/navigation-config"
 
 const enhanceWithContextualItems = (items: any[], currentPath: string | null | undefined, contextualNav?: Map<string, any>, contentContextLabel?: string | null) => {
@@ -58,7 +58,7 @@ const enhanceWithContextualItems = (items: any[], currentPath: string | null | u
         }
 
         // 2. Hardcoded fallbacks for existing patterns
-        if (item.url === '/vedic-learning' || item.url === '/app/learning') {
+        if (item.url === '/my-learning' || item.url === '/app/learning') {
             const chapterMatch = normalizedPath.match(/\/learning\/chapter\/(\d+)/);
             if (chapterMatch) {
                 // Same convention as ops portal: full label in breadcrumb, short label (no ": Title") in sidebar
@@ -113,6 +113,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     customNavigation?: any;
     contextualNavigation?: Map<string, any>;
     contentContextLabel?: string | null;
+    brandHeaderBranding?: BrandHeaderBranding;
     profileHref?: string;
     settingsHref?: string;
 }
@@ -126,6 +127,7 @@ export function AppSidebar({
     customNavigation,
     contextualNavigation,
     contentContextLabel,
+    brandHeaderBranding,
     profileHref,
     settingsHref,
     ...props
@@ -137,7 +139,7 @@ export function AppSidebar({
     return (
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader>
-                <BrandHeader homeHref={homeHref} />
+                <BrandHeader homeHref={homeHref} branding={brandHeaderBranding} />
             </SidebarHeader>
             <SidebarContent>
                 {/* Render Sections based on Role Config */}

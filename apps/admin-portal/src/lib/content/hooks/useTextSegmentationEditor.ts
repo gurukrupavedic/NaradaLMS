@@ -4,17 +4,7 @@ import { apiRequest } from '@/lib/api';
 import { useToast } from '@narada/ui';
 import { useChapterEditor } from '@/lib/content/context/ChapterEditorContext';
 import { useTextSegmentation } from './useTextSegmentation';
-
-interface TextSegment {
-    id: number;
-    chapterId: number;
-    script: 'te' | 'hi' | 'en';
-    startPosition: number;
-    endPosition: number;
-    order: number;
-    createdAt: string;
-    createdBy: string;
-}
+import type { TextSegment } from '@narada/types';
 
 interface AudioMapping {
     id: number;

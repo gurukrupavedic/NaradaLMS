@@ -38,55 +38,77 @@ Follow these steps in order to ensure all dependencies and configurations are co
 
 ### 3. Database Initialization
 
-NaradaLMS uses **Drizzle ORM** with a declarative "push" strategy for development.
+NaradaLMS uses **Drizzle ORM** with versioned SQL migrations under `./migrations/` (generated from `packages/types/src/schema.ts`).
 
-Run the following command to synchronize your database schema with the code:
+Apply pending migrations to an existing database:
 
 ```bash
-npm run db:push
+npm run db:migrate
 ```
 
-> [!IMPORTANT]
-> **Why `db:push`?**
-> We use `drizzle-kit push` instead of traditional SQL migrations during active development. This makes the database match `shared/schema.ts` immediately without the overhead of tracking migration files.
+For a **clean** local database (drops and recreates `public`, then applies all migrations), use `npm run db:reset` (see Maintenance & Reset below).
 
 ---
 
 ## 🌱 Data Seeding Strategy
 
-Seeding is divided into mandatory curriculum data and optional testing data.
+Seeding is divided into tenant org rows (multi-tenancy), mandatory curriculum data, and optional testing data.
 
-### Phase A: Vedic Curriculum (Mandatory)
+### Phase 0: Tenant organizations (multi-tenancy)
 
-Populates the primary structure (Tracks and Chapters). This script has been streamlined to ensure the latest pedagogical structure is applied.
+After migrations, ensure canonical organization rows exist (`slmts`, `rr`):
+
+```bash
+npm run db:seed-orgs
+```
+
+- **Script**: `server/db-seeding/seed-organizations.ts`
+- Idempotent: safe to re-run. Typical order: `npm run db:reset` (or `db:migrate`), then `db:seed-orgs`, then Phase 0b (below), then `db:seed` if you need curriculum data.
+- **API / registration:** Clients may send **`X-Tenant-Slug: slmts`** or **`rr`** (or JSON `tenantSlug` on `POST /api/auth/register`). If omitted, the API uses **`DEFAULT_TENANT_SLUG`** from `.env` (default `slmts`; see `.env.example`). Multi-tenancy status: [implementation-status.md](../implementation/multi-tenancy/implementation-status.md).
+
+### Phase 0b: Dev super-admin and memberships (multi-tenancy)
+
+Seeds the account matching **`SUPER_ADMIN_EMAIL`** as a platform super-admin (`users.is_super_admin`) and upserts **`user_organizations`** rows: **active** membership on **`slmts`** and **`rr`** (roles `student` + `admin` on each). Second-org join smoke uses a separate test user, not this seed shape.
+
+```bash
+npm run db:seed-dev
+```
+
+- **Script**: `server/db-seeding/seed-dev-bootstrap.ts`
+- **Required:** `SUPER_ADMIN_EMAIL` (same as [server/config.ts](../../server/config.ts) auto-promotion).
+- **When the user row does not exist yet:** set **`SUPER_ADMIN_PASSWORD`** (bcrypt-hashed on insert). Re-runs without this variable are fine once the user exists.
+- **Optional:** `DEV_SUPERADMIN_FIRST_NAME`, `DEV_SUPERADMIN_LAST_NAME` (defaults: Dev / SuperAdmin).
+- **Optional (dev only):** `DEV_SUPERADMIN_RESET_PASSWORD=1` plus **`SUPER_ADMIN_PASSWORD`** to re-hash the password for an existing user.
+- **Legacy aliases:** `ADMIN_EMAIL` and `DEV_SUPERADMIN_PASSWORD` are still read if `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_PASSWORD` are unset.
+
+### Phase A: Curriculum (optional)
+
+Populates tracks and chapters for the org declared in the seed file (`curriculum-slmts.json` by default). Use after org and dev bootstrap when the local database needs curriculum data.
 
 ```bash
 npm run db:seed
 ```
 
-- **Script**: `server/seed-vedic-curriculum.ts`
-- **Source**: `server/seeds/curriculum.json`
+- **Script**: `server/db-seeding/seed-curriculum.ts`
+- **Source**: `server/seeds/curriculum-slmts.json` by default; set `CURRICULUM_SEED_FILE` to another basename under `server/seeds/` (for example `curriculum-rr.json`) or use `npm run db:seed:curriculum:rr`
 
 ### Phase B: First Admin User (Required)
 
-There are two ways to establish the first administrator:
+There are three ways to establish the first administrator:
 
 1. **Recommended (Auto-Promotion)**:
-   Add `ADMIN_EMAIL=your.email@example.com` to your `.env` file. The first time you register via the UI using this email, you will be automatically granted the `admin` role and `active` status.
-2. **Manual Utility**:
-   If you have already registered, you can promote yourself via the CLI:
-
-   ```bash
-   npx tsx scripts/utils/update-user-role.ts
-   ```
+   Add `SUPER_ADMIN_EMAIL=your.email@example.com` to your `.env` file. The first time you register via the UI using this email, you will be automatically granted the `admin` role and `active` status.
+2. **Dev seed (multi-tenancy Phase 0b)**:
+   After `db:seed-orgs`, run `npm run db:seed-dev` with `SUPER_ADMIN_EMAIL` and `SUPER_ADMIN_PASSWORD` set (see Phase 0b above). Creates or updates the user row, sets `is_super_admin`, and inserts minimal org memberships.
+3. **Manual database update**:
+   If you have already registered and need to repair local access manually, inspect the current membership rows and update them deliberately. The old hardcoded `update-user-role` helper was removed during script cleanup because it only handled one developer email.
 
 ### Phase C: Sample Testing Data (Optional)
 
 Populates mock users, students, and batches for UI/UX testing.
 
-- **Users**: `npx tsx scripts/seed/create-sample-users.ts`
-- **Batches**: `npx tsx scripts/seed/create-sample-batches.ts`
-- **Students**: `npx tsx scripts/seed/create-30-students.ts`
+- **Pending users**: `npx tsx scripts/seeds/demo/create-sample-users.ts`
+- **Active students**: `npx tsx scripts/seeds/demo/create-30-students.ts`
 
 ---
 
@@ -100,14 +122,14 @@ If your database becomes inconsistent during development, you can perform a "fac
 npm run db:reset
 ```
 
-*Platform Note: This command runs `scripts/test/db-reset.ps1` on Windows and `scripts/db/reset-db.ts` on other platforms.*
+*Support note: the package-wired reset entrypoint on this repo state is `scripts/db/reset.ps1`.*
 
 **Reset Sequence**:
 
-1. Drops the `public` schema.
+1. Drops the `public` and `drizzle` schemas.
 2. Recreates the `public` schema.
 3. Grants necessary permissions.
-4. Executes `drizzle-kit push --force`.
+4. Executes `drizzle-kit migrate` against repo-root `migrations/`.
 
 ---
 
@@ -117,7 +139,8 @@ npm run db:reset
 | :--- | :--- | :--- |
 | `DATABASE_URL` | Yes | PostgreSQL connection string. |
 | `SESSION_SECRET` | Yes | Random string for signing session cookies. |
-| `ADMIN_EMAIL` | No | Email address that gets auto-promoted to Admin on registration. |
+| `SUPER_ADMIN_EMAIL` | No | Email that receives auto-promotion on first registration and matches dev bootstrap seed. |
+| `SUPER_ADMIN_PASSWORD` | No | Plain password for **first** `db:seed-dev` insert only (then optional). |
 | `GOOGLE_CLIENT_ID` | Opt | Required for Google OAuth 2.0. |
 | `GOOGLE_CLIENT_SECRET` | Opt | Required for Google OAuth 2.0. |
 
@@ -127,4 +150,23 @@ npm run db:reset
 
 - **`psql` not found**: Ensure PostgreSQL bin folder is in your system PATH.
 - **Connection Refused**: Check if your local Postgres service is running or if your firewall blocks port 5432.
-- **Schema Mismatch**: Run `npm run db:push` again if you pull new changes that include schema modifications.
+- **Schema Mismatch**: Re-run the supported path: `npm run db:reset`, then the needed seed commands (`db:seed-orgs`, `db:seed-dev`, and optionally `db:seed`).
+
+### Dual student portals (SLMTS vs RR) and wrong curriculum on “RR”
+
+The student app bakes **`NEXT_PUBLIC_TENANT`** from **`TENANT`** at dev/build time (see `apps/student-portal/next.config.ts`). Each browser tab must run the **correct** dev script:
+
+| Intent | Command (from `apps/student-portal`) | Port |
+| --- | --- | --- |
+| SLMTS | `npm run dev` or `npm run dev:slmts` | 3000 |
+| RR | **`npm run dev:rr`** (sets `TENANT=rr`) | 3001 |
+
+If you run **`npm run dev`** but open **`http://localhost:3001`**, you still get a **SLMTS** build: every API call sends **`X-Tenant-Slug: slmts`**, so `/api/learning/*` returns SLMTS org tracks even if the UI branding looks confusing. **Always start RR with `npm run dev:rr`.**
+
+**Verify tenant isolation in the browser (RR tab):**
+
+1. Open DevTools → **Network** → reload **My Learning**.
+2. Select **`my-progress`** (URL ends with `/api/learning/my-progress`).
+3. Under **Request headers**, confirm **`X-Tenant-Slug: rr`**. If you see **`slmts`**, fix how the RR portal was started (table above).
+4. Optionally compare **`trackProgress`** `trackId` values in the JSON response to your database: they must belong to the **RR** organization row, not SLMTS (unless you intentionally seeded identical titles in both orgs).
+5. In the console, **`process.env.NEXT_PUBLIC_TENANT`** should be **`rr`** on a correct RR dev build.

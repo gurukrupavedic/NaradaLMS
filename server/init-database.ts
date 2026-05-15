@@ -1,22 +1,26 @@
-import { identityStorage } from "./modules/identity-access/storage";
-import { CURRICULUM_IMPORT_ACTOR_PROFILE } from "./shared/constants/system-actors";
-// NOTE: Placeholder import removed because seed-vedic-data is not present in this repo.
-// Add back when the seed script is available.
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { seedOrganizations } from "./db-seeding/seed-organizations";
+import { seedCurriculum } from "./db-seeding/seed-curriculum";
 
 export async function initializeDatabase(): Promise<void> {
-  console.log("Initializing database with authentic Vedic content...");
+  console.log("Initializing database via compatibility wrapper...");
+  console.log("Step 1/2: seeding baseline organizations...");
+  await seedOrganizations();
 
-  // Create dedicated curriculum import actor for bootstrap data
-  const systemUser = await identityStorage.upsertUser(CURRICULUM_IMPORT_ACTOR_PROFILE);
+  console.log("Step 2/2: seeding curriculum...");
+  await seedCurriculum();
 
-  console.log("System user created:", systemUser.id);
-
-  // Seed authentic Vedic data (stubbed until seed script is available)
-  console.log("Database initialization completed successfully (no seed script executed)");
+  console.log(
+    "Initialization complete. For local super-admin bootstrap, run `npm run db:seed-dev` separately."
+  );
 }
 
-// Run initialization if this file is executed directly
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+const isMainModule =
+  process.argv[1] &&
+  path.normalize(process.argv[1]) === path.normalize(fileURLToPath(import.meta.url));
+
+if (isMainModule) {
   initializeDatabase()
     .then(() => {
       console.log("Database seeding completed");

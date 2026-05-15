@@ -3,33 +3,95 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "../lib/api";
+import { getCurrentTenantSlug } from "../lib/tenant";
+import {
+    getCurrentTenantMembership,
+    getTenantAccessState,
+    getTenantSwitchOrgId,
+    type TenantAccessState,
+    type TenantMembershipSummary,
+} from "../lib/tenant-session";
 
+export type OrgMembershipStatusClient =
+    | "pending"
+    | "active"
+    | "inactive"
+    | "rejected";
+
+/** Session user from JWT (`/auth/me`) plus optional profile fields when merged from APIs. */
 export interface AuthUser {
     id: string;
     email: string;
     firstName?: string;
     lastName?: string;
     profileImageUrl?: string;
-    roles: string[];
-    status: "active" | "pending_approval" | "inactive";
-    createdAt: string; // Serialized date
-    updatedAt: string;
+    isSuperAdmin: boolean;
+    currentOrgId?: string;
+    orgRoles?: string[];
+    orgMembershipStatus?: OrgMembershipStatusClient;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface MembershipSummary extends TenantMembershipSummary {}
+
+/** `/auth/me` payload: session user plus membership list from the server. */
+export interface AuthSession extends AuthUser {
+    memberships: MembershipSummary[];
+    hasActiveMembership: boolean;
+    currentTenantMembership: MembershipSummary | null;
+    currentTenantAccessState: TenantAccessState;
+    currentTenantSwitchOrgId: string | null;
+}
+
+interface AuthMeResponse {
+    user: AuthUser;
+    memberships?: MembershipSummary[];
+    hasActiveMembership?: boolean;
 }
 
 export function useAuth() {
     const router = useRouter();
     const queryClient = useQueryClient();
+    const tenantSlug = getCurrentTenantSlug();
 
     const {
         data: userData,
         isLoading,
         error,
     } = useQuery({
-        queryKey: ["auth", "me"],
+        queryKey: ["auth", "me", tenantSlug],
         queryFn: async () => {
             try {
-                const response = await apiRequest("/auth/me");
-                return response.user as AuthUser;
+                const response = await apiRequest<AuthMeResponse>("/auth/me");
+                const u = response.user;
+                const memberships = response.memberships ?? [];
+                const hasActiveMembership = Boolean(response.hasActiveMembership);
+                const tenantScopedSession = {
+                    currentOrgId: u.currentOrgId,
+                    memberships,
+                    hasActiveMembership,
+                    isSuperAdmin: u.isSuperAdmin,
+                };
+                const tenantSlug = getCurrentTenantSlug();
+
+                return {
+                    ...u,
+                    memberships,
+                    hasActiveMembership,
+                    currentTenantMembership: getCurrentTenantMembership(
+                        tenantScopedSession,
+                        tenantSlug
+                    ),
+                    currentTenantAccessState: getTenantAccessState(
+                        tenantScopedSession,
+                        tenantSlug
+                    ),
+                    currentTenantSwitchOrgId: getTenantSwitchOrgId(
+                        tenantScopedSession,
+                        tenantSlug
+                    ),
+                } satisfies AuthSession;
             } catch (err: unknown) {
                 // 401 means not authenticated — this is expected
                 // Other errors (network, 500) should propagate so React Query can retry
@@ -52,7 +114,7 @@ export function useAuth() {
     const logout = async () => {
         try {
             await apiRequest("/auth/logout", { method: "POST" });
-            queryClient.setQueryData(["auth", "me"], null);
+            queryClient.setQueryData(["auth", "me", tenantSlug], null);
             queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
             router.push("/");
         } catch (err) {
@@ -60,10 +122,21 @@ export function useAuth() {
         }
     };
 
+    const switchOrg = async (orgId: string) => {
+        await apiRequest("/auth/switch-org", {
+            method: "POST",
+            body: JSON.stringify({ orgId }),
+        });
+        await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+        await queryClient.invalidateQueries({ queryKey: ["myTrackProgress"] });
+        await queryClient.invalidateQueries({ queryKey: ["myDetails"] });
+    };
+
     return {
-        user: userData || null,
+        user: (userData as AuthSession | null) || null,
         isLoading,
         isAuthenticated: !!userData,
         logout,
+        switchOrg,
     };
 }
