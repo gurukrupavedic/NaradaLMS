@@ -1,6 +1,7 @@
 import {
   authMiddleware,
   requireOrgRole,
+  requireOrgRoleStrict,
   requireRole,
   requireAdmin,
   requireInstructor,
@@ -12,6 +13,7 @@ import { attachOrgContext, requireOrgContext } from "./org-context";
 export {
   authMiddleware,
   requireOrgRole,
+  requireOrgRoleStrict,
   requireRole,
   requireAdmin,
   requireInstructor,

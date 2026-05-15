@@ -44,7 +44,17 @@ async function run() {
   const requireOrgRole = authModule.requireOrgRole as
     | undefined
     | ((...roles: string[]) => (req: Request, res: Response, next: NextFunction) => unknown);
+  const requireOrgRoleStrict = authModule.requireOrgRoleStrict as
+    | undefined
+    | ((...roles: string[]) => (req: Request, res: Response, next: NextFunction) => unknown);
+  const requireAdmin = authModule.requireAdmin as
+    | undefined
+    | ((req: Request, res: Response, next: NextFunction) => unknown);
+
   const requireOrgRoleFromIndex = middlewareModule.requireOrgRole as
+    | undefined
+    | ((...roles: string[]) => (req: Request, res: Response, next: NextFunction) => unknown);
+  const requireOrgRoleStrictFromIndex = middlewareModule.requireOrgRoleStrict as
     | undefined
     | ((...roles: string[]) => (req: Request, res: Response, next: NextFunction) => unknown);
 
@@ -62,8 +72,16 @@ async function run() {
     "requireOrgRole export exists in middleware index",
     "Expected middleware barrel to export requireOrgRole"
   );
+  assert(
+    typeof requireOrgRoleStrictFromIndex === "function",
+    "requireOrgRoleStrict export exists in middleware index"
+  );
+  assert(
+    typeof requireOrgRoleStrict === "function",
+    "requireOrgRoleStrict export exists in auth module"
+  );
 
-  if (!requireRole || !requireOrgRole || !requireOrgRoleFromIndex) {
+  if (!requireRole || !requireOrgRole || !requireOrgRoleFromIndex || !requireOrgRoleStrict || !requireAdmin) {
     if (failed.length > 0) {
       console.error("Failed:", failed);
       process.exit(1);
@@ -118,6 +136,47 @@ async function run() {
   assert(
     forbiddenNext === false,
     "requireRole compatibility alias does not call next when denied"
+  );
+
+  const superStudentReq = {
+    user: {
+      id: "user-super",
+      email: "super@example.com",
+      isSuperAdmin: true,
+      orgRoles: ["student"],
+    },
+  } as Request;
+  const superStudentRes = createMockResponse();
+  let superStudentNext = false;
+  requireOrgRole("admin")(superStudentReq, superStudentRes, () => {
+    superStudentNext = true;
+  });
+  assert(
+    superStudentRes.statusCode === 403,
+    "requireOrgRole denies super-admin without org admin role (§3.4)"
+  );
+  assert(
+    superStudentNext === false,
+    "requireOrgRole does not call next for super-admin without admin in orgRoles"
+  );
+
+  const superAdminReq = {
+    user: {
+      id: "user-super2",
+      email: "super2@example.com",
+      isSuperAdmin: true,
+      orgRoles: ["admin"],
+    },
+  } as Request;
+  const superAdminRes = createMockResponse();
+  let superAdminNext = false;
+  requireAdmin(superAdminReq, superAdminRes, () => {
+    superAdminNext = true;
+  });
+  assert(superAdminNext === true, "requireAdmin allows super-admin when JWT has org admin");
+  assert(
+    superAdminRes.statusCode === undefined,
+    "requireAdmin does not set status when super has org admin"
   );
 }
 

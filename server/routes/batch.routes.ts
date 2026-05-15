@@ -260,11 +260,10 @@ router.get('/batches/:id/progress', async (req: Request, res: Response, next: Ne
       return res.status(401).json(createErrorResponse('Unauthorized', 'UNAUTHORIZED'));
     }
 
-    // Only instructors and admins can view batch progress
+    // Only instructors and admins can view batch progress (JWT org roles; §3.4 — no super-admin bypass)
     const isInstructorOrAdmin =
       user.orgRoles?.includes("instructor") ||
-      user.orgRoles?.includes("admin") ||
-      user.isSuperAdmin;
+      user.orgRoles?.includes("admin");
     if (!isInstructorOrAdmin) {
       return res.status(403).json(createErrorResponse('Forbidden: Instructors only', 'FORBIDDEN'));
     }
@@ -284,8 +283,8 @@ router.post('/batches/:batchId/students/:studentId/evaluate', async (req: Reques
       return res.status(401).json(createErrorResponse('Unauthorized', 'UNAUTHORIZED'));
     }
 
-    // Only instructors can evaluate
-    if (!user.orgRoles?.includes("instructor") && !user.isSuperAdmin) {
+    // Only instructors can evaluate (JWT org role; §3.4 — no super-admin bypass)
+    if (!user.orgRoles?.includes("instructor")) {
       return res.status(403).json(createErrorResponse('Forbidden: Instructors only', 'FORBIDDEN'));
     }
 

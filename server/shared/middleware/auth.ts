@@ -13,18 +13,14 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 };
 
 /**
- * Role guard using org-scoped roles on `req.user` (JWT `orgRoles`), populated by jwt-auth.
- * Super-admin bypasses org role checks for this guard.
+ * Org role guard using `req.user.orgRoles` (JWT, scoped to current org).
+ * Does **not** treat `isSuperAdmin` as satisfying org roles (§3.4 policy A).
  */
-export const requireOrgRole = (...roles: string[]) => {
+export const requireOrgRoleStrict = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as Express.User | undefined;
     if (!user) {
       return res.status(401).json({ error: "Unauthorized - missing or invalid token" });
-    }
-
-    if (user.isSuperAdmin) {
-      return next();
     }
 
     const userRoles = user.orgRoles ?? [];
@@ -39,6 +35,11 @@ export const requireOrgRole = (...roles: string[]) => {
     next();
   };
 };
+
+/**
+ * Same as {@link requireOrgRoleStrict}; kept as the primary export name used across routes.
+ */
+export const requireOrgRole = requireOrgRoleStrict;
 
 /**
  * Backward-compatible alias for org-scoped role checks.
@@ -65,5 +66,5 @@ export const requireSuperAdmin = (
 };
 
 // Role hierarchy: admin has access to everything (including content management)
-export const requireAdmin = requireOrgRole("admin");
-export const requireInstructor = requireOrgRole("instructor", "admin");
+export const requireAdmin = requireOrgRoleStrict("admin");
+export const requireInstructor = requireOrgRoleStrict("instructor", "admin");
