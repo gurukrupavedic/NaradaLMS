@@ -1,8 +1,10 @@
 const {
     canAccessAdminPortalFromLoginResponse,
     canAccessAdminPortalFromSession,
+    hasActiveOrgRole,
     hasOrgAdminAnywhere,
     isOrgScopedAdminPath,
+    isOrgScopedRole,
     isUsersAdminPath,
 } = await import(
     new URL(
@@ -77,6 +79,57 @@ function testCanAccessAdminPortalFromLoginResponse() {
     );
 }
 
+function testHasActiveOrgRole() {
+    const orgA = "00000000-0000-4000-8000-000000000001";
+    const orgB = "00000000-0000-4000-8000-000000000002";
+    assert(
+        hasActiveOrgRole(
+            [{ orgId: orgA, status: "active", roles: ["admin"] }],
+            orgA,
+            "admin"
+        ) === true,
+        "hasActiveOrgRole true for admin in current org"
+    );
+    assert(
+        hasActiveOrgRole(
+            [{ orgId: orgB, status: "active", roles: ["admin"] }],
+            orgA,
+            "admin"
+        ) === false,
+        "hasActiveOrgRole false when admin only in other org"
+    );
+    assert(
+        hasActiveOrgRole(
+            [{ orgId: orgA, status: "pending", roles: ["admin"] }],
+            orgA,
+            "admin"
+        ) === false,
+        "hasActiveOrgRole false for pending admin"
+    );
+    assert(
+        hasActiveOrgRole(
+            [{ orgId: orgA, status: "active", roles: ["student"] }],
+            orgA,
+            "admin"
+        ) === false,
+        "hasActiveOrgRole false without admin role in membership (e.g. student-only in org)"
+    );
+    assert(
+        hasActiveOrgRole([], orgA, "admin") === false,
+        "hasActiveOrgRole false when no memberships"
+    );
+    assert(
+        hasActiveOrgRole(
+            [{ orgId: orgA, status: "active", roles: ["admin"] }],
+            undefined,
+            "admin"
+        ) === false,
+        "hasActiveOrgRole false without currentOrgId"
+    );
+    assert(isOrgScopedRole("admin") === true, "admin is org-scoped role");
+    assert(isOrgScopedRole("unknown") === false, "unknown role not org-scoped");
+}
+
 function testPathHelpers() {
     assert(isUsersAdminPath("/admin/users") === true, "users path exact");
     assert(isUsersAdminPath("/admin/users/xyz") === true, "users path prefix");
@@ -87,6 +140,7 @@ function testPathHelpers() {
 }
 
 testHasOrgAdminAnywhere();
+testHasActiveOrgRole();
 testCanAccessAdminPortalFromSession();
 testCanAccessAdminPortalFromLoginResponse();
 testPathHelpers();

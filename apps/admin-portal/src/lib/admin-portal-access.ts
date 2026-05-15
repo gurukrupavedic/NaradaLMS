@@ -8,6 +8,38 @@ export interface MembershipLike {
   readonly roles: readonly string[];
 }
 
+/** Membership row including org id (matches `/auth/me` membership shape). */
+export interface MembershipWithOrgLike extends MembershipLike {
+  readonly orgId: string;
+}
+
+const ORG_SCOPED_ROLES = new Set(["student", "instructor", "admin"]);
+
+/**
+ * True when there is an **active** membership for `currentOrgId` that includes `role`.
+ * Used for org-scoped UI and route guards (§3.4 — no super-admin bypass).
+ */
+export function hasActiveOrgRole(
+  memberships: readonly MembershipWithOrgLike[],
+  currentOrgId: string | undefined,
+  role: string
+): boolean {
+  if (!currentOrgId) {
+    return false;
+  }
+  const row = memberships.find(
+    (m) => m.orgId === currentOrgId && m.status === "active"
+  );
+  return Boolean(row?.roles.includes(role));
+}
+
+/**
+ * Whether `role` is resolved from org membership (`user_organizations.roles`), not JWT alone.
+ */
+export function isOrgScopedRole(role: string): boolean {
+  return ORG_SCOPED_ROLES.has(role);
+}
+
 /**
  * True when the user has an active org membership with role `admin` in any org.
  */
