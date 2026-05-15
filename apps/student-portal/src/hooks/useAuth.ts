@@ -44,6 +44,12 @@ export interface AuthSession extends AuthUser {
     currentTenantSwitchOrgId: string | null;
 }
 
+interface AuthMeResponse {
+    user: AuthUser;
+    memberships?: MembershipSummary[];
+    hasActiveMembership?: boolean;
+}
+
 export function useAuth() {
     const router = useRouter();
     const queryClient = useQueryClient();
@@ -57,9 +63,9 @@ export function useAuth() {
         queryKey: ["auth", "me", tenantSlug],
         queryFn: async () => {
             try {
-                const response = await apiRequest("/auth/me");
-                const u = response.user as AuthUser;
-                const memberships = (response.memberships ?? []) as MembershipSummary[];
+                const response = await apiRequest<AuthMeResponse>("/auth/me");
+                const u = response.user;
+                const memberships = response.memberships ?? [];
                 const hasActiveMembership = Boolean(response.hasActiveMembership);
                 const tenantScopedSession = {
                     currentOrgId: u.currentOrgId,

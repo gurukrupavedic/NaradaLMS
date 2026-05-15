@@ -340,7 +340,7 @@ export default function UserList() {
                 <Tabs
                     value={statusFilter}
                     onValueChange={(v) => {
-                        setStatusFilter(v);
+                        setStatusFilter(v as AdminUserStatusFilter);
                         setPage(1);
                     }}
                 >
