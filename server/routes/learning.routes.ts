@@ -13,6 +13,13 @@ import { catchAsync } from '../utils/catchAsync';
 
 const router = Router();
 
+// Personalized, tenant-scoped JSON: avoid shared HTTP caches mixing orgs across tabs/origins.
+router.use((_req, res, next) => {
+  res.setHeader("Cache-Control", "private, no-store");
+  res.setHeader("Vary", "X-Tenant-Slug, Cookie");
+  next();
+});
+
 // Protect all learning routes - users must be authenticated, then tenant org from X-Tenant-Slug
 router.use(jwtAuth);
 router.use(attachLearningTenantOrgContext);

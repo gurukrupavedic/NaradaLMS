@@ -151,3 +151,22 @@ npm run db:reset
 - **`psql` not found**: Ensure PostgreSQL bin folder is in your system PATH.
 - **Connection Refused**: Check if your local Postgres service is running or if your firewall blocks port 5432.
 - **Schema Mismatch**: Re-run the supported path: `npm run db:reset`, then the needed seed commands (`db:seed-orgs`, `db:seed-dev`, and optionally `db:seed`).
+
+### Dual student portals (SLMTS vs RR) and wrong curriculum on “RR”
+
+The student app bakes **`NEXT_PUBLIC_TENANT`** from **`TENANT`** at dev/build time (see `apps/student-portal/next.config.ts`). Each browser tab must run the **correct** dev script:
+
+| Intent | Command (from `apps/student-portal`) | Port |
+| --- | --- | --- |
+| SLMTS | `npm run dev` or `npm run dev:slmts` | 3000 |
+| RR | **`npm run dev:rr`** (sets `TENANT=rr`) | 3001 |
+
+If you run **`npm run dev`** but open **`http://localhost:3001`**, you still get a **SLMTS** build: every API call sends **`X-Tenant-Slug: slmts`**, so `/api/learning/*` returns SLMTS org tracks even if the UI branding looks confusing. **Always start RR with `npm run dev:rr`.**
+
+**Verify tenant isolation in the browser (RR tab):**
+
+1. Open DevTools → **Network** → reload **My Learning**.
+2. Select **`my-progress`** (URL ends with `/api/learning/my-progress`).
+3. Under **Request headers**, confirm **`X-Tenant-Slug: rr`**. If you see **`slmts`**, fix how the RR portal was started (table above).
+4. Optionally compare **`trackProgress`** `trackId` values in the JSON response to your database: they must belong to the **RR** organization row, not SLMTS (unless you intentionally seeded identical titles in both orgs).
+5. In the console, **`process.env.NEXT_PUBLIC_TENANT`** should be **`rr`** on a correct RR dev build.

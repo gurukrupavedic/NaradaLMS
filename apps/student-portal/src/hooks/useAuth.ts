@@ -47,13 +47,14 @@ export interface AuthSession extends AuthUser {
 export function useAuth() {
     const router = useRouter();
     const queryClient = useQueryClient();
+    const tenantSlug = getCurrentTenantSlug();
 
     const {
         data: userData,
         isLoading,
         error,
     } = useQuery({
-        queryKey: ["auth", "me"],
+        queryKey: ["auth", "me", tenantSlug],
         queryFn: async () => {
             try {
                 const response = await apiRequest("/auth/me");
@@ -107,7 +108,7 @@ export function useAuth() {
     const logout = async () => {
         try {
             await apiRequest("/auth/logout", { method: "POST" });
-            queryClient.setQueryData(["auth", "me"], null);
+            queryClient.setQueryData(["auth", "me", tenantSlug], null);
             queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
             router.push("/");
         } catch (err) {
@@ -121,6 +122,8 @@ export function useAuth() {
             body: JSON.stringify({ orgId }),
         });
         await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+        await queryClient.invalidateQueries({ queryKey: ["myTrackProgress"] });
+        await queryClient.invalidateQueries({ queryKey: ["myDetails"] });
     };
 
     return {

@@ -12,8 +12,10 @@ export async function apiRequest<T = unknown>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T> {
+  const isBrowser = typeof window !== "undefined";
   return sharedApiRequest<T>(endpoint, {
     ...options,
+    ...(isBrowser ? { cache: options.cache ?? "no-store" } : {}),
     headers: {
       "X-Tenant-Slug": getCurrentTenantSlug(),
       ...(options.headers as Record<string, string> | undefined),
