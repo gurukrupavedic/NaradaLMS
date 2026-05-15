@@ -24,13 +24,13 @@
   - `slice-1.4-schema-contract` — remove `users.roles` / `users.status` / `users_status_check`, migrate remaining runtime/UI/script consumers, and refresh the execution docs
   - `slice-5.2-admin-user-org-filter` — admin user-management org filter UI, hook/query wiring, and filtered-governance pagination fix
   - `slice-5.3-admin-org-switcher` — admin shell org switcher + auth/query refresh behavior
-- `slice-4.1-tenant-config` — student tenant config foundation, tenant-aware auth branding + metadata, and dual-instance student dev scripts
-- `slice-4.3-student-shell-branding` — tenant-aware authenticated student shell/pending branding, client-safe tenant env wiring, and explicit preservation of the shared Narada auth-left hero
-- `slice-4.4-tenant-aware-oauth` — student/admin OAuth start parameters, server-signed callback state, safe post-auth redirect handling, and tenant-aware Google membership resolution
-- `slice-6.3-second-org-join` — authenticated tenant membership requests, tenant-scoped student access state, RR auto-switch behavior, second-org smoke coverage, and 6.3 docs refresh
-- `slice-6.4-known-gaps-docs` — pilot closeout documentation, canonical known-gap wording, and execution-doc sync so new chats stop treating `6.4` as pending
-- `slice-5-tenant-learning-org` — **`/api/learning/*`** resolves **`req.orgId`** from **`X-Tenant-Slug`** with **active** `user_organizations` only (**§3.4 A**, no super-admin bypass); CORS **`allowedHeaders`**; student portal **`apiRequest`** merges tenant slug; RR isolation smoke asserts learning header + inactive-membership denial
-- `slice-6-mt-docs-verification` — this status file + **architecture-decisions** ADR for tenant learning APIs; contract smoke pass notes
+  - `slice-4.1-tenant-config` — student tenant config foundation, tenant-aware auth branding + metadata, and dual-instance student dev scripts
+  - `slice-4.3-student-shell-branding` — tenant-aware authenticated student shell/pending branding, client-safe tenant env wiring, and explicit preservation of the shared Narada auth-left hero
+  - `slice-4.4-tenant-aware-oauth` — student/admin OAuth start parameters, server-signed callback state, safe post-auth redirect handling, and tenant-aware Google membership resolution
+  - `slice-6.3-second-org-join` — authenticated tenant membership requests, tenant-scoped student access state, RR auto-switch behavior, second-org smoke coverage, and 6.3 docs refresh
+  - `slice-6.4-known-gaps-docs` — pilot closeout documentation, canonical known-gap wording, and execution-doc sync so new chats stop treating `6.4` as pending
+  - `slice-5-tenant-learning-org` — **`/api/learning/*`** resolves **`req.orgId`** from **`X-Tenant-Slug`** with **active** `user_organizations` only (**§3.4 A**, no super-admin bypass); CORS **`allowedHeaders`**; student portal **`apiRequest`** merges tenant slug; RR isolation smoke asserts learning header + inactive-membership denial
+  - `slice-6-mt-docs-verification` — this status file + **architecture-decisions** ADR for tenant learning APIs; contract smoke pass notes
 
 ---
 
