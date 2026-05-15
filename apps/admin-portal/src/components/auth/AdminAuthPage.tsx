@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
     Button,
@@ -13,7 +13,8 @@ import {
 import { apiRequest } from "@/lib/api";
 import { AUTH_ME_QUERY_KEY } from "@/lib/org-switcher";
 import { FcGoogle } from "react-icons/fc";
-import { useAuth, type AuthUser } from "@/hooks/useAuth";
+import type { AuthLoginPayload } from "@/lib/admin-portal-access";
+import { canAccessAdminPortalFromLoginResponse } from "@/lib/admin-portal-access";
 
 // Assets
 import kolamPattern from "@/assets/branding/kolam-2.svg";
@@ -27,7 +28,6 @@ const ADMIN_OAUTH_ERROR_MESSAGES: Record<string, string> = {
 };
 
 export function AdminAuthPage() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const queryClient = useQueryClient();
     const { toast } = useToast();
@@ -112,10 +112,10 @@ export function AdminAuthPage() {
                     ) : null}
 
                     <LoginForm
-                        onSuccess={(userData) => {
-                            const canAdmin =
-                                userData.isSuperAdmin ||
-                                (userData.orgRoles?.includes("admin") ?? false);
+                        onSuccess={(payload) => {
+                            const canAdmin = canAccessAdminPortalFromLoginResponse(
+                                payload as AuthLoginPayload
+                            );
                             if (!canAdmin) {
                                 toast({
                                     title: "Access Denied",
@@ -175,7 +175,11 @@ const LightLabel = (props: React.ComponentProps<typeof Label>) => (
     <Label {...props} className={`text-slate-600 font-medium ${props.className}`} />
 );
 
-function LoginForm({ onSuccess }: { onSuccess: (userData: AuthUser) => void }) {
+function LoginForm({
+    onSuccess,
+}: {
+    onSuccess: (payload: unknown) => void;
+}) {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState("");
@@ -191,8 +195,7 @@ function LoginForm({ onSuccess }: { onSuccess: (userData: AuthUser) => void }) {
                 body: JSON.stringify({ email, password }),
             });
 
-            // Pass user data to onSuccess for RBAC check
-            onSuccess(response.user);
+            onSuccess(response);
         } catch (err: any) {
             toast({
                 title: "Login failed",

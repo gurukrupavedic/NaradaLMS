@@ -38,6 +38,8 @@ export interface MembershipSummary {
 export interface AuthSession extends AuthUser {
     memberships: MembershipSummary[];
     hasActiveMembership: boolean;
+    /** From `GET /api/auth/me` when the API exposes Slice 1 field. */
+    canAccessAdminPortal?: boolean;
 }
 
 export function useAuth() {
@@ -52,12 +54,20 @@ export function useAuth() {
         queryKey: AUTH_ME_QUERY_KEY,
         queryFn: async () => {
             try {
-                const response = await apiRequest("/auth/me");
+                const response = await apiRequest("/auth/me") as {
+                    user: AuthUser;
+                    memberships?: MembershipSummary[];
+                    hasActiveMembership?: boolean;
+                    canAccessAdminPortal?: boolean;
+                };
                 const u = response.user as AuthUser;
                 return {
                     ...u,
                     memberships: (response.memberships ?? []) as MembershipSummary[],
                     hasActiveMembership: Boolean(response.hasActiveMembership),
+                    ...(typeof response.canAccessAdminPortal === "boolean"
+                        ? { canAccessAdminPortal: response.canAccessAdminPortal }
+                        : {}),
                 } satisfies AuthSession;
             } catch (err: unknown) {
                 const message = err instanceof Error ? err.message : String(err);
