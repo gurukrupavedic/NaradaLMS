@@ -46,9 +46,9 @@ export const AUTH_ROTATING_TAGLINES = AUTH_TAGLINE_ENTRIES.map(
   (entry) => `${entry.before} ${entry.after}`
 );
 
-const HOLD_MS = 4500;
-const LETTER_FADE_MS = 900;
-const STAGGER_MS = 48;
+const HOLD_MS = 1800;
+const LETTER_FADE_MS = 1700;
+const STAGGER_MS = 72;
 
 export interface AuthRotatingTaglineProps {
   className?: string;
