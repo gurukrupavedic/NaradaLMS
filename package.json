@@ -4,6 +4,8 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
+    "api:dev": "dotenv -e .env -- pnpm --filter @narada/api dev",
+    "api:build": "dotenv -e .env -- pnpm --filter @narada/api build",
     "db:generate": "dotenv -e .env -- pnpm --filter @narada/db generate",
     "db:push": "dotenv -e .env -- pnpm --filter @narada/db push",
     "db:studio": "dotenv -e .env -- pnpm --filter @narada/db studio",
