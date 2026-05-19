@@ -1,0 +1,33 @@
+{
+  "name": "@narada/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "drizzle-kit generate",
+    "push": "drizzle-kit push",
+    "studio": "drizzle-kit studio",
+    "lint": "eslint .",
+    "format": "prettier . --write --ignore-path ../../.prettierignore"
+  },
+  "dependencies": {
+    "@narada/env": "workspace:*",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.40",
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.10",
+    "eslint": "^9",
+    "eslint-config-prettier": "^10",
+    "prettier": "3.8.3",
+    "tsx": "^4.20.6",
+    "typescript": "^5",
+    "typescript-eslint": "^8"
+  }
+}

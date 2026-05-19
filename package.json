@@ -4,6 +4,9 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
+    "db:generate": "dotenv -e .env -- pnpm --filter @narada/db generate",
+    "db:push": "dotenv -e .env -- pnpm --filter @narada/db push",
+    "db:studio": "dotenv -e .env -- pnpm --filter @narada/db studio",
     "lint": "pnpm -r lint",
     "format": "pnpm -r format"
   },
