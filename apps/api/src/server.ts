@@ -1,5 +1,5 @@
 import { Server } from 'http'
-import express, { Express, Request, Response, NextFunction } from 'express'
+import express, { Express, Request, Response, NextFunction, Router } from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
 import { toNodeHandler } from 'better-auth/node'
@@ -14,15 +14,18 @@ interface ServerOptions {
 }
 
 export function createServer() {
-  const app = express()
-  app.use(helmet())
-  app.use(cors({ origin: env.TRUSTED_ORIGINS, credentials: true }))
-
+  const router = Router()
+  router.use(helmet())
+  router.use(cors({ origin: env.TRUSTED_ORIGINS, credentials: true }))
+  
   // BetterAuth requires access to the raw body stream, and thus,
   // must be mounted before the `express.json()` middleware.
-  app.all('/api/auth/*splat', toNodeHandler(auth))
-  app.use(express.json())
-  setupRoutes(app)
+  router.all('/auth/*splat', toNodeHandler(auth))
+  router.use(express.json())
+  setupRoutes(router)
+  
+  const app = express()
+  app.use(`/v${env.API_VERSION}`, router)
   app.use(handleErrors)
   return app
 }

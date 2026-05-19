@@ -1,7 +1,7 @@
-import { Express } from 'express'
+import type { Router } from 'express'
 
 import healthRouter from './health'
 
-export default function setupRoutes(app: Express) {
-  app.use('/v1/health', healthRouter)
+export default function setupRoutes(router: Router) {
+  router.use('/health', healthRouter)
 }

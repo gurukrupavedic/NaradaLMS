@@ -5,6 +5,7 @@ export const env = createEnv({
   server: {
     PORT: z.coerce.number().default(3000),
     API_BASE_URL: z.url(),
+    API_VERSION: z.coerce.number(),
     DATABASE_URL: z.url(),
     TRUSTED_ORIGINS: z
       .string()
