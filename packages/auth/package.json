@@ -1,0 +1,20 @@
+{
+  "name": "@narada/auth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts"
+  },
+  "dependencies": {
+    "better-auth": "^1.2.8"
+  },
+  "peerDependencies": {
+    "@narada/db": "workspace:*",
+    "@narada/env": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

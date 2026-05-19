@@ -11,8 +11,10 @@
     "format": "prettier . --write --ignore-path ../../.prettierignore"
   },
   "dependencies": {
-    "@narada/env": "workspace:*",
+    "@narada/auth": "workspace:*",
     "@narada/db": "workspace:*",
+    "@narada/env": "workspace:*",
+    "better-auth": "^1.2.8",
     "cors": "^2.8.6",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
