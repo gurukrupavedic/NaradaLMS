@@ -1,0 +1,29 @@
+{
+  "name": "@narada/env",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "format": "prettier . --write --ignore-path ../../.prettierignore"
+  },
+  "dependencies": {
+    "@t3-oss/env-core": "^0.13.11",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.40",
+    "eslint": "^9",
+    "eslint-config-prettier": "^10",
+    "prettier": "3.8.3",
+    "typescript": "^5",
+    "typescript-eslint": "^8"
+  }
+}

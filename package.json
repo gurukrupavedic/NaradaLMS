@@ -4,6 +4,8 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
+    "lint": "pnpm -r lint",
+    "format": "pnpm -r format"
   },
   "devDependencies": {
     "dotenv-cli": "^11.0.0"
