@@ -17,13 +17,13 @@ export function createServer() {
   const router = Router()
   router.use(helmet())
   router.use(cors({ origin: env.TRUSTED_ORIGINS, credentials: true }))
-  
+
   // BetterAuth requires access to the raw body stream, and thus,
   // must be mounted before the `express.json()` middleware.
   router.all('/auth/*splat', toNodeHandler(auth))
   router.use(express.json())
   setupRoutes(router)
-  
+
   const app = express()
   app.use(`/v${env.API_VERSION}`, router)
   app.use(handleErrors)

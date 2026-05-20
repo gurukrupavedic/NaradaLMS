@@ -55,62 +55,61 @@ This document defines the HTTP API for the Narada LMS backend. See [data-model.m
 
 ---
 
-## Auth
+## Profile
 
-BetterAuth handles signup, login, and session management. These routes handle the Narada-specific profile layer.
+BetterAuth handles signup, login, and session management. Profile data (phone, city) is stored on the `enrollment` record — there is no separate profile table.
 
-### `POST /v1/auth/register`
+### `GET /v1/profile`
 
-Create a school profile for the authenticated user. Called after BetterAuth signup when the user first accesses a school.
+Return the current user's enrollment for the active batch, including profile and role data.
 
-**Access:** Authenticated user without an existing profile in this school.
-
-```ts
-// Request
-{
-  name: string,
-  phone?: string,
-  city?: string
-}
-
-// Response 201
-{
-  ok: true,
-  data: {
-    profile: {
-      id: string,
-      userId: string,
-      name: string,
-      phone: string | null,
-      city: string | null,
-      role: "user"
-    }
-  }
-}
-```
-
-New profiles default to `role: "user"`. Admin role is assigned by an existing admin or super-admin.
-
-### `GET /v1/auth/me`
-
-Return the current user's profile and role within this school.
-
-**Access:** Authenticated user with a profile in this school.
+**Access:** Authenticated user enrolled in the active batch.
 
 ```ts
 // Response 200
 {
   ok: true,
   data: {
-    profile: {
-      id: string,
+    enrollment: {
       userId: string,
+      batchId: string,
       name: string,
       phone: string | null,
       city: string | null,
-      role: "admin" | "user"
+      role: "instructor" | "ta" | "student",
+      status: "active" | "inactive" | "completed"
     },
+    schoolRole: "owner" | "admin" | "member",
     isSuperAdmin: boolean
+  }
+}
+```
+
+### `PATCH /v1/profile`
+
+Update the current user's profile fields on their active batch enrollment.
+
+**Access:** Authenticated user enrolled in the active batch.
+
+```ts
+// Request (all fields optional)
+{
+  phone?: string,
+  city?: string
+}
+
+// Response 200
+{
+  ok: true,
+  data: {
+    enrollment: {
+      userId: string,
+      batchId: string,
+      phone: string | null,
+      city: string | null,
+      role: "instructor" | "ta" | "student",
+      status: "active" | "inactive" | "completed"
+    }
   }
 }
 ```

@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./school-schema": "./src/school-schema.ts"
   },
   "scripts": {
     "generate": "drizzle-kit generate",

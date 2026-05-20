@@ -12,6 +12,12 @@ export const auth = betterAuth({
   baseURL: env.API_BASE_URL,
   basePath: `/v${env.API_VERSION}/auth`,
   emailAndPassword: { enabled: true },
+  socialProviders: {
+    google: {
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+    },
+  },
   trustedOrigins: env.TRUSTED_ORIGINS,
   session: {
     cookieCache: { enabled: true, maxAge: 300 },
@@ -29,9 +35,6 @@ export const auth = betterAuth({
     organization({
       ac: acl,
       roles: { owner, admin, member },
-      teams: {
-        enabled: true,
-      },
     }),
   ],
 })

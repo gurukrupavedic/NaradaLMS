@@ -49,7 +49,7 @@ The organization plugin provides the primitives for multi-tenancy, membership, i
 
 - **Per-school Postgres schema provisioning** — triggered when an organization is created
 - **Batch-level roles** — BetterAuth's `teamMember` has no `role` field; batch roles (instructor, ta, student) are stored in the per-school `enrollment` table
-- **Profile data** — contact details (phone, city) beyond what BetterAuth's user model stores are kept in a per-school `profile` table
+- **Profile data** — contact details (phone, city) beyond what BetterAuth's user model stores are kept on the per-school `enrollment` table
 - **All domain tables** — tracks, chapters, evaluations, exams, etc. remain in per-school schemas
 
 ## Roles
@@ -58,7 +58,7 @@ There are five roles in the system, split across two levels:
 
 **Platform-level** (on `shared.user`):
 
-- **Super Admin** — can perform any operation across any school. Represented by an `is_super_admin` flag on the user, not a school-scoped role.
+- **Super Admin** — can perform any operation across any school. Represented by an `isSuperAdmin` flag on the user, not a school-scoped role.
 
 **School-level** (on BetterAuth `member.role`):
 
@@ -91,6 +91,22 @@ A single person can belong to multiple schools with different roles (e.g., admin
 | View content | X | X | X | X | X (published only) |
 | View own proficiency | X | X | X | X | X |
 
+### Permissions (Access Control)
+
+BetterAuth's organization plugin is configured with a custom access control layer that defines resource-level permissions for each school-level role. Super admin access is handled at the application layer (bypasses AC entirely).
+
+| Resource | Actions | Owner | Admin | Member |
+|------------|------------------------------|:-----:|:-----:|:------:|
+| `school` | `update`, `delete` | all | `update` | — |
+| `content` | `create`, `read`, `update` | all | all | `read` |
+| `batch` | `create`, `read`, `update` | all | all | `read` |
+| `member` | `create`, `read`, `remove` | all | all | — |
+| `invitation`| `create`, `read`, `cancel` | all | all | — |
+| `evaluation`| `create`, `read` | all | all | `read` |
+| `exam` | `create`, `read`, `update` | all | all | `read` |
+
+The only difference between `owner` and `admin` is `school.delete`. Batch-level scoping (instructor/TA can only act within their own batches) is enforced at the application layer using the `enrollment` table, not through BetterAuth's static AC.
+
 ---
 
 ## Shared Schema
@@ -112,7 +128,6 @@ User accounts. Extended with a super-admin flag.
 | `email` | text | UNIQUE, NOT NULL |
 | `email_verified` | boolean | DEFAULT false |
 | `image` | text | |
-| `role` | text | DEFAULT 'user' |
 | `is_super_admin` | boolean | DEFAULT false |
 | `created_at` | timestamptz | NOT NULL |
 | `updated_at` | timestamptz | NOT NULL |
@@ -244,19 +259,6 @@ A user's membership in a batch. BetterAuth tracks team membership but does not a
 
 These tables are created in each `school_<id>` schema. All tables are identical across schools. References to `shared.user.id` are stored as plain text IDs (logical references, not cross-schema foreign keys) and validated at the application layer.
 
-### `profile`
-
-Extended user information within this school. Contact details and other school-specific profile data that BetterAuth's user model does not cover. One profile per user per school.
-
-| Column | Type | Constraints |
-|--------|------|-------------|
-| `id` | uuid | PK |
-| `user_id` | text | UNIQUE; logical ref to `shared.user.id` |
-| `phone` | text | |
-| `city` | text | |
-
-Note: The user's `name` comes from `shared.user.name`. The user's school-level role comes from `shared.member.role`. This table only holds supplementary profile data.
-
 ### `track`
 
 An ordered curriculum. Tracks are authored by admins and assigned to batches.
@@ -346,12 +348,14 @@ Domain-specific data for a batch (cohort). Each batch corresponds to a BetterAut
 
 ### `enrollment`
 
-Batch-level role assignment. BetterAuth's `team_member` tracks that a user belongs to a batch, but does not carry a role. This table adds the batch-level role (instructor, ta, student) and status. One enrollment per user per batch, kept in sync with `shared.team_member`.
+Batch-level role assignment and profile data. BetterAuth's `team_member` tracks that a user belongs to a batch, but does not carry a role or contact details. This table adds the batch-level role (instructor, ta, student), status, and profile fields. One enrollment per user per batch, kept in sync with `shared.team_member`.
 
 | Column | Type | Constraints |
 |--------|------|-------------|
 | `user_id` | text | logical ref to `shared.user.id` |
 | `batch_id` | uuid | FK to `batch.id` |
+| `phone` | text | |
+| `city` | text | |
 | `role` | enum | `'instructor'`, `'ta'`, `'student'` |
 | `status` | enum | `'active'`, `'inactive'`, `'completed'` |
 | `joined_at` | timestamptz | |

@@ -14,6 +14,8 @@ export const env = createEnv({
       .default([]),
 
     AUTH_SECRET: z.string().min(32),
+    GOOGLE_CLIENT_ID: z.string(),
+    GOOGLE_CLIENT_SECRET: z.string(),
   },
   clientPrefix: 'NEXT_PUBLIC',
   client: {

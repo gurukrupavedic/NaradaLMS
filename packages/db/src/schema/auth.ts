@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm'
 import { pgTable, text, boolean, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core'
+import { enrollment } from './school'
 
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
@@ -31,7 +32,6 @@ export const session = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
     activeOrganizationId: text('activeOrganizationId'),
-    activeTeamId: text('activeTeamId'),
   },
   table => [index('session_userId_idx').on(table.userId)],
 )
@@ -89,38 +89,6 @@ export const organization = pgTable(
   table => [uniqueIndex('organization_slug_uidx').on(table.slug)],
 )
 
-export const team = pgTable(
-  'team',
-  {
-    id: text('id').primaryKey(),
-    name: text('name').notNull(),
-    organizationId: text('organizationId')
-      .notNull()
-      .references(() => organization.id, { onDelete: 'cascade' }),
-    createdAt: timestamp('createdAt').notNull(),
-    updatedAt: timestamp('updatedAt').$onUpdate(() => new Date()),
-  },
-  table => [index('team_organizationId_idx').on(table.organizationId)],
-)
-
-export const teamMember = pgTable(
-  'teamMember',
-  {
-    id: text('id').primaryKey(),
-    teamId: text('teamId')
-      .notNull()
-      .references(() => team.id, { onDelete: 'cascade' }),
-    userId: text('userId')
-      .notNull()
-      .references(() => user.id, { onDelete: 'cascade' }),
-    createdAt: timestamp('createdAt'),
-  },
-  table => [
-    index('teamMember_teamId_idx').on(table.teamId),
-    index('teamMember_userId_idx').on(table.userId),
-  ],
-)
-
 export const member = pgTable(
   'member',
   {
@@ -149,7 +117,6 @@ export const invitation = pgTable(
       .references(() => organization.id, { onDelete: 'cascade' }),
     email: text('email').notNull(),
     role: text('role'),
-    teamId: text('teamId'),
     status: text('status').default('pending').notNull(),
     expiresAt: timestamp('expiresAt').notNull(),
     createdAt: timestamp('createdAt').defaultNow().notNull(),
@@ -166,9 +133,9 @@ export const invitation = pgTable(
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
-  teamMembers: many(teamMember),
   members: many(member),
   invitations: many(invitation),
+  enrollments: many(enrollment),
 }))
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -186,28 +153,8 @@ export const accountRelations = relations(account, ({ one }) => ({
 }))
 
 export const organizationRelations = relations(organization, ({ many }) => ({
-  teams: many(team),
   members: many(member),
   invitations: many(invitation),
-}))
-
-export const teamRelations = relations(team, ({ one, many }) => ({
-  organization: one(organization, {
-    fields: [team.organizationId],
-    references: [organization.id],
-  }),
-  teamMembers: many(teamMember),
-}))
-
-export const teamMemberRelations = relations(teamMember, ({ one }) => ({
-  team: one(team, {
-    fields: [teamMember.teamId],
-    references: [team.id],
-  }),
-  user: one(user, {
-    fields: [teamMember.userId],
-    references: [user.id],
-  }),
 }))
 
 export const memberRelations = relations(member, ({ one }) => ({
