@@ -3,6 +3,7 @@ export const ErrorCode = {
   FORBIDDEN: 'FORBIDDEN',
   NOT_FOUND: 'NOT_FOUND',
   CONFLICT: 'CONFLICT',
+  BAD_REQUEST: 'BAD_REQUEST',
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   UNPROCESSABLE: 'UNPROCESSABLE',
   INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
@@ -34,6 +35,10 @@ export function notFound(message?: string) {
 
 export function conflict(message?: string) {
   return new AppError(409, ErrorCode.CONFLICT, message)
+}
+
+export function badRequest(message?: string) {
+  return new AppError(400, ErrorCode.BAD_REQUEST, message)
 }
 
 export function validationError(message?: string) {
