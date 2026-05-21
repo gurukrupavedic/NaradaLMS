@@ -6,7 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
-    "./permissions": "./src/permissions.ts"
+    "./permissions": "./src/permissions/index.ts"
   },
   "scripts": {
     "generate": "pnpm dlx auth generate --config src/index.ts"

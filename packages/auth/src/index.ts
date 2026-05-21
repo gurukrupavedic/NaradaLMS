@@ -1,10 +1,10 @@
-import { betterAuth } from 'better-auth'
+import { betterAuth } from 'better-auth/minimal'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { organization } from 'better-auth/plugins/organization'
 
 import { env } from '@narada/env'
 import { db } from '@narada/db'
-import { acl, owner, admin, member } from './permissions'
+import { ac, owner, admin, member } from './permissions/school'
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: 'pg', camelCase: true }),
@@ -33,7 +33,7 @@ export const auth = betterAuth({
   },
   plugins: [
     organization({
-      ac: acl,
+      ac: ac,
       roles: { owner, admin, member },
     }),
   ],
