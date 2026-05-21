@@ -56,7 +56,7 @@ function handleErrors(error: Error, _req: Request, res: Response, next: NextFunc
   if (!res.headersSent) {
     res.status(500).json({
       ok: false,
-      error: { code: ErrorCode.INTERNAL_SERVER_ERROR, message: 'An unexpected error occurred.' },
+      error: { code: ErrorCode.INTERNAL_ERROR, message: 'An unexpected error occurred.' },
     })
   }
 
