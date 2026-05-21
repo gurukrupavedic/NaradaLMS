@@ -8,6 +8,7 @@ import { auth } from '@narada/auth'
 import { env } from '@narada/env'
 import logger from './logger'
 import setupRoutes from './routes'
+import { AppError, ErrorCode } from './error'
 
 interface ServerOptions {
   port: number
@@ -43,12 +44,19 @@ export function runServer(app: Express, options: ServerOptions) {
 
 function handleErrors(error: Error, _req: Request, res: Response, next: NextFunction) {
   logger.error(error, 'An error occurred while handling a request.')
+  if (error instanceof AppError) {
+    res.status(error.statusCode).json({
+      ok: false,
+      error: { code: error.code, message: error.message },
+    })
+
+    return
+  }
+
   if (!res.headersSent) {
     res.status(500).json({
       ok: false,
-      data: {
-        message: error.message,
-      },
+      error: { code: ErrorCode.INTERNAL_SERVER_ERROR, message: 'An unexpected error occurred.' },
     })
   }
 
