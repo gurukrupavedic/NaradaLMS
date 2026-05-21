@@ -1,0 +1,968 @@
+{
+  "id": "948b4633-c542-4727-9745-73103d78a241",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.audioAsset": {
+      "name": "audioAsset",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "chapterId": {
+          "name": "chapterId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "duration": {
+          "name": "duration",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "audioAsset_chapterId_idx": {
+          "name": "audioAsset_chapterId_idx",
+          "columns": [
+            {
+              "expression": "chapterId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "audioAsset_chapterId_chapter_id_fk": {
+          "name": "audioAsset_chapterId_chapter_id_fk",
+          "tableFrom": "audioAsset",
+          "tableTo": "chapter",
+          "columnsFrom": [
+            "chapterId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.audioMapping": {
+      "name": "audioMapping",
+      "schema": "",
+      "columns": {
+        "segmentId": {
+          "name": "segmentId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "audioAssetId": {
+          "name": "audioAssetId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "audioStart": {
+          "name": "audioStart",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "audioEnd": {
+          "name": "audioEnd",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "audioMapping_segmentId_segment_id_fk": {
+          "name": "audioMapping_segmentId_segment_id_fk",
+          "tableFrom": "audioMapping",
+          "tableTo": "segment",
+          "columnsFrom": [
+            "segmentId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "audioMapping_audioAssetId_audioAsset_id_fk": {
+          "name": "audioMapping_audioAssetId_audioAsset_id_fk",
+          "tableFrom": "audioMapping",
+          "tableTo": "audioAsset",
+          "columnsFrom": [
+            "audioAssetId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "audioMapping_segmentId_audioAssetId_pk": {
+          "name": "audioMapping_segmentId_audioAssetId_pk",
+          "columns": [
+            "segmentId",
+            "audioAssetId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.batch": {
+      "name": "batch",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "teamId": {
+          "name": "teamId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trackId": {
+          "name": "trackId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "startDate": {
+          "name": "startDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "batchStatus",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'upcoming'"
+        },
+        "scheduledAt": {
+          "name": "scheduledAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "meetingUrl": {
+          "name": "meetingUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "batch_trackId_track_id_fk": {
+          "name": "batch_trackId_track_id_fk",
+          "tableFrom": "batch",
+          "tableTo": "track",
+          "columnsFrom": [
+            "trackId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "batch_teamId_unique": {
+          "name": "batch_teamId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "teamId"
+          ]
+        },
+        "batch_code_unique": {
+          "name": "batch_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "code"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.chapter": {
+      "name": "chapter",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "trackId": {
+          "name": "trackId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "chapterStatus",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "chapter_trackId_idx": {
+          "name": "chapter_trackId_idx",
+          "columns": [
+            {
+              "expression": "trackId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "chapter_trackId_track_id_fk": {
+          "name": "chapter_trackId_track_id_fk",
+          "tableFrom": "chapter",
+          "tableTo": "track",
+          "columnsFrom": [
+            "trackId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "chapter_code_unique": {
+          "name": "chapter_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "code"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.chapterRevision": {
+      "name": "chapterRevision",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "chapterId": {
+          "name": "chapterId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "script": {
+          "name": "script",
+          "type": "script",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "textUrl": {
+          "name": "textUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "chapterRevision_chapterId_idx": {
+          "name": "chapterRevision_chapterId_idx",
+          "columns": [
+            {
+              "expression": "chapterId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "chapterRevision_chapterId_chapter_id_fk": {
+          "name": "chapterRevision_chapterId_chapter_id_fk",
+          "tableFrom": "chapterRevision",
+          "tableTo": "chapter",
+          "columnsFrom": [
+            "chapterId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "chapterRevision_chapterId_revision_unq": {
+          "name": "chapterRevision_chapterId_revision_unq",
+          "nullsNotDistinct": false,
+          "columns": [
+            "chapterId",
+            "revision"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.enrollment": {
+      "name": "enrollment",
+      "schema": "",
+      "columns": {
+        "userId": {
+          "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "batchId": {
+          "name": "batchId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "role": {
+          "name": "role",
+          "type": "enrollmentRole",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "enrollmentStatus",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "joinedAt": {
+          "name": "joinedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "enrollment_batchId_idx": {
+          "name": "enrollment_batchId_idx",
+          "columns": [
+            {
+              "expression": "batchId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "enrollment_batchId_batch_id_fk": {
+          "name": "enrollment_batchId_batch_id_fk",
+          "tableFrom": "enrollment",
+          "tableTo": "batch",
+          "columnsFrom": [
+            "batchId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "enrollment_userId_batchId_pk": {
+          "name": "enrollment_userId_batchId_pk",
+          "columns": [
+            "userId",
+            "batchId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.evaluation": {
+      "name": "evaluation",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "studentId": {
+          "name": "studentId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chapterId": {
+          "name": "chapterId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "level": {
+          "name": "level",
+          "type": "proficiencyLevel",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "evaluatorId": {
+          "name": "evaluatorId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evaluatedAt": {
+          "name": "evaluatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "evaluation_studentId_chapterId_idx": {
+          "name": "evaluation_studentId_chapterId_idx",
+          "columns": [
+            {
+              "expression": "studentId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "chapterId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "evaluation_chapterId_chapter_id_fk": {
+          "name": "evaluation_chapterId_chapter_id_fk",
+          "tableFrom": "evaluation",
+          "tableTo": "chapter",
+          "columnsFrom": [
+            "chapterId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.exam": {
+      "name": "exam",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "batchId": {
+          "name": "batchId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "studentId": {
+          "name": "studentId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "scheduledAt": {
+          "name": "scheduledAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "examStatus",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'scheduled'"
+        }
+      },
+      "indexes": {
+        "exam_batchId_idx": {
+          "name": "exam_batchId_idx",
+          "columns": [
+            {
+              "expression": "batchId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "exam_studentId_idx": {
+          "name": "exam_studentId_idx",
+          "columns": [
+            {
+              "expression": "studentId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "exam_batchId_batch_id_fk": {
+          "name": "exam_batchId_batch_id_fk",
+          "tableFrom": "exam",
+          "tableTo": "batch",
+          "columnsFrom": [
+            "batchId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.examResult": {
+      "name": "examResult",
+      "schema": "",
+      "columns": {
+        "examId": {
+          "name": "examId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chapterId": {
+          "name": "chapterId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evaluationId": {
+          "name": "evaluationId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "examResult_examId_exam_id_fk": {
+          "name": "examResult_examId_exam_id_fk",
+          "tableFrom": "examResult",
+          "tableTo": "exam",
+          "columnsFrom": [
+            "examId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "examResult_chapterId_chapter_id_fk": {
+          "name": "examResult_chapterId_chapter_id_fk",
+          "tableFrom": "examResult",
+          "tableTo": "chapter",
+          "columnsFrom": [
+            "chapterId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "examResult_evaluationId_evaluation_id_fk": {
+          "name": "examResult_evaluationId_evaluation_id_fk",
+          "tableFrom": "examResult",
+          "tableTo": "evaluation",
+          "columnsFrom": [
+            "evaluationId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "examResult_examId_chapterId_pk": {
+          "name": "examResult_examId_chapterId_pk",
+          "columns": [
+            "examId",
+            "chapterId"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.segment": {
+      "name": "segment",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "revisionId": {
+          "name": "revisionId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start": {
+          "name": "start",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end": {
+          "name": "end",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "segment_revisionId_idx": {
+          "name": "segment_revisionId_idx",
+          "columns": [
+            {
+              "expression": "revisionId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "segment_revisionId_chapterRevision_id_fk": {
+          "name": "segment_revisionId_chapterRevision_id_fk",
+          "tableFrom": "segment",
+          "tableTo": "chapterRevision",
+          "columnsFrom": [
+            "revisionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.track": {
+      "name": "track",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.batchStatus": {
+      "name": "batchStatus",
+      "schema": "public",
+      "values": [
+        "upcoming",
+        "active",
+        "completed"
+      ]
+    },
+    "public.chapterStatus": {
+      "name": "chapterStatus",
+      "schema": "public",
+      "values": [
+        "draft",
+        "published"
+      ]
+    },
+    "public.enrollmentRole": {
+      "name": "enrollmentRole",
+      "schema": "public",
+      "values": [
+        "instructor",
+        "ta",
+        "student"
+      ]
+    },
+    "public.enrollmentStatus": {
+      "name": "enrollmentStatus",
+      "schema": "public",
+      "values": [
+        "active",
+        "inactive",
+        "completed"
+      ]
+    },
+    "public.examStatus": {
+      "name": "examStatus",
+      "schema": "public",
+      "values": [
+        "scheduled",
+        "inProgress",
+        "completed",
+        "cancelled"
+      ]
+    },
+    "public.proficiencyLevel": {
+      "name": "proficiencyLevel",
+      "schema": "public",
+      "values": [
+        "absent",
+        "notStarted",
+        "practicing",
+        "level1",
+        "level2",
+        "level3",
+        "level4"
+      ]
+    },
+    "public.script": {
+      "name": "script",
+      "schema": "public",
+      "values": [
+        "te",
+        "sa",
+        "en"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

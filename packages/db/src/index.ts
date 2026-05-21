@@ -33,3 +33,4 @@ export function getScopedDatabase(schoolSlug: string) {
 
 export type Database = ReturnType<typeof getScopedDatabase>
 export * from './schema'
+export * from './provision'
