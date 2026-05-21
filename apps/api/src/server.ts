@@ -1,5 +1,6 @@
 import { Server } from 'http'
-import express, { Express, Request, Response, NextFunction, Router } from 'express'
+import express, { Router } from 'express'
+import type { Express, Request, Response, NextFunction } from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
 import { toNodeHandler } from 'better-auth/node'

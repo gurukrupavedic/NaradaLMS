@@ -1,6 +1,11 @@
-// Hydrate the response locals with the resolved school.
-declare namespace Express {
-  interface Locals {
-    school: School
+import type { School } from '../middlewares/school'
+import type { Database } from '@narada/db'
+
+declare global {
+  namespace Express {
+    interface Locals {
+      school: School
+      db: Database
+    }
   }
 }

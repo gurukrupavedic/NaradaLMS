@@ -1,13 +1,12 @@
 import { betterAuth } from 'better-auth/minimal'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { organization } from 'better-auth/plugins/organization'
-
 import { env } from '@narada/env'
-import { db } from '@narada/db'
+import { publicDb } from '@narada/db'
 import { ac, owner, admin, member } from './permissions/school'
 
 export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: 'pg', camelCase: true }),
+  database: drizzleAdapter(publicDb, { provider: 'pg', camelCase: true }),
   secret: env.AUTH_SECRET,
   baseURL: env.API_BASE_URL,
   basePath: `/v${env.API_VERSION}/auth`,

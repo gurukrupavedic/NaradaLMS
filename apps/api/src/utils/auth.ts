@@ -1,8 +1,13 @@
-import { Request } from 'express'
+import type { Request } from 'express'
 import { fromNodeHeaders } from 'better-auth/node'
 
 import { auth } from '@narada/auth'
-import { BatchPermissions, hasBatchPermission, SchoolPermissions } from '@narada/auth/permissions'
+import {
+  type BatchPermissions,
+  hasBatchPermission,
+  type SchoolPermissions,
+} from '@narada/auth/permissions'
+import type { Database } from '@narada/db'
 import { forbidden, unauthorized } from '../error'
 import EnrollmentService from '../services/enrollment'
 
@@ -10,10 +15,12 @@ export type AuthenticatedSession = typeof auth.$Infer.Session
 
 export default class AuthClient {
   private request: Request
+  private db: Database
   private session?: AuthenticatedSession
 
-  constructor(request: Request) {
+  constructor(request: Request, db: Database) {
     this.request = request
+    this.db = db
   }
 
   private get requestHeaders() {
@@ -56,7 +63,7 @@ export default class AuthClient {
       return
     }
 
-    const enrollment = await EnrollmentService.findOne(user.id, batchId)
+    const enrollment = await EnrollmentService.findOne(this.db, user.id, batchId)
     if (!enrollment || !hasBatchPermission(enrollment.role, required)) {
       throw forbidden()
     }
