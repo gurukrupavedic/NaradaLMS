@@ -16,10 +16,10 @@ NaradaLMS today supports **account registration**, **super-admin membership appr
 This memo defines the **future-state onboarding system** in three coordinated capabilities:
 
 
-| #     | Capability                        | Summary                                                                                                                                     |
-| ----- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **A** | **Registration & authentication** | Org-aware intake at sign-up; super-admin vetting; email + phone with verification; Google OAuth parity; approve/reject with email on reject |
-| **B** | **Account management**            | Directional **manages / managed-by** links; **Register another user**; **Login as** for managed accounts (and super-admin for any user)     |
+| #     | Capability                        | Summary                                                                                                                                                             |
+| ----- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A** | **Registration & authentication** | Org-aware intake at sign-up; super-admin vetting; email + phone with verification; Google OAuth parity; approve/reject with email on reject                         |
+| **B** | **Account management**            | Directional **manages / managed-by** links; **Register another user**; **Login as** for managed accounts (and super-admin for any user)                             |
 | **C** | **Enrollment-period**             | Org-admin runs an **enrollment-period** entity: draft → student 1st/2nd choice → review & assign → **End** activates batches; replaces Google Forms for preferences |
 
 
@@ -240,11 +240,11 @@ flowchart TB
 ### 7.3 Register another user
 
 
-|             |                                                                                                                                               |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+|             |                                                                                                                                           |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | **Who can** | Any user with `active` membership — including users still on Enrollment-only student UI                                                   |
 | **Flow**    | Manager fills full registration + intake → new user `pending` → super-admin vets → on approve, manager may **Login as** to run Enrollment |
-| **Example** | Approve self → register father and child → **Login as** each during **batch-enrollment** to submit 1st/2nd choices                            |
+| **Example** | Approve self → register father and child → **Login as** each during **batch-enrollment** to submit 1st/2nd choices                        |
 
 
 ### 7.4 Login as
@@ -292,13 +292,13 @@ An **enrollment-period** is a first-class entity: the org can create **many** en
 ### 8.3 Enrollment-period metadata (display only)
 
 
-| Field                        | Purpose                                  |
-| ---------------------------- | ---------------------------------------- |
-| Name                         | Cycle label (e.g. “Vedam 2026 – Spring”) |
-| Batch enrollment start / end | Shown to students and admins             |
+| Field                        | Purpose                                                    |
+| ---------------------------- | ---------------------------------------------------------- |
+| Name                         | Cycle label (e.g. “Vedam 2026 – Spring”)                   |
+| Batch enrollment start / end | Shown to students and admins                               |
 | Review window start / end    | Shown to students and admins (expected review-phase dates) |
-| Orientation date & time      | Shown to students and admins             |
-| Batch start date             | Shown to students and admins             |
+| Orientation date & time      | Shown to students and admins                               |
+| Batch start date             | Shown to students and admins                               |
 
 
 Dates **do not** auto-advance phases. Admins use **Start / Stop / End** based on real-world progress.
@@ -306,12 +306,12 @@ Dates **do not** auto-advance phases. Admins use **Start / Stop / End** based on
 ### 8.4 Status machine
 
 
-| Status               | Admin actions                                                                     | Student experience (if not yet in active batch)                                                        |
-| -------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| **Draft**            | Create enrollment-period; add **enrollment batches** (`enrolling`); edit metadata; **Start** | Enrollment-period may be visible; **cannot** submit choices                                                       |
-| **batch-enrollment** | Monitor dashboard; **Stop**                                                       | See all enrollment batches (multi-timezone times); set **1st** and **2nd** choice; edit until **Stop** |
-| **review-period**    | Assign students; **Start** to reopen choices; **End** when ready                  | See enrollment-period + **frozen** choices (read-only)                                                            |
-| **Completed**        | Read-only history                                                                 | Enrollment-period closed permanently for that cycle                                                               |
+| Status               | Admin actions                                                                                | Student experience (if not yet in active batch)                                                        |
+| -------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **Draft**            | Create enrollment-period; add **enrollment batches** (`enrolling`); edit metadata; **Start** | Enrollment-period may be visible; **cannot** submit choices                                            |
+| **batch-enrollment** | Monitor dashboard; **Stop**                                                                  | See all enrollment batches (multi-timezone times); set **1st** and **2nd** choice; edit until **Stop** |
+| **review-period**    | Assign students; **Start** to reopen choices; **End** when ready                             | See enrollment-period + **frozen** choices (read-only)                                                 |
+| **Completed**        | Read-only history                                                                            | Enrollment-period closed permanently for that cycle                                                    |
 
 
 **Transitions:**
@@ -361,7 +361,7 @@ sequenceDiagram
   end
 
   Admin->>LMS: End enrollment-period (validations)
-  LMS->>LMS: Enrollment-period Completed; batches become active
+  LMS->>LMS: Enrollment-period Completed — batches become active
 
   alt Student assigned to a batch
     LMS-->>Student: Full student portal (learning modules)
@@ -369,6 +369,8 @@ sequenceDiagram
     LMS-->>Student: Enrollment page only until next enrollment-period or admin exception
   end
 ```
+
+
 
 **Proxy path:** A manager with **Login as** performs the student steps above on behalf of a managed account during **batch-enrollment**.
 
@@ -432,12 +434,12 @@ sequenceDiagram
 ### 8.9 Exceptions: returning, advanced, and later enrollment-periods
 
 
-| Scenario                                      | Path                                                                                                                                                                                   |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Returning student**                         | Contacts admin; placed via **batch management** (may skip enrollment-period UI)                                                                                                        |
-| **Advanced student**                          | Approved account; admin assigns to **active** batch without participating in an enrollment-period                                                                                      |
-| **Unassigned after Completed enrollment-period** | Stays on Enrollment page; must participate in a **future** enrollment-period’s **batch-enrollment** (submit choices again) unless admin assigns via batch management after an **offline request** |
-| **Already placed student, new enrollment-period** | May open Enrollment **read-only** to see new batches; **cannot** select again                                                                                                      |
+| Scenario                                          | Path                                                                                                                                                                                              |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Returning student**                             | Contacts admin; placed via **batch management** (may skip enrollment-period UI)                                                                                                                   |
+| **Advanced student**                              | Approved account; admin assigns to **active** batch without participating in an enrollment-period                                                                                                 |
+| **Unassigned after Completed enrollment-period**  | Stays on Enrollment page; must participate in a **future** enrollment-period’s **batch-enrollment** (submit choices again) unless admin assigns via batch management after an **offline request** |
+| **Already placed student, new enrollment-period** | May open Enrollment **read-only** to see new batches; **cannot** select again                                                                                                                     |
 
 
 ---
@@ -576,17 +578,17 @@ Each org applies registration, vetting, enrollment-periods, and gate **independe
 ## 15. Glossary
 
 
-| Term                     | Definition                                                      |
-| ------------------------ | --------------------------------------------------------------- |
-| **Pathasala / org**      | Tenant (e.g. SLMTS, RR)                                         |
-| **Registration**         | Account creation + intake form + super-admin vetting            |
+| Term                     | Definition                                                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| **Pathasala / org**      | Tenant (e.g. SLMTS, RR)                                                                                             |
+| **Registration**         | Account creation + intake form + super-admin vetting                                                                |
 | **Enrollment-period**    | System entity: a cycle when batch preference and placement run for an org; many may exist; one **active** at a time |
-| **Enrollment batch**     | Batch in `enrolling` while its enrollment-period is open; `active` after **End** |
-| **batch-enrollment**     | Enrollment-period status: students may edit 1st/2nd choice |
-| **review-period**        | Enrollment-period status: choices frozen; admins assign |
-| **Student portal gate**  | Active enrollment in **active** batch required for learning UI  |
-| **manages / managed-by** | Directional proxy link between users                            |
-| **Vetting**              | Super-admin approval of registration before `active` membership |
+| **Enrollment batch**     | Batch in `enrolling` while its enrollment-period is open; `active` after **End**                                    |
+| **batch-enrollment**     | Enrollment-period status: students may edit 1st/2nd choice                                                          |
+| **review-period**        | Enrollment-period status: choices frozen; admins assign                                                             |
+| **Student portal gate**  | Active enrollment in **active** batch required for learning UI                                                      |
+| **manages / managed-by** | Directional proxy link between users                                                                                |
+| **Vetting**              | Super-admin approval of registration before `active` membership                                                     |
 
 
 ---
