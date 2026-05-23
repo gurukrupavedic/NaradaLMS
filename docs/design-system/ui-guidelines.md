@@ -51,4 +51,4 @@ Consider ESLint or custom rules to:
 
 ---
 
-*See also: Vercel Web Interface Guidelines; project skills under `.cursor/skills/web-design-guidelines`.*
+*See also: [Gayatri design system](./gayatri-ds.md), [DS approach](./ds-approach.md); Vercel Web Interface Guidelines; Cursor skill `.cursor/skills/web-design-guidelines`.*
