@@ -16,6 +16,7 @@
     "@narada/env": "workspace:*",
     "better-auth": "^1.2.8",
     "cors": "^2.8.6",
+    "drizzle-orm": "^0.45.2",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "pino": "^10.3.1",

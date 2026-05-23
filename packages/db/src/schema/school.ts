@@ -1,7 +1,8 @@
-import { relations } from 'drizzle-orm'
+import { relations, sql } from 'drizzle-orm'
 import {
   pgTable,
   pgEnum,
+  pgSequence,
   text,
   integer,
   real,
@@ -12,6 +13,9 @@ import {
   primaryKey,
   unique,
 } from 'drizzle-orm/pg-core'
+
+export const trackOrderSeq = pgSequence('track_order_seq', { startWith: 1 })
+export const chapterOrderSeq = pgSequence('chapter_order_seq', { startWith: 1 })
 
 export const chapterStatus = pgEnum('chapterStatus', ['draft', 'published'])
 export const script = pgEnum('script', ['te', 'sa', 'en'])
@@ -37,7 +41,7 @@ export const examStatus = pgEnum('examStatus', [
 export const track = pgTable('track', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
-  order: integer('order').notNull(),
+  order: integer('order').notNull().default(sql`nextval('track_order_seq')`),
 })
 
 export const chapter = pgTable(
@@ -50,7 +54,7 @@ export const chapter = pgTable(
     code: text('code').notNull().unique(),
     title: text('title').notNull(),
     status: chapterStatus('status').notNull().default('draft'),
-    order: integer('order').notNull(),
+    order: integer('order').notNull().default(sql`nextval('chapter_order_seq')`),
   },
   table => [index('chapter_trackId_idx').on(table.trackId)],
 )

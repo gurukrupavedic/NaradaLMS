@@ -48,3 +48,7 @@ export function validationError(message?: string) {
 export function unprocessable(message?: string) {
   return new AppError(422, ErrorCode.UNPROCESSABLE_INPUT, message)
 }
+
+export function internalError(message?: string) {
+  return new AppError(500, ErrorCode.INTERNAL_ERROR, message)
+}

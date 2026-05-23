@@ -41,10 +41,10 @@ export default class AuthClient {
     return session
   }
 
-  public async ensureSchoolPermissions(required: SchoolPermissions): Promise<void> {
+  public async hasSchoolPermissions(required: SchoolPermissions): Promise<boolean> {
     const { user } = await this.getSession()
     if (user.isSuperAdmin) {
-      return
+      return true
     }
 
     const { success } = await auth.api.hasPermission({
@@ -52,7 +52,12 @@ export default class AuthClient {
       body: { permissions: required },
     })
 
-    if (!success) {
+    return success
+  }
+
+  public async ensureSchoolPermissions(required: SchoolPermissions): Promise<void> {
+    const allowed = await this.hasSchoolPermissions(required)
+    if (!allowed) {
       throw forbidden()
     }
   }
