@@ -89,35 +89,42 @@ Accepted candidates join pathasala communication channels (WhatsApp today). Admi
 
 ```mermaid
 flowchart TB
-  subgraph reg [A - Registration]
-    R1[Submit account + intake form]
-    R2[Super-admin vetting]
-    R3{Approved?}
-    R1 --> R2 --> R3
-    R3 -->|No| RX[Rejected + email]
-    R3 -->|Yes| R4[Active membership - may login]
-  end
+  subgraph onboarding [NaradaLMS user onboarding]
+    direction TB
 
-  subgraph enroll [C - Enrollment-period]
-    E1[Draft + enrollment batches]
-    E2[Start: batch-enrollment]
-    E3[Student 1st and 2nd choice]
-    E4[Stop: review-period]
-    E5[Admin assigns to batches]
-    E6[End: Completed + batches active]
-    E1 --> E2 --> E3 --> E4 --> E5 --> E6
-  end
+    subgraph reg [A - Registration]
+      direction TB
+      R1["Submit account<br/>and intake form"]
+      R2["Super-admin<br/>vetting"]
+      R3{Approved?}
+      R1 --> R2 --> R3
+      R3 -->|No| RX["Rejected<br/>+ email"]
+      R3 -->|Yes| R4["Active membership<br/>may log in"]
+      R4 --> B["B - Register another<br/>or Login as"]
+    end
 
-  subgraph portal [Student learning gate]
-    P1{Active enrollment in active batch?}
-    P1 -->|Yes| P2[Full student modules]
-    P1 -->|No| P3[Enrollment page only]
+    subgraph enroll [C - Enrollment-period]
+      direction TB
+      E1["Draft +<br/>enrollment batches"]
+      E2["Start<br/>batch-enrollment"]
+      E3["Student 1st and<br/>2nd choice"]
+      E4["Stop<br/>review-period"]
+      E5["Admin assigns<br/>to batches"]
+      E6["End - Completed<br/>batches active"]
+      E1 --> E2 --> E3 --> E4 --> E5 --> E6
+    end
+
+    subgraph portal [Student learning gate]
+      direction TB
+      P1{Active enrollment<br/>in active batch?}
+      P1 -->|Yes| P2["Full student<br/>modules"]
+      P1 -->|No| P3["Enrollment page<br/>only"]
+    end
   end
 
   R4 --> P1
-  E3 -.-> P3
   E6 --> P1
-  R4 --> B[B - Register another user / Login as]
+  E3 -.-> P3
 ```
 
 
