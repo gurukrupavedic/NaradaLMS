@@ -138,7 +138,7 @@ Each slice lists **primary files**, **acceptance criteria**, and **suggested ver
 
 **Deliverables**
 
-- This file remains the source of truth; links from [docs/implementation/README.md](../README.md) and [multi-tenancy/README.md](./README.md) already reference it.
+- This file remains the source of truth; see [multi-tenancy/README.md](../../implementation/multi-tenancy/README.md) for the active program index.
 
 **Acceptance**
 
