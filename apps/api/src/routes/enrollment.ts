@@ -1,0 +1,49 @@
+import { Router } from 'express'
+import { z } from 'zod'
+
+import AuthClient from '../utils/auth'
+import { parseBody, parseParams } from '../utils/validate'
+import { notFound } from '../error'
+import BatchService from '../services/batch'
+import EnrollmentService, { enrollSchema } from '../services/enrollment'
+
+const router = Router({ mergeParams: true })
+
+router.post('/', async (req, res) => {
+  const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
+  const data = parseBody(enrollSchema, req)
+
+  const db = res.locals.db
+  const authClient = new AuthClient(req, db)
+  const isAdmin = await authClient.hasSchoolPermissions({ batch: ['create'] })
+  if (!isAdmin) {
+    await authClient.ensureBatchPermissions({ enrollment: ['create'] }, batchId)
+  }
+
+  const batch = await BatchService.findById(db, batchId)
+  if (!batch) {
+    throw notFound()
+  }
+
+  const enrolled = await EnrollmentService.enroll(db, batchId, data)
+  res.status(201).json({ ok: true, data: enrolled })
+})
+
+router.delete('/:userId', async (req, res) => {
+  const { batchId, userId } = parseParams(
+    z.object({ batchId: z.uuid(), userId: z.string().min(1) }),
+    req,
+  )
+
+  const db = res.locals.db
+  const authClient = new AuthClient(req, db)
+  const isAdmin = await authClient.hasSchoolPermissions({ batch: ['create'] })
+  if (!isAdmin) {
+    await authClient.ensureBatchPermissions({ enrollment: ['remove'] }, batchId)
+  }
+
+  await EnrollmentService.unenroll(db, batchId, userId)
+  res.status(200).json({ ok: true })
+})
+
+export default router

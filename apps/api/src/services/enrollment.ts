@@ -1,6 +1,9 @@
 import { z } from 'zod'
+import { and, eq } from 'drizzle-orm'
 
 import { enrollment, type Database } from '@narada/db'
+import { conflict, notFound } from '../error'
+import assert from 'node:assert'
 
 export const enrollmentSchema = z.object({
   userId: z.string(),
@@ -12,7 +15,13 @@ export const enrollmentSchema = z.object({
   joinedAt: z.date().nullable(),
 })
 
+export const enrollSchema = z.object({
+  userId: z.string().min(1),
+  role: z.enum(['instructor', 'ta', 'student']),
+})
+
 export type Enrollment = z.infer<typeof enrollmentSchema>
+export type EnrollData = z.infer<typeof enrollSchema>
 
 type DbEnrollment = typeof enrollment.$inferSelect
 
@@ -39,5 +48,32 @@ export default class EnrollmentService {
     })
 
     return row ? mapEnrollment(row) : undefined
+  }
+
+  public static async enroll(db: Database, batchId: string, data: EnrollData): Promise<Enrollment> {
+    const existing = await EnrollmentService.findOne(db, data.userId, batchId)
+    if (existing) {
+      throw conflict()
+    }
+
+    const rows = await db
+      .insert(enrollment)
+      .values({ batchId, userId: data.userId, role: data.role })
+      .returning()
+
+    const row = rows.at(0)
+    assert(row !== undefined, '`insert` should always return a row')
+    return mapEnrollment(row)
+  }
+
+  public static async unenroll(db: Database, batchId: string, userId: string): Promise<void> {
+    const rows = await db
+      .delete(enrollment)
+      .where(and(eq(enrollment.batchId, batchId), eq(enrollment.userId, userId)))
+      .returning()
+
+    if (rows.length === 0) {
+      throw notFound()
+    }
   }
 }

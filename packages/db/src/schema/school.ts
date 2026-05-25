@@ -1,4 +1,4 @@
-import { relations, sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
 import {
   pgTable,
   pgEnum,
@@ -104,7 +104,6 @@ export const audioMapping = pgTable(
 
 export const batch = pgTable('batch', {
   id: uuid('id').primaryKey().defaultRandom(),
-  teamId: text('teamId').notNull().unique(),
   code: text('code').notNull().unique(),
   trackId: uuid('trackId')
     .notNull()
@@ -183,57 +182,3 @@ export const examResult = pgTable(
   table => [primaryKey({ columns: [table.examId, table.chapterId] })],
 )
 
-export const trackRelations = relations(track, ({ many }) => ({
-  chapters: many(chapter),
-  batches: many(batch),
-}))
-
-export const chapterRelations = relations(chapter, ({ one, many }) => ({
-  track: one(track, { fields: [chapter.trackId], references: [track.id] }),
-  segments: many(segment),
-  audioAssets: many(audioAsset),
-  evaluations: many(evaluation),
-}))
-
-export const segmentRelations = relations(segment, ({ one, many }) => ({
-  chapter: one(chapter, { fields: [segment.chapterId], references: [chapter.id] }),
-  audioMappings: many(audioMapping),
-}))
-
-export const audioAssetRelations = relations(audioAsset, ({ one, many }) => ({
-  chapter: one(chapter, { fields: [audioAsset.chapterId], references: [chapter.id] }),
-  audioMappings: many(audioMapping),
-}))
-
-export const audioMappingRelations = relations(audioMapping, ({ one }) => ({
-  segment: one(segment, { fields: [audioMapping.segmentId], references: [segment.id] }),
-  audioAsset: one(audioAsset, {
-    fields: [audioMapping.audioAssetId],
-    references: [audioAsset.id],
-  }),
-}))
-
-export const batchRelations = relations(batch, ({ one, many }) => ({
-  track: one(track, { fields: [batch.trackId], references: [track.id] }),
-  enrollments: many(enrollment),
-  exams: many(exam),
-}))
-
-export const enrollmentRelations = relations(enrollment, ({ one }) => ({
-  batch: one(batch, { fields: [enrollment.batchId], references: [batch.id] }),
-}))
-
-export const evaluationRelations = relations(evaluation, ({ one }) => ({
-  chapter: one(chapter, { fields: [evaluation.chapterId], references: [chapter.id] }),
-}))
-
-export const examRelations = relations(exam, ({ one, many }) => ({
-  batch: one(batch, { fields: [exam.batchId], references: [batch.id] }),
-  results: many(examResult),
-}))
-
-export const examResultRelations = relations(examResult, ({ one }) => ({
-  exam: one(exam, { fields: [examResult.examId], references: [exam.id] }),
-  chapter: one(chapter, { fields: [examResult.chapterId], references: [chapter.id] }),
-  evaluation: one(evaluation, { fields: [examResult.evaluationId], references: [evaluation.id] }),
-}))
