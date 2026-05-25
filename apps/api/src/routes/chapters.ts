@@ -45,4 +45,19 @@ router.patch('/:chapterId', async (req, res) => {
   res.status(200).json({ ok: true, data: updated })
 })
 
+const applyScriptSchema = z.object({
+  objectKey: z.string().min(1),
+  script: z.enum(['te', 'sa', 'en']),
+})
+
+router.post('/:chapterId/script', async (req, res) => {
+  const { db, authClient } = res.locals
+  const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
+  const { objectKey, script } = parseBody(applyScriptSchema, req)
+
+  await authClient.ensureSchoolPermissions({ content: ['update'] })
+  const updated = await ChapterService.applyScript(db, chapterId, script, objectKey)
+  res.status(200).json({ ok: true, data: updated })
+})
+
 export default router

@@ -2,7 +2,8 @@ import { z } from 'zod'
 import { asc, eq } from 'drizzle-orm'
 
 import { chapter, segment, audioAsset, audioMapping, type Database } from '@narada/db'
-import { internalError } from '../error'
+import { getDownloadUrl } from '@narada/storage'
+import { internalError, notFound } from '../error'
 
 export const chapterSchema = z.object({
   id: z.string(),
@@ -158,5 +159,37 @@ export default class ChapterService {
     }
 
     return mapChapter(row)
+  }
+
+  public static async applyScript(
+    db: Database,
+    chapterId: string,
+    scriptType: 'te' | 'sa' | 'en',
+    objectKey: string,
+  ): Promise<Chapter> {
+    const existing = await db.query.chapter.findFirst({
+      where: (t, { eq }) => eq(t.id, chapterId),
+    })
+
+    if (!existing) {
+      throw notFound()
+    }
+
+    const textUrl = await getDownloadUrl(objectKey)
+    return await db.transaction(async tx => {
+      await tx.delete(segment).where(eq(segment.chapterId, chapterId))
+      const rows = await tx
+        .update(chapter)
+        .set({ script: scriptType, textUrl })
+        .where(eq(chapter.id, chapterId))
+        .returning()
+
+      const row = rows.at(0)
+      if (!row) {
+        throw internalError()
+      }
+
+      return mapChapter(row)
+    })
   }
 }

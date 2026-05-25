@@ -1,5 +1,4 @@
-import { DeleteObjectCommand } from '@aws-sdk/client-s3'
-import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 import { env } from '@narada/env'
@@ -27,6 +26,12 @@ export async function getDownloadUrl(key: string, expiresIn = DOWNLOAD_EXPIRY_SE
 
   const command = new GetObjectCommand({ Bucket: BUCKET, Key: key })
   return getSignedUrl(s3, command, { expiresIn })
+}
+
+export async function putObject(key: string, body: Uint8Array, contentType: string) {
+  await s3.send(
+    new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: body, ContentType: contentType }),
+  )
 }
 
 export async function deleteObject(key: string) {
