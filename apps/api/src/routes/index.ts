@@ -8,6 +8,9 @@ import segmentsRouter from './segments'
 import batchesRouter from './batches'
 import enrollmentRouter from './enrollment'
 import evaluationsRouter from './evaluations'
+import { batchExamsRouter, examsRouter } from './exams'
+import audioMappingsRouter from './audioMappings'
+import studentRouter from './student'
 import { resolveDb, requireSchool } from '../middlewares/school'
 import { resolveAuth } from '../middlewares/auth'
 
@@ -26,4 +29,8 @@ export default function setupRoutes(router: Router) {
     .use('/batches', batchesRouter)
     .use('/batches/:batchId/members', enrollmentRouter)
     .use('/batches/:batchId/evaluations', evaluationsRouter)
+    .use('/batches/:batchId/exams', batchExamsRouter)
+    .use('/exams', examsRouter)
+    .use('/audio', audioMappingsRouter)
+    .use('/student', studentRouter)
 }
