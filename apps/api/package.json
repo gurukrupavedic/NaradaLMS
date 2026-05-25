@@ -14,6 +14,7 @@
     "@narada/auth": "workspace:*",
     "@narada/db": "workspace:*",
     "@narada/env": "workspace:*",
+    "@narada/storage": "workspace:*",
     "better-auth": "^1.2.8",
     "cors": "^2.8.6",
     "drizzle-orm": "^0.45.2",

@@ -6,6 +6,10 @@ import * as schema from './schema'
 
 const dbCache = new Map<string, ReturnType<typeof drizzle<typeof schema>>>()
 
+export function clearSchoolDbCache(schoolSlug: string) {
+  dbCache.delete(schoolSlug)
+}
+
 export const publicDb = drizzle(
   new Pool({
     connectionString: env.DATABASE_URL,

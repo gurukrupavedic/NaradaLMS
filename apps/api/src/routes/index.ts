@@ -9,8 +9,11 @@ import batchesRouter from './batches'
 import enrollmentRouter from './enrollment'
 import evaluationsRouter from './evaluations'
 import { batchExamsRouter, examsRouter } from './exams'
+import audioRouter from './audio'
 import audioMappingsRouter from './audioMappings'
+import uploadRouter from './upload'
 import studentRouter from './student'
+import schoolsRouter from './schools'
 import { resolveDb, requireSchool } from '../middlewares/school'
 import { resolveAuth } from '../middlewares/auth'
 
@@ -19,6 +22,7 @@ export default function setupRoutes(router: Router) {
 
   router.use(resolveDb)
   router.use(resolveAuth)
+  router.use('/schools', schoolsRouter)
   router.use('/profile', publicProfileRouter)
   router
     .use(requireSchool)
@@ -31,6 +35,8 @@ export default function setupRoutes(router: Router) {
     .use('/batches/:batchId/evaluations', evaluationsRouter)
     .use('/batches/:batchId/exams', batchExamsRouter)
     .use('/exams', examsRouter)
+    .use('/upload', uploadRouter)
+    .use('/chapters/:chapterId/audio', audioRouter)
     .use('/audio', audioMappingsRouter)
     .use('/student', studentRouter)
 }

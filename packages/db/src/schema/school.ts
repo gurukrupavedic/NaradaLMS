@@ -82,6 +82,7 @@ export const audioAsset = pgTable(
       .references(() => chapter.id),
     label: text('label'),
     url: text('url').notNull(),
+    objectKey: text('objectKey').notNull(),
     duration: real('duration').notNull(),
   },
   table => [index('audioAsset_chapterId_idx').on(table.chapterId)],
