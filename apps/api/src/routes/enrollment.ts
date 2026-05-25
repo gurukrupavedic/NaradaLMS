@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import { z } from 'zod'
 
-import AuthClient from '../utils/auth'
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import BatchService from '../services/batch'
@@ -10,11 +9,10 @@ import EnrollmentService, { enrollSchema } from '../services/enrollment'
 const router = Router({ mergeParams: true })
 
 router.post('/', async (req, res) => {
+  const { db, authClient } = res.locals
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const data = parseBody(enrollSchema, req)
 
-  const db = res.locals.db
-  const authClient = new AuthClient(req, db)
   const isAdmin = await authClient.hasSchoolPermissions({ batch: ['create'] })
   if (!isAdmin) {
     await authClient.ensureBatchPermissions({ enrollment: ['create'] }, batchId)
@@ -30,13 +28,12 @@ router.post('/', async (req, res) => {
 })
 
 router.delete('/:userId', async (req, res) => {
+  const { db, authClient } = res.locals
   const { batchId, userId } = parseParams(
     z.object({ batchId: z.uuid(), userId: z.string().min(1) }),
     req,
   )
 
-  const db = res.locals.db
-  const authClient = new AuthClient(req, db)
   const isAdmin = await authClient.hasSchoolPermissions({ batch: ['create'] })
   if (!isAdmin) {
     await authClient.ensureBatchPermissions({ enrollment: ['remove'] }, batchId)

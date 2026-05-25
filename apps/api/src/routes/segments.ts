@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import { z } from 'zod'
 
-import AuthClient from '../utils/auth'
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import ChapterService from '../services/chapter'
@@ -10,10 +9,9 @@ import SegmentService, { putSegmentsSchema } from '../services/segment'
 const router = Router({ mergeParams: true })
 
 router.get('/', async (req, res) => {
+  const { db, authClient } = res.locals
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
-  const db = res.locals.db
-  const authClient = new AuthClient(req, db)
   await authClient.ensureSchoolPermissions({ content: ['read'] })
   const includeDrafts = await authClient.hasSchoolPermissions({ content: ['create'] })
   const chapter = await ChapterService.findById(db, chapterId, includeDrafts)
@@ -26,11 +24,10 @@ router.get('/', async (req, res) => {
 })
 
 router.put('/', async (req, res) => {
+  const { db, authClient } = res.locals
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
   const inputs = parseBody(putSegmentsSchema, req)
 
-  const db = res.locals.db
-  const authClient = new AuthClient(req, db)
   await authClient.ensureSchoolPermissions({ content: ['update'] })
   const chapter = await ChapterService.findById(db, chapterId, true)
   if (!chapter) {

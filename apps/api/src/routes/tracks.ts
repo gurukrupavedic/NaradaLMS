@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import { z } from 'zod'
 
-import AuthClient from '../utils/auth'
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import TrackService, { createTrackSchema, updateTrackSchema } from '../services/track'
@@ -9,8 +8,7 @@ import TrackService, { createTrackSchema, updateTrackSchema } from '../services/
 const router = Router()
 
 router.get('/', async (req, res) => {
-  const db = res.locals.db
-  const authClient = new AuthClient(req, db)
+  const { db, authClient } = res.locals
   const [_, includeDrafts] = await Promise.all([
     authClient.ensureSchoolPermissions({ content: ['read'] }),
     authClient.hasSchoolPermissions({ content: ['create'] }),
@@ -21,10 +19,9 @@ router.get('/', async (req, res) => {
 })
 
 router.get('/:trackId', async (req, res) => {
+  const { db, authClient } = res.locals
   const { trackId } = parseParams(z.object({ trackId: z.uuid() }), req)
 
-  const db = res.locals.db
-  const authClient = new AuthClient(req, db)
   const [_, includeDrafts] = await Promise.all([
     authClient.ensureSchoolPermissions({ content: ['read'] }),
     authClient.hasSchoolPermissions({ content: ['create'] }),
@@ -39,21 +36,19 @@ router.get('/:trackId', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
+  const { db, authClient } = res.locals
   const data = parseBody(createTrackSchema, req)
 
-  const db = res.locals.db
-  const authClient = new AuthClient(req, db)
   await authClient.ensureSchoolPermissions({ content: ['create'] })
   const created = await TrackService.create(db, data)
   res.status(201).json({ ok: true, data: created })
 })
 
 router.patch('/:trackId', async (req, res) => {
+  const { db, authClient } = res.locals
   const { trackId } = parseParams(z.object({ trackId: z.uuid() }), req)
   const updateData = parseBody(updateTrackSchema, req)
 
-  const db = res.locals.db
-  const authClient = new AuthClient(req, db)
   await authClient.ensureSchoolPermissions({ content: ['update'] })
   const existing = await TrackService.findById(db, trackId, true)
   if (!existing) {

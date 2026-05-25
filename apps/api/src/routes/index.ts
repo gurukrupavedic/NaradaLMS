@@ -7,13 +7,17 @@ import { publicProfileRouter, schoolProfileRouter } from './profile'
 import segmentsRouter from './segments'
 import batchesRouter from './batches'
 import enrollmentRouter from './enrollment'
-import { resolveSchoolSlug } from '../middlewares/school'
+import { resolveDb, requireSchool } from '../middlewares/school'
+import { resolveAuth } from '../middlewares/auth'
 
 export default function setupRoutes(router: Router) {
   router.use('/health', healthRouter)
+
+  router.use(resolveDb)
+  router.use(resolveAuth)
   router.use('/profile', publicProfileRouter)
   router
-    .use(resolveSchoolSlug)
+    .use(requireSchool)
     .use('/tracks', tracksRouter)
     .use('/chapters', chaptersRouter)
     .use('/profile', schoolProfileRouter)
