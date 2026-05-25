@@ -92,12 +92,12 @@ function mapBatch(row: DbBatch): Batch {
 export default class BatchService {
   public static async findAll(
     db: Database,
-    options: ListBatchesQuery & { isAdmin: boolean; userId: string },
+    options: ListBatchesQuery & { showAll: boolean; userId: string },
   ): Promise<{ items: Batch[]; nextCursor: string | null }> {
-    const { isAdmin, userId, status, cursor, limit } = options
+    const { showAll, userId, status, cursor, limit } = options
 
     const conditions = []
-    if (!isAdmin) {
+    if (!showAll) {
       const enrolledBatchIds = db
         .select({ id: enrollment.batchId })
         .from(enrollment)
@@ -105,7 +105,7 @@ export default class BatchService {
 
       conditions.push(inArray(batch.id, enrolledBatchIds))
     }
-    
+
     if (status) conditions.push(eq(batch.status, status))
     if (cursor) conditions.push(gt(batch.id, cursor.id))
 

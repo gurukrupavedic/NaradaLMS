@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
   const { db, authClient } = res.locals
   const [_, includeDrafts] = await Promise.all([
     authClient.ensureSchoolPermissions({ content: ['read'] }),
-    authClient.hasSchoolPermissions({ content: ['create'] }),
+    authClient.hasSchoolPermissions({ draft: ['read'] }),
   ])
 
   const tracks = await TrackService.findAll(db, includeDrafts)
@@ -24,7 +24,7 @@ router.get('/:trackId', async (req, res) => {
 
   const [_, includeDrafts] = await Promise.all([
     authClient.ensureSchoolPermissions({ content: ['read'] }),
-    authClient.hasSchoolPermissions({ content: ['create'] }),
+    authClient.hasSchoolPermissions({ draft: ['read'] }),
   ])
 
   const track = await TrackService.findById(db, trackId, includeDrafts)

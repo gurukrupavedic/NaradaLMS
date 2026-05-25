@@ -62,6 +62,16 @@ export default class AuthClient {
     }
   }
 
+  public async hasBatchPermissions(required: BatchPermissions, batchId: string): Promise<boolean> {
+    const { user } = await this.getSession()
+    if (user.isSuperAdmin) {
+      return true
+    }
+
+    const enrollment = await EnrollmentService.findOne(this.db, user.id, batchId)
+    return enrollment !== undefined && hasBatchPermission(enrollment.role, required)
+  }
+
   public async ensureBatchPermissions(required: BatchPermissions, batchId: string): Promise<void> {
     const { user } = await this.getSession()
     if (user.isSuperAdmin) {

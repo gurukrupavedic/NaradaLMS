@@ -7,6 +7,7 @@ import { publicProfileRouter, schoolProfileRouter } from './profile'
 import segmentsRouter from './segments'
 import batchesRouter from './batches'
 import enrollmentRouter from './enrollment'
+import evaluationsRouter from './evaluations'
 import { resolveDb, requireSchool } from '../middlewares/school'
 import { resolveAuth } from '../middlewares/auth'
 
@@ -24,4 +25,5 @@ export default function setupRoutes(router: Router) {
     .use('/chapters/:chapterId/segments', segmentsRouter)
     .use('/batches', batchesRouter)
     .use('/batches/:batchId/members', enrollmentRouter)
+    .use('/batches/:batchId/evaluations', evaluationsRouter)
 }

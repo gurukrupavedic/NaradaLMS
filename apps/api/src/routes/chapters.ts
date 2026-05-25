@@ -12,7 +12,7 @@ router.get('/:chapterId', async (req, res) => {
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
   await authClient.ensureSchoolPermissions({ content: ['read'] })
-  const includeDrafts = await authClient.hasSchoolPermissions({ content: ['create'] })
+  const includeDrafts = await authClient.hasSchoolPermissions({ draft: ['read'] })
   const chapter = await ChapterService.findById(db, chapterId, includeDrafts)
   if (!chapter) {
     throw notFound()

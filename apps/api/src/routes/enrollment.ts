@@ -13,8 +13,8 @@ router.post('/', async (req, res) => {
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const data = parseBody(enrollSchema, req)
 
-  const isAdmin = await authClient.hasSchoolPermissions({ batch: ['create'] })
-  if (!isAdmin) {
+  const canManageEnrollment = await authClient.hasSchoolPermissions({ enrollment: ['create'] })
+  if (!canManageEnrollment) {
     await authClient.ensureBatchPermissions({ enrollment: ['create'] }, batchId)
   }
 
@@ -34,8 +34,8 @@ router.delete('/:userId', async (req, res) => {
     req,
   )
 
-  const isAdmin = await authClient.hasSchoolPermissions({ batch: ['create'] })
-  if (!isAdmin) {
+  const canManageEnrollment = await authClient.hasSchoolPermissions({ enrollment: ['remove'] })
+  if (!canManageEnrollment) {
     await authClient.ensureBatchPermissions({ enrollment: ['remove'] }, batchId)
   }
 

@@ -18,9 +18,13 @@ router.get('/', async (req, res) => {
 
   await authClient.ensureSchoolPermissions({ batch: ['read'] })
   const { user } = await authClient.getSession()
-  const isAdmin = await authClient.hasSchoolPermissions({ batch: ['create'] })
+  const canManageBatches = await authClient.hasSchoolPermissions({ batch: ['update'] })
+  const result = await BatchService.findAll(db, {
+    ...query,
+    showAll: canManageBatches,
+    userId: user.id,
+  })
 
-  const result = await BatchService.findAll(db, { ...query, isAdmin, userId: user.id })
   res.status(200).json({ ok: true, data: result })
 })
 
@@ -29,8 +33,8 @@ router.get('/:batchId', async (req, res) => {
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
 
   await authClient.ensureSchoolPermissions({ batch: ['read'] })
-  const isAdmin = await authClient.hasSchoolPermissions({ batch: ['create'] })
-  if (!isAdmin) {
+  const canManageBatches = await authClient.hasSchoolPermissions({ batch: ['update'] })
+  if (!canManageBatches) {
     const { user } = await authClient.getSession()
     const enrollment = await EnrollmentService.findOne(db, user.id, batchId)
     if (!enrollment) {
