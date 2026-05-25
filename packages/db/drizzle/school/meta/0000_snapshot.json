@@ -1,5 +1,5 @@
 {
-  "id": "948b4633-c542-4727-9745-73103d78a241",
+  "id": "4be03e3f-9e37-4257-8840-61e2139454dd",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -284,7 +284,21 @@
           "name": "order",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "nextval('chapter_order_seq')"
+        },
+        "script": {
+          "name": "script",
+          "type": "script",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "textUrl": {
+          "name": "textUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -326,97 +340,6 @@
           "nullsNotDistinct": false,
           "columns": [
             "code"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.chapterRevision": {
-      "name": "chapterRevision",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "chapterId": {
-          "name": "chapterId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "script": {
-          "name": "script",
-          "type": "script",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "textUrl": {
-          "name": "textUrl",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "revision": {
-          "name": "revision",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "chapterRevision_chapterId_idx": {
-          "name": "chapterRevision_chapterId_idx",
-          "columns": [
-            {
-              "expression": "chapterId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "chapterRevision_chapterId_chapter_id_fk": {
-          "name": "chapterRevision_chapterId_chapter_id_fk",
-          "tableFrom": "chapterRevision",
-          "tableTo": "chapter",
-          "columnsFrom": [
-            "chapterId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "chapterRevision_chapterId_revision_unq": {
-          "name": "chapterRevision_chapterId_revision_unq",
-          "nullsNotDistinct": false,
-          "columns": [
-            "chapterId",
-            "revision"
           ]
         }
       },
@@ -796,8 +719,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "revisionId": {
-          "name": "revisionId",
+        "chapterId": {
+          "name": "chapterId",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -816,11 +739,11 @@
         }
       },
       "indexes": {
-        "segment_revisionId_idx": {
-          "name": "segment_revisionId_idx",
+        "segment_chapterId_idx": {
+          "name": "segment_chapterId_idx",
           "columns": [
             {
-              "expression": "revisionId",
+              "expression": "chapterId",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -833,17 +756,17 @@
         }
       },
       "foreignKeys": {
-        "segment_revisionId_chapterRevision_id_fk": {
-          "name": "segment_revisionId_chapterRevision_id_fk",
+        "segment_chapterId_chapter_id_fk": {
+          "name": "segment_chapterId_chapter_id_fk",
           "tableFrom": "segment",
-          "tableTo": "chapterRevision",
+          "tableTo": "chapter",
           "columnsFrom": [
-            "revisionId"
+            "chapterId"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -874,7 +797,8 @@
           "name": "order",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "nextval('track_order_seq')"
         }
       },
       "indexes": {},
@@ -956,7 +880,28 @@
     }
   },
   "schemas": {},
-  "sequences": {},
+  "sequences": {
+    "public.chapter_order_seq": {
+      "name": "chapter_order_seq",
+      "schema": "public",
+      "increment": "1",
+      "startWith": "1",
+      "minValue": "1",
+      "maxValue": "9223372036854775807",
+      "cache": "1",
+      "cycle": false
+    },
+    "public.track_order_seq": {
+      "name": "track_order_seq",
+      "schema": "public",
+      "increment": "1",
+      "startWith": "1",
+      "minValue": "1",
+      "maxValue": "9223372036854775807",
+      "cache": "1",
+      "cycle": false
+    }
+  },
   "roles": {},
   "policies": {},
   "views": {},

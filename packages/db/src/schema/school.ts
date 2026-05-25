@@ -11,7 +11,6 @@ import {
   uuid,
   index,
   primaryKey,
-  unique,
 } from 'drizzle-orm/pg-core'
 
 export const trackOrderSeq = pgSequence('track_order_seq', { startWith: 1 })
@@ -55,39 +54,23 @@ export const chapter = pgTable(
     title: text('title').notNull(),
     status: chapterStatus('status').notNull().default('draft'),
     order: integer('order').notNull().default(sql`nextval('chapter_order_seq')`),
+    script: script('script'),
+    textUrl: text('textUrl'),
   },
   table => [index('chapter_trackId_idx').on(table.trackId)],
-)
-
-export const chapterRevision = pgTable(
-  'chapterRevision',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    chapterId: uuid('chapterId')
-      .notNull()
-      .references(() => chapter.id),
-    script: script('script').notNull(),
-    textUrl: text('textUrl').notNull(),
-    revision: integer('revision').notNull(),
-    createdAt: timestamp('createdAt').defaultNow(),
-  },
-  table => [
-    unique('chapterRevision_chapterId_revision_unq').on(table.chapterId, table.revision),
-    index('chapterRevision_chapterId_idx').on(table.chapterId),
-  ],
 )
 
 export const segment = pgTable(
   'segment',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    revisionId: uuid('revisionId')
+    chapterId: uuid('chapterId')
       .notNull()
-      .references(() => chapterRevision.id),
+      .references(() => chapter.id, { onDelete: 'cascade' }),
     start: integer('start').notNull(),
     end: integer('end').notNull(),
   },
-  table => [index('segment_revisionId_idx').on(table.revisionId)],
+  table => [index('segment_chapterId_idx').on(table.chapterId)],
 )
 
 export const audioAsset = pgTable(
@@ -207,21 +190,13 @@ export const trackRelations = relations(track, ({ many }) => ({
 
 export const chapterRelations = relations(chapter, ({ one, many }) => ({
   track: one(track, { fields: [chapter.trackId], references: [track.id] }),
-  revisions: many(chapterRevision),
+  segments: many(segment),
   audioAssets: many(audioAsset),
   evaluations: many(evaluation),
 }))
 
-export const chapterRevisionRelations = relations(chapterRevision, ({ one, many }) => ({
-  chapter: one(chapter, { fields: [chapterRevision.chapterId], references: [chapter.id] }),
-  segments: many(segment),
-}))
-
 export const segmentRelations = relations(segment, ({ one, many }) => ({
-  revision: one(chapterRevision, {
-    fields: [segment.revisionId],
-    references: [chapterRevision.id],
-  }),
+  chapter: one(chapter, { fields: [segment.chapterId], references: [chapter.id] }),
   audioMappings: many(audioMapping),
 }))
 
@@ -232,7 +207,10 @@ export const audioAssetRelations = relations(audioAsset, ({ one, many }) => ({
 
 export const audioMappingRelations = relations(audioMapping, ({ one }) => ({
   segment: one(segment, { fields: [audioMapping.segmentId], references: [segment.id] }),
-  audioAsset: one(audioAsset, { fields: [audioMapping.audioAssetId], references: [audioAsset.id] }),
+  audioAsset: one(audioAsset, {
+    fields: [audioMapping.audioAssetId],
+    references: [audioAsset.id],
+  }),
 }))
 
 export const batchRelations = relations(batch, ({ one, many }) => ({
