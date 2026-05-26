@@ -3,16 +3,20 @@ import { z } from 'zod'
 
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
+import { authorize, hasPermission } from '../utils/auth'
 import ChapterService, { createChapterSchema, updateChapterSchema } from '../services/chapter'
 
 const router = Router()
 
 router.get('/:chapterId', async (req, res) => {
-  const { db, authClient } = res.locals
+  const { db } = res.locals
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
-  await authClient.ensureSchoolPermissions({ content: ['read'] })
-  const includeDrafts = await authClient.hasSchoolPermissions({ draft: ['read'] })
+  await authorize(req, db, { scope: 'school', permissions: { content: ['read'] } })
+  const includeDrafts = await hasPermission(req, db, {
+    scope: 'school',
+    permissions: { draft: ['read'] },
+  })
   const chapter = await ChapterService.findById(db, chapterId, includeDrafts)
   if (!chapter) {
     throw notFound()
@@ -22,20 +26,20 @@ router.get('/:chapterId', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-  const { db, authClient } = res.locals
+  const { db } = res.locals
   const data = parseBody(createChapterSchema, req)
 
-  await authClient.ensureSchoolPermissions({ content: ['create'] })
+  await authorize(req, db, { scope: 'school', permissions: { content: ['create'] } })
   const created = await ChapterService.create(db, data)
   res.status(201).json({ ok: true, data: created })
 })
 
 router.patch('/:chapterId', async (req, res) => {
-  const { db, authClient } = res.locals
+  const { db } = res.locals
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
   const updates = parseBody(updateChapterSchema, req)
 
-  await authClient.ensureSchoolPermissions({ content: ['update'] })
+  await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
   const existing = await ChapterService.findById(db, chapterId, true)
   if (!existing) {
     throw notFound()
@@ -51,11 +55,11 @@ const applyScriptSchema = z.object({
 })
 
 router.post('/:chapterId/script', async (req, res) => {
-  const { db, authClient } = res.locals
+  const { db } = res.locals
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
   const { objectKey, script } = parseBody(applyScriptSchema, req)
 
-  await authClient.ensureSchoolPermissions({ content: ['update'] })
+  await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
   const updated = await ChapterService.applyScript(db, chapterId, script, objectKey)
   res.status(200).json({ ok: true, data: updated })
 })

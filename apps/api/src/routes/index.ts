@@ -15,13 +15,11 @@ import uploadRouter from './upload'
 import studentRouter from './student'
 import schoolsRouter from './schools'
 import { resolveDb, requireSchool } from '../middlewares/school'
-import { resolveAuth } from '../middlewares/auth'
 
 export default function setupRoutes(router: Router) {
   router.use('/health', healthRouter)
 
   router.use(resolveDb)
-  router.use(resolveAuth)
   router.use('/schools', schoolsRouter)
   router.use('/profile', publicProfileRouter)
   router

@@ -13,74 +13,71 @@ import EnrollmentService from '../services/enrollment'
 
 export type AuthenticatedSession = typeof auth.$Infer.Session
 
-export default class AuthClient {
-  private request: Request
-  private db: Database
-  private session?: AuthenticatedSession
+type AuthClaim =
+  | { scope: 'super' }
+  | { scope: 'school'; permissions: SchoolPermissions }
+  | { scope: 'batch'; batchId: string; permissions: BatchPermissions }
 
-  constructor(request: Request, db: Database) {
-    this.request = request
-    this.db = db
-  }
+const sessions = new WeakMap<Request, Promise<AuthenticatedSession>>()
 
-  private get requestHeaders() {
-    return fromNodeHeaders(this.request.headers)
-  }
+function requestHeaders(req: Request) {
+  return fromNodeHeaders(req.headers)
+}
 
-  public async getSession(): Promise<AuthenticatedSession> {
-    if (this.session) {
-      return this.session
-    }
+export async function getSession(req: Request): Promise<AuthenticatedSession> {
+  const cached = sessions.get(req)
+  if (cached) return cached
 
-    const session = await auth.api.getSession({ headers: this.requestHeaders })
+  const sessionPromise = auth.api.getSession({ headers: requestHeaders(req) }).then(session => {
     if (session === null) {
       throw unauthorized()
     }
 
-    this.session = session
     return session
+  })
+
+  sessions.set(req, sessionPromise)
+  return sessionPromise
+}
+
+export async function hasPermission(
+  req: Request,
+  db: Database,
+  claim: AuthClaim,
+): Promise<boolean> {
+  const { user } = await getSession(req)
+  if (user.isSuperAdmin) {
+    return true
   }
 
-  public async hasSchoolPermissions(required: SchoolPermissions): Promise<boolean> {
-    const { user } = await this.getSession()
-    if (user.isSuperAdmin) {
-      return true
-    }
+  if (claim.scope === 'super') {
+    return false
+  }
 
+  if (claim.scope === 'school') {
     const { success } = await auth.api.hasPermission({
-      headers: this.requestHeaders,
-      body: { permissions: required },
+      headers: requestHeaders(req),
+      body: { permissions: claim.permissions },
     })
 
     return success
   }
 
-  public async ensureSchoolPermissions(required: SchoolPermissions): Promise<void> {
-    const allowed = await this.hasSchoolPermissions(required)
-    if (!allowed) {
-      throw forbidden()
-    }
+  // TODO: use Redis to cache these reads
+  const enrollment = await EnrollmentService.findOne(db, user.id, claim.batchId)
+  return enrollment !== undefined && hasBatchPermission(enrollment.role, claim.permissions)
+}
+
+export async function authorize(
+  req: Request,
+  db: Database,
+  claim: AuthClaim,
+): Promise<AuthenticatedSession> {
+  const session = await getSession(req)
+  const allowed = await hasPermission(req, db, claim)
+  if (!allowed) {
+    throw forbidden()
   }
 
-  public async hasBatchPermissions(required: BatchPermissions, batchId: string): Promise<boolean> {
-    const { user } = await this.getSession()
-    if (user.isSuperAdmin) {
-      return true
-    }
-
-    const enrollment = await EnrollmentService.findOne(this.db, user.id, batchId)
-    return enrollment !== undefined && hasBatchPermission(enrollment.role, required)
-  }
-
-  public async ensureBatchPermissions(required: BatchPermissions, batchId: string): Promise<void> {
-    const { user } = await this.getSession()
-    if (user.isSuperAdmin) {
-      return
-    }
-
-    const enrollment = await EnrollmentService.findOne(this.db, user.id, batchId)
-    if (!enrollment || !hasBatchPermission(enrollment.role, required)) {
-      throw forbidden()
-    }
-  }
+  return session
 }

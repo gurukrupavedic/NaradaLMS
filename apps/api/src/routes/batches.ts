@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import { parseBody, parseParams, parseQuery } from '../utils/validate'
 import { forbidden, notFound } from '../error'
+import { authorize, getSession, hasPermission } from '../utils/auth'
 import BatchService, {
   createBatchSchema,
   listBatchesQuerySchema,
@@ -13,12 +14,15 @@ import EnrollmentService from '../services/enrollment'
 const router = Router()
 
 router.get('/', async (req, res) => {
-  const { db, authClient } = res.locals
+  const { db } = res.locals
   const query = parseQuery(listBatchesQuerySchema, req)
 
-  await authClient.ensureSchoolPermissions({ batch: ['read'] })
-  const { user } = await authClient.getSession()
-  const canManageBatches = await authClient.hasSchoolPermissions({ batch: ['update'] })
+  await authorize(req, db, { scope: 'school', permissions: { batch: ['read'] } })
+  const { user } = await getSession(req)
+  const canManageBatches = await hasPermission(req, db, {
+    scope: 'school',
+    permissions: { batch: ['update'] },
+  })
   const result = await BatchService.findAll(db, {
     ...query,
     showAll: canManageBatches,
@@ -29,13 +33,16 @@ router.get('/', async (req, res) => {
 })
 
 router.get('/:batchId', async (req, res) => {
-  const { db, authClient } = res.locals
+  const { db } = res.locals
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
 
-  await authClient.ensureSchoolPermissions({ batch: ['read'] })
-  const canManageBatches = await authClient.hasSchoolPermissions({ batch: ['update'] })
+  await authorize(req, db, { scope: 'school', permissions: { batch: ['read'] } })
+  const canManageBatches = await hasPermission(req, db, {
+    scope: 'school',
+    permissions: { batch: ['update'] },
+  })
   if (!canManageBatches) {
-    const { user } = await authClient.getSession()
+    const { user } = await getSession(req)
     const enrollment = await EnrollmentService.findOne(db, user.id, batchId)
     if (!enrollment) {
       throw forbidden()
@@ -51,20 +58,20 @@ router.get('/:batchId', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-  const { db, authClient } = res.locals
+  const { db } = res.locals
   const data = parseBody(createBatchSchema, req)
 
-  await authClient.ensureSchoolPermissions({ batch: ['create'] })
+  await authorize(req, db, { scope: 'school', permissions: { batch: ['create'] } })
   const created = await BatchService.create(db, data)
   res.status(201).json({ ok: true, data: created })
 })
 
 router.patch('/:batchId', async (req, res) => {
-  const { db, authClient } = res.locals
+  const { db } = res.locals
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const updates = parseBody(updateBatchSchema, req)
 
-  await authClient.ensureSchoolPermissions({ batch: ['update'] })
+  await authorize(req, db, { scope: 'school', permissions: { batch: ['update'] } })
   const existing = await BatchService.findById(db, batchId)
   if (!existing) {
     throw notFound()

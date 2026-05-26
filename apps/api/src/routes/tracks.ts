@@ -3,15 +3,16 @@ import { z } from 'zod'
 
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
+import { authorize, hasPermission } from '../utils/auth'
 import TrackService, { createTrackSchema, updateTrackSchema } from '../services/track'
 
 const router = Router()
 
 router.get('/', async (req, res) => {
-  const { db, authClient } = res.locals
+  const { db } = res.locals
   const [_, includeDrafts] = await Promise.all([
-    authClient.ensureSchoolPermissions({ content: ['read'] }),
-    authClient.hasSchoolPermissions({ draft: ['read'] }),
+    authorize(req, db, { scope: 'school', permissions: { content: ['read'] } }),
+    hasPermission(req, db, { scope: 'school', permissions: { draft: ['read'] } }),
   ])
 
   const tracks = await TrackService.findAll(db, includeDrafts)
@@ -19,12 +20,12 @@ router.get('/', async (req, res) => {
 })
 
 router.get('/:trackId', async (req, res) => {
-  const { db, authClient } = res.locals
+  const { db } = res.locals
   const { trackId } = parseParams(z.object({ trackId: z.uuid() }), req)
 
   const [_, includeDrafts] = await Promise.all([
-    authClient.ensureSchoolPermissions({ content: ['read'] }),
-    authClient.hasSchoolPermissions({ draft: ['read'] }),
+    authorize(req, db, { scope: 'school', permissions: { content: ['read'] } }),
+    hasPermission(req, db, { scope: 'school', permissions: { draft: ['read'] } }),
   ])
 
   const track = await TrackService.findById(db, trackId, includeDrafts)
@@ -36,20 +37,20 @@ router.get('/:trackId', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-  const { db, authClient } = res.locals
+  const { db } = res.locals
   const data = parseBody(createTrackSchema, req)
 
-  await authClient.ensureSchoolPermissions({ content: ['create'] })
+  await authorize(req, db, { scope: 'school', permissions: { content: ['create'] } })
   const created = await TrackService.create(db, data)
   res.status(201).json({ ok: true, data: created })
 })
 
 router.patch('/:trackId', async (req, res) => {
-  const { db, authClient } = res.locals
+  const { db } = res.locals
   const { trackId } = parseParams(z.object({ trackId: z.uuid() }), req)
   const updateData = parseBody(updateTrackSchema, req)
 
-  await authClient.ensureSchoolPermissions({ content: ['update'] })
+  await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
   const existing = await TrackService.findById(db, trackId, true)
   if (!existing) {
     throw notFound()
