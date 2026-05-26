@@ -2,9 +2,11 @@ import assert from 'node:assert'
 import { z } from 'zod'
 import { and, asc, eq, gt } from 'drizzle-orm'
 
+import { hasBatchPermission } from '@narada/auth/permissions'
 import { exam, examResult, evaluation, type Database } from '@narada/db'
 import { asCursor, paginateResponse } from '../utils/cursor'
 import { notFound, unprocessable } from '../error'
+import type { BatchAccess } from '../utils/auth'
 
 const PAGE_SIZE = 20
 
@@ -89,17 +91,21 @@ export default class ExamService {
   public static async findByBatch(
     db: Database,
     batchId: string,
-    options: ListExamsQuery & { userId: string; showAll: boolean },
+    options: ListExamsQuery & { access: BatchAccess },
   ): Promise<{ items: Exam[]; nextCursor: string | null }> {
     const batchRow = await db.query.batch.findFirst({
       where: (t, { eq }) => eq(t.id, batchId),
     })
     if (!batchRow) throw notFound()
 
-    const { userId, showAll, status, cursor, limit } = options
+    const { access, status, cursor, limit } = options
 
     const conditions = [eq(exam.batchId, batchId)]
-    if (!showAll) conditions.push(eq(exam.studentId, userId))
+    const canSeeAll =
+      access.kind === 'schoolWide' ||
+      (access.kind === 'singleBatch' &&
+        hasBatchPermission(access.enrollment.role, { exam: ['update'] }))
+    if (!canSeeAll) conditions.push(eq(exam.studentId, access.userId))
     if (status) conditions.push(eq(exam.status, status))
     if (cursor) conditions.push(gt(exam.id, cursor.id))
 

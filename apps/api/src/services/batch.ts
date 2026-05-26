@@ -4,6 +4,7 @@ import { and, asc, eq, gt, inArray } from 'drizzle-orm'
 import { batch, enrollment, type Database } from '@narada/db'
 import { asCursor, paginateResponse } from '../utils/cursor'
 import { internalError, notFound } from '../error'
+import type { BatchAccess } from '../utils/auth'
 
 const PAGE_SIZE = 20
 
@@ -92,18 +93,20 @@ function mapBatch(row: DbBatch): Batch {
 export default class BatchService {
   public static async findAll(
     db: Database,
-    options: ListBatchesQuery & { showAll: boolean; userId: string },
+    options: ListBatchesQuery & { access: BatchAccess },
   ): Promise<{ items: Batch[]; nextCursor: string | null }> {
-    const { showAll, userId, status, cursor, limit } = options
+    const { access, status, cursor, limit } = options
 
     const conditions = []
-    if (!showAll) {
+    if (access.kind === 'enrolled') {
       const enrolledBatchIds = db
         .select({ id: enrollment.batchId })
         .from(enrollment)
-        .where(eq(enrollment.userId, userId))
+        .where(eq(enrollment.userId, access.userId))
 
       conditions.push(inArray(batch.id, enrolledBatchIds))
+    } else if (access.kind === 'singleBatch') {
+      conditions.push(eq(batch.id, access.enrollment.batchId))
     }
 
     if (status) conditions.push(eq(batch.status, status))

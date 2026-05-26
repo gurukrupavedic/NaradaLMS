@@ -9,7 +9,7 @@ import {
 } from '@narada/auth/permissions'
 import type { Database } from '@narada/db'
 import { forbidden, unauthorized } from '../error'
-import EnrollmentService from '../services/enrollment'
+import EnrollmentService, { type Enrollment } from '../services/enrollment'
 
 export type AuthenticatedSession = typeof auth.$Infer.Session
 
@@ -17,6 +17,21 @@ type AuthClaim =
   | { scope: 'super' }
   | { scope: 'school'; permissions: SchoolPermissions }
   | { scope: 'batch'; batchId: string; permissions: BatchPermissions }
+
+type BatchAccessClaim = {
+  schoolPermission?: SchoolPermissions
+  batchPermission: BatchPermissions
+}
+
+type BatchListClaim = {
+  schoolPermission: SchoolPermissions
+  allBatchesPermission: SchoolPermissions
+}
+
+export type BatchAccess =
+  | { kind: 'schoolWide'; userId: string }
+  | { kind: 'enrolled'; userId: string }
+  | { kind: 'singleBatch'; userId: string; enrollment: Enrollment }
 
 const sessions = new WeakMap<Request, Promise<AuthenticatedSession>>()
 
@@ -68,7 +83,7 @@ export async function hasPermission(
   return enrollment !== undefined && hasBatchPermission(enrollment.role, claim.permissions)
 }
 
-export async function authorize(
+async function authorizeClaim(
   req: Request,
   db: Database,
   claim: AuthClaim,
@@ -81,3 +96,53 @@ export async function authorize(
 
   return session
 }
+
+export async function requireBatchAccess(
+  req: Request,
+  db: Database,
+  batchId: string,
+  claim: BatchAccessClaim,
+): Promise<Extract<BatchAccess, { kind: 'schoolWide' | 'singleBatch' }>> {
+  const { user } = await getSession(req)
+  if (user.isSuperAdmin) {
+    return { kind: 'schoolWide', userId: user.id }
+  }
+
+  if (claim.schoolPermission) {
+    const allowed = await hasPermission(req, db, {
+      scope: 'school',
+      permissions: claim.schoolPermission,
+    })
+
+    if (allowed) {
+      return { kind: 'schoolWide', userId: user.id }
+    }
+  }
+
+  const enrollment = await EnrollmentService.findOne(db, user.id, batchId)
+  if (enrollment && hasBatchPermission(enrollment.role, claim.batchPermission)) {
+    return { kind: 'singleBatch', userId: user.id, enrollment }
+  }
+
+  throw forbidden()
+}
+
+export async function requireBatchListAccess(
+  req: Request,
+  db: Database,
+  claim: BatchListClaim,
+): Promise<Extract<BatchAccess, { kind: 'schoolWide' | 'enrolled' }>> {
+  const { user } = await authorizeClaim(req, db, {
+    scope: 'school',
+    permissions: claim.schoolPermission,
+  })
+
+  const canSeeAll = await hasPermission(req, db, {
+    scope: 'school',
+    permissions: claim.allBatchesPermission,
+  })
+
+  return canSeeAll ? { kind: 'schoolWide', userId: user.id } : { kind: 'enrolled', userId: user.id }
+}
+
+export const authorize = authorizeClaim

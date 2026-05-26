@@ -2,52 +2,35 @@ import { Router } from 'express'
 import { z } from 'zod'
 
 import { parseBody, parseParams, parseQuery } from '../utils/validate'
-import { forbidden, notFound } from '../error'
-import { authorize, getSession, hasPermission } from '../utils/auth'
+import { notFound } from '../error'
+import { authorize, requireBatchAccess, requireBatchListAccess } from '../utils/auth'
 import BatchService, {
   createBatchSchema,
   listBatchesQuerySchema,
   updateBatchSchema,
 } from '../services/batch'
-import EnrollmentService from '../services/enrollment'
 
 const router = Router()
 
 router.get('/', async (req, res) => {
   const { db } = res.locals
   const query = parseQuery(listBatchesQuerySchema, req)
-
-  await authorize(req, db, { scope: 'school', permissions: { batch: ['read'] } })
-  const { user } = await getSession(req)
-  const canManageBatches = await hasPermission(req, db, {
-    scope: 'school',
-    permissions: { batch: ['update'] },
-  })
-  const result = await BatchService.findAll(db, {
-    ...query,
-    showAll: canManageBatches,
-    userId: user.id,
+  const access = await requireBatchListAccess(req, db, {
+    schoolPermission: { batch: ['read'] },
+    allBatchesPermission: { batch: ['update'] },
   })
 
+  const result = await BatchService.findAll(db, { ...query, access })
   res.status(200).json({ ok: true, data: result })
 })
 
 router.get('/:batchId', async (req, res) => {
   const { db } = res.locals
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
-
-  await authorize(req, db, { scope: 'school', permissions: { batch: ['read'] } })
-  const canManageBatches = await hasPermission(req, db, {
-    scope: 'school',
-    permissions: { batch: ['update'] },
+  await requireBatchAccess(req, db, batchId, {
+    schoolPermission: { batch: ['update'] },
+    batchPermission: { enrollment: ['read'] },
   })
-  if (!canManageBatches) {
-    const { user } = await getSession(req)
-    const enrollment = await EnrollmentService.findOne(db, user.id, batchId)
-    if (!enrollment) {
-      throw forbidden()
-    }
-  }
 
   const batchDetail = await BatchService.findByIdWithMembers(db, batchId)
   if (!batchDetail) {

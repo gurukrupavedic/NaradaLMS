@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
-import { authorize, hasPermission } from '../utils/auth'
+import { requireBatchAccess } from '../utils/auth'
 import BatchService from '../services/batch'
 import EnrollmentService, { enrollSchema } from '../services/enrollment'
 
@@ -13,19 +13,10 @@ router.post('/', async (req, res) => {
   const { db } = res.locals
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const data = parseBody(enrollSchema, req)
-
-  const canManageEnrollment = await hasPermission(req, db, {
-    scope: 'school',
-    permissions: { enrollment: ['create'] },
+  await requireBatchAccess(req, db, batchId, {
+    schoolPermission: { enrollment: ['create'] },
+    batchPermission: { enrollment: ['create'] },
   })
-
-  if (!canManageEnrollment) {
-    await authorize(req, db, {
-      scope: 'batch',
-      batchId,
-      permissions: { enrollment: ['create'] },
-    })
-  }
 
   const batch = await BatchService.findById(db, batchId)
   if (!batch) {
@@ -43,18 +34,10 @@ router.delete('/:userId', async (req, res) => {
     req,
   )
 
-  const canManageEnrollment = await hasPermission(req, db, {
-    scope: 'school',
-    permissions: { enrollment: ['remove'] },
+  await requireBatchAccess(req, db, batchId, {
+    schoolPermission: { enrollment: ['remove'] },
+    batchPermission: { enrollment: ['remove'] },
   })
-
-  if (!canManageEnrollment) {
-    await authorize(req, db, {
-      scope: 'batch',
-      batchId,
-      permissions: { enrollment: ['remove'] },
-    })
-  }
 
   await EnrollmentService.unenroll(db, batchId, userId)
   res.status(200).json({ ok: true })

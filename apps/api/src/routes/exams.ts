@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { parseBody, parseParams, parseQuery } from '../utils/validate'
 import { notFound } from '../error'
-import { authorize, hasPermission } from '../utils/auth'
+import { requireBatchAccess } from '../utils/auth'
 import ExamService, {
   createExamSchema,
   listExamsQuerySchema,
@@ -17,21 +17,11 @@ batchExamsRouter.get('/', async (req, res) => {
   const { db } = res.locals
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const query = parseQuery(listExamsQuerySchema, req)
-
-  const { user } = await authorize(req, db, {
-    scope: 'batch',
-    batchId,
-    permissions: { exam: ['read'] },
+  const access = await requireBatchAccess(req, db, batchId, {
+    batchPermission: { exam: ['read'] },
   })
 
-  const showAll = await hasPermission(req, db, {
-    scope: 'batch',
-    batchId,
-    permissions: { exam: ['update'] },
-  })
-
-  const result = await ExamService.findByBatch(db, batchId, { ...query, userId: user.id, showAll })
-
+  const result = await ExamService.findByBatch(db, batchId, { ...query, access })
   res.status(200).json({ ok: true, data: result })
 })
 
@@ -39,8 +29,7 @@ batchExamsRouter.post('/', async (req, res) => {
   const { db } = res.locals
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const data = parseBody(createExamSchema, req)
-
-  await authorize(req, db, { scope: 'batch', batchId, permissions: { exam: ['create'] } })
+  await requireBatchAccess(req, db, batchId, { batchPermission: { exam: ['create'] } })
   const created = await ExamService.create(db, batchId, data)
   res.status(201).json({ ok: true, data: created })
 })
@@ -57,10 +46,8 @@ examsRouter.patch('/:examId', async (req, res) => {
     throw notFound()
   }
 
-  await authorize(req, db, {
-    scope: 'batch',
-    batchId: existing.batchId,
-    permissions: { exam: ['update'] },
+  await requireBatchAccess(req, db, existing.batchId, {
+    batchPermission: { exam: ['update'] },
   })
 
   const updated = await ExamService.update(db, examId, updates)
@@ -71,18 +58,15 @@ examsRouter.post('/:examId/results', async (req, res) => {
   const { db } = res.locals
   const { examId } = parseParams(z.object({ examId: z.uuid() }), req)
   const items = parseBody(recordResultsSchema, req)
-
   const existing = await ExamService.findById(db, examId)
   if (!existing) {
     throw notFound()
   }
 
-  const { user } = await authorize(req, db, {
-    scope: 'batch',
-    batchId: existing.batchId,
-    permissions: { exam: ['update'] },
+  const access = await requireBatchAccess(req, db, existing.batchId, {
+    batchPermission: { exam: ['update'] },
   })
 
-  const result = await ExamService.recordResults(db, examId, user.id, items)
+  const result = await ExamService.recordResults(db, examId, access.userId, items)
   res.status(200).json({ ok: true, data: result })
 })
