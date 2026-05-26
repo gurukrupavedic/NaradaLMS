@@ -23,6 +23,9 @@ importers:
       '@narada/env':
         specifier: workspace:*
         version: link:../../packages/env
+      '@narada/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       better-auth:
         specifier: ^1.2.8
         version: 1.6.11(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.21.0))(pg@8.21.0)
@@ -103,6 +106,9 @@ importers:
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.21.0)
+      lru-cache:
+        specifier: ^11.5.0
+        version: 11.5.0
       pg:
         specifier: ^8.21.0
         version: 8.21.0
@@ -1689,6 +1695,10 @@ packages:
 
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
+
+  lru-cache@11.5.0:
+    resolution: {integrity: sha512-5YgH9UJd7wVb9hIouI2adWpgqrrICkt070Dnj8EUY1+B4B2P9eRLPAkAAo6NICA7CEhOIeBHl46u9zSNpNu7zA==}
+    engines: {node: 20 || >=22}
 
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
@@ -3494,6 +3504,8 @@ snapshots:
       p-locate: 5.0.0
 
   lodash.merge@4.6.2: {}
+
+  lru-cache@11.5.0: {}
 
   math-intrinsics@1.1.0: {}
 

@@ -1,22 +1,18 @@
-import { Router } from 'express'
+import { Router, type Response } from 'express'
 import { z } from 'zod'
 
 import { parseBody, parseParams } from '../utils/validate'
 import AudioService, { createAudioAssetSchema } from '../services/audio'
-import { badRequest } from '../error'
+import type { SchoolScopedLocals } from '../middlewares/school'
 
 const router = Router({ mergeParams: true })
 
-router.post('/', async (req, res) => {
+router.post('/', async (req, res: Response<unknown, SchoolScopedLocals>) => {
   const { db, authClient, school } = res.locals
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
   const data = parseBody(createAudioAssetSchema, req)
 
   await authClient.ensureSchoolPermissions({ content: ['update'] })
-  if (!school) {
-    throw badRequest()
-  }
-
   const asset = await AudioService.create(db, school.id, chapterId, data)
   res.status(201).json({ ok: true, data: asset })
 })

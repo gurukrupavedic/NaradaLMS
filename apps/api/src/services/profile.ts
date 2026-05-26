@@ -18,10 +18,13 @@ export const profileSchema = z.object({
 
 export const updateProfileSchema = z
   .object({
+    batchId: z.uuid(),
     phone: z.string().optional(),
     city: z.string().optional(),
   })
-  .refine(data => Object.keys(data).length > 0, { message: 'No fields to update' })
+  .refine(data => data.phone !== undefined || data.city !== undefined, {
+    message: 'No fields to update',
+  })
 
 export type Membership = z.infer<typeof membershipSchema>
 export type Profile = z.infer<typeof profileSchema>
@@ -46,10 +49,11 @@ export default class ProfileService {
   }
 
   public static async update(db: Database, userId: string, data: UpdateProfileData): Promise<void> {
+    const { batchId, ...fields } = data
     const rows = await db
       .update(enrollment)
-      .set(data)
-      .where(and(eq(enrollment.userId, userId), eq(enrollment.status, 'active')))
+      .set(fields)
+      .where(and(eq(enrollment.userId, userId), eq(enrollment.batchId, batchId)))
       .returning()
 
     if (rows.length === 0) {

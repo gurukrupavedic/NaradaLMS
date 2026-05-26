@@ -11,7 +11,7 @@ CREATE TABLE "audioAsset" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"chapterId" uuid NOT NULL,
 	"label" text,
-	"url" text NOT NULL,
+	"objectKey" text NOT NULL,
 	"duration" real NOT NULL
 );
 --> statement-breakpoint
@@ -25,14 +25,12 @@ CREATE TABLE "audioMapping" (
 --> statement-breakpoint
 CREATE TABLE "batch" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"teamId" text NOT NULL,
 	"code" text NOT NULL,
 	"trackId" uuid NOT NULL,
 	"startDate" date,
 	"status" "batchStatus" DEFAULT 'upcoming' NOT NULL,
 	"scheduledAt" timestamp,
 	"meetingUrl" text,
-	CONSTRAINT "batch_teamId_unique" UNIQUE("teamId"),
 	CONSTRAINT "batch_code_unique" UNIQUE("code")
 );
 --> statement-breakpoint
@@ -44,7 +42,7 @@ CREATE TABLE "chapter" (
 	"status" "chapterStatus" DEFAULT 'draft' NOT NULL,
 	"order" integer DEFAULT nextval('chapter_order_seq') NOT NULL,
 	"script" "script",
-	"textUrl" text,
+	"textObjectKey" text,
 	CONSTRAINT "chapter_code_unique" UNIQUE("code")
 );
 --> statement-breakpoint

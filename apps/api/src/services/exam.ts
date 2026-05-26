@@ -4,7 +4,7 @@ import { and, asc, eq, gt } from 'drizzle-orm'
 
 import { exam, examResult, evaluation, type Database } from '@narada/db'
 import { asCursor, paginateResponse } from '../utils/cursor'
-import { notFound } from '../error'
+import { notFound, unprocessable } from '../error'
 
 const PAGE_SIZE = 20
 
@@ -91,6 +91,11 @@ export default class ExamService {
     batchId: string,
     options: ListExamsQuery & { userId: string; showAll: boolean },
   ): Promise<{ items: Exam[]; nextCursor: string | null }> {
+    const batchRow = await db.query.batch.findFirst({
+      where: (t, { eq }) => eq(t.id, batchId),
+    })
+    if (!batchRow) throw notFound()
+
     const { userId, showAll, status, cursor, limit } = options
 
     const conditions = [eq(exam.batchId, batchId)]
@@ -158,8 +163,23 @@ export default class ExamService {
       where: (t, { eq }) => eq(t.id, examId),
     })
 
-    if (!examRow) {
-      throw notFound()
+    if (!examRow) throw notFound()
+    const batchRow = await db.query.batch.findFirst({
+      where: (t, { eq }) => eq(t.id, examRow.batchId),
+      columns: { trackId: true },
+    })
+
+    assert(batchRow !== undefined, 'batch not found for exam — FK violation')
+    const trackChapters = await db.query.chapter.findMany({
+      where: (t, { eq }) => eq(t.trackId, batchRow.trackId),
+      columns: { id: true },
+    })
+
+    const validChapterIds = new Set(trackChapters.map(c => c.id))
+    for (const item of items) {
+      if (!validChapterIds.has(item.chapterId)) {
+        throw unprocessable(`Chapter ${item.chapterId} does not belong to this exam's track`)
+      }
     }
 
     return await db.transaction(async tx => {

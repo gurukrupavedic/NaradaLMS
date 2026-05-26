@@ -108,7 +108,6 @@ export default class BatchService {
 
     if (status) conditions.push(eq(batch.status, status))
     if (cursor) conditions.push(gt(batch.id, cursor.id))
-
     const rows = await db.query.batch.findMany({
       where: conditions.length > 0 ? and(...conditions) : undefined,
       orderBy: asc(batch.id),
@@ -135,10 +134,7 @@ export default class BatchService {
       with: { enrollments: { with: { user: true } } },
     })
 
-    if (!row) {
-      return undefined
-    }
-
+    if (!row) return undefined
     return {
       ...mapBatch(row),
       members: row.enrollments.map(e => ({
@@ -157,20 +153,14 @@ export default class BatchService {
   public static async create(db: Database, data: CreateBatchData): Promise<Batch> {
     const rows = await db.insert(batch).values(data).returning()
     const row = rows.at(0)
-    if (!row) {
-      throw internalError()
-    }
-
+    if (!row) throw internalError()
     return mapBatch(row)
   }
 
   public static async update(db: Database, batchId: string, data: UpdateBatchData): Promise<Batch> {
     const rows = await db.update(batch).set(data).where(eq(batch.id, batchId)).returning()
     const row = rows.at(0)
-    if (!row) {
-      throw notFound()
-    }
-
+    if (!row) throw notFound()
     return mapBatch(row)
   }
 }

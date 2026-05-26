@@ -40,6 +40,19 @@ export type AudioAsset = z.infer<typeof audioAssetSchema>
 export type GetUploadUrlData = z.infer<typeof getUploadUrlSchema>
 export type CreateAudioAssetData = z.infer<typeof createAudioAssetSchema>
 
+type DbAudioAsset = typeof audioAsset.$inferSelect
+
+async function mapAudioAsset(row: DbAudioAsset): Promise<AudioAsset> {
+  return {
+    id: row.id,
+    chapterId: row.chapterId,
+    label: row.label,
+    url: await getDownloadUrl(row.objectKey),
+    objectKey: row.objectKey,
+    duration: row.duration,
+  }
+}
+
 export default class AudioService {
   public static async getUploadUrl(
     schoolId: string,
@@ -63,12 +76,10 @@ export default class AudioService {
       throw badRequest()
     }
 
-    const url = await getDownloadUrl(data.objectKey)
     const rows = await db
       .insert(audioAsset)
       .values({
         chapterId,
-        url,
         objectKey: data.objectKey,
         label: data.label,
         duration: data.duration,
@@ -76,14 +87,7 @@ export default class AudioService {
       .returning()
 
     const row = rows.at(0)!
-    return {
-      id: row.id,
-      chapterId: row.chapterId,
-      label: row.label,
-      url: row.url,
-      objectKey: row.objectKey,
-      duration: row.duration,
-    }
+    return mapAudioAsset(row)
   }
 
   public static async remove(db: Database, audioId: string, chapterId: string): Promise<void> {
@@ -91,13 +95,11 @@ export default class AudioService {
       where: (t, { and, eq }) => and(eq(t.id, audioId), eq(t.chapterId, chapterId)),
     })
 
-    if (!asset) {
-      throw notFound()
-    }
-
+    if (!asset) throw notFound()
+    // TODO: see architecture-review §5.E for the longer-term object lifecycle module.
+    await deleteObject(asset.objectKey)
     await db
       .delete(audioAsset)
       .where(and(eq(audioAsset.id, audioId), eq(audioAsset.chapterId, chapterId)))
-    await deleteObject(asset.objectKey)
   }
 }

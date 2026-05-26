@@ -1,6 +1,8 @@
 import { and, asc, eq } from 'drizzle-orm'
 
 import { batch, enrollment, evaluation, segment, type Database } from '@narada/db'
+import { getDownloadUrl } from '@narada/storage'
+import { resolveDownloadUrl } from '../utils/storage'
 
 type DbEvaluation = typeof evaluation.$inferSelect
 
@@ -44,10 +46,7 @@ export default class StudentService {
       },
     })
 
-    if (!chapterRow) {
-      return undefined
-    }
-
+    if (!chapterRow) return undefined
     const access = await db
       .select({ userId: enrollment.userId })
       .from(enrollment)
@@ -61,10 +60,7 @@ export default class StudentService {
       )
       .limit(1)
 
-    if (access.length === 0) {
-      return undefined
-    }
-
+    if (access.length === 0) return undefined
     const latestEval = await db.query.evaluation.findFirst({
       where: (t, { and, eq }) => and(eq(t.studentId, userId), eq(t.chapterId, chapterId)),
       orderBy: (t, { desc }) => desc(t.evaluatedAt),
@@ -78,26 +74,28 @@ export default class StudentService {
       status: chapterRow.status,
       order: chapterRow.order,
       script: chapterRow.script,
-      textUrl: chapterRow.textUrl,
+      textUrl: chapterRow.textObjectKey ? await resolveDownloadUrl(chapterRow.textObjectKey) : null,
       segments: chapterRow.segments.map(s => ({
         id: s.id,
         chapterId: s.chapterId,
         start: s.start,
         end: s.end,
       })),
-      audioAssets: chapterRow.audioAssets.map(a => ({
-        id: a.id,
-        chapterId: a.chapterId,
-        label: a.label,
-        url: a.url,
-        duration: a.duration,
-        audioMappings: a.audioMappings.map(m => ({
-          segmentId: m.segmentId,
-          audioAssetId: m.audioAssetId,
-          audioStart: m.audioStart,
-          audioEnd: m.audioEnd,
+      audioAssets: await Promise.all(
+        chapterRow.audioAssets.map(async a => ({
+          id: a.id,
+          chapterId: a.chapterId,
+          label: a.label,
+          url: await getDownloadUrl(a.objectKey),
+          duration: a.duration,
+          audioMappings: a.audioMappings.map(m => ({
+            segmentId: m.segmentId,
+            audioAssetId: m.audioAssetId,
+            audioStart: m.audioStart,
+            audioEnd: m.audioEnd,
+          })),
         })),
-      })),
+      ),
       currentLevel: latestEval?.level ?? null,
     }
   }

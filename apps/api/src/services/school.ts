@@ -65,21 +65,16 @@ export default class SchoolService {
       where: (t, { eq }) => eq(t.slug, data.slug),
     })
 
-    if (existing) {
-      throw conflict()
-    }
-
+    if (existing) throw conflict()
+    const id = crypto.randomUUID()
+    await provisionSchool(data.slug)
     const rows = await publicDb
       .insert(organization)
-      .values({ id: crypto.randomUUID(), ...data, createdAt: new Date() })
+      .values({ id, ...data, createdAt: new Date() })
       .returning()
 
     const row = rows.at(0)
-    if (!row) {
-      throw internalError()
-    }
-
-    await provisionSchool(data.slug)
+    if (!row) throw internalError()
     return mapSchool(row)
   }
 
@@ -92,10 +87,7 @@ export default class SchoolService {
         where: (t, { eq }) => eq(t.slug, data.slug!),
       })
 
-      if (taken) {
-        throw conflict()
-      }
-
+      if (taken) throw conflict()
       await renameSchool(existing.slug, data.slug)
       clearSchoolDbCache(existing.slug)
     }
@@ -107,10 +99,7 @@ export default class SchoolService {
       .returning()
 
     const row = rows.at(0)
-    if (!row) {
-      throw notFound()
-    }
-
+    if (!row) throw notFound()
     return mapSchool(row)
   }
 }

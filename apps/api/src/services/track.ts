@@ -3,6 +3,7 @@ import { asc, eq } from 'drizzle-orm'
 
 import { track, chapter, type Database } from '@narada/db'
 import { internalError } from '../error'
+import { resolveDownloadUrl } from '../utils/storage'
 
 export const trackSchema = z.object({
   id: z.string(),
@@ -43,7 +44,7 @@ export type UpdateTrackData = z.infer<typeof updateTrackSchema>
 type DbTrack = typeof track.$inferSelect
 type DbChapter = typeof chapter.$inferSelect
 
-function mapChapter(row: DbChapter): TrackChapter {
+async function mapChapter(row: DbChapter): Promise<TrackChapter> {
   return {
     id: row.id,
     trackId: row.trackId,
@@ -52,7 +53,7 @@ function mapChapter(row: DbChapter): TrackChapter {
     status: row.status,
     order: row.order,
     script: row.script,
-    textUrl: row.textUrl,
+    textUrl: row.textObjectKey ? await resolveDownloadUrl(row.textObjectKey) : null,
   }
 }
 
@@ -60,8 +61,10 @@ function mapTrack(row: DbTrack): Track {
   return { id: row.id, name: row.name, order: row.order }
 }
 
-function mapTrackWithChapters(row: DbTrack & { chapters: DbChapter[] }): TrackWithChapters {
-  return { ...mapTrack(row), chapters: row.chapters.map(mapChapter) }
+async function mapTrackWithChapters(
+  row: DbTrack & { chapters: DbChapter[] },
+): Promise<TrackWithChapters> {
+  return { ...mapTrack(row), chapters: await Promise.all(row.chapters.map(mapChapter)) }
 }
 
 export default class TrackService {
@@ -76,7 +79,7 @@ export default class TrackService {
       },
     })
 
-    return rows.map(mapTrackWithChapters)
+    return Promise.all(rows.map(mapTrackWithChapters))
   }
 
   public static async findById(
@@ -100,24 +103,14 @@ export default class TrackService {
   public static async create(db: Database, data: CreateTrackData): Promise<Track> {
     const rows = await db.insert(track).values(data).returning()
     const row = rows.at(0)
-    if (!row) {
-      throw internalError()
-    }
-
+    if (!row) throw internalError()
     return mapTrack(row)
   }
 
-  public static async update(
-    db: Database,
-    trackId: string,
-    data: UpdateTrackData,
-  ): Promise<Track> {
+  public static async update(db: Database, trackId: string, data: UpdateTrackData): Promise<Track> {
     const rows = await db.update(track).set(data).where(eq(track.id, trackId)).returning()
     const row = rows.at(0)
-    if (!row) {
-      throw internalError()
-    }
-
+    if (!row) throw internalError()
     return mapTrack(row)
   }
 }

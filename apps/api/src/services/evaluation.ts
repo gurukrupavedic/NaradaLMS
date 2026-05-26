@@ -68,8 +68,8 @@ export default class EvaluationService {
     const batchRow = await db.query.batch.findFirst({
       where: (t, { eq }) => eq(t.id, batchId),
     })
-    if (!batchRow) throw notFound()
 
+    if (!batchRow) throw notFound()
     const chapterRows = await db.query.chapter.findMany({
       where: (t, { eq }) => eq(t.trackId, batchRow.trackId),
       columns: { id: true },
@@ -77,7 +77,6 @@ export default class EvaluationService {
 
     const chapterIds = chapterRows.map(c => c.id)
     if (chapterIds.length === 0) return []
-
     const rows = await db.query.evaluation.findMany({
       where: (t, { inArray }) => inArray(t.chapterId, chapterIds),
       orderBy: (t, { desc }) => desc(t.evaluatedAt),
@@ -94,8 +93,8 @@ export default class EvaluationService {
     const batchRow = await db.query.batch.findFirst({
       where: (t, { eq }) => eq(t.id, batchId),
     })
-    if (!batchRow) throw notFound()
 
+    if (!batchRow) throw notFound()
     const chapterRows = await db.query.chapter.findMany({
       where: (t, { eq }) => eq(t.trackId, batchRow.trackId),
       columns: { id: true },
@@ -103,7 +102,6 @@ export default class EvaluationService {
 
     const chapterIds = chapterRows.map(c => c.id)
     if (chapterIds.length === 0) return []
-
     const rows = await db.query.evaluation.findMany({
       where: (t, { and, eq, inArray }) =>
         and(eq(t.studentId, studentId), inArray(t.chapterId, chapterIds)),

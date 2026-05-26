@@ -57,19 +57,13 @@ export default class SegmentService {
     return await db.transaction(async tx => {
       await tx.delete(segment).where(eq(segment.chapterId, chapterId))
 
-      if (inputs.length === 0) {
-        return []
-      }
-
+      if (inputs.length === 0) return []
       const rows = await tx
         .insert(segment)
         .values(inputs.map(input => ({ ...input, chapterId })))
         .returning()
 
-      if (rows.length !== inputs.length) {
-        throw internalError()
-      }
-
+      if (rows.length !== inputs.length) throw internalError()
       return rows
         .map(row => ({ id: row.id, chapterId: row.chapterId, start: row.start, end: row.end }))
         .sort((a, b) => a.start - b.start)

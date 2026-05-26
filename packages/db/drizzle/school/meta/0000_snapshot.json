@@ -27,15 +27,15 @@
           "primaryKey": false,
           "notNull": false
         },
-        "url": {
-          "name": "url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "duration": {
           "name": "duration",
           "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "objectKey": {
+          "name": "objectKey",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         }
@@ -62,12 +62,8 @@
           "name": "audioAsset_chapterId_chapter_id_fk",
           "tableFrom": "audioAsset",
           "tableTo": "chapter",
-          "columnsFrom": [
-            "chapterId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["chapterId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -113,12 +109,8 @@
           "name": "audioMapping_segmentId_segment_id_fk",
           "tableFrom": "audioMapping",
           "tableTo": "segment",
-          "columnsFrom": [
-            "segmentId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["segmentId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -126,12 +118,8 @@
           "name": "audioMapping_audioAssetId_audioAsset_id_fk",
           "tableFrom": "audioMapping",
           "tableTo": "audioAsset",
-          "columnsFrom": [
-            "audioAssetId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["audioAssetId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -139,10 +127,7 @@
       "compositePrimaryKeys": {
         "audioMapping_segmentId_audioAssetId_pk": {
           "name": "audioMapping_segmentId_audioAssetId_pk",
-          "columns": [
-            "segmentId",
-            "audioAssetId"
-          ]
+          "columns": ["segmentId", "audioAssetId"]
         }
       },
       "uniqueConstraints": {},
@@ -160,12 +145,6 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
-        },
-        "teamId": {
-          "name": "teamId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
         },
         "code": {
           "name": "code",
@@ -212,31 +191,18 @@
           "name": "batch_trackId_track_id_fk",
           "tableFrom": "batch",
           "tableTo": "track",
-          "columnsFrom": [
-            "trackId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trackId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "batch_teamId_unique": {
-          "name": "batch_teamId_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "teamId"
-          ]
-        },
         "batch_code_unique": {
           "name": "batch_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
+          "columns": ["code"]
         }
       },
       "policies": {},
@@ -294,8 +260,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "textUrl": {
-          "name": "textUrl",
+        "textObjectKey": {
+          "name": "textObjectKey",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -323,12 +289,8 @@
           "name": "chapter_trackId_track_id_fk",
           "tableFrom": "chapter",
           "tableTo": "track",
-          "columnsFrom": [
-            "trackId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trackId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -338,9 +300,7 @@
         "chapter_code_unique": {
           "name": "chapter_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
+          "columns": ["code"]
         }
       },
       "policies": {},
@@ -420,12 +380,8 @@
           "name": "enrollment_batchId_batch_id_fk",
           "tableFrom": "enrollment",
           "tableTo": "batch",
-          "columnsFrom": [
-            "batchId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["batchId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -433,10 +389,7 @@
       "compositePrimaryKeys": {
         "enrollment_userId_batchId_pk": {
           "name": "enrollment_userId_batchId_pk",
-          "columns": [
-            "userId",
-            "batchId"
-          ]
+          "columns": ["userId", "batchId"]
         }
       },
       "uniqueConstraints": {},
@@ -522,12 +475,8 @@
           "name": "evaluation_chapterId_chapter_id_fk",
           "tableFrom": "evaluation",
           "tableTo": "chapter",
-          "columnsFrom": [
-            "chapterId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["chapterId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -613,12 +562,8 @@
           "name": "exam_batchId_batch_id_fk",
           "tableFrom": "exam",
           "tableTo": "batch",
-          "columnsFrom": [
-            "batchId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["batchId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -658,12 +603,8 @@
           "name": "examResult_examId_exam_id_fk",
           "tableFrom": "examResult",
           "tableTo": "exam",
-          "columnsFrom": [
-            "examId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["examId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -671,12 +612,8 @@
           "name": "examResult_chapterId_chapter_id_fk",
           "tableFrom": "examResult",
           "tableTo": "chapter",
-          "columnsFrom": [
-            "chapterId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["chapterId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -684,12 +621,8 @@
           "name": "examResult_evaluationId_evaluation_id_fk",
           "tableFrom": "examResult",
           "tableTo": "evaluation",
-          "columnsFrom": [
-            "evaluationId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["evaluationId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -697,10 +630,7 @@
       "compositePrimaryKeys": {
         "examResult_examId_chapterId_pk": {
           "name": "examResult_examId_chapterId_pk",
-          "columns": [
-            "examId",
-            "chapterId"
-          ]
+          "columns": ["examId", "chapterId"]
         }
       },
       "uniqueConstraints": {},
@@ -760,12 +690,8 @@
           "name": "segment_chapterId_chapter_id_fk",
           "tableFrom": "segment",
           "tableTo": "chapter",
-          "columnsFrom": [
-            "chapterId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["chapterId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -814,69 +740,37 @@
     "public.batchStatus": {
       "name": "batchStatus",
       "schema": "public",
-      "values": [
-        "upcoming",
-        "active",
-        "completed"
-      ]
+      "values": ["upcoming", "active", "completed"]
     },
     "public.chapterStatus": {
       "name": "chapterStatus",
       "schema": "public",
-      "values": [
-        "draft",
-        "published"
-      ]
+      "values": ["draft", "published"]
     },
     "public.enrollmentRole": {
       "name": "enrollmentRole",
       "schema": "public",
-      "values": [
-        "instructor",
-        "ta",
-        "student"
-      ]
+      "values": ["instructor", "ta", "student"]
     },
     "public.enrollmentStatus": {
       "name": "enrollmentStatus",
       "schema": "public",
-      "values": [
-        "active",
-        "inactive",
-        "completed"
-      ]
+      "values": ["active", "inactive", "completed"]
     },
     "public.examStatus": {
       "name": "examStatus",
       "schema": "public",
-      "values": [
-        "scheduled",
-        "inProgress",
-        "completed",
-        "cancelled"
-      ]
+      "values": ["scheduled", "inProgress", "completed", "cancelled"]
     },
     "public.proficiencyLevel": {
       "name": "proficiencyLevel",
       "schema": "public",
-      "values": [
-        "absent",
-        "notStarted",
-        "practicing",
-        "level1",
-        "level2",
-        "level3",
-        "level4"
-      ]
+      "values": ["absent", "notStarted", "practicing", "level1", "level2", "level3", "level4"]
     },
     "public.script": {
       "name": "script",
       "schema": "public",
-      "values": [
-        "te",
-        "sa",
-        "en"
-      ]
+      "values": ["te", "sa", "en"]
     }
   },
   "schemas": {},

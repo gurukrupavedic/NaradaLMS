@@ -20,6 +20,7 @@
     "@narada/env": "workspace:*",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
+    "lru-cache": "^11.5.0",
     "pg": "^8.21.0"
   },
   "devDependencies": {

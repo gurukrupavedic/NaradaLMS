@@ -44,14 +44,14 @@ This document defines the HTTP API for the Narada LMS backend. See [data-model.m
 
 **Common error codes:**
 
-| HTTP Status | Code | Meaning |
-|-------------|------|---------|
-| 400 | `VALIDATION_ERROR` | Request body or params failed validation |
-| 401 | `UNAUTHORIZED` | No valid session |
-| 403 | `FORBIDDEN` | Valid session but insufficient role/permission |
-| 404 | `NOT_FOUND` | Resource does not exist |
-| 409 | `CONFLICT` | Duplicate or state conflict (e.g. duplicate enrollment) |
-| 422 | `UNPROCESSABLE` | Valid request but domain rules prevent it |
+| HTTP Status | Code               | Meaning                                                 |
+| ----------- | ------------------ | ------------------------------------------------------- |
+| 400         | `VALIDATION_ERROR` | Request body or params failed validation                |
+| 401         | `UNAUTHORIZED`     | No valid session                                        |
+| 403         | `FORBIDDEN`        | Valid session but insufficient role/permission          |
+| 404         | `NOT_FOUND`        | Resource does not exist                                 |
+| 409         | `CONFLICT`         | Duplicate or state conflict (e.g. duplicate enrollment) |
+| 422         | `UNPROCESSABLE`    | Valid request but domain rules prevent it               |
 
 ---
 
@@ -61,56 +61,43 @@ BetterAuth handles signup, login, and session management. Profile data (phone, c
 
 ### `GET /v1/profile`
 
-Return the current user's enrollment for the active batch, including profile and role data.
+Return the current user's school memberships for the school picker.
 
-**Access:** Authenticated user enrolled in the active batch.
+**Access:** Authenticated user. This endpoint is not school-scoped and does not require `X-School-Id`.
 
 ```ts
 // Response 200
 {
   ok: true,
   data: {
-    enrollment: {
-      userId: string,
-      batchId: string,
-      name: string,
-      phone: string | null,
-      city: string | null,
-      role: "instructor" | "ta" | "student",
-      status: "active" | "inactive" | "completed"
-    },
-    schoolRole: "owner" | "admin" | "member",
-    isSuperAdmin: boolean
+    isSuperAdmin: boolean,
+    memberships: Array<{
+      organizationId: string,
+      organizationName: string,
+      organizationSlug: string,
+      role: "owner" | "admin" | "member"
+    }>
   }
 }
 ```
 
 ### `PATCH /v1/profile`
 
-Update the current user's profile fields on their active batch enrollment.
+Update the current user's profile fields on one batch enrollment.
 
-**Access:** Authenticated user enrolled in the active batch.
+**Access:** Authenticated user in a school context.
 
 ```ts
-// Request (all fields optional)
+// Request (phone or city required)
 {
+  batchId: string,
   phone?: string,
   city?: string
 }
 
 // Response 200
 {
-  ok: true,
-  data: {
-    enrollment: {
-      userId: string,
-      batchId: string,
-      phone: string | null,
-      city: string | null,
-      role: "instructor" | "ta" | "student",
-      status: "active" | "inactive" | "completed"
-    }
-  }
+  ok: true
 }
 ```
 
@@ -311,52 +298,45 @@ Update track metadata or reorder.
 
 ### `GET /v1/chapters/:chapterId`
 
-Full chapter with current revision, segments, audio assets, and mappings.
+Full chapter with text metadata, segments, audio assets, and mappings.
 
-**Access:** All school members. Students can only access published chapters.
+**Access:** School members with `content:read`. Draft chapters require `draft:read`; otherwise the API returns `403 FORBIDDEN`.
 
 ```ts
 // Response 200
 {
   ok: true,
   data: {
-    chapter: {
+    id: string,
+    trackId: string,
+    code: string,
+    title: string,
+    status: "draft" | "published",
+    order: number,
+    script: "te" | "sa" | "en" | null,
+    textUrl: string | null,
+    segments: Array<{
       id: string,
-      trackId: string,
-      code: string,
-      title: string,
-      status: "draft" | "published",
-      order: number,
-      currentRevision: {
-        id: string,
-        script: "te" | "sa" | "en",
-        textUrl: string,
-        revision: number,
-        createdAt: string
-      } | null,
-      segments: Array<{
-        id: string,
-        start: number,
-        end: number
-      }>,
-      audioAssets: Array<{
-        id: string,
-        label: string | null,
-        url: string,
-        duration: number
-      }>,
+      chapterId: string,
+      start: number,
+      end: number
+    }>,
+    audioAssets: Array<{
+      id: string,
+      chapterId: string,
+      label: string | null,
+      url: string,
+      duration: number,
       audioMappings: Array<{
         segmentId: string,
         audioAssetId: string,
         audioStart: number,
         audioEnd: number
       }>
-    }
+    }>
   }
 }
 ```
-
-`currentRevision` is the revision with the highest `revision` number. `segments` and `audioMappings` are for the current revision only.
 
 ### `POST /v1/chapters`
 
@@ -376,14 +356,14 @@ Create a new chapter in a track.
 {
   ok: true,
   data: {
-    chapter: {
-      id: string,
-      trackId: string,
-      code: string,
-      title: string,
-      status: "draft",
-      order: number
-    }
+    id: string,
+    trackId: string,
+    code: string,
+    title: string,
+    status: "draft",
+    order: number,
+    script: null,
+    textUrl: null
   }
 }
 ```
@@ -410,25 +390,27 @@ Update chapter metadata or status.
 {
   ok: true,
   data: {
-    chapter: {
-      id: string,
-      trackId: string,
-      code: string,
-      title: string,
-      status: "draft" | "published",
-      order: number
-    }
+    id: string,
+    trackId: string,
+    code: string,
+    title: string,
+    status: "draft" | "published",
+    order: number,
+    script: "te" | "sa" | "en" | null,
+    textUrl: string | null
   }
 }
 ```
 
 ---
 
-## Chapter Revisions
+## Chapter Text
 
-### `GET /v1/chapters/:chapterId/revisions`
+Chapter text is stored directly on `chapter` as `script` and an internal text object key. API responses expose that field as `textUrl`, resolved to a fresh download URL. There is no revision table in the current code.
 
-List all revisions for a chapter.
+### `POST /v1/upload/chapters/:chapterId/script`
+
+Get a presigned R2 URL for uploading the chapter text file.
 
 **Access:** Admin.
 
@@ -437,40 +419,37 @@ List all revisions for a chapter.
 {
   ok: true,
   data: {
-    items: Array<{
-      id: string,
-      script: "te" | "sa" | "en",
-      textUrl: string,
-      revision: number,
-      createdAt: string
-    }>
+    uploadUrl: string,
+    objectKey: string
   }
 }
 ```
 
-### `POST /v1/chapters/:chapterId/revisions`
+### `POST /v1/chapters/:chapterId/script`
 
-Upload new chapter text and create a revision. The text file is uploaded to R2 and a new revision row is created with an incremented revision number.
+Apply an uploaded text object to the chapter. Existing segments for the chapter are deleted.
 
 **Access:** Admin.
 
 ```ts
-// Request (multipart/form-data)
-// Fields:
-//   script: "te" | "sa" | "en"
-//   file: text file
+// Request
+{
+  objectKey: string,
+  script: "te" | "sa" | "en"
+}
 
-// Response 201
+// Response 200
 {
   ok: true,
   data: {
-    revision: {
-      id: string,
-      script: "te" | "sa" | "en",
-      textUrl: string,
-      revision: number,
-      createdAt: string
-    }
+    id: string,
+    trackId: string,
+    code: string,
+    title: string,
+    status: "draft" | "published",
+    order: number,
+    script: "te" | "sa" | "en",
+    textUrl: string
   }
 }
 ```
@@ -479,29 +458,28 @@ Upload new chapter text and create a revision. The text file is uploaded to R2 a
 
 ## Segments
 
-### `GET /v1/revisions/:revisionId/segments`
+### `GET /v1/chapters/:chapterId/segments`
 
-List segments for a revision, ordered by start offset.
+List segments for a chapter, ordered by start offset.
 
-**Access:** All school members.
+**Access:** School members with `content:read`. Draft chapters require `draft:read`.
 
 ```ts
 // Response 200
 {
   ok: true,
-  data: {
-    items: Array<{
-      id: string,
-      start: number,
-      end: number
-    }>
-  }
+  data: Array<{
+    id: string,
+    chapterId: string,
+    start: number,
+    end: number
+  }>
 }
 ```
 
-### `PUT /v1/revisions/:revisionId/segments`
+### `PUT /v1/chapters/:chapterId/segments`
 
-Replace all segments for a revision. This is a full replacement — the server deletes existing segments and inserts the new set. The server validates that segments don't overlap and are within text bounds.
+Replace all segments for a chapter. This is a full replacement — the server deletes existing segments and inserts the new set. The server validates that segments don't overlap.
 
 **Access:** Admin.
 
@@ -517,13 +495,12 @@ Replace all segments for a revision. This is a full replacement — the server d
 // Response 200
 {
   ok: true,
-  data: {
-    items: Array<{
-      id: string,
-      start: number,
-      end: number
-    }>
-  }
+  data: Array<{
+    id: string,
+    chapterId: string,
+    start: number,
+    end: number
+  }>
 }
 ```
 
@@ -533,7 +510,7 @@ Server-assigned UUIDs replace any client-side draft IDs. Replacing segments casc
 
 ## Audio
 
-### `POST /v1/chapters/:chapterId/audio/upload-url`
+### `POST /v1/upload/chapters/:chapterId/audio`
 
 Get a presigned R2 URL for uploading an audio file.
 
@@ -542,7 +519,6 @@ Get a presigned R2 URL for uploading an audio file.
 ```ts
 // Request
 {
-  filename: string,
   contentType: string
 }
 
@@ -556,7 +532,7 @@ Get a presigned R2 URL for uploading an audio file.
 }
 ```
 
-The client uploads directly to R2 using the presigned URL, then calls `POST /audio` to register the asset.
+The client uploads directly to R2 using the presigned URL, then calls `POST /v1/chapters/:chapterId/audio` to register the asset.
 
 ### `POST /v1/chapters/:chapterId/audio`
 
@@ -576,12 +552,12 @@ Register an uploaded audio asset after the R2 upload completes.
 {
   ok: true,
   data: {
-    audioAsset: {
-      id: string,
-      label: string | null,
-      url: string,
-      duration: number
-    }
+    id: string,
+    chapterId: string,
+    label: string | null,
+    url: string,
+    objectKey: string,
+    duration: number
   }
 }
 ```
@@ -623,14 +599,12 @@ Replace all mappings for an audio asset. Full replacement — the server validat
 // Response 200
 {
   ok: true,
-  data: {
-    items: Array<{
-      segmentId: string,
-      audioAssetId: string,
-      audioStart: number,
-      audioEnd: number
-    }>
-  }
+  data: Array<{
+    segmentId: string,
+    audioAssetId: string,
+    audioStart: number,
+    audioEnd: number
+  }>
 }
 ```
 
@@ -819,50 +793,13 @@ Remove a member from a batch.
 
 ---
 
-## Batch Matrix
-
-### `GET /v1/batches/:batchId/matrix`
-
-Student-by-chapter proficiency grid. Returns the current (most recent) proficiency level for each student-chapter pair.
-
-**Access:** Admin, or Instructor/TA in this batch.
-
-```ts
-// Response 200
-{
-  ok: true,
-  data: {
-    chapters: Array<{
-      id: string,
-      code: string,
-      title: string
-    }>,
-    students: Array<{
-      userId: string,
-      name: string
-    }>,
-    cells: Array<{
-      studentId: string,
-      chapterId: string,
-      level: ProficiencyLevel
-    }>
-  }
-}
-```
-
-`ProficiencyLevel` is one of: `"notStarted"`, `"practicing"`, `"level1"`, `"level2"`, `"level3"`, `"level4"`, `"absent"`.
-
-Only students with `enrollment.role = "student"` appear in the matrix. Only published chapters in the batch's track are included.
-
----
-
 ## Evaluations
 
-### `POST /v1/evaluations`
+### `POST /v1/batches/:batchId/evaluations`
 
 Create an evaluation for a student on a chapter.
 
-**Access:** Admin, or Instructor/TA evaluating a student in their own batch.
+**Access:** Instructor/TA in this batch.
 
 ```ts
 // Request
@@ -877,45 +814,62 @@ Create an evaluation for a student on a chapter.
 {
   ok: true,
   data: {
-    evaluation: {
-      id: string,
-      studentId: string,
-      chapterId: string,
-      level: ProficiencyLevel,
-      notes: string | null,
-      evaluatorId: string,
-      evaluatedAt: string
-    }
+    id: string,
+    studentId: string,
+    chapterId: string,
+    level: ProficiencyLevel,
+    notes: string | null,
+    evaluatorId: string,
+    evaluatedAt: string
   }
 }
 ```
 
 `evaluatorId` and `evaluatedAt` are set server-side.
 
-### `GET /v1/evaluations`
+### `GET /v1/batches/:batchId/evaluations`
 
-Query evaluation history.
+List evaluation history for a batch.
 
-**Access:** Admin sees all. Instructor/TA see evaluations for students in their batches. Students see only their own.
-
-**Query params:** `?studentId=`, `?chapterId=`, `?cursor=`, `?limit=`
+**Access:** Admin, or Instructor/TA in this batch.
 
 ```ts
 // Response 200
 {
   ok: true,
-  data: {
-    items: Array<{
-      id: string,
-      studentId: string,
-      chapterId: string,
-      level: ProficiencyLevel,
-      notes: string | null,
-      evaluatorId: string,
-      evaluatedAt: string
-    }>,
-    nextCursor: string | null
-  }
+  data: Array<{
+    id: string,
+    studentId: string,
+    chapterId: string,
+    level: ProficiencyLevel,
+    notes: string | null,
+    evaluatorId: string,
+    evaluatedAt: string
+  }>
+}
+```
+
+Results are ordered by `evaluatedAt` descending.
+
+### `GET /v1/batches/:batchId/evaluations/:studentId`
+
+List evaluation history for one student in a batch.
+
+**Access:** The student can read their own evaluations. Instructor/TA in the batch can read any student's evaluations.
+
+```ts
+// Response 200
+{
+  ok: true,
+  data: Array<{
+    id: string,
+    studentId: string,
+    chapterId: string,
+    level: ProficiencyLevel,
+    notes: string | null,
+    evaluatorId: string,
+    evaluatedAt: string
+  }>
 }
 ```
 
@@ -931,7 +885,7 @@ List exams for a batch. Students only see their own exams.
 
 **Access:** Admin, Instructor/TA in this batch, or Student (own exams only).
 
-**Query params:** `?status=scheduled,completed` (comma-separated), `?cursor=`, `?limit=`
+**Query params:** `?status=scheduled`, `?cursor=`, `?limit=`
 
 ```ts
 // Response 200
@@ -942,9 +896,8 @@ List exams for a batch. Students only see their own exams.
       id: string,
       batchId: string,
       studentId: string,
-      studentName: string,
       scheduledAt: string,
-      status: "scheduled" | "in_progress" | "completed" | "cancelled"
+      status: "scheduled" | "inProgress" | "completed" | "cancelled"
     }>,
     nextCursor: string | null
   }
@@ -961,31 +914,21 @@ Schedule an exam for a student.
 // Request
 {
   studentId: string,
-  scheduledAt: string,
-  chapterIds: string[]
+  scheduledAt: string
 }
 
 // Response 201
 {
   ok: true,
   data: {
-    exam: {
-      id: string,
-      batchId: string,
-      studentId: string,
-      scheduledAt: string,
-      status: "scheduled",
-      chapters: Array<{
-        id: string,
-        code: string,
-        title: string
-      }>
-    }
+    id: string,
+    batchId: string,
+    studentId: string,
+    scheduledAt: string,
+    status: "scheduled"
   }
 }
 ```
-
-`chapterIds` determines which chapters will be examined. Exam results are recorded per chapter.
 
 ### `PATCH /v1/exams/:examId`
 
@@ -997,20 +940,18 @@ Update an exam (reschedule, change status).
 // Request (all fields optional)
 {
   scheduledAt?: string,
-  status?: "scheduled" | "in_progress" | "completed" | "cancelled"
+  status?: "scheduled" | "inProgress" | "completed" | "cancelled"
 }
 
 // Response 200
 {
   ok: true,
   data: {
-    exam: {
-      id: string,
-      batchId: string,
-      studentId: string,
-      scheduledAt: string,
-      status: "scheduled" | "in_progress" | "completed" | "cancelled"
-    }
+    id: string,
+    batchId: string,
+    studentId: string,
+    scheduledAt: string,
+    status: "scheduled" | "inProgress" | "completed" | "cancelled"
   }
 }
 ```
@@ -1023,22 +964,25 @@ Record results for an exam. Creates one evaluation per chapter and links them to
 
 ```ts
 // Request
-{
-  results: Array<{
-    chapterId: string,
-    level: ProficiencyLevel,
-    notes?: string
-  }>
-}
+Array<{
+  chapterId: string,
+  level: ProficiencyLevel,
+  notes?: string
+}>
 
-// Response 201
+// Response 200
 {
   ok: true,
   data: {
+    id: string,
+    batchId: string,
+    studentId: string,
+    scheduledAt: string,
+    status: "completed",
     results: Array<{
+      examId: string,
       chapterId: string,
-      evaluationId: string,
-      level: ProficiencyLevel
+      evaluationId: string
     }>
   }
 }
@@ -1048,61 +992,7 @@ Each result creates an `evaluation` row and an `exam_result` row linking it to t
 
 ---
 
-## Student Dashboard
-
-### `GET /v1/student/dashboard`
-
-Aggregated view of the student's enrolled batches, track progress, and upcoming exams.
-
-**Access:** Student (own data only).
-
-```ts
-// Response 200
-{
-  ok: true,
-  data: {
-    batches: Array<{
-      id: string,
-      code: string,
-      trackName: string,
-      status: "active" | "completed" | "upcoming",
-      role: "student",
-      progress: number,
-      chapters: Array<{
-        id: string,
-        code: string,
-        title: string,
-        level: ProficiencyLevel
-      }>
-    }>,
-    nextClass: {
-      batchCode: string,
-      trackName: string,
-      scheduledAt: string,
-      meetingUrl: string | null
-    } | null,
-    upcomingExams: Array<{
-      id: string,
-      batchCode: string,
-      scheduledAt: string,
-      chapters: Array<{
-        id: string,
-        code: string,
-        title: string
-      }>
-    }>,
-    recentEvaluations: Array<{
-      chapterId: string,
-      chapterCode: string,
-      chapterTitle: string,
-      level: ProficiencyLevel,
-      evaluatedAt: string
-    }>
-  }
-}
-```
-
-`progress` is the percentage of published chapters in the track where the student's current proficiency is beyond `notStarted` and `absent`.
+## Student
 
 ### `GET /v1/student/chapters/:chapterId`
 
@@ -1115,33 +1005,36 @@ Chapter content optimized for the student learning view. Only returns published 
 {
   ok: true,
   data: {
-    chapter: {
+    id: string,
+    trackId: string,
+    code: string,
+    title: string,
+    status: "published",
+    order: number,
+    textUrl: string | null,
+    script: "te" | "sa" | "en" | null,
+    segments: Array<{
       id: string,
-      code: string,
-      title: string,
-      textUrl: string,
-      script: "te" | "sa" | "en",
-      segments: Array<{
-        id: string,
-        start: number,
-        end: number
-      }>,
-      audioAssets: Array<{
-        id: string,
-        label: string | null,
-        url: string,
-        duration: number
-      }>,
+      chapterId: string,
+      start: number,
+      end: number
+    }>,
+    audioAssets: Array<{
+      id: string,
+      chapterId: string,
+      label: string | null,
+      url: string,
+      duration: number,
       audioMappings: Array<{
         segmentId: string,
         audioAssetId: string,
         audioStart: number,
         audioEnd: number
       }>,
-      currentLevel: ProficiencyLevel
-    }
+    }>,
+    currentLevel: ProficiencyLevel | null
   }
 }
 ```
 
-`currentLevel` is the student's most recent evaluation level for this chapter, defaulting to `"notStarted"`.
+`currentLevel` is the student's most recent evaluation level for this chapter, or `null` when no evaluation exists.

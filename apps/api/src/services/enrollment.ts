@@ -52,10 +52,7 @@ export default class EnrollmentService {
 
   public static async enroll(db: Database, batchId: string, data: EnrollData): Promise<Enrollment> {
     const existing = await EnrollmentService.findOne(db, data.userId, batchId)
-    if (existing) {
-      throw conflict()
-    }
-
+    if (existing) throw conflict()
     const rows = await db
       .insert(enrollment)
       .values({ batchId, userId: data.userId, role: data.role })

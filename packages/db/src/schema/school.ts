@@ -40,7 +40,9 @@ export const examStatus = pgEnum('examStatus', [
 export const track = pgTable('track', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
-  order: integer('order').notNull().default(sql`nextval('track_order_seq')`),
+  order: integer('order')
+    .notNull()
+    .default(sql`nextval('track_order_seq')`),
 })
 
 export const chapter = pgTable(
@@ -53,9 +55,11 @@ export const chapter = pgTable(
     code: text('code').notNull().unique(),
     title: text('title').notNull(),
     status: chapterStatus('status').notNull().default('draft'),
-    order: integer('order').notNull().default(sql`nextval('chapter_order_seq')`),
+    order: integer('order')
+      .notNull()
+      .default(sql`nextval('chapter_order_seq')`),
     script: script('script'),
-    textUrl: text('textUrl'),
+    textObjectKey: text('textObjectKey'),
   },
   table => [index('chapter_trackId_idx').on(table.trackId)],
 )
@@ -81,7 +85,6 @@ export const audioAsset = pgTable(
       .notNull()
       .references(() => chapter.id),
     label: text('label'),
-    url: text('url').notNull(),
     objectKey: text('objectKey').notNull(),
     duration: real('duration').notNull(),
   },
@@ -182,4 +185,3 @@ export const examResult = pgTable(
   },
   table => [primaryKey({ columns: [table.examId, table.chapterId] })],
 )
-

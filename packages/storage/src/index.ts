@@ -16,7 +16,7 @@ export async function getUploadUrl(
 ) {
   const command = new PutObjectCommand({ Bucket: BUCKET, Key: key, ContentType: contentType })
   const uploadUrl = await getSignedUrl(s3, command, { expiresIn })
-  return { uploadUrl, key }
+  return { uploadUrl }
 }
 
 export async function getDownloadUrl(key: string, expiresIn = DOWNLOAD_EXPIRY_SECONDS) {
