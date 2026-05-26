@@ -3,11 +3,9 @@ import { asc, eq } from 'drizzle-orm'
 
 import { track, chapter, type Database } from '@narada/db'
 import { internalError } from '../error'
-import { resolveDownloadUrl } from '../utils/storage'
+import { chapterResponse, type Chapter, type ChapterReadView } from './chapterReader'
 
-type TrackChapter = Omit<typeof chapter.$inferSelect, 'textObjectKey'> & {
-  textUrl: string | null
-}
+type TrackChapter = Chapter
 
 export const createTrackSchema = z.object({
   name: z.string().min(1),
@@ -25,19 +23,6 @@ export type UpdateTrackData = z.infer<typeof updateTrackSchema>
 
 type DbChapter = typeof chapter.$inferSelect
 
-async function chapterResponse(row: DbChapter): Promise<TrackChapter> {
-  return {
-    id: row.id,
-    trackId: row.trackId,
-    code: row.code,
-    title: row.title,
-    status: row.status,
-    order: row.order,
-    script: row.script,
-    textUrl: row.textObjectKey ? await resolveDownloadUrl(row.textObjectKey) : null,
-  }
-}
-
 async function trackWithChaptersResponse(
   row: Track & { chapters: DbChapter[] },
 ): Promise<TrackWithChapters> {
@@ -45,13 +30,13 @@ async function trackWithChaptersResponse(
 }
 
 export default class TrackService {
-  public static async findAll(db: Database, includeDrafts: boolean): Promise<TrackWithChapters[]> {
+  public static async findAll(db: Database, view: ChapterReadView): Promise<TrackWithChapters[]> {
     const rows = await db.query.track.findMany({
       orderBy: asc(track.order),
       with: {
         chapters: {
           orderBy: asc(chapter.order),
-          where: includeDrafts ? undefined : (t, { eq }) => eq(t.status, 'published'),
+          where: view.kind === 'authoring' ? undefined : (t, { eq }) => eq(t.status, 'published'),
         },
       },
     })
@@ -62,14 +47,14 @@ export default class TrackService {
   public static async findById(
     db: Database,
     trackId: string,
-    includeDrafts: boolean,
+    view: ChapterReadView,
   ): Promise<TrackWithChapters | undefined> {
     const row = await db.query.track.findFirst({
       where: (t, { eq }) => eq(t.id, trackId),
       with: {
         chapters: {
           orderBy: asc(chapter.order),
-          where: includeDrafts ? undefined : (t, { eq }) => eq(t.status, 'published'),
+          where: view.kind === 'authoring' ? undefined : (t, { eq }) => eq(t.status, 'published'),
         },
       },
     })

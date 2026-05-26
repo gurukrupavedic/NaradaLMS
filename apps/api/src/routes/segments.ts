@@ -3,8 +3,9 @@ import { z } from 'zod'
 
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
-import { authorize, hasPermission } from '../utils/auth'
-import ChapterService from '../services/chapter'
+import { authorize } from '../utils/auth'
+import { authoringView, authorizeContentReadView } from '../utils/chapterView'
+import ChapterReader from '../services/chapterReader'
 import SegmentService, { putSegmentsSchema } from '../services/segment'
 
 const router = Router({ mergeParams: true })
@@ -13,18 +14,11 @@ router.get('/', async (req, res) => {
   const { db } = res.locals
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
-  await authorize(req, db, { scope: 'school', permissions: { content: ['read'] } })
-  const includeDrafts = await hasPermission(req, db, {
-    scope: 'school',
-    permissions: { draft: ['read'] },
-  })
-
-  const chapter = await ChapterService.findById(db, chapterId, includeDrafts)
-  if (!chapter) {
+  const view = await authorizeContentReadView(req, db)
+  const segments = await ChapterReader.findSegmentsByChapter(db, chapterId, view)
+  if (!segments) {
     throw notFound()
   }
-
-  const segments = await SegmentService.findByChapter(db, chapterId)
   res.status(200).json({ ok: true, data: segments })
 })
 
@@ -34,7 +28,7 @@ router.put('/', async (req, res) => {
   const inputs = parseBody(putSegmentsSchema, req)
 
   await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
-  const chapter = await ChapterService.findById(db, chapterId, true)
+  const chapter = await ChapterReader.findById(db, chapterId, authoringView)
   if (!chapter) {
     throw notFound()
   }

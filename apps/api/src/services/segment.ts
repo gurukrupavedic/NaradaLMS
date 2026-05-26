@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { asc, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 import { segment, type Database } from '@narada/db'
 import { internalError, unprocessable } from '../error'
@@ -26,15 +26,6 @@ function validateNoOverlaps(inputs: SegmentInput[]): void {
 }
 
 export default class SegmentService {
-  public static async findByChapter(db: Database, chapterId: string): Promise<Segment[]> {
-    const rows = await db.query.segment.findMany({
-      where: (t, { eq: e }) => e(t.chapterId, chapterId),
-      orderBy: asc(segment.start),
-    })
-
-    return rows
-  }
-
   public static async replace(
     db: Database,
     chapterId: string,

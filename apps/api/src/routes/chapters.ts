@@ -3,7 +3,9 @@ import { z } from 'zod'
 
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
-import { authorize, hasPermission } from '../utils/auth'
+import { authorize } from '../utils/auth'
+import { authoringView, authorizeContentReadView } from '../utils/chapterView'
+import ChapterReader from '../services/chapterReader'
 import ChapterService, { createChapterSchema, updateChapterSchema } from '../services/chapter'
 
 const router = Router()
@@ -12,12 +14,8 @@ router.get('/:chapterId', async (req, res) => {
   const { db } = res.locals
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
-  await authorize(req, db, { scope: 'school', permissions: { content: ['read'] } })
-  const includeDrafts = await hasPermission(req, db, {
-    scope: 'school',
-    permissions: { draft: ['read'] },
-  })
-  const chapter = await ChapterService.findById(db, chapterId, includeDrafts)
+  const view = await authorizeContentReadView(req, db)
+  const chapter = await ChapterReader.findById(db, chapterId, view)
   if (!chapter) {
     throw notFound()
   }
@@ -40,7 +38,7 @@ router.patch('/:chapterId', async (req, res) => {
   const updates = parseBody(updateChapterSchema, req)
 
   await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
-  const existing = await ChapterService.findById(db, chapterId, true)
+  const existing = await ChapterReader.findById(db, chapterId, authoringView)
   if (!existing) {
     throw notFound()
   }

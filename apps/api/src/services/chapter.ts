@@ -1,10 +1,9 @@
 import { z } from 'zod'
-import { asc, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
-import { chapter, segment, audioAsset, audioMapping, type Database } from '@narada/db'
-import { getDownloadUrl } from '@narada/storage'
-import { forbidden, internalError, notFound } from '../error'
-import { resolveDownloadUrl } from '../utils/storage'
+import { chapter, segment, type Database } from '@narada/db'
+import { internalError, notFound } from '../error'
+import { chapterResponse, type Chapter } from './chapterReader'
 
 export const createChapterSchema = z.object({
   trackId: z.uuid(),
@@ -24,76 +23,10 @@ export const updateChapterSchema = z
   })
   .refine(data => Object.keys(data).length > 0, { message: 'No fields to update' })
 
-export type Chapter = Omit<typeof chapter.$inferSelect, 'textObjectKey'> & { textUrl: string | null }
-export type Segment = typeof segment.$inferSelect
-export type AudioMapping = typeof audioMapping.$inferSelect
-export type AudioAsset = Omit<typeof audioAsset.$inferSelect, 'objectKey'> & {
-  url: string
-  audioMappings: AudioMapping[]
-}
-
-export type ChapterDetail = Chapter & {
-  segments: Segment[]
-  audioAssets: AudioAsset[]
-}
-
 export type CreateChapterData = z.infer<typeof createChapterSchema>
 export type UpdateChapterData = z.infer<typeof updateChapterSchema>
 
-type DbChapter = typeof chapter.$inferSelect
-type DbAudioAsset = typeof audioAsset.$inferSelect
-type DbAudioMapping = typeof audioMapping.$inferSelect
-
-async function chapterResponse(row: DbChapter): Promise<Chapter> {
-  return {
-    id: row.id,
-    trackId: row.trackId,
-    code: row.code,
-    title: row.title,
-    status: row.status,
-    order: row.order,
-    script: row.script,
-    textUrl: row.textObjectKey ? await resolveDownloadUrl(row.textObjectKey) : null,
-  }
-}
-
-async function audioAssetResponse(
-  row: DbAudioAsset & { audioMappings: DbAudioMapping[] },
-): Promise<AudioAsset> {
-  return {
-    id: row.id,
-    chapterId: row.chapterId,
-    label: row.label,
-    url: await getDownloadUrl(row.objectKey),
-    duration: row.duration,
-    audioMappings: row.audioMappings,
-  }
-}
-
 export default class ChapterService {
-  public static async findById(
-    db: Database,
-    chapterId: string,
-    includeDrafts: boolean,
-  ): Promise<ChapterDetail | undefined> {
-    const row = await db.query.chapter.findFirst({
-      where: (t, { eq }) => eq(t.id, chapterId),
-      with: {
-        segments: { orderBy: asc(segment.start) },
-        audioAssets: { with: { audioMappings: true } },
-      },
-    })
-
-    if (!row) return undefined
-    if (!includeDrafts && row.status === 'draft') throw forbidden()
-
-    return {
-      ...(await chapterResponse(row)),
-      segments: row.segments,
-      audioAssets: await Promise.all(row.audioAssets.map(audioAssetResponse)),
-    }
-  }
-
   public static async create(db: Database, data: CreateChapterData): Promise<Chapter> {
     const rows = await db.insert(chapter).values(data).returning()
     const row = rows.at(0)

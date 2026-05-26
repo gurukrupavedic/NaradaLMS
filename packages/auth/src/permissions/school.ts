@@ -15,7 +15,6 @@ export const ac = createAccessControl({
   invitation: ['create', 'read', 'cancel'],
   enrollment: ['create', 'remove'],
   evaluation: ['read'],
-  draft: ['read'],
 } as const)
 
 export const owner = ac.newRole({
@@ -26,7 +25,6 @@ export const owner = ac.newRole({
   invitation: ['create', 'read', 'cancel'],
   enrollment: ['create', 'remove'],
   evaluation: ['read'],
-  draft: ['read'],
 })
 
 export const admin = ac.newRole({
@@ -37,7 +35,6 @@ export const admin = ac.newRole({
   invitation: ['create', 'read', 'cancel'],
   enrollment: ['create', 'remove'],
   evaluation: ['read'],
-  draft: ['read'],
 })
 
 export const member = ac.newRole({

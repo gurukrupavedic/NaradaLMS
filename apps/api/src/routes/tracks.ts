@@ -3,19 +3,17 @@ import { z } from 'zod'
 
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
-import { authorize, hasPermission } from '../utils/auth'
+import { authorize } from '../utils/auth'
+import { authoringView, authorizeContentReadView } from '../utils/chapterView'
 import TrackService, { createTrackSchema, updateTrackSchema } from '../services/track'
 
 const router = Router()
 
 router.get('/', async (req, res) => {
   const { db } = res.locals
-  const [_, includeDrafts] = await Promise.all([
-    authorize(req, db, { scope: 'school', permissions: { content: ['read'] } }),
-    hasPermission(req, db, { scope: 'school', permissions: { draft: ['read'] } }),
-  ])
+  const view = await authorizeContentReadView(req, db)
 
-  const tracks = await TrackService.findAll(db, includeDrafts)
+  const tracks = await TrackService.findAll(db, view)
   res.status(200).json({ ok: true, data: tracks })
 })
 
@@ -23,12 +21,9 @@ router.get('/:trackId', async (req, res) => {
   const { db } = res.locals
   const { trackId } = parseParams(z.object({ trackId: z.uuid() }), req)
 
-  const [_, includeDrafts] = await Promise.all([
-    authorize(req, db, { scope: 'school', permissions: { content: ['read'] } }),
-    hasPermission(req, db, { scope: 'school', permissions: { draft: ['read'] } }),
-  ])
+  const view = await authorizeContentReadView(req, db)
 
-  const track = await TrackService.findById(db, trackId, includeDrafts)
+  const track = await TrackService.findById(db, trackId, view)
   if (!track) {
     throw notFound()
   }
@@ -51,7 +46,7 @@ router.patch('/:trackId', async (req, res) => {
   const updateData = parseBody(updateTrackSchema, req)
 
   await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
-  const existing = await TrackService.findById(db, trackId, true)
+  const existing = await TrackService.findById(db, trackId, authoringView)
   if (!existing) {
     throw notFound()
   }

@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import { authorize } from '../utils/auth'
-import StudentService from '../services/student'
+import ChapterReader from '../services/chapterReader'
 
 const router = Router()
 
@@ -17,7 +17,10 @@ router.get('/chapters/:chapterId', async (req, res) => {
     permissions: { content: ['read'] },
   })
 
-  const chapter = await StudentService.getChapter(db, user.id, chapterId)
+  const chapter = await ChapterReader.findById(db, chapterId, {
+    kind: 'learning',
+    studentId: user.id,
+  })
   if (!chapter) {
     throw notFound()
   }
