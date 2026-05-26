@@ -17,15 +17,6 @@ const contentTypeExtMap = {
   'audio/mp4': 'm4a',
 } as const
 
-export const audioAssetSchema = z.object({
-  id: z.string(),
-  chapterId: z.string(),
-  label: z.string().nullable(),
-  url: z.string(),
-  objectKey: z.string(),
-  duration: z.number(),
-})
-
 export const getUploadUrlSchema = z.object({
   contentType: z.enum(['audio/mpeg', 'audio/wav', 'audio/aac', 'audio/ogg', 'audio/mp4']),
 })
@@ -36,20 +27,16 @@ export const createAudioAssetSchema = z.object({
   duration: z.number().positive(),
 })
 
-export type AudioAsset = z.infer<typeof audioAssetSchema>
+export type AudioAsset = typeof audioAsset.$inferSelect & { url: string }
 export type GetUploadUrlData = z.infer<typeof getUploadUrlSchema>
 export type CreateAudioAssetData = z.infer<typeof createAudioAssetSchema>
 
 type DbAudioAsset = typeof audioAsset.$inferSelect
 
-async function mapAudioAsset(row: DbAudioAsset): Promise<AudioAsset> {
+async function audioAssetResponse(row: DbAudioAsset): Promise<AudioAsset> {
   return {
-    id: row.id,
-    chapterId: row.chapterId,
-    label: row.label,
+    ...row,
     url: await getDownloadUrl(row.objectKey),
-    objectKey: row.objectKey,
-    duration: row.duration,
   }
 }
 
@@ -87,7 +74,7 @@ export default class AudioService {
       .returning()
 
     const row = rows.at(0)!
-    return mapAudioAsset(row)
+    return audioAssetResponse(row)
   }
 
   public static async remove(db: Database, audioId: string, chapterId: string): Promise<void> {

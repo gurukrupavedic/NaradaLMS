@@ -6,45 +6,6 @@ import { getDownloadUrl } from '@narada/storage'
 import { forbidden, internalError, notFound } from '../error'
 import { resolveDownloadUrl } from '../utils/storage'
 
-export const chapterSchema = z.object({
-  id: z.string(),
-  trackId: z.string(),
-  code: z.string(),
-  title: z.string(),
-  status: z.enum(['draft', 'published']),
-  order: z.number(),
-  script: z.enum(['te', 'sa', 'en']).nullable(),
-  textUrl: z.string().nullable(),
-})
-
-export const segmentSchema = z.object({
-  id: z.string(),
-  chapterId: z.string(),
-  start: z.number(),
-  end: z.number(),
-})
-
-export const audioMappingSchema = z.object({
-  segmentId: z.string(),
-  audioAssetId: z.string(),
-  audioStart: z.number(),
-  audioEnd: z.number(),
-})
-
-export const audioAssetSchema = z.object({
-  id: z.string(),
-  chapterId: z.string(),
-  label: z.string().nullable(),
-  url: z.string(),
-  duration: z.number(),
-  audioMappings: z.array(audioMappingSchema),
-})
-
-export const chapterDetailSchema = chapterSchema.extend({
-  segments: z.array(segmentSchema),
-  audioAssets: z.array(audioAssetSchema),
-})
-
 export const createChapterSchema = z.object({
   trackId: z.uuid(),
   title: z.string().min(1),
@@ -63,20 +24,27 @@ export const updateChapterSchema = z
   })
   .refine(data => Object.keys(data).length > 0, { message: 'No fields to update' })
 
-export type Chapter = z.infer<typeof chapterSchema>
-export type Segment = z.infer<typeof segmentSchema>
-export type AudioMapping = z.infer<typeof audioMappingSchema>
-export type AudioAsset = z.infer<typeof audioAssetSchema>
-export type ChapterDetail = z.infer<typeof chapterDetailSchema>
+export type Chapter = Omit<typeof chapter.$inferSelect, 'textObjectKey'> & { textUrl: string | null }
+export type Segment = typeof segment.$inferSelect
+export type AudioMapping = typeof audioMapping.$inferSelect
+export type AudioAsset = Omit<typeof audioAsset.$inferSelect, 'objectKey'> & {
+  url: string
+  audioMappings: AudioMapping[]
+}
+
+export type ChapterDetail = Chapter & {
+  segments: Segment[]
+  audioAssets: AudioAsset[]
+}
+
 export type CreateChapterData = z.infer<typeof createChapterSchema>
 export type UpdateChapterData = z.infer<typeof updateChapterSchema>
 
 type DbChapter = typeof chapter.$inferSelect
-type DbSegment = typeof segment.$inferSelect
 type DbAudioAsset = typeof audioAsset.$inferSelect
 type DbAudioMapping = typeof audioMapping.$inferSelect
 
-async function mapChapter(row: DbChapter): Promise<Chapter> {
+async function chapterResponse(row: DbChapter): Promise<Chapter> {
   return {
     id: row.id,
     trackId: row.trackId,
@@ -89,20 +57,7 @@ async function mapChapter(row: DbChapter): Promise<Chapter> {
   }
 }
 
-function mapSegment(row: DbSegment): Segment {
-  return { id: row.id, chapterId: row.chapterId, start: row.start, end: row.end }
-}
-
-function mapAudioMapping(row: DbAudioMapping): AudioMapping {
-  return {
-    segmentId: row.segmentId,
-    audioAssetId: row.audioAssetId,
-    audioStart: row.audioStart,
-    audioEnd: row.audioEnd,
-  }
-}
-
-async function mapAudioAsset(
+async function audioAssetResponse(
   row: DbAudioAsset & { audioMappings: DbAudioMapping[] },
 ): Promise<AudioAsset> {
   return {
@@ -111,7 +66,7 @@ async function mapAudioAsset(
     label: row.label,
     url: await getDownloadUrl(row.objectKey),
     duration: row.duration,
-    audioMappings: row.audioMappings.map(mapAudioMapping),
+    audioMappings: row.audioMappings,
   }
 }
 
@@ -133,9 +88,9 @@ export default class ChapterService {
     if (!includeDrafts && row.status === 'draft') throw forbidden()
 
     return {
-      ...(await mapChapter(row)),
-      segments: row.segments.map(mapSegment),
-      audioAssets: await Promise.all(row.audioAssets.map(mapAudioAsset)),
+      ...(await chapterResponse(row)),
+      segments: row.segments,
+      audioAssets: await Promise.all(row.audioAssets.map(audioAssetResponse)),
     }
   }
 
@@ -143,7 +98,7 @@ export default class ChapterService {
     const rows = await db.insert(chapter).values(data).returning()
     const row = rows.at(0)
     if (!row) throw internalError()
-    return mapChapter(row)
+    return chapterResponse(row)
   }
 
   public static async update(
@@ -154,7 +109,7 @@ export default class ChapterService {
     const rows = await db.update(chapter).set(data).where(eq(chapter.id, chapterId)).returning()
     const row = rows.at(0)
     if (!row) throw internalError()
-    return mapChapter(row)
+    return chapterResponse(row)
   }
 
   public static async applyScript(
@@ -180,7 +135,7 @@ export default class ChapterService {
 
       const row = rows.at(0)
       if (!row) throw internalError()
-      return mapChapter(row)
+      return chapterResponse(row)
     })
   }
 }

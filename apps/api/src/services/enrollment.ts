@@ -5,37 +5,13 @@ import { enrollment, type Database } from '@narada/db'
 import { conflict, notFound } from '../error'
 import assert from 'node:assert'
 
-export const enrollmentSchema = z.object({
-  userId: z.string(),
-  batchId: z.string(),
-  phone: z.string().nullable(),
-  city: z.string().nullable(),
-  role: z.enum(['instructor', 'ta', 'student']),
-  status: z.enum(['active', 'inactive', 'completed']),
-  joinedAt: z.date().nullable(),
-})
-
 export const enrollSchema = z.object({
   userId: z.string().min(1),
   role: z.enum(['instructor', 'ta', 'student']),
 })
 
-export type Enrollment = z.infer<typeof enrollmentSchema>
+export type Enrollment = typeof enrollment.$inferSelect
 export type EnrollData = z.infer<typeof enrollSchema>
-
-type DbEnrollment = typeof enrollment.$inferSelect
-
-function mapEnrollment(row: DbEnrollment): Enrollment {
-  return {
-    userId: row.userId,
-    batchId: row.batchId,
-    phone: row.phone,
-    city: row.city,
-    role: row.role,
-    status: row.status,
-    joinedAt: row.joinedAt,
-  }
-}
 
 export default class EnrollmentService {
   public static async findOne(
@@ -47,7 +23,7 @@ export default class EnrollmentService {
       where: (t, { and, eq }) => and(eq(t.userId, userId), eq(t.batchId, batchId)),
     })
 
-    return row ? mapEnrollment(row) : undefined
+    return row
   }
 
   public static async enroll(db: Database, batchId: string, data: EnrollData): Promise<Enrollment> {
@@ -60,7 +36,7 @@ export default class EnrollmentService {
 
     const row = rows.at(0)
     assert(row !== undefined, '`insert` should always return a row')
-    return mapEnrollment(row)
+    return row
   }
 
   public static async unenroll(db: Database, batchId: string, userId: string): Promise<void> {

@@ -20,24 +20,6 @@ const proficiencyLevel = z.enum([
   'level4',
 ])
 
-export const examSchema = z.object({
-  id: z.string(),
-  batchId: z.string(),
-  studentId: z.string(),
-  scheduledAt: z.date(),
-  status: z.enum(['scheduled', 'inProgress', 'completed', 'cancelled']),
-})
-
-export const examResultSchema = z.object({
-  examId: z.string(),
-  chapterId: z.string(),
-  evaluationId: z.string(),
-})
-
-export const examDetailSchema = examSchema.extend({
-  results: z.array(examResultSchema),
-})
-
 export const createExamSchema = z.object({
   studentId: z.string().min(1),
   scheduledAt: z.iso.datetime().transform(v => new Date(v)),
@@ -67,25 +49,13 @@ export const recordResultItemSchema = z.object({
 
 export const recordResultsSchema = z.array(recordResultItemSchema).min(1)
 
-export type Exam = z.infer<typeof examSchema>
-export type ExamResult = z.infer<typeof examResultSchema>
-export type ExamDetail = z.infer<typeof examDetailSchema>
+export type Exam = typeof exam.$inferSelect
+export type ExamResult = typeof examResult.$inferSelect
+export type ExamDetail = Exam & { results: ExamResult[] }
 export type CreateExamData = z.infer<typeof createExamSchema>
 export type UpdateExamData = z.infer<typeof updateExamSchema>
 export type ListExamsQuery = z.infer<typeof listExamsQuerySchema>
 export type RecordResultItem = z.infer<typeof recordResultItemSchema>
-
-type DbExam = typeof exam.$inferSelect
-
-function mapExam(row: DbExam): Exam {
-  return {
-    id: row.id,
-    batchId: row.batchId,
-    studentId: row.studentId,
-    scheduledAt: row.scheduledAt,
-    status: row.status,
-  }
-}
 
 export default class ExamService {
   public static async findByBatch(
@@ -115,7 +85,7 @@ export default class ExamService {
       limit: limit + 1,
     })
 
-    return paginateResponse(rows.map(mapExam), limit, item => ({ id: item.id }))
+    return paginateResponse(rows, limit, item => ({ id: item.id }))
   }
 
   public static async findById(db: Database, examId: string): Promise<ExamDetail | undefined> {
@@ -128,14 +98,7 @@ export default class ExamService {
       return undefined
     }
 
-    return {
-      ...mapExam(row),
-      results: row.results.map(r => ({
-        examId: r.examId,
-        chapterId: r.chapterId,
-        evaluationId: r.evaluationId,
-      })),
-    }
+    return row
   }
 
   public static async create(db: Database, batchId: string, data: CreateExamData): Promise<Exam> {
@@ -146,7 +109,7 @@ export default class ExamService {
 
     const row = rows.at(0)
     assert(row !== undefined, '`insert` should always return a row')
-    return mapExam(row)
+    return row
   }
 
   public static async update(db: Database, examId: string, data: UpdateExamData): Promise<Exam> {
@@ -156,7 +119,7 @@ export default class ExamService {
       throw notFound()
     }
 
-    return mapExam(row)
+    return row
   }
 
   public static async recordResults(
@@ -226,7 +189,7 @@ export default class ExamService {
 
       const updated = updatedRows.at(0)
       assert(updated !== undefined, 'exam update should return a row')
-      return { ...mapExam(updated), results }
+      return { ...updated, results }
     })
   }
 }

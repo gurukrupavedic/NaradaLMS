@@ -10,13 +10,6 @@ import {
 } from '@narada/db'
 import { conflict, internalError, notFound } from '../error'
 
-export const schoolSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  slug: z.string(),
-  createdAt: z.date(),
-})
-
 export const createSchoolSchema = z.object({
   name: z.string().min(1),
   slug: z
@@ -36,20 +29,20 @@ export const updateSchoolSchema = z
   })
   .refine(data => Object.keys(data).length > 0, { message: 'No fields to update' })
 
-export type School = z.infer<typeof schoolSchema>
+export type School = Pick<typeof organization.$inferSelect, 'id' | 'name' | 'slug' | 'createdAt'>
 export type CreateSchoolData = z.infer<typeof createSchoolSchema>
 export type UpdateSchoolData = z.infer<typeof updateSchoolSchema>
 
 type DbOrg = typeof organization.$inferSelect
 
-function mapSchool(row: DbOrg): School {
+function schoolResponse(row: DbOrg): School {
   return { id: row.id, name: row.name, slug: row.slug, createdAt: row.createdAt }
 }
 
 export default class SchoolService {
   public static async findAll(): Promise<School[]> {
     const rows = await publicDb.query.organization.findMany()
-    return rows.map(mapSchool)
+    return rows.map(schoolResponse)
   }
 
   public static async findById(schoolId: string): Promise<School | undefined> {
@@ -57,7 +50,7 @@ export default class SchoolService {
       where: (t, { eq }) => eq(t.id, schoolId),
     })
 
-    return row ? mapSchool(row) : undefined
+    return row ? schoolResponse(row) : undefined
   }
 
   public static async create(data: CreateSchoolData): Promise<School> {
@@ -75,7 +68,7 @@ export default class SchoolService {
 
     const row = rows.at(0)
     if (!row) throw internalError()
-    return mapSchool(row)
+    return schoolResponse(row)
   }
 
   public static async update(schoolId: string, data: UpdateSchoolData): Promise<School> {
@@ -100,6 +93,6 @@ export default class SchoolService {
 
     const row = rows.at(0)
     if (!row) throw notFound()
-    return mapSchool(row)
+    return schoolResponse(row)
   }
 }

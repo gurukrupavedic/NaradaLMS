@@ -4,13 +4,6 @@ import { asc, eq } from 'drizzle-orm'
 import { segment, type Database } from '@narada/db'
 import { internalError, unprocessable } from '../error'
 
-export const segmentSchema = z.object({
-  id: z.string(),
-  chapterId: z.string(),
-  start: z.number(),
-  end: z.number(),
-})
-
 export const segmentInputSchema = z
   .object({
     start: z.number().int().nonnegative(),
@@ -20,7 +13,7 @@ export const segmentInputSchema = z
 
 export const putSegmentsSchema = z.array(segmentInputSchema)
 
-export type Segment = z.infer<typeof segmentSchema>
+export type Segment = typeof segment.$inferSelect
 export type SegmentInput = z.infer<typeof segmentInputSchema>
 
 function validateNoOverlaps(inputs: SegmentInput[]): void {
@@ -39,12 +32,7 @@ export default class SegmentService {
       orderBy: asc(segment.start),
     })
 
-    return rows.map(row => ({
-      id: row.id,
-      chapterId: row.chapterId,
-      start: row.start,
-      end: row.end,
-    }))
+    return rows
   }
 
   public static async replace(
@@ -64,9 +52,7 @@ export default class SegmentService {
         .returning()
 
       if (rows.length !== inputs.length) throw internalError()
-      return rows
-        .map(row => ({ id: row.id, chapterId: row.chapterId, start: row.start, end: row.end }))
-        .sort((a, b) => a.start - b.start)
+      return rows.sort((a, b) => a.start - b.start)
     })
   }
 }

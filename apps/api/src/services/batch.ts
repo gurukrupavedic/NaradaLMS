@@ -8,30 +8,16 @@ import type { BatchAccess } from '../utils/auth'
 
 const PAGE_SIZE = 20
 
-export const batchSchema = z.object({
-  id: z.string(),
-  code: z.string(),
-  trackId: z.string(),
-  startDate: z.string().nullable(),
-  status: z.enum(['upcoming', 'active', 'completed']),
-  scheduledAt: z.date().nullable(),
-  meetingUrl: z.string().nullable(),
-})
-
-export const batchMemberSchema = z.object({
-  userId: z.string(),
-  userName: z.string(),
-  userEmail: z.string(),
-  role: z.enum(['instructor', 'ta', 'student']),
-  status: z.enum(['active', 'inactive', 'completed']),
-  phone: z.string().nullable(),
-  city: z.string().nullable(),
-  joinedAt: z.date().nullable(),
-})
-
-export const batchDetailSchema = batchSchema.extend({
-  members: z.array(batchMemberSchema),
-})
+type BatchMember = {
+  userId: string
+  userName: string
+  userEmail: string
+  role: (typeof enrollment.$inferSelect)['role']
+  status: (typeof enrollment.$inferSelect)['status']
+  phone: string | null
+  city: string | null
+  joinedAt: Date | null
+}
 
 export const createBatchSchema = z.object({
   code: z.string().min(1),
@@ -69,26 +55,11 @@ export const listBatchesQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(PAGE_SIZE),
 })
 
-export type Batch = z.infer<typeof batchSchema>
-export type BatchMember = z.infer<typeof batchMemberSchema>
-export type BatchDetail = z.infer<typeof batchDetailSchema>
+export type Batch = typeof batch.$inferSelect
+export type BatchDetail = Batch & { members: BatchMember[] }
 export type CreateBatchData = z.infer<typeof createBatchSchema>
 export type UpdateBatchData = z.infer<typeof updateBatchSchema>
 export type ListBatchesQuery = z.infer<typeof listBatchesQuerySchema>
-
-type DbBatch = typeof batch.$inferSelect
-
-function mapBatch(row: DbBatch): Batch {
-  return {
-    id: row.id,
-    code: row.code,
-    trackId: row.trackId,
-    startDate: row.startDate,
-    status: row.status,
-    scheduledAt: row.scheduledAt,
-    meetingUrl: row.meetingUrl,
-  }
-}
 
 export default class BatchService {
   public static async findAll(
@@ -117,7 +88,7 @@ export default class BatchService {
       limit: limit + 1,
     })
 
-    return paginateResponse(rows.map(mapBatch), limit, item => ({ id: item.id }))
+    return paginateResponse(rows, limit, item => ({ id: item.id }))
   }
 
   public static async findById(db: Database, batchId: string): Promise<Batch | undefined> {
@@ -125,7 +96,7 @@ export default class BatchService {
       where: (t, { eq }) => eq(t.id, batchId),
     })
 
-    return row ? mapBatch(row) : undefined
+    return row
   }
 
   public static async findByIdWithMembers(
@@ -139,7 +110,7 @@ export default class BatchService {
 
     if (!row) return undefined
     return {
-      ...mapBatch(row),
+      ...row,
       members: row.enrollments.map(e => ({
         userId: e.userId,
         userName: e.user.name,
@@ -157,13 +128,13 @@ export default class BatchService {
     const rows = await db.insert(batch).values(data).returning()
     const row = rows.at(0)
     if (!row) throw internalError()
-    return mapBatch(row)
+    return row
   }
 
   public static async update(db: Database, batchId: string, data: UpdateBatchData): Promise<Batch> {
     const rows = await db.update(batch).set(data).where(eq(batch.id, batchId)).returning()
     const row = rows.at(0)
     if (!row) throw notFound()
-    return mapBatch(row)
+    return row
   }
 }

@@ -14,16 +14,6 @@ const proficiencyLevel = z.enum([
   'level4',
 ])
 
-export const evaluationSchema = z.object({
-  id: z.string(),
-  studentId: z.string(),
-  chapterId: z.string(),
-  level: proficiencyLevel,
-  notes: z.string().nullable(),
-  evaluatorId: z.string(),
-  evaluatedAt: z.date().nullable(),
-})
-
 export const createEvaluationSchema = z.object({
   studentId: z.string().min(1),
   chapterId: z.uuid(),
@@ -31,22 +21,8 @@ export const createEvaluationSchema = z.object({
   notes: z.string().optional(),
 })
 
-export type Evaluation = z.infer<typeof evaluationSchema>
+export type Evaluation = typeof evaluation.$inferSelect
 export type CreateEvaluationData = z.infer<typeof createEvaluationSchema>
-
-type DbEvaluation = typeof evaluation.$inferSelect
-
-function mapEvaluation(row: DbEvaluation): Evaluation {
-  return {
-    id: row.id,
-    studentId: row.studentId,
-    chapterId: row.chapterId,
-    level: row.level,
-    notes: row.notes,
-    evaluatorId: row.evaluatorId,
-    evaluatedAt: row.evaluatedAt,
-  }
-}
 
 export default class EvaluationService {
   public static async create(
@@ -61,7 +37,7 @@ export default class EvaluationService {
 
     const row = rows.at(0)
     assert(row !== undefined, '`insert` should always return a row')
-    return mapEvaluation(row)
+    return row
   }
 
   public static async findByBatch(db: Database, batchId: string): Promise<Evaluation[]> {
@@ -82,7 +58,7 @@ export default class EvaluationService {
       orderBy: (t, { desc }) => desc(t.evaluatedAt),
     })
 
-    return rows.map(mapEvaluation)
+    return rows
   }
 
   public static async findByStudent(
@@ -108,6 +84,6 @@ export default class EvaluationService {
       orderBy: (t, { desc }) => desc(t.evaluatedAt),
     })
 
-    return rows.map(mapEvaluation)
+    return rows
   }
 }

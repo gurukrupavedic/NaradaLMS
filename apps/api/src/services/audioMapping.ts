@@ -4,13 +4,6 @@ import { eq } from 'drizzle-orm'
 import { audioMapping, type Database } from '@narada/db'
 import { unprocessable } from '../error'
 
-export const audioMappingSchema = z.object({
-  segmentId: z.string(),
-  audioAssetId: z.string(),
-  audioStart: z.number(),
-  audioEnd: z.number(),
-})
-
 const mappingInputSchema = z
   .object({
     segmentId: z.uuid(),
@@ -23,7 +16,7 @@ const mappingInputSchema = z
 
 export const putMappingsSchema = z.array(mappingInputSchema)
 
-export type AudioMapping = z.infer<typeof audioMappingSchema>
+export type AudioMapping = typeof audioMapping.$inferSelect
 export type MappingInput = z.infer<typeof mappingInputSchema>
 
 function validateNoOverlaps(inputs: MappingInput[]): void {
@@ -66,12 +59,7 @@ export default class AudioMappingService {
         .values(inputs.map(i => ({ ...i, audioAssetId })))
         .returning()
 
-      return rows.map(r => ({
-        segmentId: r.segmentId,
-        audioAssetId: r.audioAssetId,
-        audioStart: r.audioStart,
-        audioEnd: r.audioEnd,
-      }))
+      return rows
     })
   }
 }
