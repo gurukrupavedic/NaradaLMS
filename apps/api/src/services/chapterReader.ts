@@ -19,7 +19,8 @@ type DbEvaluation = typeof evaluation.$inferSelect
 
 export type ChapterReadView =
   | { kind: 'authoring' }
-  | { kind: 'learning'; studentId?: string }
+  | { kind: 'learnerPreview' }
+  | { kind: 'student'; studentId: string }
 
 export type Chapter = Omit<DbChapter, 'textObjectKey'> & { textUrl: string | null }
 export type Segment = typeof segment.$inferSelect
@@ -34,7 +35,7 @@ export type ChapterDetail = Chapter & {
   audioAssets: AudioAsset[]
 }
 
-export type LearningChapterDetail = ChapterDetail & {
+export type StudentChapterDetail = ChapterDetail & {
   currentLevel: DbEvaluation['level'] | null
 }
 
@@ -107,7 +108,7 @@ export default class ChapterReader {
     db: Database,
     chapterId: string,
     view: ChapterReadView,
-  ): Promise<ChapterDetail | LearningChapterDetail | undefined> {
+  ): Promise<ChapterDetail | StudentChapterDetail | undefined> {
     const row = await db.query.chapter.findFirst({
       where: (t, { and: a, eq: e }) =>
         canReadDrafts(view) ? e(t.id, chapterId) : a(e(t.id, chapterId), e(t.status, 'published')),
@@ -118,8 +119,7 @@ export default class ChapterReader {
     })
 
     if (!row) return undefined
-
-    if (view.kind === 'learning' && view.studentId) {
+    if (view.kind === 'student') {
       const { studentId } = view
       const canRead = await studentCanReadTrack(db, studentId, row.trackId)
       if (!canRead) return undefined
@@ -152,8 +152,7 @@ export default class ChapterReader {
     })
 
     if (!row) return undefined
-
-    if (view.kind === 'learning' && view.studentId) {
+    if (view.kind === 'student') {
       const canRead = await studentCanReadTrack(db, view.studentId, row.trackId)
       if (!canRead) return undefined
     }

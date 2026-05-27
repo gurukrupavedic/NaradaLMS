@@ -18,9 +18,10 @@ router.get('/chapters/:chapterId', async (req, res) => {
   })
 
   const chapter = await ChapterReader.findById(db, chapterId, {
-    kind: 'learning',
+    kind: 'student',
     studentId: user.id,
   })
+
   if (!chapter) {
     throw notFound()
   }

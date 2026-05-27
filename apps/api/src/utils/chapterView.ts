@@ -9,13 +9,12 @@ export async function authorizeContentReadView(
   db: Database,
 ): Promise<ChapterReadView> {
   await authorize(req, db, { scope: 'school', permissions: { content: ['read'] } })
-
   const canAuthor = await hasPermission(req, db, {
     scope: 'school',
     permissions: { content: ['update'] },
   })
 
-  return canAuthor ? { kind: 'authoring' } : { kind: 'learning' }
+  return canAuthor ? { kind: 'authoring' } : { kind: 'learnerPreview' }
 }
 
 export const authoringView = { kind: 'authoring' } satisfies ChapterReadView
