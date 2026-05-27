@@ -6,6 +6,7 @@ import cors from 'cors'
 import { toNodeHandler } from 'better-auth/node'
 
 import { auth } from '@narada/auth'
+import { shutdownPools } from '@narada/db'
 import { env } from '@narada/env'
 import logger from './logger'
 import setupRoutes from './routes'
@@ -14,6 +15,10 @@ import { AppError, ErrorCode } from './error'
 interface ServerOptions {
   port: number
 }
+
+const SHUTDOWN_TIMEOUT_MS = 10_000
+let shutdownStarted = false
+let shutdownExitStarted = false
 
 export function createServer() {
   const router = Router()
@@ -44,7 +49,7 @@ export function runServer(app: Express, options: ServerOptions) {
 }
 
 function handleErrors(error: Error, _req: Request, res: Response, _next: NextFunction) {
-  logger.error(error, 'An error occurred while handling a request.')
+  logger.error(error, 'an error occurred while handling a request.')
   if (error instanceof AppError) {
     res.status(error.statusCode).json({
       ok: false,
@@ -61,19 +66,44 @@ function handleErrors(error: Error, _req: Request, res: Response, _next: NextFun
   if (!res.headersSent) {
     res.status(500).json({
       ok: false,
-      error: { code: ErrorCode.INTERNAL_ERROR, message: 'An unexpected error occurred.' },
+      error: { code: ErrorCode.INTERNAL_ERROR, message: 'an unexpected error occurred.' },
     })
   }
 }
 
+async function shutdownAndExit(exitCode: number) {
+  if (shutdownExitStarted) return
+  shutdownExitStarted = true
+
+  try {
+    await shutdownPools()
+  } catch (error) {
+    logger.error(error, 'encountered an error when closing database pools.')
+    exitCode = 1
+  }
+
+  logger.info('terminated the server.')
+  process.exit(exitCode)
+}
+
 function handleGracefulShutdown(signal: string, server: Server) {
-  logger.info(`${signal} signal received. Terminating the HTTP server.`)
+  if (shutdownStarted) return
+  shutdownStarted = true
+
+  logger.info(`${signal} signal received -- terminating the HTTP server.`)
+  const timeout = setTimeout(() => {
+    logger.error({ timeoutMs: SHUTDOWN_TIMEOUT_MS }, 'timed out while terminating the server.')
+    void shutdownAndExit(1)
+  }, SHUTDOWN_TIMEOUT_MS)
+
   server.close(error => {
+    clearTimeout(timeout)
     if (error) {
-      logger.error(error, 'Encountered an error when attempting to terminate the server.')
+      logger.error(error, 'encountered an error when attempting to terminate the server.')
+      void shutdownAndExit(1)
+      return
     }
 
-    logger.info('Terminated the server.')
-    process.exit(0)
+    void shutdownAndExit(0)
   })
 }
