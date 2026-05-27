@@ -412,7 +412,7 @@ Chapter text is stored directly on `chapter` as `script` and an internal text ob
 
 ### `POST /v1/upload/chapters/:chapterId/script`
 
-Get a presigned R2 URL for uploading the chapter text file.
+Get a presigned R2 URL for uploading the chapter text file. Each response uses a fresh object key under the chapter's text prefix.
 
 **Access:** Admin.
 

@@ -41,7 +41,7 @@ All routes below are missing — only `/health` exists. Group them by file in `a
 - [x] `PATCH /chapters/:chapterId` — update title, code, status, order, trackId; admin access
 
 ### Chapter Script (`routes/chapters.ts`)
-- [x] `POST /chapters/:chapterId/script` — accept `multipart/form-data` (`script` enum + text file); upload file to R2 at `schools/{orgId}/chapters/{chapterId}/text.txt`; update `chapter.script` and `chapter.textUrl`; delete all existing segments (cascades to audio mappings); admin access
+- [x] `POST /chapters/:chapterId/script` — accept `multipart/form-data` (`script` enum + text file); upload file to a versioned R2 key under `schools/{orgId}/chapters/{chapterId}/text/`; update `chapter.script` and `chapter.textUrl`; delete all existing segments (cascades to audio mappings); admin access
 
 ### Segments (`routes/segments.ts`)
 - [x] `GET /chapters/:chapterId/segments` — list segments ordered by start; all school members

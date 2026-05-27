@@ -62,7 +62,7 @@ export default class AudioService {
   ): Promise<AudioAsset> {
     const objectKey = objectLifecycle.audioObjectKey({ schoolId, chapterId, uploadId: data.uploadId })
     const exists = await objectLifecycle.objectExists(objectKey)
-    if (!exists) throw unprocessable('Uploaded audio object does not exist')
+    if (!exists) throw unprocessable('uploaded audio object does not exist')
 
     const rows = await db
       .insert(audioAsset)
@@ -76,7 +76,7 @@ export default class AudioService {
       .returning()
 
     const row = rows.at(0)
-    if (!row) throw conflict('Audio asset already exists for this upload')
+    if (!row) throw conflict('audio asset already exists for this upload')
     return audioAssetResponse(row)
   }
 

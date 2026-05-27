@@ -59,7 +59,7 @@ export const objectLifecycle = {
     schoolId: string
     chapterId: string
   }): Promise<{ uploadUrl: string; objectKey: string }> {
-    const objectKey = `schools/${input.schoolId}/chapters/${input.chapterId}/text.txt`
+    const objectKey = `schools/${input.schoolId}/chapters/${input.chapterId}/text/${crypto.randomUUID()}.txt`
     const { uploadUrl } = await getUploadUrl(objectKey, 'text/plain')
     return { uploadUrl, objectKey }
   },

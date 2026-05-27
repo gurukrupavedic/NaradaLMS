@@ -55,9 +55,12 @@ export default class ChapterService {
       where: (t, { eq }) => eq(t.id, chapterId),
     })
 
-    if (!existing) throw notFound()
-    // The upload route overwrites the R2 object before this transaction runs, so there is a
-    // brief window where R2 and the chapter row can disagree if this update fails.
+    if (!existing) {
+      throw notFound()
+    }
+
+    // The upload route writes the R2 object before this transaction runs, so there is a
+    // brief window where the new object exists but the chapter row still points at the old key.
     return await db.transaction(async tx => {
       await tx.delete(segment).where(eq(segment.chapterId, chapterId))
       const rows = await tx
