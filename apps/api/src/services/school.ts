@@ -5,8 +5,7 @@ import {
   organization,
   publicDb,
   provisionSchool,
-  renameSchool,
-  clearSchoolDbCache,
+  dropSchoolSchema,
 } from '@narada/db'
 import { conflict, internalError, notFound } from '../error'
 
@@ -60,7 +59,6 @@ export default class SchoolService {
 
     if (existing) throw conflict()
     const id = crypto.randomUUID()
-    await provisionSchool(data.slug)
     const rows = await publicDb
       .insert(organization)
       .values({ id, ...data, createdAt: new Date() })
@@ -68,6 +66,14 @@ export default class SchoolService {
 
     const row = rows.at(0)
     if (!row) throw internalError()
+    try {
+      await provisionSchool(id)
+    } catch (error) {
+      await publicDb.delete(organization).where(eq(organization.id, id))
+      await dropSchoolSchema(id)
+      throw error
+    }
+
     return schoolResponse(row)
   }
 
@@ -81,8 +87,6 @@ export default class SchoolService {
       })
 
       if (taken) throw conflict()
-      await renameSchool(existing.slug, data.slug)
-      clearSchoolDbCache(existing.slug)
     }
 
     const rows = await publicDb

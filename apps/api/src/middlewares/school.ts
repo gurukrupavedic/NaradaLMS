@@ -22,7 +22,7 @@ export async function resolveDb(req: Request, res: Response, next: NextFunction)
   }
 
   res.locals.school = school
-  res.locals.db = getScopedDatabase(school.slug)
+  res.locals.db = getScopedDatabase(school.id)
   next()
 }
 

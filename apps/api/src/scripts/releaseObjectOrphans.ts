@@ -22,7 +22,7 @@ try {
     console.error(`No school found for slug: ${schoolSlug}`)
     process.exitCode = 1
   } else {
-    const db = getScopedDatabase(school.slug)
+    const db = getScopedDatabase(school.id)
     const result = await objectLifecycle.releaseOrphans(db, school.id, { dryRun })
 
     console.log(JSON.stringify({ ...result, dryRun }, null, 2))

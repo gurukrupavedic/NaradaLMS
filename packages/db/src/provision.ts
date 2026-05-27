@@ -11,23 +11,32 @@ const migrationsFolder = path.join(
   '../drizzle/school',
 )
 
-export async function renameSchool(oldSlug: string, newSlug: string) {
+export function schoolSchemaName(organizationId: string) {
+  return `school-${organizationId}`
+}
+
+export function quotePgIdentifier(identifier: string) {
+  return `"${identifier.replaceAll('"', '""')}"`
+}
+
+export async function dropSchoolSchema(organizationId: string) {
   const pool = new Pool({ connectionString: env.DATABASE_URL })
   try {
-    await pool.query(`ALTER SCHEMA "school_${oldSlug}" RENAME TO "school_${newSlug}"`)
+    await pool.query(`DROP SCHEMA IF EXISTS ${quotePgIdentifier(schoolSchemaName(organizationId))} CASCADE`)
   } finally {
     await pool.end()
   }
 }
 
-export async function provisionSchool(schoolSlug: string) {
+export async function provisionSchool(organizationId: string) {
+  const schemaName = schoolSchemaName(organizationId)
   const adminPool = new Pool({ connectionString: env.DATABASE_URL })
-  await adminPool.query(`CREATE SCHEMA IF NOT EXISTS "school_${schoolSlug}"`)
+  await adminPool.query(`CREATE SCHEMA IF NOT EXISTS ${quotePgIdentifier(schemaName)}`)
   await adminPool.end()
 
   const schoolPool = new Pool({
     connectionString: env.DATABASE_URL,
-    options: `-c search_path=school_${schoolSlug}`,
+    options: `-c search_path=${quotePgIdentifier(schemaName)},public`,
   })
 
   try {

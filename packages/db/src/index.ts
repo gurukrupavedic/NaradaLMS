@@ -3,6 +3,7 @@ import { LRUCache } from 'lru-cache'
 import { Pool } from 'pg'
 
 import { env } from '@narada/env'
+import { quotePgIdentifier, schoolSchemaName } from './provision'
 import * as schema from './schema'
 
 type CachedDb = { db: ReturnType<typeof drizzle<typeof schema>>; pool: Pool }
@@ -29,22 +30,18 @@ async function closePool(pool: Pool): Promise<void> {
   await pool.end()
 }
 
-export function clearSchoolDbCache(schoolSlug: string) {
-  // Renames are rare; in-flight requests holding the old scoped DB may fail and retry.
-  dbCache.delete(schoolSlug)
-}
-
-export function getScopedDatabase(schoolSlug: string) {
-  const cached = dbCache.get(schoolSlug)
+export function getScopedDatabase(organizationId: string) {
+  const cached = dbCache.get(organizationId)
   if (cached) return cached.db
 
+  const schemaName = schoolSchemaName(organizationId)
   const pool = new Pool({
     connectionString: env.DATABASE_URL,
-    options: `-c search_path=school_${schoolSlug},public`,
+    options: `-c search_path=${quotePgIdentifier(schemaName)},public`,
   })
 
   const db = drizzle(pool, { schema })
-  dbCache.set(schoolSlug, { db, pool })
+  dbCache.set(organizationId, { db, pool })
   return db
 }
 
