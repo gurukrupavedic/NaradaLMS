@@ -3,9 +3,11 @@ import {
   deleteObject,
   getDownloadUrl,
   getUploadUrl,
-  listObjectKeys,
+  listObjectSummaries,
   objectExists,
 } from '@narada/storage'
+
+const ORPHAN_SAFETY_WINDOW_MS = 60 * 60 * 1000
 
 const audioContentTypeExtMap = {
   'audio/mpeg': 'mp3',
@@ -79,15 +81,17 @@ export const objectLifecycle = {
   async releaseOrphans(
     db: Database,
     schoolId: string,
-    options: { dryRun?: boolean } = {},
+    options: { dryRun?: boolean; safetyWindowMs?: number } = {},
   ): Promise<ObjectJanitorResult> {
     const prefix = `schools/${schoolId}/`
-    const [storedKeys, referencedKeys] = await Promise.all([
-      listObjectKeys(prefix),
-      referencedObjectKeys(db),
-    ])
+    const referencedKeys = await referencedObjectKeys(db)
+    const storedObjects = await listObjectSummaries(prefix)
+    const orphanCutoff = new Date(Date.now() - (options.safetyWindowMs ?? ORPHAN_SAFETY_WINDOW_MS))
+    const orphanKeys = storedObjects
+      .filter(object => !referencedKeys.has(object.key))
+      .filter(object => object.lastModified !== null && object.lastModified <= orphanCutoff)
+      .map(object => object.key)
 
-    const orphanKeys = storedKeys.filter(key => !referencedKeys.has(key))
     const deletedKeys: string[] = []
     if (!options.dryRun) {
       for (const key of orphanKeys) {

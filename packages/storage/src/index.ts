@@ -15,6 +15,11 @@ const BUCKET = env.R2_BUCKET_NAME
 const UPLOAD_EXPIRY_SECONDS = 60 * 15
 const DOWNLOAD_EXPIRY_SECONDS = 60 * 60
 
+export type ObjectSummary = {
+  key: string
+  lastModified: Date | null
+}
+
 export async function getUploadUrl(
   key: string,
   contentType: string,
@@ -57,10 +62,9 @@ export async function objectExists(key: string): Promise<boolean> {
   }
 }
 
-export async function listObjectKeys(prefix: string): Promise<string[]> {
-  const keys: string[] = []
+export async function listObjectSummaries(prefix: string): Promise<ObjectSummary[]> {
+  const objects: ObjectSummary[] = []
   let continuationToken: string | undefined
-
   do {
     const response = await s3.send(
       new ListObjectsV2Command({
@@ -72,12 +76,17 @@ export async function listObjectKeys(prefix: string): Promise<string[]> {
 
     for (const object of response.Contents ?? []) {
       if (object.Key) {
-        keys.push(object.Key)
+        objects.push({ key: object.Key, lastModified: object.LastModified ?? null })
       }
     }
 
     continuationToken = response.NextContinuationToken
   } while (continuationToken)
 
-  return keys
+  return objects
+}
+
+export async function listObjectKeys(prefix: string): Promise<string[]> {
+  const objects = await listObjectSummaries(prefix)
+  return objects.map(object => object.key)
 }
