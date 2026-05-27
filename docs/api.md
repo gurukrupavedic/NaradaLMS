@@ -529,7 +529,7 @@ Get a presigned R2 URL for uploading an audio file.
   ok: true,
   data: {
     uploadUrl: string,
-    objectKey: string
+    uploadId: string
   }
 }
 ```
@@ -545,7 +545,7 @@ Register an uploaded audio asset after the R2 upload completes.
 ```ts
 // Request
 {
-  objectKey: string,
+  uploadId: string,
   label?: string,
   duration: number
 }

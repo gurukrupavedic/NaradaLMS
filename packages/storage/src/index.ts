@@ -1,6 +1,7 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
 } from '@aws-sdk/client-s3'
@@ -41,6 +42,19 @@ export async function putObject(key: string, body: Uint8Array, contentType: stri
 
 export async function deleteObject(key: string) {
   await s3.send(new DeleteObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: key }))
+}
+
+export async function objectExists(key: string): Promise<boolean> {
+  try {
+    await s3.send(new HeadObjectCommand({ Bucket: BUCKET, Key: key }))
+    return true
+  } catch (error) {
+    if (error instanceof Error && ['NotFound', 'NoSuchKey'].includes(error.name)) {
+      return false
+    }
+
+    throw error
+  }
 }
 
 export async function listObjectKeys(prefix: string): Promise<string[]> {

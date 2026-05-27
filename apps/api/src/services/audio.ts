@@ -2,15 +2,20 @@ import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 
 import { audioAsset, type Database } from '@narada/db'
-import { badRequest, notFound } from '../error'
+import { conflict, notFound, unprocessable } from '../error'
 import { objectLifecycle } from '../utils/objectLifecycle'
+
+const audioUploadIdSchema = z.string().regex(
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(mp3|wav|aac|ogg|m4a)$/i,
+  'Invalid audio upload id',
+)
 
 export const getUploadUrlSchema = z.object({
   contentType: z.enum(['audio/mpeg', 'audio/wav', 'audio/aac', 'audio/ogg', 'audio/mp4']),
 })
 
 export const createAudioAssetSchema = z.object({
-  objectKey: z.string().min(1),
+  uploadId: audioUploadIdSchema,
   label: z.string().optional(),
   duration: z.number().positive(),
 })
@@ -45,7 +50,7 @@ export default class AudioService {
     schoolId: string,
     chapterId: string,
     contentType: GetUploadUrlData['contentType'],
-  ): Promise<{ uploadUrl: string; objectKey: string }> {
+  ): Promise<{ uploadUrl: string; uploadId: string }> {
     return objectLifecycle.stageAudioUpload({ schoolId, chapterId, contentType })
   }
 
@@ -55,22 +60,23 @@ export default class AudioService {
     chapterId: string,
     data: CreateAudioAssetData,
   ): Promise<AudioAsset> {
-    const expectedPrefix = `schools/${schoolId}/chapters/${chapterId}/audio/`
-    if (!data.objectKey.startsWith(expectedPrefix)) {
-      throw badRequest()
-    }
+    const objectKey = objectLifecycle.audioObjectKey({ schoolId, chapterId, uploadId: data.uploadId })
+    const exists = await objectLifecycle.objectExists(objectKey)
+    if (!exists) throw unprocessable('Uploaded audio object does not exist')
 
     const rows = await db
       .insert(audioAsset)
       .values({
         chapterId,
-        objectKey: data.objectKey,
+        objectKey,
         label: data.label,
         duration: data.duration,
       })
+      .onConflictDoNothing()
       .returning()
 
-    const row = rows.at(0)!
+    const row = rows.at(0)
+    if (!row) throw conflict('Audio asset already exists for this upload')
     return audioAssetResponse(row)
   }
 

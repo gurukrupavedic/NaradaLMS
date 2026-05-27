@@ -48,8 +48,8 @@ All routes below are missing — only `/health` exists. Group them by file in `a
 - [x] `PUT /chapters/:chapterId/segments` — full replacement; validate no overlaps and within text bounds; cascade-delete old audio mappings via DB constraint; admin access
 
 ### Audio (`routes/audio.ts`)
-- [x] `POST /chapters/:chapterId/audio/upload-url` — generate presigned R2 PUT URL via Pushduck's `chapterAudio` upload route for `schools/{orgId}/chapters/{chapterId}/audio/{uuid}.{ext}`; return `uploadUrl` + `objectKey`; admin access
-- [x] `POST /chapters/:chapterId/audio` — register uploaded audio asset (objectKey, label?, duration); insert `audioAsset` row; admin access
+- [x] `POST /chapters/:chapterId/audio/upload-url` — generate presigned R2 PUT URL for `schools/{orgId}/chapters/{chapterId}/audio/{uuid}.{ext}`; return `uploadUrl` + opaque `uploadId`; admin access
+- [x] `POST /chapters/:chapterId/audio` — register uploaded audio asset (uploadId, label?, duration); verify object exists; insert `audioAsset` row; admin access
 - [x] `DELETE /chapters/:chapterId/audio/:audioId` — delete `audioAsset` row (cascades to `audioMapping`); delete R2 object; admin access
 
 ### Audio Mappings (`routes/audioMappings.ts`)

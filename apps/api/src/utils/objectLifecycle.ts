@@ -4,6 +4,7 @@ import {
   getDownloadUrl,
   getUploadUrl,
   listObjectKeys,
+  objectExists,
 } from '@narada/storage'
 
 const audioContentTypeExtMap = {
@@ -15,6 +16,7 @@ const audioContentTypeExtMap = {
 } as const
 
 export type AudioContentType = keyof typeof audioContentTypeExtMap
+export type AudioUploadId = `${string}.${(typeof audioContentTypeExtMap)[AudioContentType]}`
 
 export type ObjectJanitorResult = {
   prefix: string
@@ -37,15 +39,20 @@ async function referencedObjectKeys(db: Database): Promise<Set<string>> {
 }
 
 export const objectLifecycle = {
+  audioObjectKey(input: { schoolId: string; chapterId: string; uploadId: string }): string {
+    return `schools/${input.schoolId}/chapters/${input.chapterId}/audio/${input.uploadId}`
+  },
+
   async stageAudioUpload(input: {
     schoolId: string
     chapterId: string
     contentType: AudioContentType
-  }): Promise<{ uploadUrl: string; objectKey: string }> {
+  }): Promise<{ uploadUrl: string; uploadId: AudioUploadId }> {
     const ext = audioContentTypeExtMap[input.contentType]
-    const objectKey = `schools/${input.schoolId}/chapters/${input.chapterId}/audio/${crypto.randomUUID()}.${ext}`
+    const uploadId = `${crypto.randomUUID()}.${ext}` satisfies AudioUploadId
+    const objectKey = objectLifecycle.audioObjectKey({ ...input, uploadId })
     const { uploadUrl } = await getUploadUrl(objectKey, input.contentType)
-    return { uploadUrl, objectKey }
+    return { uploadUrl, uploadId }
   },
 
   async stageChapterTextUpload(input: {
@@ -63,6 +70,10 @@ export const objectLifecycle = {
 
   async deleteObject(objectKey: string): Promise<void> {
     await deleteObject(objectKey)
+  },
+
+  async objectExists(objectKey: string): Promise<boolean> {
+    return objectExists(objectKey)
   },
 
   async releaseOrphans(

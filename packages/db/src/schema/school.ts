@@ -11,6 +11,7 @@ import {
   uuid,
   index,
   primaryKey,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
 export const trackOrderSeq = pgSequence('track_order_seq', { startWith: 1 })
@@ -88,7 +89,10 @@ export const audioAsset = pgTable(
     objectKey: text('objectKey').notNull(),
     duration: real('duration').notNull(),
   },
-  table => [index('audioAsset_chapterId_idx').on(table.chapterId)],
+  table => [
+    index('audioAsset_chapterId_idx').on(table.chapterId),
+    uniqueIndex('audioAsset_chapterId_objectKey_idx').on(table.chapterId, table.objectKey),
+  ],
 )
 
 export const audioMapping = pgTable(
