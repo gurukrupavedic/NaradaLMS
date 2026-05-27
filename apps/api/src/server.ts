@@ -43,12 +43,16 @@ export function runServer(app: Express, options: ServerOptions) {
   process.on('SIGUSR2', () => handleGracefulShutdown('SIGTERM', server))
 }
 
-function handleErrors(error: Error, _req: Request, res: Response, next: NextFunction) {
+function handleErrors(error: Error, _req: Request, res: Response, _next: NextFunction) {
   logger.error(error, 'An error occurred while handling a request.')
   if (error instanceof AppError) {
     res.status(error.statusCode).json({
       ok: false,
-      error: { code: error.code, message: error.message },
+      error: {
+        code: error.code,
+        message: error.message,
+        ...(error.details === undefined ? {} : { details: error.details }),
+      },
     })
 
     return
@@ -60,8 +64,6 @@ function handleErrors(error: Error, _req: Request, res: Response, next: NextFunc
       error: { code: ErrorCode.INTERNAL_ERROR, message: 'An unexpected error occurred.' },
     })
   }
-
-  next()
 }
 
 function handleGracefulShutdown(signal: string, server: Server) {

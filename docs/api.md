@@ -23,8 +23,9 @@ This document defines the HTTP API for the Narada LMS backend. See [data-model.m
 {
   ok: false,
   error: {
-    code: string,   // machine-readable, e.g. "CHAPTER_NOT_FOUND"
-    message: string  // human-readable
+    code: string,      // machine-readable, e.g. "RESOURCE_NOT_FOUND"
+    message: string,   // human-readable
+    details?: unknown  // present for validation failures and other structured errors
   }
 }
 ```
@@ -46,12 +47,13 @@ This document defines the HTTP API for the Narada LMS backend. See [data-model.m
 
 | HTTP Status | Code               | Meaning                                                 |
 | ----------- | ------------------ | ------------------------------------------------------- |
-| 400         | `VALIDATION_ERROR` | Request body or params failed validation                |
-| 401         | `UNAUTHORIZED`     | No valid session                                        |
-| 403         | `FORBIDDEN`        | Valid session but insufficient role/permission          |
-| 404         | `NOT_FOUND`        | Resource does not exist                                 |
-| 409         | `CONFLICT`         | Duplicate or state conflict (e.g. duplicate enrollment) |
-| 422         | `UNPROCESSABLE`    | Valid request but domain rules prevent it               |
+| 400         | `INVALID_REQUEST` / `VALIDATION_FAILED` | Malformed request, or request body/params/query failed validation |
+| 401         | `UNAUTHENTICATED`                   | No valid session                                        |
+| 403         | `PERMISSION_DENIED`                 | Valid session but insufficient role/permission          |
+| 404         | `RESOURCE_NOT_FOUND`                | Resource does not exist                                 |
+| 409         | `RESOURCE_CONFLICT`                 | Duplicate or state conflict (e.g. duplicate enrollment) |
+| 422         | `UNPROCESSABLE_INPUT`               | Valid request but domain rules prevent it               |
+| 500         | `INTERNAL_ERROR`                    | Unexpected server failure                               |
 
 ---
 

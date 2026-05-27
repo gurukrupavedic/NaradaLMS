@@ -16,6 +16,7 @@ export class AppError extends Error {
     public statusCode: number,
     public code: ErrorCode,
     message?: string,
+    public details?: unknown,
   ) {
     super(message ?? code)
   }
@@ -41,8 +42,8 @@ export function badRequest(message?: string) {
   return new AppError(400, ErrorCode.INVALID_REQUEST, message)
 }
 
-export function validationError(message?: string) {
-  return new AppError(400, ErrorCode.VALIDATION_FAILED, message)
+export function validationError(message?: string, details?: unknown) {
+  return new AppError(400, ErrorCode.VALIDATION_FAILED, message, details)
 }
 
 export function unprocessable(message?: string) {

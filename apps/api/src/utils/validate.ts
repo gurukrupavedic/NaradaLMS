@@ -6,7 +6,7 @@ import { validationError } from '../error'
 function parse<T>(schema: z.ZodType<T>, data: unknown): T {
   const result = schema.safeParse(data)
   if (!result.success) {
-    throw validationError()
+    throw validationError(undefined, result.error.issues)
   }
 
   return result.data
