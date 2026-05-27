@@ -18,6 +18,7 @@ export const createAudioAssetSchema = z.object({
 export type AudioAsset = typeof audioAsset.$inferSelect & { url: string }
 export type GetUploadUrlData = z.infer<typeof getUploadUrlSchema>
 export type CreateAudioAssetData = z.infer<typeof createAudioAssetSchema>
+export type StoredAudioAsset = typeof audioAsset.$inferSelect
 
 type DbAudioAsset = typeof audioAsset.$inferSelect
 
@@ -29,6 +30,17 @@ async function audioAssetResponse(row: DbAudioAsset): Promise<AudioAsset> {
 }
 
 export default class AudioService {
+  public static async findById(
+    db: Database,
+    audioId: string,
+    chapterId?: string,
+  ): Promise<StoredAudioAsset | undefined> {
+    return db.query.audioAsset.findFirst({
+      where: (t, { and, eq }) =>
+        chapterId === undefined ? eq(t.id, audioId) : and(eq(t.id, audioId), eq(t.chapterId, chapterId)),
+    })
+  }
+
   public static async getUploadUrl(
     schoolId: string,
     chapterId: string,
@@ -63,10 +75,7 @@ export default class AudioService {
   }
 
   public static async remove(db: Database, audioId: string, chapterId: string): Promise<void> {
-    const asset = await db.query.audioAsset.findFirst({
-      where: (t, { and, eq }) => and(eq(t.id, audioId), eq(t.chapterId, chapterId)),
-    })
-
+    const asset = await AudioService.findById(db, audioId, chapterId)
     if (!asset) throw notFound()
     await objectLifecycle.deleteObject(asset.objectKey)
     await db

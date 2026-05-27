@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import { authorize } from '../utils/auth'
+import AudioService from '../services/audio'
 import AudioMappingService, { putMappingsSchema } from '../services/audioMapping'
 
 const router = Router()
@@ -14,7 +15,7 @@ router.put('/:audioId/mappings', async (req, res) => {
   const inputs = parseBody(putMappingsSchema, req)
 
   await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
-  const asset = await db.query.audioAsset.findFirst({ where: (t, { eq }) => eq(t.id, audioId) })
+  const asset = await AudioService.findById(db, audioId)
   if (!asset) {
     throw notFound()
   }
