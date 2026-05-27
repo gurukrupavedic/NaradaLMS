@@ -990,7 +990,7 @@ Array<{
     batchId: string,
     studentId: string,
     scheduledAt: string,
-    status: "completed",
+    status: "scheduled" | "inProgress" | "completed" | "cancelled",
     results: Array<{
       examId: string,
       chapterId: string,
@@ -1000,7 +1000,7 @@ Array<{
 }
 ```
 
-Each result creates an `evaluation` row and an `exam_result` row linking it to the exam. The exam's status is automatically set to `"completed"`.
+Each result creates an `evaluation` row and an `exam_result` row linking it to the exam. Recording results does not change the exam status; use `PATCH /v1/exams/:examId` to mark an exam as `"completed"`.
 
 ---
 

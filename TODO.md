@@ -73,7 +73,7 @@ All routes below are missing — only `/health` exists. Group them by file in `a
 - [x] `GET /batches/:batchId/exams` — list exams; students see only their own; supports `?status=` filter and cursor pagination
 - [x] `POST /batches/:batchId/exams` — schedule exam for a student with chapter list; admin or instructor/TA access
 - [x] `PATCH /exams/:examId` — reschedule or update status; admin or instructor/TA access
-- [x] `POST /exams/:examId/results` — record per-chapter results; create one evaluation per chapter; create `examResult` rows; auto-set exam status to completed; admin or instructor/TA access
+- [x] `POST /exams/:examId/results` — record per-chapter results; create one evaluation per chapter; create `examResult` rows; admin or instructor/TA access
 
 ### Student Dashboard (`routes/student.ts`)
 - [x] `GET /student/chapters/:chapterId` — chapter content with text URL, segments, audio, audio mappings, and `currentLevel`; published chapters only; student must be enrolled in a batch whose track contains this chapter

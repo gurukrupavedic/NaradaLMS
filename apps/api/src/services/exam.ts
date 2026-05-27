@@ -188,15 +188,7 @@ export default class ExamService {
         })
       }
 
-      const updatedRows = await tx
-        .update(exam)
-        .set({ status: 'completed' })
-        .where(eq(exam.id, examId))
-        .returning()
-
-      const updated = updatedRows.at(0)
-      assert(updated !== undefined, 'exam update should return a row')
-      return { ...updated, results }
+      return { ...examRow, results }
     })
   }
 }
