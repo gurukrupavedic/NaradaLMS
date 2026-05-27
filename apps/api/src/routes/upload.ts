@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { parseBody, parseParams } from '../utils/validate'
 import AudioService, { getUploadUrlSchema } from '../services/audio'
-import { getUploadUrl } from '@narada/storage'
+import { objectLifecycle } from '../utils/objectLifecycle'
 import type { SchoolScopedLocals } from '../middlewares/school'
 import { authorize } from '../utils/auth'
 
@@ -29,9 +29,8 @@ router.post(
 
     await authorize(req, res.locals.db, { scope: 'school', permissions: { content: ['update'] } })
     const { school } = res.locals
-    const objectKey = `schools/${school.id}/chapters/${chapterId}/text.txt`
-    const { uploadUrl } = await getUploadUrl(objectKey, 'text/plain')
-    res.status(200).json({ ok: true, data: { uploadUrl, objectKey } })
+    const result = await objectLifecycle.stageChapterTextUpload({ schoolId: school.id, chapterId })
+    res.status(200).json({ ok: true, data: result })
   },
 )
 

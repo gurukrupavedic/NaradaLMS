@@ -2,20 +2,8 @@ import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 
 import { audioAsset, type Database } from '@narada/db'
-import {
-  getUploadUrl as getPresignedUploadUrl,
-  getDownloadUrl,
-  deleteObject,
-} from '@narada/storage'
 import { badRequest, notFound } from '../error'
-
-const contentTypeExtMap = {
-  'audio/mpeg': 'mp3',
-  'audio/wav': 'wav',
-  'audio/aac': 'aac',
-  'audio/ogg': 'ogg',
-  'audio/mp4': 'm4a',
-} as const
+import { objectLifecycle } from '../utils/objectLifecycle'
 
 export const getUploadUrlSchema = z.object({
   contentType: z.enum(['audio/mpeg', 'audio/wav', 'audio/aac', 'audio/ogg', 'audio/mp4']),
@@ -36,7 +24,7 @@ type DbAudioAsset = typeof audioAsset.$inferSelect
 async function audioAssetResponse(row: DbAudioAsset): Promise<AudioAsset> {
   return {
     ...row,
-    url: await getDownloadUrl(row.objectKey),
+    url: await objectLifecycle.urlFor(row.objectKey),
   }
 }
 
@@ -46,10 +34,7 @@ export default class AudioService {
     chapterId: string,
     contentType: GetUploadUrlData['contentType'],
   ): Promise<{ uploadUrl: string; objectKey: string }> {
-    const ext = contentTypeExtMap[contentType]
-    const objectKey = `schools/${schoolId}/chapters/${chapterId}/audio/${crypto.randomUUID()}.${ext}`
-    const { uploadUrl } = await getPresignedUploadUrl(objectKey, contentType)
-    return { uploadUrl, objectKey }
+    return objectLifecycle.stageAudioUpload({ schoolId, chapterId, contentType })
   }
 
   public static async create(
@@ -83,8 +68,7 @@ export default class AudioService {
     })
 
     if (!asset) throw notFound()
-    // TODO: see architecture-review §5.E for the longer-term object lifecycle module.
-    await deleteObject(asset.objectKey)
+    await objectLifecycle.deleteObject(asset.objectKey)
     await db
       .delete(audioAsset)
       .where(and(eq(audioAsset.id, audioId), eq(audioAsset.chapterId, chapterId)))

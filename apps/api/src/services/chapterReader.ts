@@ -10,8 +10,7 @@ import {
   segment,
   type Database,
 } from '@narada/db'
-import { getDownloadUrl } from '@narada/storage'
-import { resolveDownloadUrl } from '../utils/storage'
+import { objectLifecycle } from '../utils/objectLifecycle'
 
 type DbChapter = typeof chapter.$inferSelect
 type DbAudioAsset = typeof audioAsset.$inferSelect
@@ -78,7 +77,7 @@ export async function chapterResponse(row: DbChapter): Promise<Chapter> {
     status: row.status,
     order: row.order,
     script: row.script,
-    textUrl: row.textObjectKey ? await resolveDownloadUrl(row.textObjectKey) : null,
+    textUrl: row.textObjectKey ? await objectLifecycle.urlFor(row.textObjectKey) : null,
   }
 }
 
@@ -89,7 +88,7 @@ async function audioAssetResponse(
     id: row.id,
     chapterId: row.chapterId,
     label: row.label,
-    url: await getDownloadUrl(row.objectKey),
+    url: await objectLifecycle.urlFor(row.objectKey),
     duration: row.duration,
     audioMappings: row.audioMappings,
   }
