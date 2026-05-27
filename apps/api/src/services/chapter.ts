@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 
-import { chapter, segment, type Database } from '@narada/db'
+import { chapter, segment, type SchoolDatabase } from '@narada/db'
 import { internalError, notFound } from '../error'
 import { chapterResponse, type Chapter } from './chapterReader'
 
@@ -27,7 +27,7 @@ export type CreateChapterData = z.infer<typeof createChapterSchema>
 export type UpdateChapterData = z.infer<typeof updateChapterSchema>
 
 export default class ChapterService {
-  public static async create(db: Database, data: CreateChapterData): Promise<Chapter> {
+  public static async create(db: SchoolDatabase, data: CreateChapterData): Promise<Chapter> {
     const rows = await db.insert(chapter).values(data).returning()
     const row = rows.at(0)
     if (!row) throw internalError()
@@ -35,7 +35,7 @@ export default class ChapterService {
   }
 
   public static async update(
-    db: Database,
+    db: SchoolDatabase,
     chapterId: string,
     data: UpdateChapterData,
   ): Promise<Chapter> {
@@ -46,7 +46,7 @@ export default class ChapterService {
   }
 
   public static async applyScript(
-    db: Database,
+    db: SchoolDatabase,
     chapterId: string,
     scriptType: 'te' | 'sa' | 'en',
     objectKey: string,

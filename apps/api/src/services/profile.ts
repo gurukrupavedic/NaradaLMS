@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 
-import { enrollment, publicDb, type Database } from '@narada/db'
+import { enrollment, publicDb, type SchoolDatabase } from '@narada/db'
 import { notFound } from '../error'
 
 export const membershipSchema = z.object({
@@ -48,7 +48,7 @@ export default class ProfileService {
     }
   }
 
-  public static async update(db: Database, userId: string, data: UpdateProfileData): Promise<void> {
+  public static async update(db: SchoolDatabase, userId: string, data: UpdateProfileData): Promise<void> {
     const { batchId, ...fields } = data
     const rows = await db
       .update(enrollment)

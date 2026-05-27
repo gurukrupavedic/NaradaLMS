@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 
-import { batch, enrollment, type Database } from '@narada/db'
+import { batch, enrollment, type SchoolDatabase } from '@narada/db'
 import { compoundCursor, paginateResponse } from '../utils/cursor'
 import { internalError, notFound } from '../error'
 import type { BatchAccess } from '../utils/auth'
@@ -63,7 +63,7 @@ export type ListBatchesQuery = z.infer<typeof listBatchesQuerySchema>
 
 export default class BatchService {
   public static async findAll(
-    db: Database,
+    db: SchoolDatabase,
     options: ListBatchesQuery & { access: BatchAccess },
   ): Promise<{ items: Batch[]; nextCursor: string | null }> {
     const { access, status, cursor, limit } = options
@@ -121,7 +121,7 @@ export default class BatchService {
     return paginateResponse(rows, limit, item => ({ startDate: item.startDate, id: item.id }))
   }
 
-  public static async findById(db: Database, batchId: string): Promise<Batch | undefined> {
+  public static async findById(db: SchoolDatabase, batchId: string): Promise<Batch | undefined> {
     const row = await db.query.batch.findFirst({
       where: (t, { eq }) => eq(t.id, batchId),
     })
@@ -130,7 +130,7 @@ export default class BatchService {
   }
 
   public static async findByIdWithMembers(
-    db: Database,
+    db: SchoolDatabase,
     batchId: string,
   ): Promise<BatchDetail | undefined> {
     const row = await db.query.batch.findFirst({
@@ -154,14 +154,14 @@ export default class BatchService {
     }
   }
 
-  public static async create(db: Database, data: CreateBatchData): Promise<Batch> {
+  public static async create(db: SchoolDatabase, data: CreateBatchData): Promise<Batch> {
     const rows = await db.insert(batch).values(data).returning()
     const row = rows.at(0)
     if (!row) throw internalError()
     return row
   }
 
-  public static async update(db: Database, batchId: string, data: UpdateBatchData): Promise<Batch> {
+  public static async update(db: SchoolDatabase, batchId: string, data: UpdateBatchData): Promise<Batch> {
     const rows = await db.update(batch).set(data).where(eq(batch.id, batchId)).returning()
     const row = rows.at(0)
     if (!row) throw notFound()

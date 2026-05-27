@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 
-import { enrollment, evaluation, type Database } from '@narada/db'
+import { enrollment, evaluation, type SchoolDatabase } from '@narada/db'
 import { compoundCursor, nullableDateCursorField, paginateResponse } from '../utils/cursor'
 import { notFound } from '../error'
 import assert from 'node:assert'
@@ -55,7 +55,7 @@ function evaluationPage(rows: Evaluation[], limit: number): EvaluationPage {
 
 export default class EvaluationService {
   public static async create(
-    db: Database,
+    db: SchoolDatabase,
     evaluatorId: string,
     data: CreateEvaluationData,
   ): Promise<Evaluation> {
@@ -70,7 +70,7 @@ export default class EvaluationService {
   }
 
   public static async findByBatch(
-    db: Database,
+    db: SchoolDatabase,
     batchId: string,
     options: ListEvaluationsQuery,
   ): Promise<EvaluationPage> {
@@ -130,7 +130,7 @@ export default class EvaluationService {
   }
 
   public static async findByStudent(
-    db: Database,
+    db: SchoolDatabase,
     batchId: string,
     studentId: string,
     options: ListEvaluationsQuery,

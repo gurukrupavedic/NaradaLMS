@@ -8,7 +8,7 @@ import {
   enrollment,
   evaluation,
   segment,
-  type Database,
+  type SchoolDatabase,
 } from '@narada/db'
 import { objectLifecycle } from '../utils/objectLifecycle'
 
@@ -49,7 +49,7 @@ function canReadDrafts(view: ChapterReadView): boolean {
 }
 
 async function studentCanReadTrack(
-  db: Database,
+  db: SchoolDatabase,
   studentId: string,
   trackId: string,
 ): Promise<boolean> {
@@ -105,7 +105,7 @@ async function detailResponse(row: ChapterContentRow): Promise<ChapterDetail> {
 
 export default class ChapterReader {
   public static async findById(
-    db: Database,
+    db: SchoolDatabase,
     chapterId: string,
     view: ChapterReadView,
   ): Promise<ChapterDetail | StudentChapterDetail | undefined> {
@@ -139,7 +139,7 @@ export default class ChapterReader {
   }
 
   public static async findSegmentsByChapter(
-    db: Database,
+    db: SchoolDatabase,
     chapterId: string,
     view: ChapterReadView,
   ): Promise<Segment[] | undefined> {

@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from 'express'
 
 import { organization, publicDb, getScopedDatabase } from '@narada/db'
+import type { SchoolDatabase } from '@narada/db'
 import { badRequest, notFound } from '../error'
 
 export type School = typeof organization.$inferSelect
-export type SchoolScopedLocals = Express.Locals & { school: School }
+export type SchoolScopedLocals = Express.Locals & { school: School; db: SchoolDatabase }
 
 export async function resolveDb(req: Request, res: Response, next: NextFunction) {
   const schoolSlug = req.get('x-school-slug')
@@ -32,4 +33,12 @@ export function requireSchool(req: Request, res: Response, next: NextFunction) {
   }
 
   next()
+}
+
+export function schoolDb(res: Response): SchoolDatabase {
+  if (!res.locals.school) {
+    throw badRequest('X-School-Slug header is required')
+  }
+
+  return res.locals.db as SchoolDatabase
 }

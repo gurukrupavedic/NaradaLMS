@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 
-import { enrollment, type Database } from '@narada/db'
+import { enrollment, type SchoolDatabase } from '@narada/db'
 import { conflict, notFound } from '../error'
 import assert from 'node:assert'
 
@@ -15,7 +15,7 @@ export type EnrollData = z.infer<typeof enrollSchema>
 
 export default class EnrollmentService {
   public static async findOne(
-    db: Database,
+    db: SchoolDatabase,
     userId: string,
     batchId: string,
   ): Promise<Enrollment | undefined> {
@@ -26,7 +26,7 @@ export default class EnrollmentService {
     return row
   }
 
-  public static async enroll(db: Database, batchId: string, data: EnrollData): Promise<Enrollment> {
+  public static async enroll(db: SchoolDatabase, batchId: string, data: EnrollData): Promise<Enrollment> {
     const existing = await EnrollmentService.findOne(db, data.userId, batchId)
     if (existing) throw conflict()
     const rows = await db
@@ -39,7 +39,7 @@ export default class EnrollmentService {
     return row
   }
 
-  public static async unenroll(db: Database, batchId: string, userId: string): Promise<void> {
+  public static async unenroll(db: SchoolDatabase, batchId: string, userId: string): Promise<void> {
     const rows = await db
       .delete(enrollment)
       .where(and(eq(enrollment.batchId, batchId), eq(enrollment.userId, userId)))

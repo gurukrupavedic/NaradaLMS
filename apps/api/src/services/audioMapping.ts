@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 
-import { audioMapping, type Database } from '@narada/db'
+import { audioMapping, type SchoolDatabase } from '@narada/db'
 import { unprocessable } from '../error'
 
 const mappingInputSchema = z
@@ -30,7 +30,7 @@ function validateNoOverlaps(inputs: MappingInput[]): void {
 
 export default class AudioMappingService {
   public static async replace(
-    db: Database,
+    db: SchoolDatabase,
     audioAssetId: string,
     chapterId: string,
     inputs: MappingInput[],

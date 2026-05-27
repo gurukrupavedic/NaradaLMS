@@ -6,7 +6,15 @@ import { env } from '@narada/env'
 import { quotePgIdentifier, schoolSchemaName } from './provision'
 import * as schema from './schema'
 
-type CachedDb = { db: ReturnType<typeof drizzle<typeof schema>>; pool: Pool }
+type BaseDatabase = ReturnType<typeof drizzle<typeof schema>>
+declare const publicDatabaseBrand: unique symbol
+declare const schoolDatabaseBrand: unique symbol
+
+export type PublicDatabase = BaseDatabase & { readonly [publicDatabaseBrand]: 'public' }
+export type SchoolDatabase = BaseDatabase & { readonly [schoolDatabaseBrand]: 'school' }
+export type Database = PublicDatabase | SchoolDatabase
+
+type CachedDb = { db: SchoolDatabase; pool: Pool }
 
 const MAX_DB_CACHE_SIZE = 100
 const closedPools = new WeakSet<Pool>()
@@ -22,7 +30,7 @@ const publicPool = new Pool({
   options: '-c search_path=public',
 })
 
-export const publicDb = drizzle(publicPool, { schema })
+export const publicDb = drizzle(publicPool, { schema }) as PublicDatabase
 
 async function closePool(pool: Pool): Promise<void> {
   if (closedPools.has(pool)) return
@@ -40,7 +48,7 @@ export function getScopedDatabase(organizationId: string) {
     options: `-c search_path=${quotePgIdentifier(schemaName)},public`,
   })
 
-  const db = drizzle(pool, { schema })
+  const db = drizzle(pool, { schema }) as SchoolDatabase
   dbCache.set(organizationId, { db, pool })
   return db
 }
@@ -59,6 +67,5 @@ export async function shutdownPools(): Promise<void> {
   }
 }
 
-export type Database = ReturnType<typeof getScopedDatabase>
 export * from './schema'
 export * from './provision'

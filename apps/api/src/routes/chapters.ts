@@ -7,11 +7,12 @@ import { authorize } from '../utils/auth'
 import { authoringView, authorizeContentReadView } from '../utils/chapterView'
 import ChapterReader from '../services/chapterReader'
 import ChapterService, { createChapterSchema, updateChapterSchema } from '../services/chapter'
+import { schoolDb } from '../middlewares/school'
 
 const router = Router()
 
 router.get('/:chapterId', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
   const view = await authorizeContentReadView(req, db)
@@ -24,7 +25,7 @@ router.get('/:chapterId', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const data = parseBody(createChapterSchema, req)
 
   await authorize(req, db, { scope: 'school', permissions: { content: ['create'] } })
@@ -33,7 +34,7 @@ router.post('/', async (req, res) => {
 })
 
 router.patch('/:chapterId', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
   const updates = parseBody(updateChapterSchema, req)
 
@@ -53,7 +54,7 @@ const applyScriptSchema = z.object({
 })
 
 router.post('/:chapterId/script', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
   const { objectKey, script } = parseBody(applyScriptSchema, req)
 

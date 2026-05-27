@@ -6,11 +6,12 @@ import { notFound } from '../error'
 import { authorize } from '../utils/auth'
 import AudioService from '../services/audio'
 import AudioMappingService, { putMappingsSchema } from '../services/audioMapping'
+import { schoolDb } from '../middlewares/school'
 
 const router = Router()
 
 router.put('/:audioId/mappings', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { audioId } = parseParams(z.object({ audioId: z.uuid() }), req)
   const inputs = parseBody(putMappingsSchema, req)
 

@@ -7,11 +7,12 @@ import EvaluationService, {
   createEvaluationSchema,
   listEvaluationsQuerySchema,
 } from '../services/evaluation'
+import { schoolDb } from '../middlewares/school'
 
 const router = Router({ mergeParams: true })
 
 router.get('/', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const query = parseQuery(listEvaluationsQuerySchema, req)
   await requireBatchAccess(req, db, batchId, {
@@ -24,7 +25,7 @@ router.get('/', async (req, res) => {
 })
 
 router.get('/:studentId', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { batchId, studentId } = parseParams(
     z.object({ batchId: z.uuid(), studentId: z.string().min(1) }),
     req,
@@ -49,7 +50,7 @@ router.get('/:studentId', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const data = parseBody(createEvaluationSchema, req)
   const access = await requireBatchAccess(req, db, batchId, {

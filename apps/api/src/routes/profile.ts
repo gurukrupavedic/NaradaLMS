@@ -3,6 +3,7 @@ import { Router } from 'express'
 import { getSession } from '../utils/auth'
 import { parseBody } from '../utils/validate'
 import ProfileService, { updateProfileSchema } from '../services/profile'
+import { schoolDb } from '../middlewares/school'
 
 export const publicProfileRouter = Router()
 
@@ -16,7 +17,7 @@ publicProfileRouter.get('/', async (req, res) => {
 export const schoolProfileRouter = Router()
 
 schoolProfileRouter.patch('/', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const updates = parseBody(updateProfileSchema, req)
 
   const { user } = await getSession(req)

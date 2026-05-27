@@ -10,11 +10,12 @@ import ExamService, {
   recordResultsSchema,
   updateExamSchema,
 } from '../services/exam'
+import { schoolDb } from '../middlewares/school'
 
 export const batchExamsRouter = Router({ mergeParams: true })
 
 batchExamsRouter.get('/', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const query = parseQuery(listExamsQuerySchema, req)
   const access = await requireBatchAccess(req, db, batchId, {
@@ -26,7 +27,7 @@ batchExamsRouter.get('/', async (req, res) => {
 })
 
 batchExamsRouter.post('/', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const data = parseBody(createExamSchema, req)
   await requireBatchAccess(req, db, batchId, { batchPermission: { exam: ['create'] } })
@@ -37,7 +38,7 @@ batchExamsRouter.post('/', async (req, res) => {
 export const examsRouter = Router()
 
 examsRouter.patch('/:examId', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { examId } = parseParams(z.object({ examId: z.uuid() }), req)
   const updates = parseBody(updateExamSchema, req)
 
@@ -55,7 +56,7 @@ examsRouter.patch('/:examId', async (req, res) => {
 })
 
 examsRouter.post('/:examId/results', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { examId } = parseParams(z.object({ examId: z.uuid() }), req)
   const items = parseBody(recordResultsSchema, req)
   const existing = await ExamService.findById(db, examId)

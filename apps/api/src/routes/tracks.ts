@@ -6,11 +6,12 @@ import { notFound } from '../error'
 import { authorize } from '../utils/auth'
 import { authoringView, authorizeContentReadView } from '../utils/chapterView'
 import TrackService, { createTrackSchema, updateTrackSchema } from '../services/track'
+import { schoolDb } from '../middlewares/school'
 
 const router = Router()
 
 router.get('/', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const view = await authorizeContentReadView(req, db)
 
   const tracks = await TrackService.findAll(db, view)
@@ -18,7 +19,7 @@ router.get('/', async (req, res) => {
 })
 
 router.get('/:trackId', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { trackId } = parseParams(z.object({ trackId: z.uuid() }), req)
 
   const view = await authorizeContentReadView(req, db)
@@ -32,7 +33,7 @@ router.get('/:trackId', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const data = parseBody(createTrackSchema, req)
 
   await authorize(req, db, { scope: 'school', permissions: { content: ['create'] } })
@@ -41,7 +42,7 @@ router.post('/', async (req, res) => {
 })
 
 router.patch('/:trackId', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { trackId } = parseParams(z.object({ trackId: z.uuid() }), req)
   const updateData = parseBody(updateTrackSchema, req)
 

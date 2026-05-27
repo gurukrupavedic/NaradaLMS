@@ -7,7 +7,7 @@ import {
   hasBatchPermission,
   type SchoolPermissions,
 } from '@narada/auth/permissions'
-import type { Database } from '@narada/db'
+import type { Database, SchoolDatabase } from '@narada/db'
 import { forbidden, unauthorized } from '../error'
 import EnrollmentService, { type Enrollment } from '../services/enrollment'
 
@@ -79,7 +79,7 @@ export async function hasPermission(
   }
 
   // TODO: use Redis to cache these reads
-  const enrollment = await EnrollmentService.findOne(db, user.id, claim.batchId)
+  const enrollment = await EnrollmentService.findOne(db as SchoolDatabase, user.id, claim.batchId)
   return enrollment !== undefined && hasBatchPermission(enrollment.role, claim.permissions)
 }
 
@@ -99,7 +99,7 @@ async function authorizeClaim(
 
 export async function requireBatchAccess(
   req: Request,
-  db: Database,
+  db: SchoolDatabase,
   batchId: string,
   claim: BatchAccessClaim,
 ): Promise<Extract<BatchAccess, { kind: 'schoolWide' | 'singleBatch' }>> {
@@ -129,7 +129,7 @@ export async function requireBatchAccess(
 
 export async function requireBatchListAccess(
   req: Request,
-  db: Database,
+  db: SchoolDatabase,
   claim: BatchListClaim,
 ): Promise<Extract<BatchAccess, { kind: 'schoolWide' | 'enrolled' }>> {
   const { user } = await authorizeClaim(req, db, {

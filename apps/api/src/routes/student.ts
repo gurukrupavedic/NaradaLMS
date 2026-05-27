@@ -5,11 +5,12 @@ import { parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import { authorize } from '../utils/auth'
 import ChapterReader from '../services/chapterReader'
+import { schoolDb } from '../middlewares/school'
 
 const router = Router()
 
 router.get('/chapters/:chapterId', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
   const { user } = await authorize(req, db, {

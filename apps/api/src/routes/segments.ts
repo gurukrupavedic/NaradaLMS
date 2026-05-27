@@ -7,11 +7,12 @@ import { authorize } from '../utils/auth'
 import { authoringView, authorizeContentReadView } from '../utils/chapterView'
 import ChapterReader from '../services/chapterReader'
 import SegmentService, { putSegmentsSchema } from '../services/segment'
+import { schoolDb } from '../middlewares/school'
 
 const router = Router({ mergeParams: true })
 
 router.get('/', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
   const view = await authorizeContentReadView(req, db)
@@ -23,7 +24,7 @@ router.get('/', async (req, res) => {
 })
 
 router.put('/', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
   const inputs = parseBody(putSegmentsSchema, req)
 

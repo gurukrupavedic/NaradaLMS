@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { and, asc, eq, gt, or } from 'drizzle-orm'
 
 import { hasBatchPermission } from '@narada/auth/permissions'
-import { exam, examResult, evaluation, type Database } from '@narada/db'
+import { exam, examResult, evaluation, type SchoolDatabase } from '@narada/db'
 import { compoundCursor, dateCursorField, paginateResponse } from '../utils/cursor'
 import { notFound, unprocessable } from '../error'
 import type { BatchAccess } from '../utils/auth'
@@ -59,7 +59,7 @@ export type RecordResultItem = z.infer<typeof recordResultItemSchema>
 
 export default class ExamService {
   public static async findByBatch(
-    db: Database,
+    db: SchoolDatabase,
     batchId: string,
     options: ListExamsQuery & { access: BatchAccess },
   ): Promise<{ items: Exam[]; nextCursor: string | null }> {
@@ -95,7 +95,7 @@ export default class ExamService {
     return paginateResponse(rows, limit, item => ({ scheduledAt: item.scheduledAt, id: item.id }))
   }
 
-  public static async findById(db: Database, examId: string): Promise<ExamDetail | undefined> {
+  public static async findById(db: SchoolDatabase, examId: string): Promise<ExamDetail | undefined> {
     const row = await db.query.exam.findFirst({
       where: (t, { eq }) => eq(t.id, examId),
       with: { results: true },
@@ -108,7 +108,7 @@ export default class ExamService {
     return row
   }
 
-  public static async create(db: Database, batchId: string, data: CreateExamData): Promise<Exam> {
+  public static async create(db: SchoolDatabase, batchId: string, data: CreateExamData): Promise<Exam> {
     const rows = await db
       .insert(exam)
       .values({ batchId, ...data })
@@ -119,7 +119,7 @@ export default class ExamService {
     return row
   }
 
-  public static async update(db: Database, examId: string, data: UpdateExamData): Promise<Exam> {
+  public static async update(db: SchoolDatabase, examId: string, data: UpdateExamData): Promise<Exam> {
     const rows = await db.update(exam).set(data).where(eq(exam.id, examId)).returning()
     const row = rows.at(0)
     if (!row) {
@@ -130,7 +130,7 @@ export default class ExamService {
   }
 
   public static async recordResults(
-    db: Database,
+    db: SchoolDatabase,
     examId: string,
     evaluatorId: string,
     items: RecordResultItem[],

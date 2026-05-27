@@ -9,11 +9,12 @@ import BatchService, {
   listBatchesQuerySchema,
   updateBatchSchema,
 } from '../services/batch'
+import { schoolDb } from '../middlewares/school'
 
 const router = Router()
 
 router.get('/', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const query = parseQuery(listBatchesQuerySchema, req)
   const access = await requireBatchListAccess(req, db, {
     schoolPermission: { batch: ['read'] },
@@ -25,7 +26,7 @@ router.get('/', async (req, res) => {
 })
 
 router.get('/:batchId', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   await requireBatchAccess(req, db, batchId, {
     schoolPermission: { batch: ['update'] },
@@ -41,7 +42,7 @@ router.get('/:batchId', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const data = parseBody(createBatchSchema, req)
 
   await authorize(req, db, { scope: 'school', permissions: { batch: ['create'] } })
@@ -50,7 +51,7 @@ router.post('/', async (req, res) => {
 })
 
 router.patch('/:batchId', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const updates = parseBody(updateBatchSchema, req)
 

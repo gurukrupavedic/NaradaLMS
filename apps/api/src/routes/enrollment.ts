@@ -6,11 +6,12 @@ import { notFound } from '../error'
 import { requireBatchAccess } from '../utils/auth'
 import BatchService from '../services/batch'
 import EnrollmentService, { enrollSchema } from '../services/enrollment'
+import { schoolDb } from '../middlewares/school'
 
 const router = Router({ mergeParams: true })
 
 router.post('/', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const data = parseBody(enrollSchema, req)
   await requireBatchAccess(req, db, batchId, {
@@ -28,7 +29,7 @@ router.post('/', async (req, res) => {
 })
 
 router.delete('/:userId', async (req, res) => {
-  const { db } = res.locals
+  const db = schoolDb(res)
   const { batchId, userId } = parseParams(
     z.object({ batchId: z.uuid(), userId: z.string().min(1) }),
     req,

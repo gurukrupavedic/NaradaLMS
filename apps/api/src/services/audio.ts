@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 
-import { audioAsset, type Database } from '@narada/db'
+import { audioAsset, type SchoolDatabase } from '@narada/db'
 import { conflict, notFound, unprocessable } from '../error'
 import { objectLifecycle } from '../utils/objectLifecycle'
 
@@ -36,7 +36,7 @@ async function audioAssetResponse(row: DbAudioAsset): Promise<AudioAsset> {
 
 export default class AudioService {
   public static async findById(
-    db: Database,
+    db: SchoolDatabase,
     audioId: string,
     chapterId?: string,
   ): Promise<StoredAudioAsset | undefined> {
@@ -55,7 +55,7 @@ export default class AudioService {
   }
 
   public static async create(
-    db: Database,
+    db: SchoolDatabase,
     schoolId: string,
     chapterId: string,
     data: CreateAudioAssetData,
@@ -80,7 +80,7 @@ export default class AudioService {
     return audioAssetResponse(row)
   }
 
-  public static async remove(db: Database, audioId: string, chapterId: string): Promise<void> {
+  public static async remove(db: SchoolDatabase, audioId: string, chapterId: string): Promise<void> {
     const asset = await AudioService.findById(db, audioId, chapterId)
     if (!asset) throw notFound()
     await objectLifecycle.deleteObject(asset.objectKey)

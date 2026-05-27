@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 
-import { segment, type Database } from '@narada/db'
+import { segment, type SchoolDatabase } from '@narada/db'
 import { internalError, unprocessable } from '../error'
 
 export const segmentInputSchema = z
@@ -27,7 +27,7 @@ function validateNoOverlaps(inputs: SegmentInput[]): void {
 
 export default class SegmentService {
   public static async replace(
-    db: Database,
+    db: SchoolDatabase,
     chapterId: string,
     inputs: SegmentInput[],
   ): Promise<Segment[]> {

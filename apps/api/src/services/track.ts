@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { asc, eq } from 'drizzle-orm'
 
-import { track, chapter, type Database } from '@narada/db'
+import { track, chapter, type SchoolDatabase } from '@narada/db'
 import { internalError } from '../error'
 import { chapterResponse, type Chapter, type ChapterReadView } from './chapterReader'
 
@@ -30,7 +30,7 @@ async function trackWithChaptersResponse(
 }
 
 export default class TrackService {
-  public static async findAll(db: Database, view: ChapterReadView): Promise<TrackWithChapters[]> {
+  public static async findAll(db: SchoolDatabase, view: ChapterReadView): Promise<TrackWithChapters[]> {
     const rows = await db.query.track.findMany({
       orderBy: asc(track.order),
       with: {
@@ -45,7 +45,7 @@ export default class TrackService {
   }
 
   public static async findById(
-    db: Database,
+    db: SchoolDatabase,
     trackId: string,
     view: ChapterReadView,
   ): Promise<TrackWithChapters | undefined> {
@@ -62,14 +62,14 @@ export default class TrackService {
     return row ? trackWithChaptersResponse(row) : undefined
   }
 
-  public static async create(db: Database, data: CreateTrackData): Promise<Track> {
+  public static async create(db: SchoolDatabase, data: CreateTrackData): Promise<Track> {
     const rows = await db.insert(track).values(data).returning()
     const row = rows.at(0)
     if (!row) throw internalError()
     return row
   }
 
-  public static async update(db: Database, trackId: string, data: UpdateTrackData): Promise<Track> {
+  public static async update(db: SchoolDatabase, trackId: string, data: UpdateTrackData): Promise<Track> {
     const rows = await db.update(track).set(data).where(eq(track.id, trackId)).returning()
     const row = rows.at(0)
     if (!row) throw internalError()
