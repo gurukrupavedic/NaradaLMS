@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { and, asc, eq, gt, inArray } from 'drizzle-orm'
+import { and, asc, eq, gt, inArray, isNull, lt, or, sql } from 'drizzle-orm'
 
 import { batch, enrollment, type Database } from '@narada/db'
-import { asCursor, paginateResponse } from '../utils/cursor'
+import { compoundCursor, paginateResponse } from '../utils/cursor'
 import { internalError, notFound } from '../error'
 import type { BatchAccess } from '../utils/auth'
 
@@ -51,7 +51,7 @@ export const updateBatchSchema = z
 
 export const listBatchesQuerySchema = z.object({
   status: z.enum(['upcoming', 'active', 'completed']).optional(),
-  cursor: asCursor(z.object({ id: z.string() })).optional(),
+  cursor: compoundCursor({ startDate: z.string().nullable(), id: z.string() }).optional(),
   limit: z.coerce.number().int().positive().max(100).default(PAGE_SIZE),
 })
 
@@ -81,14 +81,25 @@ export default class BatchService {
     }
 
     if (status) conditions.push(eq(batch.status, status))
-    if (cursor) conditions.push(gt(batch.id, cursor.id))
+    if (cursor) {
+      conditions.push(
+        cursor.startDate === null
+          ? and(isNull(batch.startDate), gt(batch.id, cursor.id))
+          : or(
+              lt(batch.startDate, cursor.startDate),
+              and(eq(batch.startDate, cursor.startDate), gt(batch.id, cursor.id)),
+              isNull(batch.startDate),
+            ),
+      )
+    }
+
     const rows = await db.query.batch.findMany({
       where: conditions.length > 0 ? and(...conditions) : undefined,
-      orderBy: asc(batch.id),
+      orderBy: [sql`${batch.startDate} desc nulls last`, asc(batch.id)],
       limit: limit + 1,
     })
 
-    return paginateResponse(rows, limit, item => ({ id: item.id }))
+    return paginateResponse(rows, limit, item => ({ startDate: item.startDate, id: item.id }))
   }
 
   public static async findById(db: Database, batchId: string): Promise<Batch | undefined> {

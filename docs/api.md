@@ -833,19 +833,24 @@ List evaluation history for a batch.
 
 **Access:** Admin, or Instructor/TA in this batch.
 
+**Query params:** `?cursor=`, `?limit=`
+
 ```ts
 // Response 200
 {
   ok: true,
-  data: Array<{
-    id: string,
-    studentId: string,
-    chapterId: string,
-    level: ProficiencyLevel,
-    notes: string | null,
-    evaluatorId: string,
-    evaluatedAt: string
-  }>
+  data: {
+    items: Array<{
+      id: string,
+      studentId: string,
+      chapterId: string,
+      level: ProficiencyLevel,
+      notes: string | null,
+      evaluatorId: string,
+      evaluatedAt: string
+    }>,
+    nextCursor: string | null
+  }
 }
 ```
 
@@ -857,19 +862,24 @@ List evaluation history for one student in a batch.
 
 **Access:** The student can read their own evaluations. Instructor/TA in the batch can read any student's evaluations.
 
+**Query params:** `?cursor=`, `?limit=`
+
 ```ts
 // Response 200
 {
   ok: true,
-  data: Array<{
-    id: string,
-    studentId: string,
-    chapterId: string,
-    level: ProficiencyLevel,
-    notes: string | null,
-    evaluatorId: string,
-    evaluatedAt: string
-  }>
+  data: {
+    items: Array<{
+      id: string,
+      studentId: string,
+      chapterId: string,
+      level: ProficiencyLevel,
+      notes: string | null,
+      evaluatorId: string,
+      evaluatedAt: string
+    }>,
+    nextCursor: string | null
+  }
 }
 ```
 

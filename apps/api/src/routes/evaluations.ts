@@ -1,22 +1,26 @@
 import { Router } from 'express'
 import { z } from 'zod'
 
-import { parseBody, parseParams } from '../utils/validate'
+import { parseBody, parseParams, parseQuery } from '../utils/validate'
 import { getSession, requireBatchAccess } from '../utils/auth'
-import EvaluationService, { createEvaluationSchema } from '../services/evaluation'
+import EvaluationService, {
+  createEvaluationSchema,
+  listEvaluationsQuerySchema,
+} from '../services/evaluation'
 
 const router = Router({ mergeParams: true })
 
 router.get('/', async (req, res) => {
   const { db } = res.locals
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
+  const query = parseQuery(listEvaluationsQuerySchema, req)
   await requireBatchAccess(req, db, batchId, {
     schoolPermission: { evaluation: ['read'] },
     batchPermission: { evaluation: ['create'] },
   })
 
-  const evaluations = await EvaluationService.findByBatch(db, batchId)
-  res.status(200).json({ ok: true, data: evaluations })
+  const result = await EvaluationService.findByBatch(db, batchId, query)
+  res.status(200).json({ ok: true, data: result })
 })
 
 router.get('/:studentId', async (req, res) => {
@@ -26,6 +30,7 @@ router.get('/:studentId', async (req, res) => {
     req,
   )
 
+  const query = parseQuery(listEvaluationsQuerySchema, req)
   const { user } = await getSession(req)
   if (studentId !== user.id) {
     await requireBatchAccess(req, db, batchId, {
@@ -39,8 +44,8 @@ router.get('/:studentId', async (req, res) => {
     })
   }
 
-  const evaluations = await EvaluationService.findByStudent(db, batchId, studentId)
-  res.status(200).json({ ok: true, data: evaluations })
+  const result = await EvaluationService.findByStudent(db, batchId, studentId, query)
+  res.status(200).json({ ok: true, data: result })
 })
 
 router.post('/', async (req, res) => {

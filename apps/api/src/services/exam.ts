@@ -1,10 +1,10 @@
 import assert from 'node:assert'
 import { z } from 'zod'
-import { and, asc, eq, gt } from 'drizzle-orm'
+import { and, asc, eq, gt, or } from 'drizzle-orm'
 
 import { hasBatchPermission } from '@narada/auth/permissions'
 import { exam, examResult, evaluation, type Database } from '@narada/db'
-import { asCursor, paginateResponse } from '../utils/cursor'
+import { compoundCursor, dateCursorField, paginateResponse } from '../utils/cursor'
 import { notFound, unprocessable } from '../error'
 import type { BatchAccess } from '../utils/auth'
 
@@ -37,7 +37,7 @@ export const updateExamSchema = z
 
 export const listExamsQuerySchema = z.object({
   status: z.enum(['scheduled', 'inProgress', 'completed', 'cancelled']).optional(),
-  cursor: asCursor(z.object({ id: z.string() })).optional(),
+  cursor: compoundCursor({ scheduledAt: dateCursorField(), id: z.string() }).optional(),
   limit: z.coerce.number().int().positive().max(100).default(PAGE_SIZE),
 })
 
@@ -77,15 +77,22 @@ export default class ExamService {
         hasBatchPermission(access.enrollment.role, { exam: ['update'] }))
     if (!canSeeAll) conditions.push(eq(exam.studentId, access.userId))
     if (status) conditions.push(eq(exam.status, status))
-    if (cursor) conditions.push(gt(exam.id, cursor.id))
+    if (cursor) {
+      const cursorWhere = or(
+        gt(exam.scheduledAt, cursor.scheduledAt),
+        and(eq(exam.scheduledAt, cursor.scheduledAt), gt(exam.id, cursor.id)),
+      )
+
+      if (cursorWhere) conditions.push(cursorWhere)
+    }
 
     const rows = await db.query.exam.findMany({
       where: and(...conditions),
-      orderBy: asc(exam.id),
+      orderBy: [asc(exam.scheduledAt), asc(exam.id)],
       limit: limit + 1,
     })
 
-    return paginateResponse(rows, limit, item => ({ id: item.id }))
+    return paginateResponse(rows, limit, item => ({ scheduledAt: item.scheduledAt, id: item.id }))
   }
 
   public static async findById(db: Database, examId: string): Promise<ExamDetail | undefined> {

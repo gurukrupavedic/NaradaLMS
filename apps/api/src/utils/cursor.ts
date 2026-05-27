@@ -29,6 +29,10 @@ export function asCursor<T>(schema: z.ZodType<T>) {
   })
 }
 
+export function compoundCursor<T extends z.ZodRawShape>(shape: T) {
+  return asCursor(z.object(shape))
+}
+
 export function paginateResponse<T>(
   items: T[],
   limit: number,
@@ -38,4 +42,12 @@ export function paginateResponse<T>(
   const page = hasMore ? items.slice(0, limit) : items
   const nextCursor = hasMore ? encodeCursor(getCursor(page[page.length - 1])) : null
   return { items: page, nextCursor }
+}
+
+export function dateCursorField() {
+  return z.coerce.date()
+}
+
+export function nullableDateCursorField() {
+  return z.coerce.date().nullable()
 }
