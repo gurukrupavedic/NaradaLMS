@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { and, desc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm'
 
-import { evaluation, type Database } from '@narada/db'
+import { enrollment, evaluation, type Database } from '@narada/db'
 import { compoundCursor, nullableDateCursorField, paginateResponse } from '../utils/cursor'
 import { notFound } from '../error'
 import assert from 'node:assert'
@@ -87,7 +87,16 @@ export default class EvaluationService {
 
     const chapterIds = chapterRows.map(c => c.id)
     if (chapterIds.length === 0) return { items: [], nextCursor: null }
-    const conditions = [inArray(evaluation.chapterId, chapterIds)]
+    const enrolledStudentIds = db
+      .select({ userId: enrollment.userId })
+      .from(enrollment)
+      .where(eq(enrollment.batchId, batchId))
+
+    const conditions = [
+      inArray(evaluation.studentId, enrolledStudentIds),
+      inArray(evaluation.chapterId, chapterIds),
+    ]
+
     const cursorWhere = evaluationCursorWhere(options.cursor)
     if (cursorWhere) conditions.push(cursorWhere)
 
@@ -118,7 +127,17 @@ export default class EvaluationService {
 
     const chapterIds = chapterRows.map(c => c.id)
     if (chapterIds.length === 0) return { items: [], nextCursor: null }
-    const conditions = [eq(evaluation.studentId, studentId), inArray(evaluation.chapterId, chapterIds)]
+    const enrolledStudentIds = db
+      .select({ userId: enrollment.userId })
+      .from(enrollment)
+      .where(eq(enrollment.batchId, batchId))
+
+    const conditions = [
+      eq(evaluation.studentId, studentId),
+      inArray(evaluation.studentId, enrolledStudentIds),
+      inArray(evaluation.chapterId, chapterIds),
+    ]
+
     const cursorWhere = evaluationCursorWhere(options.cursor)
     if (cursorWhere) conditions.push(cursorWhere)
 
