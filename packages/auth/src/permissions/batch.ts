@@ -1,11 +1,11 @@
-type Subset<T> = T extends ArrayLike<unknown> ? T[number][] : never
+import type { Permissions } from './types'
 
 export type BatchAcl = typeof acl
 export type BatchRole = keyof typeof batchStatements
-export type BatchPermissions = {
-  [K in keyof BatchAcl]?: Subset<BatchAcl[K]>
-}
+export type BatchPermissions = Permissions<BatchAcl>
 
+// Batch membership is stored in the per-school schema, not BetterAuth organizations,
+// so this ACL intentionally stays runtime-independent from BetterAuth's access control.
 const acl = {
   evaluation: ['create', 'read'],
   exam: ['create', 'read', 'update'],

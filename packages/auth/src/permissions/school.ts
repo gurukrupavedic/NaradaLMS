@@ -1,11 +1,9 @@
 import { createAccessControl } from 'better-auth/plugins/access'
 
-type Subset<T> = T extends ArrayLike<unknown> ? T[number][] : never
+import type { Permissions } from './types'
 
 export type SchoolAcl = typeof ac.statements
-export type SchoolPermissions = {
-  [K in keyof SchoolAcl]?: Subset<SchoolAcl[K]>
-}
+export type SchoolPermissions = Permissions<SchoolAcl>
 
 export const ac = createAccessControl({
   school: ['update', 'delete'],
