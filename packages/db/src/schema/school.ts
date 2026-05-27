@@ -12,6 +12,7 @@ import {
   index,
   primaryKey,
   uniqueIndex,
+  check,
 } from 'drizzle-orm/pg-core'
 
 export const trackOrderSeq = pgSequence('track_order_seq', { startWith: 1 })
@@ -75,7 +76,10 @@ export const segment = pgTable(
     start: integer('start').notNull(),
     end: integer('end').notNull(),
   },
-  table => [index('segment_chapterId_idx').on(table.chapterId)],
+  table => [
+    index('segment_chapterId_idx').on(table.chapterId),
+    check('segment_bounds_valid', sql`${table.start} < ${table.end}`),
+  ],
 )
 
 export const audioAsset = pgTable(
@@ -107,7 +111,10 @@ export const audioMapping = pgTable(
     audioStart: real('audioStart').notNull(),
     audioEnd: real('audioEnd').notNull(),
   },
-  table => [primaryKey({ columns: [table.segmentId, table.audioAssetId] })],
+  table => [
+    primaryKey({ columns: [table.segmentId, table.audioAssetId] }),
+    check('audioMapping_bounds_valid', sql`${table.audioStart} < ${table.audioEnd}`),
+  ],
 )
 
 export const batch = pgTable('batch', {

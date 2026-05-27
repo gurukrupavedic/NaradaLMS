@@ -1,12 +1,13 @@
-CREATE TYPE "public"."batchStatus" AS ENUM('upcoming', 'active', 'completed');--> statement-breakpoint
-CREATE TYPE "public"."chapterStatus" AS ENUM('draft', 'published');--> statement-breakpoint
-CREATE TYPE "public"."enrollmentRole" AS ENUM('instructor', 'ta', 'student');--> statement-breakpoint
-CREATE TYPE "public"."enrollmentStatus" AS ENUM('active', 'inactive', 'completed');--> statement-breakpoint
-CREATE TYPE "public"."examStatus" AS ENUM('scheduled', 'inProgress', 'completed', 'cancelled');--> statement-breakpoint
-CREATE TYPE "public"."proficiencyLevel" AS ENUM('absent', 'notStarted', 'practicing', 'level1', 'level2', 'level3', 'level4');--> statement-breakpoint
-CREATE TYPE "public"."script" AS ENUM('te', 'sa', 'en');--> statement-breakpoint
-CREATE SEQUENCE "public"."chapter_order_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1;--> statement-breakpoint
-CREATE SEQUENCE "public"."track_order_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1;--> statement-breakpoint
+CREATE TYPE "batchStatus" AS ENUM('upcoming', 'active', 'completed');--> statement-breakpoint
+CREATE TYPE "chapterStatus" AS ENUM('draft', 'published');--> statement-breakpoint
+CREATE TYPE "enrollmentRole" AS ENUM('instructor', 'ta', 'student');--> statement-breakpoint
+CREATE TYPE "enrollmentStatus" AS ENUM('active', 'inactive', 'completed');--> statement-breakpoint
+CREATE TYPE "examStatus" AS ENUM('scheduled', 'inProgress', 'completed', 'cancelled');--> statement-breakpoint
+CREATE TYPE "proficiencyLevel" AS ENUM('absent', 'notStarted', 'practicing', 'level1', 'level2', 'level3', 'level4');--> statement-breakpoint
+CREATE TYPE "script" AS ENUM('te', 'sa', 'en');--> statement-breakpoint
+CREATE SEQUENCE "chapter_order_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1;--> statement-breakpoint
+CREATE SEQUENCE "track_order_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1;--> statement-breakpoint
+CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA public;--> statement-breakpoint
 CREATE TABLE "audioAsset" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"chapterId" uuid NOT NULL,
@@ -95,19 +96,24 @@ CREATE TABLE "track" (
 	"order" integer DEFAULT nextval('track_order_seq') NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "audioAsset" ADD CONSTRAINT "audioAsset_chapterId_chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "audioMapping" ADD CONSTRAINT "audioMapping_segmentId_segment_id_fk" FOREIGN KEY ("segmentId") REFERENCES "public"."segment"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "audioMapping" ADD CONSTRAINT "audioMapping_audioAssetId_audioAsset_id_fk" FOREIGN KEY ("audioAssetId") REFERENCES "public"."audioAsset"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "batch" ADD CONSTRAINT "batch_trackId_track_id_fk" FOREIGN KEY ("trackId") REFERENCES "public"."track"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "chapter" ADD CONSTRAINT "chapter_trackId_track_id_fk" FOREIGN KEY ("trackId") REFERENCES "public"."track"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "enrollment" ADD CONSTRAINT "enrollment_batchId_batch_id_fk" FOREIGN KEY ("batchId") REFERENCES "public"."batch"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "evaluation" ADD CONSTRAINT "evaluation_chapterId_chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "exam" ADD CONSTRAINT "exam_batchId_batch_id_fk" FOREIGN KEY ("batchId") REFERENCES "public"."batch"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "examResult" ADD CONSTRAINT "examResult_examId_exam_id_fk" FOREIGN KEY ("examId") REFERENCES "public"."exam"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "examResult" ADD CONSTRAINT "examResult_chapterId_chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "examResult" ADD CONSTRAINT "examResult_evaluationId_evaluation_id_fk" FOREIGN KEY ("evaluationId") REFERENCES "public"."evaluation"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "segment" ADD CONSTRAINT "segment_chapterId_chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."chapter"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "audioAsset" ADD CONSTRAINT "audioAsset_chapterId_chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "audioMapping" ADD CONSTRAINT "audioMapping_segmentId_segment_id_fk" FOREIGN KEY ("segmentId") REFERENCES "segment"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "audioMapping" ADD CONSTRAINT "audioMapping_audioAssetId_audioAsset_id_fk" FOREIGN KEY ("audioAssetId") REFERENCES "audioAsset"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "batch" ADD CONSTRAINT "batch_trackId_track_id_fk" FOREIGN KEY ("trackId") REFERENCES "track"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "chapter" ADD CONSTRAINT "chapter_trackId_track_id_fk" FOREIGN KEY ("trackId") REFERENCES "track"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "enrollment" ADD CONSTRAINT "enrollment_batchId_batch_id_fk" FOREIGN KEY ("batchId") REFERENCES "batch"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "evaluation" ADD CONSTRAINT "evaluation_chapterId_chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "exam" ADD CONSTRAINT "exam_batchId_batch_id_fk" FOREIGN KEY ("batchId") REFERENCES "batch"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "examResult" ADD CONSTRAINT "examResult_examId_exam_id_fk" FOREIGN KEY ("examId") REFERENCES "exam"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "examResult" ADD CONSTRAINT "examResult_chapterId_chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "examResult" ADD CONSTRAINT "examResult_evaluationId_evaluation_id_fk" FOREIGN KEY ("evaluationId") REFERENCES "evaluation"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "segment" ADD CONSTRAINT "segment_chapterId_chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "chapter"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "audioMapping" ADD CONSTRAINT "audioMapping_bounds_valid" CHECK ("audioStart" < "audioEnd");--> statement-breakpoint
+ALTER TABLE "audioMapping" ADD CONSTRAINT "audioMapping_audioAsset_no_overlap" EXCLUDE USING gist ("audioAssetId" WITH =, numrange("audioStart"::numeric, "audioEnd"::numeric, '[)') WITH &&);--> statement-breakpoint
+ALTER TABLE "segment" ADD CONSTRAINT "segment_bounds_valid" CHECK ("start" < "end");--> statement-breakpoint
+ALTER TABLE "segment" ADD CONSTRAINT "segment_chapter_no_overlap" EXCLUDE USING gist ("chapterId" WITH =, int4range("start", "end", '[)') WITH &&);--> statement-breakpoint
 CREATE INDEX "audioAsset_chapterId_idx" ON "audioAsset" USING btree ("chapterId");--> statement-breakpoint
+CREATE UNIQUE INDEX "audioAsset_chapterId_objectKey_idx" ON "audioAsset" USING btree ("chapterId","objectKey");--> statement-breakpoint
 CREATE INDEX "chapter_trackId_idx" ON "chapter" USING btree ("trackId");--> statement-breakpoint
 CREATE INDEX "enrollment_batchId_idx" ON "enrollment" USING btree ("batchId");--> statement-breakpoint
 CREATE INDEX "evaluation_studentId_chapterId_idx" ON "evaluation" USING btree ("studentId","chapterId");--> statement-breakpoint
