@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { and, desc, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 
 import { enrollment, evaluation, type Database } from '@narada/db'
 import { compoundCursor, nullableDateCursorField, paginateResponse } from '../utils/cursor'
@@ -46,7 +46,6 @@ function evaluationCursorWhere(cursor: ListEvaluationsQuery['cursor']) {
   return or(
     lt(evaluation.evaluatedAt, cursor.evaluatedAt),
     and(eq(evaluation.evaluatedAt, cursor.evaluatedAt), lt(evaluation.id, cursor.id)),
-    isNull(evaluation.evaluatedAt),
   )
 }
 
@@ -98,13 +97,34 @@ export default class EvaluationService {
     ]
 
     const cursorWhere = evaluationCursorWhere(options.cursor)
-    if (cursorWhere) conditions.push(cursorWhere)
+    if (options.cursor?.evaluatedAt === null) {
+      if (cursorWhere) conditions.push(cursorWhere)
+      const rows = await db.query.evaluation.findMany({
+        where: and(...conditions),
+        orderBy: desc(evaluation.id),
+        limit: options.limit + 1,
+      })
 
+      return evaluationPage(rows, options.limit)
+    }
+
+    const nonNullConditions = [...conditions, isNotNull(evaluation.evaluatedAt)]
+    if (cursorWhere) nonNullConditions.push(cursorWhere)
     const rows = await db.query.evaluation.findMany({
-      where: and(...conditions),
+      where: and(...nonNullConditions),
       orderBy: [sql`${evaluation.evaluatedAt} desc nulls last`, desc(evaluation.id)],
       limit: options.limit + 1,
     })
+
+    if (rows.length <= options.limit) {
+      const nullRows = await db.query.evaluation.findMany({
+        where: and(...conditions, isNull(evaluation.evaluatedAt)),
+        orderBy: desc(evaluation.id),
+        limit: options.limit + 1 - rows.length,
+      })
+
+      rows.push(...nullRows)
+    }
 
     return evaluationPage(rows, options.limit)
   }
@@ -139,13 +159,34 @@ export default class EvaluationService {
     ]
 
     const cursorWhere = evaluationCursorWhere(options.cursor)
-    if (cursorWhere) conditions.push(cursorWhere)
+    if (options.cursor?.evaluatedAt === null) {
+      if (cursorWhere) conditions.push(cursorWhere)
+      const rows = await db.query.evaluation.findMany({
+        where: and(...conditions),
+        orderBy: desc(evaluation.id),
+        limit: options.limit + 1,
+      })
+
+      return evaluationPage(rows, options.limit)
+    }
+
+    const nonNullConditions = [...conditions, isNotNull(evaluation.evaluatedAt)]
+    if (cursorWhere) nonNullConditions.push(cursorWhere)
 
     const rows = await db.query.evaluation.findMany({
-      where: and(...conditions),
+      where: and(...nonNullConditions),
       orderBy: [sql`${evaluation.evaluatedAt} desc nulls last`, desc(evaluation.id)],
       limit: options.limit + 1,
     })
+
+    if (rows.length <= options.limit) {
+      const nullRows = await db.query.evaluation.findMany({
+        where: and(...conditions, isNull(evaluation.evaluatedAt)),
+        orderBy: desc(evaluation.id),
+        limit: options.limit + 1 - rows.length,
+      })
+      rows.push(...nullRows)
+    }
 
     return evaluationPage(rows, options.limit)
   }

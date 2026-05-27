@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { and, asc, eq, gt, inArray, isNull, lt, or, sql } from 'drizzle-orm'
+import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 
 import { batch, enrollment, type Database } from '@narada/db'
 import { compoundCursor, paginateResponse } from '../utils/cursor'
@@ -81,23 +81,42 @@ export default class BatchService {
     }
 
     if (status) conditions.push(eq(batch.status, status))
+    if (cursor?.startDate === null) {
+      conditions.push(isNull(batch.startDate), gt(batch.id, cursor.id))
+      const rows = await db.query.batch.findMany({
+        where: and(...conditions),
+        orderBy: asc(batch.id),
+        limit: limit + 1,
+      })
+
+      return paginateResponse(rows, limit, item => ({ startDate: item.startDate, id: item.id }))
+    }
+
+    const nonNullConditions = [...conditions, isNotNull(batch.startDate)]
     if (cursor) {
-      conditions.push(
-        cursor.startDate === null
-          ? and(isNull(batch.startDate), gt(batch.id, cursor.id))
-          : or(
-              lt(batch.startDate, cursor.startDate),
-              and(eq(batch.startDate, cursor.startDate), gt(batch.id, cursor.id)),
-              isNull(batch.startDate),
-            ),
+      const cursorWhere = or(
+        lt(batch.startDate, cursor.startDate),
+        and(eq(batch.startDate, cursor.startDate), gt(batch.id, cursor.id)),
       )
+
+      if (cursorWhere) nonNullConditions.push(cursorWhere)
     }
 
     const rows = await db.query.batch.findMany({
-      where: conditions.length > 0 ? and(...conditions) : undefined,
+      where: and(...nonNullConditions),
       orderBy: [sql`${batch.startDate} desc nulls last`, asc(batch.id)],
       limit: limit + 1,
     })
+
+    if (rows.length <= limit) {
+      const nullRows = await db.query.batch.findMany({
+        where: and(...conditions, isNull(batch.startDate)),
+        orderBy: asc(batch.id),
+        limit: limit + 1 - rows.length,
+      })
+
+      rows.push(...nullRows)
+    }
 
     return paginateResponse(rows, limit, item => ({ startDate: item.startDate, id: item.id }))
   }
