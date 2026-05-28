@@ -12,7 +12,7 @@ const router = Router()
 
 router.get('/', async (req, res) => {
   const db = schoolDb(res)
-  const view = await authorizeContentReadView(req, db)
+  const view = await authorizeContentReadView(req)
 
   const tracks = await TrackService.findAll(db, view)
   res.status(200).json({ ok: true, data: tracks })
@@ -22,8 +22,7 @@ router.get('/:trackId', async (req, res) => {
   const db = schoolDb(res)
   const { trackId } = parseParams(z.object({ trackId: z.uuid() }), req)
 
-  const view = await authorizeContentReadView(req, db)
-
+  const view = await authorizeContentReadView(req)
   const track = await TrackService.findById(db, trackId, view)
   if (!track) {
     throw notFound()

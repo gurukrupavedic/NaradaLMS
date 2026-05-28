@@ -16,7 +16,7 @@ router.get('/:chapterId', async (req, res) => {
   const db = schoolDb(res)
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
-  const view = await authorizeContentReadView(req, db)
+  const view = await authorizeContentReadView(req)
   const chapter = await ChapterReader.findById(db, chapterId, view)
   if (!chapter) {
     throw notFound()
