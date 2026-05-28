@@ -3,6 +3,7 @@ import { and, eq } from 'drizzle-orm'
 
 import { enrollment, publicDb, type SchoolDatabase } from '@narada/db'
 import { notFound } from '../error'
+import { requireNonEmpty } from '../utils/validate'
 
 export const membershipSchema = z.object({
   organizationId: z.string(),
@@ -16,14 +17,12 @@ export const profileSchema = z.object({
   memberships: z.array(membershipSchema),
 })
 
-export const updateProfileSchema = z
-  .object({
+export const updateProfileSchema = requireNonEmpty(
+  z.object({
     phone: z.string().optional(),
     city: z.string().optional(),
-  })
-  .refine(data => data.phone !== undefined || data.city !== undefined, {
-    message: 'No fields to update',
-  })
+  }),
+)
 
 export type Membership = z.infer<typeof membershipSchema>
 export type Profile = z.infer<typeof profileSchema>
