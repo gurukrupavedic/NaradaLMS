@@ -5,23 +5,14 @@ import { enrollment, evaluation, type SchoolDatabase } from '@narada/db'
 import { compoundCursor, nullableDateCursorField, paginateResponse } from '../utils/cursor'
 import { notFound } from '../error'
 import assert from 'node:assert'
+import { proficiencyLevelSchema } from './shared'
 
 const PAGE_SIZE = 20
-
-const proficiencyLevel = z.enum([
-  'absent',
-  'notStarted',
-  'practicing',
-  'level1',
-  'level2',
-  'level3',
-  'level4',
-])
 
 export const createEvaluationSchema = z.object({
   studentId: z.string().min(1),
   chapterId: z.uuid(),
-  level: proficiencyLevel,
+  level: proficiencyLevelSchema,
   notes: z.string().optional(),
 })
 

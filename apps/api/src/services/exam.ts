@@ -7,18 +7,9 @@ import { exam, examResult, evaluation, type SchoolDatabase } from '@narada/db'
 import { compoundCursor, dateCursorField, paginateResponse } from '../utils/cursor'
 import { notFound, unprocessable } from '../error'
 import type { BatchAccess } from '../utils/auth'
+import { proficiencyLevelSchema } from './shared'
 
 const PAGE_SIZE = 20
-
-const proficiencyLevel = z.enum([
-  'absent',
-  'notStarted',
-  'practicing',
-  'level1',
-  'level2',
-  'level3',
-  'level4',
-])
 
 export const createExamSchema = z.object({
   studentId: z.string().min(1),
@@ -43,7 +34,7 @@ export const listExamsQuerySchema = z.object({
 
 export const recordResultItemSchema = z.object({
   chapterId: z.uuid(),
-  level: proficiencyLevel,
+  level: proficiencyLevelSchema,
   notes: z.string().optional(),
 })
 
