@@ -18,7 +18,6 @@ export const profileSchema = z.object({
 
 export const updateProfileSchema = z
   .object({
-    batchId: z.uuid(),
     phone: z.string().optional(),
     city: z.string().optional(),
   })
@@ -48,11 +47,15 @@ export default class ProfileService {
     }
   }
 
-  public static async update(db: SchoolDatabase, userId: string, data: UpdateProfileData): Promise<void> {
-    const { batchId, ...fields } = data
+  public static async update(
+    db: SchoolDatabase,
+    userId: string,
+    batchId: string,
+    data: UpdateProfileData,
+  ): Promise<void> {
     const rows = await db
       .update(enrollment)
-      .set(fields)
+      .set(data)
       .where(and(eq(enrollment.userId, userId), eq(enrollment.batchId, batchId)))
       .returning()
 
