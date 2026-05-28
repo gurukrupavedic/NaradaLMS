@@ -4,6 +4,7 @@ import { and, eq } from 'drizzle-orm'
 import { audioAsset, type SchoolDatabase } from '@narada/db'
 import { internalError, notFound, unprocessable } from '../error'
 import { objectLifecycle } from './objectLifecycle'
+import { audioAssetResponse, type AudioAsset } from './audioResponses'
 
 const audioUploadIdSchema = z.string().regex(
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(mp3|wav|aac|ogg|m4a)$/i,
@@ -20,20 +21,10 @@ export const createAudioAssetSchema = z.object({
   duration: z.number().positive(),
 })
 
-export type AudioAsset = typeof audioAsset.$inferSelect & { url: string }
 export type GetUploadUrlData = z.infer<typeof getUploadUrlSchema>
 export type CreateAudioAssetData = z.infer<typeof createAudioAssetSchema>
 export type StoredAudioAsset = typeof audioAsset.$inferSelect
 export type CreateAudioAssetResult = { asset: AudioAsset; created: boolean }
-
-type DbAudioAsset = typeof audioAsset.$inferSelect
-
-async function audioAssetResponse(row: DbAudioAsset): Promise<AudioAsset> {
-  return {
-    ...row,
-    url: await objectLifecycle.urlFor(row.objectKey),
-  }
-}
 
 export default class AudioService {
   public static async findById(

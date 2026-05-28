@@ -11,6 +11,7 @@ import {
   type SchoolDatabase,
 } from '@narada/db'
 import { objectLifecycle } from './objectLifecycle'
+import { chapterAudioAssetResponse, type ChapterAudioAsset } from './audioResponses'
 
 type DbChapter = typeof chapter.$inferSelect
 type DbAudioAsset = typeof audioAsset.$inferSelect
@@ -25,10 +26,7 @@ export type ChapterReadView =
 export type Chapter = Omit<DbChapter, 'textObjectKey'> & { textUrl: string | null }
 export type Segment = typeof segment.$inferSelect
 export type AudioMapping = DbAudioMapping
-export type AudioAsset = Omit<DbAudioAsset, 'objectKey'> & {
-  url: string
-  audioMappings: AudioMapping[]
-}
+export type AudioAsset = ChapterAudioAsset
 
 export type ChapterDetail = Chapter & {
   segments: Segment[]
@@ -82,24 +80,11 @@ export async function chapterResponse(row: DbChapter): Promise<Chapter> {
   }
 }
 
-async function audioAssetResponse(
-  row: DbAudioAsset & { audioMappings: DbAudioMapping[] },
-): Promise<AudioAsset> {
-  return {
-    id: row.id,
-    chapterId: row.chapterId,
-    label: row.label,
-    url: await objectLifecycle.urlFor(row.objectKey),
-    duration: row.duration,
-    audioMappings: row.audioMappings,
-  }
-}
-
 async function detailResponse(row: ChapterContentRow): Promise<ChapterDetail> {
   return {
     ...(await chapterResponse(row)),
     segments: row.segments,
-    audioAssets: await Promise.all(row.audioAssets.map(audioAssetResponse)),
+    audioAssets: await Promise.all(row.audioAssets.map(chapterAudioAssetResponse)),
   }
 }
 
