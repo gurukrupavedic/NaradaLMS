@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
+    "./ids": "./src/ids.ts",
     "./permissions": "./src/permissions/index.ts"
   },
   "scripts": {
@@ -13,7 +14,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "better-auth": "^1.2.8"
+    "better-auth": "^1.2.8",
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "@narada/db": "workspace:*",

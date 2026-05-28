@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 
+import { userIdSchema } from '@narada/auth/ids'
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import { requireBatchAccess } from '../utils/auth'
@@ -31,7 +32,7 @@ router.post('/', async (req, res) => {
 router.delete('/:userId', async (req, res) => {
   const db = schoolDb(res)
   const { batchId, userId } = parseParams(
-    z.object({ batchId: z.uuid(), userId: z.string().min(1) }),
+    z.object({ batchId: z.uuid(), userId: userIdSchema }),
     req,
   )
 

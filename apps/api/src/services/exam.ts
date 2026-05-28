@@ -2,6 +2,7 @@ import assert from 'node:assert'
 import { z } from 'zod'
 import { and, asc, eq, gt, or } from 'drizzle-orm'
 
+import { userIdSchema } from '@narada/auth/ids'
 import { hasBatchPermission } from '@narada/auth/permissions'
 import { exam, examResult, evaluation, type SchoolDatabase } from '@narada/db'
 import { compoundCursor, dateCursorField, paginateResponse } from '../utils/cursor'
@@ -13,7 +14,7 @@ import { requireNonEmpty } from '../utils/validate'
 const PAGE_SIZE = 20
 
 export const createExamSchema = z.object({
-  studentId: z.string().min(1),
+  studentId: userIdSchema,
   scheduledAt: z.iso.datetime().transform(v => new Date(v)),
 })
 

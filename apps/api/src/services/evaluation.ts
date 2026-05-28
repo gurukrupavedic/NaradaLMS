@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 
+import { userIdSchema } from '@narada/auth/ids'
 import { enrollment, evaluation, type SchoolDatabase } from '@narada/db'
 import { compoundCursor, nullableDateCursorField, paginateResponse } from '../utils/cursor'
 import { notFound } from '../error'
@@ -10,7 +11,7 @@ import { proficiencyLevelSchema } from './shared'
 const PAGE_SIZE = 20
 
 export const createEvaluationSchema = z.object({
-  studentId: z.string().min(1),
+  studentId: userIdSchema,
   chapterId: z.uuid(),
   level: proficiencyLevelSchema,
   notes: z.string().optional(),

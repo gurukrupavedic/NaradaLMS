@@ -1,12 +1,13 @@
 import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 
+import { userIdSchema } from '@narada/auth/ids'
 import { enrollment, type SchoolDatabase } from '@narada/db'
 import { conflict, notFound } from '../error'
 import assert from 'node:assert'
 
 export const enrollSchema = z.object({
-  userId: z.string().min(1),
+  userId: userIdSchema,
   role: z.enum(['instructor', 'ta', 'student']),
 })
 

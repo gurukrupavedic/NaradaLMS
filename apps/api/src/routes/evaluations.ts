@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 
+import { userIdSchema } from '@narada/auth/ids'
 import { parseBody, parseParams, parseQuery } from '../utils/validate'
 import { getSession, requireBatchAccess } from '../utils/auth'
 import EvaluationService, {
@@ -30,7 +31,7 @@ router.get('/', async (req, res) => {
 router.get('/:studentId', async (req, res) => {
   const db = schoolDb(res)
   const { batchId, studentId } = parseParams(
-    z.object({ batchId: z.uuid(), studentId: z.string().min(1) }),
+    z.object({ batchId: z.uuid(), studentId: userIdSchema }),
     req,
   )
 
