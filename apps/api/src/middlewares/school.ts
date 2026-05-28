@@ -4,8 +4,8 @@ import { organization, publicDb, getScopedDatabase } from '@narada/db'
 import type { SchoolDatabase } from '@narada/db'
 import { badRequest, notFound } from '../error'
 
-export type School = typeof organization.$inferSelect
-export type SchoolScopedLocals = Express.Locals & { school: School; db: SchoolDatabase }
+export type SchoolContext = typeof organization.$inferSelect
+export type SchoolScopedLocals = Express.Locals & { school: SchoolContext; db: SchoolDatabase }
 
 export async function resolveDb(req: Request, res: Response, next: NextFunction) {
   const schoolSlug = req.get('x-school-slug')
