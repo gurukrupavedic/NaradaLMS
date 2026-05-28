@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 
 import { audioAsset, type SchoolDatabase } from '@narada/db'
-import { conflict, notFound, unprocessable } from '../error'
+import { internalError, notFound, unprocessable } from '../error'
 import { objectLifecycle } from '../utils/objectLifecycle'
 
 const audioUploadIdSchema = z.string().regex(
@@ -24,6 +24,7 @@ export type AudioAsset = typeof audioAsset.$inferSelect & { url: string }
 export type GetUploadUrlData = z.infer<typeof getUploadUrlSchema>
 export type CreateAudioAssetData = z.infer<typeof createAudioAssetSchema>
 export type StoredAudioAsset = typeof audioAsset.$inferSelect
+export type CreateAudioAssetResult = { asset: AudioAsset; created: boolean }
 
 type DbAudioAsset = typeof audioAsset.$inferSelect
 
@@ -59,7 +60,7 @@ export default class AudioService {
     schoolId: string,
     chapterId: string,
     data: CreateAudioAssetData,
-  ): Promise<AudioAsset> {
+  ): Promise<CreateAudioAssetResult> {
     const objectKey = objectLifecycle.audioObjectKey({ schoolId, chapterId, uploadId: data.uploadId })
     const exists = await objectLifecycle.objectExists(objectKey)
     if (!exists) throw unprocessable('uploaded audio object does not exist')
@@ -76,16 +77,24 @@ export default class AudioService {
       .returning()
 
     const row = rows.at(0)
-    if (!row) throw conflict('audio asset already exists for this upload')
-    return audioAssetResponse(row)
+    if (row) {
+      return { asset: await audioAssetResponse(row), created: true }
+    }
+
+    const existing = await db.query.audioAsset.findFirst({
+      where: (t, { and, eq }) => and(eq(t.chapterId, chapterId), eq(t.objectKey, objectKey)),
+    })
+    
+    if (!existing) throw internalError()
+    return { asset: await audioAssetResponse(existing), created: false }
   }
 
   public static async remove(db: SchoolDatabase, audioId: string, chapterId: string): Promise<void> {
     const asset = await AudioService.findById(db, audioId, chapterId)
     if (!asset) throw notFound()
-    await objectLifecycle.deleteObject(asset.objectKey)
     await db
       .delete(audioAsset)
       .where(and(eq(audioAsset.id, audioId), eq(audioAsset.chapterId, chapterId)))
+    await objectLifecycle.deleteObject(asset.objectKey)
   }
 }

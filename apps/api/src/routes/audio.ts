@@ -26,8 +26,9 @@ router.post('/', async (req, res: Response<unknown, SchoolScopedLocals>) => {
   const data = parseBody(createAudioAssetSchema, req)
 
   await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
-  const asset = await AudioService.create(db, school.id, chapterId, data)
-  res.status(201).json({ ok: true, data: asset })
+  const { created, asset } = await AudioService.create(db, school.id, chapterId, data)
+  const status = created ? 201 : 200
+  res.status(status).json({ ok: true, data: asset })
 })
 
 router.delete('/:audioId', async (req, res) => {
