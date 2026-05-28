@@ -1,4 +1,5 @@
 import type { Router } from 'express'
+import { rateLimit } from 'express-rate-limit'
 
 import healthRouter from './health'
 import tracksRouter from './tracks'
@@ -15,9 +16,17 @@ import studentRouter from './student'
 import schoolsRouter from './schools'
 import { resolveDb, requireSchool } from '../middlewares/school'
 
+const apiRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 1000,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+})
+
 export default function setupRoutes(router: Router) {
   router.use('/health', healthRouter)
 
+  router.use(apiRateLimit)
   router.use(resolveDb)
   router.use('/schools', schoolsRouter)
   router.use('/profile', publicProfileRouter)

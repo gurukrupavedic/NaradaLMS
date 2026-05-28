@@ -3,6 +3,7 @@ import express, { Router } from 'express'
 import type { Express, Request, Response, NextFunction } from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
+import { rateLimit } from 'express-rate-limit'
 import { toNodeHandler } from 'better-auth/node'
 
 import { auth } from '@narada/auth'
@@ -17,8 +18,16 @@ interface ServerOptions {
 }
 
 const SHUTDOWN_TIMEOUT_MS = 10_000
+
 let shutdownStarted = false
 let shutdownExitStarted = false
+
+const authRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 100,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+})
 
 export function createServer() {
   const router = Router()
@@ -26,10 +35,10 @@ export function createServer() {
   router.use(cors({ origin: env.TRUSTED_ORIGINS, credentials: true }))
   router.use(attachRequestContext)
   router.use(logRequest)
-
+  
   // BetterAuth requires access to the raw body stream, and thus,
   // must be mounted before the `express.json()` middleware.
-  router.all('/auth/*splat', toNodeHandler(auth))
+  router.all('/auth/*splat', authRateLimit, toNodeHandler(auth))
   router.use(express.json())
   setupRoutes(router)
 
