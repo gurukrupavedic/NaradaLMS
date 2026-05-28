@@ -22,12 +22,9 @@ export function attachRequestContext(req: Request, res: Response, next: NextFunc
   requestContext.run({ requestId, logger: requestLogger }, next)
 }
 
-export function getRequestContext(): RequestContext | undefined {
-  return requestContext.getStore()
-}
-
-export function requestLogger(): Logger {
-  return getRequestContext()?.logger ?? logger
+export function getLogger(): Logger {
+  const ctx = requestContext.getStore()
+  return ctx?.logger ?? logger
 }
 
 function getRequestId(req: Request) {

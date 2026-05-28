@@ -8,8 +8,7 @@ import { toNodeHandler } from 'better-auth/node'
 import { auth } from '@narada/auth'
 import { shutdownPools } from '@narada/db'
 import { env } from '@narada/env'
-import logger from './logger'
-import { attachRequestContext, requestLogger } from './requestContext'
+import { attachRequestContext, getLogger } from './requestContext'
 import setupRoutes from './routes'
 import { AppError, ErrorCode } from './error'
 
@@ -42,7 +41,7 @@ export function createServer() {
 
 export function runServer(app: Express, options: ServerOptions) {
   const server = app.listen(options.port, () => {
-    logger.info(`🚀 Started HTTP server on port ${options.port}.`)
+    getLogger().info(`🚀 Started HTTP server on port ${options.port}.`)
   })
 
   process.on('SIGINT', () => handleGracefulShutdown('SIGINT', server))
@@ -52,9 +51,7 @@ export function runServer(app: Express, options: ServerOptions) {
 }
 
 function logRequest(req: Request, res: Response, next: NextFunction) {
-  const scopedLogger = requestLogger()
   const startedAt = Date.now()
-
   res.on('finish', () => {
     const details = {
       method: req.method,
@@ -63,29 +60,31 @@ function logRequest(req: Request, res: Response, next: NextFunction) {
       durationMs: Date.now() - startedAt,
     }
 
+    const logger = getLogger()
     if (res.statusCode >= 500) {
-      scopedLogger.error(details, 'handled request')
+      logger.error(details, 'handled request')
       return
     }
 
     if (res.statusCode >= 400) {
-      scopedLogger.warn(details, 'handled request')
+      logger.warn(details, 'handled request')
       return
     }
 
-    scopedLogger.info(details, 'handled request')
+    logger.info(details, 'handled request')
   })
+
   next()
 }
 
 function handleErrors(error: Error, _req: Request, res: Response, _next: NextFunction) {
-  const scopedLogger = requestLogger()
+  const logger = getLogger()
   if (error instanceof AppError) {
     const details = { err: error, statusCode: error.statusCode, code: error.code }
     if (error.statusCode >= 500) {
-      scopedLogger.error(details, 'an error occurred while handling a request.')
+      logger.error(details, 'an error occurred while handling a request.')
     } else {
-      scopedLogger.warn(details, 'request failed.')
+      logger.warn(details, 'request failed.')
     }
 
     res.status(error.statusCode).json({
@@ -100,7 +99,7 @@ function handleErrors(error: Error, _req: Request, res: Response, _next: NextFun
     return
   }
 
-  scopedLogger.error({ err: error }, 'an error occurred while handling a request.')
+  logger.error({ err: error }, 'an error occurred while handling a request.')
   if (!res.headersSent) {
     res.status(500).json({
       ok: false,
@@ -110,6 +109,7 @@ function handleErrors(error: Error, _req: Request, res: Response, _next: NextFun
 }
 
 async function shutdownAndExit(exitCode: number) {
+  const logger = getLogger()
   if (shutdownExitStarted) return
   shutdownExitStarted = true
 
@@ -125,6 +125,7 @@ async function shutdownAndExit(exitCode: number) {
 }
 
 function handleGracefulShutdown(signal: string, server: Server) {
+  const logger = getLogger()
   if (shutdownStarted) return
   shutdownStarted = true
 

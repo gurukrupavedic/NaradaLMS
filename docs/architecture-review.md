@@ -1,24 +1,26 @@
-# Architecture Review & Refactoring Backlog
+# Architecture Review
 
-**Audience:** A coding agent picking up this document cold. Every item below is meant to be actionable without further context from the author. File paths, line numbers, and code excerpts are inlined where relevant.
+**Date:** 2026-05-26
+**Audience:** A coding agent picking up this document cold. Every item is meant to be actionable without further context.
 
-**Status as of writing:** The API surface (`apps/api`) implements ~all routes in [docs/api.md](api.md) with a few exceptions noted in §3. There are zero tests. The service layer is shallow CRUD with a few exceptions. This document captures what to fix, in what order, and why.
+**Status:** The API surface (`apps/api`) implements most of the routes in [docs/api.md](api.md). Service layer is shallow CRUD. Zero tests. This document is the second-pass review after the first round of cleanup landed.
 
 ---
 
 ## How to use this document
 
-1. **Read §1 (Repository map) and §2 (Glossary) first** so the rest of the document's references make sense.
-2. **Pick one section at a time.** Each section is roughly independent.
-3. **Verify before acting.** This review reflects code as of 2026-05-25. Re-read the cited files; the user actively rewrites generated code and may have moved on.
-4. **User preferences to respect** (from `~/.claude` memory):
-   - Prefers simple, readable code over abstractions; will reject convoluted patterns.
-   - Dislikes middleware that injects classes onto `req`/`res.locals` without compile-time guarantees (e.g. casting `req as AuthenticatedRequest`).
-   - Prefers utility functions over middleware for auth checks.
-   - Comfortable with TypeScript type-level programming; expects proper inference, not string types.
-   - Prefers `satisfies` over explicit annotations when both inference and validation are needed.
-   - Asks exploratory questions before committing; when in doubt, surface tradeoffs and wait for approval.
-5. **Confirm scope with the user before large refactors.** The deepening candidates in §5 are opinion, not law. The bugs in §3 and spec drift in §4 are objective and safe to act on.
+1. **Read §1 (Repository map) first** to orient.
+2. **§2–§4 are objective:** correctness bugs, security/data-integrity bugs, schema-level issues. Safe to act on directly.
+3. **§5–§6 are opinion:** architectural deepening candidates and consistency cleanup. Confirm scope before large refactors.
+4. **Re-read the cited files before acting** — the user actively rewrites code and line numbers shift.
+
+**User preferences to respect** (from memory):
+
+- Prefers simple, readable code over abstractions.
+- Dislikes middleware that injects values onto `req`/`res.locals` without compile-time guarantees.
+- Prefers utility functions over middleware for auth checks.
+- Comfortable with TypeScript type-level programming; `satisfies` over explicit annotations when both inference and validation are needed.
+- Asks exploratory questions before committing; surface tradeoffs and wait for approval.
 
 ---
 
@@ -29,51 +31,38 @@ Monorepo, pnpm workspaces. Node + Express 5 backend; no frontend in this repo ye
 ```
 narada/
 ├── apps/
-│   └── api/                          # Express 5 server, ~1900 LOC TS
+│   └── api/                          # Express 5 server
 │       ├── src/
-│       │   ├── index.ts              # entry point (5 lines)
+│       │   ├── index.ts              # entry point
 │       │   ├── server.ts             # createServer, runServer, error handler
 │       │   ├── logger.ts             # pino setup
-│       │   ├── error.ts              # AppError + factories (unauthorized, notFound, etc.)
+│       │   ├── error.ts              # AppError + factories
 │       │   ├── types/express.d.ts    # res.locals typing
-│       │   ├── middlewares/
-│       │   │   ├── school.ts         # resolveDb + requireSchool
-│       │   │   └── auth.ts           # resolveAuth (constructs AuthClient)
+│       │   ├── middlewares/school.ts # resolveDb + requireSchool
 │       │   ├── utils/
-│       │   │   ├── auth.ts           # AuthClient class
-│       │   │   ├── cursor.ts         # asCursor, encodeCursor, paginateResponse
-│       │   │   └── validate.ts       # parseBody/Params/Query
-│       │   ├── routes/               # 15 route files, all wired in routes/index.ts
-│       │   └── services/             # 11 service classes, one per major entity
+│       │   │   ├── auth.ts           # getSession, authorize, requireBatchAccess
+│       │   │   ├── chapterView.ts    # authorizeContentReadView helper
+│       │   │   ├── cursor.ts         # asCursor, compoundCursor, paginateResponse
+│       │   │   ├── validate.ts       # parseBody/Params/Query
+│       │   │   └── objectLifecycle.ts # R2 + DB coordination
+│       │   ├── scripts/releaseObjectOrphans.ts
+│       │   ├── routes/               # all wired in routes/index.ts
+│       │   └── services/             # one per major entity
 │       └── package.json
 ├── packages/
-│   ├── auth/                         # BetterAuth setup + ACL definitions
-│   │   ├── src/index.ts              # betterAuth() instance, organization plugin
-│   │   ├── src/client.ts             # createAuthClient for React (currently unused)
-│   │   └── src/permissions/
-│   │       ├── school.ts             # createAccessControl + owner/admin/member roles
-│   │       ├── batch.ts              # custom ACL + hasBatchPermission()
-│   │       └── index.ts              # barrel
-│   ├── db/                           # Drizzle ORM + schema
-│   │   ├── src/index.ts              # publicDb, getScopedDatabase, dbCache
+│   ├── auth/                         # BetterAuth + ACL
+│   │   ├── src/index.ts
+│   │   ├── src/client.ts
+│   │   └── src/permissions/{school,batch,types,index}.ts
+│   ├── db/                           # Drizzle ORM
+│   │   ├── src/index.ts              # publicDb, getScopedDatabase, LRU pool cache
 │   │   ├── src/provision.ts          # provisionSchool, renameSchool
-│   │   └── src/schema/
-│   │       ├── auth.ts               # BetterAuth tables (user, session, org, member, etc.)
-│   │       ├── school.ts             # per-school domain tables
-│   │       ├── relations.ts          # Drizzle relations()
-│   │       └── index.ts              # barrel
+│   │   └── src/schema/{auth,school,relations,index}.ts
 │   ├── storage/                      # R2/S3 wrapper
-│   │   ├── src/client.ts             # S3Client instance
-│   │   └── src/index.ts              # getUploadUrl, getDownloadUrl, putObject, deleteObject
 │   └── env/                          # Zod-validated env vars
-│       └── src/index.ts
-├── docs/
-│   ├── api.md                        # HTTP API spec (PARTIALLY OUTDATED — see §4)
-│   ├── data-model.md                 # Schema + roles (PARTIALLY OUTDATED — see §4)
-│   └── architecture-review.md        # this document
-├── TODO.md                           # progress checklist; most items checked
-├── pnpm-workspace.yaml
-└── package.json                      # root scripts wrap pnpm with dotenv-cli
+├── docs/{api,data-model,architecture-review}.md
+├── TODO.md
+└── package.json
 ```
 
 **Top-level concepts:**
@@ -81,543 +70,446 @@ narada/
 - **School** = BetterAuth organization. Multi-tenancy via schema-per-school (`school_<slug>` Postgres schemas).
 - **Batch** = cohort within a school. Backed by per-school `batch` table; BetterAuth's team plugin was removed.
 - **Track** = ordered curriculum (sequence of chapters) within a school.
-- **Chapter** = single learnable unit. Holds `script` + `textObjectKey`; API responses expose a resolved `textUrl`.
+- **Chapter** = single learnable unit. Holds `script` + `textObjectKey`; API responses expose resolved `textUrl`.
 - **Segment** = byte range within a chapter's text.
 - **AudioAsset** = R2-stored audio file attached to a chapter.
 - **AudioMapping** = (segment, audioAsset, audioStart, audioEnd).
 - **Enrollment** = (userId, batchId, role, status, phone, city). Profile data merged in.
 - **Evaluation** = append-only proficiency record (studentId, chapterId, level, evaluatorId).
-- **Exam** = scheduled assessment for a student in a batch; `exam_result` rows link an exam to evaluations per chapter.
+- **Exam** = scheduled assessment for a student in a batch; `examResult` links an exam to evaluations per chapter.
 
 **Authorization model (two levels):**
 
-- **School-level** via BetterAuth AC: `owner` > `admin` > `member`. Resources: `school`, `content`, `batch`, `member`, `invitation`, `enrollment`, `evaluation`, `draft`.
+- **School-level** via BetterAuth AC: `owner` > `admin` > `member`. Resources: `school`, `content`, `batch`, `member`, `invitation`, `enrollment`, `evaluation`.
 - **Batch-level** via custom ACL in [packages/auth/src/permissions/batch.ts](../packages/auth/src/permissions/batch.ts): `instructor` / `ta` / `student`. Resources: `evaluation`, `exam`, `enrollment`.
 - **Super admin** = `user.isSuperAdmin` flag, bypasses all checks.
 
 ---
 
-## 2. Glossary (architecture terms)
+## 2. Correctness bugs
 
-Used consistently throughout this document.
+Objective defects in the code. Independent fixes.
 
-- **Module** — anything with an interface + implementation (function, class, package).
-- **Interface** — everything a caller must know: types, invariants, error modes, ordering, config.
-- **Depth** — leverage at the interface. Deep = lots of behavior, small interface.
-- **Shallow** — interface nearly as complex as the implementation (the smell most services in this codebase exhibit).
-- **Seam** — where an interface lives; a place behavior can be altered without editing in place.
-- **Deletion test** — imagine deleting the module. If complexity vanishes, it was a pass-through. If it reappears across N callers, it was earning its keep.
-- **Locality** — what maintainers get from depth: change/bugs/knowledge concentrated in one place.
+### 2.1 `handleErrors` calls `next()` after sending the response
 
----
+**File:** [apps/api/src/server.ts:46-65](../apps/api/src/server.ts)
 
-## 3. Critical bugs (fix first)
-
-These are objective defects, not opinions. Each can be fixed independently.
-
-### 3.1 Presigned upload URL persisted as `audioAsset.url`
-
-**Status:** Resolved on 2026-05-26. The `audioAsset.url` column was removed; the DB stores only `objectKey`, and API responses resolve fresh URLs from that key.
-
-**File:** [apps/api/src/services/audio.ts:55-87](../apps/api/src/services/audio.ts)
-
-**Code:**
+After `res.status(...).json(...)` the handler falls through to `next()` (no error argument). The response is already on the wire; the trailing `next()` either no-ops or advances to a phantom matcher. Drop it:
 
 ```ts
-const url = await getDownloadUrl(data.objectKey) // ← 1-hour presigned URL
-const rows = await db
-  .insert(audioAsset)
-  .values({
-    chapterId,
-    url,
-    objectKey: data.objectKey,
-    label,
-    duration,
-  })
-  .returning()
+if (error instanceof AppError) {
+  res.status(error.statusCode).json({ ok: false, error: { code: error.code, message: error.message } })
+  return
+}
+if (!res.headersSent) {
+  res.status(500).json({ ok: false, error: { code: ErrorCode.INTERNAL_ERROR, message: '...' } })
+}
+// nothing after — response is sent
 ```
 
-`getDownloadUrl` returns a presigned URL with a 1-hour expiry unless `R2_PUBLIC_URL` is set. That string is persisted into `audioAsset.url`. After 1 hour the column points to a dead URL.
+### 2.2 Graceful shutdown ignores errors and leaks PG connections
 
-**Fix:** Either
+**File:** [apps/api/src/server.ts:67-77](../apps/api/src/server.ts)
 
-- Always require `R2_PUBLIC_URL` and store a stable public URL, OR
-- Stop storing `url` in the DB; compute it on read by calling `getDownloadUrl(objectKey)` per request.
+- `server.close(err => { ... process.exit(0) })` exits 0 even when `err` is set. Should exit 1 on error so orchestrators retry properly.
+- No timeout. If a request hangs, the process never exits and the platform hard-kills it.
+- The LRU pool cache in [packages/db/src/index.ts:11](../packages/db/src/index.ts) is not drained, so all Postgres pools leak on shutdown. Expose a `shutdownPools()` from `@narada/db` and call it on SIGTERM.
 
-The second option is more robust and matches how `chapter.textUrl` _should_ work too (currently it stores whatever `getDownloadUrl` returned at script-upload time — same bug, see §3.2).
+### 2.3 `SchoolService.create` / `update` are not atomic
 
-**Acceptance:** `audioAsset.url` either contains a permanently-valid URL, or the column is removed and reads compute the URL from `objectKey`.
+**File:** [apps/api/src/services/school.ts:56-97](../apps/api/src/services/school.ts)
 
----
+- **Create:** `provisionSchool(slug)` runs *before* the `organization` insert. If the insert fails (slug uniqueness race, connection drop), the Postgres `school_<slug>` schema is orphaned with no row referencing it. The next attempt with a different slug succeeds, but the orphan is unreachable.
+- **Update:** `renameSchool` and `clearSchoolDbCache` run *before* the org-row update. Order of events:
+  1. Rename Postgres schema (`school_<old>` → `school_<new>`).
+  2. Clear LRU cache entry for the old slug.
+  3. Update the `organization` row.
 
-### 3.2 `chapter.textUrl` is also a stored presigned URL
+  Between (1) and (3), any in-flight request that already pulled the old slug's pool holds a pool with `search_path=school_<old>`, which no longer exists. New requests with the new slug haven't been pooled yet because the row update hasn't committed.
 
-**Status:** Resolved on 2026-05-26. The DB column is now `chapter.textObjectKey`, and API responses resolve it to `textUrl`.
+**Fix:** Wrap the row mutation in a transaction; do `renameSchool` inside the transaction (DDL is transactional in Postgres) or use a compensating action; invalidate the cache after commit. For create: insert the row first, provision the schema after, delete the row on provisioning failure.
 
-**File:** [apps/api/src/services/chapter.ts:164-194](../apps/api/src/services/chapter.ts) (`applyScript`)
+### 2.4 Cross-batch evaluation leak when batches share a track
 
-Same bug as 3.1. `getDownloadUrl(objectKey)` is called and persisted into `chapter.textUrl`. Stale after 1 hour without `R2_PUBLIC_URL`.
+**Files:** [apps/api/src/routes/evaluations.ts](../apps/api/src/routes/evaluations.ts), [apps/api/src/services/evaluation.ts:73-132](../apps/api/src/services/evaluation.ts)
 
-**Fix:** Same approach as 3.1. Store the object key only; resolve URL on read.
+`findByBatch` and `findByStudent` filter results by `chapterId IN (chapters of batch.trackId)`. The schema has no unique constraint on `batch.trackId` — two batches can share a track. A TA in batch A who has read permission on evaluations can list evaluations from batch B, because both batches' chapter sets are identical.
 
----
+**Fix:** Join on `enrollment.batchId = :batchId` and filter by `evaluation.studentId IN (enrolled userIds)`, or `INNER JOIN enrollment ON enrollment.userId = evaluation.studentId AND enrollment.batchId = :batchId`.
 
-### 3.3 `ProfileService.update` mass-writes across all active enrollments
+### 2.5 `findByStudent` doesn't enforce that `studentId` is enrolled in the batch
 
-**Status:** Resolved before 2026-05-26. `PATCH /profile` now requires `batchId` and updates only `(userId, batchId)`.
+**File:** [apps/api/src/routes/evaluations.ts:26-49](../apps/api/src/routes/evaluations.ts)
 
-**File:** [apps/api/src/services/profile.ts:48-58](../apps/api/src/services/profile.ts)
+Same root as 2.4. The route accepts any `studentId` path parameter. There is no check that the student is enrolled in the batch — only that the requester has access. Returns whatever evaluations match the chapter-set filter.
 
-**Code:**
+### 2.6 `ChapterReadView` with `learning` kind and undefined `studentId` bypasses the access check
+
+**File:** [apps/api/src/services/chapterReader.ts:20-23](../apps/api/src/services/chapterReader.ts)
 
 ```ts
-const rows = await db
-  .update(enrollment)
-  .set(data)
-  .where(and(eq(enrollment.userId, userId), eq(enrollment.status, 'active')))
-  .returning()
+export type ChapterReadView =
+  | { kind: 'authoring' }
+  | { kind: 'learning'; studentId?: string }
 ```
 
-A user can be enrolled in multiple batches within one school. This `UPDATE` writes the same `phone`/`city` to every active enrollment. Likely unintended — there is no notion of "the active batch enrollment" in the schema.
+`findById` only runs `studentCanReadTrack` and the currentLevel lookup when `view.kind === 'learning' && view.studentId`. If a future caller passes `{ kind: 'learning' }` without a student id, the function returns the chapter (drafts excluded) with no enrollment check — silently elevating to an admin-shaped read.
 
-**Decision needed first.** Ask the user: should `PATCH /profile` update _all_ the user's enrollments in this school (then drop the `status='active'` filter), or _one specific_ enrollment (then add an "active batch" concept or require `batchId` in the request)?
-
-**Acceptance:** Behavior is intentional and documented in [docs/api.md](api.md).
-
----
-
-### 3.4 `SchoolService.create` has no rollback on provisioning failure
-
-**Status:** Resolved before 2026-05-26. `provisionSchool(data.slug)` now runs before the `organization` insert.
-
-**File:** [apps/api/src/services/school.ts:63-84](../apps/api/src/services/school.ts)
-
-**Code:**
-
+**Fix:** Split into three explicit variants:
 ```ts
-const rows = await publicDb.insert(organization).values({...}).returning()
-// ... assertion ...
-await provisionSchool(data.slug)   // ← if this throws, org row exists with no schema
-return mapSchool(row)
+type ChapterReadView =
+  | { kind: 'authoring' }
+  | { kind: 'learnerPreview' }      // admin viewing as learner; no enrollment check
+  | { kind: 'student'; studentId: string }
 ```
 
-If `provisionSchool` (which runs CREATE SCHEMA + Drizzle migrations) fails partway, the `organization` row is committed but no `school_<slug>` schema exists. Subsequent `getScopedDatabase(slug)` calls fail with raw Postgres errors.
+### 2.7 `recordResults` always marks the exam complete
 
-**Fix:**
+**File:** [apps/api/src/services/exam.ts:191-198](../apps/api/src/services/exam.ts)
 
-- Provision the schema _first_, then insert the org row (so a half-provisioned schema is the worst case — and schemas are idempotent via `CREATE SCHEMA IF NOT EXISTS`), OR
-- Wrap in a try/catch and best-effort delete the org on provisioning failure, OR
-- Use a transaction that includes the DDL (Postgres supports DDL in transactions, but BetterAuth's insert path isn't in our transaction context).
+The transaction sets `exam.status = 'completed'` unconditionally. There is no relation linking an exam to the chapters it was *expected* to cover, so partial results still flip the status. Either:
 
-Option 1 is simplest. The slug uniqueness check up top still prevents collisions.
+- Model the expected chapter list (`examChapter` table) and only complete when count matches.
+- Make completion an explicit caller action (PATCH the status separately).
 
-**Acceptance:** Failed `provisionSchool` leaves no `organization` row referencing a missing schema.
+### 2.8 `audio` POST accepts arbitrary object keys, with path-traversal-flavored input
 
----
+**File:** [apps/api/src/services/audio.ts:46-49](../apps/api/src/services/audio.ts)
 
-### 3.5 `AudioService.remove` is not atomic across DB + R2
+The route validates `data.objectKey.startsWith('schools/{schoolId}/chapters/{chapterId}/audio/')`. A client can send `schools/X/chapters/X/audio/../../../other-school/foo.mp3`. R2 treats keys as opaque strings (no `..` interpretation), so this isn't a true traversal — but the contract is wrong. The client shouldn't be allowed to dictate the path at all.
 
-**Status:** Short-term fix applied on 2026-05-26. R2 deletion now runs before DB deletion, with a TODO pointing to §5.E for the principled lifecycle module.
+**Fix:** Have the presign step return only the UUID; reconstruct the full key server-side from `(schoolId, chapterId, uuid, ext)` on POST.
 
-**File:** [apps/api/src/services/audio.ts:89-102](../apps/api/src/services/audio.ts)
+### 2.9 `audio` POST has no idempotency
 
-DB delete happens before R2 delete. If R2 fails, the asset row is gone but the object lingers. There is no scan/janitor.
+**File:** [apps/api/src/services/audio.ts:51-63](../apps/api/src/services/audio.ts)
 
-**Short-term fix:** Reverse the order — delete from R2 first, then DB. If R2 delete fails, the DB row still references a now-missing object (worse for reads). The principled answer is in §5.E (object lifecycle module) — leave a `// TODO: see architecture-review §5.E` comment and pick the lesser evil for now (the user should choose).
+A client that retries after a network blip creates two `audioAsset` rows pointing at the same object key. Add a unique index on `(chapterId, objectKey)`, or pre-register the row at presign time and upgrade it on POST.
 
----
+### 2.10 `audio` POST doesn't verify the object exists on R2
 
-### 3.6 `ChapterService.applyScript` orphans previous text in R2
+A client can call POST with any matching-prefix key and create a row pointing at a 404. Either `HEAD` the object before insert, or insert as `status='pending'` and have a janitor reconcile.
 
-**Status:** Accepted/documented on 2026-05-26. The code now comments the small R2/DB disagreement window caused by direct-to-R2 upload before DB mutation.
+### 2.11 `applyScript` reuses a fixed object key — concurrent uploads race silently
 
-**File:** [apps/api/src/services/chapter.ts:164-194](../apps/api/src/services/chapter.ts)
+**Files:** [apps/api/src/utils/objectLifecycle.ts:51-58](../apps/api/src/utils/objectLifecycle.ts), [apps/api/src/services/chapter.ts:48-73](../apps/api/src/services/chapter.ts)
 
-Each call uploads a new `text.txt` to a stable object key (`schools/{schoolId}/chapters/{chapterId}/text.txt`) via [apps/api/src/routes/upload.ts:25](../apps/api/src/routes/upload.ts), so the _object_ is overwritten — no actual orphan on re-upload of the same script. BUT: previous segments are dropped from the DB inside the transaction; the previous text is overwritten in R2 _outside_ the transaction (in `upload.ts` before this endpoint is called). If `applyScript` fails after the R2 upload, the new text is in place but the old chapter state remains and inconsistent. Worth a comment + acceptance that this is a small window.
+`stageChapterTextUpload` returns `schools/{schoolId}/chapters/{chapterId}/text.txt` every time. Two concurrent presign+upload cycles for the same chapter clobber each other, and the DB transaction in `applyScript` doesn't notice because it just updates a pointer to the same key. The existing comment acknowledges a smaller R2/DB disagreement window, but the race is worse than that.
 
-If you eventually move to per-revision object keys as new feature work, this becomes a real orphan problem and §5.E becomes load-bearing.
+**Fix:** Make the key versioned (UUID-suffixed). Atomically swap `chapter.textObjectKey` to the new key. Let the janitor reap old keys.
 
----
+### 2.12 `releaseObjectOrphans` has a read-then-delete race
 
-### 3.7 `exam.findByBatch` does not validate the batch exists
+**File:** [apps/api/src/utils/objectLifecycle.ts:68-94](../apps/api/src/utils/objectLifecycle.ts)
 
-**Status:** Resolved before 2026-05-26. `findByBatch` now fetches the batch and throws `notFound()` if it is missing.
+`listObjectKeys` runs first, then `referencedObjectKeys`. If a new asset is uploaded to R2 and then recorded in the DB between those two reads, the new R2 key appears in `storedKeys` but not in `referencedKeys` → deleted.
 
-**File:** [apps/api/src/services/exam.ts:88-108](../apps/api/src/services/exam.ts)
+**Fix:** Read DB references first, then list R2. Treat objects only as orphans if their `LastModified` is older than some safety window (e.g. 1 hour) so in-flight uploads aren't reaped.
 
-Returns `{items: [], nextCursor: null}` for a nonexistent `batchId`. Compare to [apps/api/src/services/evaluation.ts:67-87](../apps/api/src/services/evaluation.ts) which throws `notFound()`.
+### 2.13 Audio POST and DELETE go through different code paths to find an asset
 
-**Fix:** Decide on a consistent contract. Recommendation: throw 404 for nonexistent parent resources in nested list endpoints; route handlers already pre-fetch the parent in some cases (`enrollment.ts`, `batches.ts:patch`) — make it uniform.
+**Files:** [apps/api/src/routes/audioMappings.ts:17](../apps/api/src/routes/audioMappings.ts), [apps/api/src/services/audio.ts:66](../apps/api/src/services/audio.ts)
 
----
+`audioMappings.ts` queries `db.query.audioAsset.findFirst` inline; `AudioService.remove` does the same via the service. Pull the asset lookup into `AudioService.findById` and use it from both places.
 
-### 3.8 `recordResults` accepts chapter IDs unrelated to the exam's track
+### 2.14 `Database` type is the same for `publicDb` and `getScopedDatabase`
 
-**Status:** Resolved before 2026-05-26. `recordResults` now validates every result chapter against the exam batch's track and throws `unprocessable()` on mismatch.
-
-**File:** [apps/api/src/services/exam.ts:151-205](../apps/api/src/services/exam.ts)
-
-`recordResults` writes `evaluation` rows for arbitrary `chapterId` values from the request body. There is no check that the chapter belongs to the batch's track. You can record an exam result for a chapter in an unrelated track.
-
-**Fix:** Inside `recordResults`, fetch `batch.trackId` and validate each `item.chapterId` belongs to that track. Return 422 (`unprocessable`) on mismatch.
-
----
-
-### 3.9 Draft chapter access returns 404 when it should return 403
-
-**Status:** Resolved before 2026-05-26. `ChapterService.findById` now throws `forbidden()` when a draft exists but the caller lacks draft access.
-
-**Files:** [apps/api/src/services/chapter.ts:129-131](../apps/api/src/services/chapter.ts), [apps/api/src/routes/chapters.ts:17-19](../apps/api/src/routes/chapters.ts)
+**File:** [packages/db/src/index.ts:45](../packages/db/src/index.ts)
 
 ```ts
-if (!row || (!includeDrafts && row.status === 'draft')) {
-  return undefined // ← route turns this into notFound()
+export type Database = ReturnType<typeof getScopedDatabase>
+```
+
+`publicDb` and a scoped DB instance have identical TypeScript types, but their runtime `search_path` differs. A service that expects school-scoped tables but is handed `publicDb` will silently read from the `public` schema and return nothing. This is a footgun.
+
+**Fix:** Brand the two:
+```ts
+declare const dbBrand: unique symbol
+export type PublicDatabase = DrizzleDb & { [dbBrand]: 'public' }
+export type SchoolDatabase = DrizzleDb & { [dbBrand]: 'school' }
+```
+
+Then `EnrollmentService.findOne(db: SchoolDatabase, ...)` won't compile when handed `publicDb`.
+
+### 2.15 Cursor pagination re-includes null-row candidates on every page
+
+**Files:** [apps/api/src/services/evaluation.ts:39-51](../apps/api/src/services/evaluation.ts), [apps/api/src/services/batch.ts:84-94](../apps/api/src/services/batch.ts)
+
+When `cursor.evaluatedAt` is non-null, the WHERE includes `isNull(evaluation.evaluatedAt)` in the OR. Because the ORDER BY uses `DESC NULLS LAST`, null rows still sort *after* the remaining non-null rows — so pagination is correct — but every paged query refetches and ranks all null candidates until it actually advances past them. With many null rows this is wasted work.
+
+**Fix:** Only include `isNull(...)` when `cursor.evaluatedAt === null` (the cursor has crossed into the null tail).
+
+### 2.16 `evaluation.evaluation_id` tie-break uses `lt` on a UUID
+
+**Files:** [apps/api/src/services/evaluation.ts:43-48](../apps/api/src/services/evaluation.ts), [apps/api/src/services/batch.ts:89-91](../apps/api/src/services/batch.ts)
+
+Within an `evaluatedAt` tie, the cursor advances by `lt(evaluation.id, cursor.id)`. UUIDs sort lexicographically — there's no semantic order. Pagination is consistent (won't lose rows) but the order within a tie is arbitrary. Either accept this or use a monotonic secondary key (created-at, or a serial column).
+
+### 2.17 `exams.ts` PATCH/results loads the row before authorizing
+
+**File:** [apps/api/src/routes/exams.ts:39-71](../apps/api/src/routes/exams.ts)
+
+The order is `ExamService.findById` then `requireBatchAccess(...)`. Combined with school-scoped `search_path`, cross-school enumeration is already prevented. But within a school, the existence-via-timing channel is mildly leaky. Move the auth check to fire before the load if possible (requires either pre-knowing the batchId or doing a cheap existence query first).
+
+### 2.18 `parseBody`/`parseParams`/`parseQuery` discard Zod issues
+
+**File:** [apps/api/src/utils/validate.ts:6-13](../apps/api/src/utils/validate.ts)
+
+`throw validationError()` produces `{ ok: false, error: { code: 'VALIDATION_FAILED', message: 'VALIDATION_FAILED' } }` with no field information. Clients have to guess what's wrong.
+
+**Fix:** Extend `AppError` with a `details?: unknown` field. Pass `result.error.issues` through:
+
+```ts
+class AppError extends Error {
+  constructor(public statusCode: number, public code: ErrorCode, message?: string, public details?: unknown) {
+    super(message ?? code)
+  }
 }
 ```
 
-A draft chapter requested by a non-admin returns 404. Either status is fine philosophically, but it's confusing to debug. Recommend 403 with code `PERMISSION_DENIED` — the resource exists, the caller can't see it.
-
-Low priority. Note in [docs/api.md](api.md) whichever direction you pick.
+Error envelope becomes `{ ok: false, error: { code, message, details } }`.
 
 ---
 
-### 3.10 `getUploadUrl` returns `{uploadUrl, key}` but `key` is ignored
+## 3. Schema and database concerns
 
-**Status:** Resolved before 2026-05-26. `getUploadUrl` now returns only `{ uploadUrl }`.
+### 3.1 Foreign-key cascade strategy is inconsistent
 
-**File:** [packages/storage/src/index.ts:12-20](../packages/storage/src/index.ts), consumer at [apps/api/src/services/audio.ts:50-53](../apps/api/src/services/audio.ts)
+**File:** [packages/db/src/schema/school.ts](../packages/db/src/schema/school.ts)
 
-`storage.getUploadUrl(key, ...)` returns the same `key` passed in. The audio service destructures only `{uploadUrl}` and re-uses its own `objectKey` variable. The returned `key` field is dead.
+- `segment.chapterId` → cascades on delete.
+- `audioAsset.chapterId` → does *not* cascade. Deleting a chapter raises FK violations and leaves audio mappings dangling.
+- `chapter.trackId`, `batch.trackId`, `exam.batchId`, `examResult.examId`, `evaluation.chapterId` → no cascade. Deleting a track is effectively impossible without manual sweeps.
+- `audioMapping` → cascades on both sides correctly.
 
-**Fix:** Return only `{ uploadUrl }`. Trivial cleanup.
+Pick one direction. Either cascade downward consistently (track → chapter → segment/audio), or commit to explicit cleanup in services (and make sure they actually do the cleanup).
+
+### 3.2 Postgres-level invariants are enforced only in application code
+
+The current model checks segment overlap and audio-mapping overlap in JS validators ([services/segment.ts:19](../apps/api/src/services/segment.ts), [services/audioMapping.ts:22](../apps/api/src/services/audioMapping.ts)). Two concurrent `PUT` calls can pass both validators and produce overlapping rows. The DB has no exclusion constraint.
+
+**Fix:** Add Postgres exclusion constraints:
+
+```sql
+ALTER TABLE segment
+  ADD CONSTRAINT segment_no_overlap
+  EXCLUDE USING gist (chapter_id WITH =, int4range(start, "end") WITH &&);
+
+ALTER TABLE audio_mapping
+  ADD CONSTRAINT audio_mapping_no_overlap
+  EXCLUDE USING gist (audio_asset_id WITH =, numrange(audio_start, audio_end) WITH &&);
+```
+
+Keep the JS validators for nice error messages, but lean on Postgres for correctness.
+
+### 3.3 Sequences `track_order_seq` and `chapter_order_seq` may be global rather than per-school
+
+**File:** [packages/db/src/schema/school.ts:16-17](../packages/db/src/schema/school.ts)
+
+`pgSequence('track_order_seq')` is created wherever the migration runs. If the migrations folder for per-school schemas (`drizzle/school/`) creates the sequence inside `school_<slug>`, schools have independent counters and the `order` values don't visibly collide. If the migration creates them in `public`, all schools share one counter and `order` values appear sparse and non-monotonic.
+
+**Action:** Verify the generated migration places these in the per-school schema. If it doesn't, fix it before going to prod.
+
+### 3.4 No drizzle migration files
+
+[packages/db/drizzle/school/](../packages/db/drizzle/school/) and [public/](../packages/db/drizzle/public/) only contain meta + a snapshot. The schema has never been migrated via files — `db:push` has been driving everything. Generate an initial migration before any production deployment.
+
+### 3.5 `chapter.code` and `batch.code` uniqueness is per-school (by construction), not per-track
+
+`code` columns have `.unique()` in the per-school schema. That makes them unique within the school (because the schema is per-school). For chapters specifically, intuition suggests "unique within a track" — currently a chapter can't share a code with a chapter in a *different* track within the same school. Confirm intent.
+
+### 3.6 `organization.metadata` is unused free-form text
+
+[packages/db/src/schema/auth.ts:85](../packages/db/src/schema/auth.ts) declares `text('metadata')`. Nothing in this codebase reads or writes it. Either claim it (Zod schema for the JSON, helper to read/write) or leave a one-line comment that BetterAuth owns it.
+
+### 3.7 BetterAuth schema definitions are hand-mirrored
+
+[packages/db/src/schema/auth.ts](../packages/db/src/schema/auth.ts) hand-writes the tables BetterAuth manages (`user`, `session`, `account`, `organization`, `member`, `invitation`, `verification`). If BetterAuth's expected schema drifts in a future release, you'll silently break. Either pin the BetterAuth version exactly, or run their schema generator and commit the result.
 
 ---
 
-### 3.11 `res.locals.school` typed optional but asserted non-null after `requireSchool`
+## 4. Operational / cross-cutting concerns
 
-**Status:** Resolved for the cited routes on 2026-05-26. Upload and audio route handlers now use `Response<unknown, SchoolScopedLocals>`, where `school` is required.
+### 4.1 No request-scoped logging
 
-**Files:** [apps/api/src/types/express.d.ts](../apps/api/src/types/express.d.ts), [apps/api/src/routes/upload.ts:16,25](../apps/api/src/routes/upload.ts), [apps/api/src/routes/audio.ts:11-18](../apps/api/src/routes/audio.ts)
+`pino` is set up but never wired into Express. There's no `pino-http`, no per-request log child, no request ID. The error handler logs `error` with no context — for a 500 you can't tell which request, which user, which path.
 
-`school?: School` is optional in `Locals`. Routes nested under `requireSchool` are guaranteed to have `school` at runtime, but the type doesn't reflect that. `upload.ts` uses `school!.id` (non-null assertion); `audio.ts` defensively re-checks `if (!school) throw badRequest()`. Inconsistent and against user preference (no compile-time guarantee from the middleware).
+**Fix:** Add `pino-http`. At minimum:
 
-**Fix:** Define a `SchoolScopedRequest` / `SchoolScopedLocals` type that narrows `school: School` (required). Have `requireSchool` typed to assert this narrowing — TypeScript supports this via overloads or by using a typed handler wrapper. Routes registered under the school-scoped sub-router use the narrowed type.
+```ts
+app.use(pinoHttp({
+  logger,
+  genReqId: req => req.headers['x-request-id'] ?? crypto.randomUUID(),
+}))
+```
 
-This is a stepping stone to §5.B (collapsing `AuthClient` + middleware).
+Then `req.log` is available, with `reqId` baked into every line. Pass `req.log` into services that need it.
 
----
+### 4.2 Error handler logs every error at `error` level
 
-### 3.12 `dbCache` is unbounded and not invalidated on rename races
+[apps/api/src/server.ts:47](../apps/api/src/server.ts) — `logger.error(error, '...')` fires for 401s and 404s too. Split:
 
-**Status:** Resolved on 2026-05-26. The cache is capped, entries are refreshed on access to behave as an LRU, pools are closed on eviction, and the rename race is documented as acceptable.
+- 4xx → `logger.warn` (with method, path, status, userId if known)
+- 5xx → `logger.error` (with full stack)
 
-**File:** [packages/db/src/index.ts:7-34](../packages/db/src/index.ts), interaction in [apps/api/src/services/school.ts:99-101](../apps/api/src/services/school.ts)
+### 4.3 Health check doesn't verify dependencies
 
-`getScopedDatabase` caches Drizzle instances by slug indefinitely. No LRU, no eviction. With long uptime + many schools, pool count grows without bound.
+[apps/api/src/routes/health.ts](../apps/api/src/routes/health.ts) returns `{ status: 'up' }` always. K8s readiness probes will report healthy with a dead database. Add a `SELECT 1` against `publicDb` and surface DB connectivity in the response.
 
-`renameSchool` invalidates via `clearSchoolDbCache(oldSlug)`, but a request in flight at rename time holds the _old_ `Database` reference with `search_path=school_<old>` — its connection is now invalid.
+### 4.4 No rate limiting or CSRF protection
 
-**Fix (small):**
+- BetterAuth uses cookies; CORS allows credentials. The only barrier is `TRUSTED_ORIGINS`. Add a CSRF strategy (sameSite=strict cookies for the session, or a double-submit token).
+- No `express-rate-limit` on auth endpoints — credential stuffing target.
 
-- Cap the cache with an LRU (e.g. `lru-cache` package) — say 100 entries — and `.end()` the pool on eviction.
-- Document the rename race as known-acceptable (rename is rare; in-flight requests will error out and the client retries).
+### 4.5 `helmet` and `cors` use defaults
 
----
+[apps/api/src/server.ts:20-21](../apps/api/src/server.ts) — fine for dev. Before prod: explicit CSP, restrict CORS methods, set HSTS appropriately.
 
-## 4. Spec ↔ Code drift
+### 4.6 No `engines.node` or `.nvmrc`
 
-**Status:** Resolved on 2026-05-26 by rewriting [docs/api.md](api.md) and [docs/data-model.md](data-model.md) to match the current code.
+The Drizzle + BetterAuth + Express 5 stack has Node version sensitivities. Pin to a specific Node major in `package.json#engines` and commit a `.nvmrc`.
 
-What changed:
+### 4.7 No `tsc --noEmit` in CI
 
-- Removed undocumented-in-code endpoints from the API spec: `GET /v1/student/dashboard` and `GET /v1/batches/:batchId/matrix`.
-- Removed the chapter revision API/model from the docs. The current code stores `script` and `textObjectKey` directly on `chapter`, and `segment` rows are scoped to `chapterId`.
-- Updated evaluations docs to use the nested routes in [apps/api/src/routes/evaluations.ts](../apps/api/src/routes/evaluations.ts): `/batches/:batchId/evaluations` and `/batches/:batchId/evaluations/:studentId`.
-- Updated upload docs to match [apps/api/src/routes/upload.ts](../apps/api/src/routes/upload.ts): `/upload/chapters/:chapterId/audio` and `/upload/chapters/:chapterId/script`.
-- Updated profile docs so `GET /profile` returns the membership list, while `PATCH /profile` updates one batch enrollment by `batchId`.
-- Removed BetterAuth `team` / `team_member`, `chapter_revision`, and `batch.team_id` references from [docs/data-model.md](data-model.md).
+Root scripts run `pnpm -r lint` but not type-check. Type regressions slip through. Add a `typecheck` script per package and wire it to CI.
 
-Remaining product/design questions should be tracked as new feature work rather than spec drift:
+### 4.8 `releaseObjectOrphans` script doesn't close pools
 
-- Whether to add a student dashboard aggregate endpoint.
-- Whether to add a batch matrix endpoint.
-- Whether to reintroduce a real chapter revision model later.
+[apps/api/src/scripts/releaseObjectOrphans.ts](../apps/api/src/scripts/releaseObjectOrphans.ts) opens `publicDb` and a scoped DB and exits without `pool.end()`. The process exits anyway, but cron logs fill with connection warnings.
+
+### 4.9 No tests anywhere
+
+`pnpm-workspace.yaml` has no test runner. The pure-logic surfaces — `hasBatchPermission`, segment/mapping overlap validators, cursor encoding — are cheap to test and the highest-value place to start. Suggested stack: vitest + supertest against `createServer()` + real Postgres via Docker.
 
 ---
 
 ## 5. Architectural deepening candidates
 
-Each candidate uses the deletion test: would removing the proposed module cause complexity to _concentrate_ (good — earns its keep) or just _move_ (shallow)? Listed in **payoff order**, highest first.
+Listed in payoff order. Each uses the deletion test: would removing the proposed module concentrate complexity (good — earns its keep) or just move it around (shallow)?
 
-### 5.A The "batch-or-school" authorization pattern is open-coded in every nested route
+### 5.A Routing topology: split presign vs resource creation across `upload.ts` and resource routes
 
-**Files (all manifest the same pattern):**
+**Files:** [apps/api/src/routes/upload.ts](../apps/api/src/routes/upload.ts), [apps/api/src/routes/audio.ts](../apps/api/src/routes/audio.ts), [apps/api/src/routes/chapters.ts](../apps/api/src/routes/chapters.ts)
 
-- [apps/api/src/routes/batches.ts:31-43](../apps/api/src/routes/batches.ts) — `GET /batches/:batchId`
-- [apps/api/src/routes/batches.ts:15-29](../apps/api/src/routes/batches.ts) — `GET /batches` with `showAll` flag
-- [apps/api/src/routes/enrollment.ts:16-19,37-40](../apps/api/src/routes/enrollment.ts)
-- [apps/api/src/routes/evaluations.ts:13-16,29-34](../apps/api/src/routes/evaluations.ts)
-- [apps/api/src/routes/exams.ts:22](../apps/api/src/routes/exams.ts)
+Currently:
+- `POST /upload/chapters/:chapterId/audio` → presign URL
+- `POST /chapters/:chapterId/audio` → register asset
+- `POST /upload/chapters/:chapterId/script` → presign URL for text
+- `POST /chapters/:chapterId/script` → apply text
 
-**Problem:** Five routes implement variants of: _"if the user has a school-wide permission, allow broad action; otherwise require they're enrolled in this batch with a batch-level permission."_ The shapes differ slightly each time. To understand the authorization model you have to read all five.
+The `/upload/*` prefix is structural but makes the API harder to read. Co-locate presign endpoints with their resource:
 
-The `showAll: boolean` and `userId: string` options threaded into `BatchService.findAll` and `ExamService.findByBatch` exist solely to support this scoping.
+- `POST /chapters/:chapterId/audio/upload-url` (in `audio.ts`)
+- `POST /chapters/:chapterId/script/upload-url` (in `chapters.ts`)
 
-**Deepening:** A single `authorize.inBatch(req, db, batchId, claim)` that returns a discriminator:
+Delete `upload.ts`. The route name communicates intent.
+
+### 5.B `chapterResponse` triggers N+1 S3 signings on list endpoints
+
+**Files:** [apps/api/src/services/chapterReader.ts:71-82](../apps/api/src/services/chapterReader.ts), called from `tracks.ts`, `chapters.ts`, `student.ts`
+
+Every `chapterResponse` call invokes `objectLifecycle.urlFor`, which calls `getSignedUrl` (or returns a `R2_PUBLIC_URL` string). Listing 50 chapters triggers 50 signings. The signer is local (no HTTP) but the work is non-trivial.
+
+**Fix:** Cache the signed URL keyed by `(objectKey, 5-minute bucket)` for the lifetime of the request. Or pre-compute once per `urlFor` call cluster. Or use `R2_PUBLIC_URL` mode in dev.
+
+### 5.C Three auth helpers with three different return shapes
+
+**File:** [apps/api/src/utils/auth.ts](../apps/api/src/utils/auth.ts)
+
+`authorize()`, `requireBatchAccess()`, and `requireBatchListAccess()` each return a different shape. Routes have to know which helper to call and what the return type implies.
+
+**Deepening:** Unify the access *result* into a single `BatchAccess` value with methods:
 
 ```ts
-type BatchScope =
-  | { kind: 'allBatches' } // user has school-wide permission
-  | { kind: 'thisBatch'; enrollment: Enrollment } // batch-scoped
-// throws on denied
-
-await authorize.inBatch(req, db, batchId, {
-  schoolPermission: { batch: ['update'] },
-  batchPermission: { exam: ['read'] },
-})
+class BatchAccess {
+  canSeeAllInBatch(): boolean
+  userId(): string
+  enrollment(): Enrollment | null
+}
 ```
 
-Services accept `BatchScope` and shape the query accordingly — list queries filter to enrolled batches when scope is `thisBatch`. Routes no longer need `showAll`.
+Or fold all three helpers into one `authorize` that returns a discriminated union and let routes match on `kind`. Either way: one mental model, one return shape.
 
-**Deletion test:** Removing this module would force 5 routes to re-derive the same pattern. Complexity _concentrates_ — earns its keep.
+### 5.D Service classes are namespaces in disguise
 
-**Benefits:**
+Every service (`ChapterService`, `BatchService`, `EvaluationService`, `ExamService`, `EnrollmentService`, `AudioService`, `SegmentService`, `AudioMappingService`, `ProfileService`, `SchoolService`, `TrackService`) is a class with only static methods, no state, no DI.
 
-- One place to read the authorization model.
-- Routes shrink from ~15 lines of ceremony to one `authorize` call.
-- Compile-time guarantee that `batchId` is provided (user preference).
-- Test surface: one function, parameterized.
+`objectLifecycle` is an object literal. `ChapterReader` is a class. Inconsistent.
 
-**Dependencies:** Best done after §5.B (collapse AuthClient) so the new `authorize` doesn't have to live alongside the old class.
+**Options:**
 
----
+1. Plain object exports everywhere: `export const ChapterService = { create, update, ... }`.
+2. Free functions: `export async function createChapter(db, data) { ... }`. Best tree-shaking. Aligns with the user-preference note about "utility functions over middleware."
 
-### 5.B Collapse `AuthClient` + `resolveAuth` middleware into functions
+Either is fine. Pick one.
 
-**Files:** [apps/api/src/utils/auth.ts](../apps/api/src/utils/auth.ts) (86 lines), [apps/api/src/middlewares/auth.ts](../apps/api/src/middlewares/auth.ts) (9 lines).
+### 5.E `chapterResponse` and `audioAssetResponse` live in two places with different shapes
 
-**Problem:**
+**Files:** [apps/api/src/services/audio.ts:24-29](../apps/api/src/services/audio.ts), [apps/api/src/services/chapterReader.ts:84-95](../apps/api/src/services/chapterReader.ts)
 
-- `AuthClient` has four public methods (`hasSchoolPermissions`, `ensureSchoolPermissions`, `hasBatchPermissions`, `ensureBatchPermissions`) that each repeat the _exact same_ `getSession() → if (isSuperAdmin) return; ... check` block.
-- `resolveAuth` middleware does nothing except `new AuthClient(req, db)`. Deletion test: route handlers could `new AuthClient(req, res.locals.db)` themselves; nothing breaks.
-- Violates user preference against middleware-injected classes without compile-time guarantees.
-- `res.locals.authClient: AuthClient` is typed non-optional, but its presence is only guaranteed because `resolveAuth` runs unconditionally — implicit coupling.
+`audioAssetResponse` exists in both `audio.ts` (returns `AudioAsset` with `url`) and `chapterReader.ts` (returns `AudioAsset` with `url` and `audioMappings[]`). Two functions, same name, different shapes.
 
-**Memory says:** The user has already designed this as `authorize(req, user, { scope: 'school' | 'batch', permissions, batchId? })` with a discriminated union, currently commented out in `apps/api/src/utils/auth.ts`. Find that commented block and resurrect it.
+Same story for `AudioAsset` the type — defined twice with subtly different `Omit`s.
 
-**Deepening:** Two free functions:
+**Fix:** Move both response mappers and the canonical `AudioAsset` / `Chapter` types into one place (e.g. `services/chapter/types.ts` or `services/responses.ts`).
+
+### 5.F No transaction primitive at the service boundary
+
+Services accept `Database` and either operate without a transaction or open their own with `db.transaction(...)`. When two services need to compose inside one transaction (e.g. "create enrollment + audit log"), there's no way to do it.
+
+**Deepening:** Services accept `DatabaseOrTx`:
 
 ```ts
-// memoized per-request via WeakMap<Request, Session>
-export async function getSession(req: Request): Promise<Session>
-
-// discriminated union ensures batchId is required when scope='batch'
-export async function authorize(
-  req: Request,
-  db: Database,
-  claim:
-    | { scope: 'super' }
-    | { scope: 'school'; permissions: SchoolPermissions }
-    | { scope: 'batch'; batchId: string; permissions: BatchPermissions },
-): Promise<Session>
+type DatabaseOrTx = Database | DrizzlePgTransaction
+async function createEvaluation(db: DatabaseOrTx, ...) { ... }
 ```
 
-Super-admin escape hatch lives once, inside `authorize`. Delete `middlewares/auth.ts`. Remove `authClient` from `Locals` typing.
+Callers either pass the top-level `db` (each service opens its own transaction) or pass an active `tx` (compose under one transaction).
 
-**Deletion test:** Removing `authorize` would force every route to re-implement the super-admin check + session fetch + permission check. Concentrates.
+### 5.G `authorizeContentReadView` is a thin wrapper over `authorize` + `hasPermission`
 
-**Benefits:**
+**File:** [apps/api/src/utils/chapterView.ts](../apps/api/src/utils/chapterView.ts)
 
-- 86 lines → ~40 lines.
-- Test surface: two functions, no class state.
-- Type signature enforces `batchId` presence at compile time.
-- Aligns with user preference for utility functions over middleware.
+The helper exists to express "if you have content:read, you see published; if you also have content:update, you see drafts." This is the only place in the codebase that uses "permission as a side-channel to widen visibility." It works, but the meaning of the view is split across the helper, the route, and the service.
 
-**Acceptance:** All routes call `authorize(req, db, {...})` directly; `AuthClient` is deleted; `res.locals.authClient` typing is removed.
-
----
-
-### 5.C Service mappers are 1:1 with DB rows — delete them
-
-**Files:** every service. Mapper functions: `mapBatch`, `mapChapter`, `mapEvaluation`, `mapExam`, `mapTrack`, `mapAudioAsset`, `mapAudioMapping`, `mapSegment`, `mapEnrollment`, `mapSchool`. Each paired with a hand-written Zod schema (e.g. `batchSchema`, `chapterSchema`).
-
-**Problem:** The mappers are theoretical: "protect the API shape from the DB shape." In practice they copy every field unchanged. Adding a column requires editing three places (DB schema, Zod schema, mapper). The Zod schemas duplicate types Drizzle already infers.
-
-**Deletion test:** If `mapBatch` is deleted and routes use `typeof batch.$inferSelect` directly, no complexity appears anywhere — because the mapper has no behavior.
-
-**Two viable end states:**
-
-1. **Delete the mappers.** Use Drizzle inferred types as the response shape. Add a mapper _only when_ the shape actually diverges (e.g. computed `memberCount`, omitted `objectKey`). This is the recommended approach per user preferences ("prefer simple readable code over abstractions"). Removes ~300 LOC.
-
-2. **Move mappers into a `repository` layer** that earns its keep — formatting dates as ISO strings, omitting sensitive columns (e.g. `audioAsset.objectKey` shouldn't be in API responses), computing derived fields.
-
-Either way: the current state is the worst of both.
-
-**Acceptance criteria for option 1:**
-
-- No `mapXxx` functions in `services/`.
-- No `xxxSchema = z.object({...})` for entities that are 1:1 with DB rows.
-- Services return Drizzle inferred types.
-- Where the API shape differs from the DB row (e.g. `BatchDetail` adds `members`), use plain TS interfaces or `satisfies`.
-
-**Dependencies:** None — can do independently of A/B.
-
----
-
-### 5.D Consolidate chapter-reading: `ChapterReader`
-
-**Files:** [apps/api/src/services/student.ts:34-103](../apps/api/src/services/student.ts), [apps/api/src/services/chapter.ts:115-138](../apps/api/src/services/chapter.ts), [apps/api/src/services/segment.ts:36-48](../apps/api/src/services/segment.ts).
-
-**Problem:** Three different code paths load chapter+segments+audioAssets in slightly different ways:
-
-- `ChapterService.findById` — full chapter with `includeDrafts` filter.
-- `StudentService.getChapter` — same query shape + enrollment-access check + currentLevel.
-- `SegmentService.findByChapter` — segments only, no chapter check.
-
-Plus the potential future `GET /batches/:batchId/matrix` and `GET /v1/student/dashboard` feature work noted in §4 would need similar queries.
-
-**Deepening:** A `ChapterReader` module keyed by a `ChapterView` discriminator:
+**Deepening:** Once `ChapterReadView` is split into the three explicit variants (see 2.6), the helper becomes:
 
 ```ts
-type ChapterView =
-  | { kind: 'authoring'; includeDrafts: boolean }
-  | { kind: 'learning'; studentId: string }
-
-ChapterReader.findById(db, chapterId, view) → ChapterDetail | undefined
+async function chapterViewFor(req, db): Promise<ChapterReadView> {
+  await authorize(req, db, { scope: 'school', permissions: { content: ['read'] } })
+  const canAuthor = await hasPermission(req, db, { scope: 'school', permissions: { content: ['update'] } })
+  return canAuthor ? { kind: 'authoring' } : { kind: 'learnerPreview' }
+}
 ```
 
-Single source of truth for the chapter-content query (relations, ordering, projection). View dictates: extra filters, extra joins (currentLevel for learning), access checks.
+Routes call this. The "student" view variant is constructed only from the student-facing route at [routes/student.ts](../apps/api/src/routes/student.ts).
 
-**Deletion test:** Removing this module forces query duplication across 4+ call sites. Concentrates.
+### 5.H Object lifecycle module is good — but consider folding it into a richer per-upload session
 
-**Benefits:**
-
-- One place to change when chapter content shape changes, especially if revisions are reintroduced later.
-- Deletes `StudentService.getChapter` entirely; `StudentService.StudentChapter` type goes away.
-- Test surface: one function with a sum-type input.
-
-**Dependencies:** Best after §5.C (so the result type is Drizzle-inferred, not Zod-duplicated).
-
----
-
-### 5.E Object lifecycle module — coordinate R2 and DB
-
-**Files affected:** [apps/api/src/services/audio.ts](../apps/api/src/services/audio.ts), [apps/api/src/services/chapter.ts](../apps/api/src/services/chapter.ts), [apps/api/src/services/school.ts](../apps/api/src/services/school.ts), [packages/storage/src/index.ts](../packages/storage/src/index.ts).
-
-**Problem:** Every service that touches R2 holds raw `getUploadUrl` / `getDownloadUrl` / `deleteObject` calls and improvises the failure model. No transaction discipline, no GC for orphans, no "commit-after-upload" model. Bugs 3.1, 3.2, 3.5, 3.6 are all symptoms.
-
-**Deepening:** An `objectLifecycle` module owning R2-DB coupling:
+[apps/api/src/utils/objectLifecycle.ts](../apps/api/src/utils/objectLifecycle.ts) covers the read/write API. What's missing: a *staged-then-committed* upload flow, where the presign step records a pending row in the DB and the commit step flips it to active.
 
 ```ts
-// Upload session: stage an upload, commit when DB write succeeds, abort otherwise
 ObjectLifecycle.stageUpload({ scope: 'audio', schoolId, chapterId, contentType })
   → { uploadUrl, objectKey, commitToken }
-ObjectLifecycle.commit(commitToken) → void   // marks the object as referenced
-ObjectLifecycle.releaseOrphans()             // janitor, run periodically
-
-// Reads: always compute fresh URLs, never store presigned URLs
-ObjectLifecycle.urlFor(objectKey) → string
-
-// Cascading deletes
-ObjectLifecycle.deleteForChapter(schoolId, chapterId)
-ObjectLifecycle.deleteForSchool(schoolId)
+ObjectLifecycle.commit(commitToken) → AudioAsset    // flips DB row to active
+// orphans = staged but never committed
 ```
 
-This is a bigger lift, but **necessary before the admin authoring flow becomes real** because that flow uploads many objects per chapter and the orphan problem will become operationally visible.
-
-**Deletion test:** Removing this module forces every consumer to re-derive the R2-DB consistency strategy. Concentrates.
-
-**Benefits:**
-
-- Fixes 3.1, 3.2, 3.5, 3.6 in one place.
-- Routes/services stop importing from `@narada/storage` directly.
-- Single decision point: "what's our R2 consistency model?"
-- Test seam: mock `ObjectLifecycle` instead of real R2 calls.
-
-**Acceptance:**
-
-- No `audioAsset.url` / `chapter.textUrl` stored as presigned URLs.
-- Schema removal triggers cascading R2 cleanup.
-- A janitor (cron or manual command) can list and remove orphans.
+Solves 2.9 (idempotency) and 2.10 (verify exists) simultaneously: the pending row gives you an idempotency anchor, and `commit` can `HEAD` the object before flipping it active.
 
 ---
 
-### 5.F The `draft` BetterAuth permission is a clever side-channel
-
-**Files:** [packages/auth/src/permissions/school.ts:18,30,40](../packages/auth/src/permissions/school.ts), consumers in [apps/api/src/routes/tracks.ts:13-15](../apps/api/src/routes/tracks.ts), [apps/api/src/routes/chapters.ts:15](../apps/api/src/routes/chapters.ts), [apps/api/src/routes/segments.ts:16](../apps/api/src/routes/segments.ts).
-
-**Problem:** Visibility of draft content is encoded as a BetterAuth `draft: ['read']` permission. The pattern is:
-
-```ts
-await authClient.ensureSchoolPermissions({ content: ['read'] })
-const includeDrafts = await authClient.hasSchoolPermissions({ draft: ['read'] })
-const result = await Service.findX(db, ..., includeDrafts)
-```
-
-The _meaning_ — "can this caller see in-progress content?" — is split across:
-
-1. ACL config in `permissions/school.ts` (declares the permission).
-2. Route handler (probes the permission, threads as `includeDrafts: boolean`).
-3. Service (uses `includeDrafts` to add/skip a `WHERE status = 'published'` clause).
-
-A reader must touch all three to understand who sees drafts.
-
-**Deepening:** If you adopt §5.D, the `ChapterView` discriminator subsumes this. `{kind: 'learning'}` implies "published only"; `{kind: 'authoring'}` allows drafts. The ACL still gates _who_ gets the authoring view (e.g. determined by role), but the route doesn't probe a special permission — it picks the view based on the user's role/scope.
-
-Otherwise, at minimum rename the ACL key to express intent: `content.viewDrafts` or `content.read.unpublished`.
-
----
-
-### 5.G Cursor pagination orders by random UUID
-
-**Files:** [apps/api/src/services/batch.ts:110,114](../apps/api/src/services/batch.ts), [apps/api/src/services/exam.ts:99,103](../apps/api/src/services/exam.ts), [apps/api/src/utils/cursor.ts](../apps/api/src/utils/cursor.ts).
-
-**Problem:**
-
-- `batch.findAll` orders by `asc(batch.id)` — UUID v4 order, meaningless to humans.
-- `exam.findByBatch` same issue.
-- `evaluation.findByBatch` orders by `desc(evaluatedAt)` but **has no cursor support** — returns all rows. With 5000 evaluations in a batch this is unbounded.
-- `asCursor` only supports `{id: string}` shape — no compound cursors.
-
-**Deepening:** Expand `paginateResponse` into a small helper that:
-
-- accepts `orderBy: { column, direction }[]` and emits the correct compound `where` predicate;
-- requires `limit + 1` as input (currently implicit, easy to miss);
-- works for `(evaluatedAt DESC, id DESC)` compound cursors so time-ordered lists paginate correctly.
-
-Apply uniformly. Pick natural ordering for each list:
-
-- `batches`: `(startDate DESC NULLS LAST, id)`.
-- `exams`: `(scheduledAt, id)`.
-- `evaluations`: `(evaluatedAt DESC, id DESC)`.
-
----
-
-### 5.H Auth permission ACLs duplicate the `Subset` helper
-
-**Files:** [packages/auth/src/permissions/school.ts:3-8](../packages/auth/src/permissions/school.ts), [packages/auth/src/permissions/batch.ts:1-7](../packages/auth/src/permissions/batch.ts).
-
-Both define the same `type Subset<T>`, both define near-identical `XxxPermissions` mapped types. School uses BetterAuth's `createAccessControl`; batch hand-rolls equivalent shapes.
-
-**Small fix:** Extract `Subset` + the `Permissions<Acl>` mapped type into a shared file (e.g. `permissions/types.ts`).
-
-**Bigger question:** Should the batch ACL also use BetterAuth's `createAccessControl` builder, even though it's not connected to BetterAuth's permission check? Pro: same mental model. Con: dragging BetterAuth's runtime into a check that just reads from `enrollment` table. Likely not worth it — but document the deliberate divergence.
-
----
-
-## 6. Smaller quality issues
-
-Trivial-to-medium cleanups. None blocking, all reduce reader friction.
+## 6. Smaller cleanups
 
 ### 6.1 `proficiencyLevel` enum is defined three times
 
-**Files:** [packages/db/src/schema/school.ts:24-32](../packages/db/src/schema/school.ts), [apps/api/src/services/evaluation.ts:7-15](../apps/api/src/services/evaluation.ts), [apps/api/src/services/exam.ts:11-19](../apps/api/src/services/exam.ts).
+[packages/db/src/schema/school.ts:24-32](../packages/db/src/schema/school.ts), [apps/api/src/services/evaluation.ts:11-19](../apps/api/src/services/evaluation.ts), [apps/api/src/services/exam.ts:13-21](../apps/api/src/services/exam.ts).
 
-Identical literal array each time. Export the Zod schema from one place (probably `services/evaluation.ts`) and import in `exam.ts`.
+Export the Zod schema once (e.g. from `services/evaluation.ts`) and reuse.
 
 ### 6.2 `requireNonEmpty` helper for update schemas
 
-The pattern `.refine(data => Object.keys(data).length > 0, { message: 'No fields to update' })` appears in `batch`, `chapter`, `track`, `exam`, `profile`, `school` update schemas. Extract:
+`.refine(data => Object.keys(data).length > 0, { message: 'No fields to update' })` appears in `batch`, `chapter`, `track`, `exam`, `profile`, `school` update schemas. Extract:
 
 ```ts
 export function requireNonEmpty<T extends z.ZodObject<any>>(schema: T) {
@@ -625,155 +517,108 @@ export function requireNonEmpty<T extends z.ZodObject<any>>(schema: T) {
 }
 ```
 
-### 6.3 `School` type defined twice
+### 6.3 `School` type defined in two places
 
-[apps/api/src/middlewares/school.ts:6](../apps/api/src/middlewares/school.ts) (`type School = typeof organization.$inferSelect`) and [apps/api/src/services/school.ts:39](../apps/api/src/services/school.ts) (`type School = z.infer<typeof schoolSchema>`). One is the request-context shape, one is the API shape. Either share or rename — `SchoolContext` for the middleware type.
+[apps/api/src/middlewares/school.ts:6](../apps/api/src/middlewares/school.ts) (`type School = typeof organization.$inferSelect`) and [apps/api/src/services/school.ts:32](../apps/api/src/services/school.ts) (`type School = Pick<organization.$inferSelect, 'id' | 'name' | 'slug' | 'createdAt'>`).
 
-### 6.4 `parseBody`/`parseParams`/`parseQuery` discard Zod issues
+One is the request-context shape, one is the API shape. Rename the middleware type to `SchoolContext`.
 
-**File:** [apps/api/src/utils/validate.ts:6-13](../apps/api/src/utils/validate.ts)
+### 6.4 `userId` validation is `z.string().min(1)` everywhere
 
-```ts
-if (!result.success) {
-  throw validationError() // no message
-}
-```
+Centralize as `userIdSchema = z.string().min(1)` in `@narada/auth` (or wherever BetterAuth's ID scheme is owned). Tighten the regex if possible.
 
-Lose all field-level detail. At minimum: `throw validationError(JSON.stringify(result.error.format()))`. Better: pass `result.error.issues` into the `AppError` as a structured `details` field and surface in the JSON envelope.
+### 6.5 `Router({ mergeParams: true })` use is inconsistent
 
-### 6.5 Error handler logs every error at `error` level
+Set in `enrollment.ts`, `evaluations.ts`, `segments.ts`, `audio.ts`, `exams.ts`. Not set in `audioMappings.ts` (which doesn't use parent params, so it's fine). Comment why for each router so future routers don't forget.
 
-**File:** [apps/api/src/server.ts:46-65](../apps/api/src/server.ts)
+### 6.6 Response shape on PUT/DELETE is inconsistent
 
-`logger.error(error, '...')` fires for 404s and 401s, making the log noisy. Split:
+- `DELETE /batches/:batchId/members/:userId` returns `200 { ok: true }`
+- `DELETE /chapters/:chapterId/audio/:audioId` returns `204`
 
-- 4xx → `logger.warn`
-- 5xx → `logger.error`
-- attach `req.method`, `req.url`, `statusCode`, `userId` (if available).
+Pick one. `204 No Content` is the standard.
 
-Add `pino-http` for per-request access logs while you're in there.
+### 6.7 `PATCH /profile` takes `batchId` in the body
 
-### 6.6 No request-scoped logger
+[apps/api/src/routes/profile.ts:18](../apps/api/src/routes/profile.ts) — `PATCH /profile` with `batchId` in the body is awkward; it's actually addressing a different resource. `PATCH /batches/:batchId/enrollment/me` or `PATCH /enrollments/:batchId/me` reads better.
 
-`pino-http` gives you `req.log` with a per-request `reqId`. Threading this through services would help debugging. Lower priority until you have traffic.
+### 6.8 `rows.at(0)!` vs `if (!row) throw internalError()` vs `assert(row !== undefined, '...')`
 
-### 6.7 `auth.ts` imports `'better-auth/minimal'`
+Three different ways of handling "Drizzle returning array should have one element":
 
-**File:** [packages/auth/src/index.ts:1](../packages/auth/src/index.ts)
+- [services/audio.ts:61](../apps/api/src/services/audio.ts): `rows.at(0)!`
+- [services/chapter.ts:33](../apps/api/src/services/chapter.ts): `if (!row) throw internalError()`
+- [services/enrollment.ts:38](../apps/api/src/services/enrollment.ts), [services/exam.ts:118](../apps/api/src/services/exam.ts): `assert(row !== undefined, '...')`
 
-Worth verifying the `minimal` entry point includes everything the `organization` plugin needs at runtime. If something silently no-ops in production, this will be very hard to debug. Test by running the auth flow end-to-end.
+Pick one. `internalError()` produces the cleanest client experience; `assert` produces a generic 500 with weird messages; `!` throws `TypeError` that bypasses `AppError`.
 
-### 6.8 `organization.metadata` is text JSON, never parsed
+### 6.9 `session.activeOrganizationId` is unused
 
-[packages/db/src/schema/auth.ts:85](../packages/db/src/schema/auth.ts) — declared as `text('metadata')` (BetterAuth-managed). No reader/writer in this codebase touches it. Either start using it (with a Zod schema for the JSON), or leave a comment.
+BetterAuth populates it; the code uses an `X-School-Slug` header instead. Once auth carries the active school, you could drop the header for authenticated routes. Trade-off: header is stateless and easy to debug; session-based is fewer round-trips. User decision.
 
-### 6.9 `Router({ mergeParams: true })` used inconsistently
+### 6.10 `logger.ts` returns `pino.LoggerOptions<never, boolean>`
 
-Used in `enrollment.ts`, `evaluations.ts`, `segments.ts`, `audio.ts`, `exams.ts` (batchExamsRouter). The routes nested under `/batches/:batchId/...` need it; standalone routers don't. Currently correct, but worth a code comment so future routers don't break.
+That's an oddly specific type to write. Just `pino.LoggerOptions`.
 
-### 6.10 `helmet`, `cors` use defaults
+### 6.11 `dotenv-cli` wraps every root script
 
-[apps/api/src/server.ts:20-21](../apps/api/src/server.ts). Fine for dev; flag for prod review (CSP, allowed methods).
+[package.json](../package.json) — every script is `dotenv -e .env -- pnpm --filter ...`. Cleaner: load `.env` once inside `@narada/env` (using `dotenv` directly), or use pnpm's built-in `--env-file`.
 
-### 6.11 No `engines.node` or `.nvmrc`
+### 6.12 `routes/index.ts` mixes nested and flat mounts
 
-Pin the Node version. The Drizzle + BetterAuth + Express 5 stack has Node version sensitivities; surprising deploy issues will arise.
+[apps/api/src/routes/index.ts:31-41](../apps/api/src/routes/index.ts) mounts some routes nested under params (`/batches/:batchId/evaluations`) and some flat (`/exams`, `/audio`). Both are correct; mixing them in one file is harder to scan. Either group nested mounts together with comments, or use parent router composition (`batchesRouter.use('/:batchId/evaluations', evalRouter)`).
 
-### 6.12 No `tsc --noEmit` in CI
+### 6.13 `auth.ts` imports from `'better-auth/minimal'`
 
-Root `package.json` `scripts` runs `pnpm -r lint` but not `tsc --noEmit`. Type errors don't fail builds. Add a `typecheck` script and wire to CI.
+[packages/auth/src/index.ts:1](../packages/auth/src/index.ts) — worth verifying the `minimal` entry point includes everything the `organization` plugin needs at runtime. Exercise the full auth flow once end-to-end before relying on this in prod.
 
-### 6.13 `dotenv-cli` wraps every root script
+### 6.14 `audioMapping.replace` doesn't sort its return value; `segment.replace` does
 
-[package.json:7-15](../package.json) — every script is `dotenv -e .env -- pnpm --filter ...`. Cleaner alternatives: load `.env` once in `@narada/env` (using `dotenv` directly), or use `pnpm`'s `--env-file` feature.
+[services/audioMapping.ts:60-62](../apps/api/src/services/audioMapping.ts) returns rows in Drizzle's insertion order; [services/segment.ts:46](../apps/api/src/services/segment.ts) sorts by `start`. Pick one convention.
 
-### 6.14 Two routing styles in `routes/index.ts`
+### 6.15 `Subset<T>` allows duplicates and any ordering
 
-[apps/api/src/routes/index.ts:31-41](../apps/api/src/routes/index.ts) mounts some routes nested under params (`/batches/:batchId/evaluations`) and some flat (`/exams`, `/audio`). Both are correct; mixing them in one file is confusing. Either group nested mounts together, or use a parent router pattern (`batchesRouter.use('/:batchId/evaluations', evalRouter)`).
-
-### 6.15 `session.activeOrganizationId` is unused
-
-BetterAuth populates this on the session; the code uses an `X-School-Slug` header instead. Once a user signs in and picks a school, the session knows it. You could drop the header for authenticated routes by reading `session.activeOrganizationId` and resolving the slug from the org table.
-
-Trade-off: header is stateless and easier to debug; session-based is fewer round-trips and feels more correct. User decision.
-
-### 6.16 `apps/api/src/types/express.d.ts` types `db: Database` non-optionally
-
-But [middlewares/school.ts](../apps/api/src/middlewares/school.ts) assigns `publicDb` when no school header is set — these are the _same_ TS type (`Database` is just `ReturnType<typeof getScopedDatabase>`), but the runtime instance differs (different `search_path`). A service that expects school-scoped tables but receives `publicDb` will quietly read from `public` schema and return nothing.
-
-Fix as part of §3.11 — define separate types for school-scoped vs public-scoped `db`.
-
-### 6.17 No drizzle migration files
-
-[packages/db/drizzle/school/](../packages/db/drizzle/school/) exists but only with `meta/_journal.json` and a snapshot. `TODO.md` flags this. The schema has never been migrated — you've been running `db:push` directly. Generate an initial migration before going to prod.
-
-### 6.18 `segments` returned from `replace` are re-sorted but `audioMapping.replace` doesn't sort
-
-Cosmetic. [services/segment.ts:74](../apps/api/src/services/segment.ts) sorts; [services/audioMapping.ts:69-74](../apps/api/src/services/audioMapping.ts) doesn't. Pick one convention.
-
-### 6.19 `chapter.code` and `batch.code` are globally unique via DB `.unique()`
-
-But "code" feels like it should be unique _within a track_ (for chapters) and _within a school_ (for batches). Currently the per-school schema means batch.code is per-school by construction. Chapter.code being globally unique within a school may or may not be intended — confirm with user.
+[packages/auth/src/permissions/types.ts:1](../packages/auth/src/permissions/types.ts) — `Subset<['read','update']>` resolves to `('read'|'update')[]`. A caller can write `['read','read','read']`. Mild concern; tighten with a uniqueness brand if it bothers you.
 
 ---
 
-## 7. Test infrastructure (deferred to the end)
-
-**Zero tests exist, and the user has deliberately chosen to add them last** — after the bugs in §3, the doc reconciliation in §4, and the deepening refactors in §5 have all landed. Do **not** set up testing as a prerequisite for any other section. The shallow services are fine as-is because there's nothing to break; refactors should be verified by reading the diff and exercising the app manually until the shape of the code has stabilized.
-
-This section exists so that when the time comes, the receiving agent doesn't have to redesign the test setup from scratch. Treat it as a plan, not a task to start.
-
-### 7.1 Why last, not first
-
-- The architecture is still settling. Tests written now would lock in shapes (mappers, `AuthClient`, the `showAll` flag, the `includeDrafts` parameter, etc.) that §5 will delete. Each refactor would then require rewriting the test it just broke — no signal, all cost.
-- The user actively rewrites generated code. Tests against intermediate shapes get thrown away with the code.
-- Once §3, §4, and §5 are done, the surface area is stable and small. A test suite written against the _final_ shape is cheap and durable.
-
-### 7.2 Suggested stack (for when it's time)
-
-- **Test runner:** `vitest` (works well with TS, fast, watch mode).
-- **HTTP testing:** `supertest` against the Express app from `createServer()`.
-- **DB:** real Postgres via Docker, fresh schema per test suite. Use `provisionSchool` to create test schemas.
-- **R2:** mock `@narada/storage` exports. After §5.E this becomes mocking `ObjectLifecycle`.
-- **BetterAuth:** real auth flow against a test Postgres — sessions are cookies, manageable with supertest.
-
-### 7.3 Coverage targets (for when it's time)
-
-- **One integration test per route** that exercises the happy path. Doesn't need to be exhaustive — just needs to fire if a future change breaks the wire format.
-- **Unit tests for authorization** (after §5.A/B): every combination of (super admin, school admin, batch instructor, batch student, unrelated user) × (school-scoped op, batch-scoped op).
-- **Unit tests for `cursor.ts`** — encoding/decoding round-trips, pagination boundary conditions.
-
-### 7.4 Docker Compose dev environment
-
-`TODO.md` §13 flags this. Needed so tests are reproducible when you do add them. Minimal `docker-compose.yml` with Postgres 16 + (optional) MinIO for R2. Can be set up earlier than tests themselves if helpful for dev workflow.
-
----
-
-## 8. Suggested execution order
+## 7. Suggested execution order
 
 If acting on this document with no other guidance:
 
-1. **Critical bugs** (§3) — most are 5–20 line fixes. Do 3.10, 3.7, 3.11, 3.12 first (mechanical). Then 3.3, 3.4 (need user input). Defer 3.1, 3.2, 3.5, 3.6 to be solved by §5.E.
-2. **§5.C** — delete mappers. Fast, big LOC win, no design risk.
-3. **§5.B** — collapse `AuthClient`. Touches every route but mechanically.
-4. **§5.A** — `authorize.inBatch`. Builds on B; replaces the open-coded scoping in 5 routes.
-5. **§5.D** — `ChapterReader`. Also sets up clean future dashboard and matrix endpoint work.
-6. **§5.E** — `ObjectLifecycle`. Fixes the cluster of R2 bugs. Required before admin authoring flow.
-7. **§5.F, G, H** + §6 — opportunistic.
-8. **Tests** (§7) — last, after the architecture has stabilized. See §7.1 for why.
+1. **§2 correctness bugs** in this rough order:
+   - 2.1 (response after send) — one-line fix.
+   - 2.2 (shutdown exit code, pool leak) — small.
+   - 2.18 (Zod issues into AppError) — improves every other debugging task.
+   - 2.4, 2.5 (cross-batch leaks) — security-relevant.
+   - 2.6 (ChapterReadView splitting) — latent privilege bug.
+   - 2.7 (recordResults completion) — needs a product decision.
+   - 2.3 (SchoolService atomicity) — needs care.
+   - 2.8–2.12 (R2 lifecycle hardening) — pair with §5.H.
+   - 2.13–2.17 — opportunistic.
 
-Before any §5 item, confirm scope with the user. The bugs in §3 and spec drift in §4 are safe to act on without explicit approval (but still announce what you're doing).
+2. **§3 schema concerns:**
+   - 3.4 (generate initial migrations) — blocker for prod.
+   - 3.2 (exclusion constraints) — closes data-integrity holes.
+   - 3.1 (cascade strategy) — needs an explicit decision before more cascades sprawl.
 
-Verification during steps 1–8 is by reading the diff and exercising the app manually, not by automated tests. This is deliberate (see §7.1).
+3. **§4 ops/cross-cutting:**
+   - 4.1, 4.2 (request logging) — pays for itself immediately.
+   - 4.3 (real health check).
+   - 4.7 (typecheck in CI).
+   - 4.4, 4.5 (security review before prod).
+
+4. **§5 deepening** — confirm scope with the user first. 5.A (routing) and 5.E (response-type unification) are mechanical. 5.C, 5.D, 5.F are larger.
+
+5. **§6 nits** — opportunistic, alongside other touches in the same file.
+
+6. **Tests** — start with the pure-logic surfaces (overlap validators, cursor encoding, `hasBatchPermission`). Defer integration tests until §5 has stabilized the shape.
 
 ---
 
 ## Appendix: how to verify findings
 
-Each section cites file paths and line numbers. Before acting:
-
-1. Re-read the cited file — the user actively rewrites code; line numbers may have shifted.
-2. Run `git log --since='2026-05-25' -p <file>` to see recent changes.
-3. If the cited behavior no longer matches the code, update this document with a note rather than silently skipping.
-
-If a finding seems wrong: it might be. The reviewer (a Claude session, on 2026-05-25) explored the codebase in a single pass and may have misread. Push back on individual items rather than acting on bad analysis.
+1. Re-read the cited file. Line numbers shift.
+2. `git log --since='2026-05-26' -p <file>` for recent changes.
+3. If a finding no longer matches the code, update this document with a note rather than silently skipping.
+4. If a finding seems wrong, it might be. Push back on individual items rather than acting on bad analysis.
