@@ -3,8 +3,7 @@ import { and, eq } from 'drizzle-orm'
 
 import { userIdSchema } from '@narada/auth/ids'
 import { enrollment, type SchoolDatabase } from '@narada/db'
-import { conflict, notFound } from '../error'
-import assert from 'node:assert'
+import { conflict, internalError, notFound } from '../error'
 
 export const enrollSchema = z.object({
   userId: userIdSchema,
@@ -36,7 +35,7 @@ export default class EnrollmentService {
       .returning()
 
     const row = rows.at(0)
-    assert(row !== undefined, '`insert` should always return a row')
+    if (!row) throw internalError()
     return row
   }
 

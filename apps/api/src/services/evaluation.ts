@@ -4,8 +4,7 @@ import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-
 import { userIdSchema } from '@narada/auth/ids'
 import { enrollment, evaluation, type SchoolDatabase } from '@narada/db'
 import { compoundCursor, nullableDateCursorField, paginateResponse } from '../utils/cursor'
-import { notFound } from '../error'
-import assert from 'node:assert'
+import { internalError, notFound } from '../error'
 import { proficiencyLevelSchema } from './shared'
 
 const PAGE_SIZE = 20
@@ -57,7 +56,7 @@ export default class EvaluationService {
       .returning()
 
     const row = rows.at(0)
-    assert(row !== undefined, '`insert` should always return a row')
+    if (!row) throw internalError()
     return row
   }
 

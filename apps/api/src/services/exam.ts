@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { z } from 'zod'
 import { and, asc, eq, gt, or } from 'drizzle-orm'
 
@@ -6,7 +5,7 @@ import { userIdSchema } from '@narada/auth/ids'
 import { hasBatchPermission } from '@narada/auth/permissions'
 import { exam, examResult, evaluation, type SchoolDatabase } from '@narada/db'
 import { compoundCursor, dateCursorField, paginateResponse } from '../utils/cursor'
-import { notFound, unprocessable } from '../error'
+import { internalError, notFound, unprocessable } from '../error'
 import type { BatchAccess } from '../utils/auth'
 import { proficiencyLevelSchema } from './shared'
 import { requireNonEmpty } from '../utils/validate'
@@ -113,7 +112,7 @@ export default class ExamService {
       .returning()
 
     const row = rows.at(0)
-    assert(row !== undefined, '`insert` should always return a row')
+    if (!row) throw internalError()
     return row
   }
 
@@ -143,7 +142,7 @@ export default class ExamService {
       columns: { trackId: true },
     })
 
-    assert(batchRow !== undefined, 'batch not found for exam — FK violation')
+    if (!batchRow) throw internalError()
     const trackChapters = await db.query.chapter.findMany({
       where: (t, { eq }) => eq(t.trackId, batchRow.trackId),
       columns: { id: true },
@@ -171,14 +170,14 @@ export default class ExamService {
           .returning()
 
         const evalRow = evalRows.at(0)
-        assert(evalRow !== undefined, '`insert` should always return a row')
+        if (!evalRow) throw internalError()
         const resultRows = await tx
           .insert(examResult)
           .values({ examId, chapterId: item.chapterId, evaluationId: evalRow.id })
           .returning()
 
         const resultRow = resultRows.at(0)
-        assert(resultRow !== undefined, '`insert` should always return a row')
+        if (!resultRow) throw internalError()
         results.push({
           examId: resultRow.examId,
           chapterId: resultRow.chapterId,
