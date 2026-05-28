@@ -9,7 +9,7 @@
     "./permissions": "./src/permissions/index.ts"
   },
   "scripts": {
-    "generate": "pnpm dlx auth generate --config src/index.ts",
+    "generate": "pnpm dlx @better-auth/cli generate --config src/index.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
