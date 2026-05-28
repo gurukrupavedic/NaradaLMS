@@ -42,7 +42,7 @@ router.delete('/:userId', async (req, res) => {
   })
 
   await EnrollmentService.unenroll(db, batchId, userId)
-  res.status(200).json({ ok: true })
+  res.status(204).send()
 })
 
 export default router
