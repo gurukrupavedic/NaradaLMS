@@ -3,7 +3,7 @@ import { argv, env, exit } from 'node:process'
 import { eq } from 'drizzle-orm'
 
 import { getScopedDatabase, organization, publicDb, shutdownPools } from '@narada/db'
-import { objectLifecycle } from '../utils/objectLifecycle'
+import { objectLifecycle } from '../services/objectLifecycle'
 
 const schoolSlug = env.SCHOOL_SLUG
 const dryRun = !argv.includes('--delete')

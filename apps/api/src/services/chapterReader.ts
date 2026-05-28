@@ -10,7 +10,7 @@ import {
   segment,
   type SchoolDatabase,
 } from '@narada/db'
-import { objectLifecycle } from '../utils/objectLifecycle'
+import { objectLifecycle } from './objectLifecycle'
 
 type DbChapter = typeof chapter.$inferSelect
 type DbAudioAsset = typeof audioAsset.$inferSelect

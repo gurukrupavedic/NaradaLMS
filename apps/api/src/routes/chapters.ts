@@ -8,7 +8,7 @@ import { authoringView, authorizeContentReadView } from '../utils/chapterView'
 import ChapterReader from '../services/chapterReader'
 import ChapterService, { createChapterSchema, updateChapterSchema } from '../services/chapter'
 import { schoolDb } from '../middlewares/school'
-import { objectLifecycle } from '../utils/objectLifecycle'
+import { objectLifecycle } from '../services/objectLifecycle'
 
 const router = Router()
 

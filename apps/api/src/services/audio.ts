@@ -3,7 +3,7 @@ import { and, eq } from 'drizzle-orm'
 
 import { audioAsset, type SchoolDatabase } from '@narada/db'
 import { internalError, notFound, unprocessable } from '../error'
-import { objectLifecycle } from '../utils/objectLifecycle'
+import { objectLifecycle } from './objectLifecycle'
 
 const audioUploadIdSchema = z.string().regex(
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(mp3|wav|aac|ogg|m4a)$/i,
