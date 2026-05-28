@@ -16,7 +16,6 @@ export type AuthenticatedSession = typeof auth.$Infer.Session
 type AuthClaim =
   | { scope: 'super' }
   | { scope: 'school'; permissions: SchoolPermissions }
-  | { scope: 'batch'; batchId: string; permissions: BatchPermissions }
 
 type BatchAccessClaim = {
   schoolPermission?: SchoolPermissions
@@ -78,9 +77,7 @@ export async function hasPermission(
     return success
   }
 
-  // TODO: use Redis to cache these reads
-  const enrollment = await EnrollmentService.findOne(db as SchoolDatabase, user.id, claim.batchId)
-  return enrollment !== undefined && hasBatchPermission(enrollment.role, claim.permissions)
+  return false
 }
 
 async function authorizeClaim(
