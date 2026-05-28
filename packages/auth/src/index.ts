@@ -1,4 +1,4 @@
-import { betterAuth } from 'better-auth/minimal'
+import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { organization } from 'better-auth/plugins/organization'
 import { env } from '@narada/env'
