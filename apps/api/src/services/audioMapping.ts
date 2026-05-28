@@ -59,7 +59,7 @@ export default class AudioMappingService {
         .values(inputs.map(i => ({ ...i, audioAssetId })))
         .returning()
 
-      return rows
+      return rows.sort((a, b) => a.audioStart - b.audioStart)
     })
   }
 }
