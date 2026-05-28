@@ -47,7 +47,12 @@ export const recordResultItemSchema = z.object({
   notes: z.string().optional(),
 })
 
-export const recordResultsSchema = z.array(recordResultItemSchema).min(1)
+export const recordResultsSchema = z
+  .array(recordResultItemSchema)
+  .min(1)
+  .refine(items => new Set(items.map(item => item.chapterId)).size === items.length, {
+    message: 'duplicate chapter results are not allowed',
+  })
 
 export type Exam = typeof exam.$inferSelect
 export type ExamResult = typeof examResult.$inferSelect
