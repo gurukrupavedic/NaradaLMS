@@ -410,7 +410,7 @@ Update chapter metadata or status.
 
 Chapter text is stored directly on `chapter` as `script` and an internal text object key. API responses expose that field as `textUrl`, resolved to a fresh download URL. There is no revision table in the current code.
 
-### `POST /v1/chapters/:chapterId/script/upload-url`
+### `POST /v1/chapters/:chapterId/script/presign`
 
 Get a presigned R2 URL for uploading the chapter text file. Each response uses a fresh object key under the chapter's text prefix.
 
@@ -512,7 +512,7 @@ Server-assigned UUIDs replace any client-side draft IDs. Replacing segments casc
 
 ## Audio
 
-### `POST /v1/chapters/:chapterId/audio/upload-url`
+### `POST /v1/chapters/:chapterId/audio/presign`
 
 Get a presigned R2 URL for uploading an audio file.
 

@@ -8,7 +8,7 @@ import { authorize } from '../utils/auth'
 
 const router = Router({ mergeParams: true })
 
-router.post('/upload-url', async (req, res: Response<unknown, SchoolScopedLocals>) => {
+router.post('/presign', async (req, res: Response<unknown, SchoolScopedLocals>) => {
   const db = schoolDb(res)
   const { school } = res.locals
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)

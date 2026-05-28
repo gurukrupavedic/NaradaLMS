@@ -64,7 +64,7 @@ router.post('/:chapterId/script', async (req, res) => {
   res.status(200).json({ ok: true, data: updated })
 })
 
-router.post('/:chapterId/script/upload-url', async (req, res) => {
+router.post('/:chapterId/script/presign', async (req, res) => {
   const db = schoolDb(res)
   const school = res.locals.school!
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)

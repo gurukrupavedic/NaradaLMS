@@ -48,7 +48,7 @@ All routes below are missing — only `/health` exists. Group them by file in `a
 - [x] `PUT /chapters/:chapterId/segments` — full replacement; validate no overlaps and within text bounds; cascade-delete old audio mappings via DB constraint; admin access
 
 ### Audio (`routes/audio.ts`)
-- [x] `POST /chapters/:chapterId/audio/upload-url` — generate presigned R2 PUT URL for `schools/{orgId}/chapters/{chapterId}/audio/{uuid}.{ext}`; return `uploadUrl` + opaque `uploadId`; admin access
+- [x] `POST /chapters/:chapterId/audio/presign` — generate presigned R2 PUT URL for `schools/{orgId}/chapters/{chapterId}/audio/{uuid}.{ext}`; return `uploadUrl` + opaque `uploadId`; admin access
 - [x] `POST /chapters/:chapterId/audio` — register uploaded audio asset (uploadId, label?, duration); verify object exists; insert `audioAsset` row; admin access
 - [x] `DELETE /chapters/:chapterId/audio/:audioId` — delete `audioAsset` row (cascades to `audioMapping`); delete R2 object; admin access
 
@@ -139,7 +139,7 @@ The admin page (`/admin/page.tsx`) is an empty shell. Build out the full admin s
 - [ ] **Chapter detail / editor (`/admin/content/chapters/:chapterId`)** — 4-step authoring workflow already built in `apps/playground/app/editor/page.tsx`; wire each step to real API calls:
   - Step 1 (Content): `POST /v1/chapters` to create, `PATCH /v1/chapters/:id` for title/code/status
   - Step 2 (Segments): `PUT /v1/revisions/:revisionId/segments`
-  - Step 3 (Audio Map): `POST /v1/chapters/:id/audio/upload-url` → upload to R2 → `POST /v1/chapters/:id/audio`; then `PUT /v1/audio/:audioId/mappings`
+  - Step 3 (Audio Map): `POST /v1/chapters/:id/audio/presign` → upload to R2 → `POST /v1/chapters/:id/audio`; then `PUT /v1/audio/:audioId/mappings`
   - Step 4 (Preview): read-only; sourced from data already in state
 - [ ] **New chapter flow** — `POST /v1/chapters/revisions` to upload text and create a revision before entering the editor
 - [ ] **Batch list (`/admin/batches`)** — fetch `GET /v1/batches`; create batch button → `POST /v1/batches`
