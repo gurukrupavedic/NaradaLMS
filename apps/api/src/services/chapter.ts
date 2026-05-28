@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm'
 import { chapter, segment, type SchoolDatabase } from '@narada/db'
 import { internalError, notFound } from '../error'
 import { chapterResponse, type Chapter } from './chapterReader'
+import { requireNonEmpty } from '../utils/validate'
 
 export const createChapterSchema = z.object({
   trackId: z.uuid(),
@@ -11,8 +12,8 @@ export const createChapterSchema = z.object({
   code: z.string().min(1),
 })
 
-export const updateChapterSchema = z
-  .object({
+export const updateChapterSchema = requireNonEmpty(
+  z.object({
     title: z.string().min(1).optional(),
     code: z.string().min(1).optional(),
     status: z.enum(['draft', 'published']).optional(),
@@ -20,8 +21,8 @@ export const updateChapterSchema = z
     trackId: z.uuid().optional(),
     script: z.enum(['te', 'sa', 'en']).optional(),
     textObjectKey: z.string().optional(),
-  })
-  .refine(data => Object.keys(data).length > 0, { message: 'No fields to update' })
+  }),
+)
 
 export type CreateChapterData = z.infer<typeof createChapterSchema>
 export type UpdateChapterData = z.infer<typeof updateChapterSchema>

@@ -8,6 +8,7 @@ import {
   dropSchoolSchema,
 } from '@narada/db'
 import { conflict, internalError, notFound } from '../error'
+import { requireNonEmpty } from '../utils/validate'
 
 export const createSchoolSchema = z.object({
   name: z.string().min(1),
@@ -17,16 +18,16 @@ export const createSchoolSchema = z.object({
     .regex(/^[a-z0-9-]+$/, 'slug must be lowercase alphanumeric with hyphens'),
 })
 
-export const updateSchoolSchema = z
-  .object({
+export const updateSchoolSchema = requireNonEmpty(
+  z.object({
     name: z.string().min(1).optional(),
     slug: z
       .string()
       .min(1)
       .regex(/^[a-z0-9-]+$/, 'slug must be lowercase alphanumeric with hyphens')
       .optional(),
-  })
-  .refine(data => Object.keys(data).length > 0, { message: 'No fields to update' })
+  }),
+)
 
 export type School = Pick<typeof organization.$inferSelect, 'id' | 'name' | 'slug' | 'createdAt'>
 export type CreateSchoolData = z.infer<typeof createSchoolSchema>

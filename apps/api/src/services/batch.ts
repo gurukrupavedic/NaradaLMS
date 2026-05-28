@@ -5,6 +5,7 @@ import { batch, enrollment, type SchoolDatabase } from '@narada/db'
 import { compoundCursor, paginateResponse } from '../utils/cursor'
 import { internalError, notFound } from '../error'
 import type { BatchAccess } from '../utils/auth'
+import { requireNonEmpty } from '../utils/validate'
 
 const PAGE_SIZE = 20
 
@@ -33,8 +34,8 @@ export const createBatchSchema = z.object({
   meetingUrl: z.string().url().optional(),
 })
 
-export const updateBatchSchema = z
-  .object({
+export const updateBatchSchema = requireNonEmpty(
+  z.object({
     code: z.string().min(1).optional(),
     status: z.enum(['upcoming', 'active', 'completed']).optional(),
     startDate: z
@@ -46,8 +47,8 @@ export const updateBatchSchema = z
       .transform(v => new Date(v))
       .optional(),
     meetingUrl: z.string().url().optional(),
-  })
-  .refine(data => Object.keys(data).length > 0, { message: 'No fields to update' })
+  }),
+)
 
 export const listBatchesQuerySchema = z.object({
   status: z.enum(['upcoming', 'active', 'completed']).optional(),

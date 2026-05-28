@@ -4,6 +4,7 @@ import { asc, eq } from 'drizzle-orm'
 import { track, chapter, type SchoolDatabase } from '@narada/db'
 import { internalError } from '../error'
 import { chapterResponse, type Chapter, type ChapterReadView } from './chapterReader'
+import { requireNonEmpty } from '../utils/validate'
 
 type TrackChapter = Chapter
 
@@ -11,10 +12,12 @@ export const createTrackSchema = z.object({
   name: z.string().min(1),
 })
 
-export const updateTrackSchema = z.object({
-  name: z.string().min(1).optional(),
-  order: z.number().int().positive().optional(),
-})
+export const updateTrackSchema = requireNonEmpty(
+  z.object({
+    name: z.string().min(1).optional(),
+    order: z.number().int().positive().optional(),
+  }),
+)
 
 export type Track = typeof track.$inferSelect
 export type TrackWithChapters = Track & { chapters: TrackChapter[] }

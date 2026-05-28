@@ -8,6 +8,7 @@ import { compoundCursor, dateCursorField, paginateResponse } from '../utils/curs
 import { notFound, unprocessable } from '../error'
 import type { BatchAccess } from '../utils/auth'
 import { proficiencyLevelSchema } from './shared'
+import { requireNonEmpty } from '../utils/validate'
 
 const PAGE_SIZE = 20
 
@@ -16,15 +17,15 @@ export const createExamSchema = z.object({
   scheduledAt: z.iso.datetime().transform(v => new Date(v)),
 })
 
-export const updateExamSchema = z
-  .object({
+export const updateExamSchema = requireNonEmpty(
+  z.object({
     scheduledAt: z.iso
       .datetime()
       .transform(v => new Date(v))
       .optional(),
     status: z.enum(['scheduled', 'inProgress', 'completed', 'cancelled']).optional(),
-  })
-  .refine(data => Object.keys(data).length > 0, { message: 'No fields to update' })
+  }),
+)
 
 export const listExamsQuerySchema = z.object({
   status: z.enum(['scheduled', 'inProgress', 'completed', 'cancelled']).optional(),
