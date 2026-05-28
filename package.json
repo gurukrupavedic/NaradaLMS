@@ -7,19 +7,16 @@
     "node": "22.13.1"
   },
   "scripts": {
-    "api:dev": "dotenv -e .env -- pnpm --filter @narada/api dev",
-    "api:build": "dotenv -e .env -- pnpm --filter @narada/api build",
-    "api:typecheck": "dotenv -e .env -- pnpm --filter @narada/api typecheck",
-    "auth:generate": "dotenv -e .env -- pnpm --filter @narada/auth generate",
-    "db:generate:public": "dotenv -e .env -- pnpm --filter @narada/db generate:public",
-    "db:generate:school": "dotenv -e .env -- pnpm --filter @narada/db generate:school",
-    "db:push": "dotenv -e .env -- pnpm --filter @narada/db push",
-    "db:studio": "dotenv -e .env -- pnpm --filter @narada/db studio",
+    "api:dev": "pnpm --filter @narada/api dev",
+    "api:build": "pnpm --filter @narada/api build",
+    "api:typecheck": "pnpm --filter @narada/api typecheck",
+    "auth:generate": "pnpm --filter @narada/auth generate",
+    "db:generate:public": "pnpm --filter @narada/db generate:public",
+    "db:generate:school": "pnpm --filter @narada/db generate:school",
+    "db:push": "pnpm --filter @narada/db push",
+    "db:studio": "pnpm --filter @narada/db studio",
     "lint": "pnpm -r lint",
     "format": "pnpm -r format",
     "typecheck": "pnpm -r typecheck"
-  },
-  "devDependencies": {
-    "dotenv-cli": "^11.0.0"
   }
 }
