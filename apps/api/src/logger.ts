@@ -1,6 +1,6 @@
 import pino from 'pino'
 
-function getTransport(): pino.LoggerOptions<never, boolean> {
+function getTransport(): pino.LoggerOptions {
   if (process.env.NODE_ENV === 'production') {
     return {}
   }
