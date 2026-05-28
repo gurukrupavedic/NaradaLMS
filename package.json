@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": "22.13.1"
+  },
   "scripts": {
     "api:dev": "dotenv -e .env -- pnpm --filter @narada/api dev",
     "api:build": "dotenv -e .env -- pnpm --filter @narada/api build",
