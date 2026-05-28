@@ -13,6 +13,7 @@
     "generate": "pnpm dlx @better-auth/cli generate --config src/index.ts",
     "lint": "eslint .",
     "format": "prettier . --write --ignore-path ../../.prettierignore",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -28,6 +29,7 @@
     "eslint-config-prettier": "^10",
     "prettier": "3.8.3",
     "typescript": "^5",
-    "typescript-eslint": "^8"
+    "typescript-eslint": "^8",
+    "vitest": "^4.1.7"
   }
 }
