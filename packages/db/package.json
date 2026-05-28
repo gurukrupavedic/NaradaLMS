@@ -14,7 +14,8 @@
     "push": "drizzle-kit push",
     "studio": "drizzle-kit studio",
     "lint": "eslint .",
-    "format": "prettier . --write --ignore-path ../../.prettierignore"
+    "format": "prettier . --write --ignore-path ../../.prettierignore",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@narada/env": "workspace:*",

@@ -9,6 +9,7 @@ import { auth } from '@narada/auth'
 import { shutdownPools } from '@narada/db'
 import { env } from '@narada/env'
 import logger from './logger'
+import { attachRequestContext, requestLogger } from './requestContext'
 import setupRoutes from './routes'
 import { AppError, ErrorCode } from './error'
 
@@ -24,6 +25,8 @@ export function createServer() {
   const router = Router()
   router.use(helmet())
   router.use(cors({ origin: env.TRUSTED_ORIGINS, credentials: true }))
+  router.use(attachRequestContext)
+  router.use(logRequest)
 
   // BetterAuth requires access to the raw body stream, and thus,
   // must be mounted before the `express.json()` middleware.
@@ -48,9 +51,43 @@ export function runServer(app: Express, options: ServerOptions) {
   process.on('SIGUSR2', () => handleGracefulShutdown('SIGTERM', server))
 }
 
+function logRequest(req: Request, res: Response, next: NextFunction) {
+  const scopedLogger = requestLogger()
+  const startedAt = Date.now()
+
+  res.on('finish', () => {
+    const details = {
+      method: req.method,
+      path: req.originalUrl,
+      statusCode: res.statusCode,
+      durationMs: Date.now() - startedAt,
+    }
+
+    if (res.statusCode >= 500) {
+      scopedLogger.error(details, 'handled request')
+      return
+    }
+
+    if (res.statusCode >= 400) {
+      scopedLogger.warn(details, 'handled request')
+      return
+    }
+
+    scopedLogger.info(details, 'handled request')
+  })
+  next()
+}
+
 function handleErrors(error: Error, _req: Request, res: Response, _next: NextFunction) {
-  logger.error(error, 'an error occurred while handling a request.')
+  const scopedLogger = requestLogger()
   if (error instanceof AppError) {
+    const details = { err: error, statusCode: error.statusCode, code: error.code }
+    if (error.statusCode >= 500) {
+      scopedLogger.error(details, 'an error occurred while handling a request.')
+    } else {
+      scopedLogger.warn(details, 'request failed.')
+    }
+
     res.status(error.statusCode).json({
       ok: false,
       error: {
@@ -63,6 +100,7 @@ function handleErrors(error: Error, _req: Request, res: Response, _next: NextFun
     return
   }
 
+  scopedLogger.error({ err: error }, 'an error occurred while handling a request.')
   if (!res.headersSent) {
     res.status(500).json({
       ok: false,

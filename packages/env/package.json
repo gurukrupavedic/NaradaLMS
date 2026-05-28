@@ -12,7 +12,8 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint .",
-    "format": "prettier . --write --ignore-path ../../.prettierignore"
+    "format": "prettier . --write --ignore-path ../../.prettierignore",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.11",
