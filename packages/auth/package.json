@@ -11,6 +11,8 @@
   },
   "scripts": {
     "generate": "pnpm dlx @better-auth/cli generate --config src/index.ts",
+    "lint": "eslint .",
+    "format": "prettier . --write --ignore-path ../../.prettierignore",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -22,6 +24,10 @@
     "@narada/env": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5"
+    "eslint": "^9",
+    "eslint-config-prettier": "^10",
+    "prettier": "3.8.3",
+    "typescript": "^5",
+    "typescript-eslint": "^8"
   }
 }

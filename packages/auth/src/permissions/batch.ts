@@ -6,7 +6,7 @@ export type BatchPermissions = Permissions<BatchAcl>
 
 // Batch membership is stored in the per-school schema, not BetterAuth organizations,
 // so this ACL intentionally stays runtime-independent from BetterAuth's access control.
-const acl = {
+export const acl = {
   evaluation: ['create', 'read'],
   exam: ['create', 'read', 'update'],
   enrollment: ['create', 'read', 'remove'],

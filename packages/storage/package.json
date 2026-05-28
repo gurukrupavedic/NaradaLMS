@@ -10,6 +10,8 @@
     }
   },
   "scripts": {
+    "lint": "eslint .",
+    "format": "prettier . --write --ignore-path ../../.prettierignore",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -19,6 +21,10 @@
   },
   "devDependencies": {
     "@types/node": "^20.19.40",
-    "typescript": "^5"
+    "eslint": "^9",
+    "eslint-config-prettier": "^10",
+    "prettier": "3.8.3",
+    "typescript": "^5",
+    "typescript-eslint": "^8"
   }
 }

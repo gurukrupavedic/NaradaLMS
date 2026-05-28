@@ -97,9 +97,21 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
+      eslint:
+        specifier: ^9
+        version: 9.39.4
+      eslint-config-prettier:
+        specifier: ^10
+        version: 10.1.8(eslint@9.39.4)
+      prettier:
+        specifier: 3.8.3
+        version: 3.8.3
       typescript:
         specifier: ^5
         version: 5.9.3
+      typescript-eslint:
+        specifier: ^8
+        version: 8.59.4(eslint@9.39.4)(typescript@5.9.3)
 
   packages/db:
     dependencies:
@@ -190,9 +202,21 @@ importers:
       '@types/node':
         specifier: ^20.19.40
         version: 20.19.41
+      eslint:
+        specifier: ^9
+        version: 9.39.4
+      eslint-config-prettier:
+        specifier: ^10
+        version: 10.1.8(eslint@9.39.4)
+      prettier:
+        specifier: 3.8.3
+        version: 3.8.3
       typescript:
         specifier: ^5
         version: 5.9.3
+      typescript-eslint:
+        specifier: ^8
+        version: 8.59.4(eslint@9.39.4)(typescript@5.9.3)
 
 packages:
 
