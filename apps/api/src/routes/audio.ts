@@ -2,11 +2,22 @@ import { Router, type Response } from 'express'
 import { z } from 'zod'
 
 import { parseBody, parseParams } from '../utils/validate'
-import AudioService, { createAudioAssetSchema } from '../services/audio'
+import AudioService, { createAudioAssetSchema, getUploadUrlSchema } from '../services/audio'
 import { schoolDb, type SchoolScopedLocals } from '../middlewares/school'
 import { authorize } from '../utils/auth'
 
 const router = Router({ mergeParams: true })
+
+router.post('/upload-url', async (req, res: Response<unknown, SchoolScopedLocals>) => {
+  const db = schoolDb(res)
+  const { school } = res.locals
+  const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
+  const { contentType } = parseBody(getUploadUrlSchema, req)
+
+  await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
+  const result = await AudioService.getUploadUrl(school.id, chapterId, contentType)
+  res.status(200).json({ ok: true, data: result })
+})
 
 router.post('/', async (req, res: Response<unknown, SchoolScopedLocals>) => {
   const db = schoolDb(res)

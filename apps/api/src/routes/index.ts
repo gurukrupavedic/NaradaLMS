@@ -11,7 +11,6 @@ import evaluationsRouter from './evaluations'
 import { batchExamsRouter, examsRouter } from './exams'
 import audioRouter from './audio'
 import audioMappingsRouter from './audioMappings'
-import uploadRouter from './upload'
 import studentRouter from './student'
 import schoolsRouter from './schools'
 import { resolveDb, requireSchool } from '../middlewares/school'
@@ -33,7 +32,6 @@ export default function setupRoutes(router: Router) {
     .use('/batches/:batchId/evaluations', evaluationsRouter)
     .use('/batches/:batchId/exams', batchExamsRouter)
     .use('/exams', examsRouter)
-    .use('/upload', uploadRouter)
     .use('/chapters/:chapterId/audio', audioRouter)
     .use('/audio', audioMappingsRouter)
     .use('/student', studentRouter)

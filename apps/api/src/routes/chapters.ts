@@ -8,6 +8,7 @@ import { authoringView, authorizeContentReadView } from '../utils/chapterView'
 import ChapterReader from '../services/chapterReader'
 import ChapterService, { createChapterSchema, updateChapterSchema } from '../services/chapter'
 import { schoolDb } from '../middlewares/school'
+import { objectLifecycle } from '../utils/objectLifecycle'
 
 const router = Router()
 
@@ -61,6 +62,16 @@ router.post('/:chapterId/script', async (req, res) => {
   await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
   const updated = await ChapterService.applyScript(db, chapterId, script, objectKey)
   res.status(200).json({ ok: true, data: updated })
+})
+
+router.post('/:chapterId/script/upload-url', async (req, res) => {
+  const db = schoolDb(res)
+  const school = res.locals.school!
+  const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
+
+  await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
+  const result = await objectLifecycle.stageChapterTextUpload({ schoolId: school.id, chapterId })
+  res.status(200).json({ ok: true, data: result })
 })
 
 export default router

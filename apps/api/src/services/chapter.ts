@@ -59,7 +59,7 @@ export default class ChapterService {
       throw notFound()
     }
 
-    // The upload route writes the R2 object before this transaction runs, so there is a
+    // The presign route writes the R2 object before this transaction runs, so there is a
     // brief window where the new object exists but the chapter row still points at the old key.
     return await db.transaction(async tx => {
       await tx.delete(segment).where(eq(segment.chapterId, chapterId))

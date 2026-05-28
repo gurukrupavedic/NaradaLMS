@@ -6,7 +6,7 @@ This document defines the HTTP API for the Narada LMS backend. See [data-model.m
 
 **Base URL:** All routes are prefixed with `/v1`.
 
-**School context:** Each school is accessed via its subdomain (`<slug>.narada.com`). A DNS rewrite proxies this to the API with an `X-School-Id` header. Middleware resolves the school, sets the Postgres `search_path` to the school's schema, and attaches the school context to the request. Routes under `/v1/schools` are the exception — they operate on the shared schema and require super-admin access.
+**School context:** Each school is accessed by sending `X-School-Slug`. Middleware resolves the school, sets the Postgres `search_path` to the school's schema, and attaches the school context to the request. Routes under `/v1/schools` are the exception — they operate on the shared schema and require super-admin access.
 
 **Authentication:** BetterAuth session cookies. Every route except BetterAuth's own auth endpoints requires a valid session. The authenticated user's `shared.user.id` is available on the request context.
 
@@ -410,7 +410,7 @@ Update chapter metadata or status.
 
 Chapter text is stored directly on `chapter` as `script` and an internal text object key. API responses expose that field as `textUrl`, resolved to a fresh download URL. There is no revision table in the current code.
 
-### `POST /v1/upload/chapters/:chapterId/script`
+### `POST /v1/chapters/:chapterId/script/upload-url`
 
 Get a presigned R2 URL for uploading the chapter text file. Each response uses a fresh object key under the chapter's text prefix.
 
@@ -512,7 +512,7 @@ Server-assigned UUIDs replace any client-side draft IDs. Replacing segments casc
 
 ## Audio
 
-### `POST /v1/upload/chapters/:chapterId/audio`
+### `POST /v1/chapters/:chapterId/audio/upload-url`
 
 Get a presigned R2 URL for uploading an audio file.
 
