@@ -31,10 +31,6 @@ export async function getUploadUrl(
 }
 
 export async function getDownloadUrl(key: string, expiresIn = DOWNLOAD_EXPIRY_SECONDS) {
-  if (env.R2_PUBLIC_URL) {
-    return `${env.R2_PUBLIC_URL}/${key}`
-  }
-
   const command = new GetObjectCommand({ Bucket: BUCKET, Key: key })
   return getSignedUrl(s3, command, { expiresIn })
 }

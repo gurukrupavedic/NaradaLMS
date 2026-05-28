@@ -21,7 +21,6 @@ export const env = createEnv({
     R2_ACCESS_KEY_ID: z.string(),
     R2_SECRET_ACCESS_KEY: z.string(),
     R2_BUCKET_NAME: z.string(),
-    R2_PUBLIC_URL: z.url().optional(),
   },
   clientPrefix: 'NEXT_PUBLIC',
   client: {
