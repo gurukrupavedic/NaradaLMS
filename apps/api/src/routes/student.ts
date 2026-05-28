@@ -13,7 +13,7 @@ router.get('/chapters/:chapterId', async (req, res) => {
   const db = schoolDb(res)
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
-  const { user } = await authorize(req, db, {
+  const { user } = await authorize(req, {
     scope: 'school',
     permissions: { content: ['read'] },
   })

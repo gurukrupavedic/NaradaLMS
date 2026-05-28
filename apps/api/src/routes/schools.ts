@@ -9,7 +9,7 @@ import SchoolService, { createSchoolSchema, updateSchoolSchema } from '../servic
 const router = Router()
 
 router.get('/', async (req, res) => {
-  await authorize(req, res.locals.db, { scope: 'super' })
+  await authorize(req, { scope: 'super' })
   const schools = await SchoolService.findAll()
   res.status(200).json({ ok: true, data: schools })
 })
@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const data = parseBody(createSchoolSchema, req)
 
-  await authorize(req, res.locals.db, { scope: 'super' })
+  await authorize(req, { scope: 'super' })
   const created = await SchoolService.create(data)
   res.status(201).json({ ok: true, data: created })
 })
@@ -26,7 +26,7 @@ router.patch('/:schoolId', async (req, res) => {
   const { schoolId } = parseParams(z.object({ schoolId: z.string().min(1) }), req)
   const updates = parseBody(updateSchoolSchema, req)
 
-  await authorize(req, res.locals.db, { scope: 'super' })
+  await authorize(req, { scope: 'super' })
   const existing = await SchoolService.findById(schoolId)
   if (!existing) {
     throw notFound()

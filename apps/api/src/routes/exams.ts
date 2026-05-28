@@ -12,9 +12,9 @@ import ExamService, {
 } from '../services/exam'
 import { schoolDb } from '../middlewares/school'
 
-export const batchExamsRouter = Router({ mergeParams: true })
+const router = Router({ mergeParams: true })
 
-batchExamsRouter.get('/', async (req, res) => {
+router.get('/', async (req, res) => {
   const db = schoolDb(res)
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const query = parseQuery(listExamsQuerySchema, req)
@@ -26,7 +26,7 @@ batchExamsRouter.get('/', async (req, res) => {
   res.status(200).json({ ok: true, data: result })
 })
 
-batchExamsRouter.post('/', async (req, res) => {
+router.post('/', async (req, res) => {
   const db = schoolDb(res)
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const data = parseBody(createExamSchema, req)
@@ -35,39 +35,35 @@ batchExamsRouter.post('/', async (req, res) => {
   res.status(201).json({ ok: true, data: created })
 })
 
-export const examsRouter = Router()
-
-examsRouter.patch('/:examId', async (req, res) => {
+router.patch('/:examId', async (req, res) => {
   const db = schoolDb(res)
-  const { examId } = parseParams(z.object({ examId: z.uuid() }), req)
+  const { batchId, examId } = parseParams(z.object({ batchId: z.uuid(), examId: z.uuid() }), req)
   const updates = parseBody(updateExamSchema, req)
 
-  const existing = await ExamService.findById(db, examId)
-  if (!existing) {
-    throw notFound()
-  }
-
-  await requireBatchAccess(req, db, existing.batchId, {
+  await requireBatchAccess(req, db, batchId, {
     batchPermission: { exam: ['update'] },
   })
+
+  const existing = await ExamService.findById(db, examId)
+  if (!existing || existing.batchId !== batchId) throw notFound()
 
   const updated = await ExamService.update(db, examId, updates)
   res.status(200).json({ ok: true, data: updated })
 })
 
-examsRouter.post('/:examId/results', async (req, res) => {
+router.post('/:examId/results', async (req, res) => {
   const db = schoolDb(res)
-  const { examId } = parseParams(z.object({ examId: z.uuid() }), req)
+  const { batchId, examId } = parseParams(z.object({ batchId: z.uuid(), examId: z.uuid() }), req)
   const items = parseBody(recordResultsSchema, req)
-  const existing = await ExamService.findById(db, examId)
-  if (!existing) {
-    throw notFound()
-  }
-
-  const access = await requireBatchAccess(req, db, existing.batchId, {
+  const access = await requireBatchAccess(req, db, batchId, {
     batchPermission: { exam: ['update'] },
   })
+
+  const existing = await ExamService.findById(db, examId)
+  if (!existing || existing.batchId !== batchId) throw notFound()
 
   const result = await ExamService.recordResults(db, examId, access.userId, items)
   res.status(200).json({ ok: true, data: result })
 })
+
+export default router

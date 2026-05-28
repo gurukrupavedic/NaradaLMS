@@ -28,7 +28,7 @@ router.put('/', async (req, res) => {
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
   const inputs = parseBody(putSegmentsSchema, req)
 
-  await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
+  await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
   const chapter = await ChapterReader.findById(db, chapterId, authoringView)
   if (!chapter) {
     throw notFound()

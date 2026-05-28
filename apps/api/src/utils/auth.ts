@@ -7,15 +7,13 @@ import {
   hasBatchPermission,
   type SchoolPermissions,
 } from '@narada/auth/permissions'
-import type { Database, SchoolDatabase } from '@narada/db'
+import type { SchoolDatabase } from '@narada/db'
 import { forbidden, unauthorized } from '../error'
 import EnrollmentService, { type Enrollment } from '../services/enrollment'
 
 export type AuthenticatedSession = typeof auth.$Infer.Session
 
-type AuthClaim =
-  | { scope: 'super' }
-  | { scope: 'school'; permissions: SchoolPermissions }
+type AuthClaim = { scope: 'super' } | { scope: 'school'; permissions: SchoolPermissions }
 
 type BatchAccessClaim = {
   schoolPermission?: SchoolPermissions
@@ -54,11 +52,7 @@ export async function getSession(req: Request): Promise<AuthenticatedSession> {
   return sessionPromise
 }
 
-export async function hasPermission(
-  req: Request,
-  db: Database,
-  claim: AuthClaim,
-): Promise<boolean> {
+export async function hasPermission(req: Request, claim: AuthClaim): Promise<boolean> {
   const { user } = await getSession(req)
   if (user.isSuperAdmin) {
     return true
@@ -80,13 +74,9 @@ export async function hasPermission(
   return false
 }
 
-async function authorizeClaim(
-  req: Request,
-  db: Database,
-  claim: AuthClaim,
-): Promise<AuthenticatedSession> {
+async function authorizeClaim(req: Request, claim: AuthClaim): Promise<AuthenticatedSession> {
   const session = await getSession(req)
-  const allowed = await hasPermission(req, db, claim)
+  const allowed = await hasPermission(req, claim)
   if (!allowed) {
     throw forbidden()
   }
@@ -106,7 +96,7 @@ export async function requireBatchAccess(
   }
 
   if (claim.schoolPermission) {
-    const allowed = await hasPermission(req, db, {
+    const allowed = await hasPermission(req, {
       scope: 'school',
       permissions: claim.schoolPermission,
     })
@@ -129,12 +119,12 @@ export async function requireBatchListAccess(
   db: SchoolDatabase,
   claim: BatchListClaim,
 ): Promise<Extract<BatchAccess, { kind: 'schoolWide' | 'enrolled' }>> {
-  const { user } = await authorizeClaim(req, db, {
+  const { user } = await authorizeClaim(req, {
     scope: 'school',
     permissions: claim.schoolPermission,
   })
 
-  const canSeeAll = await hasPermission(req, db, {
+  const canSeeAll = await hasPermission(req, {
     scope: 'school',
     permissions: claim.allBatchesPermission,
   })

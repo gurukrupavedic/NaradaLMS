@@ -15,7 +15,7 @@ router.put('/:audioId/mappings', async (req, res) => {
   const { audioId } = parseParams(z.object({ audioId: z.uuid() }), req)
   const inputs = parseBody(putMappingsSchema, req)
 
-  await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
+  await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
   const asset = await AudioService.findById(db, audioId)
   if (!asset) {
     throw notFound()

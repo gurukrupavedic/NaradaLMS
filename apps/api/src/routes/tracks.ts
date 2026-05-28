@@ -36,7 +36,7 @@ router.post('/', async (req, res) => {
   const db = schoolDb(res)
   const data = parseBody(createTrackSchema, req)
 
-  await authorize(req, db, { scope: 'school', permissions: { content: ['create'] } })
+  await authorize(req, { scope: 'school', permissions: { content: ['create'] } })
   const created = await TrackService.create(db, data)
   res.status(201).json({ ok: true, data: created })
 })
@@ -46,7 +46,7 @@ router.patch('/:trackId', async (req, res) => {
   const { trackId } = parseParams(z.object({ trackId: z.uuid() }), req)
   const updateData = parseBody(updateTrackSchema, req)
 
-  await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
+  await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
   const existing = await TrackService.findById(db, trackId, authoringView)
   if (!existing) {
     throw notFound()

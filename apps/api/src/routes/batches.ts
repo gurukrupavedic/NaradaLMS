@@ -45,7 +45,7 @@ router.post('/', async (req, res) => {
   const db = schoolDb(res)
   const data = parseBody(createBatchSchema, req)
 
-  await authorize(req, db, { scope: 'school', permissions: { batch: ['create'] } })
+  await authorize(req, { scope: 'school', permissions: { batch: ['create'] } })
   const created = await BatchService.create(db, data)
   res.status(201).json({ ok: true, data: created })
 })
@@ -55,7 +55,7 @@ router.patch('/:batchId', async (req, res) => {
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const updates = parseBody(updateBatchSchema, req)
 
-  await authorize(req, db, { scope: 'school', permissions: { batch: ['update'] } })
+  await authorize(req, { scope: 'school', permissions: { batch: ['update'] } })
   const existing = await BatchService.findById(db, batchId)
   if (!existing) {
     throw notFound()

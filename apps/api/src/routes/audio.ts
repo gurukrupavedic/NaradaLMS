@@ -9,12 +9,11 @@ import { authorize } from '../utils/auth'
 const router = Router({ mergeParams: true })
 
 router.post('/presign', async (req, res: Response<unknown, SchoolScopedLocals>) => {
-  const db = schoolDb(res)
   const { school } = res.locals
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
   const { contentType } = parseBody(getUploadUrlSchema, req)
 
-  await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
+  await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
   const result = await AudioService.getUploadUrl(school.id, chapterId, contentType)
   res.status(200).json({ ok: true, data: result })
 })
@@ -25,7 +24,7 @@ router.post('/', async (req, res: Response<unknown, SchoolScopedLocals>) => {
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
   const data = parseBody(createAudioAssetSchema, req)
 
-  await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
+  await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
   const { created, asset } = await AudioService.create(db, school.id, chapterId, data)
   const status = created ? 201 : 200
   res.status(status).json({ ok: true, data: asset })
@@ -38,7 +37,7 @@ router.delete('/:audioId', async (req, res) => {
     req,
   )
 
-  await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
+  await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
   await AudioService.remove(db, audioId, chapterId)
   res.status(204).send()
 })

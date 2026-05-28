@@ -29,7 +29,7 @@ router.post('/', async (req, res) => {
   const db = schoolDb(res)
   const data = parseBody(createChapterSchema, req)
 
-  await authorize(req, db, { scope: 'school', permissions: { content: ['create'] } })
+  await authorize(req, { scope: 'school', permissions: { content: ['create'] } })
   const created = await ChapterService.create(db, data)
   res.status(201).json({ ok: true, data: created })
 })
@@ -39,7 +39,7 @@ router.patch('/:chapterId', async (req, res) => {
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
   const updates = parseBody(updateChapterSchema, req)
 
-  await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
+  await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
   const existing = await ChapterReader.findById(db, chapterId, authoringView)
   if (!existing) {
     throw notFound()
@@ -59,17 +59,16 @@ router.post('/:chapterId/script', async (req, res) => {
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
   const { objectKey, script } = parseBody(applyScriptSchema, req)
 
-  await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
+  await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
   const updated = await ChapterService.applyScript(db, chapterId, script, objectKey)
   res.status(200).json({ ok: true, data: updated })
 })
 
 router.post('/:chapterId/script/presign', async (req, res) => {
-  const db = schoolDb(res)
   const school = res.locals.school!
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
-  await authorize(req, db, { scope: 'school', permissions: { content: ['update'] } })
+  await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
   const result = await objectLifecycle.stageChapterTextUpload({ schoolId: school.id, chapterId })
   res.status(200).json({ ok: true, data: result })
 })
