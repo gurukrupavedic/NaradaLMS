@@ -7,7 +7,10 @@ import EvaluationService, {
   createEvaluationSchema,
   listEvaluationsQuerySchema,
 } from '../services/evaluation'
+import BatchService from '../services/batch'
+import EnrollmentService from '../services/enrollment'
 import { schoolDb } from '../middlewares/school'
+import { notFound, unprocessable } from '../error'
 
 const router = Router({ mergeParams: true })
 
@@ -56,6 +59,23 @@ router.post('/', async (req, res) => {
   const access = await requireBatchAccess(req, db, batchId, {
     batchPermission: { evaluation: ['create'] },
   })
+
+  const studentEnrollment = await EnrollmentService.findOne(db, data.studentId, batchId)
+  if (!studentEnrollment || studentEnrollment.role !== 'student') {
+    throw unprocessable('student is not enrolled in this batch')
+  }
+
+  const chapter = await db.query.chapter.findFirst({
+    where: (t, { eq }) => eq(t.id, data.chapterId),
+    columns: { trackId: true },
+  })
+
+  if (!chapter) throw notFound()
+  const batch = await BatchService.findById(db, batchId)
+  if (!batch) throw notFound()
+  if (chapter.trackId !== batch.trackId) {
+    throw unprocessable('chapter does not belong to this batch track')
+  }
 
   const created = await EvaluationService.create(db, access.userId, data)
   res.status(201).json({ ok: true, data: created })
