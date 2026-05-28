@@ -7,7 +7,6 @@ CREATE TYPE "proficiencyLevel" AS ENUM('absent', 'notStarted', 'practicing', 'le
 CREATE TYPE "script" AS ENUM('te', 'sa', 'en');--> statement-breakpoint
 CREATE SEQUENCE "chapter_order_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1;--> statement-breakpoint
 CREATE SEQUENCE "track_order_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1;--> statement-breakpoint
-CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA public;--> statement-breakpoint
 CREATE TABLE "audioAsset" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"chapterId" uuid NOT NULL,
