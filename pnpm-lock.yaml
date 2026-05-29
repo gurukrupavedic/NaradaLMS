@@ -23,7 +23,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/storage
       better-auth:
-        specifier: ^1.2.8
+        specifier: 1.6.11
         version: 1.6.11(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.21.0))(pg@8.21.0)(vitest@4.1.7(@types/node@20.19.41)(vite@8.0.14(@types/node@20.19.41)(esbuild@0.28.0)(tsx@4.22.3)))
       cors:
         specifier: ^2.8.6
@@ -87,7 +87,7 @@ importers:
         specifier: workspace:*
         version: link:../env
       better-auth:
-        specifier: ^1.2.8
+        specifier: 1.6.11
         version: 1.6.11(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@types/pg@8.20.0)(kysely@0.28.17)(pg@8.21.0))(pg@8.21.0)(vitest@4.1.7(@types/node@20.19.41)(vite@8.0.14(@types/node@20.19.41)(esbuild@0.28.0)(tsx@4.22.3)))
       zod:
         specifier: ^4.4.3
