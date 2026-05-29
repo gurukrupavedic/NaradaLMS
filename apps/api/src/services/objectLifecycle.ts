@@ -6,6 +6,7 @@ import {
   listObjectSummaries,
   objectExists,
 } from '@narada/storage'
+import { getRequestCachedValue } from '../requestContext'
 
 const ORPHAN_SAFETY_WINDOW_MS = 60 * 60 * 1000
 
@@ -67,7 +68,7 @@ export const objectLifecycle = {
   },
 
   async urlFor(objectKey: string): Promise<string> {
-    return getDownloadUrl(objectKey)
+    return getRequestCachedValue(`download-url:${objectKey}`, () => getDownloadUrl(objectKey))
   },
 
   async deleteObject(objectKey: string): Promise<void> {
