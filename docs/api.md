@@ -65,7 +65,7 @@ BetterAuth handles signup, login, and session management. Profile data (phone, c
 
 Return the current user's school memberships for the school picker.
 
-**Access:** Authenticated user. This endpoint is not school-scoped and does not require `X-School-Id`.
+**Access:** Authenticated user. This endpoint is not school-scoped and does not require `X-School-Slug`.
 
 ```ts
 // Response 200
@@ -83,7 +83,7 @@ Return the current user's school memberships for the school picker.
 }
 ```
 
-### `PATCH /v1/profile`
+### `PATCH /v1/batches/:batchId/enrollments/me`
 
 Update the current user's profile fields on one batch enrollment.
 
@@ -92,7 +92,6 @@ Update the current user's profile fields on one batch enrollment.
 ```ts
 // Request (phone or city required)
 {
-  batchId: string,
   phone?: string,
   city?: string
 }
@@ -107,7 +106,7 @@ Update the current user's profile fields on one batch enrollment.
 
 ## Schools
 
-Operate on the shared schema. Require super-admin access. Not scoped to `X-School-Id`.
+Operate on the shared schema. Require super-admin access. Not scoped to `X-School-Slug`.
 
 ### `GET /v1/schools`
 
@@ -119,13 +118,12 @@ List all schools.
 // Response 200
 {
   ok: true,
-  data: {
-    items: Array<{
-      id: string,
-      name: string,
-      slug: string
-    }>
-  }
+  data: Array<{
+    id: string,
+    name: string,
+    slug: string,
+    createdAt: string
+  }>
 }
 ```
 
@@ -146,11 +144,10 @@ Create a school and provision its database schema.
 {
   ok: true,
   data: {
-    school: {
-      id: string,
-      name: string,
-      slug: string
-    }
+    id: string,
+    name: string,
+    slug: string,
+    createdAt: string
   }
 }
 ```
@@ -172,11 +169,10 @@ Update school metadata.
 {
   ok: true,
   data: {
-    school: {
-      id: string,
-      name: string,
-      slug: string
-    }
+    id: string,
+    name: string,
+    slug: string,
+    createdAt: string
   }
 }
 ```
@@ -195,20 +191,21 @@ List all tracks with their chapters. Students only see tracks that contain publi
 // Response 200
 {
   ok: true,
-  data: {
-    items: Array<{
+  data: Array<{
+    id: string,
+    name: string,
+    order: number,
+    chapters: Array<{
       id: string,
-      name: string,
+      trackId: string,
+      code: string,
+      title: string,
+      status: "draft" | "published",
       order: number,
-      chapters: Array<{
-        id: string,
-        code: string,
-        title: string,
-        status: "draft" | "published",
-        order: number
-      }>
+      script: "te" | "sa" | "en" | null,
+      textUrl: string | null
     }>
-  }
+  }>
 }
 ```
 
@@ -225,18 +222,19 @@ Single track with full chapter list.
 {
   ok: true,
   data: {
-    track: {
+    id: string,
+    name: string,
+    order: number,
+    chapters: Array<{
       id: string,
-      name: string,
+      trackId: string,
+      code: string,
+      title: string,
+      status: "draft" | "published",
       order: number,
-      chapters: Array<{
-        id: string,
-        code: string,
-        title: string,
-        status: "draft" | "published",
-        order: number
-      }>
-    }
+      script: "te" | "sa" | "en" | null,
+      textUrl: string | null
+    }>
   }
 }
 ```
@@ -257,11 +255,9 @@ Create a track.
 {
   ok: true,
   data: {
-    track: {
-      id: string,
-      name: string,
-      order: number
-    }
+    id: string,
+    name: string,
+    order: number
   }
 }
 ```
@@ -285,11 +281,9 @@ Update track metadata or reorder.
 {
   ok: true,
   data: {
-    track: {
-      id: string,
-      name: string,
-      order: number
-    }
+    id: string,
+    name: string,
+    order: number
   }
 }
 ```
@@ -550,7 +544,7 @@ Register an uploaded audio asset after the R2 upload completes.
   duration: number
 }
 
-// Response 201
+// Response 201 for a new asset, 200 for an idempotent retry
 {
   ok: true,
   data: {
@@ -572,10 +566,7 @@ Remove an audio asset. Cascades to delete all audio mappings referencing this as
 
 ```ts
 // Response 204
-{
-  ok: true,
-  data: null
-}
+// No response body
 ```
 
 ---
@@ -620,7 +611,7 @@ List batches. Admins see all batches. Users see only batches they are enrolled i
 
 **Access:** All school members.
 
-**Query params:** `?status=active,upcoming` (comma-separated filter), `?cursor=`, `?limit=`
+**Query params:** `?status=active`, `?cursor=`, `?limit=`
 
 ```ts
 // Response 200
@@ -631,12 +622,10 @@ List batches. Admins see all batches. Users see only batches they are enrolled i
       id: string,
       code: string,
       trackId: string,
-      trackName: string,
       startDate: string | null,
       status: "active" | "completed" | "upcoming",
       scheduledAt: string | null,
-      meetingUrl: string | null,
-      memberCount: number
+      meetingUrl: string | null
     }>,
     nextCursor: string | null
   }
@@ -654,23 +643,23 @@ Batch detail with enrolled members.
 {
   ok: true,
   data: {
-    batch: {
-      id: string,
-      code: string,
-      trackId: string,
-      trackName: string,
-      startDate: string | null,
-      status: "active" | "completed" | "upcoming",
-      scheduledAt: string | null,
-      meetingUrl: string | null,
-      members: Array<{
-        userId: string,
-        name: string,
-        role: "instructor" | "ta" | "student",
-        status: "active" | "inactive" | "completed",
-        joinedAt: string
-      }>
-    }
+    id: string,
+    code: string,
+    trackId: string,
+    startDate: string | null,
+    status: "active" | "completed" | "upcoming",
+    scheduledAt: string | null,
+    meetingUrl: string | null,
+    members: Array<{
+      userId: string,
+      userName: string,
+      userEmail: string,
+      role: "instructor" | "ta" | "student",
+      status: "active" | "inactive" | "completed",
+      phone: string | null,
+      city: string | null,
+      joinedAt: string | null
+    }>
   }
 }
 ```
@@ -695,16 +684,13 @@ Create a batch.
 {
   ok: true,
   data: {
-    batch: {
-      id: string,
-      code: string,
-      trackId: string,
-      trackName: string,
-      startDate: string | null,
-      status: "upcoming",
-      scheduledAt: string | null,
-      meetingUrl: string | null
-    }
+    id: string,
+    code: string,
+    trackId: string,
+    startDate: string | null,
+    status: "upcoming",
+    scheduledAt: string | null,
+    meetingUrl: string | null
   }
 }
 ```
@@ -723,24 +709,21 @@ Update batch metadata.
   code?: string,
   status?: "active" | "completed" | "upcoming",
   startDate?: string,
-  scheduledAt?: string | null,
-  meetingUrl?: string | null
+  scheduledAt?: string,
+  meetingUrl?: string
 }
 
 // Response 200
 {
   ok: true,
   data: {
-    batch: {
-      id: string,
-      code: string,
-      trackId: string,
-      trackName: string,
-      startDate: string | null,
-      status: "active" | "completed" | "upcoming",
-      scheduledAt: string | null,
-      meetingUrl: string | null
-    }
+    id: string,
+    code: string,
+    trackId: string,
+    startDate: string | null,
+    status: "active" | "completed" | "upcoming",
+    scheduledAt: string | null,
+    meetingUrl: string | null
   }
 }
 ```
@@ -766,13 +749,13 @@ Add a member to a batch.
 {
   ok: true,
   data: {
-    member: {
-      userId: string,
-      name: string,
-      role: "instructor" | "ta" | "student",
-      status: "active",
-      joinedAt: string
-    }
+    userId: string,
+    batchId: string,
+    phone: string | null,
+    city: string | null,
+    role: "instructor" | "ta" | "student",
+    status: "active",
+    joinedAt: string | null
   }
 }
 ```
@@ -787,10 +770,7 @@ Remove a member from a batch.
 
 ```ts
 // Response 204
-{
-  ok: true,
-  data: null
-}
+// No response body
 ```
 
 ---
@@ -942,11 +922,11 @@ Schedule an exam for a student.
 }
 ```
 
-### `PATCH /v1/exams/:examId`
+### `PATCH /v1/batches/:batchId/exams/:examId`
 
 Update an exam (reschedule, change status).
 
-**Access:** Admin, or Instructor/TA in the exam's batch.
+**Access:** Admin, or Instructor/TA in this batch.
 
 ```ts
 // Request (all fields optional)
@@ -968,11 +948,11 @@ Update an exam (reschedule, change status).
 }
 ```
 
-### `POST /v1/exams/:examId/results`
+### `POST /v1/batches/:batchId/exams/:examId/results`
 
 Record results for an exam. Creates one evaluation per chapter and links them to the exam via `exam_result`.
 
-**Access:** Admin, or Instructor/TA in the exam's batch.
+**Access:** Admin, or Instructor/TA in this batch.
 
 ```ts
 // Request
@@ -1000,7 +980,7 @@ Array<{
 }
 ```
 
-Each result creates an `evaluation` row and an `exam_result` row linking it to the exam. Recording results does not change the exam status; use `PATCH /v1/exams/:examId` to mark an exam as `"completed"`.
+Each result creates an `evaluation` row and an `exam_result` row linking it to the exam. Recording results does not change the exam status; use `PATCH /v1/batches/:batchId/exams/:examId` to mark an exam as `"completed"`.
 
 ---
 

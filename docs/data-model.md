@@ -8,7 +8,7 @@ Narada supports multiple schools under a single deployment. Each school is fully
 
 ### Strategy: Schema-per-School
 
-Each school gets its own Postgres schema (`school_<id>`) containing all domain tables. A single `shared` schema holds platform-wide data: user accounts, school registry, and BetterAuth-managed tables (including the organization plugin tables).
+Each school gets its own Postgres schema (`school_<id>`) containing all domain tables. The `public` schema holds platform-wide data: user accounts, school registry, and BetterAuth-managed tables (including the organization plugin tables).
 
 **Why schema-per-school over row-level isolation:**
 
@@ -27,7 +27,7 @@ The organization plugin provides the primitives for multi-tenancy, membership, a
 
 | BetterAuth Primitive | Narada Concept          | Notes                                                                                                                                                                       |
 | -------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Organization**     | **School**              | A school is an organization. `name`, `slug`, `logo`, and `metadata` are managed by BetterAuth. Replaces the custom `shared.school` table.                                   |
+| **Organization**     | **School**              | A school is an organization. `name`, `slug`, `logo`, and `metadata` are managed by BetterAuth. Replaces the custom school table.                                              |
 | **Member**           | **School membership**   | A user's membership in a school with a school-level role. Replaces the custom `profile` table for membership and role tracking.                                             |
 | **Member role**      | **School-level role**   | BetterAuth provides `owner`, `admin`, and `member` roles. These map to our school-level roles (see Roles section).                                                          |
 | **Invitation**       | **School invitation**   | Invite-only onboarding. BetterAuth manages the full invitation lifecycle: pending, accepted, rejected, canceled. Invitations carry the school role to assign on acceptance. |
@@ -52,7 +52,7 @@ The organization plugin provides the primitives for multi-tenancy, membership, a
 
 There are five roles in the system, split across two levels:
 
-**Platform-level** (on `shared.user`):
+**Platform-level** (on `public.user`):
 
 - **Super Admin** — can perform any operation across any school. Represented by an `isSuperAdmin` flag on the user, not a school-scoped role.
 
@@ -105,15 +105,15 @@ The only difference between `owner` and `admin` is `school.delete`. Batch-level 
 
 ---
 
-## Shared Schema
+## Public Schema
 
-These tables live in the `shared` schema and are shared across all schools. The BetterAuth-managed tables are created and maintained by BetterAuth's organization plugin.
+These tables live in the `public` schema and are shared across all schools. The BetterAuth-managed tables are created and maintained by BetterAuth's organization plugin.
 
 ### BetterAuth Core Tables
 
 BetterAuth manages these tables for authentication state. They are not modified directly by application code.
 
-#### `shared.user`
+#### `public.user`
 
 User accounts. Extended with a super-admin flag.
 
@@ -122,49 +122,49 @@ User accounts. Extended with a super-admin flag.
 | `id`             | text        | PK               |
 | `name`           | text        | NOT NULL         |
 | `email`          | text        | UNIQUE, NOT NULL |
-| `email_verified` | boolean     | DEFAULT false    |
+| `emailVerified`  | boolean     | DEFAULT false    |
 | `image`          | text        |                  |
-| `is_super_admin` | boolean     | DEFAULT false    |
-| `created_at`     | timestamptz | NOT NULL         |
-| `updated_at`     | timestamptz | NOT NULL         |
+| `isSuperAdmin`   | boolean     | DEFAULT false    |
+| `createdAt`      | timestamptz | NOT NULL         |
+| `updatedAt`      | timestamptz | NOT NULL         |
 
-#### `shared.session`
+#### `public.session`
 
-Session state. BetterAuth manages creation and expiry. The organization plugin adds `active_organization_id` to track the user's active organization.
+Session state. BetterAuth manages creation and expiry. The organization plugin adds `activeOrganizationId` to track the user's active organization.
 
 | Column                   | Type        | Constraints         |
 | ------------------------ | ----------- | ------------------- |
 | `id`                     | text        | PK                  |
-| `user_id`                | text        | FK to `user.id`     |
+| `userId`                 | text        | FK to `user.id`     |
 | `token`                  | text        | UNIQUE, NOT NULL    |
-| `expires_at`             | timestamptz | NOT NULL            |
-| `ip_address`             | text        |                     |
-| `user_agent`             | text        |                     |
-| `active_organization_id` | text        | Added by org plugin |
-| `created_at`             | timestamptz | NOT NULL            |
-| `updated_at`             | timestamptz | NOT NULL            |
+| `expiresAt`              | timestamptz | NOT NULL            |
+| `ipAddress`              | text        |                     |
+| `userAgent`              | text        |                     |
+| `activeOrganizationId`   | text        | Added by org plugin |
+| `createdAt`              | timestamptz | NOT NULL            |
+| `updatedAt`              | timestamptz | NOT NULL            |
 
-#### `shared.account`
+#### `public.account`
 
 OAuth providers and credential accounts.
 
 | Column                     | Type        | Constraints     |
 | -------------------------- | ----------- | --------------- |
 | `id`                       | text        | PK              |
-| `user_id`                  | text        | FK to `user.id` |
-| `account_id`               | text        | NOT NULL        |
-| `provider_id`              | text        | NOT NULL        |
-| `access_token`             | text        |                 |
-| `refresh_token`            | text        |                 |
-| `access_token_expires_at`  | timestamptz |                 |
-| `refresh_token_expires_at` | timestamptz |                 |
+| `userId`                   | text        | FK to `user.id` |
+| `accountId`                | text        | NOT NULL        |
+| `providerId`               | text        | NOT NULL        |
+| `accessToken`              | text        |                 |
+| `refreshToken`             | text        |                 |
+| `accessTokenExpiresAt`     | timestamptz |                 |
+| `refreshTokenExpiresAt`    | timestamptz |                 |
 | `scope`                    | text        |                 |
-| `id_token`                 | text        |                 |
+| `idToken`                  | text        |                 |
 | `password`                 | text        |                 |
-| `created_at`               | timestamptz | NOT NULL        |
-| `updated_at`               | timestamptz | NOT NULL        |
+| `createdAt`                | timestamptz | NOT NULL        |
+| `updatedAt`                | timestamptz | NOT NULL        |
 
-#### `shared.verification`
+#### `public.verification`
 
 Email verification and password reset tokens.
 
@@ -173,17 +173,17 @@ Email verification and password reset tokens.
 | `id`         | text        | PK          |
 | `identifier` | text        | NOT NULL    |
 | `value`      | text        | NOT NULL    |
-| `expires_at` | timestamptz | NOT NULL    |
-| `created_at` | timestamptz | NOT NULL    |
-| `updated_at` | timestamptz | NOT NULL    |
+| `expiresAt`  | timestamptz | NOT NULL    |
+| `createdAt`  | timestamptz | NOT NULL    |
+| `updatedAt`  | timestamptz | NOT NULL    |
 
 ### BetterAuth Organization Plugin Tables
 
-These tables are created by BetterAuth's organization plugin. They live in the shared schema alongside the core auth tables.
+These tables are created by BetterAuth's organization plugin. They live in the public schema alongside the core auth tables.
 
-#### `shared.organization`
+#### `public.organization`
 
-The registry of all schools. Each school is a BetterAuth organization. Replaces the previous custom `shared.school` table.
+The registry of all schools. Each school is a BetterAuth organization. Replaces the previous custom school table.
 
 | Column       | Type        | Constraints      |
 | ------------ | ----------- | ---------------- |
@@ -191,44 +191,43 @@ The registry of all schools. Each school is a BetterAuth organization. Replaces 
 | `name`       | text        | NOT NULL         |
 | `slug`       | text        | UNIQUE, NOT NULL |
 | `logo`       | text        |                  |
-| `metadata`   | text        | JSON string      |
-| `created_at` | timestamptz | NOT NULL         |
-| `updated_at` | timestamptz |                  |
+| `metadata`   | text        |                  |
+| `createdAt`  | timestamptz | NOT NULL         |
 
-The `metadata` field stores school-specific configuration as a JSON string (e.g., feature flags, branding settings).
+The `metadata` field is BetterAuth-managed free-form text. Narada does not currently read it.
 
-#### `shared.member`
+#### `public.member`
 
 A user's membership in a school. One member record per user per school. The `role` field carries the school-level role. Replaces the previous custom `profile` table for membership tracking.
 
 | Column            | Type        | Constraints                                                       |
 | ----------------- | ----------- | ----------------------------------------------------------------- |
 | `id`              | text        | PK                                                                |
-| `organization_id` | text        | FK to `organization.id`, NOT NULL                                 |
-| `user_id`         | text        | FK to `user.id`, NOT NULL                                         |
+| `organizationId`  | text        | FK to `organization.id`, NOT NULL                                 |
+| `userId`          | text        | FK to `user.id`, NOT NULL                                         |
 | `role`            | text        | NOT NULL; `'owner'`, `'admin'`, or `'member'`. DEFAULT `'member'` |
-| `created_at`      | timestamptz | NOT NULL                                                          |
+| `createdAt`       | timestamptz | NOT NULL                                                          |
 
-#### `shared.invitation`
+#### `public.invitation`
 
 Pending invitations to join a school. BetterAuth manages the full lifecycle.
 
 | Column            | Type        | Constraints                                                                          |
 | ----------------- | ----------- | ------------------------------------------------------------------------------------ |
 | `id`              | text        | PK                                                                                   |
-| `organization_id` | text        | FK to `organization.id`, NOT NULL                                                    |
+| `organizationId`  | text        | FK to `organization.id`, NOT NULL                                                    |
 | `email`           | text        | NOT NULL                                                                             |
-| `role`            | text        | NOT NULL; role to assign on acceptance                                               |
+| `role`            | text        | role to assign on acceptance                                                         |
 | `status`          | text        | NOT NULL; `'pending'`, `'accepted'`, `'rejected'`, `'canceled'`. DEFAULT `'pending'` |
-| `inviter_id`      | text        | FK to `user.id`, NOT NULL                                                            |
-| `expires_at`      | timestamptz | NOT NULL                                                                             |
-| `created_at`      | timestamptz | NOT NULL                                                                             |
+| `inviterId`       | text        | FK to `user.id`, NOT NULL                                                            |
+| `expiresAt`       | timestamptz | NOT NULL                                                                             |
+| `createdAt`       | timestamptz | NOT NULL                                                                             |
 
 ---
 
 ## Per-School Schema
 
-These tables are created in each `school_<id>` schema. All tables are identical across schools. References to `shared.user.id` are stored as plain text IDs (logical references, not cross-schema foreign keys) and validated at the application layer.
+These tables are created in each `school_<id>` schema. All tables are identical across schools. References to `public.user.id` are stored as plain text IDs (logical references, not cross-schema foreign keys) and validated at the application layer.
 
 ### `track`
 
@@ -247,7 +246,7 @@ A single learnable unit within a track. Chapters hold metadata plus the current 
 | Column          | Type | Constraints                                         |
 | --------------- | ---- | --------------------------------------------------- |
 | `id`            | uuid | PK                                                  |
-| `track_id`      | uuid | FK to `track.id`                                    |
+| `trackId`       | uuid | FK to `track.id`                                    |
 | `code`          | text | UNIQUE                                              |
 | `title`         | text | NOT NULL                                            |
 | `status`        | enum | `'draft'`, `'published'`                            |
@@ -262,33 +261,33 @@ A selected text range within the chapter's current text. Stored as byte offsets 
 | Column       | Type | Constraints        |
 | ------------ | ---- | ------------------ |
 | `id`         | uuid | PK                 |
-| `chapter_id` | uuid | FK to `chapter.id` |
+| `chapterId`  | uuid | FK to `chapter.id` |
 | `start`      | int  | NOT NULL           |
 | `end`        | int  | NOT NULL           |
 
-### `audio_asset`
+### `audioAsset`
 
 An audio file associated with a chapter (e.g., slow recitation, normal pace). Stored in R2.
 
 | Column       | Type  | Constraints             |
 | ------------ | ----- | ----------------------- |
 | `id`         | uuid  | PK                      |
-| `chapter_id` | uuid  | FK to `chapter.id`      |
+| `chapterId`  | uuid  | FK to `chapter.id`      |
 | `label`      | text  |                         |
 | `objectKey`  | text  | NOT NULL; R2 object key |
 | `duration`   | float | NOT NULL; seconds       |
 
-### `audio_mapping`
+### `audioMapping`
 
 Links a segment to a time range within an audio asset.
 
 | Column           | Type  | Constraints                        |
 | ---------------- | ----- | ---------------------------------- |
-| `segment_id`     | uuid  | FK to `segment.id`                 |
-| `audio_asset_id` | uuid  | FK to `audio_asset.id`             |
-| `audio_start`    | float | NOT NULL; seconds                  |
-| `audio_end`      | float | NOT NULL; seconds                  |
-|                  |       | PK(`segment_id`, `audio_asset_id`) |
+| `segmentId`      | uuid  | FK to `segment.id`                 |
+| `audioAssetId`   | uuid  | FK to `audioAsset.id`              |
+| `audioStart`     | float | NOT NULL; seconds                  |
+| `audioEnd`       | float | NOT NULL; seconds                  |
+|                  |       | PK(`segmentId`, `audioAssetId`)    |
 
 ### `batch`
 
@@ -298,11 +297,11 @@ Domain-specific data for a batch (cohort). Batch membership and batch-level role
 | -------------- | ----------- | --------------------------------------- |
 | `id`           | uuid        | PK                                      |
 | `code`         | text        | UNIQUE                                  |
-| `track_id`     | uuid        | FK to `track.id`                        |
-| `start_date`   | date        |                                         |
+| `trackId`      | uuid        | FK to `track.id`                        |
+| `startDate`    | date        |                                         |
 | `status`       | enum        | `'active'`, `'completed'`, `'upcoming'` |
-| `scheduled_at` | timestamptz |                                         |
-| `meeting_url`  | text        |                                         |
+| `scheduledAt`  | timestamptz |                                         |
+| `meetingUrl`   | text        |                                         |
 
 ### `enrollment`
 
@@ -310,14 +309,14 @@ Batch-level role assignment and profile data. This table records that a user bel
 
 | Column      | Type        | Constraints                             |
 | ----------- | ----------- | --------------------------------------- |
-| `user_id`   | text        | logical ref to `shared.user.id`         |
-| `batch_id`  | uuid        | FK to `batch.id`                        |
+| `userId`    | text        | logical ref to `public.user.id`         |
+| `batchId`   | uuid        | FK to `batch.id`                        |
 | `phone`     | text        |                                         |
 | `city`      | text        |                                         |
 | `role`      | enum        | `'instructor'`, `'ta'`, `'student'`     |
 | `status`    | enum        | `'active'`, `'inactive'`, `'completed'` |
-| `joined_at` | timestamptz |                                         |
-|             |             | PK(`user_id`, `batch_id`)               |
+| `joinedAt`  | timestamptz |                                         |
+|             |             | PK(`userId`, `batchId`)                 |
 
 ### `evaluation`
 
@@ -326,12 +325,12 @@ An instructor's assessment of a student's proficiency on a chapter. Evaluations 
 | Column         | Type        | Constraints                                                                                |
 | -------------- | ----------- | ------------------------------------------------------------------------------------------ |
 | `id`           | uuid        | PK                                                                                         |
-| `student_id`   | text        | logical ref to `shared.user.id`                                                            |
-| `chapter_id`   | uuid        | FK to `chapter.id`                                                                         |
+| `studentId`    | text        | logical ref to `public.user.id`                                                            |
+| `chapterId`    | uuid        | FK to `chapter.id`                                                                         |
 | `level`        | enum        | `'notStarted'`, `'practicing'`, `'level1'`, `'level2'`, `'level3'`, `'level4'`, `'absent'` |
 | `notes`        | text        |                                                                                            |
-| `evaluator_id` | text        | logical ref to `shared.user.id`                                                            |
-| `evaluated_at` | timestamptz |                                                                                            |
+| `evaluatorId`  | text        | logical ref to `public.user.id`                                                            |
+| `evaluatedAt`  | timestamptz |                                                                                            |
 
 ### `exam`
 
@@ -340,21 +339,21 @@ A scheduled exam for a specific student in a batch.
 | Column         | Type        | Constraints                                                 |
 | -------------- | ----------- | ----------------------------------------------------------- |
 | `id`           | uuid        | PK                                                          |
-| `batch_id`     | uuid        | FK to `batch.id`                                            |
-| `student_id`   | text        | logical ref to `shared.user.id`                             |
-| `scheduled_at` | timestamptz | NOT NULL                                                    |
+| `batchId`      | uuid        | FK to `batch.id`                                            |
+| `studentId`    | text        | logical ref to `public.user.id`                             |
+| `scheduledAt`  | timestamptz | NOT NULL                                                    |
 | `status`       | enum        | `'scheduled'`, `'inProgress'`, `'completed'`, `'cancelled'` |
 
-### `exam_result`
+### `examResult`
 
 Links an exam to the evaluation produced for a specific chapter.
 
 | Column          | Type | Constraints                 |
 | --------------- | ---- | --------------------------- |
-| `exam_id`       | uuid | FK to `exam.id`             |
-| `chapter_id`    | uuid | FK to `chapter.id`          |
-| `evaluation_id` | uuid | FK to `evaluation.id`       |
-|                 |      | PK(`exam_id`, `chapter_id`) |
+| `examId`        | uuid | FK to `exam.id`             |
+| `chapterId`     | uuid | FK to `chapter.id`          |
+| `evaluationId`  | uuid | FK to `evaluation.id`       |
+|                 |      | PK(`examId`, `chapterId`)   |
 
 ---
 
@@ -364,10 +363,11 @@ All binary content (chapter text, audio files) is stored in Cloudflare R2. Objec
 
 ```
 schools/
-  {organization_id}/
+  {organizationId}/
     chapters/
-      {chapter_id}/
-        text.txt
+      {chapterId}/
+        text/
+          {random_uuid}.txt
         audio/
           {random_uuid}.{ext}
 ```
