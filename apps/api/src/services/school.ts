@@ -6,6 +6,7 @@ import {
   publicDb,
   provisionSchool,
   dropSchoolSchema,
+  uuidv7,
 } from '@narada/db'
 import { conflict, internalError, notFound } from '../error'
 import { requireNonEmpty } from '../utils/validate'
@@ -59,7 +60,7 @@ export default class SchoolService {
     })
 
     if (existing) throw conflict()
-    const id = crypto.randomUUID()
+    const id = uuidv7()
     const rows = await publicDb
       .insert(organization)
       .values({ id, ...data, createdAt: new Date() })

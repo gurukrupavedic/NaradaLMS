@@ -8,7 +8,7 @@ CREATE TYPE "script" AS ENUM('te', 'sa', 'en');--> statement-breakpoint
 CREATE SEQUENCE "chapter_order_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1;--> statement-breakpoint
 CREATE SEQUENCE "track_order_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1;--> statement-breakpoint
 CREATE TABLE "audioAsset" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"chapterId" uuid NOT NULL,
 	"label" text,
 	"objectKey" text NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE "audioMapping" (
 );
 --> statement-breakpoint
 CREATE TABLE "batch" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"code" text NOT NULL,
 	"trackId" uuid NOT NULL,
 	"startDate" date,
@@ -35,7 +35,7 @@ CREATE TABLE "batch" (
 );
 --> statement-breakpoint
 CREATE TABLE "chapter" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"trackId" uuid NOT NULL,
 	"code" text NOT NULL,
 	"title" text NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE "enrollment" (
 );
 --> statement-breakpoint
 CREATE TABLE "evaluation" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"studentId" text NOT NULL,
 	"chapterId" uuid NOT NULL,
 	"level" "proficiencyLevel" NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE "evaluation" (
 );
 --> statement-breakpoint
 CREATE TABLE "exam" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"batchId" uuid NOT NULL,
 	"studentId" text NOT NULL,
 	"scheduledAt" timestamp NOT NULL,
@@ -83,14 +83,14 @@ CREATE TABLE "examResult" (
 );
 --> statement-breakpoint
 CREATE TABLE "segment" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"chapterId" uuid NOT NULL,
 	"start" integer NOT NULL,
 	"end" integer NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "track" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
 	"order" integer DEFAULT nextval('track_order_seq') NOT NULL
 );

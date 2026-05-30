@@ -14,6 +14,7 @@ import {
   uniqueIndex,
   check,
 } from 'drizzle-orm/pg-core'
+import { uuidv7 } from '../ids'
 
 export const trackOrderSeq = pgSequence('track_order_seq', { startWith: 1 })
 export const chapterOrderSeq = pgSequence('chapter_order_seq', { startWith: 1 })
@@ -40,7 +41,7 @@ export const examStatus = pgEnum('examStatus', [
 ])
 
 export const track = pgTable('track', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: uuid('id').primaryKey().$defaultFn(uuidv7),
   name: text('name').notNull(),
   order: integer('order')
     .notNull()
@@ -50,7 +51,7 @@ export const track = pgTable('track', {
 export const chapter = pgTable(
   'chapter',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
     trackId: uuid('trackId')
       .notNull()
       .references(() => track.id),
@@ -69,7 +70,7 @@ export const chapter = pgTable(
 export const segment = pgTable(
   'segment',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
     chapterId: uuid('chapterId')
       .notNull()
       .references(() => chapter.id, { onDelete: 'cascade' }),
@@ -85,7 +86,7 @@ export const segment = pgTable(
 export const audioAsset = pgTable(
   'audioAsset',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
     chapterId: uuid('chapterId')
       .notNull()
       .references(() => chapter.id),
@@ -118,7 +119,7 @@ export const audioMapping = pgTable(
 )
 
 export const batch = pgTable('batch', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: uuid('id').primaryKey().$defaultFn(uuidv7),
   code: text('code').notNull().unique(),
   trackId: uuid('trackId')
     .notNull()
@@ -151,7 +152,7 @@ export const enrollment = pgTable(
 export const evaluation = pgTable(
   'evaluation',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
     studentId: text('studentId').notNull(),
     chapterId: uuid('chapterId')
       .notNull()
@@ -167,7 +168,7 @@ export const evaluation = pgTable(
 export const exam = pgTable(
   'exam',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
     batchId: uuid('batchId')
       .notNull()
       .references(() => batch.id),
