@@ -54,7 +54,7 @@ export const chapter = pgTable(
     id: uuid('id').primaryKey().$defaultFn(uuidv7),
     trackId: uuid('trackId')
       .notNull()
-      .references(() => track.id),
+      .references(() => track.id, { onDelete: 'cascade' }),
     code: text('code').notNull().unique(),
     title: text('title').notNull(),
     status: chapterStatus('status').notNull().default('draft'),
@@ -89,7 +89,7 @@ export const audioAsset = pgTable(
     id: uuid('id').primaryKey().$defaultFn(uuidv7),
     chapterId: uuid('chapterId')
       .notNull()
-      .references(() => chapter.id),
+      .references(() => chapter.id, { onDelete: 'cascade' }),
     label: text('label'),
     objectKey: text('objectKey').notNull(),
     duration: real('duration').notNull(),
@@ -136,7 +136,7 @@ export const enrollment = pgTable(
     userId: text('userId').notNull(),
     batchId: uuid('batchId')
       .notNull()
-      .references(() => batch.id),
+      .references(() => batch.id, { onDelete: 'cascade' }),
     phone: text('phone'),
     city: text('city'),
     role: enrollmentRole('role').notNull(),
