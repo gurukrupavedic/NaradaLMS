@@ -24,7 +24,7 @@ export async function dropSchoolSchema(organizationId: string) {
   const adminPool = new Pool({ connectionString: env.DATABASE_URL })
   try {
     await drizzle(adminPool).execute(
-      sql`DROP SCHEMA IF EXISTS ${sql.raw(quotePgIdentifier(schoolSchemaName(organizationId)))} CASCADE`,
+      sql`DROP SCHEMA IF EXISTS ${sql.identifier(schoolSchemaName(organizationId))} CASCADE`,
     )
   } finally {
     await adminPool.end()
@@ -35,9 +35,7 @@ export async function provisionSchool(organizationId: string) {
   const schemaName = schoolSchemaName(organizationId)
   const adminPool = new Pool({ connectionString: env.DATABASE_URL })
   try {
-    await drizzle(adminPool).execute(
-      sql`CREATE SCHEMA IF NOT EXISTS ${sql.raw(quotePgIdentifier(schemaName))}`,
-    )
+    await drizzle(adminPool).execute(sql`CREATE SCHEMA IF NOT EXISTS ${sql.identifier(schemaName)}`)
   } finally {
     await adminPool.end()
   }

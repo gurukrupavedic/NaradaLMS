@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { and, asc, eq, gt, or } from 'drizzle-orm'
+import { and, asc, eq, gt, or, sql } from 'drizzle-orm'
 
 import { userIdSchema } from '@narada/auth/ids'
 import { hasBatchPermission } from '@narada/auth/permissions'
@@ -174,6 +174,10 @@ export default class ExamService {
         const resultRows = await tx
           .insert(examResult)
           .values({ examId, chapterId: item.chapterId, evaluationId: evalRow.id })
+          .onConflictDoUpdate({
+            target: [examResult.examId, examResult.chapterId],
+            set: { evaluationId: sql`excluded.${sql.identifier('evaluationId')}` },
+          })
           .returning()
 
         const resultRow = resultRows.at(0)
