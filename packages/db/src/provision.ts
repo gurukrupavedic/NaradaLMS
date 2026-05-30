@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url'
 import path from 'path'
 
 import { env } from '@narada/env'
+import { sql } from 'drizzle-orm'
 
 const migrationsFolder = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -20,19 +21,26 @@ export function quotePgIdentifier(identifier: string) {
 }
 
 export async function dropSchoolSchema(organizationId: string) {
-  const pool = new Pool({ connectionString: env.DATABASE_URL })
+  const adminPool = new Pool({ connectionString: env.DATABASE_URL })
   try {
-    await pool.query(`DROP SCHEMA IF EXISTS ${quotePgIdentifier(schoolSchemaName(organizationId))} CASCADE`)
+    await drizzle(adminPool).execute(
+      sql`DROP SCHEMA IF EXISTS ${sql.raw(quotePgIdentifier(schoolSchemaName(organizationId)))} CASCADE`,
+    )
   } finally {
-    await pool.end()
+    await adminPool.end()
   }
 }
 
 export async function provisionSchool(organizationId: string) {
   const schemaName = schoolSchemaName(organizationId)
   const adminPool = new Pool({ connectionString: env.DATABASE_URL })
-  await adminPool.query(`CREATE SCHEMA IF NOT EXISTS ${quotePgIdentifier(schemaName)}`)
-  await adminPool.end()
+  try {
+    await drizzle(adminPool).execute(
+      sql`CREATE SCHEMA IF NOT EXISTS ${sql.raw(quotePgIdentifier(schemaName))}`,
+    )
+  } finally {
+    await adminPool.end()
+  }
 
   const schoolPool = new Pool({
     connectionString: env.DATABASE_URL,

@@ -9,6 +9,7 @@
     "start": "node dist/index.js",
     "lint": "eslint .",
     "format": "prettier . --write --ignore-path ../../.prettierignore",
+    "schools:create": "tsx src/scripts/createSchool.ts",
     "objects:janitor": "tsx src/scripts/releaseObjectOrphans.ts",
     "typecheck": "tsc --noEmit"
   },

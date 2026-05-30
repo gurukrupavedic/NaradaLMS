@@ -106,7 +106,11 @@ Update the current user's profile fields on one batch enrollment.
 
 ## Schools
 
-Operate on the shared schema. Require super-admin access. Not scoped to `X-School-Slug`.
+Operate on the public schema. Require super-admin access. Not scoped to `X-School-Slug`.
+
+School creation is currently an operator action, not an HTTP endpoint. Use
+`SCHOOL_NAME="..." SCHOOL_SLUG="..." pnpm schools:create` to create a school and provision
+its database schema.
 
 ### `GET /v1/schools`
 
@@ -124,31 +128,6 @@ List all schools.
     slug: string,
     createdAt: string
   }>
-}
-```
-
-### `POST /v1/schools`
-
-Create a school and provision its database schema.
-
-**Access:** Super Admin.
-
-```ts
-// Request
-{
-  name: string,
-  slug: string
-}
-
-// Response 201
-{
-  ok: true,
-  data: {
-    id: string,
-    name: string,
-    slug: string,
-    createdAt: string
-  }
 }
 ```
 
