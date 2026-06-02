@@ -11,7 +11,6 @@ import {
   enrollment,
   evaluation,
   exam,
-  examResult,
 } from './school'
 
 // ─── Auth relations ───────────────────────────────────────────────────────────
@@ -91,13 +90,8 @@ export const evaluationRelations = relations(evaluation, ({ one }) => ({
   chapter: one(chapter, { fields: [evaluation.chapterId], references: [chapter.id] }),
 }))
 
-export const examRelations = relations(exam, ({ one, many }) => ({
+export const examRelations = relations(exam, ({ one }) => ({
   batch: one(batch, { fields: [exam.batchId], references: [batch.id] }),
-  results: many(examResult),
-}))
-
-export const examResultRelations = relations(examResult, ({ one }) => ({
-  exam: one(exam, { fields: [examResult.examId], references: [exam.id] }),
-  chapter: one(chapter, { fields: [examResult.chapterId], references: [chapter.id] }),
-  evaluation: one(evaluation, { fields: [examResult.evaluationId], references: [evaluation.id] }),
+  chapter: one(chapter, { fields: [exam.chapterId], references: [chapter.id] }),
+  evaluation: one(evaluation, { fields: [exam.evaluationId], references: [evaluation.id] }),
 }))

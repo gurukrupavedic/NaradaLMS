@@ -171,28 +171,18 @@ export const exam = pgTable(
     batchId: uuid('batchId')
       .notNull()
       .references(() => batch.id),
-    studentId: text('studentId').notNull(),
-    scheduledAt: timestamp('scheduledAt').notNull(),
-    status: examStatus('status').notNull().default('scheduled'),
-  },
-  table => [
-    index('exam_batchId_idx').on(table.batchId),
-    index('exam_studentId_idx').on(table.studentId),
-  ],
-)
-
-export const examResult = pgTable(
-  'examResult',
-  {
-    examId: uuid('examId')
-      .notNull()
-      .references(() => exam.id),
     chapterId: uuid('chapterId')
       .notNull()
       .references(() => chapter.id),
-    evaluationId: uuid('evaluationId')
-      .notNull()
-      .references(() => evaluation.id),
+    studentId: text('studentId').notNull(),
+    scheduledAt: timestamp('scheduledAt').notNull(),
+    status: examStatus('status').notNull().default('scheduled'),
+    evaluationId: uuid('evaluationId').references(() => evaluation.id),
+    performedAt: timestamp('performedAt'),
   },
-  table => [primaryKey({ columns: [table.examId, table.chapterId] })],
+  table => [
+    index('exam_batchId_idx').on(table.batchId),
+    index('exam_chapterId_idx').on(table.chapterId),
+    index('exam_studentId_idx').on(table.studentId),
+  ],
 )

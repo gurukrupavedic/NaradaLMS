@@ -7,7 +7,7 @@ import { requireBatchAccess } from '../utils/auth'
 import ExamService, {
   createExamSchema,
   listExamsQuerySchema,
-  recordResultsSchema,
+  recordResultSchema,
   updateExamSchema,
 } from '../services/exam'
 import { schoolDb } from '../middlewares/school'
@@ -54,7 +54,7 @@ router.patch('/:examId', async (req, res) => {
 router.post('/:examId/results', async (req, res) => {
   const db = schoolDb(res)
   const { batchId, examId } = parseParams(z.object({ batchId: z.uuid(), examId: z.uuid() }), req)
-  const items = parseBody(recordResultsSchema, req)
+  const data = parseBody(recordResultSchema, req)
   const access = await requireBatchAccess(req, db, batchId, {
     batchPermission: { exam: ['update'] },
   })
@@ -62,7 +62,7 @@ router.post('/:examId/results', async (req, res) => {
   const existing = await ExamService.findById(db, examId)
   if (!existing || existing.batchId !== batchId) throw notFound()
 
-  const result = await ExamService.recordResults(db, examId, access.userId, items)
+  const result = await ExamService.recordResult(db, examId, access.userId, data)
   res.status(200).json({ ok: true, data: result })
 })
 

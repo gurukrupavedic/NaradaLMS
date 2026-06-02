@@ -919,9 +919,12 @@ List exams for a batch. Students only see their own exams.
     items: Array<{
       id: string,
       batchId: string,
+      chapterId: string,
       studentId: string,
       scheduledAt: string,
-      status: "scheduled" | "inProgress" | "completed" | "cancelled"
+      status: "scheduled" | "inProgress" | "completed" | "cancelled",
+      evaluationId: string | null,
+      performedAt: string | null
     }>,
     nextCursor: string | null
   }
@@ -938,6 +941,7 @@ Schedule an exam for a student.
 // Request
 {
   studentId: string,
+  chapterId: string,
   scheduledAt: string
 }
 
@@ -947,9 +951,12 @@ Schedule an exam for a student.
   data: {
     id: string,
     batchId: string,
+    chapterId: string,
     studentId: string,
     scheduledAt: string,
-    status: "scheduled"
+    status: "scheduled",
+    evaluationId: null,
+    performedAt: null
   }
 }
 ```
@@ -964,7 +971,7 @@ Update an exam (reschedule, change status).
 // Request (all fields optional)
 {
   scheduledAt?: string,
-  status?: "scheduled" | "inProgress" | "completed" | "cancelled"
+  status?: "scheduled" | "inProgress" | "cancelled"
 }
 
 // Response 200
@@ -973,26 +980,28 @@ Update an exam (reschedule, change status).
   data: {
     id: string,
     batchId: string,
+    chapterId: string,
     studentId: string,
     scheduledAt: string,
-    status: "scheduled" | "inProgress" | "completed" | "cancelled"
+    status: "scheduled" | "inProgress" | "completed" | "cancelled",
+    evaluationId: string | null,
+    performedAt: string | null
   }
 }
 ```
 
 ### `POST /v1/batches/:batchId/exams/:examId/results`
 
-Record results for an exam. Creates one evaluation per chapter and links them to the exam via `exam_result`.
+Record or replace the result for an exam. Creates a new evaluation and points the exam at it.
 
 **Access:** Admin, or Instructor/TA in this batch.
 
 ```ts
 // Request
-Array<{
-  chapterId: string,
+{
   level: ProficiencyLevel,
   notes?: string
-}>
+}
 
 // Response 200
 {
@@ -1000,19 +1009,17 @@ Array<{
   data: {
     id: string,
     batchId: string,
+    chapterId: string,
     studentId: string,
     scheduledAt: string,
     status: "scheduled" | "inProgress" | "completed" | "cancelled",
-    results: Array<{
-      examId: string,
-      chapterId: string,
-      evaluationId: string
-    }>
+    evaluationId: string,
+    performedAt: string
   }
 }
 ```
 
-Each result creates an `evaluation` row and an `exam_result` row linking it to the exam. Recording results does not change the exam status; use `PATCH /v1/batches/:batchId/exams/:examId` to mark an exam as `"completed"`.
+Recording a result sets the exam status to `"completed"`. Re-recording creates a new `evaluation` row and updates the exam's `evaluationId` and `performedAt`.
 
 ---
 

@@ -1,5 +1,5 @@
 {
-  "id": "b8ce026f-6d25-4bd8-9645-333036a94620",
+  "id": "bc584fc5-ac22-4e0b-aae3-999aa1f76b04",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -583,6 +583,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "chapterId": {
+          "name": "chapterId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
         "studentId": {
           "name": "studentId",
           "type": "text",
@@ -602,6 +608,18 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'scheduled'"
+        },
+        "evaluationId": {
+          "name": "evaluationId",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "performedAt": {
+          "name": "performedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -610,6 +628,21 @@
           "columns": [
             {
               "expression": "batchId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "exam_chapterId_idx": {
+          "name": "exam_chapterId_idx",
+          "columns": [
+            {
+              "expression": "chapterId",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -649,55 +682,10 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.examResult": {
-      "name": "examResult",
-      "schema": "",
-      "columns": {
-        "examId": {
-          "name": "examId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
         },
-        "chapterId": {
-          "name": "chapterId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "evaluationId": {
-          "name": "evaluationId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "examResult_examId_exam_id_fk": {
-          "name": "examResult_examId_exam_id_fk",
-          "tableFrom": "examResult",
-          "tableTo": "exam",
-          "columnsFrom": [
-            "examId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "examResult_chapterId_chapter_id_fk": {
-          "name": "examResult_chapterId_chapter_id_fk",
-          "tableFrom": "examResult",
+        "exam_chapterId_chapter_id_fk": {
+          "name": "exam_chapterId_chapter_id_fk",
+          "tableFrom": "exam",
           "tableTo": "chapter",
           "columnsFrom": [
             "chapterId"
@@ -708,9 +696,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "examResult_evaluationId_evaluation_id_fk": {
-          "name": "examResult_evaluationId_evaluation_id_fk",
-          "tableFrom": "examResult",
+        "exam_evaluationId_evaluation_id_fk": {
+          "name": "exam_evaluationId_evaluation_id_fk",
+          "tableFrom": "exam",
           "tableTo": "evaluation",
           "columnsFrom": [
             "evaluationId"
@@ -722,15 +710,7 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {
-        "examResult_examId_chapterId_pk": {
-          "name": "examResult_examId_chapterId_pk",
-          "columns": [
-            "examId",
-            "chapterId"
-          ]
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
