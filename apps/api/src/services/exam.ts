@@ -1,12 +1,11 @@
 import { z } from 'zod'
-import { and, asc, eq, gt, or } from 'drizzle-orm'
+import { and, asc, eq, gt, inArray, or } from 'drizzle-orm'
 
 import { userIdSchema } from '@narada/auth/ids'
 import { hasBatchPermission } from '@narada/auth/permissions'
-import { batch, chapter, exam, evaluation, type SchoolDatabase } from '@narada/db'
+import { batch, chapter, enrollment, exam, evaluation, type SchoolDatabase } from '@narada/db'
 import { compoundCursor, dateCursorField, paginateResponse } from '../utils/cursor'
-import { internalError, notFound, unprocessable } from '../error'
-import type { BatchAccess } from '../utils/auth'
+import { internalError, notFound } from '../error'
 import { proficiencyLevelSchema } from './shared'
 import { requireNonEmpty } from '../utils/validate'
 
@@ -46,24 +45,54 @@ export type ListExamsQuery = z.infer<typeof listExamsQuerySchema>
 export type RecordResultData = z.infer<typeof recordResultSchema>
 
 export default class ExamService {
-  public static async findByBatch(
+  public static async findVisibleForUser(
     db: SchoolDatabase,
-    batchId: string,
-    options: ListExamsQuery & { access: BatchAccess },
+    userId: string,
+    options: ListExamsQuery,
   ): Promise<{ items: Exam[]; nextCursor: string | null }> {
-    const batchRow = await db.query.batch.findFirst({
-      where: (t, { eq }) => eq(t.id, batchId),
-    })
-    if (!batchRow) throw notFound()
+    const visibleBatchIds = await manageableBatchIds(db, userId)
+    if (visibleBatchIds.length === 0) {
+      return ExamService.findMany(db, [eq(exam.studentId, userId)], options)
+    }
 
-    const { access, status, cursor, limit } = options
+    const visibleChapterIds = db
+      .select({ id: chapter.id })
+      .from(chapter)
+      .innerJoin(batch, eq(batch.trackId, chapter.trackId))
+      .where(inArray(batch.id, visibleBatchIds))
 
-    const conditions = [eq(exam.batchId, batchId)]
-    const canSeeAll =
-      access.kind === 'schoolWide' ||
-      (access.kind === 'singleBatch' &&
-        hasBatchPermission(access.enrollment.role, { exam: ['update'] }))
-    if (!canSeeAll) conditions.push(eq(exam.studentId, access.userId))
+    const visibleStudentIds = db
+      .select({ id: enrollment.userId })
+      .from(enrollment)
+      .where(inArray(enrollment.batchId, visibleBatchIds))
+
+    const visibleExamCondition = or(
+      eq(exam.studentId, userId),
+      and(inArray(exam.chapterId, visibleChapterIds), inArray(exam.studentId, visibleStudentIds)),
+    )
+
+    if (!visibleExamCondition) {
+      return ExamService.findMany(db, [eq(exam.studentId, userId)], options)
+    }
+
+    return ExamService.findMany(db, [visibleExamCondition], options)
+  }
+
+  public static async findAll(
+    db: SchoolDatabase,
+    options: ListExamsQuery,
+  ): Promise<{ items: Exam[]; nextCursor: string | null }> {
+    return ExamService.findMany(db, [], options)
+  }
+
+  private static async findMany(
+    db: SchoolDatabase,
+    baseConditions: ReturnType<typeof eq>[],
+    options: ListExamsQuery,
+  ): Promise<{ items: Exam[]; nextCursor: string | null }> {
+    const { status, cursor, limit } = options
+    const conditions = [...baseConditions]
+
     if (status) conditions.push(eq(exam.status, status))
     if (cursor) {
       const cursorWhere = or(
@@ -95,17 +124,42 @@ export default class ExamService {
     return row
   }
 
-  public static async create(db: SchoolDatabase, batchId: string, data: CreateExamData): Promise<Exam> {
-    await assertChapterBelongsToBatchTrack(db, batchId, data.chapterId)
-
+  public static async create(db: SchoolDatabase, data: CreateExamData): Promise<Exam> {
     const rows = await db
       .insert(exam)
-      .values({ batchId, ...data })
+      .values(data)
       .returning()
 
     const row = rows.at(0)
     if (!row) throw internalError()
     return row
+  }
+
+  public static async canManage(
+    db: SchoolDatabase,
+    userId: string,
+    data: Pick<Exam, 'studentId' | 'chapterId'>,
+  ): Promise<boolean> {
+    const chapterRow = await db.query.chapter.findFirst({
+      where: (t, { eq }) => eq(t.id, data.chapterId),
+      columns: { trackId: true },
+    })
+
+    if (!chapterRow) return false
+    const studentRows = await db
+      .select({ batchId: enrollment.batchId })
+      .from(enrollment)
+      .innerJoin(batch, eq(batch.id, enrollment.batchId))
+      .where(and(eq(enrollment.userId, data.studentId), eq(batch.trackId, chapterRow.trackId)))
+
+    const studentBatchIds = studentRows.map(row => row.batchId)
+    if (studentBatchIds.length === 0) return false
+    const rows = await db
+      .select({ role: enrollment.role })
+      .from(enrollment)
+      .where(and(eq(enrollment.userId, userId), inArray(enrollment.batchId, studentBatchIds)))
+
+    return rows.some(row => hasBatchPermission(row.role, { exam: ['update'] }))
   }
 
   public static async update(db: SchoolDatabase, examId: string, data: UpdateExamData): Promise<Exam> {
@@ -129,7 +183,6 @@ export default class ExamService {
     })
 
     if (!examRow) throw notFound()
-
     return db.transaction(async tx => {
       const evalRows = await tx
         .insert(evaluation)
@@ -144,7 +197,6 @@ export default class ExamService {
 
       const evalRow = evalRows.at(0)
       if (!evalRow) throw internalError()
-
       const rows = await tx
         .update(exam)
         .set({ evaluationId: evalRow.id, performedAt: new Date(), status: 'completed' })
@@ -158,19 +210,13 @@ export default class ExamService {
   }
 }
 
-async function assertChapterBelongsToBatchTrack(
-  db: SchoolDatabase,
-  batchId: string,
-  chapterId: string,
-): Promise<void> {
+async function manageableBatchIds(db: SchoolDatabase, userId: string): Promise<string[]> {
   const rows = await db
-    .select({ id: chapter.id })
-    .from(batch)
-    .innerJoin(chapter, eq(chapter.trackId, batch.trackId))
-    .where(and(eq(batch.id, batchId), eq(chapter.id, chapterId)))
-    .limit(1)
+    .select({ batchId: enrollment.batchId, role: enrollment.role })
+    .from(enrollment)
+    .where(eq(enrollment.userId, userId))
 
-  if (rows.length === 0) {
-    throw unprocessable(`Chapter ${chapterId} does not belong to this batch's track`)
-  }
+  return rows
+    .filter(row => hasBatchPermission(row.role, { exam: ['update'] }))
+    .map(row => row.batchId)
 }

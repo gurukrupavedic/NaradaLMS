@@ -168,9 +168,6 @@ export const exam = pgTable(
   'exam',
   {
     id: uuid('id').primaryKey().$defaultFn(uuidv7),
-    batchId: uuid('batchId')
-      .notNull()
-      .references(() => batch.id),
     chapterId: uuid('chapterId')
       .notNull()
       .references(() => chapter.id),
@@ -181,7 +178,6 @@ export const exam = pgTable(
     performedAt: timestamp('performedAt'),
   },
   table => [
-    index('exam_batchId_idx').on(table.batchId),
     index('exam_chapterId_idx').on(table.chapterId),
     index('exam_studentId_idx').on(table.studentId),
   ],

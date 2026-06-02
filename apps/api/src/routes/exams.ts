@@ -2,8 +2,8 @@ import { Router } from 'express'
 import { z } from 'zod'
 
 import { parseBody, parseParams, parseQuery } from '../utils/validate'
-import { notFound } from '../error'
-import { requireBatchAccess } from '../utils/auth'
+import { forbidden, notFound } from '../error'
+import { getSession } from '../utils/auth'
 import ExamService, {
   createExamSchema,
   listExamsQuerySchema,
@@ -12,40 +12,43 @@ import ExamService, {
 } from '../services/exam'
 import { schoolDb } from '../middlewares/school'
 
-const router = Router({ mergeParams: true })
+const router = Router()
 
 router.get('/', async (req, res) => {
   const db = schoolDb(res)
-  const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const query = parseQuery(listExamsQuerySchema, req)
-  const access = await requireBatchAccess(req, db, batchId, {
-    batchPermission: { exam: ['read'] },
-  })
+  const { user } = await getSession(req)
+  const result = user.isSuperAdmin
+    ? await ExamService.findAll(db, query)
+    : await ExamService.findVisibleForUser(db, user.id, query)
 
-  const result = await ExamService.findByBatch(db, batchId, { ...query, access })
   res.status(200).json({ ok: true, data: result })
 })
 
 router.post('/', async (req, res) => {
   const db = schoolDb(res)
-  const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const data = parseBody(createExamSchema, req)
-  await requireBatchAccess(req, db, batchId, { batchPermission: { exam: ['create'] } })
-  const created = await ExamService.create(db, batchId, data)
+  const { user } = await getSession(req)
+  if (!user.isSuperAdmin && !(await ExamService.canManage(db, user.id, data))) {
+    throw forbidden()
+  }
+
+  const created = await ExamService.create(db, data)
   res.status(201).json({ ok: true, data: created })
 })
 
 router.patch('/:examId', async (req, res) => {
   const db = schoolDb(res)
-  const { batchId, examId } = parseParams(z.object({ batchId: z.uuid(), examId: z.uuid() }), req)
+  const { examId } = parseParams(z.object({ examId: z.uuid() }), req)
   const updates = parseBody(updateExamSchema, req)
-
-  await requireBatchAccess(req, db, batchId, {
-    batchPermission: { exam: ['update'] },
-  })
-
+  const { user } = await getSession(req)
   const existing = await ExamService.findById(db, examId)
-  if (!existing || existing.batchId !== batchId) throw notFound()
+  if (!existing) throw notFound()
+
+  const canManage = await ExamService.canManage(db, user.id, existing)
+  if (!user.isSuperAdmin && !canManage) {
+    throw forbidden()
+  }
 
   const updated = await ExamService.update(db, examId, updates)
   res.status(200).json({ ok: true, data: updated })
@@ -53,16 +56,19 @@ router.patch('/:examId', async (req, res) => {
 
 router.post('/:examId/results', async (req, res) => {
   const db = schoolDb(res)
-  const { batchId, examId } = parseParams(z.object({ batchId: z.uuid(), examId: z.uuid() }), req)
+  const { examId } = parseParams(z.object({ examId: z.uuid() }), req)
   const data = parseBody(recordResultSchema, req)
-  const access = await requireBatchAccess(req, db, batchId, {
-    batchPermission: { exam: ['update'] },
-  })
+  const { user } = await getSession(req)
 
   const existing = await ExamService.findById(db, examId)
-  if (!existing || existing.batchId !== batchId) throw notFound()
+  if (!existing) throw notFound()
 
-  const result = await ExamService.recordResult(db, examId, access.userId, data)
+  const canManage = await ExamService.canManage(db, user.id, existing)
+  if (!user.isSuperAdmin && !canManage) {
+    throw forbidden()
+  }
+
+  const result = await ExamService.recordResult(db, examId, user.id, data)
   res.status(200).json({ ok: true, data: result })
 })
 

@@ -903,11 +903,12 @@ Results are ordered by `evaluatedAt` descending.
 
 ## Exams
 
-### `GET /v1/batches/:batchId/exams`
+### `GET /v1/exams`
 
-List exams for a batch. Students only see their own exams.
+List exams. Students see their own exams. Instructors/TAs also see exams for students in
+batches they teach, across chapters in those batches' tracks. Super-admins see all exams.
 
-**Access:** Admin, Instructor/TA in this batch, or Student (own exams only).
+**Access:** Authenticated school member.
 
 **Query params:** `?status=scheduled`, `?cursor=`, `?limit=`
 
@@ -918,7 +919,6 @@ List exams for a batch. Students only see their own exams.
   data: {
     items: Array<{
       id: string,
-      batchId: string,
       chapterId: string,
       studentId: string,
       scheduledAt: string,
@@ -931,11 +931,11 @@ List exams for a batch. Students only see their own exams.
 }
 ```
 
-### `POST /v1/batches/:batchId/exams`
+### `POST /v1/exams`
 
 Schedule an exam for a student.
 
-**Access:** Admin, or Instructor/TA in this batch.
+**Access:** Super Admin, or Instructor/TA in a batch where the student is enrolled and the chapter belongs to the batch track.
 
 ```ts
 // Request
@@ -950,7 +950,6 @@ Schedule an exam for a student.
   ok: true,
   data: {
     id: string,
-    batchId: string,
     chapterId: string,
     studentId: string,
     scheduledAt: string,
@@ -961,11 +960,11 @@ Schedule an exam for a student.
 }
 ```
 
-### `PATCH /v1/batches/:batchId/exams/:examId`
+### `PATCH /v1/exams/:examId`
 
 Update an exam (reschedule, change status).
 
-**Access:** Admin, or Instructor/TA in this batch.
+**Access:** Super Admin, or Instructor/TA in a batch where the exam's student is enrolled and the exam's chapter belongs to the batch track.
 
 ```ts
 // Request (all fields optional)
@@ -979,7 +978,6 @@ Update an exam (reschedule, change status).
   ok: true,
   data: {
     id: string,
-    batchId: string,
     chapterId: string,
     studentId: string,
     scheduledAt: string,
@@ -990,11 +988,11 @@ Update an exam (reschedule, change status).
 }
 ```
 
-### `POST /v1/batches/:batchId/exams/:examId/results`
+### `POST /v1/exams/:examId/results`
 
 Record or replace the result for an exam. Creates a new evaluation and points the exam at it.
 
-**Access:** Admin, or Instructor/TA in this batch.
+**Access:** Super Admin, or Instructor/TA in a batch where the exam's student is enrolled and the exam's chapter belongs to the batch track.
 
 ```ts
 // Request
@@ -1008,7 +1006,6 @@ Record or replace the result for an exam. Creates a new evaluation and points th
   ok: true,
   data: {
     id: string,
-    batchId: string,
     chapterId: string,
     studentId: string,
     scheduledAt: string,

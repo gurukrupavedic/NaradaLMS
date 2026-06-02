@@ -9,7 +9,7 @@ import segmentsRouter from './segments'
 import batchesRouter from './batches'
 import enrollmentRouter from './enrollment'
 import evaluationsRouter from './evaluations'
-import batchExamsRouter from './exams'
+import examsRouter from './exams'
 import audioRouter from './audio'
 import audioMappingsRouter from './audioMappings'
 import studentRouter from './student'
@@ -39,7 +39,7 @@ export default function setupRoutes(router: Router) {
     .use('/batches/:batchId/enrollments/me', batchEnrollmentProfileRouter)
     .use('/batches/:batchId/members', enrollmentRouter)
     .use('/batches/:batchId/evaluations', evaluationsRouter)
-    .use('/batches/:batchId/exams', batchExamsRouter)
+    .use('/exams', examsRouter)
     .use('/chapters/:chapterId/audio', audioRouter)
     .use('/audio', audioMappingsRouter)
     .use('/student', studentRouter)

@@ -78,7 +78,6 @@ export const audioMappingRelations = relations(audioMapping, ({ one }) => ({
 export const batchRelations = relations(batch, ({ one, many }) => ({
   track: one(track, { fields: [batch.trackId], references: [track.id] }),
   enrollments: many(enrollment),
-  exams: many(exam),
 }))
 
 export const enrollmentRelations = relations(enrollment, ({ one }) => ({
@@ -91,7 +90,6 @@ export const evaluationRelations = relations(evaluation, ({ one }) => ({
 }))
 
 export const examRelations = relations(exam, ({ one }) => ({
-  batch: one(batch, { fields: [exam.batchId], references: [batch.id] }),
   chapter: one(chapter, { fields: [exam.chapterId], references: [chapter.id] }),
   evaluation: one(evaluation, { fields: [exam.evaluationId], references: [evaluation.id] }),
 }))

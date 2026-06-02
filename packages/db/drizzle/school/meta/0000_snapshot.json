@@ -577,12 +577,6 @@
           "primaryKey": true,
           "notNull": true
         },
-        "batchId": {
-          "name": "batchId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
         "chapterId": {
           "name": "chapterId",
           "type": "uuid",
@@ -623,21 +617,6 @@
         }
       },
       "indexes": {
-        "exam_batchId_idx": {
-          "name": "exam_batchId_idx",
-          "columns": [
-            {
-              "expression": "batchId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "exam_chapterId_idx": {
           "name": "exam_chapterId_idx",
           "columns": [
@@ -670,19 +649,6 @@
         }
       },
       "foreignKeys": {
-        "exam_batchId_batch_id_fk": {
-          "name": "exam_batchId_batch_id_fk",
-          "tableFrom": "exam",
-          "tableTo": "batch",
-          "columnsFrom": [
-            "batchId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
         "exam_chapterId_chapter_id_fk": {
           "name": "exam_chapterId_chapter_id_fk",
           "tableFrom": "exam",

@@ -68,7 +68,6 @@ CREATE TABLE "evaluation" (
 --> statement-breakpoint
 CREATE TABLE "exam" (
 	"id" uuid PRIMARY KEY NOT NULL,
-	"batchId" uuid NOT NULL,
 	"chapterId" uuid NOT NULL,
 	"studentId" text NOT NULL,
 	"scheduledAt" timestamp NOT NULL,
@@ -98,7 +97,6 @@ ALTER TABLE "batch" ADD CONSTRAINT "batch_trackId_track_id_fk" FOREIGN KEY ("tra
 ALTER TABLE "chapter" ADD CONSTRAINT "chapter_trackId_track_id_fk" FOREIGN KEY ("trackId") REFERENCES "public"."track"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "enrollment" ADD CONSTRAINT "enrollment_batchId_batch_id_fk" FOREIGN KEY ("batchId") REFERENCES "public"."batch"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "evaluation" ADD CONSTRAINT "evaluation_chapterId_chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "exam" ADD CONSTRAINT "exam_batchId_batch_id_fk" FOREIGN KEY ("batchId") REFERENCES "public"."batch"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "exam" ADD CONSTRAINT "exam_chapterId_chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "exam" ADD CONSTRAINT "exam_evaluationId_evaluation_id_fk" FOREIGN KEY ("evaluationId") REFERENCES "public"."evaluation"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "segment" ADD CONSTRAINT "segment_chapterId_chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."chapter"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -108,7 +106,6 @@ CREATE INDEX "chapter_trackId_idx" ON "chapter" USING btree ("trackId");--> stat
 CREATE UNIQUE INDEX "chapter_trackId_order_uidx" ON "chapter" USING btree ("trackId","order");--> statement-breakpoint
 CREATE INDEX "enrollment_batchId_idx" ON "enrollment" USING btree ("batchId");--> statement-breakpoint
 CREATE INDEX "evaluation_studentId_chapterId_idx" ON "evaluation" USING btree ("studentId","chapterId");--> statement-breakpoint
-CREATE INDEX "exam_batchId_idx" ON "exam" USING btree ("batchId");--> statement-breakpoint
 CREATE INDEX "exam_chapterId_idx" ON "exam" USING btree ("chapterId");--> statement-breakpoint
 CREATE INDEX "exam_studentId_idx" ON "exam" USING btree ("studentId");--> statement-breakpoint
 CREATE INDEX "segment_chapterId_idx" ON "segment" USING btree ("chapterId");--> statement-breakpoint
