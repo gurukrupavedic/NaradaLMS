@@ -294,8 +294,7 @@
           "name": "order",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "default": "nextval('chapter_order_seq')"
+          "notNull": true
         },
         "script": {
           "name": "script",
@@ -323,6 +322,27 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "chapter_trackId_order_uidx": {
+          "name": "chapter_trackId_order_uidx",
+          "columns": [
+            {
+              "expression": "trackId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -808,11 +828,26 @@
           "name": "order",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "default": "nextval('track_order_seq')"
+          "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "track_order_uidx": {
+          "name": "track_order_uidx",
+          "columns": [
+            {
+              "expression": "order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -891,28 +926,7 @@
     }
   },
   "schemas": {},
-  "sequences": {
-    "public.chapter_order_seq": {
-      "name": "chapter_order_seq",
-      "schema": "public",
-      "increment": "1",
-      "startWith": "1",
-      "minValue": "1",
-      "maxValue": "9223372036854775807",
-      "cache": "1",
-      "cycle": false
-    },
-    "public.track_order_seq": {
-      "name": "track_order_seq",
-      "schema": "public",
-      "increment": "1",
-      "startWith": "1",
-      "minValue": "1",
-      "maxValue": "9223372036854775807",
-      "cache": "1",
-      "cycle": false
-    }
-  },
+  "sequences": {},
   "roles": {},
   "policies": {},
   "views": {},

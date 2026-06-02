@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { asc, eq } from 'drizzle-orm'
+import { asc, eq, sql } from 'drizzle-orm'
 
 import { track, chapter, type SchoolDatabase } from '@narada/db'
-import { internalError } from '../error'
+import { internalError, unprocessable } from '../error'
 import { chapterResponse, type Chapter, type ChapterReadView } from './chapterReader'
 import { requireNonEmpty } from '../utils/validate'
 
@@ -15,14 +15,18 @@ export const createTrackSchema = z.object({
 export const updateTrackSchema = requireNonEmpty(
   z.object({
     name: z.string().min(1).optional(),
-    order: z.number().int().positive().optional(),
   }),
 )
+
+export const reorderTracksSchema = z.object({
+  ids: z.array(z.uuid()),
+})
 
 export type Track = typeof track.$inferSelect
 export type TrackWithChapters = Track & { chapters: TrackChapter[] }
 export type CreateTrackData = z.infer<typeof createTrackSchema>
 export type UpdateTrackData = z.infer<typeof updateTrackSchema>
+export type ReorderTracksData = z.infer<typeof reorderTracksSchema>
 
 type DbChapter = typeof chapter.$inferSelect
 
@@ -66,7 +70,10 @@ export default class TrackService {
   }
 
   public static async create(db: SchoolDatabase, data: CreateTrackData): Promise<Track> {
-    const rows = await db.insert(track).values(data).returning()
+    const rows = await db
+      .insert(track)
+      .values({ ...data, order: await TrackService.nextOrder(db) })
+      .returning()
     const row = rows.at(0)
     if (!row) throw internalError()
     return row
@@ -77,5 +84,46 @@ export default class TrackService {
     const row = rows.at(0)
     if (!row) throw internalError()
     return row
+  }
+
+  public static async reorder(db: SchoolDatabase, data: ReorderTracksData): Promise<Track[]> {
+    const existing = await db.query.track.findMany({ columns: { id: true } })
+    assertSameIds(existing.map(row => row.id), data.ids)
+
+    return await db.transaction(async tx => {
+      for (const [index, id] of data.ids.entries()) {
+        await tx.update(track).set({ order: -(index + 1) }).where(eq(track.id, id))
+      }
+
+      const rows: Track[] = []
+      for (const [index, id] of data.ids.entries()) {
+        const updated = await tx
+          .update(track)
+          .set({ order: index + 1 })
+          .where(eq(track.id, id))
+          .returning()
+        const row = updated.at(0)
+        if (!row) throw internalError()
+        rows.push(row)
+      }
+
+      return rows
+    })
+  }
+
+  private static async nextOrder(db: SchoolDatabase): Promise<number> {
+    const rows = await db.select({ next: sql<number>`coalesce(max(${track.order}), 0) + 1` }).from(track)
+    return rows.at(0)?.next ?? 1
+  }
+}
+
+function assertSameIds(existing: string[], requested: string[]): void {
+  if (existing.length !== requested.length) {
+    throw unprocessable('Reorder request must include every track exactly once')
+  }
+
+  const requestedIds = new Set(requested)
+  if (requestedIds.size !== requested.length || existing.some(id => !requestedIds.has(id))) {
+    throw unprocessable('Reorder request must include every track exactly once')
   }
 }

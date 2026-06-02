@@ -5,7 +5,8 @@ import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import { authorize } from '../utils/auth'
 import { authoringView, authorizeContentReadView } from '../utils/chapterView'
-import TrackService, { createTrackSchema, updateTrackSchema } from '../services/track'
+import TrackService, { createTrackSchema, reorderTracksSchema, updateTrackSchema } from '../services/track'
+import ChapterService, { reorderChaptersSchema } from '../services/chapter'
 import { schoolDb } from '../middlewares/school'
 
 const router = Router()
@@ -40,6 +41,15 @@ router.post('/', async (req, res) => {
   res.status(201).json({ ok: true, data: created })
 })
 
+router.put('/order', async (req, res) => {
+  const db = schoolDb(res)
+  const data = parseBody(reorderTracksSchema, req)
+
+  await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
+  const tracks = await TrackService.reorder(db, data)
+  res.status(200).json({ ok: true, data: tracks })
+})
+
 router.patch('/:trackId', async (req, res) => {
   const db = schoolDb(res)
   const { trackId } = parseParams(z.object({ trackId: z.uuid() }), req)
@@ -53,6 +63,21 @@ router.patch('/:trackId', async (req, res) => {
 
   const updated = await TrackService.update(db, trackId, updateData)
   res.status(200).json({ ok: true, data: updated })
+})
+
+router.put('/:trackId/chapters/order', async (req, res) => {
+  const db = schoolDb(res)
+  const { trackId } = parseParams(z.object({ trackId: z.uuid() }), req)
+  const data = parseBody(reorderChaptersSchema, req)
+
+  await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
+  const existing = await TrackService.findById(db, trackId, authoringView)
+  if (!existing) {
+    throw notFound()
+  }
+
+  const chapters = await ChapterService.reorder(db, trackId, data)
+  res.status(200).json({ ok: true, data: chapters })
 })
 
 export default router

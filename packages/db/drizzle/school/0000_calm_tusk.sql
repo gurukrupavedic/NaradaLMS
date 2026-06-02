@@ -5,8 +5,6 @@ CREATE TYPE "enrollmentStatus" AS ENUM('active', 'inactive', 'completed');--> st
 CREATE TYPE "examStatus" AS ENUM('scheduled', 'inProgress', 'completed', 'cancelled');--> statement-breakpoint
 CREATE TYPE "proficiencyLevel" AS ENUM('absent', 'notStarted', 'practicing', 'level1', 'level2', 'level3', 'level4');--> statement-breakpoint
 CREATE TYPE "script" AS ENUM('te', 'sa', 'en');--> statement-breakpoint
-CREATE SEQUENCE "chapter_order_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1;--> statement-breakpoint
-CREATE SEQUENCE "track_order_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1;--> statement-breakpoint
 CREATE TABLE "audioAsset" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"chapterId" uuid NOT NULL,
@@ -40,7 +38,7 @@ CREATE TABLE "chapter" (
 	"code" text NOT NULL,
 	"title" text NOT NULL,
 	"status" "chapterStatus" DEFAULT 'draft' NOT NULL,
-	"order" integer DEFAULT nextval('chapter_order_seq') NOT NULL,
+	"order" integer NOT NULL,
 	"script" "script",
 	"textObjectKey" text,
 	CONSTRAINT "chapter_code_unique" UNIQUE("code")
@@ -92,7 +90,7 @@ CREATE TABLE "segment" (
 CREATE TABLE "track" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
-	"order" integer DEFAULT nextval('track_order_seq') NOT NULL
+	"order" integer NOT NULL
 );
 --> statement-breakpoint
 ALTER TABLE "audioAsset" ADD CONSTRAINT "audioAsset_chapterId_chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "chapter"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -114,8 +112,10 @@ ALTER TABLE "segment" ADD CONSTRAINT "segment_chapter_no_overlap" EXCLUDE USING 
 CREATE INDEX "audioAsset_chapterId_idx" ON "audioAsset" USING btree ("chapterId");--> statement-breakpoint
 CREATE UNIQUE INDEX "audioAsset_chapterId_objectKey_idx" ON "audioAsset" USING btree ("chapterId","objectKey");--> statement-breakpoint
 CREATE INDEX "chapter_trackId_idx" ON "chapter" USING btree ("trackId");--> statement-breakpoint
+CREATE UNIQUE INDEX "chapter_trackId_order_uidx" ON "chapter" USING btree ("trackId","order");--> statement-breakpoint
 CREATE INDEX "enrollment_batchId_idx" ON "enrollment" USING btree ("batchId");--> statement-breakpoint
 CREATE INDEX "evaluation_studentId_chapterId_idx" ON "evaluation" USING btree ("studentId","chapterId");--> statement-breakpoint
 CREATE INDEX "exam_batchId_idx" ON "exam" USING btree ("batchId");--> statement-breakpoint
 CREATE INDEX "exam_studentId_idx" ON "exam" USING btree ("studentId");--> statement-breakpoint
-CREATE INDEX "segment_chapterId_idx" ON "segment" USING btree ("chapterId");
+CREATE INDEX "segment_chapterId_idx" ON "segment" USING btree ("chapterId");--> statement-breakpoint
+CREATE UNIQUE INDEX "track_order_uidx" ON "track" USING btree ("order");

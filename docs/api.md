@@ -241,19 +241,43 @@ Create a track.
 }
 ```
 
-Order is auto-assigned as the next value.
+Order is auto-assigned at the end of the track list.
+
+### `PUT /v1/tracks/order`
+
+Replace the full track order.
+
+**Access:** Admin.
+
+```ts
+// Request
+{
+  ids: string[]
+}
+
+// Response 200
+{
+  ok: true,
+  data: Array<{
+    id: string,
+    name: string,
+    order: number
+  }>
+}
+```
+
+The request must include every track exactly once.
 
 ### `PATCH /v1/tracks/:trackId`
 
-Update track metadata or reorder.
+Update track metadata.
 
 **Access:** Admin.
 
 ```ts
 // Request (all fields optional)
 {
-  name?: string,
-  order?: number
+  name?: string
 }
 
 // Response 200
@@ -345,6 +369,36 @@ Create a new chapter in a track.
 
 New chapters start as `draft` with auto-assigned order.
 
+### `PUT /v1/tracks/:trackId/chapters/order`
+
+Replace the full chapter order for one track.
+
+**Access:** Admin.
+
+```ts
+// Request
+{
+  ids: string[]
+}
+
+// Response 200
+{
+  ok: true,
+  data: Array<{
+    id: string,
+    trackId: string,
+    code: string,
+    title: string,
+    status: "draft" | "published",
+    order: number,
+    script: "te" | "sa" | "en" | null,
+    textUrl: string | null
+  }>
+}
+```
+
+The request must include every chapter in the track exactly once.
+
 ### `PATCH /v1/chapters/:chapterId`
 
 Update chapter metadata or status.
@@ -357,7 +411,6 @@ Update chapter metadata or status.
   title?: string,
   code?: string,
   status?: "draft" | "published",
-  order?: number,
   trackId?: string
 }
 

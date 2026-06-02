@@ -2,7 +2,6 @@ import { sql } from 'drizzle-orm'
 import {
   pgTable,
   pgEnum,
-  pgSequence,
   text,
   integer,
   real,
@@ -15,9 +14,6 @@ import {
   check,
 } from 'drizzle-orm/pg-core'
 import { uuidv7 } from '../ids'
-
-export const trackOrderSeq = pgSequence('track_order_seq', { startWith: 1 })
-export const chapterOrderSeq = pgSequence('chapter_order_seq', { startWith: 1 })
 
 export const chapterStatus = pgEnum('chapterStatus', ['draft', 'published'])
 export const script = pgEnum('script', ['te', 'sa', 'en'])
@@ -40,13 +36,15 @@ export const examStatus = pgEnum('examStatus', [
   'cancelled',
 ])
 
-export const track = pgTable('track', {
-  id: uuid('id').primaryKey().$defaultFn(uuidv7),
-  name: text('name').notNull(),
-  order: integer('order')
-    .notNull()
-    .default(sql`nextval('track_order_seq')`),
-})
+export const track = pgTable(
+  'track',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    name: text('name').notNull(),
+    order: integer('order').notNull(),
+  },
+  table => [uniqueIndex('track_order_uidx').on(table.order)],
+)
 
 export const chapter = pgTable(
   'chapter',
@@ -58,13 +56,14 @@ export const chapter = pgTable(
     code: text('code').notNull().unique(),
     title: text('title').notNull(),
     status: chapterStatus('status').notNull().default('draft'),
-    order: integer('order')
-      .notNull()
-      .default(sql`nextval('chapter_order_seq')`),
+    order: integer('order').notNull(),
     script: script('script'),
     textObjectKey: text('textObjectKey'),
   },
-  table => [index('chapter_trackId_idx').on(table.trackId)],
+  table => [
+    index('chapter_trackId_idx').on(table.trackId),
+    uniqueIndex('chapter_trackId_order_uidx').on(table.trackId, table.order),
+  ],
 )
 
 export const segment = pgTable(
