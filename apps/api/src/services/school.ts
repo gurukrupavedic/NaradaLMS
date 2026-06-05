@@ -71,8 +71,7 @@ export default class SchoolService {
     try {
       await provisionSchool(id)
     } catch (error) {
-      await publicDb.delete(organization).where(eq(organization.id, id))
-      await dropSchoolSchema(id)
+      await rollbackFailedCreate(id, error)
       throw error
     }
 
@@ -100,5 +99,20 @@ export default class SchoolService {
     const row = rows.at(0)
     if (!row) throw notFound()
     return schoolResponse(row)
+  }
+}
+
+async function rollbackFailedCreate(schoolId: string, cause: unknown): Promise<void> {
+  const results = await Promise.allSettled([
+    publicDb.delete(organization).where(eq(organization.id, schoolId)),
+    dropSchoolSchema(schoolId),
+  ])
+  const failures = results.filter(result => result.status === 'rejected')
+
+  if (failures.length > 0) {
+    throw new AggregateError(
+      [cause, ...failures.map(result => result.reason)],
+      `failed to provision school ${schoolId}; rollback also failed`,
+    )
   }
 }

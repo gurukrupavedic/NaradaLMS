@@ -16,8 +16,33 @@ export function schoolSchemaName(organizationId: string) {
   return `school-${organizationId}`
 }
 
+export function organizationIdFromSchoolSchema(schemaName: string) {
+  return schemaName.startsWith('school-') ? schemaName.slice('school-'.length) : null
+}
+
 export function quotePgIdentifier(identifier: string) {
   return `"${identifier.replaceAll('"', '""')}"`
+}
+
+export async function listSchoolSchemaOrganizationIds(): Promise<string[]> {
+  const adminPool = new Pool({ connectionString: env.DATABASE_URL })
+  try {
+    const result = await adminPool.query<{ schema_name: string }>(
+      `
+        SELECT schema_name
+        FROM information_schema.schemata
+        WHERE schema_name LIKE 'school-%'
+        ORDER BY schema_name
+      `,
+    )
+
+    return result.rows.flatMap(row => {
+      const organizationId = organizationIdFromSchoolSchema(row.schema_name)
+      return organizationId ? [organizationId] : []
+    })
+  } finally {
+    await adminPool.end()
+  }
 }
 
 export async function dropSchoolSchema(organizationId: string) {

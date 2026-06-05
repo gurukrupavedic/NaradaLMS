@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "format": "prettier . --write --ignore-path ../../.prettierignore",
     "schools:create": "tsx src/scripts/createSchool.ts",
+    "schools:reconcile": "tsx src/scripts/reconcileSchools.ts",
     "objects:janitor": "tsx src/scripts/releaseObjectOrphans.ts",
     "typecheck": "tsc --noEmit"
   },
