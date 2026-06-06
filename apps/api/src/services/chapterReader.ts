@@ -55,13 +55,7 @@ async function studentCanReadTrack(
     .select({ userId: enrollment.userId })
     .from(enrollment)
     .innerJoin(batch, eq(enrollment.batchId, batch.id))
-    .where(
-      and(
-        eq(enrollment.userId, studentId),
-        eq(enrollment.status, 'active'),
-        eq(batch.trackId, trackId),
-      ),
-    )
+    .where(and(eq(enrollment.userId, studentId), eq(batch.trackId, trackId)))
     .limit(1)
 
   return access.length > 0

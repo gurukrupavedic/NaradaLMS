@@ -687,7 +687,6 @@ Batch detail with enrolled members.
       userName: string,
       userEmail: string,
       role: "instructor" | "ta" | "student",
-      status: "active" | "inactive" | "completed",
       phone: string | null,
       city: string | null,
       joinedAt: string | null
@@ -786,7 +785,6 @@ Add a member to a batch.
     phone: string | null,
     city: string | null,
     role: "instructor" | "ta" | "student",
-    status: "active",
     joinedAt: string | null
   }
 }

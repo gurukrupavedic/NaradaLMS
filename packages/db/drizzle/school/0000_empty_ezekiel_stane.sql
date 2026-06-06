@@ -1,7 +1,6 @@
 CREATE TYPE "public"."batchStatus" AS ENUM('upcoming', 'active', 'completed');--> statement-breakpoint
 CREATE TYPE "public"."chapterStatus" AS ENUM('draft', 'published');--> statement-breakpoint
 CREATE TYPE "public"."enrollmentRole" AS ENUM('instructor', 'ta', 'student');--> statement-breakpoint
-CREATE TYPE "public"."enrollmentStatus" AS ENUM('active', 'inactive', 'completed');--> statement-breakpoint
 CREATE TYPE "public"."examStatus" AS ENUM('scheduled', 'inProgress', 'completed', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."proficiencyLevel" AS ENUM('absent', 'notStarted', 'practicing', 'level1', 'level2', 'level3', 'level4');--> statement-breakpoint
 CREATE TYPE "public"."script" AS ENUM('te', 'sa', 'en');--> statement-breakpoint
@@ -51,7 +50,6 @@ CREATE TABLE "enrollment" (
 	"phone" text,
 	"city" text,
 	"role" "enrollmentRole" NOT NULL,
-	"status" "enrollmentStatus" DEFAULT 'active' NOT NULL,
 	"joinedAt" timestamp DEFAULT now(),
 	CONSTRAINT "enrollment_userId_batchId_pk" PRIMARY KEY("userId","batchId")
 );

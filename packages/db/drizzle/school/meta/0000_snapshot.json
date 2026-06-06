@@ -412,14 +412,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "status": {
-          "name": "status",
-          "type": "enrollmentStatus",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'active'"
-        },
         "joinedAt": {
           "name": "joinedAt",
           "type": "timestamp",
@@ -827,15 +819,6 @@
         "instructor",
         "ta",
         "student"
-      ]
-    },
-    "public.enrollmentStatus": {
-      "name": "enrollmentStatus",
-      "schema": "public",
-      "values": [
-        "active",
-        "inactive",
-        "completed"
       ]
     },
     "public.examStatus": {

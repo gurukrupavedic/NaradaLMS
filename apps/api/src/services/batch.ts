@@ -14,7 +14,6 @@ type BatchMember = {
   userName: string
   userEmail: string
   role: (typeof enrollment.$inferSelect)['role']
-  status: (typeof enrollment.$inferSelect)['status']
   phone: string | null
   city: string | null
   joinedAt: Date | null
@@ -147,7 +146,6 @@ export default class BatchService {
         userName: e.user.name,
         userEmail: e.user.email,
         role: e.role,
-        status: e.status,
         phone: e.phone,
         city: e.city,
         joinedAt: e.joinedAt,

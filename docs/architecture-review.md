@@ -3,7 +3,7 @@
 **Date:** 2026-05-28
 **Audience:** A coding agent picking up this document cold. Every item is meant to be actionable without further context.
 
-**Status:** The previous passes have been almost entirely worked through. Both cross-batch leaks (read and write side), audio idempotency, audio delete ordering, the dead auth branch, exam-route auth ordering, the `CREATE EXTENSION` placement, R2 signed-download enforcement, per-request URL caching, the duplicated response mappers/types/enums, validation helpers, rate limiting, Node pinning, the logger type, BetterAuth CLI/version pinning, school creation as an admin script, school provisioning cleanup/reconciliation, UUIDv7 domain IDs/cursor tie-breaks, cascade delete strategy, bulk content reordering, and the revised exam/evaluation model are all resolved. This document keeps **only the items that still need attention**, grouped by whether they're objective or opinion.
+**Status:** The previous passes have been almost entirely worked through. Both cross-batch leaks (read and write side), audio idempotency, audio delete ordering, the dead auth branch, exam-route auth ordering, the `CREATE EXTENSION` placement, R2 signed-download enforcement, per-request URL caching, the duplicated response mappers/types/enums, validation helpers, rate limiting, Node pinning, the logger type, BetterAuth CLI/version pinning, school creation as an admin script, school provisioning cleanup/reconciliation, UUIDv7 domain IDs/cursor tie-breaks, cascade delete strategy, bulk content reordering, enrollment status removal, and the revised exam/evaluation model are all resolved. This document keeps **only the items that still need attention**, grouped by whether they're objective or opinion.
 
 **How to read:** §1 is schema. §2 is ops. §3 is architectural shape (opinion — confirm scope first). §4 is small cleanups. §5 is the short forward-looking list.
 
@@ -23,19 +23,13 @@
 
 These are the standing schema decisions that still need a product or API choice.
 
-### 1.1 `enrollment.status` is write-only
-
-**File:** [packages/db/src/schema/school.ts:132-149](../packages/db/src/schema/school.ts)
-
-The column exists but nothing ever transitions it off `'active'`. Either add the transitions (batch completion, withdrawal) or drop the column until needed. If transitions are added, historical evaluations and exams should remain visible even when current enrollment state changes.
-
-### 1.2 `chapter.code` / `batch.code` uniqueness scope
+### 1.1 `chapter.code` / `batch.code` uniqueness scope
 
 **File:** [packages/db/src/schema/school.ts:57, 122](../packages/db/src/schema/school.ts)
 
 Both are `.unique()`, i.e. unique per *school* (the schema is per-school). For `chapter.code`, intuition suggests per-track (`unique(trackId, code)` — allows `INTRO-01` in every track). Confirm intent; `batch.code` is probably fine school-wide.
 
-### 1.3 `organization.metadata` is unused free-form text
+### 1.2 `organization.metadata` is unused free-form text
 
 **File:** [packages/db/src/schema/auth.ts:85](../packages/db/src/schema/auth.ts)
 
