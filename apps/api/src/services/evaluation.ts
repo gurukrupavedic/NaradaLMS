@@ -3,7 +3,7 @@ import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-
 
 import { userIdSchema } from '@narada/auth/ids'
 import { enrollment, evaluation, type SchoolDatabase } from '@narada/db'
-import { compoundCursor, nullableDateCursorField, paginateResponse } from '../utils/cursor'
+import { compoundCursor, nullableDateCursorField, paginateResponse, uuidCursorField } from '../utils/cursor'
 import { internalError, notFound } from '../error'
 import { proficiencyLevelSchema } from './shared'
 
@@ -17,7 +17,7 @@ export const createEvaluationSchema = z.object({
 })
 
 export const listEvaluationsQuerySchema = z.object({
-  cursor: compoundCursor({ evaluatedAt: nullableDateCursorField(), id: z.string() }).optional(),
+  cursor: compoundCursor({ evaluatedAt: nullableDateCursorField(), id: uuidCursorField() }).optional(),
   limit: z.coerce.number().int().positive().max(100).default(PAGE_SIZE),
 })
 

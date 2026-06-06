@@ -51,3 +51,8 @@ export function dateCursorField() {
 export function nullableDateCursorField() {
   return z.coerce.date().nullable()
 }
+
+export function uuidCursorField() {
+  // Domain IDs are UUIDv7, so lexicographic ID order is a stable, creation-time tie-breaker.
+  return z.uuid()
+}

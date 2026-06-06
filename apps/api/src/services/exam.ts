@@ -4,7 +4,7 @@ import { and, asc, eq, gt, inArray, or } from 'drizzle-orm'
 import { userIdSchema } from '@narada/auth/ids'
 import { hasBatchPermission } from '@narada/auth/permissions'
 import { batch, chapter, enrollment, exam, evaluation, type SchoolDatabase } from '@narada/db'
-import { compoundCursor, dateCursorField, paginateResponse } from '../utils/cursor'
+import { compoundCursor, dateCursorField, paginateResponse, uuidCursorField } from '../utils/cursor'
 import { internalError, notFound } from '../error'
 import { proficiencyLevelSchema } from './shared'
 import { requireNonEmpty } from '../utils/validate'
@@ -29,7 +29,7 @@ export const updateExamSchema = requireNonEmpty(
 
 export const listExamsQuerySchema = z.object({
   status: z.enum(['scheduled', 'inProgress', 'completed', 'cancelled']).optional(),
-  cursor: compoundCursor({ scheduledAt: dateCursorField(), id: z.string() }).optional(),
+  cursor: compoundCursor({ scheduledAt: dateCursorField(), id: uuidCursorField() }).optional(),
   limit: z.coerce.number().int().positive().max(100).default(PAGE_SIZE),
 })
 

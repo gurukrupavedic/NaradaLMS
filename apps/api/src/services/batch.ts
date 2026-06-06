@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 
 import { batch, enrollment, type SchoolDatabase } from '@narada/db'
-import { compoundCursor, paginateResponse } from '../utils/cursor'
+import { compoundCursor, paginateResponse, uuidCursorField } from '../utils/cursor'
 import { internalError, notFound } from '../error'
 import type { BatchAccess } from '../utils/auth'
 import { requireNonEmpty } from '../utils/validate'
@@ -52,7 +52,7 @@ export const updateBatchSchema = requireNonEmpty(
 
 export const listBatchesQuerySchema = z.object({
   status: z.enum(['upcoming', 'active', 'completed']).optional(),
-  cursor: compoundCursor({ startDate: z.string().nullable(), id: z.string() }).optional(),
+  cursor: compoundCursor({ startDate: z.string().nullable(), id: uuidCursorField() }).optional(),
   limit: z.coerce.number().int().positive().max(100).default(PAGE_SIZE),
 })
 
