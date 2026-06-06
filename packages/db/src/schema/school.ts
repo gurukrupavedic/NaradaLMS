@@ -52,7 +52,7 @@ export const chapter = pgTable(
     trackId: uuid('trackId')
       .notNull()
       .references(() => track.id, { onDelete: 'cascade' }),
-    code: text('code').notNull().unique(),
+    code: text('code').notNull(),
     title: text('title').notNull(),
     status: chapterStatus('status').notNull().default('draft'),
     order: integer('order').notNull(),
@@ -61,6 +61,7 @@ export const chapter = pgTable(
   },
   table => [
     index('chapter_trackId_idx').on(table.trackId),
+    uniqueIndex('chapter_trackId_code_uidx').on(table.trackId, table.code),
     uniqueIndex('chapter_trackId_order_uidx').on(table.trackId, table.order),
   ],
 )

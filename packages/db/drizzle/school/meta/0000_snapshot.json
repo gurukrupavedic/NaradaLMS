@@ -326,6 +326,27 @@
           "method": "btree",
           "with": {}
         },
+        "chapter_trackId_code_uidx": {
+          "name": "chapter_trackId_code_uidx",
+          "columns": [
+            {
+              "expression": "trackId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "chapter_trackId_order_uidx": {
           "name": "chapter_trackId_order_uidx",
           "columns": [
@@ -364,15 +385,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "chapter_code_unique": {
-          "name": "chapter_code_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

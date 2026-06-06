@@ -40,8 +40,7 @@ CREATE TABLE "chapter" (
 	"status" "chapterStatus" DEFAULT 'draft' NOT NULL,
 	"order" integer NOT NULL,
 	"script" "script",
-	"textObjectKey" text,
-	CONSTRAINT "chapter_code_unique" UNIQUE("code")
+	"textObjectKey" text
 );
 --> statement-breakpoint
 CREATE TABLE "enrollment" (
@@ -101,6 +100,7 @@ ALTER TABLE "segment" ADD CONSTRAINT "segment_chapterId_chapter_id_fk" FOREIGN K
 CREATE INDEX "audioAsset_chapterId_idx" ON "audioAsset" USING btree ("chapterId");--> statement-breakpoint
 CREATE UNIQUE INDEX "audioAsset_chapterId_objectKey_idx" ON "audioAsset" USING btree ("chapterId","objectKey");--> statement-breakpoint
 CREATE INDEX "chapter_trackId_idx" ON "chapter" USING btree ("trackId");--> statement-breakpoint
+CREATE UNIQUE INDEX "chapter_trackId_code_uidx" ON "chapter" USING btree ("trackId","code");--> statement-breakpoint
 CREATE UNIQUE INDEX "chapter_trackId_order_uidx" ON "chapter" USING btree ("trackId","order");--> statement-breakpoint
 CREATE INDEX "enrollment_batchId_idx" ON "enrollment" USING btree ("batchId");--> statement-breakpoint
 CREATE INDEX "evaluation_studentId_chapterId_idx" ON "evaluation" USING btree ("studentId","chapterId");--> statement-breakpoint

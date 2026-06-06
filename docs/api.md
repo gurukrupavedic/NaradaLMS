@@ -342,6 +342,7 @@ Full chapter with text metadata, segments, audio assets, and mappings.
 Create a new chapter in a track.
 
 **Access:** Admin.
+Chapter `code` must be unique within the track.
 
 ```ts
 // Request
