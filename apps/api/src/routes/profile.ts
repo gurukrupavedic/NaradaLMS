@@ -15,6 +15,7 @@ publicProfileRouter.get('/', async (req, res) => {
   res.status(200).json({ ok: true, data: profile })
 })
 
+// mergeParams: parent path provides :batchId.
 export const batchEnrollmentProfileRouter = Router({ mergeParams: true })
 
 batchEnrollmentProfileRouter.patch('/', async (req, res) => {

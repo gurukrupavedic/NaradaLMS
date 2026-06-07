@@ -9,6 +9,7 @@ import ChapterReader from '../services/chapterReader'
 import SegmentService, { putSegmentsSchema } from '../services/segment'
 import { schoolDb } from '../middlewares/school'
 
+// mergeParams: parent path provides :chapterId.
 const router = Router({ mergeParams: true })
 
 router.get('/', async (req, res) => {

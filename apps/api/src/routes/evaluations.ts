@@ -13,6 +13,7 @@ import EnrollmentService from '../services/enrollment'
 import { schoolDb } from '../middlewares/school'
 import { notFound, unprocessable } from '../error'
 
+// mergeParams: parent path provides :batchId.
 const router = Router({ mergeParams: true })
 
 router.get('/', async (req, res) => {

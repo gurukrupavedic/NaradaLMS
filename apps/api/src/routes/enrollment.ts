@@ -9,6 +9,7 @@ import BatchService from '../services/batch'
 import EnrollmentService, { enrollSchema } from '../services/enrollment'
 import { schoolDb } from '../middlewares/school'
 
+// mergeParams: parent path provides :batchId.
 const router = Router({ mergeParams: true })
 
 router.post('/', async (req, res) => {

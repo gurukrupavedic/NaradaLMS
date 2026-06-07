@@ -6,6 +6,7 @@ import AudioService, { createAudioAssetSchema, getUploadUrlSchema } from '../ser
 import { schoolDb, type SchoolScopedLocals } from '../middlewares/school'
 import { authorize } from '../utils/auth'
 
+// mergeParams: parent path provides :chapterId.
 const router = Router({ mergeParams: true })
 
 router.post('/presign', async (req, res: Response<unknown, SchoolScopedLocals>) => {
