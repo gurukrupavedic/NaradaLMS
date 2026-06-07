@@ -3,7 +3,7 @@
 **Date:** 2026-05-28
 **Audience:** A coding agent picking up this document cold. Every item is meant to be actionable without further context.
 
-**Status:** The previous passes have been almost entirely worked through. Both cross-batch leaks (read and write side), audio idempotency, audio delete ordering, the dead auth branch, exam-route auth ordering, the `CREATE EXTENSION` placement, R2 signed-download enforcement, per-request URL caching, the duplicated response mappers/types/enums, validation helpers, rate limiting, Node pinning, the logger type, duplicate failed-request logging, BetterAuth CLI/version pinning, school creation as an admin script, school provisioning cleanup/reconciliation, UUIDv7 domain IDs/cursor tie-breaks, cascade delete strategy, bulk content reordering, enrollment status removal, chapter code uniqueness, the decision to keep BetterAuth `organization.metadata`, and the revised exam/evaluation model are all resolved. This document keeps **only the items that still need attention**, grouped by whether they're objective or opinion.
+**Status:** The previous passes have been almost entirely worked through. Both cross-batch leaks (read and write side), audio idempotency, audio delete ordering, the dead auth branch, exam-route auth ordering, the `CREATE EXTENSION` placement, R2 signed-download enforcement, per-request URL caching, the duplicated response mappers/types/enums, validation helpers, rate limiting, explicit CORS methods, Node pinning, the logger type, duplicate failed-request logging, BetterAuth CLI/version pinning, school creation as an admin script, school provisioning cleanup/reconciliation, UUIDv7 domain IDs/cursor tie-breaks, cascade delete strategy, bulk content reordering, enrollment status removal, chapter code uniqueness, the decision to keep BetterAuth `organization.metadata`, and the revised exam/evaluation model are all resolved. This document keeps **only the items that still need attention**, grouped by whether they're objective or opinion.
 
 **How to read:** §1 is ops. §2 is architectural shape (opinion — confirm scope first). §3 is small cleanups. §4 is the short forward-looking list.
 
@@ -34,12 +34,12 @@
 
 Then an integration suite (vitest + Postgres-via-docker) for the cross-batch authorization paths and `SchoolService.create` rollback. Add a root `test` script (currently only `@narada/auth` has one) so `pnpm -r test` works.
 
-### 1.2 Security hardening: CSRF and CORS/CSP remain
+### 1.2 Security hardening: CSRF and CSP remain
 
 Rate limiting landed on `/auth/*`. Still open before exposing to real users:
 
 - **CSRF:** BetterAuth session cookie should be `sameSite=strict` if there's no cross-site context; otherwise a double-submit token on state-changing routes.
-- **CORS/CSP:** `cors({ origin: env.TRUSTED_ORIGINS, credentials: true })` is fine, but add an explicit methods allowlist and configure helmet's `contentSecurityPolicy` once the frontend origin is known. Consider extending the rate limiter beyond `/auth` to the mutating resource routes.
+- **CSP:** configure helmet's `contentSecurityPolicy` once the frontend origin is known.
 
 ---
 

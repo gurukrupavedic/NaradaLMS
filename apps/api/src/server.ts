@@ -18,6 +18,7 @@ interface ServerOptions {
 }
 
 const SHUTDOWN_TIMEOUT_MS = 10_000
+const CORS_METHODS = ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE', 'OPTIONS']
 
 let shutdownStarted = false
 let shutdownExitStarted = false
@@ -32,7 +33,7 @@ const authRateLimit = rateLimit({
 export function createServer() {
   const router = Router()
   router.use(helmet())
-  router.use(cors({ origin: env.TRUSTED_ORIGINS, credentials: true }))
+  router.use(cors({ origin: env.TRUSTED_ORIGINS, credentials: true, methods: CORS_METHODS }))
   router.use(attachRequestContext)
   router.use(logRequest)
 
