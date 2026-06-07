@@ -3,9 +3,9 @@
 **Date:** 2026-05-28
 **Audience:** A coding agent picking up this document cold. Every item is meant to be actionable without further context.
 
-**Status:** The previous passes have been almost entirely worked through. Both cross-batch leaks (read and write side), audio idempotency, audio delete ordering, the dead auth branch, exam-route auth ordering, the `CREATE EXTENSION` placement, R2 signed-download enforcement, per-request URL caching, the duplicated response mappers/types/enums, validation helpers, rate limiting, Node pinning, the logger type, BetterAuth CLI/version pinning, school creation as an admin script, school provisioning cleanup/reconciliation, UUIDv7 domain IDs/cursor tie-breaks, cascade delete strategy, bulk content reordering, enrollment status removal, chapter code uniqueness, and the revised exam/evaluation model are all resolved. This document keeps **only the items that still need attention**, grouped by whether they're objective or opinion.
+**Status:** The previous passes have been almost entirely worked through. Both cross-batch leaks (read and write side), audio idempotency, audio delete ordering, the dead auth branch, exam-route auth ordering, the `CREATE EXTENSION` placement, R2 signed-download enforcement, per-request URL caching, the duplicated response mappers/types/enums, validation helpers, rate limiting, Node pinning, the logger type, duplicate failed-request logging, BetterAuth CLI/version pinning, school creation as an admin script, school provisioning cleanup/reconciliation, UUIDv7 domain IDs/cursor tie-breaks, cascade delete strategy, bulk content reordering, enrollment status removal, chapter code uniqueness, the decision to keep BetterAuth `organization.metadata`, and the revised exam/evaluation model are all resolved. This document keeps **only the items that still need attention**, grouped by whether they're objective or opinion.
 
-**How to read:** §1 is schema. §2 is ops. §3 is architectural shape (opinion — confirm scope first). §4 is small cleanups. §5 is the short forward-looking list.
+**How to read:** §1 is ops. §2 is architectural shape (opinion — confirm scope first). §3 is small cleanups. §4 is the short forward-looking list.
 
 **User preferences to respect** (from memory):
 
@@ -19,27 +19,9 @@
 
 ---
 
-## 1. Schema / database
+## 1. Operational / cross-cutting
 
-These are the standing schema decisions that still need a product or API choice.
-
-### 1.1 `organization.metadata` is unused free-form text
-
-**File:** [packages/db/src/schema/auth.ts:85](../packages/db/src/schema/auth.ts)
-
-Either claim it (Zod schema + helpers — school config like default language, theme, feature flags) or drop the column. Left unstructured, two callers will eventually use it for conflicting purposes.
-
----
-
-## 2. Operational / cross-cutting
-
-### 2.1 Failed requests log twice
-
-**File:** [apps/api/src/server.ts:62-118](../apps/api/src/server.ts)
-
-`handleErrors` logs the error (warn for 4xx, error for 5xx), then `logRequest`'s `res.on('finish')` logs the same request again at the same level. Every failed request emits two lines. They share a `requestId`, so it's correlatable — but it's noise. Either consolidate (stash the error and let `logRequest` emit the single line) or consciously accept the duplication and document why.
-
-### 2.2 Test coverage is one file
+### 1.1 Test coverage is one file
 
 **File:** [packages/auth/src/permissions/batch.test.ts](../packages/auth/src/permissions/batch.test.ts) (the only test; vitest is wired in `@narada/auth` only)
 
@@ -52,7 +34,7 @@ Either claim it (Zod schema + helpers — school config like default language, t
 
 Then an integration suite (vitest + Postgres-via-docker) for the cross-batch authorization paths and `SchoolService.create` rollback. Add a root `test` script (currently only `@narada/auth` has one) so `pnpm -r test` works.
 
-### 2.3 Security hardening: CSRF and CORS/CSP remain
+### 1.2 Security hardening: CSRF and CORS/CSP remain
 
 Rate limiting landed on `/auth/*`. Still open before exposing to real users:
 
@@ -61,11 +43,11 @@ Rate limiting landed on `/auth/*`. Still open before exposing to real users:
 
 ---
 
-## 3. Architectural shape (opinion — confirm scope first)
+## 2. Architectural shape (opinion — confirm scope first)
 
 These reduce the cost of the next ten features rather than fixing a bug.
 
-### 3.1 Service classes are namespaces in disguise
+### 2.1 Service classes are namespaces in disguise
 
 11 services are classes with only static methods; `objectLifecycle` is a const object; `ChapterReader` is a default-exported class. No encapsulation, no state — just import ceremony. Pick one shape and apply it everywhere:
 
@@ -75,57 +57,57 @@ These reduce the cost of the next ten features rather than fixing a bug.
 
 The grep cost is one-time; the readability win compounds. Worth settling before the frontend doubles the call sites.
 
-### 3.2 The remaining `db as SchoolDatabase` cast
+### 2.2 The remaining `db as SchoolDatabase` cast
 
 **File:** [apps/api/src/middlewares/school.ts:38-44](../apps/api/src/middlewares/school.ts)
 
 The dead `batch` branch that abused this is gone — good. The one remaining cast lives in `schoolDb()`, which is safe (it checks `res.locals.school` first) but unexplained. Add a one-line comment noting the cast is sound because `resolveDb` sets `school` and the scoped `db` together. Optional: have `resolveDb` track the branded type instead of relying on the cast — probably more machinery than it's worth.
 
-### 3.3 No transaction primitive at the service boundary
+### 2.3 No transaction primitive at the service boundary
 
 Each service opens its own `db.transaction(...)`. Symptom-free today because no operation spans services. The frontend will introduce composites ("create batch + enroll the creator as instructor"; "create exam + chapter list"). When it does, you'll either thread `db | tx` through service signatures or write transaction-orchestrator functions outside services. Decide the shape before the first composite lands.
 
-### 3.4 The auth helper triplet
+### 2.4 The auth helper triplet
 
 `authorize` / `requireBatchAccess` / `requireBatchListAccess` ([apps/api/src/utils/auth.ts](../apps/api/src/utils/auth.ts)) share a vocabulary but have different parameter shapes, so routes must know which to call. The `BatchAccess` discriminated union is the right direction. Worth experimenting with collapsing into a single `authorize(req, db, claim): Promise<Access>` that returns a discriminated `Access` (`super` | `schoolWide` | `singleBatch` | `enrolled` | `self`) and letting routes branch on `.kind`. Try it on one claim-heavy route (e.g. `GET /v1/batches`) before propagating.
 
-### 3.5 School-context contract: header vs session
+### 2.5 School-context contract: header vs session
 
 `X-School-Slug` is resolved on every request ([middlewares/school.ts](../apps/api/src/middlewares/school.ts)); BetterAuth's `session.activeOrganizationId` is populated but unused. The header is debuggable but stateless (re-resolves each request); the session is one fewer place for drift. Before the frontend's API client ships, pick one so it doesn't implement both. (Header keeps super-admin "switch school" simple; session is a cleaner contract.) Document the choice either way.
 
-### 3.6 Staged-upload session (when the second upload flow lands)
+### 2.6 Staged-upload session (when the second upload flow lands)
 
 Today: presign → client uploads → POST registers, with the DB blind between presign and POST (the janitor cleans crashes after the safety window). A richer shape — `stage()` writes a `pending` row and returns a `commitToken`; `commit()` flips it `active` after a HEAD — gives idempotency-by-design, a TTL on pending uploads, and a cleaner split for the janitor. Not needed now; revisit when the script-upload or any second file flow arrives.
 
 ---
 
-## 4. Smaller cleanups
+## 3. Smaller cleanups
 
-### 4.1 `Router({ mergeParams: true })` use is undocumented
+### 3.1 `Router({ mergeParams: true })` use is undocumented
 
 Set on routers that read parent params, absent on those that don't — correct, but invisible. One comment per router (`// mergeParams: parent path provides :batchId`) saves future readers a lookup.
 
-### 4.2 `routes/index.ts` middleware chaining is hard to skim
+### 3.2 `routes/index.ts` middleware chaining is hard to skim
 
 **File:** [apps/api/src/routes/index.ts:24-37](../apps/api/src/routes/index.ts)
 
 `router.use(requireSchool).use('/tracks', ...)...` applies `requireSchool` to every subsequent mount, but the indentation doesn't make that obvious, and it's invisible to anyone Ctrl-F'ing a route by path. Two comments — "everything below requires the school header" and "`/schools` is mounted above this line so super-admins can create a school without a slug" — would orient readers.
 
-### 4.3 Repeated inline param schemas
+### 3.3 Repeated inline param schemas
 
 `parseParams(z.object({ chapterId: z.uuid() }), req)` (and the batch/exam/track equivalents) is re-declared in ~15 handlers. Hoist one canonical schema per resource and import it.
 
-### 4.4 `Database` union could be tightened at call sites
+### 3.4 `Database` union could be tightened at call sites
 
 `Database = PublicDatabase | SchoolDatabase` is exported and used correctly in most places. A grep for `: Database` in service signatures will surface a few that actually require `SchoolDatabase` and could say so — turning a class of misuse into a compile error.
 
 ---
 
-## 5. Forward-looking: before the frontend lands
+## 4. Forward-looking: before the frontend lands
 
 The API is in good shape. Two decisions shape every later one and are cheaper to make now than after a UI depends on them:
 
-1. **Pick a service shape (§3.1).** The first cross-service composite operation (§3.3) shouldn't have to fight the conventions.
-2. **Decide the school-context contract (§3.5).** The API client should implement header *or* session, not both.
+1. **Pick a service shape (§2.1).** The first cross-service composite operation (§2.3) shouldn't have to fight the conventions.
+2. **Decide the school-context contract (§2.5).** The API client should implement header *or* session, not both.
 
 Everything else here is incrementally cleanable alongside other work in the same files.

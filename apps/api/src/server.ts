@@ -35,7 +35,7 @@ export function createServer() {
   router.use(cors({ origin: env.TRUSTED_ORIGINS, credentials: true }))
   router.use(attachRequestContext)
   router.use(logRequest)
-  
+
   // BetterAuth requires access to the raw body stream, and thus,
   // must be mounted before the `express.json()` middleware.
   router.all('/auth/*splat', authRateLimit, toNodeHandler(auth))
@@ -71,31 +71,24 @@ function logRequest(req: Request, res: Response, next: NextFunction) {
 
     const logger = getLogger()
     if (res.statusCode >= 500) {
-      logger.error(details, 'handled request')
+      logger.error({ event: 'request.completed', ...details })
       return
     }
 
     if (res.statusCode >= 400) {
-      logger.warn(details, 'handled request')
+      logger.warn({ event: 'request.completed', ...details })
       return
     }
 
-    logger.info(details, 'handled request')
+    logger.info({ event: 'request.completed', ...details })
   })
 
   next()
 }
 
 function handleErrors(error: Error, _req: Request, res: Response, _next: NextFunction) {
-  const logger = getLogger()
+  getLogger().error({ event: 'request.error', err: error })
   if (error instanceof AppError) {
-    const details = { err: error, statusCode: error.statusCode, code: error.code }
-    if (error.statusCode >= 500) {
-      logger.error(details, 'an error occurred while handling a request.')
-    } else {
-      logger.warn(details, 'request failed.')
-    }
-
     res.status(error.statusCode).json({
       ok: false,
       error: {
@@ -108,7 +101,6 @@ function handleErrors(error: Error, _req: Request, res: Response, _next: NextFun
     return
   }
 
-  logger.error({ err: error }, 'an error occurred while handling a request.')
   if (!res.headersSent) {
     res.status(500).json({
       ok: false,
