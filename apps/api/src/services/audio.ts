@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 
-import { audioAsset, type SchoolDatabase } from '@narada/db'
+import { audioAsset, type SchoolDbExecutor } from '@narada/db'
 import { internalError, notFound, unprocessable } from '../error'
 import { objectLifecycle } from './objectLifecycle'
 import { audioAssetResponse, type AudioAsset } from './audioResponses'
@@ -29,7 +29,7 @@ export type StoredAudioAsset = typeof audioAsset.$inferSelect
 export type CreateAudioAssetResult = { asset: AudioAsset; created: boolean }
 
 export async function findAudioAssetById(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   audioId: string,
   chapterId?: string,
 ): Promise<StoredAudioAsset | undefined> {
@@ -50,7 +50,7 @@ export async function getAudioUploadUrl(
 }
 
 export async function createAudioAsset(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   schoolId: string,
   chapterId: string,
   data: CreateAudioAssetData,
@@ -84,7 +84,7 @@ export async function createAudioAsset(
 }
 
 export async function removeAudioAsset(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   audioId: string,
   chapterId: string,
 ): Promise<void> {

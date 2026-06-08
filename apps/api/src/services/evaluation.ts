@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 
 import { userIdSchema } from '@narada/auth/ids'
-import { enrollment, evaluation, type SchoolDatabase } from '@narada/db'
+import { enrollment, evaluation, type SchoolDbExecutor } from '@narada/db'
 import {
   compoundCursor,
   nullableDateCursorField,
@@ -53,7 +53,7 @@ function evaluationPage(rows: Evaluation[], limit: number): EvaluationPage {
 }
 
 export async function createEvaluation(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   evaluatorId: string,
   data: CreateEvaluationData,
 ): Promise<Evaluation> {
@@ -68,7 +68,7 @@ export async function createEvaluation(
 }
 
 export async function findEvaluationsByBatch(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   batchId: string,
   options: ListEvaluationsQuery,
 ): Promise<EvaluationPage> {
@@ -128,7 +128,7 @@ export async function findEvaluationsByBatch(
 }
 
 export async function findEvaluationsByStudent(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   batchId: string,
   studentId: string,
   options: ListEvaluationsQuery,

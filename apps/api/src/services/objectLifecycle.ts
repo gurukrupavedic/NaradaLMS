@@ -1,4 +1,4 @@
-import { audioAsset, chapter, type SchoolDatabase } from '@narada/db'
+import { audioAsset, chapter, type SchoolDbExecutor } from '@narada/db'
 import {
   deleteObject,
   getDownloadUrl,
@@ -28,7 +28,7 @@ export type ObjectJanitorResult = {
   deletedKeys: string[]
 }
 
-async function referencedObjectKeys(db: SchoolDatabase): Promise<Set<string>> {
+async function referencedObjectKeys(db: SchoolDbExecutor): Promise<Set<string>> {
   const [chapters, audioAssets] = await Promise.all([
     db.select({ objectKey: chapter.textObjectKey }).from(chapter),
     db.select({ objectKey: audioAsset.objectKey }).from(audioAsset),
@@ -80,7 +80,7 @@ export const objectLifecycle = {
   },
 
   async releaseOrphans(
-    db: SchoolDatabase,
+    db: SchoolDbExecutor,
     schoolId: string,
     options: { dryRun?: boolean; safetyWindowMs?: number } = {},
   ): Promise<ObjectJanitorResult> {

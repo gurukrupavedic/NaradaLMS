@@ -3,7 +3,7 @@ import { and, asc, eq, gt, inArray, or } from 'drizzle-orm'
 
 import { userIdSchema } from '@narada/auth/ids'
 import { hasBatchPermission } from '@narada/auth/permissions'
-import { batch, chapter, enrollment, exam, evaluation, type SchoolDatabase } from '@narada/db'
+import { batch, chapter, enrollment, exam, evaluation, type SchoolDbExecutor } from '@narada/db'
 import { compoundCursor, dateCursorField, paginateResponse, uuidCursorField } from '../utils/cursor'
 import { internalError, notFound } from '../error'
 import { proficiencyLevelSchema } from './shared'
@@ -45,7 +45,7 @@ export type ListExamsQuery = z.infer<typeof listExamsQuerySchema>
 export type RecordResultData = z.infer<typeof recordResultSchema>
 
 export async function findVisibleExamsForUser(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   userId: string,
   options: ListExamsQuery,
 ): Promise<{ items: Exam[]; nextCursor: string | null }> {
@@ -78,14 +78,14 @@ export async function findVisibleExamsForUser(
 }
 
 export async function findAllExams(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   options: ListExamsQuery,
 ): Promise<{ items: Exam[]; nextCursor: string | null }> {
   return findManyExams(db, [], options)
 }
 
 async function findManyExams(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   baseConditions: ReturnType<typeof eq>[],
   options: ListExamsQuery,
 ): Promise<{ items: Exam[]; nextCursor: string | null }> {
@@ -111,7 +111,10 @@ async function findManyExams(
   return paginateResponse(rows, limit, item => ({ scheduledAt: item.scheduledAt, id: item.id }))
 }
 
-export async function findExamById(db: SchoolDatabase, examId: string): Promise<Exam | undefined> {
+export async function findExamById(
+  db: SchoolDbExecutor,
+  examId: string,
+): Promise<Exam | undefined> {
   const row = await db.query.exam.findFirst({
     where: (t, { eq }) => eq(t.id, examId),
   })
@@ -123,7 +126,7 @@ export async function findExamById(db: SchoolDatabase, examId: string): Promise<
   return row
 }
 
-export async function createExam(db: SchoolDatabase, data: CreateExamData): Promise<Exam> {
+export async function createExam(db: SchoolDbExecutor, data: CreateExamData): Promise<Exam> {
   const rows = await db.insert(exam).values(data).returning()
 
   const row = rows.at(0)
@@ -132,7 +135,7 @@ export async function createExam(db: SchoolDatabase, data: CreateExamData): Prom
 }
 
 export async function canManageExam(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   userId: string,
   data: Pick<Exam, 'studentId' | 'chapterId'>,
 ): Promise<boolean> {
@@ -159,7 +162,7 @@ export async function canManageExam(
 }
 
 export async function updateExam(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   examId: string,
   data: UpdateExamData,
 ): Promise<Exam> {
@@ -173,7 +176,7 @@ export async function updateExam(
 }
 
 export async function recordExamResult(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   examId: string,
   evaluatorId: string,
   data: RecordResultData,
@@ -209,7 +212,7 @@ export async function recordExamResult(
   })
 }
 
-async function manageableBatchIds(db: SchoolDatabase, userId: string): Promise<string[]> {
+async function manageableBatchIds(db: SchoolDbExecutor, userId: string): Promise<string[]> {
   const rows = await db
     .select({ batchId: enrollment.batchId, role: enrollment.role })
     .from(enrollment)

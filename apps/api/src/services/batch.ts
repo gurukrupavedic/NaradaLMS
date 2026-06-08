@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 
-import { batch, enrollment, type SchoolDatabase } from '@narada/db'
+import { batch, enrollment, type SchoolDbExecutor } from '@narada/db'
 import { compoundCursor, paginateResponse, uuidCursorField } from '../utils/cursor'
 import { internalError, notFound } from '../error'
 import type { BatchAccess } from '../utils/auth'
@@ -62,7 +62,7 @@ export type UpdateBatchData = z.infer<typeof updateBatchSchema>
 export type ListBatchesQuery = z.infer<typeof listBatchesQuerySchema>
 
 export async function findBatches(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   options: ListBatchesQuery & { access: BatchAccess },
 ): Promise<{ items: Batch[]; nextCursor: string | null }> {
   const { access, status, cursor, limit } = options
@@ -121,7 +121,7 @@ export async function findBatches(
 }
 
 export async function findBatchById(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   batchId: string,
 ): Promise<Batch | undefined> {
   const row = await db.query.batch.findFirst({
@@ -132,7 +132,7 @@ export async function findBatchById(
 }
 
 export async function findBatchByIdWithMembers(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   batchId: string,
 ): Promise<BatchDetail | undefined> {
   const row = await db.query.batch.findFirst({
@@ -155,7 +155,7 @@ export async function findBatchByIdWithMembers(
   }
 }
 
-export async function createBatch(db: SchoolDatabase, data: CreateBatchData): Promise<Batch> {
+export async function createBatch(db: SchoolDbExecutor, data: CreateBatchData): Promise<Batch> {
   const rows = await db.insert(batch).values(data).returning()
   const row = rows.at(0)
   if (!row) throw internalError()
@@ -163,7 +163,7 @@ export async function createBatch(db: SchoolDatabase, data: CreateBatchData): Pr
 }
 
 export async function updateBatch(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   batchId: string,
   data: UpdateBatchData,
 ): Promise<Batch> {

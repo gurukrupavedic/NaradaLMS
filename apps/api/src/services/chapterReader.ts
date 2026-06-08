@@ -8,7 +8,7 @@ import {
   enrollment,
   evaluation,
   segment,
-  type SchoolDatabase,
+  type SchoolDbExecutor,
 } from '@narada/db'
 import { objectLifecycle } from './objectLifecycle'
 import { chapterAudioAssetResponse, type ChapterAudioAsset } from './audioResponses'
@@ -47,7 +47,7 @@ function canReadDrafts(view: ChapterReadView): boolean {
 }
 
 async function studentCanReadTrack(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   studentId: string,
   trackId: string,
 ): Promise<boolean> {
@@ -83,7 +83,7 @@ async function detailResponse(row: ChapterContentRow): Promise<ChapterDetail> {
 }
 
 export async function findChapterById(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   chapterId: string,
   view: ChapterReadView,
 ): Promise<ChapterDetail | StudentChapterDetail | undefined> {
@@ -117,7 +117,7 @@ export async function findChapterById(
 }
 
 export async function findSegmentsByChapter(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   chapterId: string,
   view: ChapterReadView,
 ): Promise<Segment[] | undefined> {

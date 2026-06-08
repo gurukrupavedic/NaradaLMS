@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { eq, sql } from 'drizzle-orm'
 
-import { chapter, segment, type SchoolDatabase } from '@narada/db'
+import { chapter, segment, type SchoolDbExecutor } from '@narada/db'
 import { internalError, notFound, unprocessable } from '../error'
 import { chapterResponse, type Chapter } from './chapterReader'
 import { requireNonEmpty } from '../utils/validate'
@@ -31,7 +31,10 @@ export type CreateChapterData = z.infer<typeof createChapterSchema>
 export type UpdateChapterData = z.infer<typeof updateChapterSchema>
 export type ReorderChaptersData = z.infer<typeof reorderChaptersSchema>
 
-export async function createChapter(db: SchoolDatabase, data: CreateChapterData): Promise<Chapter> {
+export async function createChapter(
+  db: SchoolDbExecutor,
+  data: CreateChapterData,
+): Promise<Chapter> {
   const rows = await db
     .insert(chapter)
     .values({ ...data, order: await nextChapterOrder(db, data.trackId) })
@@ -42,7 +45,7 @@ export async function createChapter(db: SchoolDatabase, data: CreateChapterData)
 }
 
 export async function updateChapter(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   chapterId: string,
   data: UpdateChapterData,
 ): Promise<Chapter> {
@@ -67,7 +70,7 @@ export async function updateChapter(
 }
 
 export async function reorderChapters(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   trackId: string,
   data: ReorderChaptersData,
 ): Promise<Chapter[]> {
@@ -105,7 +108,7 @@ export async function reorderChapters(
 }
 
 export async function applyChapterScript(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   chapterId: string,
   scriptType: 'te' | 'sa' | 'en',
   objectKey: string,
@@ -134,7 +137,7 @@ export async function applyChapterScript(
   })
 }
 
-async function nextChapterOrder(db: SchoolDatabase, trackId: string): Promise<number> {
+async function nextChapterOrder(db: SchoolDbExecutor, trackId: string): Promise<number> {
   const rows = await db
     .select({ next: sql<number>`coalesce(max(${chapter.order}), 0) + 1` })
     .from(chapter)

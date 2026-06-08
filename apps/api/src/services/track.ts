@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { asc, eq, sql } from 'drizzle-orm'
 
-import { track, chapter, type SchoolDatabase } from '@narada/db'
+import { track, chapter, type SchoolDbExecutor } from '@narada/db'
 import { internalError, unprocessable } from '../error'
 import { chapterResponse, type Chapter, type ChapterReadView } from './chapterReader'
 import { requireNonEmpty } from '../utils/validate'
@@ -37,7 +37,7 @@ async function trackWithChaptersResponse(
 }
 
 export async function findTracks(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   view: ChapterReadView,
 ): Promise<TrackWithChapters[]> {
   const rows = await db.query.track.findMany({
@@ -54,7 +54,7 @@ export async function findTracks(
 }
 
 export async function findTrackById(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   trackId: string,
   view: ChapterReadView,
 ): Promise<TrackWithChapters | undefined> {
@@ -71,7 +71,7 @@ export async function findTrackById(
   return row ? trackWithChaptersResponse(row) : undefined
 }
 
-export async function createTrack(db: SchoolDatabase, data: CreateTrackData): Promise<Track> {
+export async function createTrack(db: SchoolDbExecutor, data: CreateTrackData): Promise<Track> {
   const rows = await db
     .insert(track)
     .values({ ...data, order: await nextTrackOrder(db) })
@@ -82,7 +82,7 @@ export async function createTrack(db: SchoolDatabase, data: CreateTrackData): Pr
 }
 
 export async function updateTrack(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   trackId: string,
   data: UpdateTrackData,
 ): Promise<Track> {
@@ -92,7 +92,10 @@ export async function updateTrack(
   return row
 }
 
-export async function reorderTracks(db: SchoolDatabase, data: ReorderTracksData): Promise<Track[]> {
+export async function reorderTracks(
+  db: SchoolDbExecutor,
+  data: ReorderTracksData,
+): Promise<Track[]> {
   const existing = await db.query.track.findMany({ columns: { id: true } })
   assertSameIds(
     existing.map(row => row.id),
@@ -123,7 +126,7 @@ export async function reorderTracks(db: SchoolDatabase, data: ReorderTracksData)
   })
 }
 
-async function nextTrackOrder(db: SchoolDatabase): Promise<number> {
+async function nextTrackOrder(db: SchoolDbExecutor): Promise<number> {
   const rows = await db
     .select({ next: sql<number>`coalesce(max(${track.order}), 0) + 1` })
     .from(track)

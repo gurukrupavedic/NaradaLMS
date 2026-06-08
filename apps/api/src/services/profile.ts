@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 
-import { enrollment, publicDb, type SchoolDatabase } from '@narada/db'
+import { enrollment, publicDb, type SchoolDbExecutor } from '@narada/db'
 import { notFound } from '../error'
 import { requireNonEmpty } from '../utils/validate'
 
@@ -46,7 +46,7 @@ export async function getProfile(userId: string, isSuperAdmin: boolean): Promise
 }
 
 export async function updateProfile(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   userId: string,
   batchId: string,
   data: UpdateProfileData,

@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 
 import { userIdSchema } from '@narada/auth/ids'
-import { enrollment, type SchoolDatabase } from '@narada/db'
+import { enrollment, type SchoolDbExecutor } from '@narada/db'
 import { conflict, internalError, notFound } from '../error'
 
 export const enrollSchema = z.object({
@@ -14,7 +14,7 @@ export type Enrollment = typeof enrollment.$inferSelect
 export type EnrollData = z.infer<typeof enrollSchema>
 
 export async function findEnrollment(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   userId: string,
   batchId: string,
 ): Promise<Enrollment | undefined> {
@@ -26,7 +26,7 @@ export async function findEnrollment(
 }
 
 export async function enrollUser(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   batchId: string,
   data: EnrollData,
 ): Promise<Enrollment> {
@@ -43,7 +43,7 @@ export async function enrollUser(
 }
 
 export async function unenrollUser(
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   batchId: string,
   userId: string,
 ): Promise<void> {

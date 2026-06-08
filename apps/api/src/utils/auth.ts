@@ -7,7 +7,7 @@ import {
   hasBatchPermission,
   type SchoolPermissions,
 } from '@narada/auth/permissions'
-import type { SchoolDatabase } from '@narada/db'
+import type { SchoolDbExecutor } from '@narada/db'
 import { forbidden, unauthorized } from '../error'
 import { findEnrollment, type Enrollment } from '../services/enrollment'
 
@@ -86,7 +86,7 @@ async function authorizeClaim(req: Request, claim: AuthClaim): Promise<Authentic
 
 export async function requireBatchAccess(
   req: Request,
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   batchId: string,
   claim: BatchAccessClaim,
 ): Promise<Extract<BatchAccess, { kind: 'schoolWide' | 'singleBatch' }>> {
@@ -116,7 +116,7 @@ export async function requireBatchAccess(
 
 export async function requireBatchListAccess(
   req: Request,
-  db: SchoolDatabase,
+  db: SchoolDbExecutor,
   claim: BatchListClaim,
 ): Promise<Extract<BatchAccess, { kind: 'schoolWide' | 'enrolled' }>> {
   const { user } = await authorizeClaim(req, {

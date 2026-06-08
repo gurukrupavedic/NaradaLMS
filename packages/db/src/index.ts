@@ -1,4 +1,6 @@
-import { drizzle } from 'drizzle-orm/node-postgres'
+import type { ExtractTablesWithRelations } from 'drizzle-orm/relations'
+import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
+import type { NodePgTransaction } from 'drizzle-orm/node-postgres/session'
 import { LRUCache } from 'lru-cache'
 import { Pool } from 'pg'
 
@@ -6,12 +8,16 @@ import { env } from '@narada/env'
 import { quotePgIdentifier, schoolSchemaName } from './provision'
 import * as schema from './schema'
 
-type BaseDatabase = ReturnType<typeof drizzle<typeof schema>>
+type Schema = typeof schema
+type SchemaRelations = ExtractTablesWithRelations<Schema>
+type BaseDatabase = NodePgDatabase<Schema> & { $client: Pool }
+type SchoolTransaction = NodePgTransaction<Schema, SchemaRelations>
 declare const publicDatabaseBrand: unique symbol
 declare const schoolDatabaseBrand: unique symbol
 
 export type PublicDatabase = BaseDatabase & { readonly [publicDatabaseBrand]: 'public' }
 export type SchoolDatabase = BaseDatabase & { readonly [schoolDatabaseBrand]: 'school' }
+export type SchoolDbExecutor = SchoolDatabase | SchoolTransaction
 export type Database = PublicDatabase | SchoolDatabase
 
 type CachedDb = { db: SchoolDatabase; pool: Pool }
