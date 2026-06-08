@@ -30,6 +30,9 @@ export type BatchAccess =
   | { kind: 'enrolled'; userId: string }
   | { kind: 'singleBatch'; userId: string; enrollment: Enrollment }
 
+export type BatchItemAccess = Extract<BatchAccess, { kind: 'schoolWide' | 'singleBatch' }>
+export type BatchListAccess = Extract<BatchAccess, { kind: 'schoolWide' | 'enrolled' }>
+
 const sessions = new WeakMap<Request, Promise<AuthenticatedSession>>()
 
 function requestHeaders(req: Request) {
@@ -84,12 +87,23 @@ async function authorizeClaim(req: Request, claim: AuthClaim): Promise<Authentic
   return session
 }
 
-export async function requireBatchAccess(
+export async function requireAccess<T>(
+  access: T | null | undefined | Promise<T | null | undefined>,
+): Promise<T> {
+  const resolved = await access
+  if (!resolved) {
+    throw forbidden()
+  }
+
+  return resolved
+}
+
+export async function getBatchAccess(
   req: Request,
   db: SchoolDbExecutor,
   batchId: string,
   claim: BatchAccessClaim,
-): Promise<Extract<BatchAccess, { kind: 'schoolWide' | 'singleBatch' }>> {
+): Promise<BatchItemAccess | null> {
   const { user } = await getSession(req)
   if (user.isSuperAdmin) {
     return { kind: 'schoolWide', userId: user.id }
@@ -111,19 +125,21 @@ export async function requireBatchAccess(
     return { kind: 'singleBatch', userId: user.id, enrollment }
   }
 
-  throw forbidden()
+  return null
 }
 
-export async function requireBatchListAccess(
+export async function getBatchListAccess(
   req: Request,
   db: SchoolDbExecutor,
   claim: BatchListClaim,
-): Promise<Extract<BatchAccess, { kind: 'schoolWide' | 'enrolled' }>> {
-  const { user } = await authorizeClaim(req, {
+): Promise<BatchListAccess | null> {
+  const { user } = await getSession(req)
+  const canList = await hasPermission(req, {
     scope: 'school',
     permissions: claim.schoolPermission,
   })
 
+  if (!canList) return null
   const canSeeAll = await hasPermission(req, {
     scope: 'school',
     permissions: claim.allBatchesPermission,

@@ -2,8 +2,9 @@ import { Router } from 'express'
 import { z } from 'zod'
 
 import { userIdSchema } from '@narada/auth/ids'
+import type { BatchPermissions } from '@narada/auth/permissions'
 import { parseBody, parseParams, parseQuery } from '../utils/validate'
-import { getSession, requireBatchAccess } from '../utils/auth'
+import { getBatchAccess, getSession, requireAccess } from '../utils/auth'
 import {
   createEvaluation,
   createEvaluationSchema,
@@ -23,10 +24,12 @@ router.get('/', async (req, res) => {
   const db = schoolDb(res)
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const query = parseQuery(listEvaluationsQuerySchema, req)
-  await requireBatchAccess(req, db, batchId, {
-    schoolPermission: { evaluation: ['read'] },
-    batchPermission: { evaluation: ['create'] },
-  })
+  await requireAccess(
+    getBatchAccess(req, db, batchId, {
+      schoolPermission: { evaluation: ['read'] },
+      batchPermission: { evaluation: ['create'] },
+    }),
+  )
 
   const result = await findEvaluationsByBatch(db, batchId, query)
   res.status(200).json({ ok: true, data: result })
@@ -41,17 +44,16 @@ router.get('/:studentId', async (req, res) => {
 
   const query = parseQuery(listEvaluationsQuerySchema, req)
   const { user } = await getSession(req)
-  if (studentId !== user.id) {
-    await requireBatchAccess(req, db, batchId, {
+  const batchPermission = (
+    studentId === user.id ? { evaluation: ['read'] } : { evaluation: ['create'] }
+  ) satisfies BatchPermissions
+
+  await requireAccess(
+    getBatchAccess(req, db, batchId, {
       schoolPermission: { evaluation: ['read'] },
-      batchPermission: { evaluation: ['create'] },
-    })
-  } else {
-    await requireBatchAccess(req, db, batchId, {
-      schoolPermission: { evaluation: ['read'] },
-      batchPermission: { evaluation: ['read'] },
-    })
-  }
+      batchPermission,
+    }),
+  )
 
   const result = await findEvaluationsByStudent(db, batchId, studentId, query)
   res.status(200).json({ ok: true, data: result })
@@ -61,9 +63,11 @@ router.post('/', async (req, res) => {
   const db = schoolDb(res)
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const data = parseBody(createEvaluationSchema, req)
-  const access = await requireBatchAccess(req, db, batchId, {
-    batchPermission: { evaluation: ['create'] },
-  })
+  const access = await requireAccess(
+    getBatchAccess(req, db, batchId, {
+      batchPermission: { evaluation: ['create'] },
+    }),
+  )
 
   const studentEnrollment = await findEnrollment(db, data.studentId, batchId)
   if (!studentEnrollment || studentEnrollment.role !== 'student') {

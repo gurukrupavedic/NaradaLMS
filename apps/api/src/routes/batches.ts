@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { parseBody, parseParams, parseQuery } from '../utils/validate'
 import { notFound } from '../error'
-import { authorize, requireBatchAccess, requireBatchListAccess } from '../utils/auth'
+import { authorize, getBatchAccess, getBatchListAccess, requireAccess } from '../utils/auth'
 import {
   createBatch,
   createBatchSchema,
@@ -21,10 +21,12 @@ const router = Router()
 router.get('/', async (req, res) => {
   const db = schoolDb(res)
   const query = parseQuery(listBatchesQuerySchema, req)
-  const access = await requireBatchListAccess(req, db, {
-    schoolPermission: { batch: ['read'] },
-    allBatchesPermission: { batch: ['update'] },
-  })
+  const access = await requireAccess(
+    getBatchListAccess(req, db, {
+      schoolPermission: { batch: ['read'] },
+      allBatchesPermission: { batch: ['update'] },
+    }),
+  )
 
   const result = await findBatches(db, { ...query, access })
   res.status(200).json({ ok: true, data: result })
@@ -33,10 +35,12 @@ router.get('/', async (req, res) => {
 router.get('/:batchId', async (req, res) => {
   const db = schoolDb(res)
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
-  await requireBatchAccess(req, db, batchId, {
-    schoolPermission: { batch: ['update'] },
-    batchPermission: { enrollment: ['read'] },
-  })
+  await requireAccess(
+    getBatchAccess(req, db, batchId, {
+      schoolPermission: { batch: ['update'] },
+      batchPermission: { enrollment: ['read'] },
+    }),
+  )
 
   const batchDetail = await findBatchByIdWithMembers(db, batchId)
   if (!batchDetail) {

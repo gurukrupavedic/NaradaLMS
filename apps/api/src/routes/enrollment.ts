@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { userIdSchema } from '@narada/auth/ids'
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
-import { requireBatchAccess } from '../utils/auth'
+import { getBatchAccess, requireAccess } from '../utils/auth'
 import { findBatchById } from '../services/batch'
 import { enrollSchema, enrollUser, unenrollUser } from '../services/enrollment'
 import { schoolDb } from '../middlewares/school'
@@ -16,10 +16,12 @@ router.post('/', async (req, res) => {
   const db = schoolDb(res)
   const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
   const data = parseBody(enrollSchema, req)
-  await requireBatchAccess(req, db, batchId, {
-    schoolPermission: { enrollment: ['create'] },
-    batchPermission: { enrollment: ['create'] },
-  })
+  await requireAccess(
+    getBatchAccess(req, db, batchId, {
+      schoolPermission: { enrollment: ['create'] },
+      batchPermission: { enrollment: ['create'] },
+    }),
+  )
 
   const batch = await findBatchById(db, batchId)
   if (!batch) {
@@ -37,10 +39,12 @@ router.delete('/:userId', async (req, res) => {
     req,
   )
 
-  await requireBatchAccess(req, db, batchId, {
-    schoolPermission: { enrollment: ['remove'] },
-    batchPermission: { enrollment: ['remove'] },
-  })
+  await requireAccess(
+    getBatchAccess(req, db, batchId, {
+      schoolPermission: { enrollment: ['remove'] },
+      batchPermission: { enrollment: ['remove'] },
+    }),
+  )
 
   await unenrollUser(db, batchId, userId)
   res.status(204).send()
