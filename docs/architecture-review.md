@@ -3,7 +3,7 @@
 **Date:** 2026-05-28
 **Audience:** A coding agent picking up this document cold. Every item is meant to be actionable without further context.
 
-**Status:** The previous passes have been almost entirely worked through. Both cross-batch leaks (read and write side), audio idempotency, audio delete ordering, the dead auth branch, exam-route auth ordering, the `CREATE EXTENSION` placement, R2 signed-download enforcement, per-request URL caching, the duplicated response mappers/types/enums, validation helpers, rate limiting, explicit CORS methods, Node pinning, the logger type, duplicate failed-request logging, documented merge-param routers, BetterAuth CLI/version pinning, school context via `X-School-Slug`, school creation as an admin script, school provisioning cleanup/reconciliation, UUIDv7 domain IDs/cursor tie-breaks, cascade delete strategy, bulk content reordering, enrollment status removal, chapter code uniqueness, the decision to keep BetterAuth `organization.metadata`, the revised exam/evaluation model, service modules as named free functions, `SchoolDbExecutor` for transaction-compatible service calls, and access-query auth helpers are all resolved. This document keeps **only the items that still need attention**, grouped by whether they're objective or opinion.
+**Status:** The previous passes have been almost entirely worked through. Both cross-batch leaks (read and write side), audio idempotency, audio delete ordering, the dead auth branch, exam-route auth ordering, the `CREATE EXTENSION` placement, R2 signed-download enforcement, per-request URL caching, the duplicated response mappers/types/enums, validation helpers, rate limiting, explicit CORS methods, Node pinning, the logger type, duplicate failed-request logging, documented merge-param routers, BetterAuth CLI/version pinning, school context via `X-School-Slug`, school creation as an admin script, school provisioning cleanup/reconciliation, UUIDv7 domain IDs/cursor tie-breaks, cascade delete strategy, bulk content reordering, enrollment status removal, chapter code uniqueness, the decision to keep BetterAuth `organization.metadata`, the revised exam/evaluation model, service modules as named free functions, `SchoolDbExecutor` for transaction-compatible service calls, access-query auth helpers, and deferring staged-upload sessions until the upload workflow needs them are all resolved. This document keeps **only the items that still need attention**, grouped by whether they're objective or opinion.
 
 **How to read:** §1 is ops. §2 is architectural shape (opinion — confirm scope first). §3 is small cleanups. §4 is the short forward-looking list.
 
@@ -53,10 +53,6 @@ These reduce the cost of the next ten features rather than fixing a bug.
 
 The dead `batch` branch that abused this is gone — good. The one remaining cast lives in `schoolDb()`, which is safe (it checks `res.locals.school` first) but unexplained. Add a one-line comment noting the cast is sound because `resolveDb` sets `school` and the scoped `db` together. Optional: have `resolveDb` track the branded type instead of relying on the cast — probably more machinery than it's worth.
 
-### 2.2 Staged-upload session (when the second upload flow lands)
-
-Today: presign → client uploads → POST registers, with the DB blind between presign and POST (the janitor cleans crashes after the safety window). A richer shape — `stage()` writes a `pending` row and returns a `commitToken`; `commit()` flips it `active` after a HEAD — gives idempotency-by-design, a TTL on pending uploads, and a cleaner split for the janitor. Not needed now; revisit when the script-upload or any second file flow arrives.
-
 ---
 
 ## 3. Smaller cleanups
@@ -77,10 +73,10 @@ Today: presign → client uploads → POST registers, with the DB blind between 
 
 ---
 
-## 4. Forward-looking: before the frontend lands
+## 4. Deferred decisions
 
-The API is in good shape. Two decisions shape every later one and are cheaper to make now than after a UI depends on them:
+### 4.1 Staged-upload sessions
 
-1. **Decide the staged-upload shape (§2.2).** A second upload flow should not copy the current presign/register contract blindly.
+Keep the current presign → client upload → register/apply flow while uploads only need object existence checks and janitor cleanup. Add a DB-backed staged-upload session only when uploads need resumability, user-visible pending state, multi-step commit, or a second upload workflow that should not copy the current contract blindly.
 
 Everything else here is incrementally cleanable alongside other work in the same files.
