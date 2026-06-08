@@ -4,12 +4,15 @@ import { z } from 'zod'
 import { userIdSchema } from '@narada/auth/ids'
 import { parseBody, parseParams, parseQuery } from '../utils/validate'
 import { getSession, requireBatchAccess } from '../utils/auth'
-import EvaluationService, {
+import {
+  createEvaluation,
   createEvaluationSchema,
+  findEvaluationsByBatch,
+  findEvaluationsByStudent,
   listEvaluationsQuerySchema,
 } from '../services/evaluation'
-import BatchService from '../services/batch'
-import EnrollmentService from '../services/enrollment'
+import { findBatchById } from '../services/batch'
+import { findEnrollment } from '../services/enrollment'
 import { schoolDb } from '../middlewares/school'
 import { notFound, unprocessable } from '../error'
 
@@ -25,7 +28,7 @@ router.get('/', async (req, res) => {
     batchPermission: { evaluation: ['create'] },
   })
 
-  const result = await EvaluationService.findByBatch(db, batchId, query)
+  const result = await findEvaluationsByBatch(db, batchId, query)
   res.status(200).json({ ok: true, data: result })
 })
 
@@ -50,7 +53,7 @@ router.get('/:studentId', async (req, res) => {
     })
   }
 
-  const result = await EvaluationService.findByStudent(db, batchId, studentId, query)
+  const result = await findEvaluationsByStudent(db, batchId, studentId, query)
   res.status(200).json({ ok: true, data: result })
 })
 
@@ -62,7 +65,7 @@ router.post('/', async (req, res) => {
     batchPermission: { evaluation: ['create'] },
   })
 
-  const studentEnrollment = await EnrollmentService.findOne(db, data.studentId, batchId)
+  const studentEnrollment = await findEnrollment(db, data.studentId, batchId)
   if (!studentEnrollment || studentEnrollment.role !== 'student') {
     throw unprocessable('student is not enrolled in this batch')
   }
@@ -73,13 +76,13 @@ router.post('/', async (req, res) => {
   })
 
   if (!chapter) throw notFound()
-  const batch = await BatchService.findById(db, batchId)
+  const batch = await findBatchById(db, batchId)
   if (!batch) throw notFound()
   if (chapter.trackId !== batch.trackId) {
     throw unprocessable('chapter does not belong to this batch track')
   }
 
-  const created = await EvaluationService.create(db, access.userId, data)
+  const created = await createEvaluation(db, access.userId, data)
   res.status(201).json({ ok: true, data: created })
 })
 

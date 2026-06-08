@@ -5,8 +5,8 @@ import { userIdSchema } from '@narada/auth/ids'
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import { requireBatchAccess } from '../utils/auth'
-import BatchService from '../services/batch'
-import EnrollmentService, { enrollSchema } from '../services/enrollment'
+import { findBatchById } from '../services/batch'
+import { enrollSchema, enrollUser, unenrollUser } from '../services/enrollment'
 import { schoolDb } from '../middlewares/school'
 
 // mergeParams: parent path provides :batchId.
@@ -21,12 +21,12 @@ router.post('/', async (req, res) => {
     batchPermission: { enrollment: ['create'] },
   })
 
-  const batch = await BatchService.findById(db, batchId)
+  const batch = await findBatchById(db, batchId)
   if (!batch) {
     throw notFound()
   }
 
-  const enrolled = await EnrollmentService.enroll(db, batchId, data)
+  const enrolled = await enrollUser(db, batchId, data)
   res.status(201).json({ ok: true, data: enrolled })
 })
 
@@ -42,7 +42,7 @@ router.delete('/:userId', async (req, res) => {
     batchPermission: { enrollment: ['remove'] },
   })
 
-  await EnrollmentService.unenroll(db, batchId, userId)
+  await unenrollUser(db, batchId, userId)
   res.status(204).send()
 })
 

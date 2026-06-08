@@ -1,7 +1,7 @@
 import { env, exit } from 'node:process'
 
 import { shutdownPools } from '@narada/db'
-import SchoolService, { createSchoolSchema } from '../services/school'
+import { createSchool, createSchoolSchema } from '../services/school'
 
 const parsed = createSchoolSchema.safeParse({
   name: env.SCHOOL_NAME,
@@ -15,7 +15,7 @@ if (!parsed.success) {
 }
 
 try {
-  const school = await SchoolService.create(parsed.data)
+  const school = await createSchool(parsed.data)
   console.log(JSON.stringify(school, null, 2))
 } finally {
   await shutdownPools()

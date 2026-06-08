@@ -82,60 +82,58 @@ async function detailResponse(row: ChapterContentRow): Promise<ChapterDetail> {
   }
 }
 
-export default class ChapterReader {
-  public static async findById(
-    db: SchoolDatabase,
-    chapterId: string,
-    view: ChapterReadView,
-  ): Promise<ChapterDetail | StudentChapterDetail | undefined> {
-    const row = await db.query.chapter.findFirst({
-      where: (t, { and: a, eq: e }) =>
-        canReadDrafts(view) ? e(t.id, chapterId) : a(e(t.id, chapterId), e(t.status, 'published')),
-      with: {
-        segments: { orderBy: asc(segment.start) },
-        audioAssets: { with: { audioMappings: true } },
-      },
+export async function findChapterById(
+  db: SchoolDatabase,
+  chapterId: string,
+  view: ChapterReadView,
+): Promise<ChapterDetail | StudentChapterDetail | undefined> {
+  const row = await db.query.chapter.findFirst({
+    where: (t, { and: a, eq: e }) =>
+      canReadDrafts(view) ? e(t.id, chapterId) : a(e(t.id, chapterId), e(t.status, 'published')),
+    with: {
+      segments: { orderBy: asc(segment.start) },
+      audioAssets: { with: { audioMappings: true } },
+    },
+  })
+
+  if (!row) return undefined
+  if (view.kind === 'student') {
+    const { studentId } = view
+    const canRead = await studentCanReadTrack(db, studentId, row.trackId)
+    if (!canRead) return undefined
+
+    const latestEval = await db.query.evaluation.findFirst({
+      where: (t, { and: a, eq: e }) => a(e(t.studentId, studentId), e(t.chapterId, chapterId)),
+      orderBy: (t, { desc }) => desc(t.evaluatedAt),
     })
 
-    if (!row) return undefined
-    if (view.kind === 'student') {
-      const { studentId } = view
-      const canRead = await studentCanReadTrack(db, studentId, row.trackId)
-      if (!canRead) return undefined
-
-      const latestEval = await db.query.evaluation.findFirst({
-        where: (t, { and: a, eq: e }) => a(e(t.studentId, studentId), e(t.chapterId, chapterId)),
-        orderBy: (t, { desc }) => desc(t.evaluatedAt),
-      })
-
-      return {
-        ...(await detailResponse(row)),
-        currentLevel: latestEval?.level ?? null,
-      }
+    return {
+      ...(await detailResponse(row)),
+      currentLevel: latestEval?.level ?? null,
     }
-
-    return detailResponse(row)
   }
 
-  public static async findSegmentsByChapter(
-    db: SchoolDatabase,
-    chapterId: string,
-    view: ChapterReadView,
-  ): Promise<Segment[] | undefined> {
-    const row = await db.query.chapter.findFirst({
-      where: (t, { and: a, eq: e }) =>
-        canReadDrafts(view) ? e(t.id, chapterId) : a(e(t.id, chapterId), e(t.status, 'published')),
-      with: {
-        segments: { orderBy: asc(segment.start) },
-      },
-    })
+  return detailResponse(row)
+}
 
-    if (!row) return undefined
-    if (view.kind === 'student') {
-      const canRead = await studentCanReadTrack(db, view.studentId, row.trackId)
-      if (!canRead) return undefined
-    }
+export async function findSegmentsByChapter(
+  db: SchoolDatabase,
+  chapterId: string,
+  view: ChapterReadView,
+): Promise<Segment[] | undefined> {
+  const row = await db.query.chapter.findFirst({
+    where: (t, { and: a, eq: e }) =>
+      canReadDrafts(view) ? e(t.id, chapterId) : a(e(t.id, chapterId), e(t.status, 'published')),
+    with: {
+      segments: { orderBy: asc(segment.start) },
+    },
+  })
 
-    return row.segments
+  if (!row) return undefined
+  if (view.kind === 'student') {
+    const canRead = await studentCanReadTrack(db, view.studentId, row.trackId)
+    if (!canRead) return undefined
   }
+
+  return row.segments
 }

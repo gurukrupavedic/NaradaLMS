@@ -5,8 +5,14 @@ import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import { authorize } from '../utils/auth'
 import { authoringView, authorizeContentReadView } from '../utils/chapterView'
-import ChapterReader from '../services/chapterReader'
-import ChapterService, { createChapterSchema, updateChapterSchema } from '../services/chapter'
+import { findChapterById } from '../services/chapterReader'
+import {
+  applyChapterScript,
+  createChapter,
+  createChapterSchema,
+  updateChapter,
+  updateChapterSchema,
+} from '../services/chapter'
 import { schoolDb } from '../middlewares/school'
 import { objectLifecycle } from '../services/objectLifecycle'
 
@@ -17,7 +23,7 @@ router.get('/:chapterId', async (req, res) => {
   const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
   const view = await authorizeContentReadView(req)
-  const chapter = await ChapterReader.findById(db, chapterId, view)
+  const chapter = await findChapterById(db, chapterId, view)
   if (!chapter) {
     throw notFound()
   }
@@ -30,7 +36,7 @@ router.post('/', async (req, res) => {
   const data = parseBody(createChapterSchema, req)
 
   await authorize(req, { scope: 'school', permissions: { content: ['create'] } })
-  const created = await ChapterService.create(db, data)
+  const created = await createChapter(db, data)
   res.status(201).json({ ok: true, data: created })
 })
 
@@ -40,12 +46,12 @@ router.patch('/:chapterId', async (req, res) => {
   const updates = parseBody(updateChapterSchema, req)
 
   await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
-  const existing = await ChapterReader.findById(db, chapterId, authoringView)
+  const existing = await findChapterById(db, chapterId, authoringView)
   if (!existing) {
     throw notFound()
   }
 
-  const updated = await ChapterService.update(db, chapterId, updates)
+  const updated = await updateChapter(db, chapterId, updates)
   res.status(200).json({ ok: true, data: updated })
 })
 
@@ -60,7 +66,7 @@ router.post('/:chapterId/script', async (req, res) => {
   const { objectKey, script } = parseBody(applyScriptSchema, req)
 
   await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
-  const updated = await ChapterService.applyScript(db, chapterId, script, objectKey)
+  const updated = await applyChapterScript(db, chapterId, script, objectKey)
   res.status(200).json({ ok: true, data: updated })
 })
 

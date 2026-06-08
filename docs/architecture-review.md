@@ -3,7 +3,7 @@
 **Date:** 2026-05-28
 **Audience:** A coding agent picking up this document cold. Every item is meant to be actionable without further context.
 
-**Status:** The previous passes have been almost entirely worked through. Both cross-batch leaks (read and write side), audio idempotency, audio delete ordering, the dead auth branch, exam-route auth ordering, the `CREATE EXTENSION` placement, R2 signed-download enforcement, per-request URL caching, the duplicated response mappers/types/enums, validation helpers, rate limiting, explicit CORS methods, Node pinning, the logger type, duplicate failed-request logging, documented merge-param routers, BetterAuth CLI/version pinning, school context via `X-School-Slug`, school creation as an admin script, school provisioning cleanup/reconciliation, UUIDv7 domain IDs/cursor tie-breaks, cascade delete strategy, bulk content reordering, enrollment status removal, chapter code uniqueness, the decision to keep BetterAuth `organization.metadata`, and the revised exam/evaluation model are all resolved. This document keeps **only the items that still need attention**, grouped by whether they're objective or opinion.
+**Status:** The previous passes have been almost entirely worked through. Both cross-batch leaks (read and write side), audio idempotency, audio delete ordering, the dead auth branch, exam-route auth ordering, the `CREATE EXTENSION` placement, R2 signed-download enforcement, per-request URL caching, the duplicated response mappers/types/enums, validation helpers, rate limiting, explicit CORS methods, Node pinning, the logger type, duplicate failed-request logging, documented merge-param routers, BetterAuth CLI/version pinning, school context via `X-School-Slug`, school creation as an admin script, school provisioning cleanup/reconciliation, UUIDv7 domain IDs/cursor tie-breaks, cascade delete strategy, bulk content reordering, enrollment status removal, chapter code uniqueness, the decision to keep BetterAuth `organization.metadata`, the revised exam/evaluation model, and service modules as named free functions are all resolved. This document keeps **only the items that still need attention**, grouped by whether they're objective or opinion.
 
 **How to read:** §1 is ops. §2 is architectural shape (opinion — confirm scope first). §3 is small cleanups. §4 is the short forward-looking list.
 
@@ -28,11 +28,11 @@
 `hasBatchPermission` is covered — good start. The next-highest-value pure-logic targets, all cheap to test in isolation:
 
 - `validateNoOverlaps` (segment + audio mapping)
-- the null-tail page-stitching in `EvaluationService.findByBatch` / `BatchService.findAll` (complex, untested, easy to break)
+- the null-tail page-stitching in `findEvaluationsByBatch` / `findBatches` (complex, untested, easy to break)
 - `paginateResponse` + `compoundCursor` round-trips
 - response mappers (`chapterResponse` / `audioAssetResponse`) with a mocked `urlFor`
 
-Then an integration suite (vitest + Postgres-via-docker) for the cross-batch authorization paths and `SchoolService.create` rollback. Add a root `test` script (currently only `@narada/auth` has one) so `pnpm -r test` works.
+Then an integration suite (vitest + Postgres-via-docker) for the cross-batch authorization paths and `createSchool` rollback. Add a root `test` script (currently only `@narada/auth` has one) so `pnpm -r test` works.
 
 ### 1.2 Security hardening: CSRF and CSP remain
 
@@ -47,31 +47,21 @@ Rate limiting landed on `/auth/*`. Still open before exposing to real users:
 
 These reduce the cost of the next ten features rather than fixing a bug.
 
-### 2.1 Service classes are namespaces in disguise
-
-11 services are classes with only static methods; `objectLifecycle` is a const object; `ChapterReader` is a default-exported class. No encapsulation, no state — just import ceremony. Pick one shape and apply it everywhere:
-
-1. **Free functions** — `export async function createChapter(db, data)`. Best tree-shaking, matches the "utility functions" preference. Recommended.
-2. **Object literals** — `export const chapterService = { create, update }`.
-3. **Status quo**, documented so new code doesn't drift.
-
-The grep cost is one-time; the readability win compounds. Worth settling before the frontend doubles the call sites.
-
-### 2.2 The remaining `db as SchoolDatabase` cast
+### 2.1 The remaining `db as SchoolDatabase` cast
 
 **File:** [apps/api/src/middlewares/school.ts:38-44](../apps/api/src/middlewares/school.ts)
 
 The dead `batch` branch that abused this is gone — good. The one remaining cast lives in `schoolDb()`, which is safe (it checks `res.locals.school` first) but unexplained. Add a one-line comment noting the cast is sound because `resolveDb` sets `school` and the scoped `db` together. Optional: have `resolveDb` track the branded type instead of relying on the cast — probably more machinery than it's worth.
 
-### 2.3 No transaction primitive at the service boundary
+### 2.2 No transaction primitive at the service boundary
 
 Each service opens its own `db.transaction(...)`. Symptom-free today because no operation spans services. The frontend will introduce composites ("create batch + enroll the creator as instructor"; "create exam + chapter list"). When it does, you'll either thread `db | tx` through service signatures or write transaction-orchestrator functions outside services. Decide the shape before the first composite lands.
 
-### 2.4 The auth helper triplet
+### 2.3 The auth helper triplet
 
 `authorize` / `requireBatchAccess` / `requireBatchListAccess` ([apps/api/src/utils/auth.ts](../apps/api/src/utils/auth.ts)) share a vocabulary but have different parameter shapes, so routes must know which to call. The `BatchAccess` discriminated union is the right direction. Worth experimenting with collapsing into a single `authorize(req, db, claim): Promise<Access>` that returns a discriminated `Access` (`super` | `schoolWide` | `singleBatch` | `enrolled` | `self`) and letting routes branch on `.kind`. Try it on one claim-heavy route (e.g. `GET /v1/batches`) before propagating.
 
-### 2.5 Staged-upload session (when the second upload flow lands)
+### 2.4 Staged-upload session (when the second upload flow lands)
 
 Today: presign → client uploads → POST registers, with the DB blind between presign and POST (the janitor cleans crashes after the safety window). A richer shape — `stage()` writes a `pending` row and returns a `commitToken`; `commit()` flips it `active` after a HEAD — gives idempotency-by-design, a TTL on pending uploads, and a cleaner split for the janitor. Not needed now; revisit when the script-upload or any second file flow arrives.
 
@@ -99,7 +89,7 @@ Today: presign → client uploads → POST registers, with the DB blind between 
 
 The API is in good shape. Two decisions shape every later one and are cheaper to make now than after a UI depends on them:
 
-1. **Pick a service shape (§2.1).** The first cross-service composite operation (§2.3) shouldn't have to fight the conventions.
-2. **Decide the staged-upload shape (§2.5).** A second upload flow should not copy the current presign/register contract blindly.
+1. **Settle the transaction primitive (§2.2).** The first cross-service composite operation should not have to invent the convention under deadline pressure.
+2. **Decide the staged-upload shape (§2.4).** A second upload flow should not copy the current presign/register contract blindly.
 
 Everything else here is incrementally cleanable alongside other work in the same files.

@@ -4,9 +4,14 @@ import { z } from 'zod'
 import { parseBody, parseParams, parseQuery } from '../utils/validate'
 import { notFound } from '../error'
 import { authorize, requireBatchAccess, requireBatchListAccess } from '../utils/auth'
-import BatchService, {
+import {
+  createBatch,
   createBatchSchema,
+  findBatchById,
+  findBatchByIdWithMembers,
+  findBatches,
   listBatchesQuerySchema,
+  updateBatch,
   updateBatchSchema,
 } from '../services/batch'
 import { schoolDb } from '../middlewares/school'
@@ -21,7 +26,7 @@ router.get('/', async (req, res) => {
     allBatchesPermission: { batch: ['update'] },
   })
 
-  const result = await BatchService.findAll(db, { ...query, access })
+  const result = await findBatches(db, { ...query, access })
   res.status(200).json({ ok: true, data: result })
 })
 
@@ -33,7 +38,7 @@ router.get('/:batchId', async (req, res) => {
     batchPermission: { enrollment: ['read'] },
   })
 
-  const batchDetail = await BatchService.findByIdWithMembers(db, batchId)
+  const batchDetail = await findBatchByIdWithMembers(db, batchId)
   if (!batchDetail) {
     throw notFound()
   }
@@ -46,7 +51,7 @@ router.post('/', async (req, res) => {
   const data = parseBody(createBatchSchema, req)
 
   await authorize(req, { scope: 'school', permissions: { batch: ['create'] } })
-  const created = await BatchService.create(db, data)
+  const created = await createBatch(db, data)
   res.status(201).json({ ok: true, data: created })
 })
 
@@ -56,12 +61,12 @@ router.patch('/:batchId', async (req, res) => {
   const updates = parseBody(updateBatchSchema, req)
 
   await authorize(req, { scope: 'school', permissions: { batch: ['update'] } })
-  const existing = await BatchService.findById(db, batchId)
+  const existing = await findBatchById(db, batchId)
   if (!existing) {
     throw notFound()
   }
 
-  const updated = await BatchService.update(db, batchId, updates)
+  const updated = await updateBatch(db, batchId, updates)
   res.status(200).json({ ok: true, data: updated })
 })
 

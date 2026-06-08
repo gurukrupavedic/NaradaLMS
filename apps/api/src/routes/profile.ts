@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { getSession } from '../utils/auth'
 import { parseBody, parseParams } from '../utils/validate'
-import ProfileService, { updateProfileSchema } from '../services/profile'
+import { getProfile, updateProfile, updateProfileSchema } from '../services/profile'
 import { schoolDb } from '../middlewares/school'
 
 export const publicProfileRouter = Router()
@@ -11,7 +11,7 @@ export const publicProfileRouter = Router()
 publicProfileRouter.get('/', async (req, res) => {
   const { user } = await getSession(req)
 
-  const profile = await ProfileService.get(user.id, user.isSuperAdmin)
+  const profile = await getProfile(user.id, user.isSuperAdmin)
   res.status(200).json({ ok: true, data: profile })
 })
 
@@ -24,6 +24,6 @@ batchEnrollmentProfileRouter.patch('/', async (req, res) => {
   const updates = parseBody(updateProfileSchema, req)
 
   const { user } = await getSession(req)
-  await ProfileService.update(db, user.id, batchId, updates)
+  await updateProfile(db, user.id, batchId, updates)
   res.status(200).json({ ok: true })
 })

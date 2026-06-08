@@ -3,7 +3,12 @@ import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-
 
 import { userIdSchema } from '@narada/auth/ids'
 import { enrollment, evaluation, type SchoolDatabase } from '@narada/db'
-import { compoundCursor, nullableDateCursorField, paginateResponse, uuidCursorField } from '../utils/cursor'
+import {
+  compoundCursor,
+  nullableDateCursorField,
+  paginateResponse,
+  uuidCursorField,
+} from '../utils/cursor'
 import { internalError, notFound } from '../error'
 import { proficiencyLevelSchema } from './shared'
 
@@ -17,7 +22,10 @@ export const createEvaluationSchema = z.object({
 })
 
 export const listEvaluationsQuerySchema = z.object({
-  cursor: compoundCursor({ evaluatedAt: nullableDateCursorField(), id: uuidCursorField() }).optional(),
+  cursor: compoundCursor({
+    evaluatedAt: nullableDateCursorField(),
+    id: uuidCursorField(),
+  }).optional(),
   limit: z.coerce.number().int().positive().max(100).default(PAGE_SIZE),
 })
 
@@ -44,141 +52,139 @@ function evaluationPage(rows: Evaluation[], limit: number): EvaluationPage {
   return paginateResponse(rows, limit, item => ({ evaluatedAt: item.evaluatedAt, id: item.id }))
 }
 
-export default class EvaluationService {
-  public static async create(
-    db: SchoolDatabase,
-    evaluatorId: string,
-    data: CreateEvaluationData,
-  ): Promise<Evaluation> {
-    const rows = await db
-      .insert(evaluation)
-      .values({ ...data, evaluatorId })
-      .returning()
+export async function createEvaluation(
+  db: SchoolDatabase,
+  evaluatorId: string,
+  data: CreateEvaluationData,
+): Promise<Evaluation> {
+  const rows = await db
+    .insert(evaluation)
+    .values({ ...data, evaluatorId })
+    .returning()
 
-    const row = rows.at(0)
-    if (!row) throw internalError()
-    return row
-  }
+  const row = rows.at(0)
+  if (!row) throw internalError()
+  return row
+}
 
-  public static async findByBatch(
-    db: SchoolDatabase,
-    batchId: string,
-    options: ListEvaluationsQuery,
-  ): Promise<EvaluationPage> {
-    const batchRow = await db.query.batch.findFirst({
-      where: (t, { eq }) => eq(t.id, batchId),
-    })
+export async function findEvaluationsByBatch(
+  db: SchoolDatabase,
+  batchId: string,
+  options: ListEvaluationsQuery,
+): Promise<EvaluationPage> {
+  const batchRow = await db.query.batch.findFirst({
+    where: (t, { eq }) => eq(t.id, batchId),
+  })
 
-    if (!batchRow) throw notFound()
-    const chapterRows = await db.query.chapter.findMany({
-      where: (t, { eq }) => eq(t.trackId, batchRow.trackId),
-      columns: { id: true },
-    })
+  if (!batchRow) throw notFound()
+  const chapterRows = await db.query.chapter.findMany({
+    where: (t, { eq }) => eq(t.trackId, batchRow.trackId),
+    columns: { id: true },
+  })
 
-    const chapterIds = chapterRows.map(c => c.id)
-    if (chapterIds.length === 0) return { items: [], nextCursor: null }
-    const enrolledStudentIds = db
-      .select({ userId: enrollment.userId })
-      .from(enrollment)
-      .where(eq(enrollment.batchId, batchId))
+  const chapterIds = chapterRows.map(c => c.id)
+  if (chapterIds.length === 0) return { items: [], nextCursor: null }
+  const enrolledStudentIds = db
+    .select({ userId: enrollment.userId })
+    .from(enrollment)
+    .where(eq(enrollment.batchId, batchId))
 
-    const conditions = [
-      inArray(evaluation.studentId, enrolledStudentIds),
-      inArray(evaluation.chapterId, chapterIds),
-    ]
+  const conditions = [
+    inArray(evaluation.studentId, enrolledStudentIds),
+    inArray(evaluation.chapterId, chapterIds),
+  ]
 
-    const cursorWhere = evaluationCursorWhere(options.cursor)
-    if (options.cursor?.evaluatedAt === null) {
-      if (cursorWhere) conditions.push(cursorWhere)
-      const rows = await db.query.evaluation.findMany({
-        where: and(...conditions),
-        orderBy: desc(evaluation.id),
-        limit: options.limit + 1,
-      })
-
-      return evaluationPage(rows, options.limit)
-    }
-
-    const nonNullConditions = [...conditions, isNotNull(evaluation.evaluatedAt)]
-    if (cursorWhere) nonNullConditions.push(cursorWhere)
+  const cursorWhere = evaluationCursorWhere(options.cursor)
+  if (options.cursor?.evaluatedAt === null) {
+    if (cursorWhere) conditions.push(cursorWhere)
     const rows = await db.query.evaluation.findMany({
-      where: and(...nonNullConditions),
-      orderBy: [sql`${evaluation.evaluatedAt} desc nulls last`, desc(evaluation.id)],
+      where: and(...conditions),
+      orderBy: desc(evaluation.id),
       limit: options.limit + 1,
     })
-
-    if (rows.length <= options.limit) {
-      const nullRows = await db.query.evaluation.findMany({
-        where: and(...conditions, isNull(evaluation.evaluatedAt)),
-        orderBy: desc(evaluation.id),
-        limit: options.limit + 1 - rows.length,
-      })
-
-      rows.push(...nullRows)
-    }
 
     return evaluationPage(rows, options.limit)
   }
 
-  public static async findByStudent(
-    db: SchoolDatabase,
-    batchId: string,
-    studentId: string,
-    options: ListEvaluationsQuery,
-  ): Promise<EvaluationPage> {
-    const batchRow = await db.query.batch.findFirst({
-      where: (t, { eq }) => eq(t.id, batchId),
+  const nonNullConditions = [...conditions, isNotNull(evaluation.evaluatedAt)]
+  if (cursorWhere) nonNullConditions.push(cursorWhere)
+  const rows = await db.query.evaluation.findMany({
+    where: and(...nonNullConditions),
+    orderBy: [sql`${evaluation.evaluatedAt} desc nulls last`, desc(evaluation.id)],
+    limit: options.limit + 1,
+  })
+
+  if (rows.length <= options.limit) {
+    const nullRows = await db.query.evaluation.findMany({
+      where: and(...conditions, isNull(evaluation.evaluatedAt)),
+      orderBy: desc(evaluation.id),
+      limit: options.limit + 1 - rows.length,
     })
 
-    if (!batchRow) throw notFound()
-    const chapterRows = await db.query.chapter.findMany({
-      where: (t, { eq }) => eq(t.trackId, batchRow.trackId),
-      columns: { id: true },
-    })
+    rows.push(...nullRows)
+  }
 
-    const chapterIds = chapterRows.map(c => c.id)
-    if (chapterIds.length === 0) return { items: [], nextCursor: null }
-    const enrolledStudentIds = db
-      .select({ userId: enrollment.userId })
-      .from(enrollment)
-      .where(eq(enrollment.batchId, batchId))
+  return evaluationPage(rows, options.limit)
+}
 
-    const conditions = [
-      eq(evaluation.studentId, studentId),
-      inArray(evaluation.studentId, enrolledStudentIds),
-      inArray(evaluation.chapterId, chapterIds),
-    ]
+export async function findEvaluationsByStudent(
+  db: SchoolDatabase,
+  batchId: string,
+  studentId: string,
+  options: ListEvaluationsQuery,
+): Promise<EvaluationPage> {
+  const batchRow = await db.query.batch.findFirst({
+    where: (t, { eq }) => eq(t.id, batchId),
+  })
 
-    const cursorWhere = evaluationCursorWhere(options.cursor)
-    if (options.cursor?.evaluatedAt === null) {
-      if (cursorWhere) conditions.push(cursorWhere)
-      const rows = await db.query.evaluation.findMany({
-        where: and(...conditions),
-        orderBy: desc(evaluation.id),
-        limit: options.limit + 1,
-      })
+  if (!batchRow) throw notFound()
+  const chapterRows = await db.query.chapter.findMany({
+    where: (t, { eq }) => eq(t.trackId, batchRow.trackId),
+    columns: { id: true },
+  })
 
-      return evaluationPage(rows, options.limit)
-    }
+  const chapterIds = chapterRows.map(c => c.id)
+  if (chapterIds.length === 0) return { items: [], nextCursor: null }
+  const enrolledStudentIds = db
+    .select({ userId: enrollment.userId })
+    .from(enrollment)
+    .where(eq(enrollment.batchId, batchId))
 
-    const nonNullConditions = [...conditions, isNotNull(evaluation.evaluatedAt)]
-    if (cursorWhere) nonNullConditions.push(cursorWhere)
+  const conditions = [
+    eq(evaluation.studentId, studentId),
+    inArray(evaluation.studentId, enrolledStudentIds),
+    inArray(evaluation.chapterId, chapterIds),
+  ]
 
+  const cursorWhere = evaluationCursorWhere(options.cursor)
+  if (options.cursor?.evaluatedAt === null) {
+    if (cursorWhere) conditions.push(cursorWhere)
     const rows = await db.query.evaluation.findMany({
-      where: and(...nonNullConditions),
-      orderBy: [sql`${evaluation.evaluatedAt} desc nulls last`, desc(evaluation.id)],
+      where: and(...conditions),
+      orderBy: desc(evaluation.id),
       limit: options.limit + 1,
     })
 
-    if (rows.length <= options.limit) {
-      const nullRows = await db.query.evaluation.findMany({
-        where: and(...conditions, isNull(evaluation.evaluatedAt)),
-        orderBy: desc(evaluation.id),
-        limit: options.limit + 1 - rows.length,
-      })
-      rows.push(...nullRows)
-    }
-
     return evaluationPage(rows, options.limit)
   }
+
+  const nonNullConditions = [...conditions, isNotNull(evaluation.evaluatedAt)]
+  if (cursorWhere) nonNullConditions.push(cursorWhere)
+
+  const rows = await db.query.evaluation.findMany({
+    where: and(...nonNullConditions),
+    orderBy: [sql`${evaluation.evaluatedAt} desc nulls last`, desc(evaluation.id)],
+    limit: options.limit + 1,
+  })
+
+  if (rows.length <= options.limit) {
+    const nullRows = await db.query.evaluation.findMany({
+      where: and(...conditions, isNull(evaluation.evaluatedAt)),
+      orderBy: desc(evaluation.id),
+      limit: options.limit + 1 - rows.length,
+    })
+    rows.push(...nullRows)
+  }
+
+  return evaluationPage(rows, options.limit)
 }

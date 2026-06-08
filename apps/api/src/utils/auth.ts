@@ -9,7 +9,7 @@ import {
 } from '@narada/auth/permissions'
 import type { SchoolDatabase } from '@narada/db'
 import { forbidden, unauthorized } from '../error'
-import EnrollmentService, { type Enrollment } from '../services/enrollment'
+import { findEnrollment, type Enrollment } from '../services/enrollment'
 
 export type AuthenticatedSession = typeof auth.$Infer.Session
 
@@ -106,7 +106,7 @@ export async function requireBatchAccess(
     }
   }
 
-  const enrollment = await EnrollmentService.findOne(db, user.id, batchId)
+  const enrollment = await findEnrollment(db, user.id, batchId)
   if (enrollment && hasBatchPermission(enrollment.role, claim.batchPermission)) {
     return { kind: 'singleBatch', userId: user.id, enrollment }
   }

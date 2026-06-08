@@ -28,38 +28,36 @@ function validateNoOverlaps(inputs: MappingInput[]): void {
   }
 }
 
-export default class AudioMappingService {
-  public static async replace(
-    db: SchoolDatabase,
-    audioAssetId: string,
-    chapterId: string,
-    inputs: MappingInput[],
-  ): Promise<AudioMapping[]> {
-    validateNoOverlaps(inputs)
-    const segmentIds = inputs.map(i => i.segmentId)
-    if (segmentIds.length > 0) {
-      const existing = await db.query.segment.findMany({
-        where: (t, { and, inArray }) => and(inArray(t.id, segmentIds), eq(t.chapterId, chapterId)),
-        columns: { id: true },
-      })
+export async function replaceAudioMappings(
+  db: SchoolDatabase,
+  audioAssetId: string,
+  chapterId: string,
+  inputs: MappingInput[],
+): Promise<AudioMapping[]> {
+  validateNoOverlaps(inputs)
+  const segmentIds = inputs.map(i => i.segmentId)
+  if (segmentIds.length > 0) {
+    const existing = await db.query.segment.findMany({
+      where: (t, { and, inArray }) => and(inArray(t.id, segmentIds), eq(t.chapterId, chapterId)),
+      columns: { id: true },
+    })
 
-      if (existing.length !== segmentIds.length) {
-        throw unprocessable()
-      }
+    if (existing.length !== segmentIds.length) {
+      throw unprocessable()
+    }
+  }
+
+  return await db.transaction(async tx => {
+    await tx.delete(audioMapping).where(eq(audioMapping.audioAssetId, audioAssetId))
+    if (inputs.length === 0) {
+      return []
     }
 
-    return await db.transaction(async tx => {
-      await tx.delete(audioMapping).where(eq(audioMapping.audioAssetId, audioAssetId))
-      if (inputs.length === 0) {
-        return []
-      }
+    const rows = await tx
+      .insert(audioMapping)
+      .values(inputs.map(i => ({ ...i, audioAssetId })))
+      .returning()
 
-      const rows = await tx
-        .insert(audioMapping)
-        .values(inputs.map(i => ({ ...i, audioAssetId })))
-        .returning()
-
-      return rows.sort((a, b) => a.audioStart - b.audioStart)
-    })
-  }
+    return rows.sort((a, b) => a.audioStart - b.audioStart)
+  })
 }

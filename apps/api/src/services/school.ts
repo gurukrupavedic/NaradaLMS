@@ -1,13 +1,7 @@
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 
-import {
-  organization,
-  publicDb,
-  provisionSchool,
-  dropSchoolSchema,
-  uuidv7,
-} from '@narada/db'
+import { organization, publicDb, provisionSchool, dropSchoolSchema, uuidv7 } from '@narada/db'
 import { conflict, internalError, notFound } from '../error'
 import { requireNonEmpty } from '../utils/validate'
 
@@ -40,66 +34,64 @@ function schoolResponse(row: DbOrg): School {
   return { id: row.id, name: row.name, slug: row.slug, createdAt: row.createdAt }
 }
 
-export default class SchoolService {
-  public static async findAll(): Promise<School[]> {
-    const rows = await publicDb.query.organization.findMany()
-    return rows.map(schoolResponse)
+export async function findSchools(): Promise<School[]> {
+  const rows = await publicDb.query.organization.findMany()
+  return rows.map(schoolResponse)
+}
+
+export async function findSchoolById(schoolId: string): Promise<School | undefined> {
+  const row = await publicDb.query.organization.findFirst({
+    where: (t, { eq }) => eq(t.id, schoolId),
+  })
+
+  return row ? schoolResponse(row) : undefined
+}
+
+export async function createSchool(data: CreateSchoolData): Promise<School> {
+  const existing = await publicDb.query.organization.findFirst({
+    where: (t, { eq }) => eq(t.slug, data.slug),
+  })
+
+  if (existing) throw conflict()
+  const id = uuidv7()
+  const rows = await publicDb
+    .insert(organization)
+    .values({ id, ...data, createdAt: new Date() })
+    .returning()
+
+  const row = rows.at(0)
+  if (!row) throw internalError()
+  try {
+    await provisionSchool(id)
+  } catch (error) {
+    await rollbackFailedCreate(id, error)
+    throw error
   }
 
-  public static async findById(schoolId: string): Promise<School | undefined> {
-    const row = await publicDb.query.organization.findFirst({
-      where: (t, { eq }) => eq(t.id, schoolId),
+  return schoolResponse(row)
+}
+
+export async function updateSchool(schoolId: string, data: UpdateSchoolData): Promise<School> {
+  const existing = await findSchoolById(schoolId)
+  if (!existing) throw notFound()
+
+  if (data.slug && data.slug !== existing.slug) {
+    const taken = await publicDb.query.organization.findFirst({
+      where: (t, { eq }) => eq(t.slug, data.slug!),
     })
 
-    return row ? schoolResponse(row) : undefined
+    if (taken) throw conflict()
   }
 
-  public static async create(data: CreateSchoolData): Promise<School> {
-    const existing = await publicDb.query.organization.findFirst({
-      where: (t, { eq }) => eq(t.slug, data.slug),
-    })
+  const rows = await publicDb
+    .update(organization)
+    .set(data)
+    .where(eq(organization.id, schoolId))
+    .returning()
 
-    if (existing) throw conflict()
-    const id = uuidv7()
-    const rows = await publicDb
-      .insert(organization)
-      .values({ id, ...data, createdAt: new Date() })
-      .returning()
-
-    const row = rows.at(0)
-    if (!row) throw internalError()
-    try {
-      await provisionSchool(id)
-    } catch (error) {
-      await rollbackFailedCreate(id, error)
-      throw error
-    }
-
-    return schoolResponse(row)
-  }
-
-  public static async update(schoolId: string, data: UpdateSchoolData): Promise<School> {
-    const existing = await SchoolService.findById(schoolId)
-    if (!existing) throw notFound()
-
-    if (data.slug && data.slug !== existing.slug) {
-      const taken = await publicDb.query.organization.findFirst({
-        where: (t, { eq }) => eq(t.slug, data.slug!),
-      })
-
-      if (taken) throw conflict()
-    }
-
-    const rows = await publicDb
-      .update(organization)
-      .set(data)
-      .where(eq(organization.id, schoolId))
-      .returning()
-
-    const row = rows.at(0)
-    if (!row) throw notFound()
-    return schoolResponse(row)
-  }
+  const row = rows.at(0)
+  if (!row) throw notFound()
+  return schoolResponse(row)
 }
 
 async function rollbackFailedCreate(schoolId: string, cause: unknown): Promise<void> {

@@ -31,111 +31,115 @@ export type CreateChapterData = z.infer<typeof createChapterSchema>
 export type UpdateChapterData = z.infer<typeof updateChapterSchema>
 export type ReorderChaptersData = z.infer<typeof reorderChaptersSchema>
 
-export default class ChapterService {
-  public static async create(db: SchoolDatabase, data: CreateChapterData): Promise<Chapter> {
-    const rows = await db
-      .insert(chapter)
-      .values({ ...data, order: await ChapterService.nextOrder(db, data.trackId) })
-      .returning()
-    const row = rows.at(0)
-    if (!row) throw internalError()
-    return chapterResponse(row)
-  }
+export async function createChapter(db: SchoolDatabase, data: CreateChapterData): Promise<Chapter> {
+  const rows = await db
+    .insert(chapter)
+    .values({ ...data, order: await nextChapterOrder(db, data.trackId) })
+    .returning()
+  const row = rows.at(0)
+  if (!row) throw internalError()
+  return chapterResponse(row)
+}
 
-  public static async update(
-    db: SchoolDatabase,
-    chapterId: string,
-    data: UpdateChapterData,
-  ): Promise<Chapter> {
-    const existing = await db.query.chapter.findFirst({
-      where: (t, { eq }) => eq(t.id, chapterId),
-      columns: { trackId: true },
+export async function updateChapter(
+  db: SchoolDatabase,
+  chapterId: string,
+  data: UpdateChapterData,
+): Promise<Chapter> {
+  const existing = await db.query.chapter.findFirst({
+    where: (t, { eq }) => eq(t.id, chapterId),
+    columns: { trackId: true },
+  })
+  if (!existing) throw notFound()
+
+  const movedTrackId = data.trackId && data.trackId !== existing.trackId ? data.trackId : undefined
+  const rows = await db
+    .update(chapter)
+    .set({
+      ...data,
+      ...(movedTrackId ? { order: await nextChapterOrder(db, movedTrackId) } : {}),
     })
-    if (!existing) throw notFound()
+    .where(eq(chapter.id, chapterId))
+    .returning()
+  const row = rows.at(0)
+  if (!row) throw internalError()
+  return chapterResponse(row)
+}
 
-    const movedTrackId = data.trackId && data.trackId !== existing.trackId ? data.trackId : undefined
-    const rows = await db
-      .update(chapter)
-      .set({
-        ...data,
-        ...(movedTrackId ? { order: await ChapterService.nextOrder(db, movedTrackId) } : {}),
-      })
-      .where(eq(chapter.id, chapterId))
-      .returning()
-    const row = rows.at(0)
-    if (!row) throw internalError()
-    return chapterResponse(row)
-  }
+export async function reorderChapters(
+  db: SchoolDatabase,
+  trackId: string,
+  data: ReorderChaptersData,
+): Promise<Chapter[]> {
+  const existing = await db.query.chapter.findMany({
+    where: (t, { eq }) => eq(t.trackId, trackId),
+    columns: { id: true },
+  })
+  assertSameIds(
+    existing.map(row => row.id),
+    data.ids,
+  )
 
-  public static async reorder(
-    db: SchoolDatabase,
-    trackId: string,
-    data: ReorderChaptersData,
-  ): Promise<Chapter[]> {
-    const existing = await db.query.chapter.findMany({
-      where: (t, { eq }) => eq(t.trackId, trackId),
-      columns: { id: true },
-    })
-    assertSameIds(existing.map(row => row.id), data.ids)
-
-    return await db.transaction(async tx => {
-      for (const [index, id] of data.ids.entries()) {
-        await tx.update(chapter).set({ order: -(index + 1) }).where(eq(chapter.id, id))
-      }
-
-      const rows: Chapter[] = []
-      for (const [index, id] of data.ids.entries()) {
-        const updated = await tx
-          .update(chapter)
-          .set({ order: index + 1 })
-          .where(eq(chapter.id, id))
-          .returning()
-        const row = updated.at(0)
-        if (!row) throw internalError()
-        rows.push(await chapterResponse(row))
-      }
-
-      return rows
-    })
-  }
-
-  public static async applyScript(
-    db: SchoolDatabase,
-    chapterId: string,
-    scriptType: 'te' | 'sa' | 'en',
-    objectKey: string,
-  ): Promise<Chapter> {
-    const existing = await db.query.chapter.findFirst({
-      where: (t, { eq }) => eq(t.id, chapterId),
-    })
-
-    if (!existing) {
-      throw notFound()
+  return await db.transaction(async tx => {
+    for (const [index, id] of data.ids.entries()) {
+      await tx
+        .update(chapter)
+        .set({ order: -(index + 1) })
+        .where(eq(chapter.id, id))
     }
 
-    // The presign route writes the R2 object before this transaction runs, so there is a
-    // brief window where the new object exists but the chapter row still points at the old key.
-    return await db.transaction(async tx => {
-      await tx.delete(segment).where(eq(segment.chapterId, chapterId))
-      const rows = await tx
+    const rows: Chapter[] = []
+    for (const [index, id] of data.ids.entries()) {
+      const updated = await tx
         .update(chapter)
-        .set({ script: scriptType, textObjectKey: objectKey })
-        .where(eq(chapter.id, chapterId))
+        .set({ order: index + 1 })
+        .where(eq(chapter.id, id))
         .returning()
-
-      const row = rows.at(0)
+      const row = updated.at(0)
       if (!row) throw internalError()
-      return chapterResponse(row)
-    })
+      rows.push(await chapterResponse(row))
+    }
+
+    return rows
+  })
+}
+
+export async function applyChapterScript(
+  db: SchoolDatabase,
+  chapterId: string,
+  scriptType: 'te' | 'sa' | 'en',
+  objectKey: string,
+): Promise<Chapter> {
+  const existing = await db.query.chapter.findFirst({
+    where: (t, { eq }) => eq(t.id, chapterId),
+  })
+
+  if (!existing) {
+    throw notFound()
   }
 
-  private static async nextOrder(db: SchoolDatabase, trackId: string): Promise<number> {
-    const rows = await db
-      .select({ next: sql<number>`coalesce(max(${chapter.order}), 0) + 1` })
-      .from(chapter)
-      .where(eq(chapter.trackId, trackId))
-    return rows.at(0)?.next ?? 1
-  }
+  // The presign route writes the R2 object before this transaction runs, so there is a
+  // brief window where the new object exists but the chapter row still points at the old key.
+  return await db.transaction(async tx => {
+    await tx.delete(segment).where(eq(segment.chapterId, chapterId))
+    const rows = await tx
+      .update(chapter)
+      .set({ script: scriptType, textObjectKey: objectKey })
+      .where(eq(chapter.id, chapterId))
+      .returning()
+
+    const row = rows.at(0)
+    if (!row) throw internalError()
+    return chapterResponse(row)
+  })
+}
+
+async function nextChapterOrder(db: SchoolDatabase, trackId: string): Promise<number> {
+  const rows = await db
+    .select({ next: sql<number>`coalesce(max(${chapter.order}), 0) + 1` })
+    .from(chapter)
+    .where(eq(chapter.trackId, trackId))
+  return rows.at(0)?.next ?? 1
 }
 
 function assertSameIds(existing: string[], requested: string[]): void {

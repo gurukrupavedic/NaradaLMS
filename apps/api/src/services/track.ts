@@ -36,85 +36,98 @@ async function trackWithChaptersResponse(
   return { ...row, chapters: await Promise.all(row.chapters.map(chapterResponse)) }
 }
 
-export default class TrackService {
-  public static async findAll(db: SchoolDatabase, view: ChapterReadView): Promise<TrackWithChapters[]> {
-    const rows = await db.query.track.findMany({
-      orderBy: asc(track.order),
-      with: {
-        chapters: {
-          orderBy: asc(chapter.order),
-          where: view.kind === 'authoring' ? undefined : (t, { eq }) => eq(t.status, 'published'),
-        },
+export async function findTracks(
+  db: SchoolDatabase,
+  view: ChapterReadView,
+): Promise<TrackWithChapters[]> {
+  const rows = await db.query.track.findMany({
+    orderBy: asc(track.order),
+    with: {
+      chapters: {
+        orderBy: asc(chapter.order),
+        where: view.kind === 'authoring' ? undefined : (t, { eq }) => eq(t.status, 'published'),
       },
-    })
+    },
+  })
 
-    return Promise.all(rows.map(trackWithChaptersResponse))
-  }
+  return Promise.all(rows.map(trackWithChaptersResponse))
+}
 
-  public static async findById(
-    db: SchoolDatabase,
-    trackId: string,
-    view: ChapterReadView,
-  ): Promise<TrackWithChapters | undefined> {
-    const row = await db.query.track.findFirst({
-      where: (t, { eq }) => eq(t.id, trackId),
-      with: {
-        chapters: {
-          orderBy: asc(chapter.order),
-          where: view.kind === 'authoring' ? undefined : (t, { eq }) => eq(t.status, 'published'),
-        },
+export async function findTrackById(
+  db: SchoolDatabase,
+  trackId: string,
+  view: ChapterReadView,
+): Promise<TrackWithChapters | undefined> {
+  const row = await db.query.track.findFirst({
+    where: (t, { eq }) => eq(t.id, trackId),
+    with: {
+      chapters: {
+        orderBy: asc(chapter.order),
+        where: view.kind === 'authoring' ? undefined : (t, { eq }) => eq(t.status, 'published'),
       },
-    })
+    },
+  })
 
-    return row ? trackWithChaptersResponse(row) : undefined
-  }
+  return row ? trackWithChaptersResponse(row) : undefined
+}
 
-  public static async create(db: SchoolDatabase, data: CreateTrackData): Promise<Track> {
-    const rows = await db
-      .insert(track)
-      .values({ ...data, order: await TrackService.nextOrder(db) })
-      .returning()
-    const row = rows.at(0)
-    if (!row) throw internalError()
-    return row
-  }
+export async function createTrack(db: SchoolDatabase, data: CreateTrackData): Promise<Track> {
+  const rows = await db
+    .insert(track)
+    .values({ ...data, order: await nextTrackOrder(db) })
+    .returning()
+  const row = rows.at(0)
+  if (!row) throw internalError()
+  return row
+}
 
-  public static async update(db: SchoolDatabase, trackId: string, data: UpdateTrackData): Promise<Track> {
-    const rows = await db.update(track).set(data).where(eq(track.id, trackId)).returning()
-    const row = rows.at(0)
-    if (!row) throw internalError()
-    return row
-  }
+export async function updateTrack(
+  db: SchoolDatabase,
+  trackId: string,
+  data: UpdateTrackData,
+): Promise<Track> {
+  const rows = await db.update(track).set(data).where(eq(track.id, trackId)).returning()
+  const row = rows.at(0)
+  if (!row) throw internalError()
+  return row
+}
 
-  public static async reorder(db: SchoolDatabase, data: ReorderTracksData): Promise<Track[]> {
-    const existing = await db.query.track.findMany({ columns: { id: true } })
-    assertSameIds(existing.map(row => row.id), data.ids)
+export async function reorderTracks(db: SchoolDatabase, data: ReorderTracksData): Promise<Track[]> {
+  const existing = await db.query.track.findMany({ columns: { id: true } })
+  assertSameIds(
+    existing.map(row => row.id),
+    data.ids,
+  )
 
-    return await db.transaction(async tx => {
-      for (const [index, id] of data.ids.entries()) {
-        await tx.update(track).set({ order: -(index + 1) }).where(eq(track.id, id))
-      }
+  return await db.transaction(async tx => {
+    for (const [index, id] of data.ids.entries()) {
+      await tx
+        .update(track)
+        .set({ order: -(index + 1) })
+        .where(eq(track.id, id))
+    }
 
-      const rows: Track[] = []
-      for (const [index, id] of data.ids.entries()) {
-        const updated = await tx
-          .update(track)
-          .set({ order: index + 1 })
-          .where(eq(track.id, id))
-          .returning()
-        const row = updated.at(0)
-        if (!row) throw internalError()
-        rows.push(row)
-      }
+    const rows: Track[] = []
+    for (const [index, id] of data.ids.entries()) {
+      const updated = await tx
+        .update(track)
+        .set({ order: index + 1 })
+        .where(eq(track.id, id))
+        .returning()
+      const row = updated.at(0)
+      if (!row) throw internalError()
+      rows.push(row)
+    }
 
-      return rows
-    })
-  }
+    return rows
+  })
+}
 
-  private static async nextOrder(db: SchoolDatabase): Promise<number> {
-    const rows = await db.select({ next: sql<number>`coalesce(max(${track.order}), 0) + 1` }).from(track)
-    return rows.at(0)?.next ?? 1
-  }
+async function nextTrackOrder(db: SchoolDatabase): Promise<number> {
+  const rows = await db
+    .select({ next: sql<number>`coalesce(max(${track.order}), 0) + 1` })
+    .from(track)
+  return rows.at(0)?.next ?? 1
 }
 
 function assertSameIds(existing: string[], requested: string[]): void {

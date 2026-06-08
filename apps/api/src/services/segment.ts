@@ -25,25 +25,23 @@ function validateNoOverlaps(inputs: SegmentInput[]): void {
   }
 }
 
-export default class SegmentService {
-  public static async replace(
-    db: SchoolDatabase,
-    chapterId: string,
-    inputs: SegmentInput[],
-  ): Promise<Segment[]> {
-    validateNoOverlaps(inputs)
+export async function replaceSegments(
+  db: SchoolDatabase,
+  chapterId: string,
+  inputs: SegmentInput[],
+): Promise<Segment[]> {
+  validateNoOverlaps(inputs)
 
-    return await db.transaction(async tx => {
-      await tx.delete(segment).where(eq(segment.chapterId, chapterId))
+  return await db.transaction(async tx => {
+    await tx.delete(segment).where(eq(segment.chapterId, chapterId))
 
-      if (inputs.length === 0) return []
-      const rows = await tx
-        .insert(segment)
-        .values(inputs.map(input => ({ ...input, chapterId })))
-        .returning()
+    if (inputs.length === 0) return []
+    const rows = await tx
+      .insert(segment)
+      .values(inputs.map(input => ({ ...input, chapterId })))
+      .returning()
 
-      if (rows.length !== inputs.length) throw internalError()
-      return rows.sort((a, b) => a.start - b.start)
-    })
-  }
+    if (rows.length !== inputs.length) throw internalError()
+    return rows.sort((a, b) => a.start - b.start)
+  })
 }
