@@ -3,7 +3,7 @@
 **Date:** 2026-05-28
 **Audience:** A coding agent picking up this document cold. Every item is meant to be actionable without further context.
 
-**Status:** The previous passes have been almost entirely worked through. Both cross-batch leaks (read and write side), audio idempotency, audio delete ordering, the dead auth branch, exam-route auth ordering, the `CREATE EXTENSION` placement, R2 signed-download enforcement, per-request URL caching, the duplicated response mappers/types/enums, validation helpers, rate limiting, explicit CORS methods, Node pinning, the logger type, duplicate failed-request logging, documented merge-param routers, BetterAuth CLI/version pinning, school creation as an admin script, school provisioning cleanup/reconciliation, UUIDv7 domain IDs/cursor tie-breaks, cascade delete strategy, bulk content reordering, enrollment status removal, chapter code uniqueness, the decision to keep BetterAuth `organization.metadata`, and the revised exam/evaluation model are all resolved. This document keeps **only the items that still need attention**, grouped by whether they're objective or opinion.
+**Status:** The previous passes have been almost entirely worked through. Both cross-batch leaks (read and write side), audio idempotency, audio delete ordering, the dead auth branch, exam-route auth ordering, the `CREATE EXTENSION` placement, R2 signed-download enforcement, per-request URL caching, the duplicated response mappers/types/enums, validation helpers, rate limiting, explicit CORS methods, Node pinning, the logger type, duplicate failed-request logging, documented merge-param routers, BetterAuth CLI/version pinning, school context via `X-School-Slug`, school creation as an admin script, school provisioning cleanup/reconciliation, UUIDv7 domain IDs/cursor tie-breaks, cascade delete strategy, bulk content reordering, enrollment status removal, chapter code uniqueness, the decision to keep BetterAuth `organization.metadata`, and the revised exam/evaluation model are all resolved. This document keeps **only the items that still need attention**, grouped by whether they're objective or opinion.
 
 **How to read:** §1 is ops. §2 is architectural shape (opinion — confirm scope first). §3 is small cleanups. §4 is the short forward-looking list.
 
@@ -71,11 +71,7 @@ Each service opens its own `db.transaction(...)`. Symptom-free today because no 
 
 `authorize` / `requireBatchAccess` / `requireBatchListAccess` ([apps/api/src/utils/auth.ts](../apps/api/src/utils/auth.ts)) share a vocabulary but have different parameter shapes, so routes must know which to call. The `BatchAccess` discriminated union is the right direction. Worth experimenting with collapsing into a single `authorize(req, db, claim): Promise<Access>` that returns a discriminated `Access` (`super` | `schoolWide` | `singleBatch` | `enrolled` | `self`) and letting routes branch on `.kind`. Try it on one claim-heavy route (e.g. `GET /v1/batches`) before propagating.
 
-### 2.5 School-context contract: header vs session
-
-`X-School-Slug` is resolved on every request ([middlewares/school.ts](../apps/api/src/middlewares/school.ts)); BetterAuth's `session.activeOrganizationId` is populated but unused. The header is debuggable but stateless (re-resolves each request); the session is one fewer place for drift. Before the frontend's API client ships, pick one so it doesn't implement both. (Header keeps super-admin "switch school" simple; session is a cleaner contract.) Document the choice either way.
-
-### 2.6 Staged-upload session (when the second upload flow lands)
+### 2.5 Staged-upload session (when the second upload flow lands)
 
 Today: presign → client uploads → POST registers, with the DB blind between presign and POST (the janitor cleans crashes after the safety window). A richer shape — `stage()` writes a `pending` row and returns a `commitToken`; `commit()` flips it `active` after a HEAD — gives idempotency-by-design, a TTL on pending uploads, and a cleaner split for the janitor. Not needed now; revisit when the script-upload or any second file flow arrives.
 
@@ -104,6 +100,6 @@ Today: presign → client uploads → POST registers, with the DB blind between 
 The API is in good shape. Two decisions shape every later one and are cheaper to make now than after a UI depends on them:
 
 1. **Pick a service shape (§2.1).** The first cross-service composite operation (§2.3) shouldn't have to fight the conventions.
-2. **Decide the school-context contract (§2.5).** The API client should implement header *or* session, not both.
+2. **Decide the staged-upload shape (§2.5).** A second upload flow should not copy the current presign/register contract blindly.
 
 Everything else here is incrementally cleanable alongside other work in the same files.
