@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 
-import { naradaRoute, requireSchoolContext } from '../naradaRoute'
+import { schoolRoute } from '../naradaRoute'
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import { authorize } from '../utils/auth'
@@ -14,12 +14,11 @@ const router = Router({ mergeParams: true })
 
 router.get(
   '/',
-  naradaRoute(async ({ req, res, ctx }) => {
-    const { db } = requireSchoolContext(ctx)
+  schoolRoute(async ({ req, res, ctx }) => {
     const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
     const view = await authorizeContentReadView(req)
-    const segments = await findSegmentsByChapter(db, chapterId, view)
+    const segments = await findSegmentsByChapter(ctx.db, chapterId, view)
     if (!segments) {
       throw notFound()
     }
@@ -29,18 +28,17 @@ router.get(
 
 router.put(
   '/',
-  naradaRoute(async ({ req, res, ctx }) => {
-    const { db } = requireSchoolContext(ctx)
+  schoolRoute(async ({ req, res, ctx }) => {
     const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
     const inputs = parseBody(putSegmentsSchema, req)
 
     await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
-    const chapter = await findChapterById(db, chapterId, authoringView)
+    const chapter = await findChapterById(ctx.db, chapterId, authoringView)
     if (!chapter) {
       throw notFound()
     }
 
-    const segments = await replaceSegments(db, chapterId, inputs)
+    const segments = await replaceSegments(ctx.db, chapterId, inputs)
     res.status(200).json({ ok: true, data: segments })
   }),
 )

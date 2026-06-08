@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 
-import { naradaRoute, requireSchoolContext } from '../naradaRoute'
+import { schoolRoute } from '../naradaRoute'
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import { authorize } from '../utils/auth'
@@ -20,12 +20,11 @@ const router = Router()
 
 router.get(
   '/:chapterId',
-  naradaRoute(async ({ req, res, ctx }) => {
-    const { db } = requireSchoolContext(ctx)
+  schoolRoute(async ({ req, res, ctx }) => {
     const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
     const view = await authorizeContentReadView(req)
-    const chapter = await findChapterById(db, chapterId, view)
+    const chapter = await findChapterById(ctx.db, chapterId, view)
     if (!chapter) {
       throw notFound()
     }
@@ -36,30 +35,28 @@ router.get(
 
 router.post(
   '/',
-  naradaRoute(async ({ req, res, ctx }) => {
-    const { db } = requireSchoolContext(ctx)
+  schoolRoute(async ({ req, res, ctx }) => {
     const data = parseBody(createChapterSchema, req)
 
     await authorize(req, { scope: 'school', permissions: { content: ['create'] } })
-    const created = await createChapter(db, data)
+    const created = await createChapter(ctx.db, data)
     res.status(201).json({ ok: true, data: created })
   }),
 )
 
 router.patch(
   '/:chapterId',
-  naradaRoute(async ({ req, res, ctx }) => {
-    const { db } = requireSchoolContext(ctx)
+  schoolRoute(async ({ req, res, ctx }) => {
     const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
     const updates = parseBody(updateChapterSchema, req)
 
     await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
-    const existing = await findChapterById(db, chapterId, authoringView)
+    const existing = await findChapterById(ctx.db, chapterId, authoringView)
     if (!existing) {
       throw notFound()
     }
 
-    const updated = await updateChapter(db, chapterId, updates)
+    const updated = await updateChapter(ctx.db, chapterId, updates)
     res.status(200).json({ ok: true, data: updated })
   }),
 )
@@ -71,25 +68,26 @@ const applyScriptSchema = z.object({
 
 router.post(
   '/:chapterId/script',
-  naradaRoute(async ({ req, res, ctx }) => {
-    const { db } = requireSchoolContext(ctx)
+  schoolRoute(async ({ req, res, ctx }) => {
     const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
     const { objectKey, script } = parseBody(applyScriptSchema, req)
 
     await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
-    const updated = await applyChapterScript(db, chapterId, script, objectKey)
+    const updated = await applyChapterScript(ctx.db, chapterId, script, objectKey)
     res.status(200).json({ ok: true, data: updated })
   }),
 )
 
 router.post(
   '/:chapterId/script/presign',
-  naradaRoute(async ({ req, res, ctx }) => {
-    const { school } = requireSchoolContext(ctx)
+  schoolRoute(async ({ req, res, ctx }) => {
     const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
     await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
-    const result = await objectLifecycle.stageChapterTextUpload({ schoolId: school.id, chapterId })
+    const result = await objectLifecycle.stageChapterTextUpload({
+      schoolId: ctx.school.id,
+      chapterId,
+    })
     res.status(200).json({ ok: true, data: result })
   }),
 )

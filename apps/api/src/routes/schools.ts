@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 
-import { naradaRoute } from '../naradaRoute'
+import { publicRoute } from '../naradaRoute'
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import { authorize } from '../utils/auth'
@@ -11,7 +11,7 @@ const router = Router()
 
 router.get(
   '/',
-  naradaRoute(async ({ req, res }) => {
+  publicRoute(async ({ req, res }) => {
     await authorize(req, { scope: 'super' })
     const schools = await findSchools()
     res.status(200).json({ ok: true, data: schools })
@@ -20,7 +20,7 @@ router.get(
 
 router.patch(
   '/:schoolId',
-  naradaRoute(async ({ req, res }) => {
+  publicRoute(async ({ req, res }) => {
     const { schoolId } = parseParams(z.object({ schoolId: z.string().min(1) }), req)
     const updates = parseBody(updateSchoolSchema, req)
 

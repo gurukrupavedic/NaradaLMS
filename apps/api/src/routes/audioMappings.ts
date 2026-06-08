@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 
-import { naradaRoute, requireSchoolContext } from '../naradaRoute'
+import { schoolRoute } from '../naradaRoute'
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import { authorize } from '../utils/auth'
@@ -12,18 +12,17 @@ const router = Router()
 
 router.put(
   '/:audioId/mappings',
-  naradaRoute(async ({ req, res, ctx }) => {
-    const { db } = requireSchoolContext(ctx)
+  schoolRoute(async ({ req, res, ctx }) => {
     const { audioId } = parseParams(z.object({ audioId: z.uuid() }), req)
     const inputs = parseBody(putMappingsSchema, req)
 
     await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
-    const asset = await findAudioAssetById(db, audioId)
+    const asset = await findAudioAssetById(ctx.db, audioId)
     if (!asset) {
       throw notFound()
     }
 
-    const mappings = await replaceAudioMappings(db, audioId, asset.chapterId, inputs)
+    const mappings = await replaceAudioMappings(ctx.db, audioId, asset.chapterId, inputs)
     res.status(200).json({ ok: true, data: mappings })
   }),
 )

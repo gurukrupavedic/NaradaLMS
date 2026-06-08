@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 
-import { naradaRoute, requireSchoolContext } from '../naradaRoute'
+import { schoolRoute } from '../naradaRoute'
 import { parseParams } from '../utils/validate'
 import { notFound } from '../error'
 import { authorize } from '../utils/auth'
@@ -11,8 +11,7 @@ const router = Router()
 
 router.get(
   '/chapters/:chapterId',
-  naradaRoute(async ({ req, res, ctx }) => {
-    const { db } = requireSchoolContext(ctx)
+  schoolRoute(async ({ req, res, ctx }) => {
     const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
 
     const { user } = await authorize(req, {
@@ -20,7 +19,7 @@ router.get(
       permissions: { content: ['read'] },
     })
 
-    const chapter = await findChapterById(db, chapterId, {
+    const chapter = await findChapterById(ctx.db, chapterId, {
       kind: 'student',
       studentId: user.id,
     })
