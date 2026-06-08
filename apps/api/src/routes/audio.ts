@@ -1,6 +1,7 @@
-import { Router, type Response } from 'express'
+import { Router } from 'express'
 import { z } from 'zod'
 
+import { naradaRoute, requireSchoolContext } from '../naradaRoute'
 import { parseBody, parseParams } from '../utils/validate'
 import {
   createAudioAsset,
@@ -9,44 +10,51 @@ import {
   getUploadUrlSchema,
   removeAudioAsset,
 } from '../services/audio'
-import { schoolDb, type SchoolScopedLocals } from '../middlewares/school'
 import { authorize } from '../utils/auth'
 
 // mergeParams: parent path provides :chapterId.
 const router = Router({ mergeParams: true })
 
-router.post('/presign', async (req, res: Response<unknown, SchoolScopedLocals>) => {
-  const { school } = res.locals
-  const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
-  const { contentType } = parseBody(getUploadUrlSchema, req)
+router.post(
+  '/presign',
+  naradaRoute(async ({ req, res, ctx }) => {
+    const { school } = requireSchoolContext(ctx)
+    const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
+    const { contentType } = parseBody(getUploadUrlSchema, req)
 
-  await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
-  const result = await getAudioUploadUrl(school.id, chapterId, contentType)
-  res.status(200).json({ ok: true, data: result })
-})
+    await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
+    const result = await getAudioUploadUrl(school.id, chapterId, contentType)
+    res.status(200).json({ ok: true, data: result })
+  }),
+)
 
-router.post('/', async (req, res: Response<unknown, SchoolScopedLocals>) => {
-  const db = schoolDb(res)
-  const { school } = res.locals
-  const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
-  const data = parseBody(createAudioAssetSchema, req)
+router.post(
+  '/',
+  naradaRoute(async ({ req, res, ctx }) => {
+    const { db, school } = requireSchoolContext(ctx)
+    const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
+    const data = parseBody(createAudioAssetSchema, req)
 
-  await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
-  const { created, asset } = await createAudioAsset(db, school.id, chapterId, data)
-  const status = created ? 201 : 200
-  res.status(status).json({ ok: true, data: asset })
-})
+    await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
+    const { created, asset } = await createAudioAsset(db, school.id, chapterId, data)
+    const status = created ? 201 : 200
+    res.status(status).json({ ok: true, data: asset })
+  }),
+)
 
-router.delete('/:audioId', async (req, res) => {
-  const db = schoolDb(res)
-  const { chapterId, audioId } = parseParams(
-    z.object({ chapterId: z.uuid(), audioId: z.uuid() }),
-    req,
-  )
+router.delete(
+  '/:audioId',
+  naradaRoute(async ({ req, res, ctx }) => {
+    const { db } = requireSchoolContext(ctx)
+    const { chapterId, audioId } = parseParams(
+      z.object({ chapterId: z.uuid(), audioId: z.uuid() }),
+      req,
+    )
 
-  await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
-  await removeAudioAsset(db, audioId, chapterId)
-  res.status(204).send()
-})
+    await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
+    await removeAudioAsset(db, audioId, chapterId)
+    res.status(204).send()
+  }),
+)
 
 export default router

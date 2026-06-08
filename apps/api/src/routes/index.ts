@@ -14,7 +14,7 @@ import audioRouter from './audio'
 import audioMappingsRouter from './audioMappings'
 import studentRouter from './student'
 import schoolsRouter from './schools'
-import { resolveDb, requireSchool } from '../middlewares/school'
+import { resolveDb } from '../middlewares/school'
 
 const apiRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -31,7 +31,6 @@ export default function setupRoutes(router: Router) {
   router.use('/schools', schoolsRouter)
   router.use('/profile', publicProfileRouter)
   router
-    .use(requireSchool)
     .use('/tracks', tracksRouter)
     .use('/chapters', chaptersRouter)
     .use('/chapters/:chapterId/segments', segmentsRouter)

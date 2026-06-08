@@ -1,16 +1,15 @@
 import { Request, Response, NextFunction } from 'express'
 
 import { organization, publicDb, getScopedDatabase } from '@narada/db'
-import type { SchoolDatabase } from '@narada/db'
-import { badRequest, notFound } from '../error'
+import { notFound } from '../error'
+import { setNaradaContext } from '../naradaRoute'
 
 export type SchoolContext = typeof organization.$inferSelect
-export type SchoolScopedLocals = Express.Locals & { school: SchoolContext; db: SchoolDatabase }
 
 export async function resolveDb(req: Request, res: Response, next: NextFunction) {
   const schoolSlug = req.get('x-school-slug')
   if (!schoolSlug) {
-    res.locals.db = publicDb
+    setNaradaContext(req, { kind: 'public', db: publicDb })
     return next()
   }
 
@@ -22,23 +21,6 @@ export async function resolveDb(req: Request, res: Response, next: NextFunction)
     throw notFound()
   }
 
-  res.locals.school = school
-  res.locals.db = getScopedDatabase(school.id)
+  setNaradaContext(req, { kind: 'school', school, db: getScopedDatabase(school.id) })
   next()
-}
-
-export function requireSchool(req: Request, res: Response, next: NextFunction) {
-  if (!res.locals.school) {
-    throw badRequest('X-School-Slug header is required')
-  }
-
-  next()
-}
-
-export function schoolDb(res: Response): SchoolDatabase {
-  if (!res.locals.school) {
-    throw badRequest('X-School-Slug header is required')
-  }
-
-  return res.locals.db as SchoolDatabase
 }
