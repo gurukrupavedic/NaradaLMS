@@ -7,6 +7,10 @@
     "node": "22.13.1"
   },
   "scripts": {
+    "web:dev": "pnpm --filter @narada/web dev",
+    "web:build": "pnpm --filter @narada/web build",
+    "web:start": "pnpm --filter @narada/web start",
+    "web:lint": "pnpm --filter @narada/web lint",
     "api:dev": "pnpm --filter @narada/api dev",
     "api:build": "pnpm --filter @narada/api build",
     "api:typecheck": "pnpm --filter @narada/api typecheck",
