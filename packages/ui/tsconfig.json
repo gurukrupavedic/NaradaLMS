@@ -1,1 +1,0 @@
-{"extends":"@narada/typescript-config/base.json","compilerOptions":{"baseUrl":".","jsx":"preserve","module":"esnext","moduleResolution":"bundler","paths":{"@narada/ui/*":["./src/*"]}},"include":["src"],"exclude":["node_modules"]}
