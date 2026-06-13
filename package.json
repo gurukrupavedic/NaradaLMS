@@ -7,6 +7,9 @@
     "node": "22.13.1"
   },
   "scripts": {
+    "env:fetch": "pnpm --filter @narada/tools env:fetch",
+    "env:encrypt": "pnpm --filter @narada/tools env:encrypt",
+    "env:link": "pnpm --filter @narada/tools env:link",
     "web:dev": "pnpm --filter @narada/web dev",
     "web:build": "pnpm --filter @narada/web build",
     "web:start": "pnpm --filter @narada/web start",

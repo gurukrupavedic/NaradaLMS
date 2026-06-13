@@ -1,0 +1,4 @@
+creation_rules:
+  - path_regex: packages/env/\.env\.sops$
+    age: >-
+      age1skz60ndmyn9wzc55sfvwt7we3hrmeheppeva2kelf5krlmgu0vvq20cn4w

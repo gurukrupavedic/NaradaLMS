@@ -1,0 +1,19 @@
+{
+  "name": "@narada/tools",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "env:fetch": "tsx src/env.ts fetch",
+    "env:encrypt": "tsx src/env.ts encrypt",
+    "env:link": "tsx src/env.ts link",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.40",
+    "citty": "^0.2.2",
+    "execa": "^9.6.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5"
+  }
+}
