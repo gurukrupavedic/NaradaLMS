@@ -1,3 +1,4 @@
+import '@narada/env/load'
 import { argv } from 'node:process'
 
 import { inArray } from 'drizzle-orm'

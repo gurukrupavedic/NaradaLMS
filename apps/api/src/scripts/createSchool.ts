@@ -1,3 +1,4 @@
+import '@narada/env/load'
 import { env, exit } from 'node:process'
 
 import { shutdownPools } from '@narada/db'

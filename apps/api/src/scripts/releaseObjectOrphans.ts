@@ -1,3 +1,4 @@
+import '@narada/env/load'
 import { argv, env, exit } from 'node:process'
 
 import { eq } from 'drizzle-orm'
