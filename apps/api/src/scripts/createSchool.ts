@@ -1,7 +1,7 @@
 import '@narada/env/load'
 import { env, exit } from 'node:process'
 
-import { shutdownPools } from '@narada/db'
+import { publicDb, shutdownPools } from '@narada/db'
 import { createSchool, createSchoolSchema } from '../services/school'
 
 const parsed = createSchoolSchema.safeParse({
@@ -17,7 +17,7 @@ if (!parsed.success) {
 }
 
 try {
-  const school = await createSchool(parsed.data)
+  const school = await createSchool(publicDb, parsed.data)
   console.log(JSON.stringify(school, null, 2))
 } finally {
   await shutdownPools()
