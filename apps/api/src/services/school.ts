@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
 
-import { organization, publicDb, provisionSchool, dropSchoolSchema, uuidv7 } from '@narada/db'
+import { organization, member, publicDb, provisionSchool, dropSchoolSchema, uuidv7 } from '@narada/db'
 import { conflict, internalError, notFound } from '../error'
 import { requireNonEmpty } from '../utils/validate'
 
@@ -11,6 +11,7 @@ export const createSchoolSchema = z.object({
     .string()
     .min(1)
     .regex(/^[a-z0-9-]+$/, 'slug must be lowercase alphanumeric with hyphens'),
+  ownerUserId: z.string().min(1).optional(),
 })
 
 export const updateSchoolSchema = requireNonEmpty(
@@ -53,16 +54,28 @@ export async function createSchool(data: CreateSchoolData): Promise<School> {
   })
 
   if (existing) throw conflict()
+
+  const { ownerUserId, ...orgData } = data
   const id = uuidv7()
   const rows = await publicDb
     .insert(organization)
-    .values({ id, ...data, createdAt: new Date() })
+    .values({ id, ...orgData, createdAt: new Date() })
     .returning()
 
   const row = rows.at(0)
   if (!row) throw internalError()
+
   try {
     await provisionSchool(id)
+    if (ownerUserId) {
+      await publicDb.insert(member).values({
+        id: uuidv7(),
+        organizationId: id,
+        userId: ownerUserId,
+        role: 'owner',
+        createdAt: new Date(),
+      })
+    }
   } catch (error) {
     await rollbackFailedCreate(id, error)
     throw error
