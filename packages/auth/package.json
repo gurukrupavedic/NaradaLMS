@@ -10,7 +10,7 @@
     "./permissions": "./src/permissions/index.ts"
   },
   "scripts": {
-    "generate": "pnpm dlx @better-auth/cli generate --config src/index.ts",
+    "generate": "dotenv -e ../../.env -- pnpm dlx @better-auth/cli generate --config src/index.ts",
     "lint": "eslint .",
     "format": "prettier . --write --ignore-path ../../.prettierignore",
     "test": "vitest run",
@@ -25,6 +25,7 @@
     "@narada/env": "workspace:*"
   },
   "devDependencies": {
+    "dotenv-cli": "^8.0.0",
     "eslint": "^9",
     "eslint-config-prettier": "^10",
     "prettier": "3.8.3",

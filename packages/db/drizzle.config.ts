@@ -1,3 +1,4 @@
+import '@narada/env/load'
 import { env } from '@narada/env'
 import { defineConfig } from 'drizzle-kit'
 

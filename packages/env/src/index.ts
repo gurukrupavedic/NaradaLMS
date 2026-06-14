@@ -1,8 +1,5 @@
-import { config } from 'dotenv'
 import { createEnv } from '@t3-oss/env-core'
 import * as z from 'zod'
-
-config({ path: new URL('../../../.env', import.meta.url) })
 
 export const env = createEnv({
   server: {
