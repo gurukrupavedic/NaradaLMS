@@ -11,11 +11,9 @@ const encryptedEnvPath = join(repoRoot, 'packages/env/.env.sops')
 const sopsConfigPath = join(repoRoot, '.sops.yaml')
 
 const envTargets = [
-  'apps/web/.env',
+  'apps/web/.env.local',
   'apps/api/.env',
-  'packages/db/.env',
-  'packages/auth/.env',
-  'packages/storage/.env',
+  'packages/env/.env',
 ]
 
 const fetch = defineCommand({
