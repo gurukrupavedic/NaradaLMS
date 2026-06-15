@@ -3,14 +3,9 @@ import { z } from 'zod'
 
 import { schoolRoute } from '../naradaRoute'
 import { parseBody, parseParams } from '../utils/validate'
-import {
-  createAudioAsset,
-  createAudioAssetSchema,
-  getAudioUploadUrl,
-  getUploadUrlSchema,
-  removeAudioAsset,
-} from '../services/audio'
+import { createAudioAsset, createAudioAssetSchema, removeAudioAsset } from '../services/audio'
 import { authorize } from '../utils/auth'
+import { createAudioUpload, createAudioUploadSchema } from '../services/stagedUpload'
 
 // mergeParams: parent path provides :chapterId.
 const router = Router({ mergeParams: true })
@@ -19,10 +14,15 @@ router.post(
   '/presign',
   schoolRoute(async ({ req, res, ctx }) => {
     const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
-    const { contentType } = parseBody(getUploadUrlSchema, req)
+    const { contentType } = parseBody(createAudioUploadSchema, req)
 
-    await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
-    const result = await getAudioUploadUrl(ctx.school.id, chapterId, contentType)
+    const { user } = await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
+    const result = await createAudioUpload(ctx.db, {
+      schoolId: ctx.school.id,
+      chapterId,
+      userId: user.id,
+      contentType,
+    })
     res.status(200).json({ ok: true, data: result })
   }),
 )

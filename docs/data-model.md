@@ -277,6 +277,24 @@ An audio file associated with a chapter (e.g., slow recitation, normal pace). St
 | `objectKey`  | text  | NOT NULL; R2 object key |
 | `duration`   | float | NOT NULL; seconds       |
 
+### `stagedUpload`
+
+A pending direct-to-R2 upload created before the client receives a presigned URL. The presigned URL points at the final durable object key. Completion verifies the object exists, marks the upload completed, and then attaches the object to the domain record.
+
+| Column            | Type      | Constraints                                             |
+| ----------------- | --------- | ------------------------------------------------------- |
+| `id`              | uuid      | PK                                                      |
+| `schoolId`        | text      | Organization id used in R2 keys                         |
+| `chapterId`       | uuid      | FK to `chapter.id`                                      |
+| `purpose`         | enum      | `'chapterText'`, `'audio'`                              |
+| `status`          | enum      | `'pending'`, `'completed'`, `'expired'`; default pending |
+| `objectKey`       | text      | NOT NULL; durable R2 object key                         |
+| `contentType`     | text      | NOT NULL                                                |
+| `createdByUserId` | text      | NOT NULL                                                |
+| `expiresAt`       | timestamp | NOT NULL                                                |
+| `completedAt`     | timestamp | nullable                                                |
+| `createdAt`       | timestamp | server timestamp                                        |
+
 ### `audioMapping`
 
 Links a segment to a time range within an audio asset.

@@ -14,7 +14,11 @@ import {
   updateChapter,
   updateChapterSchema,
 } from '../services/chapter'
-import { objectLifecycle } from '../services/objectLifecycle'
+import {
+  completeUploadSchema,
+  createChapterTextUpload,
+  createChapterTextUploadSchema,
+} from '../services/stagedUpload'
 
 const router = Router()
 
@@ -61,19 +65,20 @@ router.patch(
   }),
 )
 
-const applyScriptSchema = z.object({
-  objectKey: z.string().min(1),
-  script: z.enum(['te', 'sa', 'en']),
-})
-
 router.post(
   '/:chapterId/script',
   schoolRoute(async ({ req, res, ctx }) => {
     const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
-    const { objectKey, script } = parseBody(applyScriptSchema, req)
+    const { uploadId, script } = parseBody(
+      z.object({
+        ...completeUploadSchema.shape,
+        script: z.enum(['te', 'sa', 'en']),
+      }),
+      req,
+    )
 
     await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
-    const updated = await applyChapterScript(ctx.db, chapterId, script, objectKey)
+    const updated = await applyChapterScript(ctx.db, ctx.school.id, chapterId, script, uploadId)
     res.status(200).json({ ok: true, data: updated })
   }),
 )
@@ -82,11 +87,14 @@ router.post(
   '/:chapterId/script/presign',
   schoolRoute(async ({ req, res, ctx }) => {
     const { chapterId } = parseParams(z.object({ chapterId: z.uuid() }), req)
+    const { contentType } = parseBody(createChapterTextUploadSchema, req)
 
-    await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
-    const result = await objectLifecycle.stageChapterTextUpload({
+    const { user } = await authorize(req, { scope: 'school', permissions: { content: ['update'] } })
+    const result = await createChapterTextUpload(ctx.db, {
       schoolId: ctx.school.id,
       chapterId,
+      userId: user.id,
+      contentType,
     })
     res.status(200).json({ ok: true, data: result })
   }),

@@ -108,10 +108,6 @@ Update the current user's profile fields on one batch enrollment.
 
 Operate on the public schema. Require super-admin access. Not scoped to `X-School-Slug`.
 
-School creation is currently an operator action, not an HTTP endpoint. Use
-`SCHOOL_NAME="..." SCHOOL_SLUG="..." pnpm schools:create` to create a school and provision
-its database schema.
-
 ### `GET /v1/schools`
 
 List all schools.
@@ -439,31 +435,37 @@ Chapter text is stored directly on `chapter` as `script` and an internal text ob
 
 ### `POST /v1/chapters/:chapterId/script/presign`
 
-Get a presigned R2 URL for uploading the chapter text file. Each response uses a fresh object key under the chapter's text prefix.
-
-**Access:** Admin.
-
-```ts
-// Response 200
-{
-  ok: true,
-  data: {
-    uploadUrl: string,
-    objectKey: string
-  }
-}
-```
-
-### `POST /v1/chapters/:chapterId/script`
-
-Apply an uploaded text object to the chapter. Existing segments for the chapter are deleted.
+Create a pending staged upload and get a presigned R2 URL for uploading the chapter text file.
 
 **Access:** Admin.
 
 ```ts
 // Request
 {
-  objectKey: string,
+  contentType?: "text/plain" // default "text/plain"
+}
+
+// Response 200
+{
+  ok: true,
+  data: {
+    uploadUrl: string,
+    uploadId: string,
+    expiresAt: string
+  }
+}
+```
+
+### `POST /v1/chapters/:chapterId/script`
+
+Complete a staged text upload and apply it to the chapter. Existing segments for the chapter are deleted.
+
+**Access:** Admin.
+
+```ts
+// Request
+{
+  uploadId: string,
   script: "te" | "sa" | "en"
 }
 
@@ -541,7 +543,7 @@ Server-assigned UUIDs replace any client-side draft IDs. Replacing segments casc
 
 ### `POST /v1/chapters/:chapterId/audio/presign`
 
-Get a presigned R2 URL for uploading an audio file.
+Create a pending staged upload and get a presigned R2 URL for uploading an audio file.
 
 **Access:** Admin.
 
@@ -556,16 +558,17 @@ Get a presigned R2 URL for uploading an audio file.
   ok: true,
   data: {
     uploadUrl: string,
-    uploadId: string
+    uploadId: string,
+    expiresAt: string
   }
 }
 ```
 
-The client uploads directly to R2 using the presigned URL, then calls `POST /v1/chapters/:chapterId/audio` to register the asset.
+The client uploads directly to R2 using the presigned URL, then calls `POST /v1/chapters/:chapterId/audio` with `uploadId` to complete the staged upload and register the asset.
 
 ### `POST /v1/chapters/:chapterId/audio`
 
-Register an uploaded audio asset after the R2 upload completes.
+Complete a staged audio upload and register an audio asset after the R2 upload completes.
 
 **Access:** Admin.
 
@@ -577,7 +580,7 @@ Register an uploaded audio asset after the R2 upload completes.
   duration: number
 }
 
-// Response 201 for a new asset, 200 for an idempotent retry
+// Response 201
 {
   ok: true,
   data: {

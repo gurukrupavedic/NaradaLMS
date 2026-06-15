@@ -1,5 +1,5 @@
 import { audioAsset, type audioMapping } from '@narada/db'
-import { objectLifecycle } from './objectLifecycle'
+import { signedDownloadUrl } from '../utils/contentStorage'
 
 type DbAudioAsset = typeof audioAsset.$inferSelect
 type DbAudioMapping = typeof audioMapping.$inferSelect
@@ -12,7 +12,7 @@ export type ChapterAudioAsset = Omit<AudioAsset, 'objectKey'> & {
 export async function audioAssetResponse(row: DbAudioAsset): Promise<AudioAsset> {
   return {
     ...row,
-    url: await objectLifecycle.urlFor(row.objectKey),
+    url: await signedDownloadUrl(row.objectKey),
   }
 }
 

@@ -5,6 +5,9 @@ import { chapter, segment, type SchoolDbExecutor } from '@narada/db'
 import { internalError, notFound, unprocessable } from '../error'
 import { chapterResponse, type Chapter } from './chapterReader'
 import { requireNonEmpty } from '../utils/validate'
+import { completeStagedUpload } from './stagedUpload'
+import { deleteStoredObject } from '../utils/contentStorage'
+import { getLogger } from '../requestContext'
 
 export const createChapterSchema = z.object({
   trackId: z.uuid(),
@@ -109,9 +112,10 @@ export async function reorderChapters(
 
 export async function applyChapterScript(
   db: SchoolDbExecutor,
+  schoolId: string,
   chapterId: string,
   scriptType: 'te' | 'sa' | 'en',
-  objectKey: string,
+  uploadId: string,
 ): Promise<Chapter> {
   const existing = await db.query.chapter.findFirst({
     where: (t, { eq }) => eq(t.id, chapterId),
@@ -121,9 +125,14 @@ export async function applyChapterScript(
     throw notFound()
   }
 
-  // The presign route writes the R2 object before this transaction runs, so there is a
-  // brief window where the new object exists but the chapter row still points at the old key.
-  return await db.transaction(async tx => {
+  const previousTextObjectKey = existing.textObjectKey
+  const result = await db.transaction(async tx => {
+    const { objectKey } = await completeStagedUpload(tx, {
+      schoolId,
+      chapterId,
+      uploadId,
+      purpose: 'chapterText',
+    })
     await tx.delete(segment).where(eq(segment.chapterId, chapterId))
     const rows = await tx
       .update(chapter)
@@ -133,8 +142,21 @@ export async function applyChapterScript(
 
     const row = rows.at(0)
     if (!row) throw internalError()
-    return chapterResponse(row)
+    return { chapter: await chapterResponse(row), textObjectKey: objectKey }
   })
+
+  if (previousTextObjectKey && previousTextObjectKey !== result.textObjectKey) {
+    try {
+      await deleteStoredObject(previousTextObjectKey)
+    } catch (error) {
+      getLogger().warn(
+        { error, chapterId, objectKey: previousTextObjectKey },
+        'failed to delete replaced chapter text object',
+      )
+    }
+  }
+
+  return result.chapter
 }
 
 async function nextChapterOrder(db: SchoolDbExecutor, trackId: string): Promise<number> {

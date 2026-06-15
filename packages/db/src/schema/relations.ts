@@ -7,6 +7,7 @@ import {
   segment,
   audioAsset,
   audioMapping,
+  stagedUpload,
   batch,
   enrollment,
   evaluation,
@@ -57,6 +58,7 @@ export const chapterRelations = relations(chapter, ({ one, many }) => ({
   track: one(track, { fields: [chapter.trackId], references: [track.id] }),
   segments: many(segment),
   audioAssets: many(audioAsset),
+  stagedUploads: many(stagedUpload),
   evaluations: many(evaluation),
 }))
 
@@ -73,6 +75,11 @@ export const audioAssetRelations = relations(audioAsset, ({ one, many }) => ({
 export const audioMappingRelations = relations(audioMapping, ({ one }) => ({
   segment: one(segment, { fields: [audioMapping.segmentId], references: [segment.id] }),
   audioAsset: one(audioAsset, { fields: [audioMapping.audioAssetId], references: [audioAsset.id] }),
+}))
+
+export const stagedUploadRelations = relations(stagedUpload, ({ one }) => ({
+  chapter: one(chapter, { fields: [stagedUpload.chapterId], references: [chapter.id] }),
+  user: one(user, { fields: [stagedUpload.createdByUserId], references: [user.id] }),
 }))
 
 export const batchRelations = relations(batch, ({ one, many }) => ({

@@ -2,28 +2,17 @@ import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 
 import { audioAsset, type SchoolDbExecutor } from '@narada/db'
-import { internalError, notFound, unprocessable } from '../error'
-import { objectLifecycle } from './objectLifecycle'
+import { internalError, notFound } from '../error'
+import { deleteStoredObject } from '../utils/contentStorage'
 import { audioAssetResponse, type AudioAsset } from './audioResponses'
-
-const audioUploadIdSchema = z
-  .string()
-  .regex(
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(mp3|wav|aac|ogg|m4a)$/i,
-    'Invalid audio upload id',
-  )
-
-export const getUploadUrlSchema = z.object({
-  contentType: z.enum(['audio/mpeg', 'audio/wav', 'audio/aac', 'audio/ogg', 'audio/mp4']),
-})
+import { completeStagedUpload } from './stagedUpload'
 
 export const createAudioAssetSchema = z.object({
-  uploadId: audioUploadIdSchema,
+  uploadId: z.uuid(),
   label: z.string().optional(),
   duration: z.number().positive(),
 })
 
-export type GetUploadUrlData = z.infer<typeof getUploadUrlSchema>
 export type CreateAudioAssetData = z.infer<typeof createAudioAssetSchema>
 export type StoredAudioAsset = typeof audioAsset.$inferSelect
 export type CreateAudioAssetResult = { asset: AudioAsset; created: boolean }
@@ -41,46 +30,43 @@ export async function findAudioAssetById(
   })
 }
 
-export async function getAudioUploadUrl(
-  schoolId: string,
-  chapterId: string,
-  contentType: GetUploadUrlData['contentType'],
-): Promise<{ uploadUrl: string; uploadId: string }> {
-  return objectLifecycle.stageAudioUpload({ schoolId, chapterId, contentType })
-}
-
 export async function createAudioAsset(
   db: SchoolDbExecutor,
   schoolId: string,
   chapterId: string,
   data: CreateAudioAssetData,
 ): Promise<CreateAudioAssetResult> {
-  const objectKey = objectLifecycle.audioObjectKey({ schoolId, chapterId, uploadId: data.uploadId })
-  const exists = await objectLifecycle.objectExists(objectKey)
-  if (!exists) throw unprocessable('uploaded audio object does not exist')
-
-  const rows = await db
-    .insert(audioAsset)
-    .values({
+  return await db.transaction(async tx => {
+    const { objectKey } = await completeStagedUpload(tx, {
+      schoolId,
       chapterId,
-      objectKey,
-      label: data.label,
-      duration: data.duration,
+      uploadId: data.uploadId,
+      purpose: 'audio',
     })
-    .onConflictDoNothing()
-    .returning()
 
-  const row = rows.at(0)
-  if (row) {
-    return { asset: await audioAssetResponse(row), created: true }
-  }
+    const rows = await tx
+      .insert(audioAsset)
+      .values({
+        chapterId,
+        objectKey,
+        label: data.label,
+        duration: data.duration,
+      })
+      .onConflictDoNothing()
+      .returning()
 
-  const existing = await db.query.audioAsset.findFirst({
-    where: (t, { and, eq }) => and(eq(t.chapterId, chapterId), eq(t.objectKey, objectKey)),
+    const row = rows.at(0)
+    if (row) {
+      return { asset: await audioAssetResponse(row), created: true }
+    }
+
+    const existing = await tx.query.audioAsset.findFirst({
+      where: (t, { and, eq }) => and(eq(t.chapterId, chapterId), eq(t.objectKey, objectKey)),
+    })
+
+    if (!existing) throw internalError()
+    return { asset: await audioAssetResponse(existing), created: false }
   })
-
-  if (!existing) throw internalError()
-  return { asset: await audioAssetResponse(existing), created: false }
 }
 
 export async function removeAudioAsset(
@@ -93,5 +79,6 @@ export async function removeAudioAsset(
   await db
     .delete(audioAsset)
     .where(and(eq(audioAsset.id, audioId), eq(audioAsset.chapterId, chapterId)))
-  await objectLifecycle.deleteObject(asset.objectKey)
+
+  await deleteStoredObject(asset.objectKey)
 }

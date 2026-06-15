@@ -19,6 +19,8 @@ export const chapterStatus = pgEnum('chapterStatus', ['draft', 'published'])
 export const script = pgEnum('script', ['te', 'sa', 'en'])
 export const batchStatus = pgEnum('batchStatus', ['upcoming', 'active', 'completed'])
 export const enrollmentRole = pgEnum('enrollmentRole', ['instructor', 'ta', 'student'])
+export const stagedUploadPurpose = pgEnum('stagedUploadPurpose', ['chapterText', 'audio'])
+export const stagedUploadStatus = pgEnum('stagedUploadStatus', ['pending', 'completed', 'expired'])
 export const proficiencyLevel = pgEnum('proficiencyLevel', [
   'absent',
   'notStarted',
@@ -114,6 +116,29 @@ export const audioMapping = pgTable(
   table => [
     primaryKey({ columns: [table.segmentId, table.audioAssetId] }),
     check('audioMapping_bounds_valid', sql`${table.audioStart} < ${table.audioEnd}`),
+  ],
+)
+
+export const stagedUpload = pgTable(
+  'stagedUpload',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    schoolId: text('schoolId').notNull(),
+    chapterId: uuid('chapterId')
+      .notNull()
+      .references(() => chapter.id, { onDelete: 'cascade' }),
+    purpose: stagedUploadPurpose('purpose').notNull(),
+    status: stagedUploadStatus('status').notNull().default('pending'),
+    objectKey: text('objectKey').notNull(),
+    contentType: text('contentType').notNull(),
+    createdByUserId: text('createdByUserId').notNull(),
+    expiresAt: timestamp('expiresAt').notNull(),
+    completedAt: timestamp('completedAt'),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+  },
+  table => [
+    index('stagedUpload_chapterId_idx').on(table.chapterId),
+    index('stagedUpload_status_expiresAt_idx').on(table.status, table.expiresAt),
   ],
 )
 

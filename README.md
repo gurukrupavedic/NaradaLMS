@@ -54,12 +54,13 @@ pnpm db:studio            # open Drizzle Studio
 pnpm auth:generate        # regenerate BetterAuth schema from config
 ```
 
-### Schools (operator scripts)
+### Schools
 
 ```sh
-SCHOOL_NAME="..." SCHOOL_SLUG="..." pnpm schools:create       # provision a new school
-pnpm schools:reconcile                                         # reconcile failed provisions
+pnpm schools:create --name "..." --slug "..."
 ```
+
+Only use this rare provisioning tool as a super-admin user. The tool prompts for the super-admin email and password, verifies that the authenticated user is a super-admin, and adds that user as the initial owner. Pass `--ownerEmail "..."` to make a different user the owner.
 
 ### Environment management
 
@@ -106,7 +107,7 @@ packages/
   db/           @narada/db      Drizzle ORM, schema definitions, connection pooling
   env/          @narada/env     Env validation (t3-oss/env-core + zod), .env.sops storage
   storage/      @narada/storage Cloudflare R2 client (AWS SDK v3)
-tools/          @narada/tools   Internal CLI scripts (env:fetch, env:encrypt, env:link)
+tools/          @narada/tools   Internal CLI utilities (env and rare provisioning tools)
 docs/
   api.md        HTTP API reference
   data-model.md Database schema, roles, multi-tenancy strategy
@@ -158,7 +159,7 @@ schools/{organizationId}/chapters/{chapterId}/text/{uuid}.txt
 schools/{organizationId}/chapters/{chapterId}/audio/{uuid}.{ext}
 ```
 
-Uploads use a two-step presign → register flow: the client gets a presigned PUT URL, uploads directly to R2, then calls the API to register the object. Download URLs are signed per-request and cached within the request lifecycle.
+Uploads use a staged presign → upload → complete flow: the API first creates a pending staged upload row with the final object key, the client uploads directly to R2, then the API completes the staged upload into the durable chapter text or audio asset record. Download URLs are signed per-request and cached within the request lifecycle.
 
 ## Codebase patterns
 
@@ -174,4 +175,4 @@ Uploads use a two-step presign → register flow: the client gets a presigned PU
 
 **TypeScript style:** prefer `satisfies` over explicit type annotations when inference and shape validation are both needed. Service modules export named free functions, not class instances or default exports.
 
-**Scripts:** one-off operator scripts live in `apps/api/src/scripts/` and are run via `pnpm --filter @narada/api <script-name>`.
+**Operator actions:** rare provisioning operations such as school creation live in `@narada/tools`. Repair or cleanup work should be designed as explicit domain workflows or infrastructure policy, not as one-off scripts.

@@ -1,10 +1,4 @@
-import {
-  DeleteObjectCommand,
-  GetObjectCommand,
-  HeadObjectCommand,
-  ListObjectsV2Command,
-  PutObjectCommand,
-} from '@aws-sdk/client-s3'
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 import { env } from '@narada/env'
@@ -14,11 +8,6 @@ const BUCKET = env.R2_BUCKET_NAME
 
 const UPLOAD_EXPIRY_SECONDS = 60 * 15
 const DOWNLOAD_EXPIRY_SECONDS = 60 * 60
-
-export type ObjectSummary = {
-  key: string
-  lastModified: Date | null
-}
 
 export async function getUploadUrl(
   key: string,
@@ -56,33 +45,4 @@ export async function objectExists(key: string): Promise<boolean> {
 
     throw error
   }
-}
-
-export async function listObjectSummaries(prefix: string): Promise<ObjectSummary[]> {
-  const objects: ObjectSummary[] = []
-  let continuationToken: string | undefined
-  do {
-    const response = await s3.send(
-      new ListObjectsV2Command({
-        Bucket: BUCKET,
-        Prefix: prefix,
-        ContinuationToken: continuationToken,
-      }),
-    )
-
-    for (const object of response.Contents ?? []) {
-      if (object.Key) {
-        objects.push({ key: object.Key, lastModified: object.LastModified ?? null })
-      }
-    }
-
-    continuationToken = response.NextContinuationToken
-  } while (continuationToken)
-
-  return objects
-}
-
-export async function listObjectKeys(prefix: string): Promise<string[]> {
-  const objects = await listObjectSummaries(prefix)
-  return objects.map(object => object.key)
 }

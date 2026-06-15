@@ -10,7 +10,7 @@
 
 ## 2. School Schema Provisioning
 
-- [x] **Schema creation on org creation** — hook into BetterAuth's organization creation event (or wrap the POST /schools route) to: create a `school_<id>` Postgres schema, run per-school DDL (all tables in `packages/db/src/schema/school.ts`)
+- [x] **School provisioning tool** — create an internal CLI that authenticates a super-admin, creates an organization, provisions its per-school Postgres schema, and runs school migrations
 - [x] **Per-school DB connection** — utility that returns a Drizzle instance scoped to a given school schema (set `search_path`); used by all school-scoped route handlers
 - [x] **R2 env vars** — add `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_CUSTOM_DOMAIN` (optional, for public URLs) to `@narada/env`; these map directly to Pushduck's R2 provider config
 - [x] **R2 delete helper** — thin wrapper around `@aws-sdk/client-s3` `DeleteObjectCommand` for the audio delete route (Pushduck does not handle deletions); reuse the same credentials from env
@@ -26,7 +26,6 @@ All routes below are missing — only `/health` exists. Group them by file in `a
 
 ### Schools (`routes/schools.ts`)
 - [x] `GET /schools` — list all organizations; super-admin only
-- [x] `POST /schools` — create BetterAuth organization + provision per-school Postgres schema; super-admin only
 - [x] `PATCH /schools/:schoolId` — update org name/slug; super-admin only
 
 ### Tracks (`routes/tracks.ts`)

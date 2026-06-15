@@ -10,7 +10,7 @@ import {
   segment,
   type SchoolDbExecutor,
 } from '@narada/db'
-import { objectLifecycle } from './objectLifecycle'
+import { signedDownloadUrl } from '../utils/contentStorage'
 import { chapterAudioAssetResponse, type ChapterAudioAsset } from './audioResponses'
 
 type DbChapter = typeof chapter.$inferSelect
@@ -70,7 +70,7 @@ export async function chapterResponse(row: DbChapter): Promise<Chapter> {
     status: row.status,
     order: row.order,
     script: row.script,
-    textUrl: row.textObjectKey ? await objectLifecycle.urlFor(row.textObjectKey) : null,
+    textUrl: row.textObjectKey ? await signedDownloadUrl(row.textObjectKey) : null,
   }
 }
 
