@@ -8,6 +8,7 @@
     "env:encrypt": "tsx src/env.ts encrypt",
     "env:link": "tsx src/env.ts link",
     "schools:create": "tsx src/schools.ts create",
+    "seed": "tsx src/seed.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

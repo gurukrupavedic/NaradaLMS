@@ -17,10 +17,41 @@ PostgreSQL and a Cloudflare R2 bucket are required at runtime. All connection st
 
 ```sh
 pnpm install
-pnpm env:fetch      # decrypt .env.sops → root .env + workspace symlinks
+pnpm env:fetch                  # decrypt .env.sops → root .env + workspace symlinks
 ```
 
 If this is your first time, you need an age key and a maintainer must add your public key to `.sops.yaml` before `env:fetch` will succeed. See [Environment management](#environment-management).
+
+**Start the database:**
+
+```sh
+docker compose up -d narada-db  # PostgreSQL on port 5432
+pnpm db:push                    # apply schema to the local database
+```
+
+Useful Docker commands:
+
+```sh
+docker logs narada-db -f                              # tail database logs
+docker exec -it narada-db psql -U narada -d narada    # open a psql shell
+docker logs narada-api -f                             # tail API logs (when running via Docker)
+```
+
+**Seed a local environment** (first time only):
+
+```sh
+pnpm seed superadmin --email superadmin@local.test --name "Admin"
+pnpm seed school --slug local
+```
+
+This creates a super-admin account (`superadmin@local.test` / `testing123`) and a `local` school populated with test tracks, batches, instructors, and students. See [Seed tools](#seed-tools) for all options.
+
+**Start the dev servers:**
+
+```sh
+pnpm api:dev        # Express API on port 3000
+pnpm web:dev        # Next.js frontend
+```
 
 ## Commands
 
@@ -61,6 +92,49 @@ pnpm schools:create --name "..." --slug "..."
 ```
 
 Only use this rare provisioning tool as a super-admin user. The tool prompts for the super-admin email and password, verifies that the authenticated user is a super-admin, and adds that user as the initial owner. Pass `--ownerEmail "..."` to make a different user the owner.
+
+### Seed tools
+
+Tools for local development and testing. All seed user accounts share the password `testing123` unless overridden.
+
+**Bootstrap a super-admin** (run this first, before anything else):
+
+```sh
+pnpm seed superadmin --email admin@example.com --name "Admin"
+```
+
+Creates a user and sets `isSuperAdmin = true`. Does not require existing credentials.
+
+**Seed a full school** with tracks, batches, and enrolled users:
+
+```sh
+pnpm seed school --slug test-school
+# with options:
+pnpm seed school --slug test-school --name "Test School" \
+  --tracks 2 --batches 2 --instructors 2 --students 5
+```
+
+Prompts for super-admin credentials, then idempotently creates:
+- The school org and its Postgres schema
+- `{slug}-owner@seed.test` and `{slug}-admin@seed.test` as org members
+- N instructor and M student users, distributed across all batches (max 2 instructors per batch)
+
+**Create a single user** with an optional role:
+
+```sh
+# User only
+pnpm seed user --email jane@example.com --name "Jane"
+
+# Org-level role (owner | admin | member)
+pnpm seed user --email jane@example.com --name "Jane" \
+  --role admin --schoolSlug test-school
+
+# Batch-level role (instructor | ta | student)
+pnpm seed user --email jane@example.com --name "Jane" \
+  --role student --schoolSlug test-school --batchId <uuid>
+```
+
+All seed commands are idempotent — safe to run multiple times against the same slug or email.
 
 ### Environment management
 

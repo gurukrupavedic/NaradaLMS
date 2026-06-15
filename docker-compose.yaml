@@ -1,7 +1,8 @@
 name: narada
 
 services:
-  postgres:
+  narada-db:
+    container_name: narada-db
     image: postgres:17-alpine
     environment:
       POSTGRES_USER: narada
@@ -17,19 +18,18 @@ services:
       timeout: 5s
       retries: 10
 
-  api:
+  narada-api:
+    container_name: narada-api
     build:
       context: .
       dockerfile: apps/api/Dockerfile
     env_file:
       - path: .env
         required: false
-    environment:
-      DATABASE_URL: postgresql://narada:narada@postgres:5432/narada
     ports:
       - "3000:3000"
     depends_on:
-      postgres:
+      narada-db:
         condition: service_healthy
     restart: unless-stopped
 
