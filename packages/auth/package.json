@@ -24,6 +24,11 @@
     "@narada/db": "workspace:*",
     "@narada/env": "workspace:*"
   },
+  "peerDependenciesMeta": {
+    "@narada/db": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "dotenv-cli": "^8.0.0",
     "eslint": "^9",

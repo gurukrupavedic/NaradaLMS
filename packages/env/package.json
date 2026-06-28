@@ -8,6 +8,7 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
+    "./client": "./src/client.ts",
     "./load": "./src/load.ts"
   },
   "scripts": {

@@ -17,6 +17,13 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
   ]),
   {
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
     rules: {
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [

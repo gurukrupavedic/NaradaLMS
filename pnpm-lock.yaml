@@ -92,6 +92,12 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.2.4)
+      '@narada/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      '@narada/env':
+        specifier: workspace:*
+        version: link:../../packages/env
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
