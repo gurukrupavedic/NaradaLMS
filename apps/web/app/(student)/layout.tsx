@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Geist, Geist_Mono, Crimson_Pro } from 'next/font/google'
 import { cookies } from 'next/headers'
 
 import { cn } from '@/lib/utils'
@@ -12,9 +12,12 @@ import '../globals.css'
 const THEME_COOKIE: string = 'narada-theme'
 
 const geistSans = Geist({ variable: '--font-sans', subsets: ['latin'] })
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
+const crimsonPro = Crimson_Pro({
+  variable: '--font-display',
   subsets: ['latin'],
+  style: ['normal', 'italic'],
+  weight: ['400', '600'],
 })
 
 export const metadata: Metadata = {
@@ -36,6 +39,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       className={cn(
         geistSans.variable,
         geistMono.variable,
+        crimsonPro.variable,
         theme === 'dark' && 'dark',
         'h-full antialiased',
       )}

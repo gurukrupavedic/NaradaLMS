@@ -39,7 +39,7 @@ function NavButton({ item }: { item: NavigationItem }) {
   const Icon = item.icon
   const isActive = isItemActive(item)
   const buttonClass = cn(
-    'group flex items-center gap-1.5 px-2.5 py-1.5 text-xs transition-colors',
+    'group flex items-center gap-2 rounded-none px-3 py-1.5 text-sm transition-colors',
     isActive
       ? 'text-foreground font-medium'
       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
@@ -63,7 +63,7 @@ function UserMenu() {
         }
       >
         <Avatar className="size-6 shrink-0">
-          <AvatarFallback className="bg-violet-500 text-[9px] font-medium text-white">
+          <AvatarFallback className="bg-primary text-[9px] font-medium text-primary-foreground">
             RP
           </AvatarFallback>
         </Avatar>
@@ -101,72 +101,106 @@ export function AppShell({ navigationItems, children, className }: AppShellProps
 
   return (
     <div className={cn('flex h-full flex-col overflow-hidden', className)}>
-      <header className="border-border bg-card flex h-11 shrink-0 items-center gap-3 border-b px-4">
-        <span className="text-sm font-semibold tracking-tight whitespace-nowrap">Narada LMS</span>
+      {/* Floating nav — wide gutter, card treatment */}
+      <div className="shrink-0 px-6 py-3">
+        <div className="bg-card ring-1 ring-foreground/10">
+          <header className="flex h-13 items-center px-5">
+            {/* Brand — left third */}
+            <div className="flex flex-1 items-center">
+              <span className="whitespace-nowrap text-sm font-semibold tracking-tight">
+                Narada LMS
+              </span>
+            </div>
 
-        <nav className="hidden flex-1 items-center gap-0.5 md:flex">
-          {navigationItems.map(item => (
-            <NavButton key={item.label} item={item} />
-          ))}
-        </nav>
+            {/* Nav items — centered */}
+            <nav className="hidden items-center gap-3 md:flex">
+              {navigationItems.map(item => (
+                <NavButton key={item.label} item={item} />
+              ))}
+            </nav>
 
-        <div className="ml-auto flex items-center gap-1.5">
-          <Button variant="ghost" size="icon-xs" onClick={toggleTheme}>
-            {theme === 'dark' ? (
-              <SunIcon className="size-3.5" />
-            ) : (
-              <MoonIcon className="size-3.5" />
-            )}
-          </Button>
-
-          <div className="hidden sm:block">
-            <UserMenu />
-          </div>
-
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            className="md:hidden"
-            onClick={() => setMobileOpen(o => !o)}
-          >
-            {mobileOpen ? <XIcon className="size-3.5" /> : <HamburgerIcon className="size-3.5" />}
-          </Button>
-        </div>
-      </header>
-
-      {mobileOpen && (
-        <div className="border-border bg-card shrink-0 border-b md:hidden">
-          {navigationItems.map(item => {
-            const Icon = item.icon
-            const isActive = isItemActive(item)
-            return (
-              <button
-                key={item.label}
-                className={cn(
-                  'flex w-full items-center gap-2 px-4 py-2 text-xs transition-colors',
-                  isActive
-                    ? 'text-foreground bg-muted font-medium'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
-                )}
+            {/* Actions — right third */}
+            <div className="flex flex-1 items-center justify-end gap-1.5">
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className="rounded-none"
+                onClick={toggleTheme}
               >
-                <Icon className="size-3.5 shrink-0" />
-                {item.label}
-              </button>
-            )
-          })}
-          <Separator />
-          <button className="text-muted-foreground hover:text-foreground hover:bg-muted/50 flex w-full items-center gap-2 px-4 py-2 text-xs transition-colors">
-            <SettingsIcon className="size-3.5 shrink-0" />
-            Settings
-          </button>
-          <button className="text-muted-foreground hover:text-foreground hover:bg-muted/50 flex w-full items-center gap-2 px-4 py-2 text-xs transition-colors">
-            <LeaveIcon className="size-3.5 shrink-0" />
-            Sign out
-          </button>
-        </div>
-      )}
+                {theme === 'dark' ? (
+                  <SunIcon className="size-3.5" />
+                ) : (
+                  <MoonIcon className="size-3.5" />
+                )}
+              </Button>
 
-      <main className="bg-background flex-1 overflow-auto">{children}</main>
+              <div className="hidden sm:block">
+                <UserMenu />
+              </div>
+
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className="rounded-none md:hidden"
+                onClick={() => setMobileOpen(o => !o)}
+              >
+                {mobileOpen ? (
+                  <XIcon className="size-3.5" />
+                ) : (
+                  <HamburgerIcon className="size-3.5" />
+                )}
+              </Button>
+            </div>
+          </header>
+
+          {/* Mobile menu — extends the card downward */}
+          {mobileOpen && (
+            <div className="border-t border-border/40 md:hidden">
+              {navigationItems.map(item => {
+                const Icon = item.icon
+                const isActive = isItemActive(item)
+                return (
+                  <button
+                    key={item.label}
+                    className={cn(
+                      'flex w-full items-center gap-2 px-5 py-2.5 text-sm transition-colors',
+                      isActive
+                        ? 'bg-muted font-medium text-foreground'
+                        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                    )}
+                  >
+                    <Icon className="size-3.5 shrink-0" />
+                    {item.label}
+                  </button>
+                )
+              })}
+              <Separator />
+              <button className="flex w-full items-center gap-2 px-5 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground">
+                <SettingsIcon className="size-3.5 shrink-0" />
+                Settings
+              </button>
+              <button className="flex w-full items-center gap-2 px-5 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground">
+                <LeaveIcon className="size-3.5 shrink-0" />
+                Sign out
+              </button>
+              <Separator />
+              <div className="flex items-center gap-2.5 px-5 py-3">
+                <Avatar className="size-7 shrink-0">
+                  <AvatarFallback className="bg-primary text-[9px] font-medium text-primary-foreground">
+                    RP
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-medium leading-none">Revanth Pothukuchi</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Student</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <main className="flex-1 overflow-auto">{children}</main>
     </div>
   )
 }
