@@ -38,7 +38,6 @@ type ApiChapter = {
   status: 'draft' | 'published'
   order: number
   script: 'te' | 'sa' | 'en' | null
-  textUrl: string | null
 }
 
 type ApiTrack = {
@@ -98,7 +97,6 @@ const MOCK_TRACKS: ApiTrack[] = [
         status: 'published',
         order: 1,
         script: 'sa',
-        textUrl: null,
       },
       {
         id: CH.vayu,
@@ -108,7 +106,6 @@ const MOCK_TRACKS: ApiTrack[] = [
         status: 'published',
         order: 2,
         script: 'sa',
-        textUrl: null,
       },
       {
         id: CH.indra,
@@ -118,7 +115,6 @@ const MOCK_TRACKS: ApiTrack[] = [
         status: 'published',
         order: 3,
         script: 'sa',
-        textUrl: null,
       },
       {
         id: CH.mitraVaruna,
@@ -128,7 +124,6 @@ const MOCK_TRACKS: ApiTrack[] = [
         status: 'published',
         order: 4,
         script: 'sa',
-        textUrl: null,
       },
       {
         id: CH.ashvins,
@@ -138,7 +133,6 @@ const MOCK_TRACKS: ApiTrack[] = [
         status: 'published',
         order: 5,
         script: 'sa',
-        textUrl: null,
       },
     ],
   },
@@ -155,7 +149,6 @@ const MOCK_TRACKS: ApiTrack[] = [
         status: 'published',
         order: 1,
         script: 'sa',
-        textUrl: null,
       },
       {
         id: CH.purusha,
@@ -165,7 +158,6 @@ const MOCK_TRACKS: ApiTrack[] = [
         status: 'published',
         order: 2,
         script: 'sa',
-        textUrl: null,
       },
       {
         id: CH.shri,
@@ -175,7 +167,6 @@ const MOCK_TRACKS: ApiTrack[] = [
         status: 'published',
         order: 3,
         script: 'sa',
-        textUrl: null,
       },
     ],
   },

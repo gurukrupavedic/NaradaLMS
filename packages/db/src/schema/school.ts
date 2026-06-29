@@ -1,17 +1,14 @@
-import { sql } from 'drizzle-orm'
 import {
   pgTable,
   pgEnum,
   text,
   integer,
-  real,
   date,
   timestamp,
   uuid,
   index,
   primaryKey,
   uniqueIndex,
-  check,
 } from 'drizzle-orm/pg-core'
 import { uuidv7 } from '../ids'
 
@@ -19,8 +16,6 @@ export const chapterStatus = pgEnum('chapterStatus', ['draft', 'published'])
 export const script = pgEnum('script', ['te', 'sa', 'en'])
 export const batchStatus = pgEnum('batchStatus', ['upcoming', 'active', 'completed'])
 export const enrollmentRole = pgEnum('enrollmentRole', ['instructor', 'ta', 'student'])
-export const stagedUploadPurpose = pgEnum('stagedUploadPurpose', ['chapterText', 'audio'])
-export const stagedUploadStatus = pgEnum('stagedUploadStatus', ['pending', 'completed', 'expired'])
 export const proficiencyLevel = pgEnum('proficiencyLevel', [
   'absent',
   'notStarted',
@@ -59,86 +54,11 @@ export const chapter = pgTable(
     status: chapterStatus('status').notNull().default('draft'),
     order: integer('order').notNull(),
     script: script('script'),
-    textObjectKey: text('textObjectKey'),
   },
   table => [
     index('chapter_trackId_idx').on(table.trackId),
     uniqueIndex('chapter_trackId_code_uidx').on(table.trackId, table.code),
     uniqueIndex('chapter_trackId_order_uidx').on(table.trackId, table.order),
-  ],
-)
-
-export const segment = pgTable(
-  'segment',
-  {
-    id: uuid('id').primaryKey().$defaultFn(uuidv7),
-    chapterId: uuid('chapterId')
-      .notNull()
-      .references(() => chapter.id, { onDelete: 'cascade' }),
-    start: integer('start').notNull(),
-    end: integer('end').notNull(),
-  },
-  table => [
-    index('segment_chapterId_idx').on(table.chapterId),
-    check('segment_bounds_valid', sql`${table.start} < ${table.end}`),
-  ],
-)
-
-export const audioAsset = pgTable(
-  'audioAsset',
-  {
-    id: uuid('id').primaryKey().$defaultFn(uuidv7),
-    chapterId: uuid('chapterId')
-      .notNull()
-      .references(() => chapter.id, { onDelete: 'cascade' }),
-    label: text('label'),
-    objectKey: text('objectKey').notNull(),
-    duration: real('duration').notNull(),
-  },
-  table => [
-    index('audioAsset_chapterId_idx').on(table.chapterId),
-    uniqueIndex('audioAsset_chapterId_objectKey_idx').on(table.chapterId, table.objectKey),
-  ],
-)
-
-export const audioMapping = pgTable(
-  'audioMapping',
-  {
-    segmentId: uuid('segmentId')
-      .notNull()
-      .references(() => segment.id, { onDelete: 'cascade' }),
-    audioAssetId: uuid('audioAssetId')
-      .notNull()
-      .references(() => audioAsset.id, { onDelete: 'cascade' }),
-    audioStart: real('audioStart').notNull(),
-    audioEnd: real('audioEnd').notNull(),
-  },
-  table => [
-    primaryKey({ columns: [table.segmentId, table.audioAssetId] }),
-    check('audioMapping_bounds_valid', sql`${table.audioStart} < ${table.audioEnd}`),
-  ],
-)
-
-export const stagedUpload = pgTable(
-  'stagedUpload',
-  {
-    id: uuid('id').primaryKey().$defaultFn(uuidv7),
-    schoolId: text('schoolId').notNull(),
-    chapterId: uuid('chapterId')
-      .notNull()
-      .references(() => chapter.id, { onDelete: 'cascade' }),
-    purpose: stagedUploadPurpose('purpose').notNull(),
-    status: stagedUploadStatus('status').notNull().default('pending'),
-    objectKey: text('objectKey').notNull(),
-    contentType: text('contentType').notNull(),
-    createdByUserId: text('createdByUserId').notNull(),
-    expiresAt: timestamp('expiresAt').notNull(),
-    completedAt: timestamp('completedAt'),
-    createdAt: timestamp('createdAt').defaultNow().notNull(),
-  },
-  table => [
-    index('stagedUpload_chapterId_idx').on(table.chapterId),
-    index('stagedUpload_status_expiresAt_idx').on(table.status, table.expiresAt),
   ],
 )
 

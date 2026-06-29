@@ -12,5 +12,3 @@ export async function authorizeContentReadView(req: Request): Promise<ChapterRea
 
   return canAuthor ? { kind: 'authoring' } : { kind: 'learnerPreview' }
 }
-
-export const authoringView = { kind: 'authoring' } satisfies ChapterReadView
