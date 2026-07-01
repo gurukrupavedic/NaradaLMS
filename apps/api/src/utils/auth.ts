@@ -7,8 +7,8 @@ import {
   hasBatchPermission,
   type SchoolPermissions,
 } from '@narada/auth/permissions'
-import type { SchoolDbExecutor } from '@narada/db'
-import { forbidden, unauthorized } from '../error'
+import { publicDb, type SchoolDbExecutor } from '@narada/db'
+import { badRequest, forbidden, unauthorized } from '../error'
 import { findEnrollment, type Enrollment } from '../services/enrollment'
 
 export type AuthenticatedSession = typeof auth.$Infer.Session
@@ -21,14 +21,13 @@ type BatchAccessClaim = {
 }
 
 type BatchListClaim = {
-  schoolPermission: SchoolPermissions
   allBatchesPermission: SchoolPermissions
 }
 
 export type BatchAccess =
-  | { kind: 'schoolWide'; userId: string }
-  | { kind: 'enrolled'; userId: string }
-  | { kind: 'singleBatch'; userId: string; enrollment: Enrollment }
+  | { kind: 'schoolWide' }
+  | { kind: 'enrolled'; profileId: string }
+  | { kind: 'singleBatch'; profileId: string; enrollment: Enrollment }
 
 export type BatchItemAccess = Extract<BatchAccess, { kind: 'schoolWide' | 'singleBatch' }>
 export type BatchListAccess = Extract<BatchAccess, { kind: 'schoolWide' | 'enrolled' }>
@@ -98,15 +97,52 @@ export async function requireAccess<T>(
   return resolved
 }
 
+export async function getActorProfile(req: Request, db: SchoolDbExecutor) {
+  const { user } = await getSession(req)
+  const profileId = req.headers['x-profile-id']
+  if (!profileId || typeof profileId !== 'string') {
+    throw badRequest('X-Profile-Id header is required')
+  }
+
+  const profile = await db.query.profile.findFirst({
+    where: (t, { eq }) => eq(t.id, profileId),
+  })
+
+  if (!profile || profile.userId !== user.id) {
+    throw forbidden()
+  }
+
+  return { user, profile }
+}
+
+export async function tryGetActorProfile(req: Request, db: SchoolDbExecutor) {
+  const { user } = await getSession(req)
+  const profileId = req.headers['x-profile-id']
+  if (!profileId || typeof profileId !== 'string') {
+    return { user, profile: null }
+  }
+
+  const profile = await db.query.profile.findFirst({
+    where: (t, { eq }) => eq(t.id, profileId),
+  })
+
+  if (!profile || profile.userId !== user.id) {
+    throw forbidden()
+  }
+
+  return { user, profile }
+}
+
 export async function getBatchAccess(
   req: Request,
   db: SchoolDbExecutor,
   batchId: string,
   claim: BatchAccessClaim,
+  profileId?: string | null,
 ): Promise<BatchItemAccess | null> {
   const { user } = await getSession(req)
   if (user.isSuperAdmin) {
-    return { kind: 'schoolWide', userId: user.id }
+    return { kind: 'schoolWide' }
   }
 
   if (claim.schoolPermission) {
@@ -116,13 +152,17 @@ export async function getBatchAccess(
     })
 
     if (allowed) {
-      return { kind: 'schoolWide', userId: user.id }
+      return { kind: 'schoolWide' }
     }
   }
 
-  const enrollment = await findEnrollment(db, user.id, batchId)
+  if (!profileId) {
+    return null
+  }
+
+  const enrollment = await findEnrollment(db, profileId, batchId)
   if (enrollment && hasBatchPermission(enrollment.role, claim.batchPermission)) {
-    return { kind: 'singleBatch', userId: user.id, enrollment }
+    return { kind: 'singleBatch', profileId, enrollment }
   }
 
   return null
@@ -130,22 +170,30 @@ export async function getBatchAccess(
 
 export async function getBatchListAccess(
   req: Request,
-  db: SchoolDbExecutor,
   claim: BatchListClaim,
+  profileId?: string | null,
 ): Promise<BatchListAccess | null> {
   const { user } = await getSession(req)
-  const canList = await hasPermission(req, {
-    scope: 'school',
-    permissions: claim.schoolPermission,
-  })
+  if (user.isSuperAdmin) return { kind: 'schoolWide' }
 
-  if (!canList) return null
   const canSeeAll = await hasPermission(req, {
     scope: 'school',
     permissions: claim.allBatchesPermission,
   })
 
-  return canSeeAll ? { kind: 'schoolWide', userId: user.id } : { kind: 'enrolled', userId: user.id }
+  if (canSeeAll) return { kind: 'schoolWide' }
+  if (!profileId) return null
+  return { kind: 'enrolled', profileId }
 }
 
 export const authorize = authorizeClaim
+
+export async function requireOrgMember(req: Request, orgId: string): Promise<void> {
+  const { user } = await getSession(req)
+  if (user.isSuperAdmin) return
+  const row = await publicDb.query.member.findFirst({
+    where: (t, { and: a, eq: e }) => a(e(t.organizationId, orgId), e(t.userId, user.id)),
+    columns: { id: true },
+  })
+  if (!row) throw forbidden()
+}
