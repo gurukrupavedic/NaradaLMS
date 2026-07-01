@@ -25,6 +25,7 @@ export const env = createEnv({
   clientPrefix: 'NEXT_PUBLIC',
   client: {
     NEXT_PUBLIC_API_URL: z.url(),
+    NEXT_PUBLIC_SCHOOL_SLUG: z.string(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
