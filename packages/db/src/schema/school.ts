@@ -12,6 +12,22 @@ import {
 } from 'drizzle-orm/pg-core'
 import { uuidv7 } from '../ids'
 
+export const profile = pgTable(
+  'profile',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    userId: text('userId').notNull(),
+    name: text('name').notNull(),
+    phone: text('phone'),
+    city: text('city'),
+    updatedAt: timestamp('updatedAt').defaultNow().notNull().$onUpdateFn(() => new Date()),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+  },
+  table => [index('profile_userId_idx').on(table.userId)],
+)
+
+export type SchoolProfile = typeof profile.$inferSelect
+
 export const chapterStatus = pgEnum('chapterStatus', ['draft', 'published'])
 export const script = pgEnum('script', ['te', 'sa', 'en'])
 export const batchStatus = pgEnum('batchStatus', ['upcoming', 'active', 'completed'])
@@ -77,17 +93,17 @@ export const batch = pgTable('batch', {
 export const enrollment = pgTable(
   'enrollment',
   {
-    userId: text('userId').notNull(),
+    profileId: uuid('profileId')
+      .notNull()
+      .references(() => profile.id, { onDelete: 'cascade' }),
     batchId: uuid('batchId')
       .notNull()
       .references(() => batch.id, { onDelete: 'cascade' }),
-    phone: text('phone'),
-    city: text('city'),
     role: enrollmentRole('role').notNull(),
     joinedAt: timestamp('joinedAt').defaultNow(),
   },
   table => [
-    primaryKey({ columns: [table.userId, table.batchId] }),
+    primaryKey({ columns: [table.profileId, table.batchId] }),
     index('enrollment_batchId_idx').on(table.batchId),
   ],
 )
@@ -96,13 +112,17 @@ export const evaluation = pgTable(
   'evaluation',
   {
     id: uuid('id').primaryKey().$defaultFn(uuidv7),
-    studentId: text('studentId').notNull(),
+    studentId: uuid('studentId')
+      .notNull()
+      .references(() => profile.id, { onDelete: 'cascade' }),
     chapterId: uuid('chapterId')
       .notNull()
       .references(() => chapter.id),
     level: proficiencyLevel('level').notNull(),
     notes: text('notes'),
-    evaluatorId: text('evaluatorId').notNull(),
+    evaluatorId: uuid('evaluatorId')
+      .notNull()
+      .references(() => profile.id, { onDelete: 'restrict' }),
     evaluatedAt: timestamp('evaluatedAt').defaultNow(),
   },
   table => [index('evaluation_studentId_chapterId_idx').on(table.studentId, table.chapterId)],
@@ -115,7 +135,9 @@ export const exam = pgTable(
     chapterId: uuid('chapterId')
       .notNull()
       .references(() => chapter.id),
-    studentId: text('studentId').notNull(),
+    studentId: uuid('studentId')
+      .notNull()
+      .references(() => profile.id, { onDelete: 'cascade' }),
     scheduledAt: timestamp('scheduledAt').notNull(),
     status: examStatus('status').notNull().default('scheduled'),
     evaluationId: uuid('evaluationId').references(() => evaluation.id),

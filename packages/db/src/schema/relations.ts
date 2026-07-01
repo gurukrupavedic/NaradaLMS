@@ -1,7 +1,7 @@
 import { relations } from 'drizzle-orm'
 
 import { user, session, account, organization, member, invitation } from './auth'
-import { track, chapter, batch, enrollment, evaluation, exam } from './school'
+import { track, chapter, batch, enrollment, evaluation, exam, profile } from './school'
 
 // ─── Auth relations ───────────────────────────────────────────────────────────
 
@@ -10,7 +10,6 @@ export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
   members: many(member),
   invitations: many(invitation),
-  enrollments: many(enrollment),
 }))
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -38,6 +37,10 @@ export const invitationRelations = relations(invitation, ({ one }) => ({
 
 // ─── School relations ─────────────────────────────────────────────────────────
 
+export const profileRelations = relations(profile, ({ many }) => ({
+  enrollments: many(enrollment),
+}))
+
 export const trackRelations = relations(track, ({ many }) => ({
   chapters: many(chapter),
   batches: many(batch),
@@ -54,8 +57,8 @@ export const batchRelations = relations(batch, ({ one, many }) => ({
 }))
 
 export const enrollmentRelations = relations(enrollment, ({ one }) => ({
+  profile: one(profile, { fields: [enrollment.profileId], references: [profile.id] }),
   batch: one(batch, { fields: [enrollment.batchId], references: [batch.id] }),
-  user: one(user, { fields: [enrollment.userId], references: [user.id] }),
 }))
 
 export const evaluationRelations = relations(evaluation, ({ one }) => ({
