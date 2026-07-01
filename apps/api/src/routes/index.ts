@@ -4,7 +4,8 @@ import { rateLimit } from 'express-rate-limit'
 import healthRouter from './health'
 import tracksRouter from './tracks'
 import chaptersRouter from './chapters'
-import { batchEnrollmentProfileRouter, publicProfileRouter } from './profile'
+import { publicProfileRouter } from './profile'
+import profilesRouter from './profiles'
 import batchesRouter from './batches'
 import enrollmentRouter from './enrollment'
 import evaluationsRouter from './evaluations'
@@ -30,8 +31,8 @@ export default function setupRoutes(router: Router) {
     .use('/tracks', tracksRouter)
     .use('/chapters', chaptersRouter)
     .use('/batches', batchesRouter)
-    .use('/batches/:batchId/enrollments/me', batchEnrollmentProfileRouter)
     .use('/batches/:batchId/members', enrollmentRouter)
     .use('/batches/:batchId/evaluations', evaluationsRouter)
     .use('/exams', examsRouter)
+    .use('/profiles', profilesRouter)
 }

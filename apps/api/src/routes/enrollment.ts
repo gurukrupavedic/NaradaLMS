@@ -1,13 +1,12 @@
 import { Router } from 'express'
 import { z } from 'zod'
 
-import { userIdSchema } from '@narada/auth/ids'
 import { schoolRoute } from '../naradaRoute'
 import { parseBody, parseParams } from '../utils/validate'
 import { notFound } from '../error'
-import { getBatchAccess, requireAccess } from '../utils/auth'
+import { getBatchAccess, requireAccess, tryGetActorProfile } from '../utils/auth'
 import { findBatchById } from '../services/batch'
-import { enrollSchema, enrollUser, unenrollUser } from '../services/enrollment'
+import { enrollSchema, enrollProfile, unenrollProfile } from '../services/enrollment'
 
 // mergeParams: parent path provides :batchId.
 const router = Router({ mergeParams: true })
@@ -17,11 +16,12 @@ router.post(
   schoolRoute(async ({ req, res, ctx }) => {
     const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
     const data = parseBody(enrollSchema, req)
+    const { profile } = await tryGetActorProfile(req, ctx.db)
     await requireAccess(
       getBatchAccess(req, ctx.db, batchId, {
         schoolPermission: { enrollment: ['create'] },
         batchPermission: { enrollment: ['create'] },
-      }),
+      }, profile?.id),
     )
 
     const batch = await findBatchById(ctx.db, batchId)
@@ -29,27 +29,28 @@ router.post(
       throw notFound()
     }
 
-    const enrolled = await enrollUser(ctx.db, batchId, data)
+    const enrolled = await enrollProfile(ctx.db, batchId, data)
     res.status(201).json({ ok: true, data: enrolled })
   }),
 )
 
 router.delete(
-  '/:userId',
+  '/:profileId',
   schoolRoute(async ({ req, res, ctx }) => {
-    const { batchId, userId } = parseParams(
-      z.object({ batchId: z.uuid(), userId: userIdSchema }),
+    const { batchId, profileId } = parseParams(
+      z.object({ batchId: z.uuid(), profileId: z.uuid() }),
       req,
     )
 
+    const { profile } = await tryGetActorProfile(req, ctx.db)
     await requireAccess(
       getBatchAccess(req, ctx.db, batchId, {
         schoolPermission: { enrollment: ['remove'] },
         batchPermission: { enrollment: ['remove'] },
-      }),
+      }, profile?.id),
     )
 
-    await unenrollUser(ctx.db, batchId, userId)
+    await unenrollProfile(ctx.db, batchId, profileId)
     res.status(204).send()
   }),
 )

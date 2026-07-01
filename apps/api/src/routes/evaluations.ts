@@ -1,11 +1,10 @@
 import { Router } from 'express'
 import { z } from 'zod'
 
-import { userIdSchema } from '@narada/auth/ids'
 import type { BatchPermissions } from '@narada/auth/permissions'
-import { schoolRoute } from '../naradaRoute'
+import { profileRoute, schoolRoute } from '../naradaRoute'
 import { parseBody, parseParams, parseQuery } from '../utils/validate'
-import { getBatchAccess, getSession, requireAccess } from '../utils/auth'
+import { getBatchAccess, requireAccess, tryGetActorProfile } from '../utils/auth'
 import {
   createEvaluation,
   createEvaluationSchema,
@@ -25,11 +24,18 @@ router.get(
   schoolRoute(async ({ req, res, ctx }) => {
     const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
     const query = parseQuery(listEvaluationsQuerySchema, req)
+    const { profile } = await tryGetActorProfile(req, ctx.db)
     await requireAccess(
-      getBatchAccess(req, ctx.db, batchId, {
-        schoolPermission: { evaluation: ['read'] },
-        batchPermission: { evaluation: ['create'] },
-      }),
+      getBatchAccess(
+        req,
+        ctx.db,
+        batchId,
+        {
+          schoolPermission: { evaluation: ['read'] },
+          batchPermission: { evaluation: ['create'] },
+        },
+        profile?.id,
+      ),
     )
 
     const result = await findEvaluationsByBatch(ctx.db, batchId, query)
@@ -39,23 +45,28 @@ router.get(
 
 router.get(
   '/:studentId',
-  schoolRoute(async ({ req, res, ctx }) => {
+  profileRoute(async ({ req, res, ctx, profile }) => {
     const { batchId, studentId } = parseParams(
-      z.object({ batchId: z.uuid(), studentId: userIdSchema }),
+      z.object({ batchId: z.uuid(), studentId: z.uuid() }),
       req,
     )
 
     const query = parseQuery(listEvaluationsQuerySchema, req)
-    const { user } = await getSession(req)
     const batchPermission = (
-      studentId === user.id ? { evaluation: ['read'] } : { evaluation: ['create'] }
+      studentId === profile.id ? { evaluation: ['read'] } : { evaluation: ['create'] }
     ) satisfies BatchPermissions
 
     await requireAccess(
-      getBatchAccess(req, ctx.db, batchId, {
-        schoolPermission: { evaluation: ['read'] },
-        batchPermission,
-      }),
+      getBatchAccess(
+        req,
+        ctx.db,
+        batchId,
+        {
+          schoolPermission: { evaluation: ['read'] },
+          batchPermission,
+        },
+        profile.id,
+      ),
     )
 
     const result = await findEvaluationsByStudent(ctx.db, batchId, studentId, query)
@@ -65,13 +76,19 @@ router.get(
 
 router.post(
   '/',
-  schoolRoute(async ({ req, res, ctx }) => {
+  profileRoute(async ({ req, res, ctx, profile }) => {
     const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
     const data = parseBody(createEvaluationSchema, req)
-    const access = await requireAccess(
-      getBatchAccess(req, ctx.db, batchId, {
-        batchPermission: { evaluation: ['create'] },
-      }),
+    await requireAccess(
+      getBatchAccess(
+        req,
+        ctx.db,
+        batchId,
+        {
+          batchPermission: { evaluation: ['create'] },
+        },
+        profile.id,
+      ),
     )
 
     const studentEnrollment = await findEnrollment(ctx.db, data.studentId, batchId)
@@ -84,14 +101,20 @@ router.post(
       columns: { trackId: true },
     })
 
-    if (!chapter) throw notFound()
+    if (!chapter) {
+      throw notFound()
+    }
+
     const batch = await findBatchById(ctx.db, batchId)
-    if (!batch) throw notFound()
+    if (!batch) {
+      throw notFound()
+    }
+
     if (chapter.trackId !== batch.trackId) {
       throw unprocessable('chapter does not belong to this batch track')
     }
 
-    const created = await createEvaluation(ctx.db, access.userId, data)
+    const created = await createEvaluation(ctx.db, profile.id, data)
     res.status(201).json({ ok: true, data: created })
   }),
 )
