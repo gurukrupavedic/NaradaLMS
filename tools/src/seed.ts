@@ -11,6 +11,7 @@ import {
   getScopedDatabase,
   member,
   organization,
+  profile,
   provisionSchool,
   publicDb,
   shutdownPools,
@@ -96,7 +97,9 @@ const userCmd = defineCommand({
         const school = await requireSchool(args.schoolSlug)
         if (ORG_ROLES.has(args.role)) {
           await upsertOrgMember(school.id, user.id, args.role as OrgRole)
-          assignment = { schoolSlug: args.schoolSlug, orgRole: args.role }
+          const schoolDb = getScopedDatabase(school.id)
+          const userProfile = await upsertProfile(schoolDb, user.id, args.name)
+          assignment = { schoolSlug: args.schoolSlug, orgRole: args.role, profileId: userProfile.id }
         } else if (BATCH_ROLES.has(args.role)) {
           if (!args.batchId) {
             throw new Error('--batchId is required for batch roles (instructor, ta, student)')
@@ -108,8 +111,9 @@ const userCmd = defineCommand({
           })
 
           if (!batchRow) throw new Error(`Batch not found: ${args.batchId}`)
-          await upsertEnrollment(schoolDb, args.batchId, user.id, args.role as BatchRole)
-          assignment = { schoolSlug: args.schoolSlug, batchId: args.batchId, batchRole: args.role }
+          const userProfile = await upsertProfile(schoolDb, user.id, args.name)
+          await upsertEnrollment(schoolDb, args.batchId, userProfile.id, args.role as BatchRole)
+          assignment = { schoolSlug: args.schoolSlug, batchId: args.batchId, batchRole: args.role, profileId: userProfile.id }
         } else {
           throw new Error(
             `Unknown role "${args.role}". Valid: owner, admin, member, instructor, ta, student`,
@@ -170,6 +174,8 @@ async function seedSchool(input: SchoolSeedInput) {
     const admin = await upsertUser(adminEmail, 'Admin')
     await upsertOrgMember(school.id, owner.id, 'owner')
     await upsertOrgMember(school.id, admin.id, 'admin')
+    const ownerProfile = await upsertProfile(schoolDb, owner.id, 'Owner')
+    const adminProfile = await upsertProfile(schoolDb, admin.id, 'Admin')
 
     const instructors = await Promise.all(
       range(input.numInstructors).map(i =>
@@ -182,6 +188,20 @@ async function seedSchool(input: SchoolSeedInput) {
       ),
     )
 
+    // All users with profiles must be org members
+    for (const user of [...instructors, ...students]) {
+      await upsertOrgMember(school.id, user.id, 'member')
+    }
+
+    const instructorProfiles = await Promise.all(
+      instructors.map(u => upsertProfile(schoolDb, u.id, u.name)),
+    )
+    const studentProfiles = await Promise.all(
+      students.map(u => upsertProfile(schoolDb, u.id, u.name)),
+    )
+
+    const instructorProfileById = new Map(instructors.map((u, i) => [u.id, instructorProfiles[i]!]))
+    const studentProfileById = new Map(students.map((u, i) => [u.id, studentProfiles[i]!]))
     const totalBatches = input.numTracks * input.numBatches
     const studentsPerBatch = Math.max(1, Math.ceil(input.numStudents / totalBatches))
     const trackResults = []
@@ -192,11 +212,13 @@ async function seedSchool(input: SchoolSeedInput) {
       for (let b = 1; b <= input.numBatches; b++) {
         const batchRow = await upsertBatch(schoolDb, trackRow.id, `${input.slug}-t${t}-batch${b}`)
         for (const user of pickForBatch(instructors, batchIndex, 2)) {
-          await upsertEnrollment(schoolDb, batchRow.id, user.id, 'instructor')
+          const p = instructorProfileById.get(user.id)!
+          await upsertEnrollment(schoolDb, batchRow.id, p.id, 'instructor')
         }
 
         for (const user of pickForBatch(students, batchIndex, studentsPerBatch)) {
-          await upsertEnrollment(schoolDb, batchRow.id, user.id, 'student')
+          const p = studentProfileById.get(user.id)!
+          await upsertEnrollment(schoolDb, batchRow.id, p.id, 'student')
         }
 
         batchResults.push({ id: batchRow.id, code: batchRow.code })
@@ -210,16 +232,18 @@ async function seedSchool(input: SchoolSeedInput) {
       JSON.stringify(
         {
           school: { id: school.id, slug: school.slug, name: school.name },
-          owner: { id: owner.id, email: ownerEmail },
-          admin: { id: admin.id, email: adminEmail },
+          owner: { id: owner.id, email: ownerEmail, profileId: ownerProfile.id },
+          admin: { id: admin.id, email: adminEmail, profileId: adminProfile.id },
           tracks: trackResults,
           instructors: instructors.map((u, i) => ({
             id: u.id,
             email: `${input.slug}-instructor${i + 1}@seed.test`,
+            profileId: instructorProfiles[i]!.id,
           })),
           students: students.map((u, i) => ({
             id: u.id,
             email: `${input.slug}-student${i + 1}@seed.test`,
+            profileId: studentProfiles[i]!.id,
           })),
           password: SEED_PASSWORD,
         },
@@ -321,18 +345,30 @@ async function upsertBatch(db: SchoolDatabase, trackId: string, code: string) {
   return row
 }
 
-async function upsertEnrollment(
-  db: SchoolDatabase,
-  batchId: string,
-  userId: string,
-  role: BatchRole,
-) {
-  const existing = await db.query.enrollment.findFirst({
-    where: (t, { and, eq }) => and(eq(t.batchId, batchId), eq(t.userId, userId)),
+async function upsertProfile(db: SchoolDatabase, userId: string, name: string) {
+  const existing = await db.query.profile.findFirst({
+    where: (t, { eq }) => eq(t.userId, userId),
+    orderBy: (t, { asc }) => [asc(t.createdAt)],
   })
 
   if (existing) return existing
-  const [row] = await db.insert(enrollment).values({ batchId, userId, role }).returning()
+  const [row] = await db.insert(profile).values({ userId, name }).returning()
+  if (!row) throw new Error('Failed to create profile')
+  return row
+}
+
+async function upsertEnrollment(
+  db: SchoolDatabase,
+  batchId: string,
+  profileId: string,
+  role: BatchRole,
+) {
+  const existing = await db.query.enrollment.findFirst({
+    where: (t, { and, eq }) => and(eq(t.batchId, batchId), eq(t.profileId, profileId)),
+  })
+
+  if (existing) return existing
+  const [row] = await db.insert(enrollment).values({ batchId, profileId, role }).returning()
   if (!row) throw new Error('Failed to create enrollment')
   return row
 }
