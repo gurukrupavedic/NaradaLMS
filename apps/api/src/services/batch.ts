@@ -10,12 +10,11 @@ import { requireNonEmpty } from '../utils/validate'
 const PAGE_SIZE = 20
 
 type BatchMember = {
-  userId: string
-  userName: string
-  userEmail: string
-  role: (typeof enrollment.$inferSelect)['role']
+  profileId: string
+  name: string
   phone: string | null
   city: string | null
+  role: (typeof enrollment.$inferSelect)['role']
   joinedAt: Date | null
 }
 
@@ -72,7 +71,7 @@ export async function findBatches(
     const enrolledBatchIds = db
       .select({ id: enrollment.batchId })
       .from(enrollment)
-      .where(eq(enrollment.userId, access.userId))
+      .where(eq(enrollment.profileId, access.profileId))
 
     conditions.push(inArray(batch.id, enrolledBatchIds))
   } else if (access.kind === 'singleBatch') {
@@ -124,11 +123,9 @@ export async function findBatchById(
   db: SchoolDbExecutor,
   batchId: string,
 ): Promise<Batch | undefined> {
-  const row = await db.query.batch.findFirst({
+  return db.query.batch.findFirst({
     where: (t, { eq }) => eq(t.id, batchId),
   })
-
-  return row
 }
 
 export async function findBatchByIdWithMembers(
@@ -137,19 +134,18 @@ export async function findBatchByIdWithMembers(
 ): Promise<BatchDetail | undefined> {
   const row = await db.query.batch.findFirst({
     where: (t, { eq }) => eq(t.id, batchId),
-    with: { enrollments: { with: { user: true } } },
+    with: { enrollments: { with: { profile: true } } },
   })
 
   if (!row) return undefined
   return {
     ...row,
     members: row.enrollments.map(e => ({
-      userId: e.userId,
-      userName: e.user.name,
-      userEmail: e.user.email,
+      profileId: e.profileId,
+      name: e.profile.name,
+      phone: e.profile.phone,
+      city: e.profile.city,
       role: e.role,
-      phone: e.phone,
-      city: e.city,
       joinedAt: e.joinedAt,
     })),
   }

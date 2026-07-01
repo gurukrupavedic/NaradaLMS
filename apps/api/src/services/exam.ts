@@ -1,18 +1,17 @@
 import { z } from 'zod'
 import { and, asc, eq, gt, inArray, or } from 'drizzle-orm'
 
-import { userIdSchema } from '@narada/auth/ids'
 import { hasBatchPermission } from '@narada/auth/permissions'
 import { batch, chapter, enrollment, exam, evaluation, type SchoolDbExecutor } from '@narada/db'
 import { compoundCursor, dateCursorField, paginateResponse, uuidCursorField } from '../utils/cursor'
-import { internalError, notFound } from '../error'
+import { internalError, notFound, unprocessable } from '../error'
 import { proficiencyLevelSchema } from './shared'
 import { requireNonEmpty } from '../utils/validate'
 
 const PAGE_SIZE = 20
 
 export const createExamSchema = z.object({
-  studentId: userIdSchema,
+  studentId: z.uuid(),
   chapterId: z.uuid(),
   scheduledAt: z.iso.datetime().transform(v => new Date(v)),
 })
@@ -44,14 +43,14 @@ export type UpdateExamData = z.infer<typeof updateExamSchema>
 export type ListExamsQuery = z.infer<typeof listExamsQuerySchema>
 export type RecordResultData = z.infer<typeof recordResultSchema>
 
-export async function findVisibleExamsForUser(
+export async function findVisibleExamsForProfile(
   db: SchoolDbExecutor,
-  userId: string,
+  profileId: string,
   options: ListExamsQuery,
 ): Promise<{ items: Exam[]; nextCursor: string | null }> {
-  const visibleBatchIds = await manageableBatchIds(db, userId)
+  const visibleBatchIds = await manageableBatchIds(db, profileId)
   if (visibleBatchIds.length === 0) {
-    return findManyExams(db, [eq(exam.studentId, userId)], options)
+    return findManyExams(db, [eq(exam.studentId, profileId)], options)
   }
 
   const visibleChapterIds = db
@@ -61,17 +60,17 @@ export async function findVisibleExamsForUser(
     .where(inArray(batch.id, visibleBatchIds))
 
   const visibleStudentIds = db
-    .select({ id: enrollment.userId })
+    .select({ id: enrollment.profileId })
     .from(enrollment)
     .where(inArray(enrollment.batchId, visibleBatchIds))
 
   const visibleExamCondition = or(
-    eq(exam.studentId, userId),
+    eq(exam.studentId, profileId),
     and(inArray(exam.chapterId, visibleChapterIds), inArray(exam.studentId, visibleStudentIds)),
   )
 
   if (!visibleExamCondition) {
-    return findManyExams(db, [eq(exam.studentId, userId)], options)
+    return findManyExams(db, [eq(exam.studentId, profileId)], options)
   }
 
   return findManyExams(db, [visibleExamCondition], options)
@@ -115,48 +114,62 @@ export async function findExamById(
   db: SchoolDbExecutor,
   examId: string,
 ): Promise<Exam | undefined> {
-  const row = await db.query.exam.findFirst({
+  return db.query.exam.findFirst({
     where: (t, { eq }) => eq(t.id, examId),
   })
-
-  if (!row) {
-    return undefined
-  }
-
-  return row
 }
 
 export async function createExam(db: SchoolDbExecutor, data: CreateExamData): Promise<Exam> {
   const rows = await db.insert(exam).values(data).returning()
-
   const row = rows.at(0)
   if (!row) throw internalError()
   return row
 }
 
-export async function canManageExam(
+async function findStudentBatchIds(
   db: SchoolDbExecutor,
-  userId: string,
-  data: Pick<Exam, 'studentId' | 'chapterId'>,
-): Promise<boolean> {
+  studentId: string,
+  chapterId: string,
+): Promise<string[]> {
   const chapterRow = await db.query.chapter.findFirst({
-    where: (t, { eq }) => eq(t.id, data.chapterId),
+    where: (t, { eq }) => eq(t.id, chapterId),
     columns: { trackId: true },
   })
 
-  if (!chapterRow) return false
-  const studentRows = await db
+  if (!chapterRow) {
+    return []
+  }
+
+  const rows = await db
     .select({ batchId: enrollment.batchId })
     .from(enrollment)
     .innerJoin(batch, eq(batch.id, enrollment.batchId))
-    .where(and(eq(enrollment.userId, data.studentId), eq(batch.trackId, chapterRow.trackId)))
+    .where(and(eq(enrollment.profileId, studentId), eq(batch.trackId, chapterRow.trackId)))
 
-  const studentBatchIds = studentRows.map(row => row.batchId)
+  return rows.map(r => r.batchId)
+}
+
+export async function validateExamInput(
+  db: SchoolDbExecutor,
+  data: Pick<Exam, 'studentId' | 'chapterId'>,
+): Promise<void> {
+  const batchIds = await findStudentBatchIds(db, data.studentId, data.chapterId)
+  if (batchIds.length === 0) {
+    throw unprocessable('student is not enrolled in any batch for this track')
+  }
+}
+
+export async function canManageExam(
+  db: SchoolDbExecutor,
+  profileId: string,
+  data: Pick<Exam, 'studentId' | 'chapterId'>,
+): Promise<boolean> {
+  const studentBatchIds = await findStudentBatchIds(db, data.studentId, data.chapterId)
   if (studentBatchIds.length === 0) return false
   const rows = await db
     .select({ role: enrollment.role })
     .from(enrollment)
-    .where(and(eq(enrollment.userId, userId), inArray(enrollment.batchId, studentBatchIds)))
+    .where(and(eq(enrollment.profileId, profileId), inArray(enrollment.batchId, studentBatchIds)))
 
   return rows.some(row => hasBatchPermission(row.role, { exam: ['update'] }))
 }
@@ -177,21 +190,16 @@ export async function updateExam(
 
 export async function recordExamResult(
   db: SchoolDbExecutor,
-  examId: string,
+  examRecord: Pick<Exam, 'id' | 'studentId' | 'chapterId'>,
   evaluatorId: string,
   data: RecordResultData,
 ): Promise<Exam> {
-  const examRow = await db.query.exam.findFirst({
-    where: (t, { eq }) => eq(t.id, examId),
-  })
-
-  if (!examRow) throw notFound()
   return db.transaction(async tx => {
     const evalRows = await tx
       .insert(evaluation)
       .values({
-        studentId: examRow.studentId,
-        chapterId: examRow.chapterId,
+        studentId: examRecord.studentId,
+        chapterId: examRecord.chapterId,
         level: data.level,
         notes: data.notes,
         evaluatorId,
@@ -199,24 +207,30 @@ export async function recordExamResult(
       .returning()
 
     const evalRow = evalRows.at(0)
-    if (!evalRow) throw internalError()
+    if (!evalRow) {
+      throw internalError()
+    }
+
     const rows = await tx
       .update(exam)
       .set({ evaluationId: evalRow.id, performedAt: new Date(), status: 'completed' })
-      .where(eq(exam.id, examId))
+      .where(eq(exam.id, examRecord.id))
       .returning()
 
     const row = rows.at(0)
-    if (!row) throw internalError()
+    if (!row) {
+      throw internalError()
+    }
+
     return row
   })
 }
 
-async function manageableBatchIds(db: SchoolDbExecutor, userId: string): Promise<string[]> {
+async function manageableBatchIds(db: SchoolDbExecutor, profileId: string): Promise<string[]> {
   const rows = await db
     .select({ batchId: enrollment.batchId, role: enrollment.role })
     .from(enrollment)
-    .where(eq(enrollment.userId, userId))
+    .where(eq(enrollment.profileId, profileId))
 
   return rows
     .filter(row => hasBatchPermission(row.role, { exam: ['update'] }))

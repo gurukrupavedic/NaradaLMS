@@ -4,15 +4,14 @@ type DbChapter = typeof chapter.$inferSelect
 
 export type ChapterReadView = { kind: 'authoring' } | { kind: 'learnerPreview' }
 
-export type Chapter = Omit<DbChapter, 'textObjectKey'>
+export type Chapter = DbChapter
 
 function canReadDrafts(view: ChapterReadView): boolean {
   return view.kind === 'authoring'
 }
 
 export function chapterResponse(row: DbChapter): Chapter {
-  const { textObjectKey: _, ...rest } = row
-  return rest
+  return row
 }
 
 export async function findChapterById(

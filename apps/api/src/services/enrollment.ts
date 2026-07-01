@@ -1,12 +1,11 @@
 import { z } from 'zod'
 import { and, eq } from 'drizzle-orm'
 
-import { userIdSchema } from '@narada/auth/ids'
 import { enrollment, type SchoolDbExecutor } from '@narada/db'
 import { conflict, internalError, notFound } from '../error'
 
 export const enrollSchema = z.object({
-  userId: userIdSchema,
+  profileId: z.uuid(),
   role: z.enum(['instructor', 'ta', 'student']),
 })
 
@@ -15,26 +14,36 @@ export type EnrollData = z.infer<typeof enrollSchema>
 
 export async function findEnrollment(
   db: SchoolDbExecutor,
-  userId: string,
+  profileId: string,
   batchId: string,
 ): Promise<Enrollment | undefined> {
-  const row = await db.query.enrollment.findFirst({
-    where: (t, { and, eq }) => and(eq(t.userId, userId), eq(t.batchId, batchId)),
+  return db.query.enrollment.findFirst({
+    where: (t, { and, eq }) => and(eq(t.profileId, profileId), eq(t.batchId, batchId)),
   })
-
-  return row
 }
 
-export async function enrollUser(
+export async function enrollProfile(
   db: SchoolDbExecutor,
   batchId: string,
   data: EnrollData,
 ): Promise<Enrollment> {
-  const existing = await findEnrollment(db, data.userId, batchId)
-  if (existing) throw conflict()
+  const profileExists = await db.query.profile.findFirst({
+    where: (t, { eq }) => eq(t.id, data.profileId),
+    columns: { id: true },
+  })
+
+  if (!profileExists) {
+    throw notFound()
+  }
+
+  const existing = await findEnrollment(db, data.profileId, batchId)
+  if (existing) {
+    throw conflict()
+  }
+
   const rows = await db
     .insert(enrollment)
-    .values({ batchId, userId: data.userId, role: data.role })
+    .values({ batchId, profileId: data.profileId, role: data.role })
     .returning()
 
   const row = rows.at(0)
@@ -42,14 +51,14 @@ export async function enrollUser(
   return row
 }
 
-export async function unenrollUser(
+export async function unenrollProfile(
   db: SchoolDbExecutor,
   batchId: string,
-  userId: string,
+  profileId: string,
 ): Promise<void> {
   const rows = await db
     .delete(enrollment)
-    .where(and(eq(enrollment.batchId, batchId), eq(enrollment.userId, userId)))
+    .where(and(eq(enrollment.batchId, batchId), eq(enrollment.profileId, profileId)))
     .returning()
 
   if (rows.length === 0) {

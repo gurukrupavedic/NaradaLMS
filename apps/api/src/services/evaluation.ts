@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 
-import { userIdSchema } from '@narada/auth/ids'
 import { enrollment, evaluation, type SchoolDbExecutor } from '@narada/db'
 import {
   compoundCursor,
@@ -15,7 +14,7 @@ import { proficiencyLevelSchema } from './shared'
 const PAGE_SIZE = 20
 
 export const createEvaluationSchema = z.object({
-  studentId: userIdSchema,
+  studentId: z.uuid(),
   chapterId: z.uuid(),
   level: proficiencyLevelSchema,
   notes: z.string().optional(),
@@ -83,14 +82,17 @@ export async function findEvaluationsByBatch(
   })
 
   const chapterIds = chapterRows.map(c => c.id)
-  if (chapterIds.length === 0) return { items: [], nextCursor: null }
-  const enrolledStudentIds = db
-    .select({ userId: enrollment.userId })
+  if (chapterIds.length === 0) {
+    return { items: [], nextCursor: null }
+  }
+
+  const enrolledProfileIds = db
+    .select({ profileId: enrollment.profileId })
     .from(enrollment)
     .where(eq(enrollment.batchId, batchId))
 
   const conditions = [
-    inArray(evaluation.studentId, enrolledStudentIds),
+    inArray(evaluation.studentId, enrolledProfileIds),
     inArray(evaluation.chapterId, chapterIds),
   ]
 
@@ -144,15 +146,18 @@ export async function findEvaluationsByStudent(
   })
 
   const chapterIds = chapterRows.map(c => c.id)
-  if (chapterIds.length === 0) return { items: [], nextCursor: null }
-  const enrolledStudentIds = db
-    .select({ userId: enrollment.userId })
+  if (chapterIds.length === 0) {
+    return { items: [], nextCursor: null }
+  }
+
+  const enrolledProfileIds = db
+    .select({ profileId: enrollment.profileId })
     .from(enrollment)
     .where(eq(enrollment.batchId, batchId))
 
   const conditions = [
     eq(evaluation.studentId, studentId),
-    inArray(evaluation.studentId, enrolledStudentIds),
+    inArray(evaluation.studentId, enrolledProfileIds),
     inArray(evaluation.chapterId, chapterIds),
   ]
 
@@ -169,7 +174,9 @@ export async function findEvaluationsByStudent(
   }
 
   const nonNullConditions = [...conditions, isNotNull(evaluation.evaluatedAt)]
-  if (cursorWhere) nonNullConditions.push(cursorWhere)
+  if (cursorWhere) {
+    nonNullConditions.push(cursorWhere)
+  }
 
   const rows = await db.query.evaluation.findMany({
     where: and(...nonNullConditions),
@@ -183,6 +190,7 @@ export async function findEvaluationsByStudent(
       orderBy: desc(evaluation.id),
       limit: options.limit + 1 - rows.length,
     })
+
     rows.push(...nullRows)
   }
 
