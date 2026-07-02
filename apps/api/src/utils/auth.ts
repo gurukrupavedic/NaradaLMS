@@ -174,15 +174,23 @@ export async function getBatchListAccess(
   profileId?: string | null,
 ): Promise<BatchListAccess | null> {
   const { user } = await getSession(req)
-  if (user.isSuperAdmin) return { kind: 'schoolWide' }
+  if (user.isSuperAdmin) {
+    return { kind: 'schoolWide' }
+  }
 
   const canSeeAll = await hasPermission(req, {
     scope: 'school',
     permissions: claim.allBatchesPermission,
   })
 
-  if (canSeeAll) return { kind: 'schoolWide' }
-  if (!profileId) return null
+  if (canSeeAll) {
+    return { kind: 'schoolWide' }
+  }
+
+  if (!profileId) {
+    return null
+  }
+
   return { kind: 'enrolled', profileId }
 }
 
@@ -190,10 +198,16 @@ export const authorize = authorizeClaim
 
 export async function requireOrgMember(req: Request, orgId: string): Promise<void> {
   const { user } = await getSession(req)
-  if (user.isSuperAdmin) return
+  if (user.isSuperAdmin) {
+    return
+  }
+
   const row = await publicDb.query.member.findFirst({
-    where: (t, { and: a, eq: e }) => a(e(t.organizationId, orgId), e(t.userId, user.id)),
+    where: (t, { and, eq }) => and(eq(t.organizationId, orgId), eq(t.userId, user.id)),
     columns: { id: true },
   })
-  if (!row) throw forbidden()
+
+  if (!row) {
+    throw forbidden()
+  }
 }

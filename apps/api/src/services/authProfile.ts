@@ -19,7 +19,7 @@ export type AuthProfile = z.infer<typeof authProfileSchema>
 
 export async function getAuthProfile(userId: string, isSuperAdmin: boolean): Promise<AuthProfile> {
   const memberships = await publicDb.query.member.findMany({
-    where: (t, { eq: e }) => e(t.userId, userId),
+    where: (t, { eq }) => eq(t.userId, userId),
     with: { organization: true },
   })
 
