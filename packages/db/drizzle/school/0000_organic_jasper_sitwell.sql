@@ -32,11 +32,10 @@ CREATE TABLE "chapter" (
 --> statement-breakpoint
 CREATE TABLE "batch" (
 	"id" uuid PRIMARY KEY NOT NULL,
-	"code" text NOT NULL,
 	"trackId" uuid NOT NULL,
-	"startDate" date,
+	"code" text NOT NULL,
 	"status" "batchStatus" DEFAULT 'upcoming' NOT NULL,
-	"scheduledAt" timestamp,
+	"startDate" timestamp,
 	"meetingUrl" text,
 	CONSTRAINT "batch_code_unique" UNIQUE("code")
 );

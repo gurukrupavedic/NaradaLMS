@@ -1,3 +1,5 @@
+import type { ProficiencyLevel } from '@/lib/proficiency'
+
 export type ApiProfile = {
   id: string
   name: string
@@ -5,4 +7,74 @@ export type ApiProfile = {
   city: string | null
   createdAt: string
   updatedAt: string
+}
+
+export type ApiPage<T> = {
+  items: T[]
+  nextCursor: string | null
+}
+
+export type ApiChapter = {
+  id: string
+  trackId: string
+  code: string
+  title: string
+  status: 'draft' | 'published'
+  order: number
+  script: 'te' | 'sa' | 'en' | null
+}
+
+export type ApiTrack = {
+  id: string
+  name: string
+  order: number
+  chapters: ApiChapter[]
+}
+
+export type BatchStatus = 'upcoming' | 'active' | 'completed'
+
+export type ApiBatch = {
+  id: string
+  trackId: string
+  code: string
+  status: BatchStatus
+  startDate: string | null
+  meetingUrl: string | null
+}
+
+export type EnrollmentRole = 'instructor' | 'ta' | 'student'
+
+export type ApiBatchMember = {
+  profileId: string
+  name: string
+  phone: string | null
+  city: string | null
+  role: EnrollmentRole
+  joinedAt: string | null
+}
+
+export type ApiBatchDetail = ApiBatch & {
+  members: ApiBatchMember[]
+}
+
+export type ApiEvaluation = {
+  id: string
+  studentId: string
+  chapterId: string
+  level: ProficiencyLevel
+  notes: string | null
+  evaluatorId: string
+  evaluatedAt: string | null
+}
+
+export type ExamStatus = 'scheduled' | 'inProgress' | 'completed' | 'cancelled'
+
+export type ApiExam = {
+  id: string
+  chapterId: string
+  studentId: string
+  scheduledAt: string
+  status: ExamStatus
+  evaluationId: string | null
+  performedAt: string | null
 }

@@ -14,23 +14,17 @@
           "primaryKey": true,
           "notNull": true
         },
-        "code": {
-          "name": "code",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "trackId": {
           "name": "trackId",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "startDate": {
-          "name": "startDate",
-          "type": "date",
+        "code": {
+          "name": "code",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "status": {
           "name": "status",
@@ -40,8 +34,8 @@
           "notNull": true,
           "default": "'upcoming'"
         },
-        "scheduledAt": {
-          "name": "scheduledAt",
+        "startDate": {
+          "name": "startDate",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false

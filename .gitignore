@@ -52,3 +52,9 @@ next-env.d.ts
 
 # Codegraph
 .codegraph/
+
+# Draft backend scratchpad
+apps/api/.draft-backend/
+
+# Draft frontend scratchpad
+apps/web/.draft-frontend/

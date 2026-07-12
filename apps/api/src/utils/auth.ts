@@ -9,7 +9,11 @@ import {
 } from '@narada/auth/permissions'
 import { publicDb, type SchoolDbExecutor } from '@narada/db'
 import { badRequest, forbidden, unauthorized } from '../error'
-import { findEnrollment, type Enrollment } from '../services/enrollment'
+import {
+  findEnrollment,
+  hasSharedInstructorEnrollment,
+  type Enrollment,
+} from '../services/enrollment'
 
 export type AuthenticatedSession = typeof auth.$Infer.Session
 
@@ -192,6 +196,48 @@ export async function getBatchListAccess(
   }
 
   return { kind: 'enrolled', profileId }
+}
+
+// Grants a caller access to list a *different* profile's batches: school-wide (admin/owner or
+// super admin), the profile viewing its own batches, or an instructor/ta who currently or
+// previously shared a batch with that profile — the "you've taught this student before, so you
+// can see their full history" rule. Reuses BatchListAccess's 'enrolled' kind, since filtering
+// findBatches by an arbitrary profileId works the same as filtering by the caller's own.
+export async function getProfileBatchListAccess(
+  req: Request,
+  db: SchoolDbExecutor,
+  targetProfileId: string,
+  claim: BatchListClaim,
+  actorProfileId?: string | null,
+): Promise<BatchListAccess | null> {
+  const { user } = await getSession(req)
+  if (user.isSuperAdmin) {
+    return { kind: 'schoolWide' }
+  }
+
+  const canSeeAll = await hasPermission(req, {
+    scope: 'school',
+    permissions: claim.allBatchesPermission,
+  })
+
+  if (canSeeAll) {
+    return { kind: 'schoolWide' }
+  }
+
+  if (!actorProfileId) {
+    return null
+  }
+
+  if (actorProfileId === targetProfileId) {
+    return { kind: 'enrolled', profileId: targetProfileId }
+  }
+
+  const shared = await hasSharedInstructorEnrollment(db, actorProfileId, targetProfileId)
+  if (!shared) {
+    return null
+  }
+
+  return { kind: 'enrolled', profileId: targetProfileId }
 }
 
 export const authorize = authorizeClaim

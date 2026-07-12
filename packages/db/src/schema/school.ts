@@ -3,7 +3,6 @@ import {
   pgEnum,
   text,
   integer,
-  date,
   timestamp,
   uuid,
   index,
@@ -20,7 +19,10 @@ export const profile = pgTable(
     name: text('name').notNull(),
     phone: text('phone'),
     city: text('city'),
-    updatedAt: timestamp('updatedAt').defaultNow().notNull().$onUpdateFn(() => new Date()),
+    updatedAt: timestamp('updatedAt')
+      .defaultNow()
+      .notNull()
+      .$onUpdateFn(() => new Date()),
     createdAt: timestamp('createdAt').defaultNow().notNull(),
   },
   table => [index('profile_userId_idx').on(table.userId)],
@@ -80,13 +82,12 @@ export const chapter = pgTable(
 
 export const batch = pgTable('batch', {
   id: uuid('id').primaryKey().$defaultFn(uuidv7),
-  code: text('code').notNull().unique(),
   trackId: uuid('trackId')
     .notNull()
     .references(() => track.id),
-  startDate: date('startDate'),
+  code: text('code').notNull().unique(),
   status: batchStatus('status').notNull().default('upcoming'),
-  scheduledAt: timestamp('scheduledAt'),
+  startDate: timestamp('startDate'),
   meetingUrl: text('meetingUrl'),
 })
 

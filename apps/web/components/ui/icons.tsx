@@ -26,4 +26,6 @@ export {
   Sun as SunIcon,
   Moon as MoonIcon,
   Menu as HamburgerIcon,
+  Pencil as PencilSimpleIcon,
+  MoveUpRight as ArrowUpRightIcon,
 } from 'lucide-react'

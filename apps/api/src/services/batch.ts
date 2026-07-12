@@ -2,7 +2,12 @@ import { z } from 'zod'
 import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 
 import { batch, enrollment, type SchoolDbExecutor } from '@narada/db'
-import { compoundCursor, paginateResponse, uuidCursorField } from '../utils/cursor'
+import {
+  compoundCursor,
+  nullableDateCursorField,
+  paginateResponse,
+  uuidCursorField,
+} from '../utils/cursor'
 import { internalError, notFound } from '../error'
 import type { BatchAccess } from '../utils/auth'
 import { requireNonEmpty } from '../utils/validate'
@@ -19,15 +24,11 @@ type BatchMember = {
 }
 
 export const createBatchSchema = z.object({
-  code: z.string().min(1),
   trackId: z.uuid(),
-  startDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate must be YYYY-MM-DD')
-    .optional(),
-  scheduledAt: z.iso
+  code: z.string().min(1),
+  startDate: z.iso
     .datetime()
-    .transform(v => new Date(v))
+    .transform(value => new Date(value))
     .optional(),
   meetingUrl: z.string().url().optional(),
 })
@@ -36,13 +37,9 @@ export const updateBatchSchema = requireNonEmpty(
   z.object({
     code: z.string().min(1).optional(),
     status: z.enum(['upcoming', 'active', 'completed']).optional(),
-    startDate: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate must be YYYY-MM-DD')
-      .optional(),
-    scheduledAt: z.iso
+    startDate: z.iso
       .datetime()
-      .transform(v => new Date(v))
+      .transform(value => new Date(value))
       .optional(),
     meetingUrl: z.string().url().optional(),
   }),
@@ -50,7 +47,10 @@ export const updateBatchSchema = requireNonEmpty(
 
 export const listBatchesQuerySchema = z.object({
   status: z.enum(['upcoming', 'active', 'completed']).optional(),
-  cursor: compoundCursor({ startDate: z.string().nullable(), id: uuidCursorField() }).optional(),
+  cursor: compoundCursor({
+    startDate: nullableDateCursorField(),
+    id: uuidCursorField(),
+  }).optional(),
   limit: z.coerce.number().int().positive().max(100).default(PAGE_SIZE),
 })
 
@@ -96,7 +96,6 @@ export async function findBatches(
       lt(batch.startDate, cursor.startDate),
       and(eq(batch.startDate, cursor.startDate), gt(batch.id, cursor.id)),
     )
-
     if (cursorWhere) nonNullConditions.push(cursorWhere)
   }
 

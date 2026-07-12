@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm'
 import { auth } from '@narada/auth'
 import {
   batch,
+  chapter,
   dropSchoolSchema,
   enrollment,
   getScopedDatabase,
@@ -35,17 +36,19 @@ type SchoolSeedInput = {
   operatorEmail: string
   operatorPassword: string
   numTracks: number
+  numChapters: number
   numBatches: number
   numInstructors: number
   numStudents: number
 }
 
 const schoolCmd = defineCommand({
-  meta: { description: 'Seed a school with test users, tracks, batches, and enrollments.' },
+  meta: { description: 'Seed a school with test users, tracks, chapters, batches, and enrollments.' },
   args: {
     slug: { type: 'string', required: true, description: 'School slug.' },
     name: { type: 'string', description: 'School display name (defaults to slug title-cased).' },
     tracks: { type: 'string', default: '2', description: 'Number of tracks to create.' },
+    chapters: { type: 'string', default: '5', description: 'Number of chapters per track.' },
     batches: { type: 'string', default: '2', description: 'Number of batches per track.' },
     instructors: { type: 'string', default: '2', description: 'Number of instructor users.' },
     students: { type: 'string', default: '5', description: 'Number of student users.' },
@@ -57,10 +60,11 @@ const schoolCmd = defineCommand({
       name: args.name ?? toTitleCase(args.slug),
       operatorEmail: credentials.email,
       operatorPassword: credentials.password,
-      numTracks: parseInt(args.tracks, 10),
-      numBatches: parseInt(args.batches, 10),
-      numInstructors: parseInt(args.instructors, 10),
-      numStudents: parseInt(args.students, 10),
+      numTracks: parseCount(args.tracks, '--tracks'),
+      numChapters: parseCount(args.chapters, '--chapters'),
+      numBatches: parseCount(args.batches, '--batches'),
+      numInstructors: parseCount(args.instructors, '--instructors'),
+      numStudents: parseCount(args.students, '--students'),
     })
   },
 })
@@ -99,7 +103,11 @@ const userCmd = defineCommand({
           await upsertOrgMember(school.id, user.id, args.role as OrgRole)
           const schoolDb = getScopedDatabase(school.id)
           const userProfile = await upsertProfile(schoolDb, user.id, args.name)
-          assignment = { schoolSlug: args.schoolSlug, orgRole: args.role, profileId: userProfile.id }
+          assignment = {
+            schoolSlug: args.schoolSlug,
+            orgRole: args.role,
+            profileId: userProfile.id,
+          }
         } else if (BATCH_ROLES.has(args.role)) {
           if (!args.batchId) {
             throw new Error('--batchId is required for batch roles (instructor, ta, student)')
@@ -113,7 +121,12 @@ const userCmd = defineCommand({
           if (!batchRow) throw new Error(`Batch not found: ${args.batchId}`)
           const userProfile = await upsertProfile(schoolDb, user.id, args.name)
           await upsertEnrollment(schoolDb, args.batchId, userProfile.id, args.role as BatchRole)
-          assignment = { schoolSlug: args.schoolSlug, batchId: args.batchId, batchRole: args.role, profileId: userProfile.id }
+          assignment = {
+            schoolSlug: args.schoolSlug,
+            batchId: args.batchId,
+            batchRole: args.role,
+            profileId: userProfile.id,
+          }
         } else {
           throw new Error(
             `Unknown role "${args.role}". Valid: owner, admin, member, instructor, ta, student`,
@@ -123,7 +136,13 @@ const userCmd = defineCommand({
 
       console.log(
         JSON.stringify(
-          { id: user.id, email: args.email, name: args.name, password: SEED_PASSWORD, ...assignment },
+          {
+            id: user.id,
+            email: args.email,
+            name: args.name,
+            password: SEED_PASSWORD,
+            ...assignment,
+          },
           null,
           2,
         ),
@@ -145,9 +164,16 @@ const superadminCmd = defineCommand({
     try {
       const password = args.password ?? SEED_PASSWORD
       const newUser = await upsertUser(args.email, args.name, password)
-      await publicDb.update(userTable).set({ isSuperAdmin: true }).where(eq(userTable.id, newUser.id))
+      await publicDb
+        .update(userTable)
+        .set({ isSuperAdmin: true })
+        .where(eq(userTable.id, newUser.id))
       console.log(
-        JSON.stringify({ id: newUser.id, email: args.email, name: args.name, password, isSuperAdmin: true }, null, 2),
+        JSON.stringify(
+          { id: newUser.id, email: args.email, name: args.name, password, isSuperAdmin: true },
+          null,
+          2,
+        ),
       )
     } finally {
       await shutdownPools()
@@ -203,11 +229,21 @@ async function seedSchool(input: SchoolSeedInput) {
     const instructorProfileById = new Map(instructors.map((u, i) => [u.id, instructorProfiles[i]!]))
     const studentProfileById = new Map(students.map((u, i) => [u.id, studentProfiles[i]!]))
     const totalBatches = input.numTracks * input.numBatches
-    const studentsPerBatch = Math.max(1, Math.ceil(input.numStudents / totalBatches))
+    const studentsPerBatch =
+      totalBatches === 0 ? 0 : Math.max(1, Math.ceil(input.numStudents / totalBatches))
     const trackResults = []
     let batchIndex = 0
     for (let t = 1; t <= input.numTracks; t++) {
       const trackRow = await upsertTrack(schoolDb, `Seed Track ${t}`)
+      const chapters = await Promise.all(
+        range(input.numChapters).map(index =>
+          upsertChapter(schoolDb, trackRow.id, {
+            code: `${t}.${index + 1}`,
+            title: `Seed Chapter ${index + 1}`,
+            order: index + 1,
+          }),
+        ),
+      )
       const batchResults = []
       for (let b = 1; b <= input.numBatches; b++) {
         const batchRow = await upsertBatch(schoolDb, trackRow.id, `${input.slug}-t${t}-batch${b}`)
@@ -225,7 +261,12 @@ async function seedSchool(input: SchoolSeedInput) {
         batchIndex++
       }
 
-      trackResults.push({ id: trackRow.id, name: trackRow.name, batches: batchResults })
+      trackResults.push({
+        id: trackRow.id,
+        name: trackRow.name,
+        chapters: chapters.map(row => ({ id: row.id, code: row.code, title: row.title })),
+        batches: batchResults,
+      })
     }
 
     console.log(
@@ -345,6 +386,24 @@ async function upsertBatch(db: SchoolDatabase, trackId: string, code: string) {
   return row
 }
 
+async function upsertChapter(
+  db: SchoolDatabase,
+  trackId: string,
+  values: { code: string; title: string; order: number },
+) {
+  const existing = await db.query.chapter.findFirst({
+    where: (table, { and, eq }) => and(eq(table.trackId, trackId), eq(table.code, values.code)),
+  })
+
+  if (existing) return existing
+  const [row] = await db
+    .insert(chapter)
+    .values({ trackId, ...values, status: 'published', script: 'sa' })
+    .returning()
+  if (!row) throw new Error(`Failed to create chapter: ${values.code}`)
+  return row
+}
+
 async function upsertProfile(db: SchoolDatabase, userId: string, name: string) {
   const existing = await db.query.profile.findFirst({
     where: (t, { eq }) => eq(t.userId, userId),
@@ -409,6 +468,14 @@ function toTitleCase(slug: string): string {
 
 function range(n: number): number[] {
   return Array.from({ length: n }, (_, i) => i)
+}
+
+function parseCount(value: string, option: string): number {
+  const count = Number(value)
+  if (!Number.isSafeInteger(count) || count < 0) {
+    throw new Error(`${option} must be a non-negative integer`)
+  }
+  return count
 }
 
 function pickForBatch<T>(items: T[], batchIndex: number, count: number): T[] {

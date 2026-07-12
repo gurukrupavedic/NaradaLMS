@@ -111,12 +111,13 @@ Creates a user and sets `isSuperAdmin = true`. Does not require existing credent
 pnpm seed school --slug test-school
 # with options:
 pnpm seed school --slug test-school --name "Test School" \
-  --tracks 2 --batches 2 --instructors 2 --students 5
+  --tracks 2 --chapters 5 --batches 2 --instructors 2 --students 5
 ```
 
 Prompts for super-admin credentials, then idempotently creates:
 - The school org and its Postgres schema
 - `{slug}-owner@seed.test` and `{slug}-admin@seed.test` as org members
+- Published seed chapters for every track
 - N instructor and M student users, distributed across all batches (max 2 instructors per batch)
 
 **Create a single user** with an optional role:

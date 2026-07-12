@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import type { LucideIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -19,11 +19,11 @@ import {
   HamburgerIcon,
   LeaveIcon,
   MoonIcon,
-  SettingsIcon,
   SunIcon,
   XIcon,
 } from '@/components/ui/icons'
 import { useTheme } from '@/components/theme-provider'
+import { signOut } from '@/lib/session'
 
 export interface NavigationItem {
   label: string
@@ -54,6 +54,12 @@ function NavButton({ item }: { item: NavigationItem }) {
 }
 
 function UserMenu() {
+  const [isSigningOut, startSignOut] = useTransition()
+
+  function handleSignOut() {
+    startSignOut(() => signOut())
+  }
+
   // TODO: fetch avatar information from authentication state.
   return (
     <DropdownMenu>
@@ -76,13 +82,9 @@ function UserMenu() {
           <p className="text-muted-foreground text-xs">Student</p>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <SettingsIcon className="size-3.5 shrink-0" />
-          Settings
-        </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut} disabled={isSigningOut}>
           <LeaveIcon className="size-3.5 shrink-0" />
-          Sign out
+          {isSigningOut ? 'Signing out…' : 'Sign out'}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -97,7 +99,12 @@ interface AppShellProps {
 
 export function AppShell({ navigationItems, children, className }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [isSigningOut, startSignOut] = useTransition()
   const { theme, toggleTheme } = useTheme()
+
+  function handleSignOut() {
+    startSignOut(() => signOut())
+  }
 
   return (
     <div className={cn('flex h-full flex-col overflow-hidden', className)}>
@@ -175,13 +182,14 @@ export function AppShell({ navigationItems, children, className }: AppShellProps
                 )
               })}
               <Separator />
-              <button className="flex w-full items-center gap-2 px-5 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground">
-                <SettingsIcon className="size-3.5 shrink-0" />
-                Settings
-              </button>
-              <button className="flex w-full items-center gap-2 px-5 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground">
+              <button
+                type="button"
+                onClick={handleSignOut}
+                disabled={isSigningOut}
+                className="flex w-full items-center gap-2 px-5 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+              >
                 <LeaveIcon className="size-3.5 shrink-0" />
-                Sign out
+                {isSigningOut ? 'Signing out…' : 'Sign out'}
               </button>
               <Separator />
               <div className="flex items-center gap-2.5 px-5 py-3">

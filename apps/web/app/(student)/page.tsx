@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import type { ReactNode } from 'react'
 
 import { type ProficiencyLevel } from '@/lib/proficiency'
 import { PROFICIENCY_LEVELS, getProficiencyConfig } from '@/lib/proficiency'
@@ -6,10 +7,31 @@ import { AppShell, type NavigationItem } from '@/components/app-shell'
 import { type ChapterData } from '@/components/track-card'
 import { BatchSection } from '@/components/batch-section'
 import { ProficiencyBadge } from '@/components/proficiency-badge'
+import { StudentHistoryContent } from '@/components/teacher/student-history-content'
+import { TeachingBatchSection } from '@/components/teacher/teaching-batch-section'
+import { PROFILE_COOKIE } from '@/lib/constants'
+import { getDashboardData } from '@/lib/dashboard'
+import {
+  getBatchProgress as getTaughtBatchProgress,
+  getChapterLevel,
+  getCurrentChapter,
+  getLatestEvaluation,
+  getPastBatches,
+  getStudentEvaluationHistory,
+  toRosterStudent,
+  type RosterStudent,
+  type RosterRow,
+} from '@/lib/roster'
+import {
+  type ApiBatch,
+  type ApiChapter,
+  type ApiEvaluation,
+  type ApiTrack,
+  type EnrollmentRole,
+} from '@/lib/types'
 import {
   BookOpenIcon,
   HouseIcon,
-  CalendarBlankIcon,
   UsersIcon,
   BookmarkSimpleIcon,
   VideoCameraIcon,
@@ -18,252 +40,6 @@ import {
   ExamIcon,
 } from '@/components/ui/icons'
 
-// ── API-aligned types ────────────────────────────────────────────────────────
-
-type ApiBatch = {
-  id: string
-  code: string
-  trackId: string
-  startDate: string | null // 'YYYY-MM-DD'
-  status: 'upcoming' | 'active' | 'completed'
-  scheduledAt: string | null // ISO datetime — next scheduled class
-  meetingUrl: string | null
-}
-
-type ApiChapter = {
-  id: string
-  trackId: string
-  code: string
-  title: string
-  status: 'draft' | 'published'
-  order: number
-  script: 'te' | 'sa' | 'en' | null
-}
-
-type ApiTrack = {
-  id: string
-  name: string
-  order: number
-  chapters: ApiChapter[]
-}
-
-type ApiEvaluation = {
-  id: string
-  studentId: string
-  chapterId: string
-  level: ProficiencyLevel
-  notes: string | null
-  evaluatorId: string
-  evaluatedAt: string | null // ISO datetime
-}
-
-type ApiExam = {
-  id: string
-  chapterId: string
-  studentId: string
-  scheduledAt: string // ISO datetime
-  status: 'scheduled' | 'inProgress' | 'completed' | 'cancelled'
-  evaluationId: string | null
-  performedAt: string | null
-}
-
-// ── Mock data (API-shape aligned) ────────────────────────────────────────────
-
-const TRACK_RIG1_ID = '01960000-0000-7000-0000-000000000001'
-const TRACK_YAJ_ID = '01960000-0000-7000-0000-000000000002'
-
-const CH = {
-  agni: '01960000-0000-7000-0001-000000000001',
-  vayu: '01960000-0000-7000-0001-000000000002',
-  indra: '01960000-0000-7000-0001-000000000003',
-  mitraVaruna: '01960000-0000-7000-0001-000000000004',
-  ashvins: '01960000-0000-7000-0001-000000000005',
-  ishavasya: '01960000-0000-7000-0002-000000000001',
-  purusha: '01960000-0000-7000-0002-000000000002',
-  shri: '01960000-0000-7000-0002-000000000003',
-}
-
-const MOCK_TRACKS: ApiTrack[] = [
-  {
-    id: TRACK_RIG1_ID,
-    name: 'Rigveda Sukta Selection I',
-    order: 1,
-    chapters: [
-      {
-        id: CH.agni,
-        trackId: TRACK_RIG1_ID,
-        code: '1.1',
-        title: 'Agni Sukta',
-        status: 'published',
-        order: 1,
-        script: 'sa',
-      },
-      {
-        id: CH.vayu,
-        trackId: TRACK_RIG1_ID,
-        code: '1.2',
-        title: 'Vayu Sukta',
-        status: 'published',
-        order: 2,
-        script: 'sa',
-      },
-      {
-        id: CH.indra,
-        trackId: TRACK_RIG1_ID,
-        code: '1.3',
-        title: 'Indra Sukta',
-        status: 'published',
-        order: 3,
-        script: 'sa',
-      },
-      {
-        id: CH.mitraVaruna,
-        trackId: TRACK_RIG1_ID,
-        code: '1.4',
-        title: 'Mitra-Varuna Sukta',
-        status: 'published',
-        order: 4,
-        script: 'sa',
-      },
-      {
-        id: CH.ashvins,
-        trackId: TRACK_RIG1_ID,
-        code: '1.5',
-        title: 'Ashvins Sukta',
-        status: 'published',
-        order: 5,
-        script: 'sa',
-      },
-    ],
-  },
-  {
-    id: TRACK_YAJ_ID,
-    name: 'Yajurveda Introductory',
-    order: 2,
-    chapters: [
-      {
-        id: CH.ishavasya,
-        trackId: TRACK_YAJ_ID,
-        code: '1.1',
-        title: 'Ishavasyopanishad',
-        status: 'published',
-        order: 1,
-        script: 'sa',
-      },
-      {
-        id: CH.purusha,
-        trackId: TRACK_YAJ_ID,
-        code: '1.2',
-        title: 'Purushasukta',
-        status: 'published',
-        order: 2,
-        script: 'sa',
-      },
-      {
-        id: CH.shri,
-        trackId: TRACK_YAJ_ID,
-        code: '1.3',
-        title: 'Shri Sukta',
-        status: 'published',
-        order: 3,
-        script: 'sa',
-      },
-    ],
-  },
-]
-
-const MOCK_BATCHES: ApiBatch[] = [
-  {
-    id: '01960000-0000-7000-0003-000000000001',
-    code: 'BATCH-2025A',
-    trackId: TRACK_RIG1_ID,
-    startDate: '2025-01-15',
-    status: 'active',
-    scheduledAt: '2025-05-17T04:30:00.000Z',
-    meetingUrl: 'https://zoom.us/j/1234567890',
-  },
-  {
-    id: '01960000-0000-7000-0003-000000000002',
-    code: 'BATCH-2025B',
-    trackId: TRACK_YAJ_ID,
-    startDate: '2025-03-01',
-    status: 'active',
-    scheduledAt: null,
-    meetingUrl: null,
-  },
-]
-
-// Evaluations sorted DESC by evaluatedAt (matches API sort order)
-const MOCK_EVALUATIONS: ApiEvaluation[] = [
-  {
-    id: '01960000-0001-7000-0001-000000000004',
-    studentId: 'student-1',
-    chapterId: CH.mitraVaruna,
-    level: 'practicing',
-    notes: null,
-    evaluatorId: 'teacher-1',
-    evaluatedAt: '2025-05-10T00:00:00.000Z',
-  },
-  {
-    id: '01960000-0001-7000-0001-000000000003',
-    studentId: 'student-1',
-    chapterId: CH.indra,
-    level: 'level1',
-    notes: null,
-    evaluatorId: 'teacher-1',
-    evaluatedAt: '2025-05-08T00:00:00.000Z',
-  },
-  {
-    id: '01960000-0001-7000-0001-000000000002',
-    studentId: 'student-1',
-    chapterId: CH.vayu,
-    level: 'level2',
-    notes: null,
-    evaluatorId: 'teacher-1',
-    evaluatedAt: '2025-05-05T00:00:00.000Z',
-  },
-  {
-    id: '01960000-0001-7000-0001-000000000001',
-    studentId: 'student-1',
-    chapterId: CH.agni,
-    level: 'level3',
-    notes: null,
-    evaluatorId: 'teacher-1',
-    evaluatedAt: '2025-05-02T00:00:00.000Z',
-  },
-  {
-    id: '01960000-0001-7000-0002-000000000001',
-    studentId: 'student-1',
-    chapterId: CH.ishavasya,
-    level: 'level1',
-    notes: null,
-    evaluatorId: 'teacher-1',
-    evaluatedAt: '2025-04-20T00:00:00.000Z',
-  },
-]
-
-const MOCK_EXAMS: ApiExam[] = [
-  {
-    id: '01960000-0002-7000-0001-000000000001',
-    chapterId: CH.mitraVaruna,
-    studentId: 'student-1',
-    scheduledAt: '2025-05-24T04:30:00.000Z',
-    status: 'scheduled',
-    evaluationId: null,
-    performedAt: null,
-  },
-  {
-    id: '01960000-0002-7000-0002-000000000001',
-    chapterId: CH.purusha,
-    studentId: 'student-1',
-    scheduledAt: '2025-05-28T08:30:00.000Z',
-    status: 'scheduled',
-    evaluationId: null,
-    performedAt: null,
-  },
-]
-
-const STUDENT_NAME = 'Revanth'
 const CONTINUE_COOKIE = 'narada-continue-chapter'
 
 // ── Nav ──────────────────────────────────────────────────────────────────────
@@ -317,13 +93,12 @@ function buildChapterData(
   })
 }
 
+// TODO(scheduledAt): batch.scheduledAt isn't persisted yet — it's planned as a recurring
+// cron-like schedule string rather than a single timestamp, so we can't compute a real "next
+// class" time from it. Until that lands, just surface the join link for an active batch that
+// has a meetingUrl, with no date/time.
 function findNextClass(batches: ApiBatch[]): ApiBatch | null {
-  return (
-    batches
-      .filter(b => b.scheduledAt !== null && b.meetingUrl !== null)
-      .sort((a, b) => new Date(a.scheduledAt!).getTime() - new Date(b.scheduledAt!).getTime())[0] ??
-    null
-  )
+  return batches.find(b => b.status === 'active' && b.meetingUrl !== null) ?? null
 }
 
 function findFirstPracticingChapter(
@@ -356,31 +131,99 @@ function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 }
 
+function buildTeachingRoster(
+  chapters: ApiChapter[],
+  evaluations: ApiEvaluation[],
+  students: RosterStudent[],
+): RosterRow[] {
+  return students.map(student => ({
+    student,
+    current: getCurrentChapter(evaluations, chapters, student.id),
+    chapterMarks: chapters.map(chapter => ({
+      chapter,
+      level: getChapterLevel(evaluations, student.id, chapter.id),
+      latest: getLatestEvaluation(evaluations, student.id, chapter.id),
+    })),
+  }))
+}
+
+function buildHistoryContentByStudentId(
+  batchId: string,
+  chapters: ApiChapter[],
+  evaluations: ApiEvaluation[],
+  students: RosterStudent[],
+  evaluatorNameById: Map<string, string>,
+  pastBatchesByStudentId: Map<string, ApiBatch[]>,
+  trackMap: Map<string, ApiTrack>,
+): Record<string, ReactNode> {
+  const chapterById = new Map(chapters.map(chapter => [chapter.id, chapter]))
+  return Object.fromEntries(
+    students.map(student => [
+      student.id,
+      <StudentHistoryContent
+        key={student.id}
+        batchId={batchId}
+        student={student}
+        currentChapter={getCurrentChapter(evaluations, chapters, student.id)}
+        historyRows={getStudentEvaluationHistory(evaluations, student.id)}
+        chapterById={chapterById}
+        evaluatorNameById={evaluatorNameById}
+        pastBatches={getPastBatches(
+          pastBatchesByStudentId.get(student.id) ?? [],
+          trackMap,
+          batchId,
+        )}
+      />,
+    ]),
+  )
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ batch?: string }>
+}) {
+  const { batch: activeBatchId } = await searchParams
+
   const cookieStore = await cookies()
   const savedChapterId = cookieStore.get(CONTINUE_COOKIE)?.value
+  const myProfileId = cookieStore.get(PROFILE_COOKIE)?.value
 
-  const chapterMap = buildChapterMap(MOCK_TRACKS)
-  const trackMap = new Map(MOCK_TRACKS.map(t => [t.id, t]))
-  const profMap = buildProficiencyMap(MOCK_EVALUATIONS)
+  const dashboard = await getDashboardData(myProfileId)
+  const {
+    firstName,
+    memberships,
+    tracks,
+    studentEvaluations,
+    upcomingExams,
+    teachingByBatchId,
+    pastBatchesByStudentId,
+  } = dashboard
+  const batches = memberships.map(item => item.batch)
+  const roleByBatchId = new Map<string, EnrollmentRole>(
+    memberships.map(item => [item.batch.id, item.role]),
+  )
+
+  const chapterMap = buildChapterMap(tracks)
+  const trackMap = new Map(tracks.map(t => [t.id, t]))
+  const profMap = buildProficiencyMap(studentEvaluations)
 
   // "Continue" target: cookie chapter → first practicing chapter
   const savedChapter = savedChapterId ? chapterMap.get(savedChapterId) : undefined
   const savedBatch = savedChapter
-    ? MOCK_BATCHES.find(b => b.trackId === savedChapter.trackId)
+    ? batches.find(b => b.trackId === savedChapter.trackId)
     : undefined
   const continueTarget =
     savedChapter && savedBatch
       ? { chapter: savedChapter, batch: savedBatch }
-      : findFirstPracticingChapter(MOCK_BATCHES, trackMap, profMap)
+      : findFirstPracticingChapter(batches, trackMap, profMap)
 
-  const nextClass = findNextClass(MOCK_BATCHES)
+  const nextClass = findNextClass(batches)
   const nextClassTrack = nextClass ? trackMap.get(nextClass.trackId) : null
 
-  const recentEvals = MOCK_EVALUATIONS.slice(0, 4)
-  const upcomingExams = MOCK_EXAMS.filter(e => e.status === 'scheduled')
+  const recentEvals = studentEvaluations.slice(0, 4)
 
   return (
     <AppShell navigationItems={navItems}>
@@ -400,7 +243,7 @@ export default async function DashboardPage() {
           <h1 className="font-serif text-5xl font-semibold leading-tight tracking-tight">
             Welcome back,
             <br />
-            {STUDENT_NAME}.
+            {firstName}.
           </h1>
         </div>
       </div>
@@ -445,9 +288,12 @@ export default async function DashboardPage() {
               </p>
             </div>
             <div className="divide-y divide-border/30">
+              {recentEvals.length === 0 && (
+                <p className="px-4 py-3 text-xs text-muted-foreground">No evaluations yet.</p>
+              )}
               {recentEvals.map(ev => {
                 const chapter = chapterMap.get(ev.chapterId)
-                const batchCode = MOCK_BATCHES.find(b => b.trackId === chapter?.trackId)?.code
+                const batchCode = batches.find(b => b.trackId === chapter?.trackId)?.code
                 return (
                   <div key={ev.id} className="flex items-center gap-3 px-4 py-3">
                     <div className="min-w-0 flex-1">
@@ -479,17 +325,7 @@ export default async function DashboardPage() {
                 <div className="p-4">
                   <p className="mb-0.5 text-sm font-medium">{nextClass.code}</p>
                   <p className="mb-4 text-xs text-muted-foreground">Track {nextClassTrack.order}</p>
-                  <div className="flex items-end justify-between">
-                    <div className="space-y-1.5 text-xs text-muted-foreground">
-                      <p className="flex items-center gap-1.5">
-                        <CalendarBlankIcon className="size-3.5" />
-                        {formatDate(nextClass.scheduledAt!)}
-                      </p>
-                      <p className="flex items-center gap-1.5">
-                        <ClockIcon className="size-3.5" />
-                        {formatTime(nextClass.scheduledAt!)}
-                      </p>
-                    </div>
+                  <div className="flex items-center justify-end">
                     <a
                       href={nextClass.meetingUrl!}
                       target="_blank"
@@ -547,9 +383,48 @@ export default async function DashboardPage() {
             <div className="h-px flex-1 bg-border" />
           </div>
           <div className="space-y-4">
-            {MOCK_BATCHES.map(batch => {
+            {batches.map(batch => {
               const track = trackMap.get(batch.trackId)
               if (!track) return null
+
+              const role = roleByBatchId.get(batch.id)
+              if (role && role !== 'student') {
+                const taught = teachingByBatchId.get(batch.id)
+                if (!taught) return null
+
+                const students = batch.members
+                  .filter(member => member.role === 'student')
+                  .map(toRosterStudent)
+                const evaluatorNameById = new Map(
+                  batch.members.map(member => [member.profileId, member.name]),
+                )
+
+                return (
+                  <TeachingBatchSection
+                    key={batch.id}
+                    batchId={batch.id}
+                    batchCode={batch.code}
+                    status={batch.status}
+                    trackName={track.name}
+                    trackOrder={track.order}
+                    progress={getTaughtBatchProgress(taught.evaluations, track.chapters, students)}
+                    role={role}
+                    chapters={track.chapters}
+                    roster={buildTeachingRoster(track.chapters, taught.evaluations, students)}
+                    historyContentByStudentId={buildHistoryContentByStudentId(
+                      batch.id,
+                      track.chapters,
+                      taught.evaluations,
+                      students,
+                      evaluatorNameById,
+                      pastBatchesByStudentId,
+                      trackMap,
+                    )}
+                    defaultOpen={batch.id === activeBatchId}
+                  />
+                )
+              }
+
               const chapterData = buildChapterData(track.chapters, profMap)
               return (
                 <BatchSection

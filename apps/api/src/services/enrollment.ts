@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 
 import { enrollment, type SchoolDbExecutor } from '@narada/db'
 import { conflict, internalError, notFound } from '../error'
@@ -49,6 +49,33 @@ export async function enrollProfile(
   const row = rows.at(0)
   if (!row) throw internalError()
   return row
+}
+
+// True when instructorProfileId has ever taught (instructor/ta role) a batch that
+// studentProfileId is also (or was also) enrolled in — the gate for letting a teacher view a
+// student's full batch history rather than just the roster of a batch they share right now.
+export async function hasSharedInstructorEnrollment(
+  db: SchoolDbExecutor,
+  instructorProfileId: string,
+  studentProfileId: string,
+): Promise<boolean> {
+  const instructorBatchIds = db
+    .select({ batchId: enrollment.batchId })
+    .from(enrollment)
+    .where(
+      and(
+        eq(enrollment.profileId, instructorProfileId),
+        inArray(enrollment.role, ['instructor', 'ta']),
+      ),
+    )
+
+  const shared = await db.query.enrollment.findFirst({
+    where: (t, { and, eq, inArray }) =>
+      and(eq(t.profileId, studentProfileId), inArray(t.batchId, instructorBatchIds)),
+    columns: { batchId: true },
+  })
+
+  return shared !== undefined
 }
 
 export async function unenrollProfile(
