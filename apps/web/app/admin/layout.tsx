@@ -1,0 +1,51 @@
+import type { Metadata } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import { cookies } from 'next/headers'
+
+import { cn } from '@/lib/utils'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { Theme, ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
+
+import '../globals.css'
+
+const THEME_COOKIE: string = 'narada-theme'
+
+const geistSans = Geist({ variable: '--font-sans', subsets: ['latin'] })
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
+
+export const metadata: Metadata = {
+  title: 'Narada LMS - Admin',
+}
+
+async function readStoredTheme(): Promise<Theme> {
+  const cookieStore = await cookies()
+  const theme = cookieStore.get(THEME_COOKIE)
+  return theme?.value === 'dark' ? 'dark' : 'light'
+}
+
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const theme = await readStoredTheme()
+
+  return (
+    <html
+      lang="en"
+      className={cn(
+        geistSans.variable,
+        geistMono.variable,
+        theme === 'dark' && 'dark',
+        'h-full antialiased',
+      )}
+    >
+      <body className="bg-background text-foreground flex min-h-full flex-col font-sans text-sm">
+        <ThemeProvider initialTheme={theme} storageKey={THEME_COOKIE}>
+          <TooltipProvider>{children}</TooltipProvider>
+          <Toaster richColors />
+        </ThemeProvider>
+      </body>
+    </html>
+  )
+}

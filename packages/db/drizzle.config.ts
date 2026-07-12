@@ -1,0 +1,12 @@
+import '@narada/env/load'
+import { env } from '@narada/env'
+import { defineConfig } from 'drizzle-kit'
+
+export default defineConfig({
+  dialect: 'postgresql',
+  schema: './src/schema/auth.ts',
+  out: './drizzle/public',
+  dbCredentials: {
+    url: env.DATABASE_URL,
+  },
+})

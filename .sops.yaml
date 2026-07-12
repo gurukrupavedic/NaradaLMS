@@ -1,0 +1,13 @@
+creation_rules:
+  - path_regex: packages/env/\.env\.sops$
+    age:
+      # Revanth Pothukuchi
+      - age1skz60ndmyn9wzc55sfvwt7we3hrmeheppeva2kelf5krlmgu0vvq20cn4w
+      # Siva Rama Krishna
+      - age1zhtzzm67uhykah3nmds6ygh9hepku9m99sctvqw694q48yp2rauqzdeml9
+      # Hari Charan
+      - age1wzjrz7yg25rwdl58fj4kzhzct08lmsc9m376sxnsynj7npqahycsz8drcv
+      # Manasa
+      - age1l38agzcquuzur6my4twpx2vz6wax4ysdpj8kzuwladms5llzw3ysr50hwz
+      # Krishna Vedula
+      - age1kxecxkq895lcxx6hyqqqf4pgac09e7kx0zv8aftqw262cfymevfqwl9fzg

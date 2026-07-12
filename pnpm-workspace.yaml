@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - packages/*
+  - tools
+
+# 1 week in seconds.
+minimumReleaseAge: 10080
+minimumReleaseAgeStrict: true

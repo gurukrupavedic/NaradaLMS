@@ -1,5 +1,0 @@
-
-> narada-lms@1.0.0 test:format-date
-> tsx scripts/test/format-date.test.ts
-
-formatDate: 8 tests passed.

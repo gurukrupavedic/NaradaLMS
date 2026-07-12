@@ -1,37 +1,60 @@
-node_modules
-dist
-**/.next/
-**/.next-*/
-.DS_Store
-server/public
-vite.config.ts.*
-*.tar.gz
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Environment variables (contains sensitive data like passwords)
+# dependencies
+node_modules/
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+coverage/
+.test-dist/
+
+# next.js
+.next/
+out/
+
+# production
+build/
+dist/
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
 .env
 .env.local
-.env.*.local
-.env.development
+.env.staging
+.env.production
 
-# Development logs
-dev.log
-dev.error.log
+# vercel
+.vercel/
 
-# Cursor IDE debug logs
-.cursor/*.log
-.cursor/settings.json
-.cursor/plans/
-
-# Turbo cache and task logs
+# turbo
 .turbo/
 
-# Uploaded media files (audio, video, etc.)
-# These should not be in version control - use cloud storage in production
-uploads/
-!uploads/.gitkeep
+# typescript
+*.tsbuildinfo
+next-env.d.ts
 
-# Prevent nested repo-in-repo from being re-added
-VedicLMS/
-.agent/
-.agents/
-docs/implementation/multi-tenancy/setup-baseline.*.log
+# Claude
+.claude/
+
+# Codegraph
+.codegraph/
+
+# Draft backend scratchpad
+apps/api/.draft-backend/
+
+# Draft frontend scratchpad
+apps/web/.draft-frontend/

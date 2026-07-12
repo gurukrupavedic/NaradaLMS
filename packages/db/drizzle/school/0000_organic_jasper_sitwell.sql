@@ -1,0 +1,89 @@
+CREATE TYPE "batchStatus" AS ENUM('upcoming', 'active', 'completed');--> statement-breakpoint
+CREATE TYPE "chapterStatus" AS ENUM('draft', 'published');--> statement-breakpoint
+CREATE TYPE "enrollmentRole" AS ENUM('instructor', 'ta', 'student');--> statement-breakpoint
+CREATE TYPE "examStatus" AS ENUM('scheduled', 'inProgress', 'completed', 'cancelled');--> statement-breakpoint
+CREATE TYPE "proficiencyLevel" AS ENUM('absent', 'notStarted', 'practicing', 'level1', 'level2', 'level3', 'level4');--> statement-breakpoint
+CREATE TYPE "script" AS ENUM('te', 'sa', 'en');--> statement-breakpoint
+CREATE TABLE "profile" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"userId" text NOT NULL,
+	"name" text NOT NULL,
+	"phone" text,
+	"city" text,
+	"updatedAt" timestamp DEFAULT now() NOT NULL,
+	"createdAt" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "track" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
+	"order" integer NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "chapter" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"trackId" uuid NOT NULL,
+	"code" text NOT NULL,
+	"title" text NOT NULL,
+	"status" "chapterStatus" DEFAULT 'draft' NOT NULL,
+	"order" integer NOT NULL,
+	"script" "script"
+);
+--> statement-breakpoint
+CREATE TABLE "batch" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"trackId" uuid NOT NULL,
+	"code" text NOT NULL,
+	"status" "batchStatus" DEFAULT 'upcoming' NOT NULL,
+	"startDate" timestamp,
+	"meetingUrl" text,
+	CONSTRAINT "batch_code_unique" UNIQUE("code")
+);
+--> statement-breakpoint
+CREATE TABLE "enrollment" (
+	"profileId" uuid NOT NULL,
+	"batchId" uuid NOT NULL,
+	"role" "enrollmentRole" NOT NULL,
+	"joinedAt" timestamp DEFAULT now(),
+	CONSTRAINT "enrollment_profileId_batchId_pk" PRIMARY KEY("profileId","batchId")
+);
+--> statement-breakpoint
+CREATE TABLE "evaluation" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"studentId" uuid NOT NULL,
+	"chapterId" uuid NOT NULL,
+	"level" "proficiencyLevel" NOT NULL,
+	"notes" text,
+	"evaluatorId" uuid NOT NULL,
+	"evaluatedAt" timestamp DEFAULT now()
+);
+--> statement-breakpoint
+CREATE TABLE "exam" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"chapterId" uuid NOT NULL,
+	"studentId" uuid NOT NULL,
+	"scheduledAt" timestamp NOT NULL,
+	"status" "examStatus" DEFAULT 'scheduled' NOT NULL,
+	"evaluationId" uuid,
+	"performedAt" timestamp
+);
+--> statement-breakpoint
+ALTER TABLE "batch" ADD CONSTRAINT "batch_trackId_track_id_fk" FOREIGN KEY ("trackId") REFERENCES "track"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "chapter" ADD CONSTRAINT "chapter_trackId_track_id_fk" FOREIGN KEY ("trackId") REFERENCES "track"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "enrollment" ADD CONSTRAINT "enrollment_profileId_profile_id_fk" FOREIGN KEY ("profileId") REFERENCES "profile"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "enrollment" ADD CONSTRAINT "enrollment_batchId_batch_id_fk" FOREIGN KEY ("batchId") REFERENCES "batch"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "evaluation" ADD CONSTRAINT "evaluation_studentId_profile_id_fk" FOREIGN KEY ("studentId") REFERENCES "profile"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "evaluation" ADD CONSTRAINT "evaluation_evaluatorId_profile_id_fk" FOREIGN KEY ("evaluatorId") REFERENCES "profile"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "evaluation" ADD CONSTRAINT "evaluation_chapterId_chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "exam" ADD CONSTRAINT "exam_studentId_profile_id_fk" FOREIGN KEY ("studentId") REFERENCES "profile"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "exam" ADD CONSTRAINT "exam_chapterId_chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "exam" ADD CONSTRAINT "exam_evaluationId_evaluation_id_fk" FOREIGN KEY ("evaluationId") REFERENCES "evaluation"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "profile_userId_idx" ON "profile" USING btree ("userId");--> statement-breakpoint
+CREATE INDEX "chapter_trackId_idx" ON "chapter" USING btree ("trackId");--> statement-breakpoint
+CREATE UNIQUE INDEX "chapter_trackId_code_uidx" ON "chapter" USING btree ("trackId","code");--> statement-breakpoint
+CREATE UNIQUE INDEX "chapter_trackId_order_uidx" ON "chapter" USING btree ("trackId","order");--> statement-breakpoint
+CREATE INDEX "enrollment_batchId_idx" ON "enrollment" USING btree ("batchId");--> statement-breakpoint
+CREATE INDEX "evaluation_studentId_chapterId_idx" ON "evaluation" USING btree ("studentId","chapterId");--> statement-breakpoint
+CREATE INDEX "exam_chapterId_idx" ON "exam" USING btree ("chapterId");--> statement-breakpoint
+CREATE INDEX "exam_studentId_idx" ON "exam" USING btree ("studentId");--> statement-breakpoint
+CREATE UNIQUE INDEX "track_order_uidx" ON "track" USING btree ("order");
