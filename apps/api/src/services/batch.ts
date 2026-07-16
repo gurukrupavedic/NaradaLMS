@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
 
-import { batch, enrollment, type SchoolDbExecutor } from '@narada/db'
+import { batch, batchClassSlot, enrollment, type SchoolDbExecutor } from '@narada/db'
 import {
   compoundCursor,
   nullableDateCursorField,
@@ -22,6 +22,27 @@ type BatchMember = {
   role: (typeof enrollment.$inferSelect)['role']
   joinedAt: Date | null
 }
+
+export type ClassSlot = {
+  dayOfWeek: number
+  time: string
+  durationMinutes: number
+}
+
+export const classSlotSchema = z.object({
+  dayOfWeek: z.number().int().min(0).max(6),
+  time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'time must be HH:MM'),
+  durationMinutes: z.number().int().positive(),
+})
+
+export const setClassSlotsSchema = z.object({
+  slots: z
+    .array(classSlotSchema)
+    .max(7)
+    .refine(slots => new Set(slots.map(slot => slot.dayOfWeek)).size === slots.length, {
+      message: 'a batch can only have one class slot per day of week',
+    }),
+})
 
 export const createBatchSchema = z.object({
   trackId: z.uuid(),
@@ -55,10 +76,15 @@ export const listBatchesQuerySchema = z.object({
 })
 
 export type Batch = typeof batch.$inferSelect
-export type BatchDetail = Batch & { members: BatchMember[] }
+export type BatchDetail = Batch & { members: BatchMember[]; classSlots: ClassSlot[] }
 export type CreateBatchData = z.infer<typeof createBatchSchema>
 export type UpdateBatchData = z.infer<typeof updateBatchSchema>
 export type ListBatchesQuery = z.infer<typeof listBatchesQuerySchema>
+export type SetClassSlotsData = z.infer<typeof setClassSlotsSchema>
+
+function toClassSlot(row: typeof batchClassSlot.$inferSelect): ClassSlot {
+  return { dayOfWeek: row.dayOfWeek, time: row.time, durationMinutes: row.durationMinutes }
+}
 
 export async function findBatches(
   db: SchoolDbExecutor,
@@ -133,7 +159,7 @@ export async function findBatchByIdWithMembers(
 ): Promise<BatchDetail | undefined> {
   const row = await db.query.batch.findFirst({
     where: (t, { eq }) => eq(t.id, batchId),
-    with: { enrollments: { with: { profile: true } } },
+    with: { enrollments: { with: { profile: true } }, classSlots: true },
   })
 
   if (!row) return undefined
@@ -147,7 +173,26 @@ export async function findBatchByIdWithMembers(
       role: e.role,
       joinedAt: e.joinedAt,
     })),
+    classSlots: row.classSlots.map(toClassSlot),
   }
+}
+
+export async function setClassSlots(
+  db: SchoolDbExecutor,
+  batchId: string,
+  slots: ClassSlot[],
+): Promise<ClassSlot[]> {
+  return db.transaction(async tx => {
+    await tx.delete(batchClassSlot).where(eq(batchClassSlot.batchId, batchId))
+    if (slots.length === 0) return []
+
+    const rows = await tx
+      .insert(batchClassSlot)
+      .values(slots.map(slot => ({ ...slot, batchId })))
+      .returning()
+
+    return rows.map(toClassSlot)
+  })
 }
 
 export async function createBatch(db: SchoolDbExecutor, data: CreateBatchData): Promise<Batch> {

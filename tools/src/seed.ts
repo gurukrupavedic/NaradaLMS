@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm'
 import { auth } from '@narada/auth'
 import {
   batch,
+  batchClassSlot,
   chapter,
   dropSchoolSchema,
   enrollment,
@@ -247,6 +248,7 @@ async function seedSchool(input: SchoolSeedInput) {
       const batchResults = []
       for (let b = 1; b <= input.numBatches; b++) {
         const batchRow = await upsertBatch(schoolDb, trackRow.id, `${input.slug}-t${t}-batch${b}`)
+        await upsertClassSlots(schoolDb, batchRow.id)
         for (const user of pickForBatch(instructors, batchIndex, 2)) {
           const p = instructorProfileById.get(user.id)!
           await upsertEnrollment(schoolDb, batchRow.id, p.id, 'instructor')
@@ -381,9 +383,32 @@ async function upsertBatch(db: SchoolDatabase, trackId: string, code: string) {
   })
 
   if (existing) return existing
-  const [row] = await db.insert(batch).values({ trackId, code, status: 'active' }).returning()
+  const [row] = await db
+    .insert(batch)
+    .values({ trackId, code, status: 'active', meetingUrl: `https://meet.google.com/${code}` })
+    .returning()
   if (!row) throw new Error(`Failed to create batch: ${code}`)
   return row
+}
+
+// Every seeded batch meets Mon/Wed/Fri at 6pm — a realistic default weekly cadence for the
+// "next class" feature, not meant to vary per batch.
+const DEFAULT_CLASS_SLOTS = [
+  { dayOfWeek: 1, time: '18:00', durationMinutes: 60 },
+  { dayOfWeek: 3, time: '18:00', durationMinutes: 60 },
+  { dayOfWeek: 5, time: '18:00', durationMinutes: 60 },
+]
+
+async function upsertClassSlots(db: SchoolDatabase, batchId: string) {
+  const existing = await db.query.batchClassSlot.findMany({
+    where: (t, { eq }) => eq(t.batchId, batchId),
+  })
+
+  if (existing.length > 0) return existing
+  return db
+    .insert(batchClassSlot)
+    .values(DEFAULT_CLASS_SLOTS.map(slot => ({ ...slot, batchId })))
+    .returning()
 }
 
 async function upsertChapter(

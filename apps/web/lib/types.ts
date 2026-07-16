@@ -53,8 +53,15 @@ export type ApiBatchMember = {
   joinedAt: string | null
 }
 
+export type ApiClassSlot = {
+  dayOfWeek: number
+  time: string
+  durationMinutes: number
+}
+
 export type ApiBatchDetail = ApiBatch & {
   members: ApiBatchMember[]
+  classSlots: ApiClassSlot[]
 }
 
 export type ApiEvaluation = {

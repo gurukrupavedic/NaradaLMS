@@ -4,6 +4,7 @@ import {
   text,
   integer,
   timestamp,
+  time,
   uuid,
   index,
   primaryKey,
@@ -90,6 +91,25 @@ export const batch = pgTable('batch', {
   startDate: timestamp('startDate'),
   meetingUrl: text('meetingUrl'),
 })
+
+// A batch typically meets multiple times a week (e.g. Mon/Wed/Fri), each potentially at a
+// different time — a one-to-many child table rather than array columns on `batch`.
+export const batchClassSlot = pgTable(
+  'batchClassSlot',
+  {
+    id: uuid('id').primaryKey().$defaultFn(uuidv7),
+    batchId: uuid('batchId')
+      .notNull()
+      .references(() => batch.id, { onDelete: 'cascade' }),
+    dayOfWeek: integer('dayOfWeek').notNull(), // 0 = Sunday .. 6 = Saturday (matches Date#getDay())
+    time: time('time').notNull(),
+    durationMinutes: integer('durationMinutes').notNull(),
+  },
+  table => [
+    index('batchClassSlot_batchId_idx').on(table.batchId),
+    uniqueIndex('batchClassSlot_batchId_dayOfWeek_uidx').on(table.batchId, table.dayOfWeek),
+  ],
+)
 
 export const enrollment = pgTable(
   'enrollment',

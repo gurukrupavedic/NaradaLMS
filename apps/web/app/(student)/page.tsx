@@ -11,6 +11,7 @@ import { StudentHistoryContent } from '@/components/teacher/student-history-cont
 import { TeachingBatchSection } from '@/components/teacher/teaching-batch-section'
 import { PROFILE_COOKIE } from '@/lib/constants'
 import { getDashboardData } from '@/lib/dashboard'
+import { getNextOccurrence } from '@/lib/schedule'
 import {
   getBatchProgress as getTaughtBatchProgress,
   getChapterLevel,
@@ -24,6 +25,7 @@ import {
 } from '@/lib/roster'
 import {
   type ApiBatch,
+  type ApiBatchDetail,
   type ApiChapter,
   type ApiEvaluation,
   type ApiTrack,
@@ -93,12 +95,22 @@ function buildChapterData(
   })
 }
 
-// TODO(scheduledAt): batch.scheduledAt isn't persisted yet — it's planned as a recurring
-// cron-like schedule string rather than a single timestamp, so we can't compute a real "next
-// class" time from it. Until that lands, just surface the join link for an active batch that
-// has a meetingUrl, with no date/time.
-function findNextClass(batches: ApiBatch[]): ApiBatch | null {
-  return batches.find(b => b.status === 'active' && b.meetingUrl !== null) ?? null
+type NextClass = { batch: ApiBatchDetail; occursAt: Date | null }
+
+function findNextClass(batches: ApiBatchDetail[], now: Date): NextClass | null {
+  const eligible = batches.filter(b => b.status === 'active' && b.meetingUrl !== null)
+
+  const scheduled = eligible
+    .map(batch => ({ batch, occursAt: getNextOccurrence(batch.classSlots, now) }))
+    .filter((entry): entry is { batch: ApiBatchDetail; occursAt: Date } => entry.occursAt !== null)
+
+  if (scheduled.length > 0) {
+    return scheduled.reduce((soonest, entry) => (entry.occursAt < soonest.occursAt ? entry : soonest))
+  }
+
+  // No eligible batch has a schedule set yet — fall back to the join link alone, no time shown.
+  const first = eligible[0]
+  return first ? { batch: first, occursAt: null } : null
 }
 
 function findFirstPracticingChapter(
@@ -119,16 +131,16 @@ function findFirstPracticingChapter(
   return null
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
+function formatDate(value: string | Date): string {
+  return new Date(value).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   })
 }
 
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+function formatTime(value: string | Date): string {
+  return new Date(value).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 }
 
 function buildTeachingRoster(
@@ -220,8 +232,8 @@ export default async function DashboardPage({
       ? { chapter: savedChapter, batch: savedBatch }
       : findFirstPracticingChapter(batches, trackMap, profMap)
 
-  const nextClass = findNextClass(batches)
-  const nextClassTrack = nextClass ? trackMap.get(nextClass.trackId) : null
+  const nextClass = findNextClass(batches, new Date())
+  const nextClassTrack = nextClass ? trackMap.get(nextClass.batch.trackId) : null
 
   const recentEvals = studentEvaluations.slice(0, 4)
 
@@ -323,11 +335,18 @@ export default async function DashboardPage({
                   </p>
                 </div>
                 <div className="p-4">
-                  <p className="mb-0.5 text-sm font-medium">{nextClass.code}</p>
+                  <p className="mb-0.5 text-sm font-medium">{nextClass.batch.code}</p>
                   <p className="mb-4 text-xs text-muted-foreground">Track {nextClassTrack.order}</p>
-                  <div className="flex items-center justify-end">
+                  <div className="flex items-center justify-between gap-3">
+                    {nextClass.occursAt ? (
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(nextClass.occursAt)}&ensp;·&ensp;{formatTime(nextClass.occursAt)}
+                      </p>
+                    ) : (
+                      <span />
+                    )}
                     <a
-                      href={nextClass.meetingUrl!}
+                      href={nextClass.batch.meetingUrl!}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"

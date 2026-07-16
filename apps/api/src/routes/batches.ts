@@ -12,6 +12,8 @@ import {
   findBatchByIdWithMembers,
   findBatches,
   listBatchesQuerySchema,
+  setClassSlots,
+  setClassSlotsSchema,
   updateBatch,
   updateBatchSchema,
 } from '../services/batch'
@@ -75,6 +77,22 @@ router.patch(
     }
 
     const updated = await updateBatch(ctx.db, batchId, updates)
+    res.status(200).json({ ok: true, data: updated })
+  }),
+)
+
+router.put(
+  '/:batchId/schedule',
+  schoolRoute(async ({ req, res, ctx }) => {
+    const { batchId } = parseParams(z.object({ batchId: z.uuid() }), req)
+    const { slots } = parseBody(setClassSlotsSchema, req)
+    await authorize(req, { scope: 'school', permissions: { batch: ['update'] } })
+    const existing = await findBatchById(ctx.db, batchId)
+    if (!existing) {
+      throw notFound()
+    }
+
+    const updated = await setClassSlots(ctx.db, batchId, slots)
     res.status(200).json({ ok: true, data: updated })
   }),
 )
