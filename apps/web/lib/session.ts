@@ -14,6 +14,15 @@ export async function getProfiles(): Promise<ApiProfile[]> {
   return fetchApi<ApiProfile[]>('/profiles')
 }
 
+export async function getCurrentProfile(): Promise<ApiProfile | null> {
+  const cookieStore = await cookies()
+  const profileId = cookieStore.get(PROFILE_COOKIE)?.value
+  if (!profileId) return null
+
+  const profiles = await getProfiles()
+  return profiles.find(profile => profile.id === profileId) ?? null
+}
+
 export async function selectProfile(profileId: string): Promise<void> {
   // BetterAuth's organization plugin gates every school-scoped permission check
   // (see apps/api/src/utils/auth.ts hasPermission) on the session having an active

@@ -9,6 +9,7 @@ import { getStudentEvaluations } from '@/lib/api/evaluations'
 import { fetchAllPages } from '@/lib/api/pagination'
 import { getTracks } from '@/lib/api/tracks'
 import { getCurrentChapter, getPastBatches, toRosterStudent } from '@/lib/roster'
+import { getCurrentProfile } from '@/lib/session'
 
 const navItems: NavigationItem[] = [
   { label: 'Dashboard', icon: HouseIcon },
@@ -29,10 +30,11 @@ export default async function StudentHistoryPage({
   const member = batch.members.find(m => m.profileId === studentId)
   if (!member) notFound()
 
-  const [tracks, historyRows, pastBatches] = await Promise.all([
+  const [tracks, historyRows, pastBatches, profile] = await Promise.all([
     getTracks(),
     getStudentEvaluations(batchId, studentId),
     fetchAllPages(cursor => getBatchesForProfile(studentId, { cursor })),
+    getCurrentProfile(),
   ])
 
   const track = tracks.find(t => t.id === batch.trackId)
@@ -45,7 +47,7 @@ export default async function StudentHistoryPage({
   const evaluatorNameById = new Map(batch.members.map(m => [m.profileId, m.name]))
 
   return (
-    <AppShell navigationItems={navItems}>
+    <AppShell navigationItems={navItems} profile={profile}>
       <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
         <Breadcrumb
           items={[
