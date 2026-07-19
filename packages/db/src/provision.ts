@@ -71,7 +71,12 @@ export async function provisionSchool(organizationId: string) {
   })
 
   try {
-    await migrate(drizzle(schoolPool), { migrationsFolder })
+    // drizzle's migrate() tracks applied migrations in a fixed "drizzle" schema by default,
+    // regardless of search_path — shared across every tenant. Without migrationsSchema here, the
+    // first school's migrations get recorded there, so every school after that skips migrating
+    // (already-applied, as far as that shared tracking table is concerned) and ends up with an
+    // empty schema. Scoping the tracking table to this tenant's own schema fixes that.
+    await migrate(drizzle(schoolPool), { migrationsFolder, migrationsSchema: schemaName })
   } finally {
     await schoolPool.end()
   }
