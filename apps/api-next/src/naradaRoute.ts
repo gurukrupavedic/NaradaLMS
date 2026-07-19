@@ -1,12 +1,12 @@
 import type { Request, RequestHandler, Response } from 'express'
 
 import {
-  getScopedDatabase,
+  getSchoolDb,
   publicDb,
   type organization,
-  type PublicDatabase,
-  type SchoolDatabase,
-  type SchoolDbExecutor,
+  type PublicDbClient,
+  type SchoolDb,
+  type SchoolDbClient,
   type SchoolProfile,
 } from '@narada/db'
 
@@ -19,13 +19,13 @@ type School = typeof organization.$inferSelect
 export type PublicRouteArgs = {
   req: Request
   res: Response
-  db: PublicDatabase
+  db: PublicDbClient
 }
 
 export type SchoolRouteArgs = {
   req: Request
   res: Response
-  db: SchoolDatabase
+  db: SchoolDbClient
   school: School
 }
 
@@ -38,12 +38,14 @@ export type ProfileRouteArgs = UserRouteArgs & {
   profile: SchoolProfile
 }
 
+/** Wraps a handler that needs only the public database — no school header, no session. */
 export function publicRoute(handler: (args: PublicRouteArgs) => Promise<void>): RequestHandler {
   return async (req, res) => {
     await handler({ req, res, db: publicDb })
   }
 }
 
+/** Wraps a handler that requires a valid `X-School-Slug` but no authenticated session. */
 export function schoolRoute(handler: (args: SchoolRouteArgs) => Promise<void>): RequestHandler {
   return async (req, res) => {
     const { db, school } = await resolveSchool(req)
@@ -51,6 +53,7 @@ export function schoolRoute(handler: (args: SchoolRouteArgs) => Promise<void>): 
   }
 }
 
+/** Wraps a handler that requires a valid school and an authenticated user, but no active profile. */
 export function userRoute(handler: (args: UserRouteArgs) => Promise<void>): RequestHandler {
   return async (req, res) => {
     const [{ db, school }, user] = await Promise.all([
@@ -62,6 +65,7 @@ export function userRoute(handler: (args: UserRouteArgs) => Promise<void>): Requ
   }
 }
 
+/** Wraps a handler that requires a valid school, authenticated user, and the caller's own active profile. */
 export function profileRoute(handler: (args: ProfileRouteArgs) => Promise<void>): RequestHandler {
   return async (req, res) => {
     const [{ db, school }, user] = await Promise.all([
@@ -75,7 +79,8 @@ export function profileRoute(handler: (args: ProfileRouteArgs) => Promise<void>)
   }
 }
 
-async function resolveSchool(req: Request): Promise<{ db: SchoolDatabase; school: School }> {
+/** Resolves the required `X-School-Slug` header to its school row and scoped database client. */
+async function resolveSchool(req: Request): Promise<{ db: SchoolDbClient; school: School }> {
   const slug = req.get('x-school-slug')
   if (!slug) {
     throw badRequest('X-School-Slug header is required')
@@ -89,11 +94,15 @@ async function resolveSchool(req: Request): Promise<{ db: SchoolDatabase; school
     throw badRequest('school not found')
   }
 
-  const db = getScopedDatabase(school.id)
+  const db = getSchoolDb(school.id)
   return { db, school }
 }
 
-async function resolveProfile(req: Request, db: SchoolDbExecutor, user: User) {
+/**
+ * Resolves the required `X-Profile-Id` header to a profile in this school, rejecting a profile
+ * that doesn't exist or belongs to a different user (never trust a caller-supplied profile ID).
+ */
+async function resolveProfile(req: Request, db: SchoolDb, user: User) {
   const profileId = req.headers['x-profile-id']
   if (!profileId || typeof profileId !== 'string') {
     throw badRequest('X-Profile-Id header is required')

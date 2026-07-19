@@ -17,9 +17,9 @@ over copying the old codebase's style.
 When implementing a feature in this directory, use this multi-agent split
 rather than doing it all in one pass:
 
-1. **Planning agent** (Opus 4.8, high effort) — breaks the feature down into
+1. **Planning agent** (Sonnet 5, high effort) — breaks the feature down into
    a concrete plan and splits it into one or more units of work.
-2. **Execution agent(s)** (Sonnet 5, medium effort) — one or more agents,
+2. **Execution agent(s)** (Sonnet 5, low effort) — one or more agents,
    each implementing a unit of work from the plan.
 3. **Adversarial review agent** (Sonnet 5, high effort) — reviews the
    resulting code critically and reports issues/feedback; it does not fix

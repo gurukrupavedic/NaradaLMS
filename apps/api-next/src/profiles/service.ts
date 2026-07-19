@@ -1,42 +1,44 @@
-import { and, eq } from 'drizzle-orm'
-
-import { profile, publicDb, type organization, type SchoolDbExecutor } from '@narada/db'
+import { publicDb, type organization, type SchoolDbClient } from '@narada/db'
 
 import { forbidden, internalError, notFound } from '../error'
 import type { User } from '../session'
+import * as repository from './repository'
 import type { CreateProfileData, Profile, UpdateProfileData } from './schema'
 
 type School = typeof organization.$inferSelect
 
-export async function findByUserId(userId: string, db: SchoolDbExecutor): Promise<Profile[]> {
-  return db.query.profile.findMany({
-    where: (t, { eq }) => eq(t.userId, userId),
-  })
+type ProfileServiceContext = { db: SchoolDbClient; school: School; user: User }
+
+export async function findByUserId(
+  context: ProfileServiceContext,
+  userId: string,
+): Promise<Profile[]> {
+  return repository.findByUserId(context.db, userId)
 }
 
+/**
+ * A super admin may create a profile in any school; everyone else must already hold an
+ * organization membership for this school (checked against the public schema, not this
+ * school's own tables).
+ */
 export async function createProfile(
-  school: School,
-  user: User,
+  context: ProfileServiceContext,
   data: CreateProfileData,
-  db: SchoolDbExecutor,
 ): Promise<Profile> {
-  if (!user.isSuperAdmin) {
-    const membership = await publicDb.query.member.findFirst({
-      where: (t, { and, eq }) => and(eq(t.organizationId, school.id), eq(t.userId, user.id)),
-      columns: { id: true },
-    })
-
+  if (!context.user.isSuperAdmin) {
+    const membership = await repository.findMembership(publicDb, context.school.id, context.user.id)
     if (!membership) {
       throw forbidden()
     }
   }
 
-  const rows = await db
-    .insert(profile)
-    .values({ userId: user.id, phone: null, city: null, ...data })
-    .returning()
+  const row = await repository.insert(context.db, {
+    userId: context.user.id,
+    phone: null,
+    city: null,
+    ...data,
+  })
 
-  const row = rows.at(0)
   if (!row) {
     throw internalError()
   }
@@ -44,19 +46,13 @@ export async function createProfile(
   return row
 }
 
+/** Ownership is enforced by `repository.updateOwned`'s SQL predicate; a foreign-owned profile 404s the same as a missing one. */
 export async function updateProfile(
+  context: ProfileServiceContext,
   id: string,
-  userId: string,
   data: UpdateProfileData,
-  db: SchoolDbExecutor,
 ): Promise<Profile> {
-  const rows = await db
-    .update(profile)
-    .set(data)
-    .where(and(eq(profile.id, id), eq(profile.userId, userId)))
-    .returning()
-
-  const row = rows.at(0)
+  const row = await repository.updateOwned(context.db, id, context.user.id, data)
   if (!row) {
     throw notFound()
   }
@@ -64,12 +60,8 @@ export async function updateProfile(
   return row
 }
 
-export async function deleteById(id: string, userId: string, db: SchoolDbExecutor): Promise<void> {
-  const rows = await db
-    .delete(profile)
-    .where(and(eq(profile.id, id), eq(profile.userId, userId)))
-    .returning({ id: profile.id })
-
+export async function deleteById(context: ProfileServiceContext, id: string): Promise<void> {
+  const rows = await repository.deleteOwned(context.db, id, context.user.id)
   if (rows.length === 0) {
     throw notFound()
   }

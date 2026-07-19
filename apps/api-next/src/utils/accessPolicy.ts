@@ -3,7 +3,7 @@ import {
   member,
   organization,
   publicDb,
-  type SchoolDatabase,
+  type SchoolDbClient,
   type SchoolProfile,
 } from '@narada/db'
 import { hasBatchPermission, type BatchPermissions } from '@narada/auth/permissions'
@@ -24,7 +24,7 @@ export type BatchReadScope = { kind: 'all' } | { kind: 'enrolled'; profileId: st
 export type ExamReadScope = { kind: 'all' } | { kind: 'own'; profileId: string }
 
 type AccessPolicySource = {
-  db: SchoolDatabase
+  db: SchoolDbClient
   school: School
   user: User
   profile?: SchoolProfile
@@ -32,6 +32,11 @@ type AccessPolicySource = {
 
 const BATCH_READ_PERMISSION: BatchPermissions = { enrollment: ['read'] }
 
+/**
+ * The single authorization vocabulary for domain services (HARDENING_PLAN.md §4.4). Holds an
+ * actor's resolved school role and, if a profile is active, their per-batch roles, so a service
+ * asks a typed `require*`/`get*Visibility` question instead of re-deriving permissions itself.
+ */
 export class AccessPolicy {
   private constructor(
     private readonly userId: string,
@@ -41,6 +46,11 @@ export class AccessPolicy {
     private readonly isSuperAdmin: boolean,
   ) {}
 
+  /**
+   * Resolves the actor's school membership and (if a profile is active) their batch enrollments
+   * in parallel. A non-super-admin with no organization membership is rejected here so every
+   * other method can assume `schoolRole`/`batchRoles` are already authorized to view.
+   */
   public static async load({
     db,
     school,
@@ -168,6 +178,9 @@ export class AccessPolicy {
   }
 }
 
+// Compatibility baseline (PARITY_PLAN.md DD-010 is not yet approved): a missing or unrecognized
+// role is normalized down to plain `member` rather than rejected. Do not change this to a
+// fail-closed/deny behavior without that decision being approved first.
 function normalizeSchoolRole(role: typeof member.$inferSelect.role | undefined): SchoolRole {
   if (role === 'owner' || role === 'admin') {
     return role

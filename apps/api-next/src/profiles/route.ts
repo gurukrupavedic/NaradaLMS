@@ -10,8 +10,8 @@ const router = Router()
 
 router.get(
   '/',
-  userRoute(async ({ res, db, user }) => {
-    const profiles = await findByUserId(user.id, db)
+  userRoute(async ({ res, db, school, user }) => {
+    const profiles = await findByUserId({ db, school, user }, user.id)
     res.status(200).json({ data: profiles })
   }),
 )
@@ -20,26 +20,26 @@ router.post(
   '/',
   userRoute(async ({ req, res, db, school, user }) => {
     const data = await parse(CreateProfileSchema, req.body)
-    const profile = await createProfile(school, user, data, db)
+    const profile = await createProfile({ db, school, user }, data)
     res.status(201).json({ data: profile })
   }),
 )
 
 router.patch(
   '/:profileId',
-  userRoute(async ({ req, res, db, user }) => {
+  userRoute(async ({ req, res, db, school, user }) => {
     const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
     const data = await parse(UpdateProfileSchema, req.body)
-    const profile = await updateProfile(profileId, user.id, data, db)
+    const profile = await updateProfile({ db, school, user }, profileId, data)
     res.status(200).json({ data: profile })
   }),
 )
 
 router.delete(
   '/:profileId',
-  userRoute(async ({ req, res, db, user }) => {
+  userRoute(async ({ req, res, db, school, user }) => {
     const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
-    await deleteById(profileId, user.id, db)
+    await deleteById({ db, school, user }, profileId)
     res.status(204).send()
   }),
 )

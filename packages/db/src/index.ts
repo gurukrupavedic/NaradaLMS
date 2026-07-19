@@ -15,15 +15,37 @@ type SchoolTransaction = NodePgTransaction<Schema, SchemaRelations>
 declare const publicDatabaseBrand: unique symbol
 declare const schoolDatabaseBrand: unique symbol
 
-export type PublicDatabase = BaseDatabase & { readonly [publicDatabaseBrand]: 'public' }
-export type SchoolDatabase = BaseDatabase & { readonly [schoolDatabaseBrand]: 'school' }
-export type SchoolDbExecutor = SchoolDatabase | SchoolTransaction
-export type Database = PublicDatabase | SchoolDatabase
+/** Root public-schema Drizzle client. May open transactions; only services/application composition should receive it. */
+export type PublicDbClient = BaseDatabase & { readonly [publicDatabaseBrand]: 'public' }
+/** Root, tenant-scoped Drizzle client returned by {@link getSchoolDb}. May open transactions; only services/application composition should receive it. */
+export type SchoolDbClient = BaseDatabase & { readonly [schoolDatabaseBrand]: 'school' }
 
-type CachedDb = { db: SchoolDatabase; pool: Pool }
+/**
+ * Narrow school-schema query/mutation capability for repository functions.
+ * Deliberately omits `transaction` (only a service may open one) and `execute`
+ * (add it only once a real repository needs raw SQL).
+ */
+export type SchoolDb = Pick<SchoolDbClient, 'query' | 'select' | 'insert' | 'update' | 'delete'>
+/** Narrow public-schema query/mutation capability for repository functions. See {@link SchoolDb}. */
+export type PublicDb = Pick<PublicDbClient, 'query' | 'select' | 'insert' | 'update' | 'delete'>
+
+/** @deprecated use SchoolDbClient */
+export type SchoolDatabase = SchoolDbClient
+/** @deprecated use PublicDbClient */
+export type PublicDatabase = PublicDbClient
+/** @deprecated use SchoolDb (repositories) or SchoolDbClient (services) */
+export type SchoolDbExecutor = SchoolDbClient | SchoolTransaction
+/** @deprecated split in H8 */
+export type Database = PublicDbClient | SchoolDbClient
+
+type CachedDb = { db: SchoolDbClient; pool: Pool }
 
 const MAX_DB_CACHE_SIZE = 100
+// closePool is idempotent (see below), so both LRU eviction and shutdownPools
+// can race to close the same pool without double-closing it.
 const closedPools = new WeakSet<Pool>()
+// Caches one connection pool per organization. Evicting the least-recently-used
+// entry closes its pool via `dispose`, so the cache also bounds live connections.
 const dbCache = new LRUCache<string, CachedDb>({
   max: MAX_DB_CACHE_SIZE,
   dispose: entry => {
@@ -36,15 +58,21 @@ const publicPool = new Pool({
   options: '-c search_path=public',
 })
 
-export const publicDb = drizzle(publicPool, { schema }) as PublicDatabase
+export const publicDb = drizzle(publicPool, { schema }) as PublicDbClient
 
+/** Idempotent: safe to call on a pool that's already closing/closed (e.g. by LRU eviction). */
 async function closePool(pool: Pool): Promise<void> {
   if (closedPools.has(pool)) return
   closedPools.add(pool)
   await pool.end()
 }
 
-export function getScopedDatabase(organizationId: string) {
+/**
+ * Returns the tenant-scoped Drizzle client for an organization's school schema,
+ * creating and caching its connection pool on first access. The pool's search
+ * path is scoped to that school's schema, falling back to `public`.
+ */
+export function getSchoolDb(organizationId: string): SchoolDbClient {
   const cached = dbCache.get(organizationId)
   if (cached) return cached.db
 
@@ -54,11 +82,15 @@ export function getScopedDatabase(organizationId: string) {
     options: `-c search_path=${quotePgIdentifier(schemaName)},public`,
   })
 
-  const db = drizzle(pool, { schema }) as SchoolDatabase
+  const db = drizzle(pool, { schema }) as SchoolDbClient
   dbCache.set(organizationId, { db, pool })
   return db
 }
 
+/** @deprecated use getSchoolDb */
+export const getScopedDatabase = getSchoolDb
+
+/** Closes the public pool and every cached school pool exactly once; aggregates any close failures. */
 export async function shutdownPools(): Promise<void> {
   const pools = [...dbCache.values()].map(entry => entry.pool)
   const results = await Promise.allSettled([closePool(publicPool), ...pools.map(closePool)])

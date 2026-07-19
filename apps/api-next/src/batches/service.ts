@@ -1,53 +1,23 @@
-import { and, asc, eq, gt, inArray, type SQL } from 'drizzle-orm'
-
-import { batch, enrollment, type SchoolDbExecutor } from '@narada/db'
+import { type SchoolDbClient } from '@narada/db'
 
 import { internalError, notFound } from '../error'
 import type { BatchReadScope } from '../utils/accessPolicy'
-import { paginateResponse } from '../utils/cursor'
+import * as repository from './repository'
 import type { Batch, CreateBatchData, FindBatchesData, UpdateBatchData } from './schema'
 
+/** Holds the tenant-scoped client so this service can pass it straight through to repository.ts. */
+type BatchServiceContext = { db: SchoolDbClient }
+
 export async function findAllAccessible(
-  { status, limit, cursor }: FindBatchesData,
-  access: BatchReadScope,
-  db: SchoolDbExecutor,
+  context: BatchServiceContext,
+  params: FindBatchesData,
+  scope: BatchReadScope,
 ): Promise<{ items: Batch[]; nextCursor: string | null }> {
-  const conditions: SQL[] = []
-
-  if (status) {
-    conditions.push(eq(batch.status, status))
-  }
-
-  if (cursor) {
-    conditions.push(gt(batch.id, cursor.id))
-  }
-
-  if (access.kind === 'enrolled') {
-    conditions.push(
-      inArray(
-        batch.id,
-        db
-          .select({ batchId: enrollment.batchId })
-          .from(enrollment)
-          .where(eq(enrollment.profileId, access.profileId)),
-      ),
-    )
-  }
-
-  const rows = await db.query.batch.findMany({
-    where: and(...conditions),
-    orderBy: asc(batch.id),
-    limit: limit + 1,
-  })
-
-  return paginateResponse(rows, limit, item => ({ id: item.id }))
+  return repository.findAccessible(context.db, params, scope)
 }
 
-export async function findById(id: string, db: SchoolDbExecutor): Promise<Batch> {
-  const row = await db.query.batch.findFirst({
-    where: (t, { eq }) => eq(t.id, id),
-  })
-
+export async function findById(context: BatchServiceContext, id: string): Promise<Batch> {
+  const row = await repository.findById(context.db, id)
   if (!row) {
     throw notFound()
   }
@@ -55,9 +25,11 @@ export async function findById(id: string, db: SchoolDbExecutor): Promise<Batch>
   return row
 }
 
-export async function createBatch(data: CreateBatchData, db: SchoolDbExecutor): Promise<Batch> {
-  const rows = await db.insert(batch).values(data).returning()
-  const row = rows.at(0)
+export async function createBatch(
+  context: BatchServiceContext,
+  data: CreateBatchData,
+): Promise<Batch> {
+  const row = await repository.insert(context.db, data)
   if (!row) {
     throw internalError()
   }
@@ -66,12 +38,11 @@ export async function createBatch(data: CreateBatchData, db: SchoolDbExecutor): 
 }
 
 export async function updateBatch(
+  context: BatchServiceContext,
   id: string,
   data: UpdateBatchData,
-  db: SchoolDbExecutor,
 ): Promise<Batch> {
-  const rows = await db.update(batch).set(data).where(eq(batch.id, id)).returning()
-  const row = rows.at(0)
+  const row = await repository.update(context.db, id, data)
   if (!row) {
     throw notFound()
   }
