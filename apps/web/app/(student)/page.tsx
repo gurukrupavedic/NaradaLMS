@@ -12,6 +12,7 @@ import { TeachingBatchSection } from '@/components/teacher/teaching-batch-sectio
 import { PROFILE_COOKIE } from '@/lib/constants'
 import { getDashboardData } from '@/lib/dashboard'
 import { getNextOccurrence } from '@/lib/schedule'
+import { getCurrentProfile } from '@/lib/session'
 import {
   getBatchProgress as getTaughtBatchProgress,
   getChapterLevel,
@@ -203,7 +204,10 @@ export default async function DashboardPage({
   const savedChapterId = cookieStore.get(CONTINUE_COOKIE)?.value
   const myProfileId = cookieStore.get(PROFILE_COOKIE)?.value
 
-  const dashboard = await getDashboardData(myProfileId)
+  const [dashboard, profile] = await Promise.all([
+    getDashboardData(myProfileId),
+    getCurrentProfile(),
+  ])
   const {
     firstName,
     memberships,
@@ -238,7 +242,7 @@ export default async function DashboardPage({
   const recentEvals = studentEvaluations.slice(0, 4)
 
   return (
-    <AppShell navigationItems={navItems}>
+    <AppShell navigationItems={navItems} profile={profile}>
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden border-b border-border px-4 py-12">
         <span

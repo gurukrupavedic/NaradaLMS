@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/icons'
 import { useTheme } from '@/components/theme-provider'
 import { signOut } from '@/lib/session'
+import type { ApiProfile } from '@/lib/types'
 
 export interface NavigationItem {
   label: string
@@ -53,14 +54,14 @@ function NavButton({ item }: { item: NavigationItem }) {
   )
 }
 
-function UserMenu() {
+function UserMenu({ profile }: { profile: ApiProfile | null }) {
   const [isSigningOut, startSignOut] = useTransition()
+  const name = profile?.name ?? 'Account'
 
   function handleSignOut() {
     startSignOut(() => signOut())
   }
 
-  // TODO: fetch avatar information from authentication state.
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -70,16 +71,15 @@ function UserMenu() {
       >
         <Avatar className="size-6 shrink-0">
           <AvatarFallback className="bg-primary text-[9px] font-medium text-primary-foreground">
-            RP
+            {name.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
-        <span className="text-foreground font-medium">Revanth P.</span>
+        <span className="text-foreground font-medium">{name}</span>
         <CaretDownIcon className="size-2.5 transition-transform group-data-popup-open:rotate-180" />
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end" className="min-w-44">
         <div className="px-3 py-2">
-          <p className="text-xs font-medium">Revanth Pothukuchi</p>
-          <p className="text-muted-foreground text-xs">Student</p>
+          <p className="text-xs font-medium">{name}</p>
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} disabled={isSigningOut}>
@@ -93,11 +93,12 @@ function UserMenu() {
 
 interface AppShellProps {
   navigationItems: NavigationItem[]
+  profile: ApiProfile | null
   className?: string
   children?: React.ReactNode
 }
 
-export function AppShell({ navigationItems, children, className }: AppShellProps) {
+export function AppShell({ navigationItems, profile, children, className }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isSigningOut, startSignOut] = useTransition()
   const { theme, toggleTheme } = useTheme()
@@ -142,7 +143,7 @@ export function AppShell({ navigationItems, children, className }: AppShellProps
               </Button>
 
               <div className="hidden sm:block">
-                <UserMenu />
+                <UserMenu profile={profile} />
               </div>
 
               <Button
@@ -195,12 +196,11 @@ export function AppShell({ navigationItems, children, className }: AppShellProps
               <div className="flex items-center gap-2.5 px-5 py-3">
                 <Avatar className="size-7 shrink-0">
                   <AvatarFallback className="bg-primary text-[9px] font-medium text-primary-foreground">
-                    RP
+                    {(profile?.name ?? 'Account').charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-medium leading-none">Revanth Pothukuchi</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Student</p>
+                  <p className="text-sm font-medium leading-none">{profile?.name ?? 'Account'}</p>
                 </div>
               </div>
             </div>
