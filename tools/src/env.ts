@@ -13,6 +13,7 @@ const sopsConfigPath = join(repoRoot, '.sops.yaml')
 const envTargets = [
   'apps/web/.env.local',
   'apps/api/.env',
+  'apps/api-next/.env',
   'packages/env/.env',
 ]
 

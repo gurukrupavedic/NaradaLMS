@@ -50,6 +50,7 @@ This creates a super-admin account (`superadmin@local.test` / `testing123`) and 
 
 ```sh
 pnpm api:dev        # Express API on port 3000
+pnpm api-next:dev   # rewrite API (uses the configured API port)
 pnpm web:dev        # Next.js frontend
 ```
 
@@ -59,6 +60,7 @@ pnpm web:dev        # Next.js frontend
 
 ```sh
 pnpm api:dev        # start API with tsx watch (hot reload)
+pnpm api-next:dev   # start the tracked rewrite API
 pnpm web:dev        # start Next.js dev server
 ```
 
@@ -66,6 +68,7 @@ pnpm web:dev        # start Next.js dev server
 
 ```sh
 pnpm api:build      # tsc → dist/
+pnpm api-next:build # rewrite API: tsc → dist/
 pnpm web:build      # next build
 pnpm typecheck      # typecheck all packages
 ```
@@ -175,8 +178,9 @@ The `packages/env/src/index.ts` module validates all required variables at start
 
 ```
 apps/
-  api/          @narada/api     Express 5 backend
-  web/          @narada/web     Next.js 16 frontend
+  api/          @narada/api       current Express 5 backend
+  api-next/     @narada/api-next  tracked backend rewrite
+  web/          @narada/web       Next.js 16 frontend
 packages/
   auth/         @narada/auth    BetterAuth config, permissions, ids
   db/           @narada/db      Drizzle ORM, schema definitions, connection pooling
