@@ -101,7 +101,11 @@ export const member = pgTable(
     createdAt: timestamp('createdAt').notNull(),
   },
   table => [
-    index('member_organizationId_idx').on(table.organizationId),
+    // Enforces one membership per (organization, user); every current lookup filters by both
+    // columns together, and this composite index's leading column also covers organizationId-only
+    // lookups (e.g. BetterAuth listing an org's members), so the old standalone
+    // member_organizationId_idx is redundant and has been dropped.
+    uniqueIndex('member_organizationId_userId_uidx').on(table.organizationId, table.userId),
     index('member_userId_idx').on(table.userId),
   ],
 )

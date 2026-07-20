@@ -8,6 +8,13 @@
       "when": 1780374016543,
       "tag": "0000_nebulous_the_liberteens",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784514160458,
+      "tag": "0001_supreme_nocturne",
+      "breakpoints": true
     }
   ]
 }
