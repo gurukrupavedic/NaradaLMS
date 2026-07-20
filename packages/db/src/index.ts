@@ -6,19 +6,24 @@ import { Pool } from 'pg'
 
 import { env } from '@narada/env'
 import { quotePgIdentifier, schoolSchemaName } from './provision'
-import * as schema from './schema'
+import { publicSchema, schoolSchema } from './schema'
 
-type Schema = typeof schema
-type SchemaRelations = ExtractTablesWithRelations<Schema>
-type BaseDatabase = NodePgDatabase<Schema> & { $client: Pool }
-type SchoolTransaction = NodePgTransaction<Schema, SchemaRelations>
-declare const publicDatabaseBrand: unique symbol
-declare const schoolDatabaseBrand: unique symbol
+type PublicSchema = typeof publicSchema
+type SchoolSchema = typeof schoolSchema
+type SchoolSchemaRelations = ExtractTablesWithRelations<SchoolSchema>
+
+type PublicBaseDatabase = NodePgDatabase<PublicSchema> & { $client: Pool }
+type SchoolBaseDatabase = NodePgDatabase<SchoolSchema> & { $client: Pool }
+
+// Concrete transaction type stays private to @narada/db; only SchoolTransaction is needed
+// today (the deprecated SchoolDbExecutor alias for apps/api/src). Add PublicTransaction back
+// only if a deprecated public-transaction-capable alias is ever needed.
+type SchoolTransaction = NodePgTransaction<SchoolSchema, SchoolSchemaRelations>
 
 /** Root public-schema Drizzle client. May open transactions; only services/application composition should receive it. */
-export type PublicDbClient = BaseDatabase & { readonly [publicDatabaseBrand]: 'public' }
+export type PublicDbClient = PublicBaseDatabase
 /** Root, tenant-scoped Drizzle client returned by {@link getSchoolDb}. May open transactions; only services/application composition should receive it. */
-export type SchoolDbClient = BaseDatabase & { readonly [schoolDatabaseBrand]: 'school' }
+export type SchoolDbClient = SchoolBaseDatabase
 
 /**
  * Narrow school-schema query/mutation capability for repository functions.
@@ -58,7 +63,7 @@ const publicPool = new Pool({
   options: '-c search_path=public',
 })
 
-export const publicDb = drizzle(publicPool, { schema }) as PublicDbClient
+export const publicDb = drizzle(publicPool, { schema: publicSchema }) as PublicDbClient
 
 /** Idempotent: safe to call on a pool that's already closing/closed (e.g. by LRU eviction). */
 async function closePool(pool: Pool): Promise<void> {
@@ -82,7 +87,7 @@ export function getSchoolDb(organizationId: string): SchoolDbClient {
     options: `-c search_path=${quotePgIdentifier(schemaName)},public`,
   })
 
-  const db = drizzle(pool, { schema }) as SchoolDbClient
+  const db = drizzle(pool, { schema: schoolSchema }) as SchoolDbClient
   dbCache.set(organizationId, { db, pool })
   return db
 }

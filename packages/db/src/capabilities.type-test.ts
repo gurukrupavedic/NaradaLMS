@@ -35,4 +35,19 @@ void p.transaction
 // @ts-expect-error PublicDb must not expose the pool $client
 void p.$client
 
-// TODO(H8): once publicSchema/schoolSchema are split, assert PublicDb and SchoolDb are mutually non-assignable here.
+// H8: public and school capabilities are mutually non-assignable now that the schemas are split.
+// SchoolDb.query has no `member`/`organization`; PublicDb.query has no `exam`/`profile`.
+// @ts-expect-error SchoolDb is not assignable to PublicDb (disjoint query surfaces)
+const _publicFromSchool: PublicDb = null as unknown as SchoolDb
+void _publicFromSchool
+// @ts-expect-error PublicDb is not assignable to SchoolDb (disjoint query surfaces)
+const _schoolFromPublic: SchoolDb = null as unknown as PublicDb
+void _schoolFromPublic
+
+// H8 acceptance (HARDENING_PLAN §12.2): cross-schema table access must not typecheck.
+declare const schoolDbForQuery: SchoolDbClient
+// @ts-expect-error the school schema has no `member` table
+void schoolDbForQuery.query.member
+declare const publicDbForQuery: PublicDbClient
+// @ts-expect-error the public schema has no `exam` table
+void publicDbForQuery.query.exam

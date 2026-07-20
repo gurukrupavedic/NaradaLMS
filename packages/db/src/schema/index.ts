@@ -1,3 +1,68 @@
 export * from './auth'
 export * from './school'
 export * from './relations'
+
+import { user, session, account, verification, organization, member, invitation } from './auth'
+import {
+  profile,
+  track,
+  chapter,
+  batch,
+  batchClassSlot,
+  enrollment,
+  evaluation,
+  exam,
+} from './school'
+import {
+  userRelations,
+  sessionRelations,
+  accountRelations,
+  organizationRelations,
+  memberRelations,
+  invitationRelations,
+  profileRelations,
+  trackRelations,
+  chapterRelations,
+  batchRelations,
+  batchClassSlotRelations,
+  enrollmentRelations,
+  evaluationRelations,
+  examRelations,
+} from './relations'
+
+/** BetterAuth + organization tables and their relations. Backs PublicDbClient's `.query` surface. */
+export const publicSchema = {
+  user,
+  session,
+  account,
+  verification,
+  organization,
+  member,
+  invitation,
+  userRelations,
+  sessionRelations,
+  accountRelations,
+  organizationRelations,
+  memberRelations,
+  invitationRelations,
+}
+
+/** Profile/content/batch/enrollment/exam/evaluation tables and their relations. Backs SchoolDbClient's `.query` surface. */
+export const schoolSchema = {
+  profile,
+  track,
+  chapter,
+  batch,
+  batchClassSlot,
+  enrollment,
+  evaluation,
+  exam,
+  profileRelations,
+  trackRelations,
+  chapterRelations,
+  batchRelations,
+  batchClassSlotRelations,
+  enrollmentRelations,
+  evaluationRelations,
+  examRelations,
+}
