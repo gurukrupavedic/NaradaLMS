@@ -201,7 +201,7 @@ Do not implement a gated behavior until its note has a completed manual approval
 | ------------------------------- | -------------------------------------- | -------------------------------------------------------------------- | ----------------------------------- |
 | [DD-001](./decisions/DD-001.md) | Database-error translation             | Domain/constraint-aware mapping with a safe global fallback          | Approved 2026-07-19                 |
 | [DD-002](./decisions/DD-002.md) | Exam transition/result concurrency     | Exact-status compare-and-set plus transactional rollback             | Agent-approved 2026-07-19, pending human review |
-| `DD-011`                        | Profile lifecycle and record retention | Soft-delete profile, revoke active participation, retain assessments | Product/privacy approval            |
+| [DD-011](./decisions/DD-011.md) | Profile lifecycle and record retention | Soft-delete profile, revoke active participation, retain assessments | Agent-approved 2026-07-19, pending human review (needs product/privacy sign-off — see note §8) |
 | `DD-012`                        | Persist assessment batch context       | Store `batchId` on exams/evaluations and authorize against it        | Product/API/data-migration approval |
 | [DD-013](./decisions/DD-013.md) | HTTP datetime and meeting-URL policy   | Offset-bearing ISO instants and HTTPS-only meeting URLs              | Agent-approved 2026-07-19, pending human review |
 | [DD-014](./decisions/DD-014.md) | Request failure precedence             | Header presence → authentication → school lookup → profile/policy    | Agent-approved 2026-07-19, pending human review |

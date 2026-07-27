@@ -1,12 +1,29 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 
 import { profile, type PublicDb, type SchoolDb } from '@narada/db'
 
 import type { CreateProfileData, Profile, UpdateProfileData } from './schema'
 
+/**
+ * Explicit projection matching `Profile` exactly. `profile.deletedAt` is an internal lifecycle
+ * column (DD-011) and is deliberately never returned to API consumers, which serialize these
+ * rows directly.
+ */
+const profileColumns = {
+  id: profile.id,
+  userId: profile.userId,
+  name: profile.name,
+  phone: profile.phone,
+  city: profile.city,
+  updatedAt: profile.updatedAt,
+  createdAt: profile.createdAt,
+}
+
+/** Lists only active profiles; a soft-deleted profile (DD-011) is invisible to its own owner. */
 export async function findByUserId(db: SchoolDb, userId: string): Promise<Profile[]> {
   return db.query.profile.findMany({
-    where: (t, { eq }) => eq(t.userId, userId),
+    where: (t, { and, eq, isNull }) => and(eq(t.userId, userId), isNull(t.deletedAt)),
+    columns: { deletedAt: false },
   })
 }
 
@@ -26,7 +43,7 @@ export async function insert(
   db: SchoolDb,
   values: CreateProfileData & { userId: string; phone: string | null; city: string | null },
 ): Promise<Profile | undefined> {
-  const rows = await db.insert(profile).values(values).returning()
+  const rows = await db.insert(profile).values(values).returning(profileColumns)
   return rows.at(0)
 }
 
@@ -41,19 +58,27 @@ export async function updateOwned(
     .update(profile)
     .set(data)
     .where(and(eq(profile.id, id), eq(profile.userId, userId)))
-    .returning()
+    .returning(profileColumns)
 
   return rows.at(0)
 }
 
-/** Same ownership predicate as {@link updateOwned}; an empty result means either a missing or a foreign-owned profile. */
-export async function deleteOwned(
+/**
+ * Deactivates an owned profile (DD-011): stamps `deletedAt` only. Every other column — name,
+ * phone, city — and every `enrollment`/`exam`/`evaluation` row referencing this profile stay
+ * exactly as they were, so historical queries ("which batches was this user in", "what did they
+ * score there") keep working after deactivation. The `deletedAt IS NULL` predicate makes a
+ * repeat call match zero rows, so the service's 404 covers missing, foreign-owned, and
+ * already-deactivated alike.
+ */
+export async function softDeleteOwned(
   db: SchoolDb,
   id: string,
   userId: string,
 ): Promise<{ id: string }[]> {
   return db
-    .delete(profile)
-    .where(and(eq(profile.id, id), eq(profile.userId, userId)))
+    .update(profile)
+    .set({ deletedAt: new Date() })
+    .where(and(eq(profile.id, id), eq(profile.userId, userId), isNull(profile.deletedAt)))
     .returning({ id: profile.id })
 }

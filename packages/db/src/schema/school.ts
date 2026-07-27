@@ -20,6 +20,10 @@ export const profile = pgTable(
     name: text('name').notNull(),
     phone: text('phone'),
     city: text('city'),
+    // Soft-delete marker (DD-011): NULL = active. Deliberately has no `.$onUpdateFn` —
+    // unlike `updatedAt`, this is set exactly once, explicitly, by the soft-delete write,
+    // and must never be auto-touched by an unrelated UPDATE.
+    deletedAt: timestamp('deletedAt'),
     updatedAt: timestamp('updatedAt')
       .defaultNow()
       .notNull()

@@ -120,7 +120,9 @@ function resolveSchool(req: Request): Promise<{ db: SchoolDbClient; school: Scho
 
 /**
  * Resolves the required `X-Profile-Id` header to a profile in this school, rejecting a profile
- * that doesn't exist or belongs to a different user (never trust a caller-supplied profile ID).
+ * that doesn't exist, belongs to a different user (never trust a caller-supplied profile ID), or
+ * has been deactivated (DD-011) — the single choke point that keeps a soft-deleted profile out of
+ * every `profileRoute`-gated read and write.
  */
 async function resolveProfile(req: Request, db: SchoolDb, user: User) {
   const profileId = req.headers['x-profile-id']
@@ -132,7 +134,7 @@ async function resolveProfile(req: Request, db: SchoolDb, user: User) {
     where: (t, { eq }) => eq(t.id, profileId),
   })
 
-  if (!profile || profile.userId !== user.id) {
+  if (!profile || profile.userId !== user.id || profile.deletedAt !== null) {
     throw forbidden()
   }
 

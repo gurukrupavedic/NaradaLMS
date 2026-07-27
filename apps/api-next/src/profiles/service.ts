@@ -1,8 +1,7 @@
 import { publicDb, type organization, type SchoolDbClient } from '@narada/db'
 
-import { conflict, forbidden, internalError, notFound } from '../error'
+import { forbidden, internalError, notFound } from '../error'
 import type { User } from '../session'
-import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as repository from './repository'
 import type { CreateProfileData, Profile, UpdateProfileData } from './schema'
 
@@ -61,15 +60,13 @@ export async function updateProfile(
   return row
 }
 
+/**
+ * Deactivates the caller's own profile (DD-011) instead of physically deleting it: only
+ * `deletedAt` is set. Every other column, and every `enrollment`/`exam`/`evaluation` row
+ * referencing this profile, is left exactly as it was, so historical queries keep working.
+ */
 export async function deleteById(context: ProfileServiceContext, id: string): Promise<void> {
-  const rows = await withConstraintMapping(
-    () => repository.deleteOwned(context.db, id, context.user.id),
-    {
-      [DbConstraint.evaluationEvaluatorIdFk]: () =>
-        conflict('profile is still referenced by an evaluation and cannot be deleted'),
-    },
-  )
-
+  const rows = await repository.softDeleteOwned(context.db, id, context.user.id)
   if (rows.length === 0) {
     throw notFound()
   }

@@ -25,11 +25,12 @@ import { getSchoolDb, publicDb } from '@narada/db'
 import { unauthorized } from './error'
 import { profileRoute, schoolRoute, userRoute } from './naradaRoute'
 import { SessionService } from './session'
+import { AccessPolicy } from './utils/accessPolicy'
 
-function makeRequest(slug?: string): Request {
+function makeRequest(slug?: string, profileId?: string): Request {
   return {
     get: (name: string) => (name.toLowerCase() === 'x-school-slug' ? slug : undefined),
-    headers: {},
+    headers: profileId ? { 'x-profile-id': profileId } : {},
   } as unknown as Request
 }
 
@@ -178,5 +179,60 @@ describe('profileRoute', () => {
 
     expect(publicDb.query.organization.findFirst).not.toHaveBeenCalled()
     expect(handler).not.toHaveBeenCalled()
+  })
+
+  describe('resolveProfile', () => {
+    const findFirst = vi.fn()
+
+    beforeEach(() => {
+      vi.mocked(getSchoolDb).mockReturnValue({ query: { profile: { findFirst } } } as never)
+      vi.mocked(AccessPolicy.load).mockResolvedValue({} as never)
+    })
+
+    it('rejects a soft-deleted profile with 403', async () => {
+      findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-1', deletedAt: new Date() })
+      const handler = vi.fn(async () => {})
+
+      await expect(
+        profileRoute(handler)(makeRequest('known', 'profile-1'), res, next),
+      ).rejects.toMatchObject({ statusCode: 403 })
+
+      expect(handler).not.toHaveBeenCalled()
+      expect(AccessPolicy.load).not.toHaveBeenCalled()
+    })
+
+    it('passes an active profile through to the handler', async () => {
+      findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-1', deletedAt: null })
+      const handler = vi.fn(async () => {})
+
+      await profileRoute(handler)(makeRequest('known', 'profile-1'), res, next)
+
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          profile: expect.objectContaining({ id: 'profile-1' }),
+        }),
+      )
+    })
+
+    it('rejects a profile owned by another user with 403', async () => {
+      findFirst.mockResolvedValue({ id: 'profile-1', userId: 'user-2', deletedAt: null })
+      const handler = vi.fn(async () => {})
+
+      await expect(
+        profileRoute(handler)(makeRequest('known', 'profile-1'), res, next),
+      ).rejects.toMatchObject({ statusCode: 403 })
+
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('rejects a missing X-Profile-Id header with 400', async () => {
+      const handler = vi.fn(async () => {})
+
+      await expect(
+        profileRoute(handler)(makeRequest('known'), res, next),
+      ).rejects.toMatchObject({ statusCode: 400, message: 'X-Profile-Id header is required' })
+
+      expect(findFirst).not.toHaveBeenCalled()
+    })
   })
 })
