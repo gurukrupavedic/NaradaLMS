@@ -199,7 +199,7 @@ Do not implement a gated behavior until its note has a completed manual approval
 
 | ID to create/update             | Decision                               | Recommended alternative                                              | Gate                                |
 | ------------------------------- | -------------------------------------- | -------------------------------------------------------------------- | ----------------------------------- |
-| [DD-001](./decisions/DD-001.md) | Database-error translation             | Domain/constraint-aware mapping with a safe global fallback          | Existing note remains proposed      |
+| [DD-001](./decisions/DD-001.md) | Database-error translation             | Domain/constraint-aware mapping with a safe global fallback          | Approved 2026-07-19                 |
 | [DD-002](./decisions/DD-002.md) | Exam transition/result concurrency     | Exact-status compare-and-set plus transactional rollback             | Existing note remains proposed      |
 | `DD-011`                        | Profile lifecycle and record retention | Soft-delete profile, revoke active participation, retain assessments | Product/privacy approval            |
 | `DD-012`                        | Persist assessment batch context       | Store `batchId` on exams/evaluations and authorize against it        | Product/API/data-migration approval |

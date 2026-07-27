@@ -2,6 +2,7 @@ import { type SchoolDb, type SchoolDbClient } from '@narada/db'
 
 import { conflict, internalError, notFound, unprocessable } from '../error'
 import type { ExamReadScope } from '../utils/accessPolicy'
+import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as repository from './repository'
 import type {
   CreateExamData,
@@ -36,7 +37,11 @@ export async function findById(context: ExamServiceContext, id: string): Promise
 /** Validates the student/chapter assignment invariant before inserting; see {@link assertValidExamAssignment}. */
 export async function createExam(context: ExamServiceContext, data: CreateExamData): Promise<Exam> {
   await assertValidExamAssignment(context.db, data.studentId, data.chapterId)
-  const row = await repository.insert(context.db, data)
+  const row = await withConstraintMapping(() => repository.insert(context.db, data), {
+    [DbConstraint.examStudentIdFk]: () => unprocessable('student or chapter no longer exists'),
+    [DbConstraint.examChapterIdFk]: () => unprocessable('student or chapter no longer exists'),
+  })
+
   if (!row) {
     throw internalError()
   }
@@ -106,13 +111,24 @@ export async function recordExamResult(
   }
 
   return context.db.transaction(async tx => {
-    const evalRow = await repository.insertEvaluation(tx, {
-      studentId: existing.studentId,
-      chapterId: existing.chapterId,
-      level: data.level,
-      notes: data.notes,
-      evaluatorId,
-    })
+    const evalRow = await withConstraintMapping(
+      () =>
+        repository.insertEvaluation(tx, {
+          studentId: existing.studentId,
+          chapterId: existing.chapterId,
+          level: data.level,
+          notes: data.notes,
+          evaluatorId,
+        }),
+      {
+        [DbConstraint.evaluationStudentIdFk]: () =>
+          unprocessable('student, chapter, or evaluator no longer exists'),
+        [DbConstraint.evaluationChapterIdFk]: () =>
+          unprocessable('student, chapter, or evaluator no longer exists'),
+        [DbConstraint.evaluationEvaluatorIdFk]: () =>
+          unprocessable('student, chapter, or evaluator no longer exists'),
+      },
+    )
 
     if (!evalRow) {
       throw internalError()

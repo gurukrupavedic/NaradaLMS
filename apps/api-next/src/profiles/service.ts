@@ -1,7 +1,8 @@
 import { publicDb, type organization, type SchoolDbClient } from '@narada/db'
 
-import { forbidden, internalError, notFound } from '../error'
+import { conflict, forbidden, internalError, notFound } from '../error'
 import type { User } from '../session'
+import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as repository from './repository'
 import type { CreateProfileData, Profile, UpdateProfileData } from './schema'
 
@@ -61,7 +62,14 @@ export async function updateProfile(
 }
 
 export async function deleteById(context: ProfileServiceContext, id: string): Promise<void> {
-  const rows = await repository.deleteOwned(context.db, id, context.user.id)
+  const rows = await withConstraintMapping(
+    () => repository.deleteOwned(context.db, id, context.user.id),
+    {
+      [DbConstraint.evaluationEvaluatorIdFk]: () =>
+        conflict('profile is still referenced by an evaluation and cannot be deleted'),
+    },
+  )
+
   if (rows.length === 0) {
     throw notFound()
   }

@@ -1,7 +1,8 @@
 import { type SchoolDbClient } from '@narada/db'
 
-import { internalError, notFound } from '../error'
+import { conflict, internalError, notFound, unprocessable } from '../error'
 import type { BatchReadScope } from '../utils/accessPolicy'
+import { DbConstraint, withConstraintMapping } from '../utils/dbError'
 import * as repository from './repository'
 import type { Batch, CreateBatchData, FindBatchesData, UpdateBatchData } from './schema'
 
@@ -29,7 +30,11 @@ export async function createBatch(
   context: BatchServiceContext,
   data: CreateBatchData,
 ): Promise<Batch> {
-  const row = await repository.insert(context.db, data)
+  const row = await withConstraintMapping(() => repository.insert(context.db, data), {
+    [DbConstraint.batchTrackIdFk]: () => unprocessable('unknown or invalid track'),
+    [DbConstraint.batchCodeUnique]: () => conflict('a batch with this code already exists'),
+  })
+
   if (!row) {
     throw internalError()
   }
@@ -42,7 +47,10 @@ export async function updateBatch(
   id: string,
   data: UpdateBatchData,
 ): Promise<Batch> {
-  const row = await repository.update(context.db, id, data)
+  const row = await withConstraintMapping(() => repository.update(context.db, id, data), {
+    [DbConstraint.batchCodeUnique]: () => conflict('a batch with this code already exists'),
+  })
+
   if (!row) {
     throw notFound()
   }
