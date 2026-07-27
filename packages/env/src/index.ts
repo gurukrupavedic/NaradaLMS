@@ -13,6 +13,18 @@ export const env = createEnv({
       .pipe(z.array(z.url()))
       .default([]),
 
+    // Connection-pool budget and timeouts (DD-015). Defaults are conservative placeholders
+    // pending real ops data (PostgreSQL max_connections, instance count, proxy presence);
+    // tune via environment, not code. DB_MAX_LIFETIME_SECONDS 0 = disabled (pg's own default).
+    DB_PUBLIC_POOL_MAX: z.coerce.number().int().positive().default(5),
+    DB_SCHOOL_POOL_MAX: z.coerce.number().int().positive().default(3),
+    DB_SCHOOL_POOL_CACHE_MAX: z.coerce.number().int().positive().default(10),
+    DB_ACQUIRE_TIMEOUT_MS: z.coerce.number().int().positive().default(5_000),
+    DB_IDLE_TIMEOUT_MS: z.coerce.number().int().positive().default(30_000),
+    DB_STATEMENT_TIMEOUT_MS: z.coerce.number().int().positive().default(30_000),
+    DB_MAX_LIFETIME_SECONDS: z.coerce.number().int().nonnegative().default(0),
+    DB_READY_TIMEOUT_MS: z.coerce.number().int().positive().default(3_000),
+
     AUTH_SECRET: z.string().min(32),
     GOOGLE_CLIENT_ID: z.string(),
     GOOGLE_CLIENT_SECRET: z.string(),

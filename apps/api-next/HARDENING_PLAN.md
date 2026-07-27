@@ -205,7 +205,7 @@ Do not implement a gated behavior until its note has a completed manual approval
 | `DD-012`                        | Persist assessment batch context       | Store `batchId` on exams/evaluations and authorize against it        | Product/API/data-migration approval |
 | [DD-013](./decisions/DD-013.md) | HTTP datetime and meeting-URL policy   | Offset-bearing ISO instants and HTTPS-only meeting URLs              | Agent-approved 2026-07-19, pending human review |
 | [DD-014](./decisions/DD-014.md) | Request failure precedence             | Header presence → authentication → school lookup → profile/policy    | Agent-approved 2026-07-19, pending human review |
-| `DD-015`                        | Tenant connection budget               | Explicit per-instance pool budget, timeouts, metrics, bounded cache  | Operations/deployment approval      |
+| [DD-015](./decisions/DD-015.md) | Tenant connection budget               | Explicit per-instance pool budget, timeouts, metrics, bounded cache  | Agent-approved 2026-07-19, pending human review (placeholder budget numbers — see note) |
 
 ### 3.1 Required audits before approval
 

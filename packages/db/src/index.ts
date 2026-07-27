@@ -45,22 +45,44 @@ export type Database = PublicDbClient | SchoolDbClient
 
 type CachedDb = { db: SchoolDbClient; pool: Pool }
 
-const MAX_DB_CACHE_SIZE = 100
 // closePool is idempotent (see below), so both LRU eviction and shutdownPools
 // can race to close the same pool without double-closing it.
 const closedPools = new WeakSet<Pool>()
+// Pools evicted from the cache close asynchronously; shutdownPools must be able to await an
+// eviction that started just before shutdown (DD-015 §3.3).
+const closingPools = new Set<Promise<void>>()
+
 // Caches one connection pool per organization. Evicting the least-recently-used
 // entry closes its pool via `dispose`, so the cache also bounds live connections.
 const dbCache = new LRUCache<string, CachedDb>({
-  max: MAX_DB_CACHE_SIZE,
-  dispose: entry => {
-    closePool(entry.pool).catch(() => {})
+  max: env.DB_SCHOOL_POOL_CACHE_MAX,
+  dispose: (entry, key) => {
+    console.warn('closing evicted school database pool', { schoolId: key })
+    const closing = closePool(entry.pool)
+    closingPools.add(closing)
+    // The `.catch` must sit at the END of the chain, not on `closing` itself: `.finally()`
+    // returns a NEW promise that re-rejects if `closing` rejects, and leaving THAT one
+    // unhandled crashes the process on a failing pool.end(). `closing` itself stays
+    // unswallowed so shutdownPools' allSettled below can still observe and aggregate a real
+    // close failure.
+    closing.finally(() => closingPools.delete(closing)).catch(() => {})
   },
 })
 
 const publicPool = new Pool({
   connectionString: env.DATABASE_URL,
   options: '-c search_path=public',
+  max: env.DB_PUBLIC_POOL_MAX,
+  idleTimeoutMillis: env.DB_IDLE_TIMEOUT_MS,
+  connectionTimeoutMillis: env.DB_ACQUIRE_TIMEOUT_MS,
+  statement_timeout: env.DB_STATEMENT_TIMEOUT_MS,
+  maxLifetimeSeconds: env.DB_MAX_LIFETIME_SECONDS,
+})
+
+// pg.Pool extends EventEmitter: an 'error' event with zero listeners throws and crashes the
+// process. Idle-connection drops and network blips emit here routinely.
+publicPool.on('error', error => {
+  console.error('pg pool error', { pool: 'public', message: error.message })
 })
 
 export const publicDb = drizzle(publicPool, { schema: publicSchema }) as PublicDbClient
@@ -81,10 +103,21 @@ export function getSchoolDb(organizationId: string): SchoolDbClient {
   const cached = dbCache.get(organizationId)
   if (cached) return cached.db
 
+  console.warn('creating school database pool', { schoolId: organizationId })
+
   const schemaName = schoolSchemaName(organizationId)
   const pool = new Pool({
     connectionString: env.DATABASE_URL,
     options: `-c search_path=${quotePgIdentifier(schemaName)},public`,
+    max: env.DB_SCHOOL_POOL_MAX,
+    idleTimeoutMillis: env.DB_IDLE_TIMEOUT_MS,
+    connectionTimeoutMillis: env.DB_ACQUIRE_TIMEOUT_MS,
+    statement_timeout: env.DB_STATEMENT_TIMEOUT_MS,
+    maxLifetimeSeconds: env.DB_MAX_LIFETIME_SECONDS,
+  })
+
+  pool.on('error', error => {
+    console.error('pg pool error', { schoolId: organizationId, message: error.message })
   })
 
   const db = drizzle(pool, { schema: schoolSchema }) as SchoolDbClient
@@ -97,9 +130,13 @@ export const getScopedDatabase = getSchoolDb
 
 /** Closes the public pool and every cached school pool exactly once; aggregates any close failures. */
 export async function shutdownPools(): Promise<void> {
-  const pools = [...dbCache.values()].map(entry => entry.pool)
-  const results = await Promise.allSettled([closePool(publicPool), ...pools.map(closePool)])
-  dbCache.clear()
+  const cachedPools = [...dbCache.values()].map(entry => entry.pool)
+  dbCache.clear() // stop new callers from getting a pool we're about to close
+  const results = await Promise.allSettled([
+    closePool(publicPool),
+    ...cachedPools.map(pool => closePool(pool)),
+    ...closingPools, // pools evicted and mid-close before shutdown began
+  ])
 
   const failures = results.filter(result => result.status === 'rejected')
   if (failures.length > 0) {
@@ -107,6 +144,28 @@ export async function shutdownPools(): Promise<void> {
       failures.map(result => result.reason),
       'failed to close one or more database pools',
     )
+  }
+}
+
+/** Point-in-time pool census for logging/diagnostics. Not wired to any endpoint or exporter. */
+export function getPoolStats(): {
+  public: { total: number; idle: number; waiting: number }
+  cachedSchools: number
+  schools: { total: number; idle: number; waiting: number }
+} {
+  const schoolPools = [...dbCache.values()].map(entry => entry.pool)
+  return {
+    public: {
+      total: publicPool.totalCount,
+      idle: publicPool.idleCount,
+      waiting: publicPool.waitingCount,
+    },
+    cachedSchools: dbCache.size,
+    schools: {
+      total: schoolPools.reduce((sum, pool) => sum + pool.totalCount, 0),
+      idle: schoolPools.reduce((sum, pool) => sum + pool.idleCount, 0),
+      waiting: schoolPools.reduce((sum, pool) => sum + pool.waitingCount, 0),
+    },
   }
 }
 
