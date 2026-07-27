@@ -118,20 +118,23 @@ export async function insertEvaluation(
 }
 
 /**
- * Guarded by `evaluationId IS NULL` rather than a status check: this is the second half of
- * `recordExamResult`'s transaction, so a concurrent completion (which already set
- * `evaluationId`) loses here even if it also matched on status.
+ * Guarded by both `evaluationId IS NULL` and a compare-and-set on `expectedStatus` (the status
+ * the service read before opening the transaction). The first half makes a concurrent second
+ * result lose; the second half makes a concurrent status change (e.g. a committed cancellation)
+ * lose here instead of being silently overwritten. Returns `undefined` for a missing exam and
+ * for either lost race — the service distinguishes them with a follow-up read.
  */
 export async function complete(
   db: SchoolDb,
   id: string,
   evaluationId: string,
   performedAt: Date,
+  expectedStatus: Exam['status'],
 ): Promise<Exam | undefined> {
   const rows = await db
     .update(exam)
     .set({ evaluationId, performedAt, status: 'completed' })
-    .where(and(eq(exam.id, id), isNull(exam.evaluationId)))
+    .where(and(eq(exam.id, id), isNull(exam.evaluationId), eq(exam.status, expectedStatus)))
     .returning()
 
   return rows.at(0)

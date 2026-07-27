@@ -94,10 +94,14 @@ export async function updateExam(
 }
 
 /**
- * Records a result and completes the exam atomically: the evaluation insert and the
- * `evaluationId IS NULL`-guarded completion (repository.complete) run in one transaction, so a
- * losing concurrent call rolls back its evaluation insert instead of leaving an orphan row. Two
- * simultaneous calls therefore produce exactly one evaluation and one 409 for the loser.
+ * Records a result and completes the exam atomically: the evaluation insert and the completion
+ * (repository.complete) run in one transaction. The completion is guarded by both
+ * `evaluationId IS NULL` and a compare-and-set on the status read before the transaction, so a
+ * losing concurrent call — whether a second result or a concurrent status change (e.g. a
+ * cancellation) — rolls back its evaluation insert instead of leaving an orphan row or silently
+ * overwriting a committed status change. A lost race is distinguished by a follow-up read inside
+ * the transaction: 404 if the exam is gone, 409 "already recorded" if `evaluationId` is set, 409
+ * "status changed concurrently" otherwise.
  */
 export async function recordExamResult(
   context: ExamServiceContext,
@@ -135,9 +139,12 @@ export async function recordExamResult(
     }
 
     // Throwing here rolls back the evaluation insert above — see the transaction doc comment.
-    const row = await repository.complete(tx, id, evalRow.id, new Date())
+    const row = await repository.complete(tx, id, evalRow.id, new Date(), existing.status)
     if (!row) {
-      throw conflict('a result was already recorded for this exam')
+      const current = await repository.findById(tx, id)
+      if (!current) throw notFound()
+      if (current.evaluationId) throw conflict('a result was already recorded for this exam')
+      throw conflict('exam status changed concurrently')
     }
 
     return row

@@ -68,9 +68,20 @@ describe('recordExamResult', () => {
     performedAt: null,
   }
 
+  const evaluationRow = {
+    id: 'evaluation-1',
+    studentId: 'student-1',
+    chapterId: 'chapter-1',
+    level: 'level1' as const,
+    notes: null,
+    evaluatorId: 'evaluator-1',
+    evaluatedAt: new Date(),
+  }
+
   beforeEach(() => {
     vi.resetAllMocks()
     vi.mocked(repository.findById).mockResolvedValue(existingExam)
+    vi.mocked(repository.insertEvaluation).mockResolvedValue(evaluationRow)
     transactionMock.mockImplementation(async callback => callback({}))
   })
 
@@ -91,5 +102,79 @@ describe('recordExamResult', () => {
     })
 
     expect(transactionMock).toHaveBeenCalled()
+  })
+
+  it("calls repository.complete with existing.status as the expectedStatus argument", async () => {
+    vi.mocked(repository.complete).mockResolvedValue({
+      ...existingExam,
+      status: 'completed',
+      evaluationId: 'evaluation-1',
+      performedAt: new Date(),
+    })
+
+    await recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level1' })
+
+    expect(repository.complete).toHaveBeenCalledWith(
+      {},
+      'exam-1',
+      'evaluation-1',
+      expect.any(Date),
+      'scheduled',
+    )
+  })
+
+  it('throws a 409 "already recorded" conflict when the follow-up read shows evaluationId set', async () => {
+    vi.mocked(repository.complete).mockResolvedValue(undefined)
+    vi.mocked(repository.findById)
+      .mockResolvedValueOnce(existingExam)
+      .mockResolvedValueOnce({
+        ...existingExam,
+        status: 'completed',
+        evaluationId: 'evaluation-other',
+        performedAt: new Date(),
+      })
+
+    await expect(
+      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level1' }),
+    ).rejects.toMatchObject({
+      statusCode: 409,
+      message: 'a result was already recorded for this exam',
+    })
+
+    expect(transactionMock).toHaveBeenCalled()
+    expect(repository.findById).toHaveBeenNthCalledWith(2, {}, 'exam-1')
+  })
+
+  it('throws a 409 "status changed concurrently" conflict when the follow-up read shows evaluationId still null', async () => {
+    vi.mocked(repository.complete).mockResolvedValue(undefined)
+    vi.mocked(repository.findById)
+      .mockResolvedValueOnce(existingExam)
+      .mockResolvedValueOnce({ ...existingExam, status: 'cancelled' as const, evaluationId: null })
+
+    await expect(
+      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level1' }),
+    ).rejects.toMatchObject({
+      statusCode: 409,
+      message: 'exam status changed concurrently',
+    })
+
+    expect(transactionMock).toHaveBeenCalled()
+    expect(repository.findById).toHaveBeenNthCalledWith(2, {}, 'exam-1')
+  })
+
+  it('throws 404 when the follow-up read finds no row', async () => {
+    vi.mocked(repository.complete).mockResolvedValue(undefined)
+    vi.mocked(repository.findById)
+      .mockResolvedValueOnce(existingExam)
+      .mockResolvedValueOnce(undefined)
+
+    await expect(
+      recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level1' }),
+    ).rejects.toMatchObject({
+      statusCode: 404,
+    })
+
+    expect(transactionMock).toHaveBeenCalled()
+    expect(repository.findById).toHaveBeenNthCalledWith(2, {}, 'exam-1')
   })
 })
