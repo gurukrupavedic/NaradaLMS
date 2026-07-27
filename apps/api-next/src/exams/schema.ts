@@ -15,6 +15,7 @@ export const ExamSchema = z.object({
   id: z.uuid(),
   chapterId: z.uuid(),
   studentId: z.uuid(),
+  batchId: z.uuid().nullable(),
   scheduledAt: isoInstant,
   status: examStatusSchema,
   evaluationId: z.uuid().nullable(),

@@ -1,6 +1,6 @@
 import { and, asc, eq, gt, isNull, or, type SQL } from 'drizzle-orm'
 
-import { batch, enrollment, evaluation, exam, type SchoolDb } from '@narada/db'
+import { batch, enrollment, evaluation, exam, profile, type SchoolDb } from '@narada/db'
 
 import type { ExamReadScope } from '../utils/accessPolicy'
 import { paginateResponse } from '../utils/cursor'
@@ -59,6 +59,14 @@ export async function findChapterTrackId(
   })
 }
 
+// Deliberately returns every qualifying batch rather than `.limit(1)`-ing to one — the caller
+// (`assertValidExamAssignment`) must reject ambiguity when a student qualifies for more than one
+// batch, not silently pick one (DD-012 §1).
+//
+// Requires the target student's own profile to still be active (DD-011 §4.6): profile
+// deactivation deliberately leaves `enrollment` rows untouched so historical queries keep
+// working, which means a deactivated student's stale enrollment would otherwise still "qualify"
+// them for a brand-new exam.
 export async function findStudentEnrollmentForTrack(
   db: SchoolDb,
   studentId: string,
@@ -68,17 +76,21 @@ export async function findStudentEnrollmentForTrack(
     .select({ batchId: enrollment.batchId })
     .from(enrollment)
     .innerJoin(batch, eq(enrollment.batchId, batch.id))
+    .innerJoin(profile, eq(enrollment.profileId, profile.id))
     .where(
       and(
         eq(enrollment.profileId, studentId),
         eq(enrollment.role, 'student'),
         eq(batch.trackId, trackId),
+        isNull(profile.deletedAt),
       ),
     )
-    .limit(1)
 }
 
-export async function insert(db: SchoolDb, data: CreateExamData): Promise<Exam | undefined> {
+export async function insert(
+  db: SchoolDb,
+  data: CreateExamData & { batchId: string },
+): Promise<Exam | undefined> {
   const rows = await db.insert(exam).values(data).returning()
   return rows.at(0)
 }
@@ -108,6 +120,7 @@ export async function insertEvaluation(
   values: {
     studentId: string
     chapterId: string
+    batchId: string | null
     level: Evaluation['level']
     notes: string | undefined
     evaluatorId: string

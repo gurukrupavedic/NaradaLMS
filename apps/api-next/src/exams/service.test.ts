@@ -46,6 +46,70 @@ describe('createExam', () => {
       })
     },
   )
+
+  it('succeeds and stores the resolved batchId on the new exam', async () => {
+    const scheduledAt = new Date()
+    vi.mocked(repository.insert).mockResolvedValue({
+      id: 'exam-1',
+      chapterId: 'chapter-1',
+      studentId: 'student-1',
+      batchId: 'batch-1',
+      scheduledAt,
+      status: 'scheduled',
+      evaluationId: null,
+      performedAt: null,
+    })
+
+    await createExam(context, {
+      studentId: 'student-1',
+      chapterId: 'chapter-1',
+      scheduledAt,
+    })
+
+    expect(repository.insert).toHaveBeenCalledWith(db, {
+      studentId: 'student-1',
+      chapterId: 'chapter-1',
+      scheduledAt,
+      batchId: 'batch-1',
+    })
+  })
+
+  it('rejects with a 422 when the student is enrolled in more than one qualifying batch', async () => {
+    vi.mocked(repository.findStudentEnrollmentForTrack).mockResolvedValue([
+      { batchId: 'batch-1' },
+      { batchId: 'batch-2' },
+    ])
+
+    await expect(
+      createExam(context, {
+        studentId: 'student-1',
+        chapterId: 'chapter-1',
+        scheduledAt: new Date(),
+      }),
+    ).rejects.toMatchObject({
+      statusCode: 422,
+      message: "student is enrolled in multiple batches for this chapter's track",
+    })
+
+    expect(repository.insert).not.toHaveBeenCalled()
+  })
+
+  it('rejects with a 422 when the student has no qualifying batch', async () => {
+    vi.mocked(repository.findStudentEnrollmentForTrack).mockResolvedValue([])
+
+    await expect(
+      createExam(context, {
+        studentId: 'student-1',
+        chapterId: 'chapter-1',
+        scheduledAt: new Date(),
+      }),
+    ).rejects.toMatchObject({
+      statusCode: 422,
+      message: 'student is not enrolled in a batch for this chapter',
+    })
+
+    expect(repository.insert).not.toHaveBeenCalled()
+  })
 })
 
 describe('recordExamResult', () => {
@@ -62,6 +126,7 @@ describe('recordExamResult', () => {
     id: 'exam-1',
     chapterId: 'chapter-1',
     studentId: 'student-1',
+    batchId: 'batch-1',
     scheduledAt: new Date(),
     status: 'scheduled' as const,
     evaluationId: null,
@@ -72,6 +137,7 @@ describe('recordExamResult', () => {
     id: 'evaluation-1',
     studentId: 'student-1',
     chapterId: 'chapter-1',
+    batchId: 'batch-1',
     level: 'level1' as const,
     notes: null,
     evaluatorId: 'evaluator-1',
@@ -102,6 +168,22 @@ describe('recordExamResult', () => {
     })
 
     expect(transactionMock).toHaveBeenCalled()
+  })
+
+  it("copies the exam's batchId onto the inserted evaluation", async () => {
+    vi.mocked(repository.complete).mockResolvedValue({
+      ...existingExam,
+      status: 'completed',
+      evaluationId: 'evaluation-1',
+      performedAt: new Date(),
+    })
+
+    await recordExamResult(context, 'exam-1', 'evaluator-1', { level: 'level1' })
+
+    expect(repository.insertEvaluation).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({ batchId: 'batch-1' }),
+    )
   })
 
   it("calls repository.complete with existing.status as the expectedStatus argument", async () => {

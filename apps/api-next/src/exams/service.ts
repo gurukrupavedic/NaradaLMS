@@ -36,11 +36,14 @@ export async function findById(context: ExamServiceContext, id: string): Promise
 
 /** Validates the student/chapter assignment invariant before inserting; see {@link assertValidExamAssignment}. */
 export async function createExam(context: ExamServiceContext, data: CreateExamData): Promise<Exam> {
-  await assertValidExamAssignment(context.db, data.studentId, data.chapterId)
-  const row = await withConstraintMapping(() => repository.insert(context.db, data), {
-    [DbConstraint.examStudentIdFk]: () => unprocessable('student or chapter no longer exists'),
-    [DbConstraint.examChapterIdFk]: () => unprocessable('student or chapter no longer exists'),
-  })
+  const batchId = await assertValidExamAssignment(context.db, data.studentId, data.chapterId)
+  const row = await withConstraintMapping(
+    () => repository.insert(context.db, { ...data, batchId }),
+    {
+      [DbConstraint.examStudentIdFk]: () => unprocessable('student or chapter no longer exists'),
+      [DbConstraint.examChapterIdFk]: () => unprocessable('student or chapter no longer exists'),
+    },
+  )
 
   if (!row) {
     throw internalError()
@@ -50,12 +53,13 @@ export async function createExam(context: ExamServiceContext, data: CreateExamDa
 }
 
 // A student can only be examined on a chapter belonging to a track they're
-// enrolled in as a student.
+// enrolled in as a student, and that enrollment must be unambiguous — the
+// resolved batch is stored on the exam as immutable assessment context (DD-012).
 async function assertValidExamAssignment(
   db: SchoolDb,
   studentId: string,
   chapterId: string,
-): Promise<void> {
+): Promise<string> {
   const chapterRow = await repository.findChapterTrackId(db, chapterId)
   if (!chapterRow) {
     throw unprocessable('chapter not found')
@@ -65,6 +69,17 @@ async function assertValidExamAssignment(
   if (enrolled.length === 0) {
     throw unprocessable('student is not enrolled in a batch for this chapter')
   }
+
+  if (enrolled.length > 1) {
+    throw unprocessable("student is enrolled in multiple batches for this chapter's track")
+  }
+
+  const [only] = enrolled
+  if (!only) {
+    throw internalError()
+  }
+
+  return only.batchId
 }
 
 /**
@@ -120,6 +135,7 @@ export async function recordExamResult(
         repository.insertEvaluation(tx, {
           studentId: existing.studentId,
           chapterId: existing.chapterId,
+          batchId: existing.batchId,
           level: data.level,
           notes: data.notes,
           evaluatorId,

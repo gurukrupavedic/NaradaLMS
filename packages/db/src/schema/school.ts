@@ -149,8 +149,12 @@ export const evaluation = pgTable(
       .notNull()
       .references(() => profile.id, { onDelete: 'restrict' }),
     evaluatedAt: timestamp('evaluatedAt').defaultNow(),
+    batchId: uuid('batchId').references(() => batch.id),
   },
-  table => [index('evaluation_studentId_chapterId_idx').on(table.studentId, table.chapterId)],
+  table => [
+    index('evaluation_studentId_chapterId_idx').on(table.studentId, table.chapterId),
+    index('evaluation_batchId_studentId_idx').on(table.batchId, table.studentId),
+  ],
 )
 
 export const exam = pgTable(
@@ -167,9 +171,11 @@ export const exam = pgTable(
     status: examStatus('status').notNull().default('scheduled'),
     evaluationId: uuid('evaluationId').references(() => evaluation.id),
     performedAt: timestamp('performedAt'),
+    batchId: uuid('batchId').references(() => batch.id),
   },
   table => [
     index('exam_chapterId_idx').on(table.chapterId),
     index('exam_studentId_idx').on(table.studentId),
+    index('exam_batchId_studentId_idx').on(table.batchId, table.studentId),
   ],
 )
