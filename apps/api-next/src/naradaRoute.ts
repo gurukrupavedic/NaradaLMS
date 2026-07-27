@@ -10,11 +10,17 @@ import {
   type SchoolProfile,
 } from '@narada/db'
 
-import { badRequest, forbidden } from './error'
+import { badRequest, forbidden, notFound } from './error'
 import { SessionService, type User } from './session'
 import { AccessPolicy } from './utils/accessPolicy'
 
 type School = typeof organization.$inferSelect
+
+/**
+ * Caches the in-flight school resolution per request so `resolveSchool` performs at most one
+ * lookup per request, mirroring `SessionService`'s session cache.
+ */
+const schoolCache = new WeakMap<Request, Promise<{ db: SchoolDbClient; school: School }>>
 
 export type PublicRouteArgs = {
   req: Request
@@ -56,10 +62,9 @@ export function schoolRoute(handler: (args: SchoolRouteArgs) => Promise<void>): 
 /** Wraps a handler that requires a valid school and an authenticated user, but no active profile. */
 export function userRoute(handler: (args: UserRouteArgs) => Promise<void>): RequestHandler {
   return async (req, res) => {
-    const [{ db, school }, user] = await Promise.all([
-      resolveSchool(req),
-      SessionService.getCurrentUser(req),
-    ])
+    requireSchoolSlug(req)
+    const user = await SessionService.getCurrentUser(req)
+    const { db, school } = await resolveSchool(req)
 
     await handler({ req, res, db, school, user })
   }
@@ -68,10 +73,9 @@ export function userRoute(handler: (args: UserRouteArgs) => Promise<void>): Requ
 /** Wraps a handler that requires a valid school, authenticated user, and the caller's own active profile. */
 export function profileRoute(handler: (args: ProfileRouteArgs) => Promise<void>): RequestHandler {
   return async (req, res) => {
-    const [{ db, school }, user] = await Promise.all([
-      resolveSchool(req),
-      SessionService.getCurrentUser(req),
-    ])
+    requireSchoolSlug(req)
+    const user = await SessionService.getCurrentUser(req)
+    const { db, school } = await resolveSchool(req)
     const profile = await resolveProfile(req, db, user)
 
     const access = await AccessPolicy.load({ db, school, user, profile })
@@ -79,23 +83,39 @@ export function profileRoute(handler: (args: ProfileRouteArgs) => Promise<void>)
   }
 }
 
-/** Resolves the required `X-School-Slug` header to its school row and scoped database client. */
-async function resolveSchool(req: Request): Promise<{ db: SchoolDbClient; school: School }> {
+/** Validates the presence of the `X-School-Slug` header synchronously, before any I/O. */
+function requireSchoolSlug(req: Request): string {
   const slug = req.get('x-school-slug')
   if (!slug) {
     throw badRequest('X-School-Slug header is required')
   }
 
-  const school = await publicDb.query.organization.findFirst({
-    where: (t, { eq }) => eq(t.slug, slug),
-  })
+  return slug
+}
 
-  if (!school) {
-    throw badRequest('school not found')
+/** Resolves the required `X-School-Slug` header to its school row and scoped database client. */
+function resolveSchool(req: Request): Promise<{ db: SchoolDbClient; school: School }> {
+  const cached = schoolCache.get(req)
+  if (cached) {
+    return cached
   }
 
-  const db = getSchoolDb(school.id)
-  return { db, school }
+  const slug = requireSchoolSlug(req) // synchronous, before the promise is created or cached
+  const promise = (async () => {
+    const school = await publicDb.query.organization.findFirst({
+      where: (t, { eq }) => eq(t.slug, slug),
+    })
+
+    if (!school) {
+      throw notFound('school not found')
+    }
+
+    const db = getSchoolDb(school.id)
+    return { db, school }
+  })()
+
+  schoolCache.set(req, promise)
+  return promise
 }
 
 /**

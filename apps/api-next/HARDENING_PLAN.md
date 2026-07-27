@@ -204,7 +204,7 @@ Do not implement a gated behavior until its note has a completed manual approval
 | `DD-011`                        | Profile lifecycle and record retention | Soft-delete profile, revoke active participation, retain assessments | Product/privacy approval            |
 | `DD-012`                        | Persist assessment batch context       | Store `batchId` on exams/evaluations and authorize against it        | Product/API/data-migration approval |
 | `DD-013`                        | HTTP datetime and meeting-URL policy   | Offset-bearing ISO instants and HTTPS-only meeting URLs              | Client compatibility approval       |
-| `DD-014`                        | Request failure precedence             | Header presence → authentication → school lookup → profile/policy    | API compatibility/security approval |
+| [DD-014](./decisions/DD-014.md) | Request failure precedence             | Header presence → authentication → school lookup → profile/policy    | Agent-approved 2026-07-19, pending human review |
 | `DD-015`                        | Tenant connection budget               | Explicit per-instance pool budget, timeouts, metrics, bounded cache  | Operations/deployment approval      |
 
 ### 3.1 Required audits before approval
