@@ -3,7 +3,7 @@ import * as z from 'zod'
 import { batchStatus } from '@narada/db'
 
 import { asCursor } from '../utils/cursor'
-import { requireNonEmpty } from '../utils/validate'
+import { httpsUrl, isoInstant, requireNonEmpty } from '../utils/validate'
 
 const PAGE_SIZE = 20
 
@@ -15,8 +15,8 @@ export const BatchSchema = z.object({
   trackId: z.uuid(),
   code: z.string().min(1),
   status: batchStatusSchema,
-  startDate: z.coerce.date().nullable(),
-  meetingUrl: z.url().nullable(),
+  startDate: isoInstant.nullable(),
+  meetingUrl: httpsUrl.nullable(),
 })
 
 export type FindBatchesData = z.infer<typeof FindBatchesSchema>

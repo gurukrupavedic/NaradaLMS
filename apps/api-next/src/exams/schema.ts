@@ -3,7 +3,7 @@ import * as z from 'zod'
 import { examStatus, proficiencyLevel } from '@narada/db'
 
 import { asCursor } from '../utils/cursor'
-import { requireNonEmpty } from '../utils/validate'
+import { isoInstant, requireNonEmpty } from '../utils/validate'
 
 const PAGE_SIZE = 20
 
@@ -15,10 +15,10 @@ export const ExamSchema = z.object({
   id: z.uuid(),
   chapterId: z.uuid(),
   studentId: z.uuid(),
-  scheduledAt: z.coerce.date(),
+  scheduledAt: isoInstant,
   status: examStatusSchema,
   evaluationId: z.uuid().nullable(),
-  performedAt: z.coerce.date().nullable(),
+  performedAt: isoInstant.nullable(),
 })
 
 export type FindExamsData = z.infer<typeof FindExamsSchema>
