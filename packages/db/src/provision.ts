@@ -71,7 +71,21 @@ export async function provisionSchool(organizationId: string) {
   })
 
   try {
-    await migrate(drizzle(schoolPool), { migrationsFolder })
+    // Schema-scoped migration tracking: drizzle-orm's migrator defaults to a single
+    // database-wide `drizzle.__drizzle_migrations` table, and decides what to apply by comparing
+    // each migration file's folder timestamp against only the MOST RECENT row in that table
+    // (`created_at desc limit 1`) — not a per-migration record. Every tenant is migrated from the
+    // exact same files (identical timestamps), so without scoping this per schema, the *first*
+    // school ever provisioned against a database applies and records the migrations correctly,
+    // and every subsequent school's migration compares its files' timestamps against that same
+    // already-newer row and silently no-ops — leaving that school's schema with zero tables.
+    // Tracking each school's applied migrations inside its own schema makes every provisioning
+    // call independent of every other school's history.
+    await migrate(drizzle(schoolPool), {
+      migrationsFolder,
+      migrationsSchema: schemaName,
+      migrationsTable: '__drizzle_migrations',
+    })
   } finally {
     await schoolPool.end()
   }

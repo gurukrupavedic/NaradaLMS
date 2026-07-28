@@ -1,0 +1,136 @@
+import { afterEach, describe, expect, it } from 'vitest'
+
+import { destroyTestWorld } from '../testing/cleanup'
+import * as examRepository from '../exams/repository'
+import {
+  createBatch,
+  createChapter,
+  createEvaluation,
+  createProfile,
+  createTestSchool,
+  createTrack,
+  enroll,
+  type TestWorld,
+} from '../testing/fixtures'
+import * as repository from './repository'
+
+let world: TestWorld | undefined
+
+afterEach(async () => {
+  if (world) {
+    await destroyTestWorld(world)
+    world = undefined
+  }
+})
+
+describe('profile deactivation (matrix items 3 & 4, updated for DD-011 pure soft-delete)', () => {
+  it('soft-deletes a profile: deletedAt set, every other column retained unchanged', async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, {
+      userId: 'user-no-refs',
+      phone: '555-0100',
+      city: 'Springfield',
+    })
+
+    const result = await repository.softDeleteOwned(world.schoolDb, profileRow.id, 'user-no-refs')
+    expect(result).toHaveLength(1)
+
+    const found = await world.schoolDb.query.profile.findFirst({
+      where: (t, { eq }) => eq(t.id, profileRow.id),
+    })
+    expect(found).toBeDefined()
+    expect(found?.deletedAt).not.toBeNull()
+    // Pure soft-delete (DD-011, revised): phone/city are NOT critical PII for this product and
+    // are retained, not cleared.
+    expect(found?.phone).toBe('555-0100')
+    expect(found?.city).toBe('Springfield')
+    expect(found?.name).toBe(profileRow.name)
+  })
+
+  it(
+    'soft-deletes a profile referenced by evaluation.evaluatorId — DD-011 lifted the old ' +
+      "restrict-FK block (evaluation.evaluatorId's onDelete: 'restrict' is never hit since " +
+      'this is an UPDATE, not a physical DELETE)',
+    async () => {
+      world = await createTestSchool()
+      const trackRow = await createTrack(world)
+      const chapterRow = await createChapter(world, trackRow)
+      const studentProfile = await createProfile(world)
+      const evaluatorProfile = await createProfile(world, { userId: 'evaluator-user' })
+
+      await createEvaluation(world, {
+        student: studentProfile,
+        chapter: chapterRow,
+        evaluator: evaluatorProfile,
+      })
+
+      const result = await repository.softDeleteOwned(
+        world.schoolDb,
+        evaluatorProfile.id,
+        'evaluator-user',
+      )
+      expect(result).toHaveLength(1)
+
+      const stillThere = await world.schoolDb.query.profile.findFirst({
+        where: (t, { eq }) => eq(t.id, evaluatorProfile.id),
+      })
+      expect(stillThere).toBeDefined()
+      expect(stillThere?.deletedAt).not.toBeNull()
+    },
+  )
+
+  it('a repeat soft-delete matches zero rows (idempotent-safe, no re-touching)', async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, { userId: 'user-repeat' })
+
+    const first = await repository.softDeleteOwned(world.schoolDb, profileRow.id, 'user-repeat')
+    expect(first).toHaveLength(1)
+
+    const second = await repository.softDeleteOwned(world.schoolDb, profileRow.id, 'user-repeat')
+    expect(second).toHaveLength(0)
+  })
+
+  it('enrollment rows survive deactivation unchanged — "which batches was this user in" keeps working', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const profileRow = await createProfile(world, { userId: 'user-with-enrollment' })
+    const batchRow = await createBatch(world, trackRow)
+    await enroll(world, profileRow, batchRow, 'student')
+
+    await repository.softDeleteOwned(world.schoolDb, profileRow.id, 'user-with-enrollment')
+
+    const stillEnrolled = await world.schoolDb.query.enrollment.findFirst({
+      where: (t, { eq }) => eq(t.profileId, profileRow.id),
+    })
+    expect(stillEnrolled).toBeDefined()
+    expect(stillEnrolled?.batchId).toBe(batchRow.id)
+  })
+
+  it(
+    'a deactivated student can no longer be the target of a NEW exam, even though their ' +
+      'enrollment row still exists (DD-011 §4.6 gap fix)',
+    async () => {
+      world = await createTestSchool()
+      const trackRow = await createTrack(world)
+      const studentProfile = await createProfile(world, { userId: 'user-deactivated-student' })
+      const batchRow = await createBatch(world, trackRow)
+      await enroll(world, studentProfile, batchRow, 'student')
+
+      await repository.softDeleteOwned(world.schoolDb, studentProfile.id, 'user-deactivated-student')
+
+      // The enrollment row is still there...
+      const stillEnrolled = await world.schoolDb.query.enrollment.findFirst({
+        where: (t, { eq }) => eq(t.profileId, studentProfile.id),
+      })
+      expect(stillEnrolled).toBeDefined()
+
+      // ...but it must no longer qualify the (now-deactivated) student for a new exam.
+      const qualifying = await examRepository.findStudentEnrollmentForTrack(
+        world.schoolDb,
+        studentProfile.id,
+        trackRow.id,
+      )
+      expect(qualifying).toHaveLength(0)
+    },
+  )
+})
