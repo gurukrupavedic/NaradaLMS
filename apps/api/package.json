@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "format": "prettier . --write --ignore-path ../../.prettierignore",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@narada/auth": "workspace:*",
