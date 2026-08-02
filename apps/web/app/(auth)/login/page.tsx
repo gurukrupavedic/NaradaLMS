@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-import { getSession } from '@/lib/auth'
+import { getSession, requestOrigin } from '@/lib/auth'
 import { fetchApi } from '@/lib/api'
 import { PROFILE_COOKIE } from '@/lib/constants'
 import type { ApiProfile } from '@/lib/types'
@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 export default async function LoginPage() {
   const headerStore = await headers()
   const [session, cookieStore] = await Promise.all([
-    getSession(headerStore.get('cookie') ?? ''),
+    getSession(headerStore.get('cookie') ?? '', requestOrigin(headerStore)),
     cookies(),
   ])
 
