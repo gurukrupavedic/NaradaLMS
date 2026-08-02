@@ -4,7 +4,7 @@ import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { env } from '@narada/env/client'
 
-import { authFetch, applySetCookies } from './auth'
+import { authFetch, applySetCookies, requestOrigin } from './auth'
 import { fetchApi } from './api'
 import { PROFILE_COOKIE } from './constants'
 import type { ApiProfile } from './types'
@@ -31,11 +31,16 @@ export async function selectProfile(profileId: string): Promise<void> {
   // the session's cookie cache stays stale and every school-permission check keeps
   // throwing "No active organization".
   const headerStore = await headers()
-  const response = await authFetch('/organization/set-active', headerStore.get('cookie') ?? '', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ organizationSlug: env.NEXT_PUBLIC_SCHOOL_SLUG }),
-  })
+  const response = await authFetch(
+    '/organization/set-active',
+    headerStore.get('cookie') ?? '',
+    requestOrigin(headerStore),
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ organizationSlug: env.NEXT_PUBLIC_SCHOOL_SLUG }),
+    },
+  )
 
   const cookieJar = await cookies()
   applySetCookies(cookieJar, response)
@@ -51,7 +56,9 @@ export async function selectProfile(profileId: string): Promise<void> {
 
 export async function signOut(): Promise<void> {
   const headerStore = await headers()
-  const response = await authFetch('/sign-out', headerStore.get('cookie') ?? '', { method: 'POST' })
+  const response = await authFetch('/sign-out', headerStore.get('cookie') ?? '', requestOrigin(headerStore), {
+    method: 'POST',
+  })
 
   const cookieJar = await cookies()
   applySetCookies(cookieJar, response)
