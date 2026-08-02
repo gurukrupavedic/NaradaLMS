@@ -26,6 +26,8 @@
     "seed": "pnpm --filter @narada/tools seed",
     "lint": "pnpm -r lint",
     "format": "pnpm -r format",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "build": "pnpm -r --if-present build",
+    "test": "pnpm -r --if-present test"
   }
 }
