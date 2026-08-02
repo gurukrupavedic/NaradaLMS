@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    // .draft-frontend is its own nested workspace with its own config.
+    '.draft-frontend/**',
   ]),
   {
     languageOptions: {
