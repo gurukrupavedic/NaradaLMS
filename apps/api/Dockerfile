@@ -27,6 +27,7 @@ FROM deps AS runner
 
 COPY apps/api  apps/api
 COPY packages  packages
+COPY tools     tools
 
 WORKDIR /repo/apps/api
 EXPOSE 3000
