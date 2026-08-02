@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Crimson_Pro } from 'next/font/google'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { auth } from '@narada/auth'
 
+import { getSession } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 import { PROFILE_COOKIE } from '@/lib/constants'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -34,8 +34,9 @@ async function readStoredTheme(): Promise<Theme> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const headerStore = await headers()
   const [session, cookieStore] = await Promise.all([
-    auth.api.getSession({ headers: await headers() }),
+    getSession(headerStore.get('cookie') ?? ''),
     cookies(),
   ])
 

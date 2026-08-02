@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { cookies, headers } from 'next/headers'
-import { env } from '@narada/env'
+import { env } from '@narada/env/client'
 
 import { PROFILE_COOKIE } from './constants'
 
