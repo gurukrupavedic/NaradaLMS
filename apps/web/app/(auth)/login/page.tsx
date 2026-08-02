@@ -1,7 +1,7 @@
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { auth } from '@narada/auth'
 
+import { getSession } from '@/lib/auth'
 import { fetchApi } from '@/lib/api'
 import { PROFILE_COOKIE } from '@/lib/constants'
 import type { ApiProfile } from '@/lib/types'
@@ -10,8 +10,9 @@ import { SignInForm } from '@/components/auth/sign-in-form'
 export const dynamic = 'force-dynamic'
 
 export default async function LoginPage() {
+  const headerStore = await headers()
   const [session, cookieStore] = await Promise.all([
-    auth.api.getSession({ headers: await headers() }),
+    getSession(headerStore.get('cookie') ?? ''),
     cookies(),
   ])
 
