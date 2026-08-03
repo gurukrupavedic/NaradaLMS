@@ -169,6 +169,15 @@ export class AccessPolicy {
     return { kind: 'own', profileId: this.requireProfileId() }
   }
 
+  // -- Profiles ---------------------------------------------------------------
+
+  /** Admin-deactivation (DD-011 §9): only a school admin/owner (or super admin) may deactivate a profile other than their own. */
+  public requireCanDeactivateProfile(): void {
+    if (!this.isSchoolAdmin()) {
+      throw forbidden()
+    }
+  }
+
   private requireProfileId(): string {
     if (!this.profileId) {
       throw forbidden('X-Profile-Id header is required')

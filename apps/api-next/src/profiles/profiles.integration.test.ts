@@ -134,3 +134,50 @@ describe('profile deactivation (matrix items 3 & 4, updated for DD-011 pure soft
     },
   )
 })
+
+describe('admin-deactivation (DD-011 §9)', () => {
+  it('deactivates a profile with no ownership check — every other column, and its enrollment history, survive unchanged', async () => {
+    world = await createTestSchool()
+    const trackRow = await createTrack(world)
+    const profileRow = await createProfile(world, {
+      userId: 'user-admin-target',
+      phone: '555-0199',
+      city: 'Metropolis',
+    })
+    const batchRow = await createBatch(world, trackRow)
+    await enroll(world, profileRow, batchRow, 'student')
+
+    const result = await repository.softDeleteById(world.schoolDb, profileRow.id)
+    expect(result).toHaveLength(1)
+
+    const found = await world.schoolDb.query.profile.findFirst({
+      where: (t, { eq }) => eq(t.id, profileRow.id),
+    })
+    expect(found?.deletedAt).not.toBeNull()
+    expect(found?.phone).toBe('555-0199')
+    expect(found?.city).toBe('Metropolis')
+
+    const stillEnrolled = await world.schoolDb.query.enrollment.findFirst({
+      where: (t, { eq }) => eq(t.profileId, profileRow.id),
+    })
+    expect(stillEnrolled).toBeDefined()
+  })
+
+  it('a repeat admin-deactivation matches zero rows (idempotent-safe, same contract as owner soft-delete)', async () => {
+    world = await createTestSchool()
+    const profileRow = await createProfile(world, { userId: 'user-admin-target-2' })
+
+    const first = await repository.softDeleteById(world.schoolDb, profileRow.id)
+    expect(first).toHaveLength(1)
+
+    const second = await repository.softDeleteById(world.schoolDb, profileRow.id)
+    expect(second).toHaveLength(0)
+  })
+
+  it('a nonexistent profile id matches zero rows', async () => {
+    world = await createTestSchool()
+
+    const result = await repository.softDeleteById(world.schoolDb, crypto.randomUUID())
+    expect(result).toHaveLength(0)
+  })
+})

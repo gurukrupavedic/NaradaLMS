@@ -71,3 +71,16 @@ export async function deleteById(context: ProfileServiceContext, id: string): Pr
     throw notFound()
   }
 }
+
+/**
+ * Admin-deactivation (DD-011 §9): a school admin deactivating a profile other than their own.
+ * Authorization (`access.requireCanDeactivateProfile()`) happens in the route, matching every
+ * other admin-gated write in this codebase (see `batches/route.ts`) — this function assumes the
+ * caller has already been checked.
+ */
+export async function deactivateByAdmin(context: ProfileServiceContext, id: string): Promise<void> {
+  const rows = await repository.softDeleteById(context.db, id)
+  if (rows.length === 0) {
+    throw notFound()
+  }
+}

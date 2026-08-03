@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import * as z from 'zod'
 
-import { userRoute } from '../naradaRoute'
+import { profileRoute, userRoute } from '../naradaRoute'
 import { parse } from '../utils/validate'
 import { CreateProfileSchema, UpdateProfileSchema } from './schema'
-import { createProfile, deleteById, findByUserId, updateProfile } from './service'
+import { createProfile, deactivateByAdmin, deleteById, findByUserId, updateProfile } from './service'
 
 const router = Router()
 
@@ -40,6 +40,19 @@ router.delete(
   userRoute(async ({ req, res, db, school, user }) => {
     const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
     await deleteById({ db, school, user }, profileId)
+    res.status(204).send()
+  }),
+)
+
+// Admin-deactivation (DD-011 §9): a separate route from the owner-only DELETE above, since the
+// authorization check (school admin acting on someone else's profile) is a different question
+// from "does the caller own this profile" and shouldn't be conflated behind one path.
+router.post(
+  '/:profileId/deactivate',
+  profileRoute(async ({ req, res, db, school, user, access }) => {
+    const { profileId } = await parse(z.object({ profileId: z.uuid() }), req.params)
+    access.requireCanDeactivateProfile()
+    await deactivateByAdmin({ db, school, user }, profileId)
     res.status(204).send()
   }),
 )

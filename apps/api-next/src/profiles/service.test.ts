@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { SchoolDbClient, organization } from '@narada/db'
 
-import { deleteById } from './service'
+import { deactivateByAdmin, deleteById } from './service'
 import * as repository from './repository'
 
 // Explicit factory (rather than vitest's auto-mock) so the real `./repository` module — which
@@ -13,6 +13,7 @@ vi.mock('./repository', () => ({
   insert: vi.fn(),
   updateOwned: vi.fn(),
   softDeleteOwned: vi.fn(),
+  softDeleteById: vi.fn(),
 }))
 
 // `profiles/service.ts` imports the real `publicDb` value directly from `@narada/db`, so that
@@ -48,5 +49,27 @@ describe('deleteById', () => {
     vi.mocked(repository.softDeleteOwned).mockResolvedValue([])
 
     await expect(deleteById(context, 'profile-1')).rejects.toMatchObject({ statusCode: 404 })
+  })
+})
+
+describe('deactivateByAdmin (DD-011 §9)', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  it('soft-deletes the target profile without an owner check (authorization already done in the route)', async () => {
+    vi.mocked(repository.softDeleteById).mockResolvedValue([{ id: 'profile-1' }])
+
+    await expect(deactivateByAdmin(context, 'profile-1')).resolves.toBeUndefined()
+
+    expect(repository.softDeleteById).toHaveBeenCalledWith(db, 'profile-1')
+  })
+
+  it('404s a missing or already-deactivated profile', async () => {
+    vi.mocked(repository.softDeleteById).mockResolvedValue([])
+
+    await expect(deactivateByAdmin(context, 'profile-1')).rejects.toMatchObject({
+      statusCode: 404,
+    })
   })
 })

@@ -82,3 +82,17 @@ export async function softDeleteOwned(
     .where(and(eq(profile.id, id), eq(profile.userId, userId), isNull(profile.deletedAt)))
     .returning({ id: profile.id })
 }
+
+/**
+ * Admin-deactivation (DD-011 §9): identical to `softDeleteOwned` minus the `userId` predicate,
+ * since here the actor is a school admin acting on someone else's profile, not the owner. The
+ * `deletedAt IS NULL` predicate keeps the same idempotent-safe contract — a repeat call or an
+ * unknown id both match zero rows.
+ */
+export async function softDeleteById(db: SchoolDb, id: string): Promise<{ id: string }[]> {
+  return db
+    .update(profile)
+    .set({ deletedAt: new Date() })
+    .where(and(eq(profile.id, id), isNull(profile.deletedAt)))
+    .returning({ id: profile.id })
+}
