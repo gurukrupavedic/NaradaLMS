@@ -7,6 +7,8 @@ import { auth } from '@narada/auth'
 import {
   dropSchoolSchema,
   member,
+  migrateExistingSchool,
+  needsLegacyMigrationBackfill,
   organization,
   provisionSchool,
   publicDb,
@@ -44,10 +46,34 @@ const create = defineCommand({
   },
 })
 
+const migrate = defineCommand({
+  meta: {
+    description:
+      'Apply any pending school-schema migrations to already-provisioned school(s) (the ' +
+      'counterpart to `create`, which only ever migrates a school once, at creation).',
+  },
+  args: {
+    slug: {
+      type: 'string',
+      description: 'Only migrate the school with this slug (default: every existing school).',
+    },
+    dryRun: {
+      type: 'boolean',
+      default: false,
+      description: 'Report what would happen without changing anything.',
+    },
+  },
+  async run({ args }) {
+    const credentials = await promptCredentials()
+    await authenticateSuperAdmin(credentials.email, credentials.password)
+    await migrateSchools({ slug: args.slug, dryRun: args.dryRun })
+  },
+})
+
 runMain(
   defineCommand({
     meta: { name: 'schools', description: 'Manage rare school provisioning operations.' },
-    subCommands: { create },
+    subCommands: { create, migrate },
   }),
 )
 
@@ -110,6 +136,50 @@ async function createSchool(input: {
   } finally {
     await shutdownPools()
   }
+}
+
+async function migrateSchools(input: { slug?: string; dryRun: boolean }) {
+  try {
+    const schools = input.slug
+      ? [await requireSchoolBySlug(input.slug)]
+      : await publicDb.query.organization.findMany()
+
+    for (const school of schools) {
+      if (input.dryRun) {
+        const wouldBackfillLegacyTracking = await needsLegacyMigrationBackfill(school.id)
+        console.log(
+          JSON.stringify({
+            id: school.id,
+            slug: school.slug,
+            dryRun: true,
+            wouldBackfillLegacyTracking,
+          }),
+        )
+        continue
+      }
+
+      const { backfilledLegacyTracking } = await migrateExistingSchool(school.id)
+      console.log(
+        JSON.stringify({
+          id: school.id,
+          slug: school.slug,
+          migrated: true,
+          backfilledLegacyTracking,
+        }),
+      )
+    }
+  } finally {
+    await shutdownPools()
+  }
+}
+
+async function requireSchoolBySlug(slug: string) {
+  const school = await publicDb.query.organization.findFirst({ where: (t, { eq }) => eq(t.slug, slug) })
+  if (!school) {
+    throw new Error(`No school with slug \`${slug}\``)
+  }
+
+  return school
 }
 
 async function authenticateSuperAdmin(email: string, password: string) {

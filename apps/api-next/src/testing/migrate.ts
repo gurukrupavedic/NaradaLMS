@@ -12,7 +12,7 @@ import { Pool } from 'pg'
  * (no `./package.json` subpath is exported), so resolve the package entrypoint and walk up from
  * there instead of resolving `@narada/db/package.json` directly.
  */
-function resolveMigrationsFolder(kind: 'public' | 'school'): string {
+export function resolveMigrationsFolder(kind: 'public' | 'school'): string {
   const require = createRequire(import.meta.url)
   const entrypoint = require.resolve('@narada/db') // .../packages/db/src/index.ts
   const packageRoot = path.resolve(path.dirname(entrypoint), '..') // .../packages/db
