@@ -13,6 +13,38 @@ import {
 } from '@narada/db'
 import { promptSuperAdminPhone, requireSuperAdminByPhone } from './provisioning'
 
+const migrate = defineCommand({
+  meta: {
+    description:
+      'Apply any pending school-schema migrations to already-provisioned schools. ' +
+      'provisionSchool only ever runs at creation time, so a school never picks up a migration ' +
+      'added after it existed unless something calls it again — this is that something.',
+  },
+  args: {
+    slug: {
+      type: 'string',
+      description: 'Migrate only this school (default: every existing school).',
+    },
+  },
+  async run({ args }) {
+    const operatorPhone = await promptSuperAdminPhone()
+    try {
+      await requireSuperAdminByPhone(operatorPhone)
+
+      const targets = args.slug ? [await requireSchoolBySlug(args.slug)] : await allSchools()
+      const migrated = []
+      for (const school of targets) {
+        await provisionSchool(school.id)
+        migrated.push({ id: school.id, slug: school.slug })
+      }
+
+      console.log(JSON.stringify({ migrated }, null, 2))
+    } finally {
+      await shutdownPools()
+    }
+  },
+})
+
 const create = defineCommand({
   meta: { description: 'Create a school organization and provision its Postgres schema.' },
   args: {
@@ -45,7 +77,7 @@ const create = defineCommand({
 runMain(
   defineCommand({
     meta: { name: 'schools', description: 'Manage rare school provisioning operations.' },
-    subCommands: { create },
+    subCommands: { create, migrate },
   }),
 )
 
@@ -110,6 +142,19 @@ async function createSchool(input: {
   } finally {
     await shutdownPools()
   }
+}
+
+async function requireSchoolBySlug(slug: string) {
+  const school = await publicDb.query.organization.findFirst({
+    where: (t, { eq }) => eq(t.slug, slug),
+  })
+
+  if (!school) throw new Error(`School slug not found: ${slug}`)
+  return school
+}
+
+async function allSchools() {
+  return publicDb.query.organization.findMany()
 }
 
 async function findUserIdByEmail(email: string) {
