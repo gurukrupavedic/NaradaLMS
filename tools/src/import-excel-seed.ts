@@ -44,7 +44,14 @@ type BatchRow = {
   startDate: string | null
   meetingUrl: string | null
 }
-type UserRow = { id: string; name: string; email: string; isSuperAdmin: false }
+type UserRow = {
+  id: string
+  name: string
+  email: string
+  isSuperAdmin: false
+  phoneNumber: string | null
+  phoneNumberVerified: boolean | null
+}
 type ProfileRow = { id: string; userId: string; name: string; phone: string | null; city: string | null }
 type EnrollmentRow = {
   profileId: string
@@ -77,8 +84,18 @@ function readJson<T>(dataDir: string, fileName: string): T {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T
 }
 
-function validate(enrollments: EnrollmentRow[], evaluations: EvaluationRow[]): string[] {
+// Matches the phoneNumber plugin's validator on feat/whatsapp-otp-auth (packages/auth/src/index.ts)
+// — kept in sync manually since that plugin isn't wired into this schema/branch yet.
+const E164_PATTERN = /^\+[1-9]\d{7,14}$/
+
+function validate(users: UserRow[], enrollments: EnrollmentRow[], evaluations: EvaluationRow[]): string[] {
   const errors: string[] = []
+
+  for (const u of users) {
+    if (u.phoneNumber && !E164_PATTERN.test(u.phoneNumber)) {
+      errors.push(`user ${u.id}: phoneNumber "${u.phoneNumber}" is not valid E.164`)
+    }
+  }
 
   for (const e of enrollments) {
     const result = enrollSchema.safeParse({ profileId: e.profileId, role: e.role })
@@ -131,7 +148,7 @@ const importCmd = defineCommand({
           `${evaluations.length} evaluations from ${dataDir}`,
       )
 
-      const errors = validate(enrollments, evaluations)
+      const errors = validate(users, enrollments, evaluations)
       if (errors.length > 0) {
         console.error(`❌ ${errors.length} row(s) failed validation against the live API's own schemas:`)
         for (const e of errors.slice(0, 20)) console.error(`  - ${e}`)

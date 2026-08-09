@@ -57,7 +57,14 @@ type BatchRow = {
   startDate: string | null
   meetingUrl: string | null
 }
-type UserRow = { id: string; name: string; email: string; isSuperAdmin: false }
+type UserRow = {
+  id: string
+  name: string
+  email: string
+  isSuperAdmin: false
+  phoneNumber: string | null
+  phoneNumberVerified: boolean | null
+}
 type ProfileRow = { id: string; userId: string; name: string; phone: string | null; city: string | null }
 type EnrollmentRow = {
   profileId: string
@@ -75,6 +82,7 @@ type Report = {
   droppedMetadata: string
   phoneCollisions: { phone: string; userId: string; profiles: { profileId: string; name: string }[] }[]
   missingPhoneProfiles: { profileId: string; name: string; identityKey: string }[]
+  invalidE164Phones: { userId: string; rawDigits: string; name: string }[]
   ambiguousStudentStatus: { rawValue: string; mappedTo: string; profileId: string; batchCode: string }[]
   graduatedBatches: { batchCode: string; batchId: string }[]
   enrollmentRoleSkips: {
@@ -134,6 +142,16 @@ function sanitizePhone(code: unknown, phone: unknown): string {
   if (cleanPhone.length === 12 && cleanPhone.startsWith('91')) return cleanPhone
 
   return `${cleanCode}${cleanPhone}`
+}
+
+// Matches the phoneNumberValidator on the OTP-auth `phoneNumber` plugin config
+// (packages/auth/src/index.ts on feat/whatsapp-otp-auth) exactly, so nothing this importer writes
+// today would fail validation once that plugin goes live.
+const E164_PATTERN = /^\+[1-9]\d{7,14}$/
+
+function toE164(digitsOnly: string): string | null {
+  const candidate = `+${digitsOnly}`
+  return E164_PATTERN.test(candidate) ? candidate : null
 }
 
 function isGraduatedBatch(batchCode: string, rawTrackNum: unknown): boolean {
@@ -236,6 +254,7 @@ async function run() {
       'parent info, consent flags, comments, etc.) were not carried into the DB-shaped output.',
     phoneCollisions: [],
     missingPhoneProfiles: [],
+    invalidE164Phones: [],
     ambiguousStudentStatus: [],
     graduatedBatches: [],
     enrollmentRoleSkips: [],
@@ -313,11 +332,17 @@ async function run() {
     let user = usersByPhone.get(userKey)
     if (!user) {
       const id = uuidv7()
+      const phoneNumber = params.phone ? toE164(params.phone) : null
+      if (params.phone && !phoneNumber) {
+        report.invalidE164Phones.push({ userId: id, rawDigits: params.phone, name: computedName })
+      }
       user = {
         id,
         name: computedName,
         email: claimEmail(params.realEmail, userKey, id),
         isSuperAdmin: false,
+        phoneNumber,
+        phoneNumberVerified: phoneNumber ? false : null,
       }
       usersByPhone.set(userKey, user)
     }
@@ -352,11 +377,15 @@ async function run() {
     if (existing) return existing
 
     const teacherId = uuidv7()
+    // No phone column exists for teachers in either sheet (only GURUVU GARU name columns) — stays
+    // null until that data is collected some other way.
     const user: UserRow = {
       id: teacherId,
       name: trimmedName,
       email: claimEmail(undefined, trimmedName, teacherId),
       isSuperAdmin: false,
+      phoneNumber: null,
+      phoneNumberVerified: null,
     }
     const profile: ProfileRow = {
       id: uuidv7(),
@@ -612,6 +641,7 @@ async function run() {
    users: ${allUsers.length}  profiles: ${allProfiles.length}  tracks: ${tracksMap.size}
    chapters: ${chaptersMap.size}  batches: ${batchesMap.size}  enrollments: ${enrollments.length}  evaluations: ${evaluations.length}
    phone collisions (shared accounts): ${report.phoneCollisions.length}
+   invalid E.164 phone numbers (no login capability yet): ${report.invalidE164Phones.length}
    ambiguous student-status values: ${report.ambiguousStudentStatus.length}
    review seed-data/_report.json before running the importer.
   `)
