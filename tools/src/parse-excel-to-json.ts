@@ -78,6 +78,48 @@ type EnrollmentRow = {
 }
 type EvaluationRow = { id: string; studentId: string; chapterId: string; level: string; evaluatorId: string }
 
+// Registration-sheet columns with no home in the current schema — not written by import-excel-seed.ts
+// and never touches the DB. Kept identity-matched to a profile now (rather than left only in the
+// raw spreadsheet) so whoever adds real columns for this later can join on profileId instead of
+// re-deriving the phone/YOB/name matching from scratch. One entry per profile, captured from
+// whichever registration row first established that profile's identity.
+type RegistrationMetadataRow = {
+  profileId: string
+  registeredYear: string | null
+  registrationTimestamp: string | null
+  qualifiedStatus: string | null
+  emailSent: string | null
+  whatsappSent: string | null
+  joinedCommGroup: string | null
+  category: string | null
+  upanayanamYear: string | null
+  countryTimeZone: string | null
+  // Raw "PRIMARY KEY" column from the source spreadsheet's own prior dedup pass — some rows show
+  // "#NAME?" (an Excel formula error already present in the source), kept as-is rather than
+  // cleaned up since this is a passthrough of their data, not ours.
+  sourcePrimaryKey: string | null
+  referenceName: string | null
+  // Source column is labeled "REFERENCE PHONE" but actually contains names, not phone numbers —
+  // a pre-existing mislabel in the spreadsheet itself, passed through unchanged.
+  referencePhone: string | null
+  gruhasta: string | null
+  brahmachari: string | null
+  vedaShaka: string | null
+  spokenLanguages: string | null
+  readLanguages: string | null
+  parentNames: string | null
+  jobOccupation: string | null
+  parentStudying: string | null
+  learningGoal: string | null
+  currentProficiency: string | null
+  priorityLevel: string | null
+  dressCodeAgreed: string | null
+  noMeatAgreed: string | null
+  noAlcoholAgreed: string | null
+  noSmokingAgreed: string | null
+  comments: string | null
+}
+
 type Report = {
   droppedMetadata: string
   phoneCollisions: { phone: string; userId: string; profiles: { profileId: string; name: string }[] }[]
@@ -92,6 +134,7 @@ type Report = {
     skippedRole: string
   }[]
   duplicateRealEmails: { email: string; keptForUserId: string; fellBackToSyntheticFor: string }[]
+  resolvedEmailOverrides: { email: string; assignedToPhone: string; fellBackToSyntheticFor: string }[]
   batchStatusDefaults: { batchCode: string; status: string; reason: string }[]
   droppedRowsMissingIdentity: { sheet: string; reason: string }[]
 }
@@ -142,6 +185,51 @@ function sanitizePhone(code: unknown, phone: unknown): string {
   if (cleanPhone.length === 12 && cleanPhone.startsWith('91')) return cleanPhone
 
   return `${cleanCode}${cleanPhone}`
+}
+
+// Known cases where the same real person registered twice under two different phone numbers —
+// confirmed by hand against the source spreadsheet (matching YOB/city, one registration
+// superseding the other), not an algorithmic guess. Each entry aliases the older/superseded
+// number to the one with real batch/assessment history, so both registrations collapse into one
+// user+profile instead of two disconnected accounts. Add to this list only after checking the
+// raw rows — a shared name alone (e.g. "Abhiram Remella", different YOB and different countries
+// in that case) is not enough evidence on its own.
+const KNOWN_DUPLICATE_PHONES: Record<string, string> = {
+  // Sridhar Tadepalli, Frisco, YOB 1973 — registered 2025-11-30 under this number, then again
+  // 2026-01-01 under 919591989895 (aliased below), which is the one with an actual batch
+  // assignment (VED-01-2025-GR-12) and evaluations attached.
+  '15107668743': '19591989895',
+}
+
+function resolvePhone(phone: string): string {
+  return KNOWN_DUPLICATE_PHONES[phone] ?? phone
+}
+
+// Known cases where one real email address is entered on multiple households' registration rows
+// (a parent's personal email reused for a child's registration, or a shared family email), where
+// naive first-come-first-served claim order gave the real address to the wrong household —
+// confirmed by hand against the source spreadsheet (name-vs-email match, ages, city/parent-name
+// fields), not an algorithmic guess. Maps email -> the phone whose household should keep it;
+// every other household proposing the same email always gets a synthetic one instead, regardless
+// of row order.
+const PREFERRED_EMAIL_OWNERS: Record<string, string> = {
+  // Surya Srinivas Jagarlapudi (adult, Austin) — "J" + "suryasrinivas" is his name almost
+  // verbatim. The other claimant is a child in Hyderabad with a different parent on file
+  // (likely a different branch of the same extended family reusing the email).
+  'jsuryasrinivas@gmail.com': '17373779389',
+  // Venkata Dileep Bommakanti (adult, Hyderabad) — "B" + "V" + "dileep" matches his name
+  // exactly. He and his son Pavan already share this phone (merged as one household); a third
+  // child, Adithya, is registered under a different number (likely the mother's) but lists the
+  // same parents and had ended up with the real email instead of Dileep himself.
+  'bvdileep@gmail.com': '919885883979',
+  // Sashikanth Pochimcharla (adult, Hyderabad) — the email is his exact full name. The other
+  // claimant, "Vedant Pochimcharla" (same surname, ~30 years younger), is plausibly his son.
+  'sashikanth.pochimcharla@gmail.com': '919949054060',
+  // Kameswara Rao Mandalika (adult, Visakhapatnam) — "kamesh" is a common short form of
+  // "Kameswara." Weaker signal than the others (no exact match, and the two claimants don't
+  // obviously look like parent/child), but "kamesh" has real overlap with his name and the
+  // other claimant ("Sriram Mandalika") has none at all.
+  'ratnamkamesh4545@gmail.com': '919885774264',
 }
 
 // Matches the phoneNumberValidator on the OTP-auth `phoneNumber` plugin config
@@ -251,7 +339,9 @@ async function run() {
   const report: Report = {
     droppedMetadata:
       'Registration-sheet columns with no home in the current schema (qualified status, upanayanam, ' +
-      'parent info, consent flags, comments, etc.) were not carried into the DB-shaped output.',
+      'parent info, consent flags, comments, etc.) are not part of the DB-shaped output and are ' +
+      'never written by the importer. Preserved, identity-matched to a profileId, in ' +
+      'registration-metadata.json for whenever real columns exist for this data.',
     phoneCollisions: [],
     missingPhoneProfiles: [],
     invalidE164Phones: [],
@@ -259,6 +349,7 @@ async function run() {
     graduatedBatches: [],
     enrollmentRoleSkips: [],
     duplicateRealEmails: [],
+    resolvedEmailOverrides: [],
     batchStatusDefaults: [],
     droppedRowsMissingIdentity: [],
   }
@@ -281,8 +372,53 @@ async function run() {
   const chaptersMap = new Map<string, ChapterRow>()
   const batchesMap = new Map<string, BatchRow>()
   const batchTrackNumbers = new Map<string, number | null>()
+  // Max "LAST Batch Year" seen across each batch's own students — verified clean (zero batches
+  // have students disagreeing on this value), and a far better active/completed signal than
+  // enrollment presence alone (every batch has at least one enrollment by construction).
+  const batchLastYears = new Map<string, number>()
+  let maxDataYear = 0
   const enrollmentsByKey = new Map<string, EnrollmentRow>()
   const evaluations: EvaluationRow[] = []
+  const registrationMetadata: RegistrationMetadataRow[] = []
+
+  function buildRegistrationMetadata(profileId: string, row: Record<string, any>): RegistrationMetadataRow {
+    const asString = (value: unknown): string | null => {
+      const trimmed = String(value ?? '').trim()
+      return trimmed || null
+    }
+
+    return {
+      profileId,
+      registeredYear: asString(row['REGISTERED']),
+      registrationTimestamp: formatExcelTimestamp(row['Timestamp']),
+      qualifiedStatus: asString(row['QUALIFIED?']),
+      emailSent: asString(row['EMAIL SENT?']),
+      whatsappSent: asString(row['WHATSAPP SENT?']),
+      joinedCommGroup: asString(row['JOINED COMM GROUP?']),
+      category: asString(row['CATEGORY']),
+      upanayanamYear: asString(row['UPANAYANAM']),
+      countryTimeZone: asString(row['COUNTRY TIME ZONE']),
+      sourcePrimaryKey: asString(row['PRIMARY KEY']),
+      referenceName: asString(row['REFERENCE NAME']),
+      referencePhone: asString(row['REFERENCE PHONE']),
+      gruhasta: asString(row['GRUHASTA']),
+      brahmachari: asString(row['BRAHMACHARI']),
+      vedaShaka: asString(row['VEDA SHAKA']),
+      spokenLanguages: asString(row['SPOKEN']),
+      readLanguages: asString(row['READ']),
+      parentNames: asString(row['PARENT NAMES']),
+      jobOccupation: asString(row['JOB']),
+      parentStudying: asString(row['PARENT STUDYING']),
+      learningGoal: asString(row['GOAL']),
+      currentProficiency: asString(row['PROFICIENCY']),
+      priorityLevel: asString(row['PRIORITY']),
+      dressCodeAgreed: asString(row['DRESS CODE']),
+      noMeatAgreed: asString(row['NO MEAT']),
+      noAlcoholAgreed: asString(row['NO ALCHOHOL']),
+      noSmokingAgreed: asString(row['NO SMOKING']),
+      comments: asString(row['COMMENTS']),
+    }
+  }
 
   // user.email is unique+required. `user` is keyed by phone, not email, so two different
   // phone-derived households can legitimately share one real email (e.g. a parent's personal
@@ -292,6 +428,21 @@ async function run() {
   const emailOwners = new Map<string, string>()
   function claimEmail(candidate: string | undefined, fallbackKey: string, userId: string): string {
     if (candidate) {
+      const preferredOwnerPhone = PREFERRED_EMAIL_OWNERS[candidate]
+      if (preferredOwnerPhone && preferredOwnerPhone !== fallbackKey) {
+        // A specific, hand-verified household owns this email — never let a different household
+        // claim it, regardless of which row is processed first. Deliberately not registered in
+        // emailOwners, so the real slot stays free whenever the true owner's row is reached.
+        const fallback = syntheticEmail(fallbackKey)
+        emailOwners.set(fallback, userId)
+        report.resolvedEmailOverrides.push({
+          email: candidate,
+          assignedToPhone: preferredOwnerPhone,
+          fellBackToSyntheticFor: userId,
+        })
+        return fallback
+      }
+
       const existingOwner = emailOwners.get(candidate)
       if (!existingOwner || existingOwner === userId) {
         emailOwners.set(candidate, userId)
@@ -406,7 +557,7 @@ async function run() {
   console.log('📦 Processing registrations...')
 
   for (const row of regRows) {
-    const phone = sanitizePhone(row['COUNTRY CODE'], row['WHATSAPP'])
+    const phone = resolvePhone(sanitizePhone(row['COUNTRY CODE'], row['WHATSAPP']))
     const firstName = row['FIRST NAME'] || ''
     const lastName = row['LAST NAME'] || ''
     const yob = row['YEAR OF BIRTH'] || ''
@@ -414,7 +565,8 @@ async function run() {
       .toLowerCase()
       .trim()
 
-    getOrCreateProfile({
+    const profileCountBefore = profilesByIdentity.size
+    const profile = getOrCreateProfile({
       phone,
       yob,
       firstName,
@@ -423,6 +575,12 @@ async function run() {
       fallbackFullName: row['FULL NAME'],
       realEmail: realEmail || undefined,
     })
+
+    // Only the row that actually established this profile's identity — a second registration row
+    // for the same person (e.g. the Tadepalli re-registration, aliased above) doesn't overwrite it.
+    if (profilesByIdentity.size > profileCountBefore) {
+      registrationMetadata.push(buildRegistrationMetadata(profile.id, row))
+    }
   }
 
   // ==========================================
@@ -511,7 +669,13 @@ async function run() {
         if (isGrad) report.graduatedBatches.push({ batchCode: rawBatchCode, batchId: batchRecord.id })
       }
 
-      const phone = sanitizePhone(row['Country Code'], row['Phone Number'])
+      const lastBatchYear = parseInt(String(row['LAST Batch Year'] ?? '').trim(), 10)
+      if (!isNaN(lastBatchYear)) {
+        batchLastYears.set(rawBatchCode, Math.max(batchLastYears.get(rawBatchCode) ?? 0, lastBatchYear))
+        maxDataYear = Math.max(maxDataYear, lastBatchYear)
+      }
+
+      const phone = resolvePhone(sanitizePhone(row['Country Code'], row['Phone Number']))
       const firstName = row['First Name'] || ''
       const lastName = row['Last Name'] || ''
       const yob = row['YOB'] || ''
@@ -598,20 +762,35 @@ async function run() {
   }
 
   // Batch status: no source column gives this directly, so it's derived (and always flagged for
-  // review) — 'active' when the batch still has at least one student enrollment, else 'completed'.
+  // review). Primary signal is "LAST Batch Year" — verified consistent within every batch — a
+  // batch is 'active' if its students' most recent batch year matches the newest year seen
+  // anywhere in the dataset, 'completed' otherwise. Falls back to "has a student enrollment" only
+  // for the rare batch with no year data at all (none exist in the current spreadsheet, but the
+  // fallback is kept and flagged distinctly in case future data has gaps).
   const studentEnrollmentCountByBatch = new Map<string, number>()
   for (const enr of enrollmentsByKey.values()) {
     if (enr.role === 'student') {
       studentEnrollmentCountByBatch.set(enr.batchId, (studentEnrollmentCountByBatch.get(enr.batchId) ?? 0) + 1)
     }
   }
-  for (const batchRow of batchesMap.values()) {
+  for (const [batchCode, batchRow] of batchesMap.entries()) {
+    const lastYear = batchLastYears.get(batchCode)
+    if (lastYear !== undefined && maxDataYear > 0) {
+      batchRow.status = lastYear >= maxDataYear ? 'active' : 'completed'
+      report.batchStatusDefaults.push({
+        batchCode: batchRow.code,
+        status: batchRow.status,
+        reason: `LAST Batch Year ${lastYear} (newest in dataset: ${maxDataYear})`,
+      })
+      continue
+    }
+
     const hasStudents = (studentEnrollmentCountByBatch.get(batchRow.id) ?? 0) > 0
     batchRow.status = hasStudents ? 'active' : 'completed'
     report.batchStatusDefaults.push({
       batchCode: batchRow.code,
       status: batchRow.status,
-      reason: hasStudents ? 'has active student enrollments' : 'no student enrollments found',
+      reason: `no LAST Batch Year data — fell back to enrollment presence (${hasStudents ? 'has' : 'no'} active student enrollments)`,
     })
   }
 
@@ -634,6 +813,7 @@ async function run() {
   write('profiles.json', allProfiles)
   write('enrollments.json', enrollments)
   write('evaluations.json', evaluations)
+  write('registration-metadata.json', registrationMetadata)
   write('_report.json', report)
 
   console.log(`
@@ -643,6 +823,7 @@ async function run() {
    phone collisions (shared accounts): ${report.phoneCollisions.length}
    invalid E.164 phone numbers (no login capability yet): ${report.invalidE164Phones.length}
    ambiguous student-status values: ${report.ambiguousStudentStatus.length}
+   registration-metadata.json: ${registrationMetadata.length} rows (not imported — for future schema work)
    review seed-data/_report.json before running the importer.
   `)
 }
